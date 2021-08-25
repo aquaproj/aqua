@@ -73,7 +73,10 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 
 	// create a symbolic link
 	for _, file := range pkgInfo.Files {
-		if err := os.Symlink(filepath.Join(ctrl.RootDir, "bin", "aqua"), file.Name); err != nil {
+		if _, err := os.Stat(filepath.Join(ctrl.RootDir, "bin", file.Name)); err == nil {
+			continue
+		}
+		if err := os.Symlink("aqua-proxy", filepath.Join(ctrl.RootDir, "bin", file.Name)); err != nil {
 			return fmt.Errorf("create a symbolic link: %w", err)
 		}
 	}

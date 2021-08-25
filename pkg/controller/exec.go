@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,7 +12,11 @@ import (
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, args []string) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error {
+	if len(args) == 0 {
+		return errors.New("command is required")
+	}
+	exeName := args[0]
 	cfg := Config{}
 	wd, err := os.Getwd()
 	if err != nil {
@@ -38,7 +43,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, 
 			return fmt.Errorf("repository isn't found %s", pkg.Name)
 		}
 
-		return ctrl.exec(ctx, exeName, pkg, pkgInfo, args)
+		return ctrl.exec(ctx, exeName, pkg, pkgInfo, args[1:])
 	}
 	return nil
 }
