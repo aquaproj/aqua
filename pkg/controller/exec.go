@@ -22,8 +22,15 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
+	param.ConfigFilePath = ctrl.getConfigFilePath(wd, param.ConfigFilePath)
+	if param.ConfigFilePath == "" {
+		return errConfigFileNotFound
+	}
 	if err := ctrl.readConfig(wd, param.ConfigFilePath, cfg); err != nil {
 		return err
+	}
+	if cfg.BinDir == "" {
+		cfg.BinDir = filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
 	}
 	inlineRepo := make(map[string]*PackageInfo, len(cfg.InlineRepository))
 	for _, pkgInfo := range cfg.InlineRepository {

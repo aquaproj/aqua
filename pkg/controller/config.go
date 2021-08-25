@@ -44,14 +44,14 @@ type Param struct {
 
 var errConfigFileNotFound = errors.New("configuration file isn't found")
 
-func (ctrl *Controller) readConfig(wd, configFilePath string, cfg *Config) error {
-	if configFilePath == "" {
-		p := ctrl.ConfigFinder.Find(wd)
-		if p == "" {
-			return errConfigFileNotFound
-		}
-		configFilePath = p
+func (ctrl *Controller) getConfigFilePath(wd, configFilePath string) string {
+	if configFilePath != "" {
+		return configFilePath
 	}
+	return ctrl.ConfigFinder.Find(wd)
+}
+
+func (ctrl *Controller) readConfig(wd, configFilePath string, cfg *Config) error {
 	file, err := ctrl.ConfigReader.Read(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck

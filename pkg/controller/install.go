@@ -16,6 +16,10 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
+	param.ConfigFilePath = ctrl.getConfigFilePath(wd, param.ConfigFilePath)
+	if param.ConfigFilePath == "" {
+		return errConfigFileNotFound
+	}
 	if err := ctrl.readConfig(wd, param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
