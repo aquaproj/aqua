@@ -43,7 +43,7 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		Stderr:       os.Stderr,
 		ConfigFinder: &configFinder{},
 		ConfigReader: &configReader{},
-		RootDir:      os.Getenv("CUBE_ROOT_DIR"),
+		RootDir:      os.Getenv("AQUA_ROOT_DIR"),
 	}
 	if ctrl.RootDir == "" {
 		ctrl.RootDir = filepath.Join(os.Getenv("HOME"), ".aqua")

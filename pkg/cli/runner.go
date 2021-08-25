@@ -28,13 +28,13 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 					&cli.StringFlag{
 						Name:    "log-level",
 						Usage:   "log level",
-						EnvVars: []string{"CUBE_LOG_LEVEL"},
+						EnvVars: []string{"AQUA_LOG_LEVEL"},
 					},
 					&cli.StringFlag{
 						Name:    "config",
 						Aliases: []string{"c"},
 						Usage:   "configuration file path",
-						EnvVars: []string{"CUBE_CONFIG"},
+						EnvVars: []string{"AQUA_CONFIG"},
 					},
 				},
 			},
@@ -46,13 +46,13 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 					&cli.StringFlag{
 						Name:    "log-level",
 						Usage:   "log level",
-						EnvVars: []string{"CUBE_LOG_LEVEL"},
+						EnvVars: []string{"AQUA_LOG_LEVEL"},
 					},
 					&cli.StringFlag{
 						Name:    "config",
 						Aliases: []string{"c"},
 						Usage:   "configuration file path",
-						EnvVars: []string{"CUBE_CONFIG"},
+						EnvVars: []string{"AQUA_CONFIG"},
 					},
 				},
 			},
