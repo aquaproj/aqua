@@ -60,7 +60,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 		"package_version": pkg.Version,
 		"repository":      pkg.Repository,
 	})
-	logE.Info("install the package")
+	logE.Debug("install the package")
 	if pkg.Repository != "inline" {
 		return fmt.Errorf("only inline repository is supported (%s)", pkg.Repository)
 	}
@@ -122,7 +122,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		"package_version": pkg.Version,
 		"repository":      pkg.Repository,
 	})
-	logE.Info("install the proxy")
+	logE.Debug("install the proxy")
 	pkgInfo := &PackageInfo{
 		Name:     "inline",
 		Type:     "github_release",
