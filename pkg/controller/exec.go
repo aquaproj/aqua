@@ -17,12 +17,12 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		return errors.New("command is required")
 	}
 	exeName := args[0]
-	cfg := Config{}
+	cfg := &Config{}
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	if err := ctrl.readConfig(wd, param.ConfigFilePath, &cfg); err != nil {
+	if err := ctrl.readConfig(wd, param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
 	inlineRepo := make(map[string]*PackageInfo, len(cfg.InlineRepository))
@@ -34,7 +34,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			continue
 		}
 
-		if err := ctrl.installPackage(ctx, inlineRepo, pkg); err != nil {
+		if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
 			return err
 		}
 

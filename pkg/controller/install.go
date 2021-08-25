@@ -11,13 +11,19 @@ import (
 )
 
 func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
-	cfg := Config{}
+	cfg := &Config{}
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	if err := ctrl.readConfig(wd, param.ConfigFilePath, &cfg); err != nil {
+	if err := ctrl.readConfig(wd, param.ConfigFilePath, cfg); err != nil {
 		return err
+	}
+	if cfg.BinDir == "" {
+		cfg.BinDir = filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
+	}
+	if err := os.MkdirAll(cfg.BinDir, 0o775); err != nil { //nolint:gomnd
+		return fmt.Errorf("create the directory: %w", err)
 	}
 	inlineRepo := make(map[string]*PackageInfo, len(cfg.InlineRepository))
 	for _, pkgInfo := range cfg.InlineRepository {
@@ -31,14 +37,14 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 	}
 
 	for _, pkg := range cfg.Packages {
-		if err := ctrl.installPackage(ctx, inlineRepo, pkg); err != nil {
+		if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
 			return fmt.Errorf("install the package %s: %w", pkg.Name, err)
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package) error {
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, cfg *Config) error {
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -80,10 +86,10 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 
 	// create a symbolic link
 	for _, file := range pkgInfo.Files {
-		if _, err := os.Stat(filepath.Join(ctrl.RootDir, "bin", file.Name)); err == nil {
+		if _, err := os.Stat(filepath.Join(cfg.BinDir, file.Name)); err == nil {
 			continue
 		}
-		if err := os.Symlink("aqua-proxy", filepath.Join(ctrl.RootDir, "bin", file.Name)); err != nil {
+		if err := os.Symlink(filepath.Join(ctrl.RootDir, "bin", "aqua-proxy"), filepath.Join(cfg.BinDir, file.Name)); err != nil {
 			return fmt.Errorf("create a symbolic link: %w", err)
 		}
 	}

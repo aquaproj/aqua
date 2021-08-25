@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Packages         []*Package
 	InlineRepository []*PackageInfo `yaml:"inline_repository"`
+	BinDir           string         `yaml:"bin_dir"`
 }
 
 type Package struct {
