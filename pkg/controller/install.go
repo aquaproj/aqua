@@ -34,7 +34,13 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		inlineRepo[pkgInfo.Name] = pkgInfo
 	}
 
-	if _, err := os.Stat(filepath.Join(ctrl.RootDir, "bin", "aqua-proxy")); err != nil {
+	rootBin := filepath.Join(ctrl.RootDir, "bin")
+
+	if err := os.MkdirAll(rootBin, 0o775); err != nil { //nolint:gomnd
+		return fmt.Errorf("create the directory: %w", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(rootBin, "aqua-proxy")); err != nil {
 		if err := ctrl.installProxy(ctx); err != nil {
 			return err
 		}
