@@ -104,7 +104,7 @@ func getPkgPath(aquaRootDir string, pkg *Package, pkgInfo *PackageInfo, assetNam
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
 		Name:       "aqua-proxy",
-		Version:    "v0.1.0",
+		Version:    "v0.1.0-0",
 		Repository: "inline",
 	}
 	logE := logrus.WithFields(logrus.Fields{
@@ -125,7 +125,8 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 			},
 		},
 	}
-	assetName := "aqua-proxy_linux_amd64.tar.gz"
+
+	assetName := "aqua-proxy_" + runtime.GOOS + "_" + runtime.GOARCH + ".tar.gz"
 
 	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
 	// check if the repository exists
