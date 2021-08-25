@@ -12,7 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:cyclop
 	if len(args) == 0 {
 		return errors.New("command is required")
 	}
@@ -26,7 +26,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	if param.ConfigFilePath == "" {
 		return errConfigFileNotFound
 	}
-	if err := ctrl.readConfig(wd, param.ConfigFilePath, cfg); err != nil {
+	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
 	if cfg.BinDir == "" {

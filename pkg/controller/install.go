@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
+func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop
 	cfg := &Config{}
 	wd, err := os.Getwd()
 	if err != nil {
@@ -20,7 +20,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 	if param.ConfigFilePath == "" {
 		return errConfigFileNotFound
 	}
-	if err := ctrl.readConfig(wd, param.ConfigFilePath, cfg); err != nil {
+	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
 	if cfg.BinDir == "" {

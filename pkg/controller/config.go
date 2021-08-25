@@ -51,7 +51,7 @@ func (ctrl *Controller) getConfigFilePath(wd, configFilePath string) string {
 	return ctrl.ConfigFinder.Find(wd)
 }
 
-func (ctrl *Controller) readConfig(wd, configFilePath string, cfg *Config) error {
+func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 	file, err := ctrl.ConfigReader.Read(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
