@@ -2,30 +2,11 @@
 # the configuration file of cmdx - task runner
 # https://github.com/suzuki-shunsuke/cmdx
 tasks:
-- name: init
-  short: i
-  script: bash scripts/githook.sh
-  description: setup git hooks
-  usage: setup git hooks
-- name: coverage
-  short: c
-  description: test a package
-  usage: test a package
-  script: "bash scripts/coverage.sh {{.path}}"
-  args:
-  - name: path
 - name: test
   short: t
   description: test
   usage: test
   script: go test -v ./... -race -covermode=atomic
-- name: fmt
-  description: format the go code
-  usage: format the go code
-  script: bash scripts/fmt.sh
-  require:
-    exec:
-    - gofumpt
 - name: vet
   short: v
   description: go vet
@@ -40,16 +21,14 @@ tasks:
   short: r
   description: release the new version
   usage: release the new version
-  script: "bash scripts/release.sh {{.version}}"
+  script: |
+    git tag "{{.version}}"
+    git push origin "{{.version}}"
   args:
   - name: version
     required: true
     validate:
     - regexp: "^v\\d+\\.\\d+.\\d+(-\\d+)?$"
-- name: install
-  description: go install
-  usage: go install
-  script: go install ./cmd/aqua
 - name: build
   description: go build
   usage: go build
