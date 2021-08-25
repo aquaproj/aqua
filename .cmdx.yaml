@@ -1,0 +1,35 @@
+---
+# the configuration file of cmdx - task runner
+# https://github.com/suzuki-shunsuke/cmdx
+tasks:
+- name: test
+  short: t
+  description: test
+  usage: test
+  script: go test -v ./... -race -covermode=atomic
+- name: vet
+  short: v
+  description: go vet
+  usage: go vet
+  script: go vet ./...
+- name: lint
+  short: l
+  description: lint the go code
+  usage: lint the go code
+  script: golangci-lint run
+- name: release
+  short: r
+  description: release the new version
+  usage: release the new version
+  script: |
+    git tag "{{.version}}"
+    git push origin "{{.version}}"
+  args:
+  - name: version
+    required: true
+    validate:
+    - regexp: "^v\\d+\\.\\d+.\\d+(-\\d+)?$"
+- name: build
+  description: go build
+  usage: go build
+  script: go build -o dist/aqua ./cmd/aqua

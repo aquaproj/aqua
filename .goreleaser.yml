@@ -1,0 +1,19 @@
+---
+project_name: aqua
+archives:
+- name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+builds:
+- binary: aqua
+  main: cmd/aqua/main.go
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - windows
+  - darwin
+  - linux
+  goarch:
+  - amd64
+  - arm
+  - arm64
+release:
+  prerelease: true
