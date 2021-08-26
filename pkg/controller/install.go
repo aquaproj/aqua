@@ -63,7 +63,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
+			if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg, param.OnlyLink); err != nil {
 				<-maxInstallChan
 				logrus.WithFields(logrus.Fields{
 					"package_name": pkg.Name,
@@ -103,7 +103,7 @@ func getMaxParallelism() int {
 	return num
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, cfg *Config) error {
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, cfg *Config, onlyLink bool) error {
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -132,6 +132,13 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 		if err := ctrl.createLink(cfg, file); err != nil {
 			return err
 		}
+	}
+
+	if onlyLink {
+		logE.WithFields(logrus.Fields{
+			"only_link": true,
+		}).Debug("skip downloading the package")
+		return nil
 	}
 
 	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)

@@ -50,6 +50,12 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 				Aliases: []string{"i"},
 				Usage:   "Install tools",
 				Action:  runner.installAction,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "only-link",
+						Usage: "create links but skip download packages",
+					},
+				},
 			},
 			{
 				Name:   "exec",

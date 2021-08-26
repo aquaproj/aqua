@@ -68,7 +68,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			continue
 		}
 
-		if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
+		if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg, false); err != nil {
 			return err
 		}
 
