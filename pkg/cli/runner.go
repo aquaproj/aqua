@@ -63,6 +63,11 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 				Action: runner.execAction,
 			},
 			{
+				Name:   "get-bin-dir",
+				Usage:  "Get the configuration `bin_dir`",
+				Action: runner.getBinDirAction,
+			},
+			{
 				Name:   "version",
 				Usage:  "Show version",
 				Action: runner.versionAction,
