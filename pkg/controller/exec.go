@@ -66,7 +66,14 @@ func (ctrl *Controller) exec(ctx context.Context, exeName string, pkg *Package, 
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
-	exePath := filepath.Join(pkgPath, exeName) // TODO
+	src := ""
+	for _, file := range pkgInfo.Files {
+		if file.Name != exeName {
+			continue
+		}
+		src = file.Src
+	}
+	exePath := filepath.Join(pkgPath, src)
 	cmd := exec.Command(exePath, args...)
 	cmd.Stdin = ctrl.Stdin
 	cmd.Stdout = ctrl.Stdout
