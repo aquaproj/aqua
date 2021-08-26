@@ -9,7 +9,7 @@ USAGE:
    aqua [global options] command [command options] [arguments...]
 
 VERSION:
-   0.1.0-5 (ee953aad50bdfb066d892a62c9852cd028a11755)
+   0.1.0-6 (unreleased)
 
 COMMANDS:
    install, i  Install tools
@@ -32,7 +32,11 @@ NAME:
    aqua install - Install tools
 
 USAGE:
-   aqua install [arguments...]
+   aqua install [command options] [arguments...]
+
+OPTIONS:
+   --only-link  create links but skip download packages (default: false)
+   --help, -h   show help (default: false)
 ```
 
 ## aqua exec
