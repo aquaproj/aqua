@@ -33,9 +33,10 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		Compiled: compiledDate,
 		Commands: []*cli.Command{
 			{
-				Name:   "add",
-				Usage:  "Install tools",
-				Action: runner.installAction,
+				Name:    "install",
+				Aliases: []string{"i"},
+				Usage:   "Install tools",
+				Action:  runner.installAction,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "log-level",
