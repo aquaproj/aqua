@@ -12,9 +12,30 @@ Please download a binary from the [Release Page](https://github.com/suzuki-shuns
 
 Or you can install aqua quickly with [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer).
 
+e.g.
+
+```
+$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.0/aqua-installer | bash
+```
+
+GitHub Actions
+
+e.g.
+
+```yaml
+- uses: suzuki-shunsuke/aqua-installer@v0.1.0
+  with:
+    version: v0.1.0-4
+    install_path: /tmp/bin/aqua
+```
+
 ## Tutorial
 
 [tutorial](tutorial/README.md)
+
+## Configuration
+
+[config](docs/config.md)
 
 ## Directory Structure
 
