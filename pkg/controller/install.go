@@ -96,11 +96,8 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 
 	// create a symbolic link
 	for _, file := range pkgInfo.Files {
-		if _, err := os.Stat(filepath.Join(cfg.BinDir, file.Name)); err == nil {
-			continue
-		}
-		if err := os.Symlink(filepath.Join(ctrl.RootDir, "bin", "aqua-proxy"), filepath.Join(cfg.BinDir, file.Name)); err != nil {
-			return fmt.Errorf("create a symbolic link: %w", err)
+		if err := ctrl.createLink(cfg, file); err != nil {
+			return err
 		}
 	}
 
@@ -111,52 +108,55 @@ func getPkgPath(aquaRootDir string, pkg *Package, pkgInfo *PackageInfo, assetNam
 	return filepath.Join(aquaRootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.Repo, pkg.Version, assetName)
 }
 
-func (ctrl *Controller) installProxy(ctx context.Context) error {
-	pkg := &Package{
-		Name:       "aqua-proxy",
-		Version:    "v0.1.0-0",
-		Repository: "inline",
-	}
-	logE := logrus.WithFields(logrus.Fields{
-		"package_name":    pkg.Name,
-		"package_version": pkg.Version,
-		"repository":      pkg.Repository,
-	})
-	logE.Debug("install the proxy")
-	pkgInfo := &PackageInfo{
-		Name:     "inline",
-		Type:     "github_release",
-		Repo:     "suzuki-shunsuke/aqua-proxy",
-		Artifact: nil,
-		Files: []*File{
-			{
-				Name: "aqua-proxy",
-				Src:  "aqua-proxy",
-			},
-		},
-	}
-
-	assetName := "aqua-proxy_" + runtime.GOOS + "_" + runtime.GOARCH + ".tar.gz"
-
-	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
-	// check if the repository exists
-	logE.Debug("check if the package is already installed")
-	finfo, err := os.Stat(pkgPath)
-	if err != nil {
-		// file doesn't exist
-		if err := ctrl.download(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
-			return err
-		}
-	} else {
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", pkgPath)
+func (ctrl *Controller) createLink(cfg *Config, file *File) error {
+	linkPath := filepath.Join(cfg.BinDir, file.Name)
+	linkDest := filepath.Join(ctrl.RootDir, "bin", "aqua-proxy")
+	if fileInfo, err := os.Lstat(linkPath); err == nil {
+		switch mode := fileInfo.Mode(); {
+		case mode.IsDir():
+			// if file is a directory, raise error
+			return fmt.Errorf("%s has already existed and is a directory", linkPath)
+		case mode&os.ModeNamedPipe != 0:
+			// if file is a pipe, raise error
+			return fmt.Errorf("%s has already existed and is a named pipe", linkPath)
+		case mode.IsRegular():
+			// TODO if file is a regular file, remove it and create a symlink.
+			return fmt.Errorf("%s has already existed and is a regular file", linkPath)
+		case mode&os.ModeSymlink != 0:
+			return ctrl.recreateLink(linkPath, linkDest)
+		default:
+			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
-
-	// create a symbolic link
-	if err := os.Symlink(filepath.Join(pkgPath, "aqua-proxy"), filepath.Join(ctrl.RootDir, "bin", "aqua-proxy")); err != nil {
+	logrus.WithFields(logrus.Fields{
+		"link_file": linkPath,
+		"new":       linkDest,
+	}).Info("create a symbolic link")
+	if err := os.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
+	return nil
+}
 
+func (ctrl *Controller) recreateLink(linkPath, linkDest string) error {
+	lnDest, err := os.Readlink(linkPath)
+	if err != nil {
+		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
+	}
+	if linkDest == lnDest {
+		return nil
+	}
+	// recreate link
+	logrus.WithFields(logrus.Fields{
+		"link_file": linkPath,
+		"old":       lnDest,
+		"new":       linkDest,
+	}).Info("recreate a symbolic link")
+	if err := os.Remove(linkPath); err != nil {
+		return fmt.Errorf("remove a symbolic link (%s): %w", linkPath, err)
+	}
+	if err := os.Symlink(linkDest, linkPath); err != nil {
+		return fmt.Errorf("create a symbolic link: %w", err)
+	}
 	return nil
 }
