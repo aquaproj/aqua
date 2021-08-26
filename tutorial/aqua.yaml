@@ -1,0 +1,12 @@
+packages:
+- name: akoi
+  repository: inline
+  version: v2.2.0
+inline_repository:
+- name: akoi
+  type: github_release
+  repo: suzuki-shunsuke/akoi
+  artifact: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+  files:
+  - name: akoi
+    src: akoi
