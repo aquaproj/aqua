@@ -21,6 +21,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		"package_version": pkg.Version,
 		"repository":      pkg.Repository,
 	})
+
 	logE.Debug("install the proxy")
 	pkgInfo := &PackageInfo{
 		Name:     "inline",
@@ -30,7 +31,6 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		Files: []*File{
 			{
 				Name: "aqua-proxy",
-				Src:  "aqua-proxy",
 			},
 		},
 	}
