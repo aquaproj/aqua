@@ -12,10 +12,11 @@ VERSION:
    0.1.0-6 (unreleased)
 
 COMMANDS:
-   install, i  Install tools
-   exec        Execute tool
-   version     Show version
-   help, h     Shows a list of commands or help for one command
+   install, i   Install tools
+   exec         Execute tool
+   get-bin-dir  Get the configuration `bin_dir`
+   version      Show version
+   help, h      Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --log-level value         log level [$AQUA_LOG_LEVEL]
@@ -48,4 +49,15 @@ NAME:
 
 USAGE:
    aqua exec [arguments...]
+```
+
+## aqua get-bin-dir
+
+```console
+$ aqua help get-bin-dir
+NAME:
+   aqua get-bin-dir - Get the configuration `bin_dir`
+
+USAGE:
+   aqua get-bin-dir [arguments...]
 ```
