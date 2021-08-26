@@ -13,7 +13,7 @@ import (
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:cyclop
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:cyclop,funlen
 	if len(args) == 0 {
 		return errors.New("command is required")
 	}
@@ -46,10 +46,20 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		}
 		for _, file := range pkgInfo.Files {
 			if file.Name == exeName {
-				if file.Src == "" {
+				if file.Src == nil {
 					fileSrc = file.Name
 				} else {
-					fileSrc = file.Src
+					src, err := file.Src.Execute(map[string]interface{}{
+						"Package":     pkg,
+						"PackageInfo": pkgInfo,
+						"OS":          runtime.GOOS,
+						"Arch":        runtime.GOARCH,
+						"File":        file,
+					})
+					if err != nil {
+						return fmt.Errorf("render the template file.src: %w", err)
+					}
+					fileSrc = src
 				}
 				break
 			}

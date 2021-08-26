@@ -34,7 +34,7 @@ type PackageInfo struct {
 
 type File struct {
 	Name string `validate:"required"`
-	Src  string
+	Src  *text.Template
 }
 
 type Param struct {
