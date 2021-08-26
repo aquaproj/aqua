@@ -34,6 +34,10 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		}
 		logrus.SetLevel(lvl)
 	}
+	logrus.WithFields(logrus.Fields{
+		"log_level": param.LogLevel,
+		"config":    param.ConfigFilePath,
+	}).Debug("CLI args")
 	text.SetTemplateFunc(func(s string) (*template.Template, error) {
 		return template.New("_").Funcs(sprig.TxtFuncMap()).Parse(s) //nolint:wrapcheck
 	})

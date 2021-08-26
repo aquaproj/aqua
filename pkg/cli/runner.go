@@ -31,43 +31,30 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		Usage:    "General version manager. https://github.com/suzuki-shunsuke/aqua",
 		Version:  runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
 		Compiled: compiledDate,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "log-level",
+				Usage:   "log level",
+				EnvVars: []string{"AQUA_LOG_LEVEL"},
+			},
+			&cli.StringFlag{
+				Name:    "config",
+				Aliases: []string{"c"},
+				Usage:   "configuration file path",
+				EnvVars: []string{"AQUA_CONFIG"},
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name:    "install",
 				Aliases: []string{"i"},
 				Usage:   "Install tools",
 				Action:  runner.installAction,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:    "log-level",
-						Usage:   "log level",
-						EnvVars: []string{"AQUA_LOG_LEVEL"},
-					},
-					&cli.StringFlag{
-						Name:    "config",
-						Aliases: []string{"c"},
-						Usage:   "configuration file path",
-						EnvVars: []string{"AQUA_CONFIG"},
-					},
-				},
 			},
 			{
 				Name:   "exec",
 				Usage:  "Execute tool",
 				Action: runner.execAction,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:    "log-level",
-						Usage:   "log level",
-						EnvVars: []string{"AQUA_LOG_LEVEL"},
-					},
-					&cli.StringFlag{
-						Name:    "config",
-						Aliases: []string{"c"},
-						Usage:   "configuration file path",
-						EnvVars: []string{"AQUA_CONFIG"},
-					},
-				},
 			},
 			{
 				Name:   "version",
