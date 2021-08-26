@@ -41,6 +41,7 @@ type File struct {
 type Param struct {
 	ConfigFilePath string
 	LogLevel       string
+	OnlyLink       bool
 }
 
 var errConfigFileNotFound = errors.New("configuration file isn't found")

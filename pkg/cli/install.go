@@ -12,6 +12,7 @@ func (runner *Runner) setCLIArg(c *cli.Context, param *controller.Param) error {
 		param.LogLevel = logLevel
 	}
 	param.ConfigFilePath = c.String("config")
+	param.OnlyLink = c.Bool("only-link")
 	return nil
 }
 
