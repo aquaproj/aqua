@@ -12,8 +12,8 @@ import (
 )
 
 type Config struct {
-	Packages         []*Package
-	InlineRepository []*PackageInfo `yaml:"inline_repository"`
+	Packages         []*Package     `validate:"dive"`
+	InlineRepository []*PackageInfo `yaml:"inline_repository" validate:"dive"`
 	BinDir           string         `yaml:"bin_dir"`
 }
 
@@ -29,7 +29,7 @@ type PackageInfo struct {
 	Repo        string         `validate:"required"`
 	Artifact    *text.Template `validate:"required"`
 	ArchiveType string         `yaml:"archive_type"`
-	Files       []*File        `validate:"required"`
+	Files       []*File        `validate:"required,dive"`
 }
 
 type File struct {
