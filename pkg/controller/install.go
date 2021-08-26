@@ -26,6 +26,11 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	if cfg.BinDir == "" {
 		cfg.BinDir = filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
 	}
+
+	if err := validate.Struct(cfg); err != nil {
+		return fmt.Errorf("configuration is invalid: %w", err)
+	}
+
 	if err := os.MkdirAll(cfg.BinDir, 0o775); err != nil { //nolint:gomnd
 		return fmt.Errorf("create the directory: %w", err)
 	}
