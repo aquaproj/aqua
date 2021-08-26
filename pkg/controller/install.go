@@ -84,8 +84,13 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 
+	for _, file := range pkgInfo.Files {
+		if err := ctrl.createLink(cfg, file); err != nil {
+			return err
+		}
+	}
+
 	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
-	// check if the repository exists
 	logE.Debug("check if the package is already installed")
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
@@ -96,13 +101,6 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 	} else {
 		if !finfo.IsDir() {
 			return fmt.Errorf("%s isn't a directory", pkgPath)
-		}
-	}
-
-	// create a symbolic link
-	for _, file := range pkgInfo.Files {
-		if err := ctrl.createLink(cfg, file); err != nil {
-			return err
 		}
 	}
 
