@@ -15,6 +15,7 @@ type Config struct {
 	Packages         []*Package     `validate:"dive"`
 	InlineRepository []*PackageInfo `yaml:"inline_repository" validate:"dive"`
 	BinDir           string         `yaml:"bin_dir"`
+	MaxParallelism   int            `yaml:"-"`
 }
 
 type Package struct {

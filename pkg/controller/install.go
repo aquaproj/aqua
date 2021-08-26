@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -27,6 +28,19 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	}
 	if cfg.BinDir == "" {
 		cfg.BinDir = filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
+	}
+	if a := os.Getenv("AQUA_MAX_PARALLELISM"); a != "" {
+		num, err := strconv.Atoi(a)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"AQUA_MAX_PARALLELISM": a,
+			}).Warn("the environment variable AQUA_MAX_PARALLELISM must be a number")
+		} else {
+			cfg.MaxParallelism = num
+		}
+	}
+	if cfg.MaxParallelism == 0 {
+		cfg.MaxParallelism = 5
 	}
 
 	if err := validate.Struct(cfg); err != nil {
@@ -57,7 +71,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
 	failed := false
-	maxInstallChan := make(chan struct{}, 5)
+	maxInstallChan := make(chan struct{}, cfg.MaxParallelism)
 	for _, pkg := range cfg.Packages {
 		go func(pkg *Package) {
 			defer wg.Done()
