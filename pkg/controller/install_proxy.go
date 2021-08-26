@@ -24,10 +24,11 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 
 	logE.Debug("install the proxy")
 	pkgInfo := &PackageInfo{
-		Name:     "inline",
-		Type:     "github_release",
-		Repo:     "suzuki-shunsuke/aqua-proxy",
-		Artifact: nil,
+		Name:      "inline",
+		Type:      "github_release",
+		RepoOwner: "suzuki-shunsuke",
+		RepoName:  "aqua-proxy",
+		Artifact:  nil,
 		Files: []*File{
 			{
 				Name: "aqua-proxy",
