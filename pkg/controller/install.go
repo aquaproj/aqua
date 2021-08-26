@@ -57,17 +57,22 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
 	failed := false
+	maxInstallChan := make(chan struct{}, 5)
 	for _, pkg := range cfg.Packages {
 		go func(pkg *Package) {
 			defer wg.Done()
+			maxInstallChan <- struct{}{}
 			if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
+				<-maxInstallChan
 				logrus.WithFields(logrus.Fields{
 					"package_name": pkg.Name,
 				}).WithError(err).Error("install the package")
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
+				return
 			}
+			<-maxInstallChan
 		}(pkg)
 	}
 	wg.Wait()
