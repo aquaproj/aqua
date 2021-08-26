@@ -46,7 +46,11 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		}
 		for _, file := range pkgInfo.Files {
 			if file.Name == exeName {
-				fileSrc = file.Src
+				if file.Src == "" {
+					fileSrc = file.Name
+				} else {
+					fileSrc = file.Src
+				}
 				break
 			}
 		}
