@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop
+func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
 	cfg := &Config{}
 	wd, err := os.Getwd()
 	if err != nil {
@@ -28,19 +28,6 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	}
 	if cfg.BinDir == "" {
 		cfg.BinDir = filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
-	}
-	if a := os.Getenv("AQUA_MAX_PARALLELISM"); a != "" {
-		num, err := strconv.Atoi(a)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"AQUA_MAX_PARALLELISM": a,
-			}).Warn("the environment variable AQUA_MAX_PARALLELISM must be a number")
-		} else {
-			cfg.MaxParallelism = num
-		}
-	}
-	if cfg.MaxParallelism == 0 {
-		cfg.MaxParallelism = 5
 	}
 
 	if err := validate.Struct(cfg); err != nil {
@@ -70,8 +57,8 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
-	failed := false
-	maxInstallChan := make(chan struct{}, cfg.MaxParallelism)
+	failed := false //nolint:ifshort
+	maxInstallChan := make(chan struct{}, getMaxParallelism())
 	for _, pkg := range cfg.Packages {
 		go func(pkg *Package) {
 			defer wg.Done()
@@ -94,6 +81,26 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		return errors.New("it failed to install some packages")
 	}
 	return nil
+}
+
+const defaultMaxParallelism = 5
+
+func getMaxParallelism() int {
+	envMaxParallelism := os.Getenv("AQUA_MAX_PARALLELISM")
+	if envMaxParallelism == "" {
+		return defaultMaxParallelism
+	}
+	num, err := strconv.Atoi(envMaxParallelism)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"AQUA_MAX_PARALLELISM": envMaxParallelism,
+		}).Warn("the environment variable AQUA_MAX_PARALLELISM must be a number")
+		return defaultMaxParallelism
+	}
+	if num <= 0 {
+		return defaultMaxParallelism
+	}
+	return num
 }
 
 func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, cfg *Config) error {
