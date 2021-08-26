@@ -26,7 +26,8 @@ type Package struct {
 type PackageInfo struct {
 	Name        string         `validate:"required"`
 	Type        string         `validate:"required"`
-	Repo        string         `validate:"required"`
+	RepoOwner   string         `yaml:"repo_owner" validate:"required"`
+	RepoName    string         `yaml:"repo_name" validate:"required"`
 	Artifact    *text.Template `validate:"required"`
 	ArchiveType string         `yaml:"archive_type"`
 	Files       []*File        `validate:"required,dive"`

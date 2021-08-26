@@ -1,12 +1,33 @@
 packages:
+- name: aqua
+  repository: inline
+  version: v0.1.0-3
 - name: akoi
   repository: inline
   version: v2.2.1
+- name: golangci
+  repository: inline
+  version: v1.42.0
 inline_repository:
 - name: akoi
   type: github_release
-  repo: suzuki-shunsuke/akoi
+  repo_owner: suzuki-shunsuke
+  repo_name: akoi
   artifact: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
   files:
   - name: akoi
-    src: akoi
+- name: aqua
+  type: github_release
+  repo_owner: suzuki-shunsuke
+  repo_name: aqua
+  artifact: 'aqua_{{.OS}}_{{.Arch}}.tar.gz'
+  files:
+  - name: aqua
+- name: golangci
+  type: github_release
+  repo_owner: golangci
+  repo_name: golangci-lint
+  artifact: 'golangci-lint-{{trimPrefix "v" .Package.Version}}-{{.OS}}-{{.Arch}}.tar.gz'
+  files:
+  - name: golangci-lint
+    src: 'golangci-lint-{{trimPrefix "v" .Package.Version}}-{{.OS}}-{{.Arch}}/golangci-lint'

@@ -152,7 +152,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 }
 
 func getPkgPath(aquaRootDir string, pkg *Package, pkgInfo *PackageInfo, assetName string) string {
-	return filepath.Join(aquaRootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.Repo, pkg.Version, assetName)
+	return filepath.Join(aquaRootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
 }
 
 func (ctrl *Controller) createLink(cfg *Config, file *File) error {
