@@ -10,6 +10,8 @@ Command line tool to install tools and manage their versions.
 
 Please download a binary from the [Release Page](https://github.com/suzuki-shunsuke/aqua/releases).
 
+Or you can install aqua quickly with [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer).
+
 ## Tutorial
 
 [tutorial](tutorial/README.md)
@@ -31,6 +33,11 @@ Please download a binary from the [Release Page](https://github.com/suzuki-shuns
               aqua-proxy_darwin_amd64.tar.gz
                 aqua-proxy
 ```
+
+## Related Projects
+
+* [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy)
+* [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer)
 
 ## License
 
