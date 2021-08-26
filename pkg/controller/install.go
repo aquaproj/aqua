@@ -2,10 +2,12 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 )
@@ -51,10 +53,26 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		}
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(len(cfg.Packages))
+	var flagMutex sync.Mutex
+	failed := false
 	for _, pkg := range cfg.Packages {
-		if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
-			return fmt.Errorf("install the package %s: %w", pkg.Name, err)
-		}
+		go func(pkg *Package) {
+			defer wg.Done()
+			if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"package_name": pkg.Name,
+				}).WithError(err).Error("install the package")
+				flagMutex.Lock()
+				failed = true
+				flagMutex.Unlock()
+			}
+		}(pkg)
+	}
+	wg.Wait()
+	if failed {
+		return errors.New("it failed to install some packages")
 	}
 	return nil
 }
