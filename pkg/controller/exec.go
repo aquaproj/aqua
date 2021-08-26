@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
@@ -36,8 +37,20 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	for _, pkgInfo := range cfg.InlineRepository {
 		inlineRepo[pkgInfo.Name] = pkgInfo
 	}
+	fileSrc := ""
 	for _, pkg := range cfg.Packages {
-		if pkg.Name != exeName {
+		pkgInfo, ok := inlineRepo[pkg.Name]
+		if !ok {
+			logrus.Warnf("repository isn't found %s", pkg.Name)
+			continue
+		}
+		for _, file := range pkgInfo.Files {
+			if file.Name == exeName {
+				fileSrc = file.Src
+				break
+			}
+		}
+		if fileSrc == "" {
 			continue
 		}
 
@@ -45,17 +58,12 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		pkgInfo, ok := inlineRepo[pkg.Name]
-		if !ok {
-			return fmt.Errorf("repository isn't found %s", pkg.Name)
-		}
-
-		return ctrl.exec(ctx, exeName, pkg, pkgInfo, args[1:])
+		return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 	}
-	return nil
+	return errors.New("command is not found")
 }
 
-func (ctrl *Controller) exec(ctx context.Context, exeName string, pkg *Package, pkgInfo *PackageInfo, args []string) error {
+func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, src string, args []string) error {
 	assetName, err := pkgInfo.Artifact.Execute(map[string]interface{}{
 		"Package":     pkg,
 		"PackageInfo": pkgInfo,
@@ -66,13 +74,6 @@ func (ctrl *Controller) exec(ctx context.Context, exeName string, pkg *Package, 
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
-	src := ""
-	for _, file := range pkgInfo.Files {
-		if file.Name != exeName {
-			continue
-		}
-		src = file.Src
-	}
 	exePath := filepath.Join(pkgPath, src)
 	cmd := exec.Command(exePath, args...)
 	cmd.Stdin = ctrl.Stdin
