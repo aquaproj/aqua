@@ -33,7 +33,7 @@ aqua is installed in Dockerfile.
 
 ```console
 bash-5.1# aqua -v
-aqua version 0.1.0-2 (0694162ae868a018377fd8dfd8957abebf254647)
+aqua version 0.1.0-3 (91ccad4ded9412504c305e07661aa6a43e2b5a91)
 ```
 
 Please see `aqua.yaml`.
@@ -58,10 +58,10 @@ In the tutorial, you will install [akoi](https://github.com/suzuki-shunsuke/akoi
 Let's install tools with aqua.
 
 ```console
-bash-5.1# aqua add
+bash-5.1# aqua install
 INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.0-0 repository=inline
-INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.2.0 repository=inline
-INFO[0002] create a symbolic link                        link_file=/workspace/.aqua/bin/akoi new=/root/.aqua/bin/aqua-proxy
+INFO[0001] create a symbolic link                        link_file=/workspace/.aqua/bin/akoi new=/root/.aqua/bin/aqua-proxy
+INFO[0001] download and unarchive the package            package_name=akoi package_version=v2.2.0 repository=inline
 ```
 
 In addition to akoi, [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy) is installed. aqua-proxy is required for aqua.
@@ -143,19 +143,26 @@ bash-5.1# tree .aqua
 
 `.aqua/bin/akoi` is a symbolic link to [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy).
 
-Run `aqua add` again, then `aqua add` exits soon.
+Run `aqua install` again, then the command exits soon.
 
 ```console
-bash-5.1# aqua add
+bash-5.1# aqua install
+bash-5.1#
+```
+
+The subcommand `install` is a little long. You can use the short alias `i`.
+
+```console
+bash-5.1# aqua i
 bash-5.1#
 ```
 
 Please edit `aqua.yaml` to change akoi's version from v2.2.0 to v2.2.1.
 
-Run `aqua add` again, then akoi v2.2.1 is installed.
+Run `aqua i` again, then akoi v2.2.1 is installed.
 
 ```console
-bash-5.1# aqua add
+bash-5.1# aqua i
 INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.2.1 repository=inline
 ```
 
@@ -204,7 +211,7 @@ akoi version 2.2.0
 ```
 
 Please edit `aqua.yaml` to change the version to v2.1.0 and run `akoi`, then before akoi is run akoi v2.1.0 is installed automatically.
-You don't have to run `aqua add` in advance.
+You don't have to run `aqua i` in advance.
 
 ```console
 bash-5.1# akoi -v
