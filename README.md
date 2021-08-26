@@ -6,6 +6,10 @@
 
 Command line tool to install tools and manage their versions.
 
+* [Tutorial](tutorial/README.md)
+* [Usage](docs/usage.md)
+* [Configuration](docs/config.md)
+
 ## Install
 
 Please download a binary from the [Release Page](https://github.com/suzuki-shunsuke/aqua/releases).
@@ -28,14 +32,6 @@ e.g.
     version: v0.1.0-4
     install_path: /tmp/bin/aqua
 ```
-
-## Tutorial
-
-[tutorial](tutorial/README.md)
-
-## Configuration
-
-[config](docs/config.md)
 
 ## Directory Structure
 
