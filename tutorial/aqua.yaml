@@ -5,7 +5,8 @@ packages:
 inline_repository:
 - name: akoi
   type: github_release
-  repo: suzuki-shunsuke/akoi
+  repo_owner: suzuki-shunsuke
+  repo_name: akoi
   artifact: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
   files:
   - name: akoi

@@ -33,7 +33,7 @@ aqua is installed in Dockerfile.
 
 ```console
 bash-5.1# aqua -v
-aqua version 0.1.0-3 (91ccad4ded9412504c305e07661aa6a43e2b5a91)
+aqua version 0.1.0-4 (fca23667765143e13ab33da520d232bb5f1a5e5d)
 ```
 
 Please see `aqua.yaml`.
@@ -46,7 +46,8 @@ packages:
 inline_repository:
 - name: akoi
   type: github_release
-  repo: suzuki-shunsuke/akoi
+  repo_owner: suzuki-shunsuke
+  repo_name: akoi
   artifact: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
   files:
   - name: akoi
