@@ -18,22 +18,22 @@ type Config struct {
 }
 
 type Package struct {
-	Name       string
-	Repository string
-	Version    string
+	Name       string `validate:"required"`
+	Repository string `validate:"required"`
+	Version    string `validate:"required"`
 }
 
 type PackageInfo struct {
-	Name        string
-	Type        string
-	Repo        string
-	Artifact    *text.Template
-	ArchiveType string `yaml:"archive_type"`
-	Files       []*File
+	Name        string         `validate:"required"`
+	Type        string         `validate:"required"`
+	Repo        string         `validate:"required"`
+	Artifact    *text.Template `validate:"required"`
+	ArchiveType string         `yaml:"archive_type"`
+	Files       []*File        `validate:"required"`
 }
 
 type File struct {
-	Name string
+	Name string `validate:"required"`
 	Src  string
 }
 
