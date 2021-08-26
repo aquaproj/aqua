@@ -2,15 +2,18 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop
+func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
 	cfg := &Config{}
 	wd, err := os.Getwd()
 	if err != nil {
@@ -51,12 +54,53 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		}
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(len(cfg.Packages))
+	var flagMutex sync.Mutex
+	failed := false //nolint:ifshort
+	maxInstallChan := make(chan struct{}, getMaxParallelism())
 	for _, pkg := range cfg.Packages {
-		if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
-			return fmt.Errorf("install the package %s: %w", pkg.Name, err)
-		}
+		go func(pkg *Package) {
+			defer wg.Done()
+			maxInstallChan <- struct{}{}
+			if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg); err != nil {
+				<-maxInstallChan
+				logrus.WithFields(logrus.Fields{
+					"package_name": pkg.Name,
+				}).WithError(err).Error("install the package")
+				flagMutex.Lock()
+				failed = true
+				flagMutex.Unlock()
+				return
+			}
+			<-maxInstallChan
+		}(pkg)
+	}
+	wg.Wait()
+	if failed {
+		return errors.New("it failed to install some packages")
 	}
 	return nil
+}
+
+const defaultMaxParallelism = 5
+
+func getMaxParallelism() int {
+	envMaxParallelism := os.Getenv("AQUA_MAX_PARALLELISM")
+	if envMaxParallelism == "" {
+		return defaultMaxParallelism
+	}
+	num, err := strconv.Atoi(envMaxParallelism)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"AQUA_MAX_PARALLELISM": envMaxParallelism,
+		}).Warn("the environment variable AQUA_MAX_PARALLELISM must be a number")
+		return defaultMaxParallelism
+	}
+	if num <= 0 {
+		return defaultMaxParallelism
+	}
+	return num
 }
 
 func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, cfg *Config) error {
