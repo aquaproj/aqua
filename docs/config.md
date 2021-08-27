@@ -34,14 +34,15 @@ PackageInfo is the package metadata how the package is installed.
 
 * `name`: the package name
 * `type`: the package type. Only `github_release` is supported
-* `archive_type`: the archive type
+* `archive_type`: the archive type (e.g. `zip`, `tar.gz`). Basically you don't have to specify this field because `aqua` understand the archive type from the filename extension.
+  If the `archive_type` is `raw` or the filename has no extension, `aqua` treats the file isn't archived and uncompressed.
 * `files`: The list of files which the archive includes
 
 `github_release` has the following fields.
 
 * `repo_owner`: GitHub Repository owner
 * `repo_name`: GitHub Repository name
-* `artifact`: GitHub Release asset name
+* `artifact`: (type: `template string`) GitHub Release asset name
 
 ### Repository
 
@@ -51,4 +52,11 @@ Only `inline` repository is supported.
 ### type: File
 
 * `name`: the file name
-* `src`: (default: the value of `name`) the path to the file from the archive file's root.
+* `src`: (default: the value of `name`, type: `template string`) the path to the file from the archive file's root.
+
+### template string
+
+Some fields are parsed with [Go's text/template](https://pkg.go.dev/text/template) and [sprig](http://masterminds.github.io/sprig/).
+
+* `PackageInfo.artifact`
+* `File.src`
