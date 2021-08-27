@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
@@ -32,9 +33,28 @@ type PackageInfo struct {
 	Files       []*File        `validate:"required,dive"`
 }
 
+func (pkgInfo *PackageInfo) RenderArtifact(pkg *Package) (string, error) {
+	return pkgInfo.Artifact.Execute(map[string]interface{}{ //nolint:wrapcheck
+		"Package":     pkg,
+		"PackageInfo": pkgInfo,
+		"OS":          runtime.GOOS,
+		"Arch":        runtime.GOARCH,
+	})
+}
+
 type File struct {
 	Name string `validate:"required"`
 	Src  *text.Template
+}
+
+func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo) (string, error) {
+	return file.Src.Execute(map[string]interface{}{ //nolint:wrapcheck
+		"Package":     pkg,
+		"PackageInfo": pkgInfo,
+		"OS":          runtime.GOOS,
+		"Arch":        runtime.GOARCH,
+		"File":        file,
+	})
 }
 
 type Param struct {
