@@ -45,7 +45,20 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			continue
 		}
 		for _, file := range pkgInfo.Files {
-			if file.Name == exeName {
+			if file.Name == exeName { //nolint:nestif
+				assetName, err := pkgInfo.Artifact.Execute(map[string]interface{}{
+					"Package":     pkg,
+					"PackageInfo": pkgInfo,
+					"OS":          runtime.GOOS,
+					"Arch":        runtime.GOARCH,
+				})
+				if err != nil {
+					return fmt.Errorf("render the asset name: %w", err)
+				}
+				if pkgInfo.ArchiveType == "raw" || (pkgInfo.ArchiveType == "" && filepath.Ext(assetName) == "") {
+					fileSrc = assetName
+					break
+				}
 				if file.Src == nil {
 					fileSrc = file.Name
 				} else {
