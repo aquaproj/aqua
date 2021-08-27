@@ -55,7 +55,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
-	failed := false //nolint:ifshort
+	var failed bool
 	maxInstallChan := make(chan struct{}, getMaxParallelism())
 	for _, pkg := range cfg.Packages {
 		go func(pkg *Package) {
@@ -76,10 +76,12 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	}
 	wg.Wait()
 	if failed {
-		return errors.New("it failed to install some packages")
+		return errInstallFailure
 	}
 	return nil
 }
+
+var errInstallFailure = errors.New("it failed to install some packages")
 
 const defaultMaxParallelism = 5
 

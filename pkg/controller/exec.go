@@ -14,9 +14,14 @@ import (
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
+var (
+	errCommandIsRequired = errors.New("command is required")
+	errCommandIsNotFound = errors.New("command is not found")
+)
+
 func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:cyclop,funlen
 	if len(args) == 0 {
-		return errors.New("command is required")
+		return errCommandIsRequired
 	}
 	exeName := args[0]
 	cfg := &Config{}
@@ -87,7 +92,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 		return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 	}
-	return errors.New("command is not found")
+	return errCommandIsNotFound
 }
 
 func isUnarchived(archiveType, assetName string) bool {
