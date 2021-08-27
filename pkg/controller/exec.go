@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
@@ -51,12 +50,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			if file.Name != exeName {
 				continue
 			}
-			assetName, err := pkgInfo.Artifact.Execute(map[string]interface{}{
-				"Package":     pkg,
-				"PackageInfo": pkgInfo,
-				"OS":          runtime.GOOS,
-				"Arch":        runtime.GOARCH,
-			})
+			assetName, err := pkgInfo.RenderArtifact(pkg)
 			if err != nil {
 				return fmt.Errorf("render the asset name: %w", err)
 			}
@@ -68,13 +62,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 				fileSrc = file.Name
 				break
 			}
-			src, err := file.Src.Execute(map[string]interface{}{
-				"Package":     pkg,
-				"PackageInfo": pkgInfo,
-				"OS":          runtime.GOOS,
-				"Arch":        runtime.GOARCH,
-				"File":        file,
-			})
+			src, err := file.RenderSrc(pkg, pkgInfo)
 			if err != nil {
 				return fmt.Errorf("render the template file.src: %w", err)
 			}
@@ -100,12 +88,7 @@ func isUnarchived(archiveType, assetName string) bool {
 }
 
 func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, src string, args []string) error {
-	assetName, err := pkgInfo.Artifact.Execute(map[string]interface{}{
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
-		"OS":          runtime.GOOS,
-		"Arch":        runtime.GOARCH,
-	})
+	assetName, err := pkgInfo.RenderArtifact(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"sync"
 
@@ -118,12 +117,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 		return fmt.Errorf("repository isn't found %s", pkg.Name)
 	}
 
-	assetName, err := pkgInfo.Artifact.Execute(map[string]interface{}{
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
-		"OS":          runtime.GOOS,
-		"Arch":        runtime.GOARCH,
-	})
+	assetName, err := pkgInfo.RenderArtifact(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
 	}
@@ -169,13 +163,7 @@ func warnFileSrc(pkg *Package, pkgInfo *PackageInfo, pkgPath string, file *File)
 	logE := logrus.WithFields(logrus.Fields{
 		"file_name": file.Name,
 	})
-	fileSrc, err := file.Src.Execute(map[string]interface{}{
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
-		"OS":          runtime.GOOS,
-		"Arch":        runtime.GOARCH,
-		"File":        file,
-	})
+	fileSrc, err := file.RenderSrc(pkg, pkgInfo)
 	if err != nil {
 		logE.WithError(err).Warn("render the file.src")
 		return
