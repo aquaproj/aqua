@@ -19,10 +19,6 @@ func (ctrl *Controller) GetBinDir(cfgFilePath string) error {
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return err
 	}
-	if cfg.BinDir != "" {
-		fmt.Fprintln(ctrl.Stdout, cfg.BinDir)
-		return nil
-	}
 	fmt.Fprintln(ctrl.Stdout, filepath.Join(filepath.Dir(cfgFilePath), ".aqua", "bin"))
 	return nil
 }

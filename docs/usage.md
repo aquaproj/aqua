@@ -9,12 +9,12 @@ USAGE:
    aqua [global options] command [command options] [arguments...]
 
 VERSION:
-   0.1.0-6 (unreleased)
+   0.1.0-7 (unreleased)
 
 COMMANDS:
    install, i   Install tools
    exec         Execute tool
-   get-bin-dir  Get the configuration `bin_dir`
+   get-bin-dir  Show the path where the packages are installed
    version      Show version
    help, h      Shows a list of commands or help for one command
 
@@ -56,7 +56,7 @@ USAGE:
 ```console
 $ aqua help get-bin-dir
 NAME:
-   aqua get-bin-dir - Get the configuration `bin_dir`
+   aqua get-bin-dir - Show the path where the packages are installed
 
 USAGE:
    aqua get-bin-dir [arguments...]

@@ -26,15 +26,13 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
-	if cfg.BinDir == "" {
-		cfg.BinDir = filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
-	}
+	binDir := filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
 
 	if err := validate.Struct(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	if err := os.MkdirAll(cfg.BinDir, 0o775); err != nil { //nolint:gomnd
+	if err := os.MkdirAll(binDir, 0o775); err != nil { //nolint:gomnd
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	inlineRepo := make(map[string]*PackageInfo, len(cfg.InlineRepository))
@@ -63,7 +61,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg, param.OnlyLink); err != nil {
+			if err := ctrl.installPackage(ctx, inlineRepo, pkg, binDir, param.OnlyLink); err != nil {
 				<-maxInstallChan
 				logrus.WithFields(logrus.Fields{
 					"package_name": pkg.Name,
@@ -103,7 +101,7 @@ func getMaxParallelism() int {
 	return num
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, cfg *Config, onlyLink bool) error {
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error {
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -129,7 +127,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 	}
 
 	for _, file := range pkgInfo.Files {
-		if err := ctrl.createLink(cfg, file); err != nil {
+		if err := ctrl.createLink(binDir, file); err != nil {
 			return err
 		}
 	}
@@ -162,8 +160,8 @@ func getPkgPath(aquaRootDir string, pkg *Package, pkgInfo *PackageInfo, assetNam
 	return filepath.Join(aquaRootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
 }
 
-func (ctrl *Controller) createLink(cfg *Config, file *File) error {
-	linkPath := filepath.Join(cfg.BinDir, file.Name)
+func (ctrl *Controller) createLink(binDir string, file *File) error {
+	linkPath := filepath.Join(binDir, file.Name)
 	linkDest := filepath.Join(ctrl.RootDir, "bin", "aqua-proxy")
 	if fileInfo, err := os.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {

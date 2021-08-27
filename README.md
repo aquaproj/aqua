@@ -36,7 +36,7 @@ e.g.
 ## Directory Structure
 
 ```
-.aqua/bin/ # config.bin_dir (default .aqua/bin)
+.aqua/bin/
   akoi (symbolic link to ~/.aqua/bin/aqua-proxy)
 ~/.aqua/ # $AQUA_ROOT_DIR (default ~/.aqua)
   bin/
