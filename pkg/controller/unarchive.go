@@ -18,7 +18,7 @@ func getUnarchiver(filename, typ string) (interface{}, error) {
 }
 
 func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cyclop
-	if typ == "raw" || (typ == "" && filepath.Ext(filename) == "") {
+	if isUnarchived(typ, filename) {
 		logrus.Debug("archive type is raw")
 		if err := os.MkdirAll(dest, 0o775); err != nil { //nolint:gomnd
 			return fmt.Errorf("create a directory (%s): %w", dest, err)
