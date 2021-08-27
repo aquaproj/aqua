@@ -101,7 +101,7 @@ func getMaxParallelism() int {
 	return num
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error {
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error { //nolint:cyclop
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -153,7 +153,45 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 		}
 	}
 
+	for _, file := range pkgInfo.Files {
+		warnFileSrc(pkg, pkgInfo, pkgPath, file)
+	}
+
 	return nil
+}
+
+func warnFileSrc(pkg *Package, pkgInfo *PackageInfo, pkgPath string, file *File) {
+	if file.Src.Empty() {
+		return
+	}
+	logE := logrus.WithFields(logrus.Fields{
+		"file_name": file.Name,
+	})
+	fileSrc, err := file.Src.Execute(map[string]interface{}{
+		"Package":     pkg,
+		"PackageInfo": pkgInfo,
+		"OS":          runtime.GOOS,
+		"Arch":        runtime.GOARCH,
+		"File":        file,
+	})
+	if err != nil {
+		logE.WithError(err).Warn("render the file.src")
+		return
+	}
+	exePath := filepath.Join(pkgPath, fileSrc)
+	logE = logE.WithFields(logrus.Fields{
+		"exe_path": exePath,
+		"file.src": fileSrc,
+	})
+	finfo, err := os.Stat(exePath)
+	if err != nil {
+		logE.WithError(err).Warn("exe_path isn't found. Check file.src is correct")
+		return
+	}
+	if finfo.IsDir() {
+		logE.Warn("exe_path is directory. Check file.src is correct")
+		return
+	}
 }
 
 func getPkgPath(aquaRootDir string, pkg *Package, pkgInfo *PackageInfo, assetName string) string {

@@ -23,8 +23,5 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo *Pac
 	if err != nil {
 		return err
 	}
-	if err := unarchive(body, assetName, pkgInfo.ArchiveType, dest); err != nil {
-		return err
-	}
-	return nil
+	return unarchive(body, assetName, pkgInfo.ArchiveType, dest)
 }
