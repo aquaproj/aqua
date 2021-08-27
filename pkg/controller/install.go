@@ -101,7 +101,7 @@ func getMaxParallelism() int {
 	return num
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error {
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error { //nolint:cyclop
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
