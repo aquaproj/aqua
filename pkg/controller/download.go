@@ -16,7 +16,7 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo *Pac
 	logE.Info("download and unarchive the package")
 
 	if pkgInfo.Type == "github_release" && ctrl.GitHub == nil {
-		return errors.New("GITHUB_TOKEN is required for the type `github_release`")
+		return errGitHubTokenIsRequired
 	}
 
 	body, err := ctrl.downloadFromGitHub(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
@@ -25,3 +25,5 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo *Pac
 	}
 	return unarchive(body, assetName, pkgInfo.ArchiveType, dest)
 }
+
+var errGitHubTokenIsRequired = errors.New("GITHUB_TOKEN is required for the type `github_release`")
