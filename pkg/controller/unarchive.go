@@ -35,6 +35,11 @@ func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cycl
 	}
 	arc, err := getUnarchiver(filename, typ)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"archive_type":           typ,
+			"filename":               filename,
+			"filepath.Ext(filename)": filepath.Ext(filename),
+		}).Error("get the unarchiver or decompressor")
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
