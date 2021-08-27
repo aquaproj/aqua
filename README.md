@@ -29,7 +29,7 @@ e.g.
 ```yaml
 - uses: suzuki-shunsuke/aqua-installer@v0.1.0
   with:
-    version: v0.1.0-4
+    version: v0.1.0-6
     install_path: /tmp/bin/aqua
 ```
 
@@ -55,6 +55,11 @@ e.g.
 
 * [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy)
 * [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer)
+
+## Example
+
+* [suzuki-shunsuke/my-aqua-config](https://github.com/suzuki-shunsuke/my-aqua-config)
+* [suzuki-shunsuke/example-aqua](https://github.com/suzuki-shunsuke/example-aqua)
 
 ## License
 
