@@ -19,7 +19,6 @@ If the confgiuration file path isn't specified, the file named `[.]aqua.y[a]ml` 
 
 * `packages`: The list of installed packages
 * `inline_repository`: The list of package metadata
-* `bin_dir`: (default: `.aqua/bin`) The directory path where links to [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy) are created
 
 ### type: Package
 

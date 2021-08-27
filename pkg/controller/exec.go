@@ -30,9 +30,6 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
-	if cfg.BinDir == "" {
-		cfg.BinDir = filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
-	}
 	inlineRepo := make(map[string]*PackageInfo, len(cfg.InlineRepository))
 	for _, pkgInfo := range cfg.InlineRepository {
 		inlineRepo[pkgInfo.Name] = pkgInfo
@@ -82,7 +79,8 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			continue
 		}
 
-		if err := ctrl.installPackage(ctx, inlineRepo, pkg, cfg, false); err != nil {
+		binDir := filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
+		if err := ctrl.installPackage(ctx, inlineRepo, pkg, binDir, false); err != nil {
 			return err
 		}
 

@@ -64,7 +64,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			},
 			{
 				Name:   "get-bin-dir",
-				Usage:  "Get the configuration `bin_dir`",
+				Usage:  "Show the path where the packages are installed",
 				Action: runner.getBinDirAction,
 			},
 			{
