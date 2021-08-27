@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 
@@ -15,8 +16,20 @@ var (
 	date    = "" //nolint:gochecknoglobals
 )
 
+type HasExitCode interface {
+	ExitCode() int
+}
+
 func main() {
 	if err := core(); err != nil {
+		var hasExitCode HasExitCode
+		if errors.As(err, &hasExitCode) {
+			code := hasExitCode.ExitCode()
+			logrus.WithError(err).WithFields(logrus.Fields{
+				"exit_code": code,
+			}).Debug("command failed")
+			os.Exit(code)
+		}
 		logrus.Fatal(err)
 	}
 }

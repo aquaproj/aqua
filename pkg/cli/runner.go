@@ -27,10 +27,11 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		compiledDate = time.Now()
 	}
 	app := cli.App{
-		Name:     "aqua",
-		Usage:    "General version manager. https://github.com/suzuki-shunsuke/aqua",
-		Version:  runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
-		Compiled: compiledDate,
+		Name:           "aqua",
+		Usage:          "General version manager. https://github.com/suzuki-shunsuke/aqua",
+		Version:        runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
+		Compiled:       compiledDate,
+		ExitErrHandler: exitErrHandlerFunc,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "log-level",
@@ -76,4 +77,11 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 	}
 
 	return app.RunContext(ctx, args) //nolint:wrapcheck
+}
+
+func exitErrHandlerFunc(c *cli.Context, err error) {
+	if c.Command.Name != "exec" {
+		cli.HandleExitCoder(err)
+		return
+	}
 }
