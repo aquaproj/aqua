@@ -10,6 +10,7 @@ import (
 	"runtime"
 
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
@@ -111,7 +112,7 @@ func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *Package
 	cmd.Stderr = ctrl.Stderr
 	runner := timeout.NewRunner(0)
 	if err := runner.Run(ctx, cmd); err != nil {
-		return fmt.Errorf("execute the command: %w", err)
+		return ecerror.Wrap(err, cmd.ProcessState.ExitCode())
 	}
 	return nil
 }

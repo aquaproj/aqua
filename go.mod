@@ -8,6 +8,7 @@ require (
 	github.com/google/go-github/v38 v38.1.0
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/sirupsen/logrus v1.8.1
+	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.0.0
 	github.com/suzuki-shunsuke/go-template-unmarshaler v0.1.0
 	github.com/suzuki-shunsuke/go-timeout v1.0.0
