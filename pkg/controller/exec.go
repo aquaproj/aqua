@@ -45,24 +45,38 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			continue
 		}
 		for _, file := range pkgInfo.Files {
-			if file.Name == exeName {
-				if file.Src == nil {
-					fileSrc = file.Name
-				} else {
-					src, err := file.Src.Execute(map[string]interface{}{
-						"Package":     pkg,
-						"PackageInfo": pkgInfo,
-						"OS":          runtime.GOOS,
-						"Arch":        runtime.GOARCH,
-						"File":        file,
-					})
-					if err != nil {
-						return fmt.Errorf("render the template file.src: %w", err)
-					}
-					fileSrc = src
-				}
+			if file.Name != exeName {
+				continue
+			}
+			assetName, err := pkgInfo.Artifact.Execute(map[string]interface{}{
+				"Package":     pkg,
+				"PackageInfo": pkgInfo,
+				"OS":          runtime.GOOS,
+				"Arch":        runtime.GOARCH,
+			})
+			if err != nil {
+				return fmt.Errorf("render the asset name: %w", err)
+			}
+			if isUnarchived(pkgInfo.ArchiveType, assetName) {
+				fileSrc = assetName
 				break
 			}
+			if file.Src == nil {
+				fileSrc = file.Name
+				break
+			}
+			src, err := file.Src.Execute(map[string]interface{}{
+				"Package":     pkg,
+				"PackageInfo": pkgInfo,
+				"OS":          runtime.GOOS,
+				"Arch":        runtime.GOARCH,
+				"File":        file,
+			})
+			if err != nil {
+				return fmt.Errorf("render the template file.src: %w", err)
+			}
+			fileSrc = src
+			break
 		}
 		if fileSrc == "" {
 			continue
@@ -75,6 +89,10 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 	}
 	return errors.New("command is not found")
+}
+
+func isUnarchived(archiveType, assetName string) bool {
+	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
 }
 
 func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, src string, args []string) error {
