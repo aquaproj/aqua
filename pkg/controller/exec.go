@@ -35,15 +35,15 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
-	inlineRepo := make(map[string]*PackageInfo, len(cfg.InlineRepository))
-	for _, pkgInfo := range cfg.InlineRepository {
-		inlineRepo[pkgInfo.Name] = pkgInfo
+	inlineRegistry := make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+	for _, pkgInfo := range cfg.InlineRegistry {
+		inlineRegistry[pkgInfo.Name] = pkgInfo
 	}
 	fileSrc := ""
 	for _, pkg := range cfg.Packages {
-		pkgInfo, ok := inlineRepo[pkg.Name]
+		pkgInfo, ok := inlineRegistry[pkg.Name]
 		if !ok {
-			logrus.Warnf("repository isn't found %s", pkg.Name)
+			logrus.Warnf("registry isn't found %s", pkg.Name)
 			continue
 		}
 		for _, file := range pkgInfo.Files {
@@ -74,7 +74,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		}
 
 		binDir := filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
-		if err := ctrl.installPackage(ctx, inlineRepo, pkg, binDir, false); err != nil {
+		if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false); err != nil {
 			return err
 		}
 

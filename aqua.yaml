@@ -1,11 +1,11 @@
 packages:
 - name: akoi
-  repository: inline
+  registry: inline
   version: v2.2.1
 - name: golangci
-  repository: inline
+  registry: inline
   version: v1.42.0
-inline_repository:
+inline_registry:
 - name: akoi
   type: github_release
   repo_owner: suzuki-shunsuke

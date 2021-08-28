@@ -41,9 +41,9 @@ Please see `aqua.yaml`.
 ```yaml
 packages:
 - name: akoi
-  repository: inline
+  registry: inline
   version: v2.2.0
-inline_repository:
+inline_registry:
 - name: akoi
   type: github_release
   repo_owner: suzuki-shunsuke
@@ -60,9 +60,9 @@ Let's install tools with aqua.
 
 ```console
 bash-5.1# aqua install
-INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.0-0 repository=inline
+INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.0-0 registry=inline
 INFO[0001] create a symbolic link                        link_file=/workspace/.aqua/bin/akoi new=/root/.aqua/bin/aqua-proxy
-INFO[0001] download and unarchive the package            package_name=akoi package_version=v2.2.0 repository=inline
+INFO[0001] download and unarchive the package            package_name=akoi package_version=v2.2.0 registry=inline
 ```
 
 In addition to akoi, [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy) is installed. aqua-proxy is required for aqua.
@@ -164,7 +164,7 @@ Run `aqua i` again, then akoi v2.2.1 is installed.
 
 ```console
 bash-5.1# aqua i
-INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.2.1 repository=inline
+INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.2.1 registry=inline
 ```
 
 ```console
@@ -216,6 +216,6 @@ You don't have to run `aqua i` in advance.
 
 ```console
 bash-5.1# akoi -v
-INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.1.0 repository=inline
+INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.1.0 registry=inline
 akoi version 2.1.0
 ```

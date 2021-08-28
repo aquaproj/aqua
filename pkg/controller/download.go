@@ -11,7 +11,7 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo *Pac
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
-		"repository":      pkg.Repository,
+		"registry":        pkg.Registry,
 	})
 	logE.Info("download and unarchive the package")
 
