@@ -18,44 +18,91 @@ var (
 	errCommandIsNotFound = errors.New("command is not found")
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:funlen,cyclop
 	if len(args) == 0 {
 		return errCommandIsRequired
 	}
+
 	exeName := args[0]
-	cfg := &Config{}
+
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 
-	param.ConfigFilePath = ctrl.getConfigFilePath(wd, param.ConfigFilePath)
-	if param.ConfigFilePath == "" {
-		return errConfigFileNotFound
+	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
+
+	var (
+		pkg            *Package
+		pkgInfo        *PackageInfo
+		file           *File
+		inlineRegistry map[string]*PackageInfo
+	)
+	if cfgFilePath != "" { //nolint:nestif
+		cfg := &Config{}
+		if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
+			return err
+		}
+
+		inlineRegistry = make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+		for _, pkgInfo := range cfg.InlineRegistry {
+			inlineRegistry[pkgInfo.Name] = pkgInfo
+		}
+
+		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
+		if pkg == nil {
+			cfgFilePath = filepath.Join(ctrl.RootDir, "global", "aqua.yaml")
+			if _, err := os.Stat(cfgFilePath); err != nil {
+				return errCommandIsNotFound
+			}
+			cfg := &Config{}
+			if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
+				return err
+			}
+
+			inlineRegistry = make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+			for _, pkgInfo := range cfg.InlineRegistry {
+				inlineRegistry[pkgInfo.Name] = pkgInfo
+			}
+
+			pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
+			if pkg == nil {
+				return errCommandIsNotFound
+			}
+		}
+	} else {
+		cfgFilePath = filepath.Join(ctrl.RootDir, "global", "aqua.yaml")
+		if _, err := os.Stat(cfgFilePath); err != nil {
+			return errCommandIsNotFound
+		}
+		cfg := &Config{}
+		if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
+			return err
+		}
+
+		inlineRegistry = make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+		for _, pkgInfo := range cfg.InlineRegistry {
+			inlineRegistry[pkgInfo.Name] = pkgInfo
+		}
+
+		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
+		if pkg == nil {
+			return errCommandIsNotFound
+		}
 	}
-	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
+
+	fileSrc, err := ctrl.getFileSrc(pkg, pkgInfo, file)
+	if err != nil {
 		return err
 	}
-	inlineRegistry := make(map[string]*PackageInfo, len(cfg.InlineRegistry))
-	for _, pkgInfo := range cfg.InlineRegistry {
-		inlineRegistry[pkgInfo.Name] = pkgInfo
-	}
-	pkg, pkgInfo, file := ctrl.findExecFile(inlineRegistry, cfg, exeName)
-	if pkg != nil {
-		fileSrc, err := ctrl.getFileSrc(pkg, pkgInfo, file)
-		if err != nil {
-			return err
-		}
 
-		binDir := filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
-		if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false); err != nil {
-			return err
-		}
+	binDir := filepath.Join(filepath.Dir(cfgFilePath), ".aqua", "bin")
 
-		return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
+	if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false); err != nil {
+		return err
 	}
 
-	return errCommandIsNotFound
+	return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 }
 
 func (ctrl *Controller) getFileSrc(pkg *Package, pkgInfo *PackageInfo, file *File) (string, error) {
