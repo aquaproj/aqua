@@ -1,8 +1,8 @@
 packages:
 - name: akoi
-  repository: inline
+  registry: inline
   version: v2.2.0
-inline_repository:
+inline_registry:
 - name: akoi
   type: github_release
   repo_owner: suzuki-shunsuke

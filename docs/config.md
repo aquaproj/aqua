@@ -18,13 +18,13 @@ If the confgiuration file path isn't specified, the file named `[.]aqua.y[a]ml` 
 ## Configuration File Format
 
 * `packages`: The list of installed packages
-* `inline_repository`: The list of package metadata
+* `inline_registry`: The list of package metadata
 
 ### type: Package
 
 * `name`: the package name. This is used to map the package and the package metadata
-  `name` must be unique in the same [Repository](#repository)
-* `repository`: the name of package metadata
+  `name` must be unique in the same [Registry](#registry)
+* `registry`: the name of package metadata
 * `version`: the package version
 
 ### type: PackageInfo
@@ -43,10 +43,10 @@ PackageInfo is the package metadata how the package is installed.
 * `repo_name`: GitHub Repository name
 * `asset`: (type: `template string`) GitHub Release asset name
 
-### Repository
+### Registry
 
-`Repository` is the list of package metadata.
-Only `inline` repository is supported.
+`Registry` is the list of package metadata.
+Only `inline` registry is supported.
 
 ### type: File
 

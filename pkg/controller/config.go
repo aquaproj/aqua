@@ -13,14 +13,14 @@ import (
 )
 
 type Config struct {
-	Packages         []*Package     `validate:"dive"`
-	InlineRepository []*PackageInfo `yaml:"inline_repository" validate:"dive"`
+	Packages       []*Package     `validate:"dive"`
+	InlineRegistry []*PackageInfo `yaml:"inline_registry" validate:"dive"`
 }
 
 type Package struct {
-	Name       string `validate:"required"`
-	Repository string `validate:"required"`
-	Version    string `validate:"required"`
+	Name     string `validate:"required"`
+	Registry string `validate:"required"`
+	Version  string `validate:"required"`
 }
 
 type PackageInfo struct {

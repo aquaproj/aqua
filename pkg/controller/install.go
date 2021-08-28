@@ -34,9 +34,9 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	if err := os.MkdirAll(binDir, 0o775); err != nil { //nolint:gomnd
 		return fmt.Errorf("create the directory: %w", err)
 	}
-	inlineRepo := make(map[string]*PackageInfo, len(cfg.InlineRepository))
-	for _, pkgInfo := range cfg.InlineRepository {
-		inlineRepo[pkgInfo.Name] = pkgInfo
+	inlineRegistry := make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+	for _, pkgInfo := range cfg.InlineRegistry {
+		inlineRegistry[pkgInfo.Name] = pkgInfo
 	}
 
 	rootBin := filepath.Join(ctrl.RootDir, "bin")
@@ -60,7 +60,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			if err := ctrl.installPackage(ctx, inlineRepo, pkg, binDir, param.OnlyLink); err != nil {
+			if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, param.OnlyLink); err != nil {
 				<-maxInstallChan
 				logrus.WithFields(logrus.Fields{
 					"package_name": pkg.Name,
@@ -102,19 +102,19 @@ func getMaxParallelism() int {
 	return num
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error { //nolint:cyclop
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error { //nolint:cyclop
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
-		"repository":      pkg.Repository,
+		"registry":        pkg.Registry,
 	})
 	logE.Debug("install the package")
-	if pkg.Repository != "inline" {
-		return fmt.Errorf("only inline repository is supported (%s)", pkg.Repository)
+	if pkg.Registry != "inline" {
+		return fmt.Errorf("only inline registry is supported (%s)", pkg.Registry)
 	}
-	pkgInfo, ok := inlineRepo[pkg.Name]
+	pkgInfo, ok := inlineRegistry[pkg.Name]
 	if !ok {
-		return fmt.Errorf("repository isn't found %s", pkg.Name)
+		return fmt.Errorf("registry isn't found %s", pkg.Name)
 	}
 
 	assetName, err := pkgInfo.RenderAsset(pkg)

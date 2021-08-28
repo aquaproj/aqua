@@ -12,14 +12,14 @@ import (
 
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
-		Name:       "aqua-proxy",
-		Version:    "v0.1.0-1",
-		Repository: "inline",
+		Name:     "aqua-proxy",
+		Version:  "v0.1.0-1",
+		Registry: "inline",
 	}
 	logE := logrus.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
-		"repository":      pkg.Repository,
+		"registry":        pkg.Registry,
 	})
 
 	logE.Debug("install the proxy")
@@ -39,7 +39,6 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	assetName := "aqua-proxy_" + runtime.GOOS + "_" + runtime.GOARCH + ".tar.gz"
 
 	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
-	// check if the repository exists
 	logE.Debug("check if the package is already installed")
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
