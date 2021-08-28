@@ -1,7 +1,4 @@
 packages:
-- name: aqua
-  repository: inline
-  version: v0.1.0-3
 - name: akoi
   repository: inline
   version: v2.2.1
@@ -16,13 +13,6 @@ inline_repository:
   asset: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
   files:
   - name: akoi
-- name: aqua
-  type: github_release
-  repo_owner: suzuki-shunsuke
-  repo_name: aqua
-  artifact: 'aqua_{{.OS}}_{{.Arch}}.tar.gz'
-  files:
-  - name: aqua
 - name: golangci
   type: github_release
   repo_owner: golangci
