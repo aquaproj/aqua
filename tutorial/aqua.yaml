@@ -1,13 +1,13 @@
 packages:
-- name: akoi
+- name: gh
   registry: inline
-  version: v2.2.0
+  version: v2.0.0
 inline_registry:
-- name: akoi
+- name: gh
   type: github_release
-  repo_owner: suzuki-shunsuke
-  repo_name: akoi
-  asset: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+  repo_owner: cli
+  repo_name: cli
+  asset: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}.tar.gz'
   files:
-  - name: akoi
-    src: akoi
+  - name: gh
+    src: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}/bin/gh'
