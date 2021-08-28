@@ -14,7 +14,6 @@ VERSION:
 COMMANDS:
    install, i   Install tools
    exec         Execute tool
-   get-bin-dir  Show the path where the packages are installed
    version      Show version
    help, h      Shows a list of commands or help for one command
 
@@ -49,15 +48,4 @@ NAME:
 
 USAGE:
    aqua exec [arguments...]
-```
-
-## aqua get-bin-dir
-
-```console
-$ aqua help get-bin-dir
-NAME:
-   aqua get-bin-dir - Show the path where the packages are installed
-
-USAGE:
-   aqua get-bin-dir [arguments...]
 ```
