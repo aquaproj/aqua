@@ -117,7 +117,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRepo map[strin
 		return fmt.Errorf("repository isn't found %s", pkg.Name)
 	}
 
-	assetName, err := pkgInfo.RenderArtifact(pkg)
+	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
 	}

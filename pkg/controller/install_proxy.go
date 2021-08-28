@@ -28,7 +28,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		Type:      "github_release",
 		RepoOwner: "suzuki-shunsuke",
 		RepoName:  "aqua-proxy",
-		Artifact:  nil,
+		Asset:     nil,
 		Files: []*File{
 			{
 				Name: "aqua-proxy",

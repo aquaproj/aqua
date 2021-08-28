@@ -41,7 +41,7 @@ PackageInfo is the package metadata how the package is installed.
 
 * `repo_owner`: GitHub Repository owner
 * `repo_name`: GitHub Repository name
-* `artifact`: (type: `template string`) GitHub Release asset name
+* `asset`: (type: `template string`) GitHub Release asset name
 
 ### Repository
 
@@ -57,12 +57,12 @@ Only `inline` repository is supported.
 
 Some fields are parsed with [Go's text/template](https://pkg.go.dev/text/template) and [sprig](http://masterminds.github.io/sprig/).
 
-* `PackageInfo.artifact`
+* `PackageInfo.asset`
 * `File.src`
 
 The following variables are passed to the template.
 
-`PackageInfo.artifact`
+`PackageInfo.asset`
 
 * `Package`: the Package
   * `Name`

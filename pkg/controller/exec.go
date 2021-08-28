@@ -50,7 +50,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			if file.Name != exeName {
 				continue
 			}
-			assetName, err := pkgInfo.RenderArtifact(pkg)
+			assetName, err := pkgInfo.RenderAsset(pkg)
 			if err != nil {
 				return fmt.Errorf("render the asset name: %w", err)
 			}
@@ -88,7 +88,7 @@ func isUnarchived(archiveType, assetName string) bool {
 }
 
 func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, src string, args []string) error {
-	assetName, err := pkgInfo.RenderArtifact(pkg)
+	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
 	}
