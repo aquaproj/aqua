@@ -33,7 +33,7 @@ aqua is installed in Dockerfile.
 
 ```console
 bash-5.1# aqua -v
-aqua version 0.1.0-9 (8c2be89b44815cae81fe782016d0bd15f7731226)
+aqua version 0.1.0-10 (533eba47b828a5a4ba89602393c41d71ec644e89)
 ```
 
 Please see `aqua.yaml`.
@@ -60,7 +60,7 @@ Let's install tools with aqua.
 
 ```console
 bash-5.1# aqua install
-INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.0-1 registry=inline
+INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.0 registry=inline
 INFO[0002] create a symbolic link                        link_file=/workspace/.aqua/bin/gh new=/root/.aqua/bin/aqua-proxy
 INFO[0002] download and unarchive the package            package_name=gh package_version=v2.0.0 registry=inline
 ```
@@ -95,7 +95,7 @@ Please check `~/.aqua` and `.aqua`.
 bash-5.1# tree -L 11 ~/.aqua
 /root/.aqua
 ├── bin
-│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0-1/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
+│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
 └── pkgs
     └── github_release
         └── github.com
@@ -112,7 +112,7 @@ bash-5.1# tree -L 11 ~/.aqua
             │                           └── man1
             └── suzuki-shunsuke
                 └── aqua-proxy
-                    └── v0.1.0-1
+                    └── v0.1.0
                         └── aqua-proxy_linux_amd64.tar.gz
                             ├── LICENSE
                             ├── README.md
@@ -157,7 +157,7 @@ INFO[0000] download and unarchive the package            package_name=gh package
 bash-5.1# tree -L 11 ~/.aqua
 /root/.aqua
 ├── bin
-│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0-1/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
+│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
 └── pkgs
     └── github_release
         └── github.com
@@ -183,7 +183,7 @@ bash-5.1# tree -L 11 ~/.aqua
             │                           └── man1
             └── suzuki-shunsuke
                 └── aqua-proxy
-                    └── v0.1.0-1
+                    └── v0.1.0
                         └── aqua-proxy_linux_amd64.tar.gz
                             ├── LICENSE
                             ├── README.md
