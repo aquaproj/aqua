@@ -133,7 +133,7 @@ e.g.
       github.com/
         suzuki-shunsuke/
           aqua-proxy/
-            v0.1.0-1/
+            v0.1.0/
               aqua-proxy_darwin_amd64.tar.gz
                 aqua-proxy
 ```
