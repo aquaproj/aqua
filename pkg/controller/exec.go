@@ -18,7 +18,7 @@ var (
 	errCommandIsNotFound = errors.New("command is not found")
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:cyclop,funlen
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error {
 	if len(args) == 0 {
 		return errCommandIsRequired
 	}
@@ -28,6 +28,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
+
 	param.ConfigFilePath = ctrl.getConfigFilePath(wd, param.ConfigFilePath)
 	if param.ConfigFilePath == "" {
 		return errConfigFileNotFound
@@ -39,38 +40,11 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	for _, pkgInfo := range cfg.InlineRegistry {
 		inlineRegistry[pkgInfo.Name] = pkgInfo
 	}
-	fileSrc := ""
-	for _, pkg := range cfg.Packages {
-		pkgInfo, ok := inlineRegistry[pkg.Name]
-		if !ok {
-			logrus.Warnf("registry isn't found %s", pkg.Name)
-			continue
-		}
-		for _, file := range pkgInfo.Files {
-			if file.Name != exeName {
-				continue
-			}
-			assetName, err := pkgInfo.RenderAsset(pkg)
-			if err != nil {
-				return fmt.Errorf("render the asset name: %w", err)
-			}
-			if isUnarchived(pkgInfo.ArchiveType, assetName) {
-				fileSrc = assetName
-				break
-			}
-			if file.Src == nil {
-				fileSrc = file.Name
-				break
-			}
-			src, err := file.RenderSrc(pkg, pkgInfo)
-			if err != nil {
-				return fmt.Errorf("render the template file.src: %w", err)
-			}
-			fileSrc = src
-			break
-		}
-		if fileSrc == "" {
-			continue
+	pkg, pkgInfo, file := ctrl.findExecFile(inlineRegistry, cfg, exeName)
+	if pkg != nil {
+		fileSrc, err := ctrl.getFileSrc(pkg, pkgInfo, file)
+		if err != nil {
+			return err
 		}
 
 		binDir := filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
@@ -80,7 +54,42 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 		return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 	}
+
 	return errCommandIsNotFound
+}
+
+func (ctrl *Controller) getFileSrc(pkg *Package, pkgInfo *PackageInfo, file *File) (string, error) {
+	assetName, err := pkgInfo.RenderAsset(pkg)
+	if err != nil {
+		return "", fmt.Errorf("render the asset name: %w", err)
+	}
+	if isUnarchived(pkgInfo.ArchiveType, assetName) {
+		return assetName, nil
+	}
+	if file.Src == nil {
+		return file.Name, nil
+	}
+	src, err := file.RenderSrc(pkg, pkgInfo)
+	if err != nil {
+		return "", fmt.Errorf("render the template file.src: %w", err)
+	}
+	return src, nil
+}
+
+func (ctrl *Controller) findExecFile(inlineRegistry map[string]*PackageInfo, cfg *Config, exeName string) (*Package, *PackageInfo, *File) {
+	for _, pkg := range cfg.Packages {
+		pkgInfo, ok := inlineRegistry[pkg.Name]
+		if !ok {
+			logrus.Warnf("registry isn't found %s", pkg.Name)
+			continue
+		}
+		for _, file := range pkgInfo.Files {
+			if file.Name == exeName {
+				return pkg, pkgInfo, file
+			}
+		}
+	}
+	return nil, nil, nil
 }
 
 func isUnarchived(archiveType, assetName string) bool {
