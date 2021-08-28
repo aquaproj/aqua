@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
@@ -88,12 +89,23 @@ func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 
 type ConfigFinder interface {
 	Find(wd string) string
+	FindGlobal(rootDir string) string
 }
 
 type configFinder struct{}
 
 func (finder *configFinder) Find(wd string) string {
 	return findconfig.Find(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+}
+
+func (finder *configFinder) FindGlobal(rootDir string) string {
+	for _, file := range []string{"aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml"} {
+		cfgFilePath := filepath.Join(rootDir, "global", file)
+		if _, err := os.Stat(cfgFilePath); err == nil {
+			return cfgFilePath
+		}
+	}
+	return ""
 }
 
 type ConfigReader interface {
