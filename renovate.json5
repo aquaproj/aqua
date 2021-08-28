@@ -25,6 +25,14 @@
       "matchStrings": [
         "aqua_installer_version: (?<currentValue>.*)"
       ]
+    },
+    {
+      "fileMatch": [".*\\.go"],
+      "depNameTemplate": "suzuki-shunsuke/aqua-proxy",
+      "datasourceTemplate": "github-releases",
+      "matchStrings": [
+        '"(?<currentValue>.*)", // renovate: depName=suzuki-shunsuke/aqua-proxy'
+      ]
     }
   ]
 }
