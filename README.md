@@ -67,9 +67,12 @@ jq-1.6
 
 ## Main Usecase
 
-1. Install tools in CI/CD
-1. Install tools for your project's local development
-1. Install tools in your laptop
+* Install tools in CI/CD
+  * [Example](https://github.com/suzuki-shunsuke/example-aqua#install-tools-in-cicd)
+* Install tools for your project's local development
+  * [Example](https://github.com/suzuki-shunsuke/example-aqua#install-tools-for-this-projects-local-development)
+* Install tools in your laptop
+  * [Example](https://github.com/suzuki-shunsuke/my-aqua-config)
 
 ## Feature
 
