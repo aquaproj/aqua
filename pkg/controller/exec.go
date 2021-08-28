@@ -51,7 +51,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
 		if pkg == nil {
-			cfgFilePath = filepath.Join(ctrl.RootDir, "global", "aqua.yaml")
+			cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 			if _, err := os.Stat(cfgFilePath); err != nil {
 				return errCommandIsNotFound
 			}
@@ -71,7 +71,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			}
 		}
 	} else {
-		cfgFilePath = filepath.Join(ctrl.RootDir, "global", "aqua.yaml")
+		cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 		if _, err := os.Stat(cfgFilePath); err != nil {
 			return errCommandIsNotFound
 		}
