@@ -19,7 +19,7 @@
       ]
     },
     {
-      "fileMatch": ["tutorial/docker-compose.yaml"],
+      "fileMatch": ["tutorial/docker-compose.yml"],
       "depNameTemplate": "suzuki-shunsuke/aqua-installer",
       "datasourceTemplate": "github-releases",
       "matchStrings": [
