@@ -4,11 +4,83 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/aqua.svg)](https://github.com/suzuki-shunsuke/aqua)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/aqua/main/LICENSE)
 
-Command line tool to install tools and manage their versions.
+Version manager of CLI.
+
+## Quick Start
+
+Install aqua.
+
+```console
+$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.0/aqua-installer | bash -s -- -i bin/aqua
+$ export PATH=$PWD/bin:$PWD/.aqua/bin:$PATH
+$ export GITHUB_TOKEN=<your personal access token>
+```
+
+Write `aqua.yaml`.
+
+```yaml
+packages:
+- name: jq
+  registry: inline
+  version: jq-1.5
+inline_registry:
+- name: jq
+  type: github_release
+  repo_owner: stedolan
+  repo_name: jq
+  asset: 'jq-{{if eq .OS "darwin"}}osx{{else}}{{.OS}}{{end}}-{{.Arch}}'
+  files:
+  - name: jq
+```
+
+Install tools.
+
+```console
+$ aqua i
+```
+
+Tools are installed successfully.
+
+```console
+$ jq --version
+jq-1.5
+```
+
+Edit `aqua.yaml`.
+
+```
+$ sed -i "s/jq-1\.5/jq-1.6/" aqua.yaml
+```
+
+Run `jq` again, then jq's new version is installed automatically and `jq` is run.
+
+```
+$ jq --version
+jq-1.6
+```
+
+## Index
 
 * [Tutorial](tutorial/README.md)
 * [Usage](docs/usage.md)
 * [Configuration](docs/config.md)
+
+## Main Usecase
+
+1. Install tools in CI/CD
+1. Install tools for your project's local development
+1. Install tools in your laptop
+
+## Feature
+
+* Declarative YAML Configuration
+  * You don't have to execute commands imperatively to install tools
+* Manage versions per project
+  * You can change tools version per project
+* Install tools when they are executed
+  * When you execute the tool which isn't installed yet, aqua installs the tool and execute the tool
+* Share tools across projects
+  * aqua installs tools in the shared directory `~/.aqua`. It saves time and disk to install tools
 
 ## Install
 
@@ -29,24 +101,36 @@ e.g.
 ```yaml
 - uses: suzuki-shunsuke/aqua-installer@v0.1.0
   with:
-    version: v0.1.0-6
+    version: v0.1.0-9
     install_path: /tmp/bin/aqua
 ```
 
-## Directory Structure
+## Where are tools installed?
+
+* the directory `.aqua`. This is created in the same directory as `aqua.yaml`
+  * symbolic links are created in `.aqua/bin`, so add this to the environment variable `PATH`
+* `$HOME/.aqua`: tools are installed in `$HOME/.aqua/pkgs`
+* `$HOME/.aqua/global`: Global configuration. Symbolic links are created in `$HOME/.aqua/global/.aqua/bin`, so add this to the environment variable `PATH`
 
 ```
-.aqua/bin/
-  akoi (symbolic link to ~/.aqua/bin/aqua-proxy)
+(your working directory)/
+  aqua.yaml
+  .aqua/bin/
+    jq (symbolic link to ~/.aqua/bin/aqua-proxy)
+
 ~/.aqua/ # $AQUA_ROOT_DIR (default ~/.aqua)
   bin/
     aqua-proxy (symbolic link to aqua-proxy)
+  global/
+    aqua.yaml # global configuration
+    .aqua/
+      bin/
   pkgs/
     github_release/
       github.com/
         suzuki-shunsuke/
           aqua-proxy/
-            v0.1.0-0/
+            v0.1.0-1/
               aqua-proxy_darwin_amd64.tar.gz
                 aqua-proxy
 ```
