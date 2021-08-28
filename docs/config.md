@@ -59,3 +59,31 @@ Some fields are parsed with [Go's text/template](https://pkg.go.dev/text/templat
 
 * `PackageInfo.artifact`
 * `File.src`
+
+The following variables are passed to the template.
+
+`PackageInfo.artifact`
+
+* `Package`: the Package
+  * `Name`
+  * `Version`
+* `PackageInfo`: the Package
+  * `Name`
+  * `RepoOwner`
+  * `RepoName`
+* `OS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
+* `Arch`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
+
+`File.src`
+
+* `Package`: Package
+  * `Name`
+  * `Version`
+* `PackageInfo`: PackageInfo
+  * `Name`
+  * `RepoOwner`
+  * `RepoName`
+* `OS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
+* `Arch`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
+* `File`: File
+  * `Name`
