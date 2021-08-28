@@ -8,7 +8,7 @@
 
 aqua doesn't depends on these tools, but in the tutorial you use them.
 
-And the environment variable `GITHUB_TOKEN`, which is a GitHub Access Token, is required.
+And the environment variable `GITHUB_TOKEN`, which is a [GitHub Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token), is required. The required permission is `repo`.
 
 ## Tutorial
 
@@ -33,64 +33,46 @@ aqua is installed in Dockerfile.
 
 ```console
 bash-5.1# aqua -v
-aqua version 0.1.0-4 (fca23667765143e13ab33da520d232bb5f1a5e5d)
+aqua version 0.1.0-9 (8c2be89b44815cae81fe782016d0bd15f7731226)
 ```
 
 Please see `aqua.yaml`.
 
 ```yaml
 packages:
-- name: akoi
+- name: gh
   registry: inline
-  version: v2.2.0
+  version: v2.0.0 # renovate: depName=cli/cli
 inline_registry:
-- name: akoi
+- name: gh
   type: github_release
-  repo_owner: suzuki-shunsuke
-  repo_name: akoi
-  asset: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+  repo_owner: cli
+  repo_name: cli
+  asset: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}.tar.gz'
   files:
-  - name: akoi
-    src: akoi
+  - name: gh
+    src: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}/bin/gh'
 ```
 
-In the tutorial, you will install [akoi](https://github.com/suzuki-shunsuke/akoi) and switch the version of akoi with aqua.
+In the tutorial, you will install [gh](https://cli.github.com/) and switch the version of gh with aqua.
 
 Let's install tools with aqua.
 
 ```console
 bash-5.1# aqua install
-INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.0-0 registry=inline
-INFO[0001] create a symbolic link                        link_file=/workspace/.aqua/bin/akoi new=/root/.aqua/bin/aqua-proxy
-INFO[0001] download and unarchive the package            package_name=akoi package_version=v2.2.0 registry=inline
+INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.0-1 registry=inline
+INFO[0002] create a symbolic link                        link_file=/workspace/.aqua/bin/gh new=/root/.aqua/bin/aqua-proxy
+INFO[0002] download and unarchive the package            package_name=gh package_version=v2.0.0 registry=inline
 ```
 
-In addition to akoi, [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy) is installed. aqua-proxy is required for aqua.
+In addition to gh, [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy) is installed. aqua-proxy is required for aqua.
 
 You can execute the installed tool by `aqua exec` command.
 
 ```console
-bash-5.1# aqua exec -- akoi help
-NAME:
-   akoi - binary version control system
-
-USAGE:
-   akoi [global options] command [command options] [arguments...]
-
-VERSION:
-   2.2.0
-
-AUTHOR:
-   suzuki-shunsuke https://github.com/suzuki-shunsuke
-
-COMMANDS:
-     init     create a configuration file if it doesn't exist
-     install  intall binaries
-     help, h  Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --help, -h     show help
-   --version, -v  print the version
+bash-5.1# aqua exec -- gh version
+gh version 2.0.0 (2021-08-24)
+https://github.com/cli/cli/releases/tag/v2.0.0
 ```
 
 By adding `.aqua/bin` to the environment variable `PATH`, you can execute the installed tool directly.
@@ -102,49 +84,53 @@ export PATH=$PWD/.aqua/bin:$PATH
 In this tutorial, the environment variable is already set in docker-compose.yml.
 
 ```console
-bash-5.1# akoi -v
-akoi version 2.2.0
+bash-5.1# gh version
+gh version 2.0.0 (2021-08-24)
+https://github.com/cli/cli/releases/tag/v2.0.0
 ```
 
 Please check `~/.aqua` and `.aqua`.
 
 ```console
-bash-5.1# tree ~/.aqua
+bash-5.1# tree -L 11 ~/.aqua
 /root/.aqua
 ├── bin
-│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0-0/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
+│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0-1/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
 └── pkgs
     └── github_release
         └── github.com
+            ├── cli
+            │   └── cli
+            │       └── v2.0.0
+            │           └── gh_2.0.0_linux_amd64.tar.gz
+            │               └── gh_2.0.0_linux_amd64
+            │                   ├── LICENSE
+            │                   ├── bin
+            │                   │   └── gh
+            │                   └── share
+            │                       └── man
+            │                           └── man1
             └── suzuki-shunsuke
-                ├── akoi
-                │   └── v2.2.0
-                │       └── akoi_2.2.0_linux_amd64.tar.gz
-                │           ├── LICENSE
-                │           ├── README.md
-                │           └── akoi
                 └── aqua-proxy
-                    └── v0.1.0-0
+                    └── v0.1.0-1
                         └── aqua-proxy_linux_amd64.tar.gz
                             ├── LICENSE
                             ├── README.md
                             └── aqua-proxy
-
-11 directories, 7 files
 ```
 
 ```console
 bash-5.1# tree .aqua
 .aqua
 └── bin
-    └── akoi -> /root/.aqua/bin/aqua-proxy
+    └── gh -> /root/.aqua/bin/aqua-proxy
 
 1 directory, 1 file
 ```
 
-`.aqua/bin/akoi` is a symbolic link to [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy).
+`.aqua/bin/gh` is a symbolic link to [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy).
 
-Run `aqua install` again, then the command exits soon.
+Run `aqua install` again, then the command exits immediately because tools are already installed properly.
 
 ```console
 bash-5.1# aqua install
@@ -158,64 +144,76 @@ bash-5.1# aqua i
 bash-5.1#
 ```
 
-Please edit `aqua.yaml` to change akoi's version from v2.2.0 to v2.2.1.
+Please edit `aqua.yaml` to change gh's version to v1.14.0.
 
-Run `aqua i` again, then akoi v2.2.1 is installed.
+Run `aqua i` again, then gh v1.14.0 is installed.
 
 ```console
 bash-5.1# aqua i
-INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.2.1 registry=inline
+INFO[0000] download and unarchive the package            package_name=gh package_version=v1.14.0 registry=inline
 ```
 
 ```console
-bash-5.1# tree ~/.aqua
+bash-5.1# tree -L 11 ~/.aqua
 /root/.aqua
 ├── bin
-│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0-0/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
+│   └── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.0-1/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
 └── pkgs
     └── github_release
         └── github.com
+            ├── cli
+            │   └── cli
+            │       ├── v1.14.0
+            │       │   └── gh_1.14.0_linux_amd64.tar.gz
+            │       │       └── gh_1.14.0_linux_amd64
+            │       │           ├── LICENSE
+            │       │           ├── bin
+            │       │           │   └── gh
+            │       │           └── share
+            │       │               └── man
+            │       │                   └── man1
+            │       └── v2.0.0
+            │           └── gh_2.0.0_linux_amd64.tar.gz
+            │               └── gh_2.0.0_linux_amd64
+            │                   ├── LICENSE
+            │                   ├── bin
+            │                   │   └── gh
+            │                   └── share
+            │                       └── man
+            │                           └── man1
             └── suzuki-shunsuke
-                ├── akoi
-                │   ├── v2.2.0
-                │   │   └── akoi_2.2.0_linux_amd64.tar.gz
-                │   │       ├── LICENSE
-                │   │       ├── README.md
-                │   │       └── akoi
-                │   └── v2.2.1
-                │       └── akoi_2.2.1_linux_amd64.tar.gz
-                │           ├── LICENSE
-                │           ├── README.md
-                │           └── akoi
                 └── aqua-proxy
-                    └── v0.1.0-0
+                    └── v0.1.0-1
                         └── aqua-proxy_linux_amd64.tar.gz
                             ├── LICENSE
                             ├── README.md
                             └── aqua-proxy
 
-13 directories, 10 files
+24 directories, 8 files
 ```
 
 ```console
-bash-5.1# akoi -v
-akoi version 2.2.1
+bash-5.1# gh version
+gh version 1.14.0 (2021-08-04)
+https://github.com/cli/cli/releases/tag/v1.14.0
 ```
 
-Please edit `aqua.yaml` to change the version from v2.2.1 to v2.2.0.
-
-And run `akoi -v`, then the version is changed soon.
+Please edit `aqua.yaml` to change the version v2.0.0.
+gh v2.0.0 is already installed, so the version is changed immediately.
 
 ```console
-bash-5.1# akoi -v
-akoi version 2.2.0
+bash-5.1# gh version
+gh version 2.0.0 (2021-08-24)
+https://github.com/cli/cli/releases/tag/v2.0.0
 ```
 
-Please edit `aqua.yaml` to change the version to v2.1.0 and run `akoi`, then before akoi is run akoi v2.1.0 is installed automatically.
+Please edit `aqua.yaml` to change the version to v1.13.1 and run `gh version`.
+gh v1.13.1 isn't installed yet, but it is installed automatically and is run.
 You don't have to run `aqua i` in advance.
 
 ```console
-bash-5.1# akoi -v
-INFO[0000] download and unarchive the package            package_name=akoi package_version=v2.1.0 registry=inline
-akoi version 2.1.0
+bash-5.1# gh version
+INFO[0000] download and unarchive the package            package_name=gh package_version=v1.13.1 registry=inline
+gh version 1.13.1 (2021-07-20)
+https://github.com/cli/cli/releases/tag/v1.13.1
 ```
