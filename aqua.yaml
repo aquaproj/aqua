@@ -1,19 +1,12 @@
 packages:
-- name: akoi
+- name: golangci-lint
   registry: inline
-  version: v2.2.1
-- name: golangci
+  version: v1.42.0 # renovate: depName=golangci/golangci-lint
+- name: cmdx
   registry: inline
-  version: v1.42.0
+  version: v1.6.0 # renovate: depName=suzuki-shunsuke/cmdx
 inline_registry:
-- name: akoi
-  type: github_release
-  repo_owner: suzuki-shunsuke
-  repo_name: akoi
-  asset: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
-  files:
-  - name: akoi
-- name: golangci
+- name: golangci-lint
   type: github_release
   repo_owner: golangci
   repo_name: golangci-lint
@@ -21,3 +14,10 @@ inline_registry:
   files:
   - name: golangci-lint
     src: 'golangci-lint-{{trimPrefix "v" .Package.Version}}-{{.OS}}-{{.Arch}}/golangci-lint'
+- name: cmdx
+  type: github_release
+  repo_owner: suzuki-shunsuke
+  repo_name: cmdx
+  asset: 'cmdx_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+  files:
+  - name: cmdx

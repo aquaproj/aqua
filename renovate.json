@@ -4,9 +4,10 @@
   ],
   "regexManagers": [
     {
-      "fileMatch": ["ci/install-golangci-lint\\.sh"],
-      "matchStrings": ["GOLANGCI_LINT_VERSION=(?<currentValue>.*?)\\n"],
-      "depNameTemplate": "golangci/golangci-lint",
+      "fileMatch": ["aqua.yaml"],
+      "matchStrings": [
+        "version: (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n"
+      ],
       "datasourceTemplate": "github-releases"
     }
   ]
