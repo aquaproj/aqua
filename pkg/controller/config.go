@@ -28,13 +28,13 @@ type PackageInfo struct {
 	Type        string         `validate:"required"`
 	RepoOwner   string         `yaml:"repo_owner" validate:"required"`
 	RepoName    string         `yaml:"repo_name" validate:"required"`
-	Artifact    *text.Template `validate:"required"`
+	Asset       *text.Template `validate:"required"`
 	ArchiveType string         `yaml:"archive_type"`
 	Files       []*File        `validate:"required,dive"`
 }
 
-func (pkgInfo *PackageInfo) RenderArtifact(pkg *Package) (string, error) {
-	return pkgInfo.Artifact.Execute(map[string]interface{}{ //nolint:wrapcheck
+func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
+	return pkgInfo.Asset.Execute(map[string]interface{}{ //nolint:wrapcheck
 		"Package":     pkg,
 		"PackageInfo": pkgInfo,
 		"OS":          runtime.GOOS,

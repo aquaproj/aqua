@@ -7,7 +7,7 @@ inline_repository:
   type: github_release
   repo_owner: suzuki-shunsuke
   repo_name: akoi
-  artifact: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+  asset: 'akoi_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
   files:
   - name: akoi
     src: akoi
