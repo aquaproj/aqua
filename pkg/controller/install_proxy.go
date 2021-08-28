@@ -13,7 +13,7 @@ import (
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
 		Name:     "aqua-proxy",
-		Version:  "v0.1.0-1", // renovate: depName=suzuki-shunsuke/aqua-proxy
+		Version:  "v0.1.0", // renovate: depName=suzuki-shunsuke/aqua-proxy
 		Registry: "inline",
 	}
 	logE := logrus.WithFields(logrus.Fields{
