@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 func (ctrl *Controller) installProxy(ctx context.Context) error {
@@ -16,7 +17,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		Version:  "v0.1.0", // renovate: depName=suzuki-shunsuke/aqua-proxy
 		Registry: "inline",
 	}
-	logE := logrus.WithFields(logrus.Fields{
+	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,

@@ -5,10 +5,11 @@ import (
 	"errors"
 
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, dest, assetName string) error {
-	logE := logrus.WithFields(logrus.Fields{
+	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,

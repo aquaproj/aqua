@@ -8,6 +8,7 @@ import (
 
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 func getUnarchiver(filename, typ string) (interface{}, error) {
@@ -19,7 +20,7 @@ func getUnarchiver(filename, typ string) (interface{}, error) {
 
 func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cyclop
 	if isUnarchived(typ, filename) {
-		logrus.Debug("archive type is raw")
+		log.New().Debug("archive type is raw")
 		if err := os.MkdirAll(dest, 0o775); err != nil { //nolint:gomnd
 			return fmt.Errorf("create a directory (%s): %w", dest, err)
 		}
@@ -35,7 +36,7 @@ func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cycl
 	}
 	arc, err := getUnarchiver(filename, typ)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
+		log.New().WithFields(logrus.Fields{
 			"archive_type":           typ,
 			"filename":               filename,
 			"filepath.Ext(filename)": filepath.Ext(filename),

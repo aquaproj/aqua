@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
@@ -127,7 +127,7 @@ func (ctrl *Controller) findExecFile(inlineRegistry map[string]*PackageInfo, cfg
 	for _, pkg := range cfg.Packages {
 		pkgInfo, ok := inlineRegistry[pkg.Name]
 		if !ok {
-			logrus.Warnf("registry isn't found %s", pkg.Name)
+			log.New().Warnf("registry isn't found %s", pkg.Name)
 			continue
 		}
 		for _, file := range pkgInfo.Files {
