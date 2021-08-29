@@ -28,7 +28,7 @@
     },
     {
       "fileMatch": ["README.md"],
-      "depNameTemplate": "aqua-installer",
+      "depNameTemplate": "suzuki-shunsuke/aqua-installer",
       "datasourceTemplate": "github-releases",
       "matchStrings": [
         "aqua-installer/(?<currentValue>.*)/aqua-installer",
