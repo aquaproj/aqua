@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/suzuki-shunsuke/aqua/pkg/cli"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
@@ -43,7 +44,7 @@ func core() error {
 			Date:    date,
 		},
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return runner.Run(ctx, os.Args...) //nolint:wrapcheck
 }
