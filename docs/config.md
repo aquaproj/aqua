@@ -1,6 +1,6 @@
 # Configuration
 
-e.g. [tutorial/aqua.yaml](../tutorial/aqua.yaml)
+e.g. [tutorial/aqua.yaml](../tutorial/aqua.yaml), [suzuki-shunsuke/my-aqua-config](https://github.com/suzuki-shunsuke/my-aqua-config/blob/main/aqua.yaml)
 
 ## Configuration File Path
 
