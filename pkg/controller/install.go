@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
@@ -62,7 +63,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 			maxInstallChan <- struct{}{}
 			if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, param.OnlyLink); err != nil {
 				<-maxInstallChan
-				logrus.WithFields(logrus.Fields{
+				log.New().WithFields(logrus.Fields{
 					"package_name": pkg.Name,
 				}).WithError(err).Error("install the package")
 				flagMutex.Lock()
@@ -91,7 +92,7 @@ func getMaxParallelism() int {
 	}
 	num, err := strconv.Atoi(envMaxParallelism)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
+		log.New().WithFields(logrus.Fields{
 			"AQUA_MAX_PARALLELISM": envMaxParallelism,
 		}).Warn("the environment variable AQUA_MAX_PARALLELISM must be a number")
 		return defaultMaxParallelism
@@ -103,7 +104,7 @@ func getMaxParallelism() int {
 }
 
 func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error { //nolint:cyclop
-	logE := logrus.WithFields(logrus.Fields{
+	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -160,7 +161,7 @@ func warnFileSrc(pkg *Package, pkgInfo *PackageInfo, pkgPath string, file *File)
 	if file.Src.Empty() {
 		return
 	}
-	logE := logrus.WithFields(logrus.Fields{
+	logE := log.New().WithFields(logrus.Fields{
 		"file_name": file.Name,
 	})
 	fileSrc, err := file.RenderSrc(pkg, pkgInfo)
@@ -208,7 +209,7 @@ func (ctrl *Controller) createLink(binDir string, file *File) error {
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
-	logrus.WithFields(logrus.Fields{
+	log.New().WithFields(logrus.Fields{
 		"link_file": linkPath,
 		"new":       linkDest,
 	}).Info("create a symbolic link")
@@ -227,7 +228,7 @@ func (ctrl *Controller) recreateLink(linkPath, linkDest string) error {
 		return nil
 	}
 	// recreate link
-	logrus.WithFields(logrus.Fields{
+	log.New().WithFields(logrus.Fields{
 		"link_file": linkPath,
 		"old":       lnDest,
 		"new":       linkDest,

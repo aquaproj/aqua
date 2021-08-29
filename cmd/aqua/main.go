@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/cli"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 var (
@@ -25,12 +25,10 @@ func main() {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
 			code := hasExitCode.ExitCode()
-			logrus.WithError(err).WithFields(logrus.Fields{
-				"exit_code": code,
-			}).Debug("command failed")
+			log.New().WithField("exit_code", code).Debug("command failed")
 			os.Exit(code)
 		}
-		logrus.Fatal(err)
+		log.New().Fatal(err)
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/google/go-github/v38/github"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 	"golang.org/x/oauth2"
 )
@@ -28,13 +29,13 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 	if param.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(param.LogLevel)
 		if err != nil {
-			logrus.WithFields(logrus.Fields{
+			log.New().WithFields(logrus.Fields{
 				"log_level": param.LogLevel,
 			}).WithError(err).Error("the log level is invalid")
 		}
 		logrus.SetLevel(lvl)
 	}
-	logrus.WithFields(logrus.Fields{
+	log.New().WithFields(logrus.Fields{
 		"log_level": param.LogLevel,
 		"config":    param.ConfigFilePath,
 	}).Debug("CLI args")
