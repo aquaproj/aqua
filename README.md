@@ -148,6 +148,10 @@ e.g.
 * [suzuki-shunsuke/my-aqua-config](https://github.com/suzuki-shunsuke/my-aqua-config)
 * [suzuki-shunsuke/example-aqua](https://github.com/suzuki-shunsuke/example-aqua)
 
+## Blog
+
+* [aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
+
 ## License
 
 [MIT](LICENSE)
