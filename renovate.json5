@@ -27,6 +27,15 @@
       ]
     },
     {
+      "fileMatch": ["README.md"],
+      "depNameTemplate": "aqua-installer",
+      "datasourceTemplate": "github-releases",
+      "matchStrings": [
+        "aqua-installer/(?<currentValue>.*)/aqua-installer",
+        "aqua-installer@(?<currentValue>.*)",
+      ]
+    },
+    {
       "fileMatch": [".*\\.go"],
       "depNameTemplate": "suzuki-shunsuke/aqua-proxy",
       "datasourceTemplate": "github-releases",
