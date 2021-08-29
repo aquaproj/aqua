@@ -11,7 +11,7 @@ Version manager of CLI.
 Install aqua.
 
 ```console
-$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.0/aqua-installer | bash -s -- -i bin/aqua
+$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.1/aqua-installer | bash -s -- -i bin/aqua
 $ export PATH=$PWD/bin:$PWD/.aqua/bin:$PATH
 $ export GITHUB_TOKEN=<your personal access token>
 ```
@@ -94,7 +94,7 @@ Or you can install aqua quickly with [aqua-installer](https://github.com/suzuki-
 e.g.
 
 ```
-$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.0/aqua-installer | bash
+$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.1/aqua-installer | bash
 ```
 
 GitHub Actions
@@ -102,7 +102,7 @@ GitHub Actions
 e.g.
 
 ```yaml
-- uses: suzuki-shunsuke/aqua-installer@v0.1.0
+- uses: suzuki-shunsuke/aqua-installer@v0.1.1
   with:
     version: v0.1.0-9
     install_path: /tmp/bin/aqua
