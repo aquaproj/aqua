@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
@@ -144,19 +145,36 @@ func isUnarchived(archiveType, assetName string) bool {
 }
 
 func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, src string, args []string) error {
+	logE := log.New().WithFields(logrus.Fields{
+		"args":            args,
+		"package_name":    pkgInfo.Name,
+		"package_version": pkg.Version,
+		"registry_name":   pkgInfo.Name,
+		"registry_type":   pkgInfo.Type,
+	})
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
 	exePath := filepath.Join(pkgPath, src)
+
+	if _, err := os.Stat(exePath); err != nil {
+		return fmt.Errorf("file.src is invalid. file isn't found %s: %w", exePath, err)
+	}
+
 	cmd := exec.Command(exePath, args...)
 	cmd.Stdin = ctrl.Stdin
 	cmd.Stdout = ctrl.Stdout
 	cmd.Stderr = ctrl.Stderr
 	runner := timeout.NewRunner(0)
+
+	logE = logE.WithField("exe_path", exePath)
+	logE.Debug("execute the command")
 	if err := runner.Run(ctx, cmd); err != nil {
-		return ecerror.Wrap(err, cmd.ProcessState.ExitCode())
+		exitCode := cmd.ProcessState.ExitCode()
+		logE.WithError(err).WithField("exit_code", exitCode).Debug("command was executed but it failed")
+		return ecerror.Wrap(err, exitCode)
 	}
 	return nil
 }
