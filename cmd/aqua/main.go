@@ -9,6 +9,7 @@ import (
 
 	"github.com/suzuki-shunsuke/aqua/pkg/cli"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 var (
@@ -26,10 +27,10 @@ func main() {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
 			code := hasExitCode.ExitCode()
-			log.New().WithField("exit_code", code).Debug("command failed")
+			logerr.WithError(log.New().WithField("exit_code", code), err).Debug("command failed")
 			os.Exit(code)
 		}
-		log.New().Fatal(err)
+		logerr.WithError(log.New(), err).Fatal("aqua failed")
 	}
 }
 
