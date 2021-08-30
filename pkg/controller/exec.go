@@ -12,6 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 var (
@@ -25,6 +26,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	}
 
 	exeName := args[0]
+	fields := logrus.Fields{
+		"exe_name": exeName,
+	}
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -68,7 +72,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 			pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
 			if pkg == nil {
-				return errCommandIsNotFound
+				return logerr.WithFields(errCommandIsNotFound, fields) //nolint:wrapcheck
 			}
 		}
 	} else {
