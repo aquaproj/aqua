@@ -1,7 +1,7 @@
 packages:
 - name: gh
   registry: inline
-  version: v2.0.0
+  version: v1.13.1
 inline_registry:
 - name: gh
   type: github_release

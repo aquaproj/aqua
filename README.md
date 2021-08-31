@@ -12,7 +12,7 @@ Install aqua.
 
 ```console
 $ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.2/aqua-installer | bash -s -- -i bin/aqua
-$ export PATH=$PWD/bin:$PWD/.aqua/bin:$PATH
+$ export PATH=$PWD/bin:$HOME/.aqua/bin:$PATH
 $ export GITHUB_TOKEN=<your personal access token>
 ```
 
@@ -110,24 +110,18 @@ e.g.
 
 ## Where are tools installed?
 
-* the directory `.aqua`. This is created in the same directory as `aqua.yaml`
-  * symbolic links are created in `.aqua/bin`, so add this to the environment variable `PATH`
-* `$HOME/.aqua`: tools are installed in `$HOME/.aqua/pkgs`
-* `$HOME/.aqua/global`: Global configuration. Symbolic links are created in `$HOME/.aqua/global/.aqua/bin`, so add this to the environment variable `PATH`
+* Symbolic links are created in `$HOME/.aqua/bin`, so add this to the environment variable `PATH`
+* Tools are installed in `$HOME/.aqua/pkgs`
 
 ```
 (your working directory)/
   aqua.yaml
-  .aqua/bin/
-    jq (symbolic link to ~/.aqua/bin/aqua-proxy)
-
 ~/.aqua/ # $AQUA_ROOT_DIR (default ~/.aqua)
   bin/
     aqua-proxy (symbolic link to aqua-proxy)
+    <tool> (symbolic link to aqua-proxy)
   global/
     aqua.yaml # global configuration
-    .aqua/
-      bin/
   pkgs/
     github_release/
       github.com/
