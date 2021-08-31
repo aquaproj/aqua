@@ -24,9 +24,8 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	})
 
 	logE.Debug("install the proxy")
-	pkgInfo := &PackageInfo{
+	pkgInfo := &GitHubReleasePackageInfo{
 		Name:      "inline",
-		Type:      "github_release",
 		RepoOwner: "suzuki-shunsuke",
 		RepoName:  "aqua-proxy",
 		Asset:     nil,
@@ -39,7 +38,10 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 
 	assetName := "aqua-proxy_" + runtime.GOOS + "_" + runtime.GOARCH + ".tar.gz"
 
-	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
+	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
+	if err != nil {
+		return err
+	}
 	logE.Debug("check if the package is already installed")
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {

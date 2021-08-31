@@ -41,9 +41,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 	var (
 		pkg            *Package
-		pkgInfo        *PackageInfo
+		pkgInfo        PackageInfo
 		file           *File
-		inlineRegistry map[string]*PackageInfo
+		inlineRegistry map[string]PackageInfo
 	)
 	if cfgFilePath != "" { //nolint:nestif
 		cfg := &Config{}
@@ -51,9 +51,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		inlineRegistry = make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+		inlineRegistry = make(map[string]PackageInfo, len(cfg.InlineRegistry))
 		for _, pkgInfo := range cfg.InlineRegistry {
-			inlineRegistry[pkgInfo.Name] = pkgInfo
+			inlineRegistry[pkgInfo.GetName()] = pkgInfo
 		}
 
 		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
@@ -71,9 +71,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 				return err
 			}
 
-			inlineRegistry = make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+			inlineRegistry = make(map[string]PackageInfo, len(cfg.InlineRegistry))
 			for _, pkgInfo := range cfg.InlineRegistry {
-				inlineRegistry[pkgInfo.Name] = pkgInfo
+				inlineRegistry[pkgInfo.GetName()] = pkgInfo
 			}
 
 			pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
@@ -99,9 +99,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		inlineRegistry = make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+		inlineRegistry = make(map[string]PackageInfo, len(cfg.InlineRegistry))
 		for _, pkgInfo := range cfg.InlineRegistry {
-			inlineRegistry[pkgInfo.Name] = pkgInfo
+			inlineRegistry[pkgInfo.GetName()] = pkgInfo
 		}
 
 		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
@@ -116,9 +116,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		}
 	}
 
-	fileSrc, err := ctrl.getFileSrc(pkg, pkgInfo, file)
+	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
-		return err
+		return fmt.Errorf("get file_src: %w", err)
 	}
 
 	if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false, false); err != nil {
@@ -128,32 +128,14 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 }
 
-func (ctrl *Controller) getFileSrc(pkg *Package, pkgInfo *PackageInfo, file *File) (string, error) {
-	assetName, err := pkgInfo.RenderAsset(pkg)
-	if err != nil {
-		return "", fmt.Errorf("render the asset name: %w", err)
-	}
-	if isUnarchived(pkgInfo.ArchiveType, assetName) {
-		return assetName, nil
-	}
-	if file.Src == nil {
-		return file.Name, nil
-	}
-	src, err := file.RenderSrc(pkg, pkgInfo)
-	if err != nil {
-		return "", fmt.Errorf("render the template file.src: %w", err)
-	}
-	return src, nil
-}
-
-func (ctrl *Controller) findExecFile(inlineRegistry map[string]*PackageInfo, cfg *Config, exeName string) (*Package, *PackageInfo, *File) {
+func (ctrl *Controller) findExecFile(inlineRegistry map[string]PackageInfo, cfg *Config, exeName string) (*Package, PackageInfo, *File) {
 	for _, pkg := range cfg.Packages {
 		pkgInfo, ok := inlineRegistry[pkg.Name]
 		if !ok {
 			log.New().Warnf("registry isn't found %s", pkg.Name)
 			continue
 		}
-		for _, file := range pkgInfo.Files {
+		for _, file := range pkgInfo.GetFiles() {
 			if file.Name == exeName {
 				return pkg, pkgInfo, file
 			}
@@ -166,12 +148,11 @@ func isUnarchived(archiveType, assetName string) bool {
 	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
 }
 
-func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, src string, args []string) error {
-	assetName, err := pkgInfo.RenderAsset(pkg)
+func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo PackageInfo, src string, args []string) error {
+	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
 	if err != nil {
-		return fmt.Errorf("render the asset name: %w", err)
+		return fmt.Errorf("get pkg install path: %w", err)
 	}
-	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
 	exePath := filepath.Join(pkgPath, src)
 
 	if _, err := os.Stat(exePath); err != nil {

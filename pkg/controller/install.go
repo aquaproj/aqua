@@ -36,9 +36,9 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	if err := os.MkdirAll(rootBin, 0o775); err != nil { //nolint:gomnd
 		return fmt.Errorf("create the directory: %w", err)
 	}
-	inlineRegistry := make(map[string]*PackageInfo, len(cfg.InlineRegistry))
+	inlineRegistry := make(map[string]PackageInfo, len(cfg.InlineRegistry))
 	for _, pkgInfo := range cfg.InlineRegistry {
-		inlineRegistry[pkgInfo.Name] = pkgInfo
+		inlineRegistry[pkgInfo.GetName()] = pkgInfo
 	}
 
 	if err := os.MkdirAll(rootBin, 0o775); err != nil { //nolint:gomnd
@@ -102,7 +102,7 @@ func getMaxParallelism() int {
 	return num
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[string]*PackageInfo, pkg *Package, binDir string, onlyLink, isTest bool) error { //nolint:cyclop
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[string]PackageInfo, pkg *Package, binDir string, onlyLink, isTest bool) error { //nolint:cyclop
 	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -122,7 +122,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 
-	for _, file := range pkgInfo.Files {
+	for _, file := range pkgInfo.GetFiles() {
 		if err := ctrl.createLink(binDir, file); err != nil {
 			return err
 		}
@@ -135,7 +135,10 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 		return nil
 	}
 
-	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
+	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
+	if err != nil {
+		return fmt.Errorf("get the package install path: %w", err)
+	}
 	logE.Debug("check if the package is already installed")
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
@@ -149,8 +152,8 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 		}
 	}
 
-	for _, file := range pkgInfo.Files {
-		if err := ctrl.warnFileSrc(pkg, pkgInfo, file, assetName); err != nil {
+	for _, file := range pkgInfo.GetFiles() {
+		if err := ctrl.warnFileSrc(pkg, pkgInfo, file); err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -161,17 +164,20 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 	return nil
 }
 
-func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo *PackageInfo, file *File, assetName string) error {
+func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *File) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
 
-	fileSrc, err := ctrl.getFileSrc(pkg, pkgInfo, file)
+	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
-		return err
+		return fmt.Errorf("get file_src: %w", err)
 	}
 
-	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
+	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
+	if err != nil {
+		return fmt.Errorf("get the package install path: %w", err)
+	}
 	exePath := filepath.Join(pkgPath, fileSrc)
 
 	finfo, err := os.Stat(exePath)
@@ -182,10 +188,6 @@ func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo *PackageInfo, file *Fi
 		return logerr.WithFields(errors.New("exe_path is directory"), fields) //nolint:wrapcheck
 	}
 	return nil
-}
-
-func getPkgPath(aquaRootDir string, pkg *Package, pkgInfo *PackageInfo, assetName string) string {
-	return filepath.Join(aquaRootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
 }
 
 func (ctrl *Controller) createLink(binDir string, file *File) error {

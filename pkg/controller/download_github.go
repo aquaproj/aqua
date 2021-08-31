@@ -29,7 +29,7 @@ func (ctrl *Controller) downloadFromGitHub(ctx context.Context, owner, repoName,
 	if body != nil {
 		return body, nil
 	}
-	b, err := ctrl.downloadFromRedirectURL(ctx, redirectURL)
+	b, err := ctrl.downloadFromURL(ctx, redirectURL)
 	if err != nil {
 		if b != nil {
 			b.Close()
@@ -37,19 +37,4 @@ func (ctrl *Controller) downloadFromGitHub(ctx context.Context, owner, repoName,
 		return nil, err
 	}
 	return b, nil
-}
-
-func (ctrl *Controller) downloadFromRedirectURL(ctx context.Context, redirectURL string) (io.ReadCloser, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, redirectURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create a HTTP request: %w", err)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("send the HTTP request: %w", err)
-	}
-	if resp.StatusCode >= 300 { //nolint:gomnd
-		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
-	}
-	return resp.Body, nil
 }
