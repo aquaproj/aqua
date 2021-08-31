@@ -28,7 +28,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 	}
 	app := cli.App{
 		Name:           "aqua",
-		Usage:          "General version manager. https://github.com/suzuki-shunsuke/aqua",
+		Usage:          "Version Manager of CLI. https://github.com/suzuki-shunsuke/aqua",
 		Version:        runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
 		Compiled:       compiledDate,
 		ExitErrHandler: exitErrHandlerFunc,
