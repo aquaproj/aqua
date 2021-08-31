@@ -26,21 +26,19 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
 		return err
 	}
-	binDir := filepath.Join(filepath.Dir(param.ConfigFilePath), ".aqua", "bin")
+	rootBin := filepath.Join(ctrl.RootDir, "bin")
 
 	if err := validate.Struct(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	if err := os.MkdirAll(binDir, 0o775); err != nil { //nolint:gomnd
+	if err := os.MkdirAll(rootBin, 0o775); err != nil { //nolint:gomnd
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	inlineRegistry := make(map[string]*PackageInfo, len(cfg.InlineRegistry))
 	for _, pkgInfo := range cfg.InlineRegistry {
 		inlineRegistry[pkgInfo.Name] = pkgInfo
 	}
-
-	rootBin := filepath.Join(ctrl.RootDir, "bin")
 
 	if err := os.MkdirAll(rootBin, 0o775); err != nil { //nolint:gomnd
 		return fmt.Errorf("create the directory: %w", err)
@@ -61,7 +59,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, param.OnlyLink); err != nil {
+			if err := ctrl.installPackage(ctx, inlineRegistry, pkg, rootBin, param.OnlyLink); err != nil {
 				<-maxInstallChan
 				log.New().WithFields(logrus.Fields{
 					"package_name": pkg.Name,

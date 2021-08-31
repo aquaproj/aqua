@@ -8,27 +8,19 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-var (
-	errCommandIsRequired = errors.New("command is required")
-	errCommandIsNotFound = errors.New("command is not found")
-)
+var errCommandIsRequired = errors.New("command is required")
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:funlen,cyclop
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:funlen,cyclop,gocognit
 	if len(args) == 0 {
 		return errCommandIsRequired
 	}
 
-	exeName := args[0]
-	fields := logrus.Fields{
-		"exe_name": exeName,
-	}
+	exeName := filepath.Base(args[0])
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -36,6 +28,8 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	}
 
 	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
+
+	binDir := filepath.Join(ctrl.RootDir, "bin")
 
 	var (
 		pkg            *Package
@@ -58,7 +52,11 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		if pkg == nil {
 			cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 			if _, err := os.Stat(cfgFilePath); err != nil {
-				return errCommandIsNotFound
+				exePath, err := lookPath(exeName, binDir)
+				if err != nil {
+					return err
+				}
+				return ctrl.execCommand(ctx, exePath, args[1:])
 			}
 			cfg := &Config{}
 			if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
@@ -72,13 +70,21 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 			pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
 			if pkg == nil {
-				return logerr.WithFields(errCommandIsNotFound, fields) //nolint:wrapcheck
+				exePath, err := lookPath(exeName, binDir)
+				if err != nil {
+					return err
+				}
+				return ctrl.execCommand(ctx, exePath, args[1:])
 			}
 		}
 	} else {
 		cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 		if _, err := os.Stat(cfgFilePath); err != nil {
-			return errCommandIsNotFound
+			exePath, err := lookPath(exeName, binDir)
+			if err != nil {
+				return err
+			}
+			return ctrl.execCommand(ctx, exePath, args[1:])
 		}
 		cfg := &Config{}
 		if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
@@ -92,7 +98,11 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
 		if pkg == nil {
-			return errCommandIsNotFound
+			exePath, err := lookPath(exeName, binDir)
+			if err != nil {
+				return err
+			}
+			return ctrl.execCommand(ctx, exePath, args[1:])
 		}
 	}
 
@@ -100,8 +110,6 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	if err != nil {
 		return err
 	}
-
-	binDir := filepath.Join(filepath.Dir(cfgFilePath), ".aqua", "bin")
 
 	if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false); err != nil {
 		return err
@@ -149,13 +157,6 @@ func isUnarchived(archiveType, assetName string) bool {
 }
 
 func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, src string, args []string) error {
-	logE := log.New().WithFields(logrus.Fields{
-		"args":            args,
-		"package_name":    pkgInfo.Name,
-		"package_version": pkg.Version,
-		"registry_name":   pkgInfo.Name,
-		"registry_type":   pkgInfo.Type,
-	})
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
@@ -167,13 +168,17 @@ func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *Package
 		return fmt.Errorf("file.src is invalid. file isn't found %s: %w", exePath, err)
 	}
 
+	return ctrl.execCommand(ctx, exePath, args)
+}
+
+func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) error {
 	cmd := exec.Command(exePath, args...)
 	cmd.Stdin = ctrl.Stdin
 	cmd.Stdout = ctrl.Stdout
 	cmd.Stderr = ctrl.Stderr
 	runner := timeout.NewRunner(0)
 
-	logE = logE.WithField("exe_path", exePath)
+	logE := log.New().WithField("exe_path", exePath)
 	logE.Debug("execute the command")
 	if err := runner.Run(ctx, cmd); err != nil {
 		exitCode := cmd.ProcessState.ExitCode()
