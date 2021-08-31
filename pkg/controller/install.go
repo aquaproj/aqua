@@ -156,21 +156,24 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 }
 
 func warnFileSrc(pkg *Package, pkgInfo *PackageInfo, pkgPath string, file *File) {
-	if file.Src.Empty() {
-		return
-	}
 	logE := log.New().WithFields(logrus.Fields{
 		"file_name": file.Name,
 	})
-	fileSrc, err := file.RenderSrc(pkg, pkgInfo)
-	if err != nil {
-		logE.WithError(err).Warn("render the file.src")
-		return
+	var fileSrc string
+	if file.Src == nil {
+		fileSrc = file.Name
+	} else {
+		src, err := file.RenderSrc(pkg, pkgInfo)
+		if err != nil {
+			logE.WithError(err).Warn("render the file.src")
+			return
+		}
+		fileSrc = src
 	}
 	exePath := filepath.Join(pkgPath, fileSrc)
 	logE = logE.WithFields(logrus.Fields{
 		"exe_path": exePath,
-		"file.src": fileSrc,
+		"file_src": fileSrc,
 	})
 	finfo, err := os.Stat(exePath)
 	if err != nil {
