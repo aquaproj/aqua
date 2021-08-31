@@ -2,44 +2,47 @@ package controller
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
 
-func lookPath(exeName, ignoredPath string) (string, error) {
-	a, err := filepath.Abs(ignoredPath)
-	if err != nil {
-		return "", fmt.Errorf("get the absolute path (%s): %w", ignoredPath, err)
+func lookPath(exeName string) string {
+	for _, p := range strings.Split(os.Getenv("PATH"), ":") {
+		bin := filepath.Join(p, exeName)
+		finfo, err := readLink(bin)
+		if err != nil {
+			continue
+		}
+		if finfo.IsDir() {
+			continue
+		}
+		if filepath.Base(finfo.Name()) == "aqua-proxy" {
+			continue
+		}
+		return bin
 	}
-	ignoredPath = a
-	oldPath := os.Getenv("PATH")
-	newPath, err := getNewPath(oldPath, ignoredPath)
-	if err != nil {
-		return "", err
-	}
-	os.Setenv("PATH", newPath)
-	defer os.Setenv("PATH", oldPath)
-	s, err := exec.LookPath(exeName)
-	if err != nil {
-		return "", fmt.Errorf("look the command (%s): %w", exeName, err)
-	}
-	return s, nil
+	return ""
 }
 
-func getNewPath(path, ignoredPath string) (string, error) {
-	paths := strings.Split(path, ":")
-	filteredPaths := []string{}
-	for _, p := range paths {
-		a, err := filepath.Abs(p)
-		if err != nil {
-			return "", fmt.Errorf("get the absolute path (%s): %w", p, err)
-		}
-		p = a
-		if p != ignoredPath {
-			filteredPaths = append(filteredPaths, p)
-		}
+func readLink(p string) (os.FileInfo, error) {
+	finfo, err := os.Lstat(p)
+	if err != nil {
+		return nil, fmt.Errorf("get a file stat (%s): %w", p, err)
 	}
-	return strings.Join(filteredPaths, ":"), nil
+	if finfo.Name() == "aqua-proxy" {
+		return finfo, nil
+	}
+	if finfo.Mode()&fs.ModeSymlink != 0 {
+		s, err := os.Readlink(p)
+		if err != nil {
+			return nil, fmt.Errorf("read a symbolic link (%s): %w", p, err)
+		}
+		if filepath.IsAbs(s) {
+			return readLink(s)
+		}
+		return readLink(filepath.Join(filepath.Dir(p), s))
+	}
+	return finfo, nil
 }

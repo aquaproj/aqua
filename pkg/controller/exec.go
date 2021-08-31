@@ -8,12 +8,17 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-var errCommandIsRequired = errors.New("command is required")
+var (
+	errCommandIsRequired = errors.New("command is required")
+	errCommandIsNotFound = errors.New("command is not found")
+)
 
 func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:funlen,cyclop,gocognit
 	if len(args) == 0 {
@@ -21,10 +26,13 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	}
 
 	exeName := filepath.Base(args[0])
+	fields := logrus.Fields{
+		"exe_name": exeName,
+	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("get the current directory: %w", err)
+		return fmt.Errorf("get the current directory: %w", logerr.WithFields(err, fields))
 	}
 
 	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
@@ -52,9 +60,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		if pkg == nil {
 			cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 			if _, err := os.Stat(cfgFilePath); err != nil {
-				exePath, err := lookPath(exeName, binDir)
-				if err != nil {
-					return err
+				exePath := lookPath(exeName)
+				if exePath == "" {
+					return errCommandIsNotFound
 				}
 				return ctrl.execCommand(ctx, exePath, args[1:])
 			}
@@ -70,9 +78,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 			pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
 			if pkg == nil {
-				exePath, err := lookPath(exeName, binDir)
-				if err != nil {
-					return err
+				exePath := lookPath(exeName)
+				if exePath == "" {
+					return errCommandIsNotFound
 				}
 				return ctrl.execCommand(ctx, exePath, args[1:])
 			}
@@ -80,9 +88,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	} else {
 		cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 		if _, err := os.Stat(cfgFilePath); err != nil {
-			exePath, err := lookPath(exeName, binDir)
-			if err != nil {
-				return err
+			exePath := lookPath(exeName)
+			if exePath == "" {
+				return logerr.WithFields(errCommandIsNotFound, fields) //nolint:wrapcheck
 			}
 			return ctrl.execCommand(ctx, exePath, args[1:])
 		}
@@ -98,9 +106,11 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 
 		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
 		if pkg == nil {
-			exePath, err := lookPath(exeName, binDir)
-			if err != nil {
-				return err
+			exePath := lookPath(exeName)
+			if exePath == "" {
+				return logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
+					"exe_name": exeName,
+				})
 			}
 			return ctrl.execCommand(ctx, exePath, args[1:])
 		}
