@@ -14,6 +14,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+const proxyName = "aqua-proxy"
+
 func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
 	cfg := &Config{}
 	wd, err := os.Getwd()
@@ -46,7 +48,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(rootBin, "aqua-proxy")); err != nil {
+	if _, err := os.Stat(filepath.Join(rootBin, proxyName)); err != nil {
 		if err := ctrl.installProxy(ctx); err != nil {
 			return err
 		}
@@ -193,7 +195,7 @@ func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *Fil
 
 func (ctrl *Controller) createLink(binDir string, file *File) error {
 	linkPath := filepath.Join(binDir, file.Name)
-	linkDest := filepath.Join(ctrl.RootDir, "bin", "aqua-proxy")
+	linkDest := proxyName
 	if fileInfo, err := os.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -206,7 +208,7 @@ func (ctrl *Controller) createLink(binDir string, file *File) error {
 			// TODO if file is a regular file, remove it and create a symlink.
 			return fmt.Errorf("%s has already existed and is a regular file", linkPath)
 		case mode&os.ModeSymlink != 0:
-			return ctrl.recreateLink(linkPath, linkDest)
+			return recreateLink(linkPath, linkDest)
 		default:
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
@@ -221,7 +223,7 @@ func (ctrl *Controller) createLink(binDir string, file *File) error {
 	return nil
 }
 
-func (ctrl *Controller) recreateLink(linkPath, linkDest string) error {
+func recreateLink(linkPath, linkDest string) error {
 	lnDest, err := os.Readlink(linkPath)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
