@@ -121,7 +121,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		return err
 	}
 
-	if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false); err != nil {
+	if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false, false); err != nil {
 		return err
 	}
 
