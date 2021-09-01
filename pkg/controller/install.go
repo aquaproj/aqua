@@ -150,7 +150,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 	}
 
 	for _, file := range pkgInfo.Files {
-		if err := warnFileSrc(pkg, pkgInfo, pkgPath, file); err != nil {
+		if err := ctrl.warnFileSrc(pkg, pkgInfo, file, assetName); err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -161,25 +161,19 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 	return nil
 }
 
-func warnFileSrc(pkg *Package, pkgInfo *PackageInfo, pkgPath string, file *File) error {
+func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo *PackageInfo, file *File, assetName string) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
-	var fileSrc string
-	if file.Src == nil {
-		fileSrc = file.Name
-	} else {
-		src, err := file.RenderSrc(pkg, pkgInfo)
-		if err != nil {
-			return fmt.Errorf("render the file.src: %w", logerr.WithFields(err, fields))
-		}
-		fileSrc = src
+
+	fileSrc, err := ctrl.getFileSrc(pkg, pkgInfo, file)
+	if err != nil {
+		return err
 	}
+
+	pkgPath := getPkgPath(ctrl.RootDir, pkg, pkgInfo, assetName)
 	exePath := filepath.Join(pkgPath, fileSrc)
-	fields = logerr.AppendFields(fields, logrus.Fields{
-		"exe_path": exePath,
-		"file_src": fileSrc,
-	})
+
 	finfo, err := os.Stat(exePath)
 	if err != nil {
 		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))
