@@ -39,7 +39,7 @@ func (pkgInfo *HTTPPackageInfo) GetPkgPath(rootDir string, pkg *Package) (string
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)
 	}
-	u, err := url.Parse(uS) // TODO
+	u, err := url.Parse(uS)
 	if err != nil {
 		return "", fmt.Errorf("parse the URL: %w", err)
 	}
@@ -86,7 +86,7 @@ func (pkgInfo *HTTPPackageInfo) RenderAsset(pkg *Package) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)
 	}
-	u, err := url.Parse(uS) // TODO
+	u, err := url.Parse(uS)
 	if err != nil {
 		return "", fmt.Errorf("parse the URL: %w", err)
 	}
