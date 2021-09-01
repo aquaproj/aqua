@@ -56,6 +56,10 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 						Name:  "only-link",
 						Usage: "create links but skip download packages",
 					},
+					&cli.BoolFlag{
+						Name:  "test",
+						Usage: "test file.src after installing the package",
+					},
 				},
 			},
 			{

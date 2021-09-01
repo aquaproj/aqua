@@ -11,6 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
@@ -59,7 +60,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			if err := ctrl.installPackage(ctx, inlineRegistry, pkg, rootBin, param.OnlyLink); err != nil {
+			if err := ctrl.installPackage(ctx, inlineRegistry, pkg, rootBin, param.OnlyLink, param.IsTest); err != nil {
 				<-maxInstallChan
 				log.New().WithFields(logrus.Fields{
 					"package_name": pkg.Name,
@@ -101,7 +102,7 @@ func getMaxParallelism() int {
 	return num
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[string]*PackageInfo, pkg *Package, binDir string, onlyLink bool) error { //nolint:cyclop
+func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[string]*PackageInfo, pkg *Package, binDir string, onlyLink, isTest bool) error { //nolint:cyclop
 	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -149,41 +150,44 @@ func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[s
 	}
 
 	for _, file := range pkgInfo.Files {
-		warnFileSrc(pkg, pkgInfo, pkgPath, file)
+		if err := warnFileSrc(pkg, pkgInfo, pkgPath, file); err != nil {
+			if isTest {
+				return fmt.Errorf("check file_src is correct: %w", err)
+			}
+			logE.WithError(err).Warn("check file_src is correct")
+		}
 	}
 
 	return nil
 }
 
-func warnFileSrc(pkg *Package, pkgInfo *PackageInfo, pkgPath string, file *File) {
-	logE := log.New().WithFields(logrus.Fields{
+func warnFileSrc(pkg *Package, pkgInfo *PackageInfo, pkgPath string, file *File) error {
+	fields := logrus.Fields{
 		"file_name": file.Name,
-	})
+	}
 	var fileSrc string
 	if file.Src == nil {
 		fileSrc = file.Name
 	} else {
 		src, err := file.RenderSrc(pkg, pkgInfo)
 		if err != nil {
-			logE.WithError(err).Warn("render the file.src")
-			return
+			return fmt.Errorf("render the file.src: %w", logerr.WithFields(err, fields))
 		}
 		fileSrc = src
 	}
 	exePath := filepath.Join(pkgPath, fileSrc)
-	logE = logE.WithFields(logrus.Fields{
+	fields = logerr.AppendFields(fields, logrus.Fields{
 		"exe_path": exePath,
 		"file_src": fileSrc,
 	})
 	finfo, err := os.Stat(exePath)
 	if err != nil {
-		logE.WithError(err).Warn("exe_path isn't found. Check file.src is correct")
-		return
+		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))
 	}
 	if finfo.IsDir() {
-		logE.Warn("exe_path is directory. Check file.src is correct")
-		return
+		return logerr.WithFields(errors.New("exe_path is directory"), fields) //nolint:wrapcheck
 	}
+	return nil
 }
 
 func getPkgPath(aquaRootDir string, pkg *Package, pkgInfo *PackageInfo, assetName string) string {
