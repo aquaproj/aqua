@@ -104,7 +104,7 @@ e.g.
 ```yaml
 - uses: suzuki-shunsuke/aqua-installer@v0.1.2
   with:
-    version: v0.1.0-9
+    version: v0.3.1
     install_path: /tmp/bin/aqua
 ```
 
