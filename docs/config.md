@@ -32,16 +32,20 @@ If the confgiuration file path isn't specified, the file named `[.]aqua.y[a]ml` 
 PackageInfo is the package metadata how the package is installed.
 
 * `name`: the package name
-* `type`: the package type. Only `github_release` is supported
+* `type`: the package type. Either `github_release` or `http` is supported
 * `archive_type`: the archive type (e.g. `zip`, `tar.gz`). Basically you don't have to specify this field because `aqua` understand the archive type from the filename extension.
   If the `archive_type` is `raw` or the filename has no extension, `aqua` treats the file isn't archived and uncompressed.
 * `files`: The list of files which the archive includes
 
-`github_release` has the following fields.
+The type `github_release` has the following fields.
 
 * `repo_owner`: GitHub Repository owner
 * `repo_name`: GitHub Repository name
 * `asset`: (type: `template string`) GitHub Release asset name
+
+The type `http` has the following fields.
+
+* `url`: Downloaded URL
 
 ### Registry
 
@@ -58,11 +62,12 @@ Only `inline` registry is supported.
 Some fields are parsed with [Go's text/template](https://pkg.go.dev/text/template) and [sprig](http://masterminds.github.io/sprig/).
 
 * `PackageInfo.asset`
+* `PackageInfo.url`
 * `File.src`
 
 The following variables are passed to the template.
 
-`PackageInfo.asset`
+`PackageInfo.url`, `PackageInfo.asset`
 
 * `Package`: the Package
   * `Name`
