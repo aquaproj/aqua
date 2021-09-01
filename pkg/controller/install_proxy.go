@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
+	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 )
 
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
-		Name:     "aqua-proxy",
+		Name:     proxyName,
 		Version:  "v0.1.2", // renovate: depName=suzuki-shunsuke/aqua-proxy
 		Registry: "inline",
 	}
@@ -23,20 +23,27 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		"registry":        pkg.Registry,
 	})
 
+	assetNameTpl, err := text.New(`aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`)
+	if err != nil {
+		return fmt.Errorf("render the asset name of aqua-proxy: %w", err)
+	}
+
 	logE.Debug("install the proxy")
 	pkgInfo := &GitHubReleasePackageInfo{
 		Name:      "inline",
 		RepoOwner: "suzuki-shunsuke",
-		RepoName:  "aqua-proxy",
-		Asset:     nil,
+		RepoName:  proxyName,
+		Asset:     assetNameTpl,
 		Files: []*File{
 			{
-				Name: "aqua-proxy",
+				Name: proxyName,
 			},
 		},
 	}
-
-	assetName := "aqua-proxy_" + runtime.GOOS + "_" + runtime.GOARCH + ".tar.gz"
+	assetName, err := pkgInfo.RenderAsset(pkg)
+	if err != nil {
+		return err
+	}
 
 	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
 	if err != nil {
@@ -56,7 +63,11 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	}
 
 	// create a symbolic link
-	if err := os.Symlink(filepath.Join(pkgPath, "aqua-proxy"), filepath.Join(ctrl.RootDir, "bin", "aqua-proxy")); err != nil {
+	a, err := filepath.Rel(filepath.Join(ctrl.RootDir, "bin"), filepath.Join(pkgPath, proxyName))
+	if err != nil {
+		return fmt.Errorf("get a relative path: %w", err)
+	}
+	if err := os.Symlink(a, filepath.Join(ctrl.RootDir, "bin", proxyName)); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
 

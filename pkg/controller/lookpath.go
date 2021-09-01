@@ -18,7 +18,7 @@ func lookPath(exeName string) string {
 		if finfo.IsDir() {
 			continue
 		}
-		if filepath.Base(finfo.Name()) == "aqua-proxy" {
+		if filepath.Base(finfo.Name()) == proxyName {
 			continue
 		}
 		return bin
@@ -31,7 +31,7 @@ func readLink(p string) (os.FileInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get a file stat (%s): %w", p, err)
 	}
-	if finfo.Name() == "aqua-proxy" {
+	if finfo.Name() == proxyName {
 		return finfo, nil
 	}
 	if finfo.Mode()&fs.ModeSymlink != 0 {
