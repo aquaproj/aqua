@@ -51,9 +51,10 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		inlineRegistry = make(map[string]PackageInfo, len(cfg.InlineRegistry))
-		for _, pkgInfo := range cfg.InlineRegistry {
-			inlineRegistry[pkgInfo.GetName()] = pkgInfo
+		if registries, err := cfg.InlineRegistry.ToMap(); err != nil {
+			return err
+		} else { //nolint:revive
+			inlineRegistry = registries
 		}
 
 		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
@@ -71,9 +72,10 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 				return err
 			}
 
-			inlineRegistry = make(map[string]PackageInfo, len(cfg.InlineRegistry))
-			for _, pkgInfo := range cfg.InlineRegistry {
-				inlineRegistry[pkgInfo.GetName()] = pkgInfo
+			if registries, err := cfg.InlineRegistry.ToMap(); err != nil {
+				return err
+			} else { //nolint:revive
+				inlineRegistry = registries
 			}
 
 			pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
@@ -99,9 +101,10 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		inlineRegistry = make(map[string]PackageInfo, len(cfg.InlineRegistry))
-		for _, pkgInfo := range cfg.InlineRegistry {
-			inlineRegistry[pkgInfo.GetName()] = pkgInfo
+		if registries, err := cfg.InlineRegistry.ToMap(); err != nil {
+			return err
+		} else { //nolint:revive
+			inlineRegistry = registries
 		}
 
 		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)

@@ -36,9 +36,10 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error { //nol
 	if err := os.MkdirAll(rootBin, 0o775); err != nil { //nolint:gomnd
 		return fmt.Errorf("create the directory: %w", err)
 	}
-	inlineRegistry := make(map[string]PackageInfo, len(cfg.InlineRegistry))
-	for _, pkgInfo := range cfg.InlineRegistry {
-		inlineRegistry[pkgInfo.GetName()] = pkgInfo
+
+	inlineRegistry, err := cfg.InlineRegistry.ToMap()
+	if err != nil {
+		return err
 	}
 
 	if err := os.MkdirAll(rootBin, 0o775); err != nil { //nolint:gomnd

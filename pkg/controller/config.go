@@ -8,8 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -30,6 +32,21 @@ const (
 	pkgInfoTypeGitHubRelease = "github_release"
 	pkgInfoTypeHTTP          = "http"
 )
+
+var errPkgInfoNameIsDuplicated = errors.New("the package info name must be unique in the same registry")
+
+func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
+	m := make(map[string]PackageInfo, len(*pkgInfos))
+	for _, pkgInfo := range *pkgInfos {
+		if _, ok := m[pkgInfo.GetName()]; ok {
+			return nil, logerr.WithFields(errPkgInfoNameIsDuplicated, logrus.Fields{ //nolint:wrapcheck
+				"package_info_name": pkgInfo.GetName(),
+			})
+		}
+		m[pkgInfo.GetName()] = pkgInfo
+	}
+	return m, nil
+}
 
 func (pkgInfos *PackageInfos) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var arr []mergedPackageInfo
