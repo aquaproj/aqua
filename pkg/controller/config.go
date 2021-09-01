@@ -13,34 +13,83 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Config struct {
-	Packages       []*Package     `validate:"dive"`
-	InlineRegistry []*PackageInfo `yaml:"inline_registry" validate:"dive"`
-}
-
 type Package struct {
 	Name     string `validate:"required"`
 	Registry string `validate:"required"`
 	Version  string `validate:"required"`
 }
 
-type PackageInfo struct {
-	Name        string         `validate:"required"`
-	Type        string         `validate:"required"`
-	RepoOwner   string         `yaml:"repo_owner" validate:"required"`
-	RepoName    string         `yaml:"repo_name" validate:"required"`
-	Asset       *text.Template `validate:"required"`
-	ArchiveType string         `yaml:"archive_type"`
-	Files       []*File        `validate:"required,dive"`
+type Config struct {
+	Packages       []*Package   `validate:"dive"`
+	InlineRegistry PackageInfos `yaml:"inline_registry" validate:"dive"`
 }
 
-func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
-	return pkgInfo.Asset.Execute(map[string]interface{}{ //nolint:wrapcheck
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
-		"OS":          runtime.GOOS,
-		"Arch":        runtime.GOARCH,
-	})
+type PackageInfos []PackageInfo
+
+const (
+	pkgInfoTypeGitHubRelease = "github_release"
+	pkgInfoTypeHTTP          = "http"
+)
+
+func (pkgInfos *PackageInfos) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var arr []mergedPackageInfo
+	if err := unmarshal(&arr); err != nil {
+		return err
+	}
+	list := make([]PackageInfo, len(arr))
+	for i, p := range arr {
+		pkgInfo, err := p.GetPackageInfo()
+		if err != nil {
+			return err
+		}
+		list[i] = pkgInfo
+	}
+	*pkgInfos = list
+	return nil
+}
+
+type PackageInfo interface {
+	GetName() string
+	GetType() string
+	GetArchiveType() string
+	GetFiles() []*File
+	GetFileSrc(pkg *Package, file *File) (string, error)
+	GetPkgPath(rootDir string, pkg *Package) (string, error)
+	RenderAsset(pkg *Package) (string, error)
+}
+
+type mergedPackageInfo struct {
+	Name        string
+	Type        string
+	RepoOwner   string `yaml:"repo_owner"`
+	RepoName    string `yaml:"repo_name"`
+	Asset       *text.Template
+	ArchiveType string `yaml:"archive_type"`
+	Files       []*File
+	URL         *text.Template
+}
+
+func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
+	switch pkgInfo.Type {
+	case pkgInfoTypeGitHubRelease:
+		return &GitHubReleasePackageInfo{
+			Name:        pkgInfo.Name,
+			RepoOwner:   pkgInfo.RepoOwner,
+			RepoName:    pkgInfo.RepoName,
+			Asset:       pkgInfo.Asset,
+			ArchiveType: pkgInfo.ArchiveType,
+			Files:       pkgInfo.Files,
+		}, nil
+	case pkgInfoTypeHTTP:
+		return &HTTPPackageInfo{
+			Name:        pkgInfo.Name,
+			ArchiveType: pkgInfo.ArchiveType,
+			URL:         pkgInfo.URL,
+			Files:       pkgInfo.Files,
+		}, nil
+	default:
+		return nil, errors.New("type is invalid")
+	}
 }
 
 type File struct {
@@ -48,7 +97,7 @@ type File struct {
 	Src  *text.Template
 }
 
-func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo) (string, error) {
+func (file *File) RenderSrc(pkg *Package, pkgInfo PackageInfo) (string, error) {
 	return file.Src.Execute(map[string]interface{}{ //nolint:wrapcheck
 		"Package":     pkg,
 		"PackageInfo": pkgInfo,
