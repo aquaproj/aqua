@@ -135,7 +135,8 @@ e.g.
 ## Related Projects
 
 * [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy)
-* [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer)
+* [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer): Install aqua quickly
+* [aqua-registry](https://github.com/suzuki-shunsuke/aqua-registry): Official Registry
 
 ## Example
 
