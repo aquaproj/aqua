@@ -64,6 +64,7 @@ jq-1.6
 * [Tutorial](tutorial/README.md)
 * [Usage](docs/usage.md)
 * [Configuration](docs/config.md)
+* [Registry](docs/registry.md)
 
 ## Main Usecase
 
@@ -84,6 +85,8 @@ jq-1.6
   * When you execute the tool which isn't installed yet, aqua installs the tool and execute the tool
 * Share tools across projects
   * aqua installs tools in the shared directory `~/.aqua`. It saves time and disk to install tools
+* Ecosystem named `Registry` - it eases to write aqua configuration
+  * You can share and reuse the aqua configuration. We provide the official registry too
 
 ## Install
 
