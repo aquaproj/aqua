@@ -35,6 +35,10 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map
 	var failed bool
 	maxInstallChan := make(chan struct{}, getMaxParallelism())
 	registryContents := make(map[string]*RegistryContent, len(cfg.Registries)+1)
+	registryContents["inline"] = &RegistryContent{
+		PackageInfos: cfg.InlineRegistry,
+	}
+
 	for _, registry := range cfg.Registries {
 		go func(registry *Registry) {
 			defer wg.Done()

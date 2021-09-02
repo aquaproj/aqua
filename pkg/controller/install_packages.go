@@ -13,7 +13,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error {
+func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
@@ -24,6 +24,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
+
 			registry, ok := registries[pkg.Registry]
 			if !ok {
 				log.New().WithFields(logrus.Fields{
@@ -32,6 +33,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				<-maxInstallChan
 				return
 			}
+
 			pkgInfos, err := registry.PackageInfos.ToMap()
 			if err != nil {
 				<-maxInstallChan
@@ -43,7 +45,20 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				flagMutex.Unlock()
 				return
 			}
-			if err := ctrl.installPackage(ctx, pkgInfos, pkg, binDir, onlyLink, isTest); err != nil {
+
+			pkgInfo, ok := pkgInfos[pkg.Name]
+			if !ok {
+				<-maxInstallChan
+				log.New().WithFields(logrus.Fields{
+					"package_name": pkg.Name,
+				}).WithError(err).Error("install the package")
+				flagMutex.Lock()
+				failed = true
+				flagMutex.Unlock()
+				return
+			}
+
+			if err := ctrl.installPackage(ctx, pkgInfo, pkg, binDir, onlyLink, isTest); err != nil {
 				<-maxInstallChan
 				log.New().WithFields(logrus.Fields{
 					"package_name": pkg.Name,
@@ -63,21 +78,13 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	return nil
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, inlineRegistry map[string]PackageInfo, pkg *Package, binDir string, onlyLink, isTest bool) error { //nolint:cyclop
+func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo, pkg *Package, binDir string, onlyLink, isTest bool) error { //nolint:cyclop
 	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
 	})
 	logE.Debug("install the package")
-	if pkg.Registry != "inline" {
-		return fmt.Errorf("only inline registry is supported (%s)", pkg.Registry)
-	}
-	pkgInfo, ok := inlineRegistry[pkg.Name]
-	if !ok {
-		return fmt.Errorf("registry isn't found %s", pkg.Name)
-	}
-
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)

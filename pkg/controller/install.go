@@ -52,10 +52,6 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 		return err
 	}
 
-	registryContents["inline"] = &RegistryContent{
-		PackageInfos: cfg.InlineRegistry,
-	}
-
 	return ctrl.installPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest)
 }
 

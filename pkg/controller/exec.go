@@ -40,10 +40,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	binDir := filepath.Join(ctrl.RootDir, "bin")
 
 	var (
-		pkg            *Package
-		pkgInfo        PackageInfo
-		file           *File
-		inlineRegistry map[string]PackageInfo
+		pkg     *Package
+		pkgInfo PackageInfo
+		file    *File
 	)
 	if cfgFilePath != "" { //nolint:nestif
 		cfg := &Config{}
@@ -51,13 +50,12 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		if registries, err := cfg.InlineRegistry.ToMap(); err != nil {
+		registryContents, err := ctrl.installRegistries(ctx, cfg)
+		if err != nil {
 			return err
-		} else { //nolint:revive
-			inlineRegistry = registries
 		}
 
-		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
+		pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
 		if pkg == nil {
 			cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 			if _, err := os.Stat(cfgFilePath); err != nil {
@@ -72,13 +70,12 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 				return err
 			}
 
-			if registries, err := cfg.InlineRegistry.ToMap(); err != nil {
+			registryContents, err := ctrl.installRegistries(ctx, cfg)
+			if err != nil {
 				return err
-			} else { //nolint:revive
-				inlineRegistry = registries
 			}
 
-			pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
+			pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
 			if pkg == nil {
 				exePath := lookPath(exeName)
 				if exePath == "" {
@@ -101,13 +98,12 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		if registries, err := cfg.InlineRegistry.ToMap(); err != nil {
+		registryContents, err := ctrl.installRegistries(ctx, cfg)
+		if err != nil {
 			return err
-		} else { //nolint:revive
-			inlineRegistry = registries
 		}
 
-		pkg, pkgInfo, file = ctrl.findExecFile(inlineRegistry, cfg, exeName)
+		pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
 		if pkg == nil {
 			exePath := lookPath(exeName)
 			if exePath == "" {
@@ -124,18 +120,30 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		return fmt.Errorf("get file_src: %w", err)
 	}
 
-	if err := ctrl.installPackage(ctx, inlineRegistry, pkg, binDir, false, false); err != nil {
+	if err := ctrl.installPackage(ctx, pkgInfo, pkg, binDir, false, false); err != nil {
 		return err
 	}
 
 	return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 }
 
-func (ctrl *Controller) findExecFile(inlineRegistry map[string]PackageInfo, cfg *Config, exeName string) (*Package, PackageInfo, *File) {
+func (ctrl *Controller) findExecFile(registries map[string]*RegistryContent, cfg *Config, exeName string) (*Package, PackageInfo, *File) {
 	for _, pkg := range cfg.Packages {
-		pkgInfo, ok := inlineRegistry[pkg.Name]
+		registry, ok := registries[pkg.Registry]
 		if !ok {
 			log.New().Warnf("registry isn't found %s", pkg.Name)
+			continue
+		}
+
+		m, err := registry.PackageInfos.ToMap()
+		if err != nil {
+			log.New().Warnf("package isn't found %s", pkg.Name)
+			continue
+		}
+
+		pkgInfo, ok := m[pkg.Name]
+		if !ok {
+			log.New().Warnf("package isn't found %s", pkg.Name)
 			continue
 		}
 		for _, file := range pkgInfo.GetFiles() {
