@@ -51,7 +51,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				<-maxInstallChan
 				log.New().WithFields(logrus.Fields{
 					"package_name": pkg.Name,
-				}).WithError(err).Error("install the package")
+				}).Error("install the package")
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
