@@ -19,6 +19,7 @@ If the confgiuration file path isn't specified, the file named `[.]aqua.y[a]ml` 
 
 * `packages`: The list of installed packages
 * `inline_registry`: The list of package metadata
+* `registries`: The list of registries
 
 ### type: Package
 
@@ -50,7 +51,15 @@ The type `http` has the following fields.
 ### Registry
 
 `Registry` is the list of package metadata.
-Only `inline` registry is supported.
+
+`github_content` registry
+
+* `name`: registy name
+* `type`: registy type. Only `github_content` is supported
+* `repo_owner`: GitHub Repository owner
+* `repo_name`: GitHub Repository name
+* `ref`: GitHub Content ref (e.g. `v0.1.0`)
+* `path`: GitHub Content file path. This must be a file
 
 ### type: File
 
