@@ -24,7 +24,7 @@ type Registry struct {
 }
 
 type RegistryContent struct {
-	PackageInfos PackageInfos `yaml:"package_infos"`
+	PackageInfos PackageInfos `yaml:"packages"`
 }
 
 func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map[string]*RegistryContent, error) {
