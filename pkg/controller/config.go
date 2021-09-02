@@ -24,6 +24,7 @@ type Package struct {
 type Config struct {
 	Packages       []*Package   `validate:"dive"`
 	InlineRegistry PackageInfos `yaml:"inline_registry" validate:"dive"`
+	Registries     []*Registry  `validate:"dive"`
 }
 
 type PackageInfos []PackageInfo
