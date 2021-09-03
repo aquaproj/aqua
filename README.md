@@ -8,9 +8,9 @@ Version manager of CLI.
 
 ## Slide
 
-[Speaker Deck](https://speakerdeck.com/szksh/introduction-of-aqua-v0-dot-3)
+[Speaker Deck](https://speakerdeck.com/szksh/introduction-of-aqua)
 
-[![image](https://user-images.githubusercontent.com/13323303/131992819-e82320f7-0d99-4294-9a44-92602e5ff33e.png)](https://speakerdeck.com/szksh/introduction-of-aqua-v0-dot-3)
+[![image](https://user-images.githubusercontent.com/13323303/131992819-e82320f7-0d99-4294-9a44-92602e5ff33e.png)](https://speakerdeck.com/szksh/introduction-of-aqua)
 
 ## Quick Start
 
