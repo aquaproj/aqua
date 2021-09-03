@@ -27,16 +27,12 @@ Write `aqua.yaml`.
 ```yaml
 packages:
 - name: jq
-  registry: inline
+  registry: official
   version: jq-1.5
 
 registries:
-- name: official
-  type: github_content
-  repo_owner: suzuki-shunsuke
-  repo_name: aqua-registry
+- type: official
   ref: v0.1.1-0
-  path: registry.yaml
 ```
 
 Install tools.
