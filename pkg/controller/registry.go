@@ -105,7 +105,7 @@ func (registry *LocalRegistry) GetFilePath(rootDir, cfgFilePath string) string {
 }
 
 type RegistryContent struct {
-	PackageInfos PackageInfos `yaml:"packages"`
+	PackageInfos PackageInfos `yaml:"packages" validate:"dive"`
 }
 
 func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgFilePath string) (map[string]*RegistryContent, error) {
