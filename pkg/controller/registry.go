@@ -33,6 +33,7 @@ type mergedRegistry struct {
 const (
 	registryTypeGitHubContent = "github_content"
 	registryTypeLocal         = "local"
+	registryTypeOfficial      = "official"
 )
 
 func (registry *mergedRegistry) GetRegistry() (Registry, error) {
@@ -49,6 +50,14 @@ func (registry *mergedRegistry) GetRegistry() (Registry, error) {
 		return &LocalRegistry{
 			Name: registry.Name,
 			Path: registry.Path,
+		}, nil
+	case registryTypeOfficial:
+		return &GitHubContentRegistry{
+			Name:      "official",
+			RepoOwner: "suzuki-shunsuke",
+			RepoName:  "aqua-registry",
+			Ref:       registry.Ref,
+			Path:      "registry.yaml",
 		}, nil
 	default:
 		return nil, errors.New("type is invalid")
