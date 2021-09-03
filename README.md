@@ -6,6 +6,12 @@
 
 Version manager of CLI.
 
+## Slide
+
+[Speaker Deck](https://speakerdeck.com/szksh/introduction-of-aqua-v0-dot-3)
+
+[![image](https://user-images.githubusercontent.com/13323303/131990731-93d5f77e-e020-44da-9052-d7146031ad3c.png)](https://speakerdeck.com/szksh/introduction-of-aqua-v0-dot-3)
+
 ## Quick Start
 
 Install aqua.
