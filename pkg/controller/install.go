@@ -37,17 +37,13 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	if err := mkdirAll(rootBin); err != nil {
-		return fmt.Errorf("create the directory: %w", err)
-	}
-
 	if _, err := os.Stat(filepath.Join(rootBin, proxyName)); err != nil {
 		if err := ctrl.installProxy(ctx); err != nil {
 			return err
 		}
 	}
 
-	registryContents, err := ctrl.installRegistries(ctx, cfg)
+	registryContents, err := ctrl.installRegistries(ctx, cfg, param.ConfigFilePath)
 	if err != nil {
 		return err
 	}

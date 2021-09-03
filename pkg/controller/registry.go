@@ -11,13 +11,14 @@ import (
 	"github.com/google/go-github/v38/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
 
 type Registry interface {
 	GetName() string
 	GetType() string
-	GetFilePath(rootDir string) string
+	GetFilePath(rootDir, cfgFilePath string) string
 }
 
 type mergedRegistry struct {
@@ -67,15 +68,35 @@ func (registry *GitHubContentRegistry) GetType() string {
 	return registryTypeGitHubContent
 }
 
-func (registry *GitHubContentRegistry) GetFilePath(rootDir string) string {
+func (registry *GitHubContentRegistry) GetFilePath(rootDir, cfgFilePath string) string {
 	return filepath.Join(rootDir, "registries", registry.GetType(), "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
+}
+
+type LocalRegistry struct {
+	Name string `validate:"required"`
+	Path string `validate:"required"`
+}
+
+func (registry *LocalRegistry) GetName() string {
+	return registry.Name
+}
+
+func (registry *LocalRegistry) GetType() string {
+	return registryTypeLocal
+}
+
+func (registry *LocalRegistry) GetFilePath(rootDir, cfgFilePath string) string {
+	if filepath.IsAbs(registry.Path) {
+		return registry.Path
+	}
+	return filepath.Join(filepath.Dir(cfgFilePath), registry.Path)
 }
 
 type RegistryContent struct {
 	PackageInfos PackageInfos `yaml:"packages"`
 }
 
-func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map[string]*RegistryContent, error) {
+func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgFilePath string) (map[string]*RegistryContent, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Registries))
 	var flagMutex sync.Mutex
@@ -91,7 +112,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map
 		go func(registry Registry) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			registryContent, err := ctrl.installRegistry(ctx, registry)
+			registryContent, err := ctrl.installRegistry(ctx, registry, cfgFilePath)
 			if err != nil {
 				<-maxInstallChan
 				log.New().WithFields(logrus.Fields{
@@ -116,8 +137,8 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map
 	return registryContents, nil
 }
 
-func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry) (*RegistryContent, error) { //nolint:cyclop
-	registryFilePath := registry.GetFilePath(ctrl.RootDir)
+func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry, cfgFilePath string) (*RegistryContent, error) { //nolint:cyclop
+	registryFilePath := registry.GetFilePath(ctrl.RootDir, cfgFilePath)
 	if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
@@ -125,7 +146,8 @@ func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry) 
 	if _, err := os.Stat(registryFilePath); err != nil { //nolint:nestif
 		// file doesn't exist
 		// download and install file
-		if registry.GetType() == "github_content" {
+		switch registry.GetType() {
+		case registryTypeGitHubContent:
 			if ctrl.GitHub == nil {
 				return nil, errGitHubTokenIsRequired
 			}
@@ -155,6 +177,10 @@ func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry) 
 				return nil, fmt.Errorf("parse the registry configuration file: %w", err)
 			}
 			return registryContent, nil
+		case registryTypeLocal:
+			return nil, logerr.WithFields(errors.New("local registry isn't found"), logrus.Fields{ //nolint:wrapcheck
+				"local_registry_file_path": registryFilePath,
+			})
 		}
 		return nil, errors.New("unsupported registry type")
 	}
