@@ -38,19 +38,13 @@ bash-5.1# aqua -v
 Please see `aqua.yaml`.
 
 ```yaml
+registries:
+- type: official
+  ref: v0.1.1-0 # renovate: depName=suzuki-shunsuke/aqua-registry
 packages:
 - name: gh
-  registry: inline
+  registry: official
   version: v2.0.0 # renovate: depName=cli/cli
-inline_registry:
-- name: gh
-  type: github_release
-  repo_owner: cli
-  repo_name: cli
-  asset: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}.tar.gz'
-  files:
-  - name: gh
-    src: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}/bin/gh'
 ```
 
 In the tutorial, you will install [gh](https://cli.github.com/) and switch the version of gh with aqua.
@@ -60,8 +54,8 @@ Let's install tools with aqua.
 ```console
 bash-5.1# aqua install
 INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.2 program=aqua registry=inline
-INFO[0001] create a symbolic link                        link_file=/root/.aqua/bin/gh new=/root/.aqua/bin/aqua-proxy program=aqua
-INFO[0001] download and unarchive the package            package_name=gh package_version=v2.0.0 program=aqua registry=inline
+INFO[0001] create a symbolic link                        link_file=/root/.aqua/bin/gh new=aqua-proxy program=aqua
+INFO[0001] download and unarchive the package            package_name=gh package_version=v2.0.0 program=aqua registry=official
 ```
 
 In addition to gh, [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy) is installed. aqua-proxy is required for aqua.
@@ -94,31 +88,38 @@ Please check `~/.aqua`.
 bash-5.1# tree -L 11 ~/.aqua
 /root/.aqua
 ├── bin
-│   ├── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
-│   └── gh -> /root/.aqua/bin/aqua-proxy
-└── pkgs
-    └── github_release
+│   ├── aqua-proxy -> ../pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
+│   └── gh -> aqua-proxy
+├── pkgs
+│   └── github_release
+│       └── github.com
+│           ├── cli
+│           │   └── cli
+│           │       └── v2.0.0
+│           │           └── gh_2.0.0_linux_amd64.tar.gz
+│           │               └── gh_2.0.0_linux_amd64
+│           │                   ├── LICENSE
+│           │                   ├── bin
+│           │                   │   └── gh
+│           │                   └── share
+│           │                       └── man
+│           │                           └── man1
+│           └── suzuki-shunsuke
+│               └── aqua-proxy
+│                   └── v0.1.2
+│                       └── aqua-proxy_linux_amd64.tar.gz
+│                           ├── LICENSE
+│                           ├── README.md
+│                           └── aqua-proxy
+└── registries
+    └── github_content
         └── github.com
-            ├── cli
-            │   └── cli
-            │       └── v2.0.0
-            │           └── gh_2.0.0_linux_amd64.tar.gz
-            │               └── gh_2.0.0_linux_amd64
-            │                   ├── LICENSE
-            │                   ├── bin
-            │                   │   └── gh
-            │                   └── share
-            │                       └── man
-            │                           └── man1
             └── suzuki-shunsuke
-                └── aqua-proxy
-                    └── v0.1.2
-                        └── aqua-proxy_linux_amd64.tar.gz
-                            ├── LICENSE
-                            ├── README.md
-                            └── aqua-proxy
+                └── aqua-registry
+                    └── v0.1.1-0
+                        └── registry.yaml
 
-17 directories, 7 files
+23 directories, 8 files
 ```
 
 `$HOME/.aqua/bin/gh` is a symbolic link to [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy).
@@ -143,47 +144,54 @@ Run `aqua i` again, then gh v1.14.0 is installed.
 
 ```console
 bash-5.1# aqua i
-INFO[0000] download and unarchive the package            package_name=gh package_version=v1.14.0 program=aqua registry=inline
+INFO[0000] download and unarchive the package            package_name=gh package_version=v1.14.0 program=aqua registry=official
 ```
 
 ```console
 bash-5.1# tree -L 11 ~/.aqua
 /root/.aqua
 ├── bin
-│   ├── aqua-proxy -> /root/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
-│   └── gh -> /root/.aqua/bin/aqua-proxy
-└── pkgs
-    └── github_release
+│   ├── aqua-proxy -> ../pkgs/github_release/github.com/suzuki-shunsuke/aqua-proxy/v0.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy
+│   └── gh -> aqua-proxy
+├── pkgs
+│   └── github_release
+│       └── github.com
+│           ├── cli
+│           │   └── cli
+│           │       ├── v1.14.0
+│           │       │   └── gh_1.14.0_linux_amd64.tar.gz
+│           │       │       └── gh_1.14.0_linux_amd64
+│           │       │           ├── LICENSE
+│           │       │           ├── bin
+│           │       │           │   └── gh
+│           │       │           └── share
+│           │       │               └── man
+│           │       │                   └── man1
+│           │       └── v2.0.0
+│           │           └── gh_2.0.0_linux_amd64.tar.gz
+│           │               └── gh_2.0.0_linux_amd64
+│           │                   ├── LICENSE
+│           │                   ├── bin
+│           │                   │   └── gh
+│           │                   └── share
+│           │                       └── man
+│           │                           └── man1
+│           └── suzuki-shunsuke
+│               └── aqua-proxy
+│                   └── v0.1.2
+│                       └── aqua-proxy_linux_amd64.tar.gz
+│                           ├── LICENSE
+│                           ├── README.md
+│                           └── aqua-proxy
+└── registries
+    └── github_content
         └── github.com
-            ├── cli
-            │   └── cli
-            │       ├── v1.14.0
-            │       │   └── gh_1.14.0_linux_amd64.tar.gz
-            │       │       └── gh_1.14.0_linux_amd64
-            │       │           ├── LICENSE
-            │       │           ├── bin
-            │       │           │   └── gh
-            │       │           └── share
-            │       │               └── man
-            │       │                   └── man1
-            │       └── v2.0.0
-            │           └── gh_2.0.0_linux_amd64.tar.gz
-            │               └── gh_2.0.0_linux_amd64
-            │                   ├── LICENSE
-            │                   ├── bin
-            │                   │   └── gh
-            │                   └── share
-            │                       └── man
-            │                           └── man1
             └── suzuki-shunsuke
-                └── aqua-proxy
-                    └── v0.1.2
-                        └── aqua-proxy_linux_amd64.tar.gz
-                            ├── LICENSE
-                            ├── README.md
-                            └── aqua-proxy
+                └── aqua-registry
+                    └── v0.1.1-0
+                        └── registry.yaml
 
-24 directories, 9 files
+30 directories, 10 files
 ```
 
 ```console
@@ -207,7 +215,7 @@ You don't have to run `aqua i` in advance.
 
 ```console
 bash-5.1# gh version
-INFO[0000] download and unarchive the package            package_name=gh package_version=v1.13.1 program=aqua registry=inline
+INFO[0000] download and unarchive the package            package_name=gh package_version=v1.13.1 program=aqua registry=official
 gh version 1.13.1 (2021-07-20)
 https://github.com/cli/cli/releases/tag/v1.13.1
 ```
