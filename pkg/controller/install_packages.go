@@ -24,12 +24,15 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
+			logE := log.New().WithFields(logrus.Fields{
+				"package_name":    pkg.Name,
+				"package_version": pkg.Version,
+				"registry":        pkg.Registry,
+			})
 
 			registry, ok := registries[pkg.Registry]
 			if !ok {
-				log.New().WithFields(logrus.Fields{
-					"package_name": pkg.Name,
-				}).Error("install the package")
+				logE.Error("install the package: registry isn't found")
 				<-maxInstallChan
 				return
 			}
@@ -37,9 +40,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			pkgInfos, err := registry.PackageInfos.ToMap()
 			if err != nil {
 				<-maxInstallChan
-				log.New().WithFields(logrus.Fields{
-					"package_name": pkg.Name,
-				}).WithError(err).Error("install the package")
+				logE.WithError(fmt.Errorf("convert package infos to map: %w", err)).Error("install the package")
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
@@ -49,9 +50,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			pkgInfo, ok := pkgInfos[pkg.Name]
 			if !ok {
 				<-maxInstallChan
-				log.New().WithFields(logrus.Fields{
-					"package_name": pkg.Name,
-				}).WithError(err).Error("install the package")
+				logE.Error("install the package: package isn't found in the registry")
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
@@ -60,9 +59,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 
 			if err := ctrl.installPackage(ctx, pkgInfo, pkg, binDir, onlyLink, isTest); err != nil {
 				<-maxInstallChan
-				log.New().WithFields(logrus.Fields{
-					"package_name": pkg.Name,
-				}).WithError(err).Error("install the package")
+				logE.WithError(err).Error("install the package")
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
