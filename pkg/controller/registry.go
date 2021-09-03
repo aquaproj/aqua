@@ -108,7 +108,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 	maxInstallChan := make(chan struct{}, getMaxParallelism())
 	registryContents := make(map[string]*RegistryContent, len(cfg.Registries)+1)
 	registryContents["inline"] = &RegistryContent{
-		PackageInfos: cfg.InlineRegistry,
+		PackageInfos: cfg.InlineRegistry.Packages,
 	}
 
 	for _, registry := range cfg.Registries {

@@ -18,8 +18,12 @@ If the confgiuration file path isn't specified, the file named `[.]aqua.y[a]ml` 
 ## Configuration File Format
 
 * `packages`: The list of installed packages
-* `inline_registry`: The list of package metadata
+* `inline_registry`: The inline registry
 * `registries`: The list of registries
+
+### type: Inline Registry
+
+* `packages`: The list of package metadata
 
 ### type: Package
 
