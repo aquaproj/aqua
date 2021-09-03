@@ -2,21 +2,6 @@ registries:
 - type: official
   ref: v0.1.1-0 # renovate: depName=suzuki-shunsuke/aqua-registry
 packages:
-- name: direnv
+- name: gh
   registry: official
-  version: v2.28.0 # renovate: depName=direnv/direnv
-- name: golangci-lint
-  registry: official
-  version: v1.42.0 # renovate: depName=golangci/golangci-lint
-- name: helmfile
-  registry: official
-  version: v0.140.0 # renovate: depName=roboll/helmfile
-- name: jq
-  registry: official
-  version: jq-1.6
-- name: kustomize
-  registry: official
-  version: kustomize/v3.9.4 # TODO renovate
-- name: opa
-  registry: official
-  version: v0.32.0 # renovate: depName=open-policy-agent/opa
+  version: v2.0.0 # renovate: depName=cli/cli

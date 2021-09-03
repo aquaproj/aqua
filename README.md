@@ -135,6 +135,13 @@ e.g.
             v0.1.0/
               aqua-proxy_darwin_amd64.tar.gz
                 aqua-proxy
+  registries/
+    github_content/
+      github.com/
+        suzuki-shunsuke/
+          aqua-registry/
+            v0.1.1-0/
+              registry.yaml
 ```
 
 ## Related Projects
