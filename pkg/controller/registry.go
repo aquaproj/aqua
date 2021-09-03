@@ -14,13 +14,61 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Registry struct {
+type Registry interface {
+	GetName() string
+	GetType() string
+	GetFilePath(rootDir string) string
+}
+
+type mergedRegistry struct {
 	Name      string `validate:"required"`
 	Type      string `validate:"required"`
 	RepoOwner string `yaml:"repo_owner"`
 	RepoName  string `yaml:"repo_name"`
 	Ref       string `validate:"required"`
 	Path      string `validate:"required"`
+}
+
+const (
+	registryTypeGitHubContent = "github_content"
+	registryTypeLocal         = "local"
+)
+
+func (registry *mergedRegistry) GetRegistry() (Registry, error) {
+	switch registry.Type {
+	case registryTypeGitHubContent:
+		return &GitHubContentRegistry{
+			Name:      registry.Name,
+			RepoOwner: registry.RepoOwner,
+			RepoName:  registry.RepoName,
+			Ref:       registry.Ref,
+			Path:      registry.Path,
+		}, nil
+	case registryTypeLocal:
+		return nil, nil
+	default:
+		return nil, errors.New("type is invalid")
+	}
+}
+
+type GitHubContentRegistry struct {
+	Name      string `validate:"required"`
+	RepoOwner string `yaml:"repo_owner"`
+	RepoName  string `yaml:"repo_name"`
+	Ref       string `validate:"required"`
+	Path      string `validate:"required"`
+}
+
+func (registry *GitHubContentRegistry) GetName() string {
+	return registry.Name
+}
+
+func (registry *GitHubContentRegistry) GetType() string {
+	return registryTypeGitHubContent
+}
+
+func (registry *GitHubContentRegistry) GetFilePath(rootDir string) string {
+	return filepath.Join(rootDir, "registries", registry.GetType(), "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 }
 
 type RegistryContent struct {
@@ -40,14 +88,14 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map
 	}
 
 	for _, registry := range cfg.Registries {
-		go func(registry *Registry) {
+		go func(registry Registry) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
 			registryContent, err := ctrl.installRegistry(ctx, registry)
 			if err != nil {
 				<-maxInstallChan
 				log.New().WithFields(logrus.Fields{
-					"registry_name": registry.Name,
+					"registry_name": registry.GetName(),
 				}).WithError(err).Error("install the registry")
 				flagMutex.Lock()
 				failed = true
@@ -55,7 +103,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map
 				return
 			}
 			registriesMutex.Lock()
-			registryContents[registry.Name] = registryContent
+			registryContents[registry.GetName()] = registryContent
 			registriesMutex.Unlock()
 			<-maxInstallChan
 		}(registry)
@@ -68,44 +116,47 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config) (map
 	return registryContents, nil
 }
 
-func (ctrl *Controller) installRegistry(ctx context.Context, registry *Registry) (*RegistryContent, error) { //nolint:cyclop
-	if registry.Type != "github_content" {
-		return nil, fmt.Errorf("only inline or github_content registry is supported (%s)", registry.Type)
+func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry) (*RegistryContent, error) { //nolint:cyclop
+	registryFilePath := registry.GetFilePath(ctrl.RootDir)
+	if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
+		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
 
-	// TODO check if file exists
-	registryFilePath := filepath.Join(ctrl.RootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	if _, err := os.Stat(registryFilePath); err != nil { //nolint:nestif
 		// file doesn't exist
 		// download and install file
-		if ctrl.GitHub == nil {
-			return nil, errGitHubTokenIsRequired
-		}
-		file, _, _, err := ctrl.GitHub.Repositories.GetContents(ctx, registry.RepoOwner, registry.RepoName, registry.Path, &github.RepositoryContentGetOptions{
-			Ref: registry.Ref,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
-		}
-		if file == nil {
-			return nil, errors.New("ref must be not a directory but a file")
-		}
-		content, err := file.GetContent()
-		if err != nil {
-			return nil, fmt.Errorf("get the registry configuration content: %w", err)
-		}
+		if registry.GetType() == "github_content" {
+			if ctrl.GitHub == nil {
+				return nil, errGitHubTokenIsRequired
+			}
+			r, ok := registry.(*GitHubContentRegistry)
+			if !ok {
+				return nil, errors.New("registry.GetType() is github_content, but registry isn't *GitHubContentRegistry")
+			}
 
-		if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
-			return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
+			file, _, _, err := ctrl.GitHub.Repositories.GetContents(ctx, r.RepoOwner, r.RepoName, r.Path, &github.RepositoryContentGetOptions{
+				Ref: r.Ref,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
+			}
+			if file == nil {
+				return nil, errors.New("ref must be not a directory but a file")
+			}
+			content, err := file.GetContent()
+			if err != nil {
+				return nil, fmt.Errorf("get the registry configuration content: %w", err)
+			}
+			if err := os.WriteFile(registryFilePath, []byte(content), 0o600); err != nil { //nolint:gomnd
+				return nil, fmt.Errorf("write the configuration file: %w", err)
+			}
+			registryContent := &RegistryContent{}
+			if err := yaml.Unmarshal([]byte(content), registryContent); err != nil {
+				return nil, fmt.Errorf("parse the registry configuration file: %w", err)
+			}
+			return registryContent, nil
 		}
-		if err := os.WriteFile(registryFilePath, []byte(content), 0o600); err != nil { //nolint:gomnd
-			return nil, fmt.Errorf("write the configuration file: %w", err)
-		}
-		registryContent := &RegistryContent{}
-		if err := yaml.Unmarshal([]byte(content), registryContent); err != nil {
-			return nil, fmt.Errorf("parse the registry configuration file: %w", err)
-		}
-		return registryContent, nil
+		return nil, errors.New("unsupported registry type")
 	}
 
 	f, err := os.Open(registryFilePath)
