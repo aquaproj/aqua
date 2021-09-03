@@ -23,7 +23,7 @@ type Package struct {
 
 type Config struct {
 	Packages       []*Package       `validate:"dive"`
-	InlineRegistry *RegistryContent `yaml:"inline_registry" validate:"dive"`
+	InlineRegistry *RegistryContent `yaml:"inline_registry"`
 	Registries     Registries       `validate:"dive"`
 }
 
