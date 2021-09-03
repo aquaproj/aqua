@@ -1,19 +1,14 @@
-packages:
-- name: golangci-lint
-  registry: inline
-  version: v1.42.0 # renovate: depName=golangci/golangci-lint
-- name: cmdx
-  registry: inline
-  version: v1.6.0 # renovate: depName=suzuki-shunsuke/cmdx
+registries:
+- name: official
+  type: github_content
+  repo_owner: suzuki-shunsuke
+  repo_name: aqua-registry
+  ref: v0.1.1-0
+  path: registry.yaml
+- name: local
+  type: local
+  path: registry.yaml
 inline_registry:
-- name: golangci-lint
-  type: github_release
-  repo_owner: golangci
-  repo_name: golangci-lint
-  asset: 'golangci-lint-{{trimPrefix "v" .Package.Version}}-{{.OS}}-{{.Arch}}.tar.gz'
-  files:
-  - name: golangci-lint
-    src: 'golangci-lint-{{trimPrefix "v" .Package.Version}}-{{.OS}}-{{.Arch}}/golangci-lint'
 - name: cmdx
   type: github_release
   repo_owner: suzuki-shunsuke
@@ -21,3 +16,15 @@ inline_registry:
   asset: 'cmdx_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
   files:
   - name: cmdx
+packages:
+- name: cmdx
+  registry: inline
+  version: v1.6.0 # renovate: depName=suzuki-shunsuke/cmdx
+
+- name: golangci-lint
+  registry: local
+  version: v1.42.0 # renovate: depName=golangci/golangci-lint
+
+- name: helm # http
+  registry: official
+  version: v3.6.3 # renovate: depName=helm/helm
