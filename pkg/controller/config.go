@@ -24,10 +24,13 @@ type Package struct {
 type Config struct {
 	Packages       []*Package   `validate:"dive"`
 	InlineRegistry PackageInfos `yaml:"inline_registry" validate:"dive"`
-	Registries     []*Registry  `validate:"dive"`
+	Registries     Registries   `validate:"dive"`
 }
 
-type PackageInfos []PackageInfo
+type (
+	PackageInfos []PackageInfo
+	Registries   []Registry
+)
 
 const (
 	pkgInfoTypeGitHubRelease = "github_release"
@@ -63,6 +66,23 @@ func (pkgInfos *PackageInfos) UnmarshalYAML(unmarshal func(interface{}) error) e
 		list[i] = pkgInfo
 	}
 	*pkgInfos = list
+	return nil
+}
+
+func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var arr []mergedRegistry
+	if err := unmarshal(&arr); err != nil {
+		return err
+	}
+	list := make([]Registry, len(arr))
+	for i, p := range arr {
+		registry, err := p.GetRegistry()
+		if err != nil {
+			return err
+		}
+		list[i] = registry
+	}
+	*registries = list
 	return nil
 }
 

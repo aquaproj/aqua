@@ -52,14 +52,19 @@ The type `http` has the following fields.
 
 `Registry` is the list of package metadata.
 
-`github_content` registry
-
 * `name`: registy name
-* `type`: registy type. Only `github_content` is supported
+* `type`: registy type. `github_content` and `local` is supported
+
+`github_content` registry has the following fields.
+
 * `repo_owner`: GitHub Repository owner
 * `repo_name`: GitHub Repository name
 * `ref`: GitHub Content ref (e.g. `v0.1.0`)
 * `path`: GitHub Content file path. This must be a file
+
+`local` registry has the following fields.
+
+* `path`: The registry file path. This is either the absolute path or the relative path from aqua configuration file
 
 ### type: File
 

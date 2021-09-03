@@ -50,7 +50,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		registryContents, err := ctrl.installRegistries(ctx, cfg)
+		registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
 		if err != nil {
 			return err
 		}
@@ -70,7 +70,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 				return err
 			}
 
-			registryContents, err := ctrl.installRegistries(ctx, cfg)
+			registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
 			if err != nil {
 				return err
 			}
@@ -98,7 +98,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return err
 		}
 
-		registryContents, err := ctrl.installRegistries(ctx, cfg)
+		registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
 		if err != nil {
 			return err
 		}
