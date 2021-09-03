@@ -24,13 +24,14 @@ packages:
   registry: inline
   version: jq-1.5
 inline_registry:
-- name: jq
-  type: github_release
-  repo_owner: stedolan
-  repo_name: jq
-  asset: 'jq-{{if eq .OS "darwin"}}osx{{else}}{{.OS}}{{end}}-{{.Arch}}'
-  files:
+  packages:
   - name: jq
+    type: github_release
+    repo_owner: stedolan
+    repo_name: jq
+    asset: 'jq-{{if eq .OS "darwin"}}osx{{else}}{{.OS}}{{end}}-{{.Arch}}'
+    files:
+    - name: jq
 ```
 
 Install tools.
