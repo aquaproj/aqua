@@ -22,13 +22,9 @@ type Package struct {
 }
 
 type Config struct {
-	Packages       []*Package      `validate:"dive"`
-	InlineRegistry *InlineRegistry `yaml:"inline_registry" validate:"dive"`
-	Registries     Registries      `validate:"dive"`
-}
-
-type InlineRegistry struct {
-	Packages PackageInfos `validate:"dive"`
+	Packages       []*Package       `validate:"dive"`
+	InlineRegistry *RegistryContent `yaml:"inline_registry" validate:"dive"`
+	Registries     Registries       `validate:"dive"`
 }
 
 type (
