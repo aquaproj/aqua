@@ -46,7 +46,10 @@ func (registry *mergedRegistry) GetRegistry() (Registry, error) {
 			Path:      registry.Path,
 		}, nil
 	case registryTypeLocal:
-		return nil, nil
+		return &LocalRegistry{
+			Name: registry.Name,
+			Path: registry.Path,
+		}, nil
 	default:
 		return nil, errors.New("type is invalid")
 	}
