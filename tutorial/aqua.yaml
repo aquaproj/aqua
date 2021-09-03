@@ -1,13 +1,26 @@
+registries:
+- name: official
+  type: github_content
+  repo_owner: suzuki-shunsuke
+  repo_name: aqua-registry
+  ref: v0.1.1-0 # renovate: depName=suzuki-shunsuke/aqua-registry
+  path: registry.yaml
 packages:
-- name: gh
-  registry: inline
-  version: v1.13.1
-inline_registry:
-- name: gh
-  type: github_release
-  repo_owner: cli
-  repo_name: cli
-  asset: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}.tar.gz'
-  files:
-  - name: gh
-    src: 'gh_{{trimPrefix "v" .Package.Version}}_{{if eq .OS "darwin"}}macOS{{else}}linux{{end}}_{{.Arch}}/bin/gh'
+- name: direnv
+  registry: official
+  version: v2.28.0 # renovate: depName=direnv/direnv
+- name: golangci-lint
+  registry: official
+  version: v1.42.0 # renovate: depName=golangci/golangci-lint
+- name: helmfile
+  registry: official
+  version: v0.140.0 # renovate: depName=roboll/helmfile
+- name: jq
+  registry: official
+  version: jq-1.6
+- name: kustomize
+  registry: official
+  version: kustomize/v3.9.4 # TODO renovate
+- name: opa
+  registry: official
+  version: v0.32.0 # renovate: depName=open-policy-agent/opa

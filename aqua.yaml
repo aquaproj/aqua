@@ -5,17 +5,21 @@ registries:
   repo_name: aqua-registry
   ref: v0.1.1-0
   path: registry.yaml
+
 - name: local
   type: local
   path: registry.yaml
+
 inline_registry:
-- name: cmdx
-  type: github_release
-  repo_owner: suzuki-shunsuke
-  repo_name: cmdx
-  asset: 'cmdx_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
-  files:
+  packages:
   - name: cmdx
+    type: github_release
+    repo_owner: suzuki-shunsuke
+    repo_name: cmdx
+    asset: 'cmdx_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+    files:
+    - name: cmdx
+
 packages:
 - name: cmdx
   registry: inline
