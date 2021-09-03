@@ -29,15 +29,14 @@ packages:
 - name: jq
   registry: inline
   version: jq-1.5
-inline_registry:
-  packages:
-  - name: jq
-    type: github_release
-    repo_owner: stedolan
-    repo_name: jq
-    asset: 'jq-{{if eq .OS "darwin"}}osx{{else}}{{.OS}}{{end}}-{{.Arch}}'
-    files:
-    - name: jq
+
+registries:
+- name: official
+  type: github_content
+  repo_owner: suzuki-shunsuke
+  repo_name: aqua-registry
+  ref: v0.1.1-0
+  path: registry.yaml
 ```
 
 Install tools.
