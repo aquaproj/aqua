@@ -5,19 +5,20 @@
 ```console
 $ aqua help
 NAME:
-   aqua - General version manager. https://github.com/suzuki-shunsuke/aqua
+   aqua - Version Manager of CLI. https://github.com/suzuki-shunsuke/aqua
 
 USAGE:
    aqua [global options] command [command options] [arguments...]
 
 VERSION:
-   0.1.0-10 (533eba47b828a5a4ba89602393c41d71ec644e89)
+   0.5.1-0 (0afa9d9ddd069d726e9f2e8b1467db1c4956c931)
 
 COMMANDS:
-   install, i  Install tools
-   exec        Execute tool
-   version     Show version
-   help, h     Shows a list of commands or help for one command
+   install, i   Install tools
+   exec         Execute tool
+   generate, g  Search packages in registries and output the configuration interactively
+   version      Show version
+   help, h      Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --log-level value         log level [$AQUA_LOG_LEVEL]
@@ -38,6 +39,7 @@ USAGE:
 
 OPTIONS:
    --only-link  create links but skip download packages (default: false)
+   --test       test file.src after installing the package (default: false)
    
 ```
 
@@ -50,4 +52,15 @@ NAME:
 
 USAGE:
    aqua exec [arguments...]
+```
+
+## aqua generate
+
+```console
+$ aqua help generate
+NAME:
+   aqua generate - Search packages in registries and output the configuration interactively
+
+USAGE:
+   aqua generate [arguments...]
 ```
