@@ -1,47 +1,48 @@
 {
-  "extends": [
-    "github>suzuki-shunsuke/renovate-config:golang"
+  extends: [
+    "config:base",
+    "github>suzuki-shunsuke/renovate-config:golang",
   ],
-  "regexManagers": [
+  regexManagers: [
     {
-      "fileMatch": ["aqua.yaml"],
-      "matchStrings": [
-        "version: (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n"
+      fileMatch: ["aqua.yaml"],
+      matchStrings: [
+        "version: (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n",
       ],
-      "datasourceTemplate": "github-releases"
+      datasourceTemplate: "github-releases",
     },
     {
-      "fileMatch": ["tutorial/docker-compose.yml"],
-      "depNameTemplate": "suzuki-shunsuke/aqua",
-      "datasourceTemplate": "github-releases",
-      "matchStrings": [
-        "aqua_version: (?<currentValue>.*)"
-      ]
+      fileMatch: ["tutorial/docker-compose.yml"],
+      depNameTemplate: "suzuki-shunsuke/aqua",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        "aqua_version: (?<currentValue>.*)",
+      ],
     },
     {
-      "fileMatch": ["tutorial/docker-compose.yml"],
-      "depNameTemplate": "suzuki-shunsuke/aqua-installer",
-      "datasourceTemplate": "github-releases",
-      "matchStrings": [
-        "aqua_installer_version: (?<currentValue>.*)"
-      ]
+      fileMatch: ["tutorial/docker-compose.yml"],
+      depNameTemplate: "suzuki-shunsuke/aqua-installer",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        "aqua_installer_version: (?<currentValue>.*)",
+      ],
     },
     {
-      "fileMatch": ["README.md"],
-      "depNameTemplate": "suzuki-shunsuke/aqua-installer",
-      "datasourceTemplate": "github-releases",
-      "matchStrings": [
+      fileMatch: ["README.md"],
+      depNameTemplate: "suzuki-shunsuke/aqua-installer",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
         "aqua-installer/(?<currentValue>.*)/aqua-installer",
         "aqua-installer@(?<currentValue>.*)",
-      ]
+      ],
     },
     {
-      "fileMatch": [".*\\.go"],
-      "depNameTemplate": "suzuki-shunsuke/aqua-proxy",
-      "datasourceTemplate": "github-releases",
-      "matchStrings": [
-        '"(?<currentValue>.*)", // renovate: depName=suzuki-shunsuke/aqua-proxy'
-      ]
-    }
-  ]
+      fileMatch: [".*\\.go"],
+      depNameTemplate: "suzuki-shunsuke/aqua-proxy",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        '"(?<currentValue>.*)", // renovate: depName=suzuki-shunsuke/aqua-proxy',
+      ],
+    },
+  ],
 }
