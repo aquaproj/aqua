@@ -24,4 +24,8 @@ $(command_console aqua help install)
 
 ## aqua exec
 
-$(command_console aqua help exec)" 
+$(command_console aqua help exec)
+
+## aqua generate
+
+$(command_console aqua help generate)" 
