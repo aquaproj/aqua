@@ -6,11 +6,11 @@ By `Registry`, you can do the following things.
 * Reuse the aqua's Configuration
 * Share your Configuration across projects
 * Publish your Configuration as OSS
-* Contribute to the official Registry or third party Registry
+* Contribute to the standard Registry or third party Registry
 
-## Official Registry
+## Standard Registry
 
-We maintain the official registry.
+We maintain the standard registry.
 We welcome your contribution!
 
 https://github.com/suzuki-shunsuke/aqua-registry

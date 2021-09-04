@@ -33,7 +33,7 @@ type mergedRegistry struct {
 const (
 	registryTypeGitHubContent = "github_content"
 	registryTypeLocal         = "local"
-	registryTypeOfficial      = "official"
+	registryTypeStandard      = "standard"
 )
 
 func (registry *mergedRegistry) GetRegistry() (Registry, error) {
@@ -51,9 +51,9 @@ func (registry *mergedRegistry) GetRegistry() (Registry, error) {
 			Name: registry.Name,
 			Path: registry.Path,
 		}, nil
-	case registryTypeOfficial:
+	case registryTypeStandard:
 		return &GitHubContentRegistry{
-			Name:      "official",
+			Name:      "standard",
 			RepoOwner: "suzuki-shunsuke",
 			RepoName:  "aqua-registry",
 			Ref:       registry.Ref,
