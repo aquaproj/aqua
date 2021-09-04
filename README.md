@@ -162,6 +162,7 @@ Please see [Releases](https://github.com/suzuki-shunsuke/aqua/releases).
 ## Blog
 
 * [aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
+* [aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
 
 ## License
 
