@@ -56,33 +56,35 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		}
 
 		pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
+		if pkg != nil {
+			return ctrl.installAndExec(ctx, pkgInfo, pkg, file, binDir, args)
+		}
+
+		cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
+		if _, err := os.Stat(cfgFilePath); err != nil {
+			exePath := lookPath(exeName)
+			if exePath == "" {
+				return errCommandIsNotFound
+			}
+			return ctrl.execCommand(ctx, exePath, args[1:])
+		}
+		cfg = &Config{}
+		if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
+			return err
+		}
+
+		registryContents, err = ctrl.installRegistries(ctx, cfg, cfgFilePath)
+		if err != nil {
+			return err
+		}
+
+		pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
 		if pkg == nil {
-			cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
-			if _, err := os.Stat(cfgFilePath); err != nil {
-				exePath := lookPath(exeName)
-				if exePath == "" {
-					return errCommandIsNotFound
-				}
-				return ctrl.execCommand(ctx, exePath, args[1:])
+			exePath := lookPath(exeName)
+			if exePath == "" {
+				return errCommandIsNotFound
 			}
-			cfg := &Config{}
-			if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-				return err
-			}
-
-			registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
-			if err != nil {
-				return err
-			}
-
-			pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
-			if pkg == nil {
-				exePath := lookPath(exeName)
-				if exePath == "" {
-					return errCommandIsNotFound
-				}
-				return ctrl.execCommand(ctx, exePath, args[1:])
-			}
+			return ctrl.execCommand(ctx, exePath, args[1:])
 		}
 	} else {
 		cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
@@ -115,6 +117,10 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		}
 	}
 
+	return ctrl.installAndExec(ctx, pkgInfo, pkg, file, binDir, args)
+}
+
+func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo, pkg *Package, file *File, binDir string, args []string) error {
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return fmt.Errorf("get file_src: %w", err)

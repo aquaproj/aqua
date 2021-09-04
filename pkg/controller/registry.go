@@ -147,52 +147,60 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 	return registryContents, nil
 }
 
-func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry, cfgFilePath string) (*RegistryContent, error) { //nolint:cyclop
+func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
+	if ctrl.GitHub == nil {
+		return nil, errGitHubTokenIsRequired
+	}
+	r, ok := registry.(*GitHubContentRegistry)
+	if !ok {
+		return nil, errors.New("registry.GetType() is github_content, but registry isn't *GitHubContentRegistry")
+	}
+
+	file, _, _, err := ctrl.GitHub.Repositories.GetContents(ctx, r.RepoOwner, r.RepoName, r.Path, &github.RepositoryContentGetOptions{
+		Ref: r.Ref,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
+	}
+	if file == nil {
+		return nil, errors.New("ref must be not a directory but a file")
+	}
+	content, err := file.GetContent()
+	if err != nil {
+		return nil, fmt.Errorf("get the registry configuration content: %w", err)
+	}
+	if err := os.WriteFile(registryFilePath, []byte(content), 0o600); err != nil { //nolint:gomnd
+		return nil, fmt.Errorf("write the configuration file: %w", err)
+	}
+	registryContent := &RegistryContent{}
+	if err := yaml.Unmarshal([]byte(content), registryContent); err != nil {
+		return nil, fmt.Errorf("parse the registry configuration file: %w", err)
+	}
+	return registryContent, nil
+}
+
+func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
+	// file doesn't exist
+	// download and install file
+	switch registry.GetType() {
+	case registryTypeGitHubContent:
+		return ctrl.getGitHubContentRegistry(ctx, registry, registryFilePath)
+	case registryTypeLocal:
+		return nil, logerr.WithFields(errors.New("local registry isn't found"), logrus.Fields{ //nolint:wrapcheck
+			"local_registry_file_path": registryFilePath,
+		})
+	}
+	return nil, errors.New("unsupported registry type")
+}
+
+func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry, cfgFilePath string) (*RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(ctrl.RootDir, cfgFilePath)
 	if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
 
-	if _, err := os.Stat(registryFilePath); err != nil { //nolint:nestif
-		// file doesn't exist
-		// download and install file
-		switch registry.GetType() {
-		case registryTypeGitHubContent:
-			if ctrl.GitHub == nil {
-				return nil, errGitHubTokenIsRequired
-			}
-			r, ok := registry.(*GitHubContentRegistry)
-			if !ok {
-				return nil, errors.New("registry.GetType() is github_content, but registry isn't *GitHubContentRegistry")
-			}
-
-			file, _, _, err := ctrl.GitHub.Repositories.GetContents(ctx, r.RepoOwner, r.RepoName, r.Path, &github.RepositoryContentGetOptions{
-				Ref: r.Ref,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
-			}
-			if file == nil {
-				return nil, errors.New("ref must be not a directory but a file")
-			}
-			content, err := file.GetContent()
-			if err != nil {
-				return nil, fmt.Errorf("get the registry configuration content: %w", err)
-			}
-			if err := os.WriteFile(registryFilePath, []byte(content), 0o600); err != nil { //nolint:gomnd
-				return nil, fmt.Errorf("write the configuration file: %w", err)
-			}
-			registryContent := &RegistryContent{}
-			if err := yaml.Unmarshal([]byte(content), registryContent); err != nil {
-				return nil, fmt.Errorf("parse the registry configuration file: %w", err)
-			}
-			return registryContent, nil
-		case registryTypeLocal:
-			return nil, logerr.WithFields(errors.New("local registry isn't found"), logrus.Fields{ //nolint:wrapcheck
-				"local_registry_file_path": registryFilePath,
-			})
-		}
-		return nil, errors.New("unsupported registry type")
+	if _, err := os.Stat(registryFilePath); err != nil {
+		return ctrl.getRegistry(ctx, registry, registryFilePath)
 	}
 
 	f, err := os.Open(registryFilePath)
