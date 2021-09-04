@@ -5,7 +5,7 @@ services:
     build:
       context: .
       args:
-        aqua_version: v0.4.0-3
+        aqua_version: v0.4.0
         aqua_installer_version: v0.1.2
     tty: true
     stdin_open: true
