@@ -10,6 +10,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+var errGitHubReleaseTypeAssertion = errors.New("pkg typs is github_release, but it isn't *GitHubReleasePackageInfo")
+
 func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo PackageInfo, dest, assetName string) error {
 	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
@@ -26,7 +28,7 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo Pack
 		}
 		p, ok := pkgInfo.(*GitHubReleasePackageInfo)
 		if !ok {
-			return errors.New("pkg typs is github_release, but it isn't *GitHubReleasePackageInfo")
+			return errGitHubReleaseTypeAssertion
 		}
 		b, err := ctrl.downloadFromGitHub(ctx, p.RepoOwner, p.RepoName, pkg.Version, assetName)
 		if err != nil {
