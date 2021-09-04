@@ -40,7 +40,7 @@ Please see `aqua.yaml`.
 ```yaml
 registries:
 - type: official
-  ref: v0.1.1-0 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.1.1 # renovate: depName=suzuki-shunsuke/aqua-registry
 packages:
 - name: gh
   registry: official
