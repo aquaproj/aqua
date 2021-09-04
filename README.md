@@ -32,7 +32,7 @@ packages:
 
 registries:
 - type: official
-  ref: v0.1.1-0 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.2.0 # renovate: depName=suzuki-shunsuke/aqua-registry
 ```
 
 Install tools.
