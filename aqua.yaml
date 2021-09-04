@@ -1,5 +1,5 @@
 registries:
-- type: official
+- type: standard
   ref: v0.2.0
 
 - name: local
@@ -26,5 +26,5 @@ packages:
   version: v1.42.0 # renovate: depName=golangci/golangci-lint
 
 - name: helm # http
-  registry: official
+  registry: standard
   version: v3.6.3 # renovate: depName=helm/helm

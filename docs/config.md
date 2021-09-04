@@ -57,7 +57,7 @@ The type `http` has the following fields.
 `Registry` is the list of package metadata.
 
 * `name`: registy name
-* `type`: registy type. `github_content` and `local` and `official` are supported
+* `type`: registy type. `github_content` and `local` and `standard` are supported
 
 `github_content` registry has the following fields.
 
@@ -70,13 +70,13 @@ The type `http` has the following fields.
 
 * `path`: The registry file path. This is either the absolute path or the relative path from aqua configuration file
 
-`official` registry is special registry.
+`standard` registry is special registry.
 
 Only `ref` field is supported.
 
 ```yaml
 registries:
-- type: official
+- type: standard
   ref: v0.1.1-0
 ```
 
@@ -84,7 +84,7 @@ This is equivalent to the following definition.
 
 ```yaml
 registries:
-- name: official
+- name: standard
   type: github_content
   repo_owner: suzuki-shunsuke
   repo_name: aqua-registry

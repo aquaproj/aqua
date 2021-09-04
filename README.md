@@ -27,11 +27,11 @@ Write `aqua.yaml`.
 ```yaml
 packages:
 - name: jq
-  registry: official
+  registry: standard
   version: jq-1.5
 
 registries:
-- type: official
+- type: standard
   ref: v0.2.0 # renovate: depName=suzuki-shunsuke/aqua-registry
 ```
 
@@ -88,7 +88,7 @@ jq-1.6
 * Share tools across projects
   * aqua installs tools in the shared directory `~/.aqua`. It saves time and disk to install tools
 * Ecosystem named `Registry` - it eases to write aqua configuration
-  * You can share and reuse the aqua configuration. We provide the official registry too
+  * You can share and reuse the aqua configuration. We provide the standard registry too
 
 ## Install
 
@@ -148,7 +148,7 @@ e.g.
 
 * [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy)
 * [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer): Install aqua quickly
-* [aqua-registry](https://github.com/suzuki-shunsuke/aqua-registry): Official Registry
+* [aqua-registry](https://github.com/suzuki-shunsuke/aqua-registry): Standard Registry
 
 ## Example
 

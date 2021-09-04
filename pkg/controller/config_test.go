@@ -18,20 +18,20 @@ func TestConfig_UnmarshalYAML(t *testing.T) { //nolint:funlen
 		exp   *controller.Config
 	}{
 		{
-			title: "official registry",
+			title: "standard registry",
 			yaml: `
 registries:
-- type: official
+- type: standard
   ref: v0.2.0
 packages:
 - name: cmdx
-  registry: official
+  registry: standard
   version: v1.6.0
 `,
 			exp: &controller.Config{
 				Registries: controller.Registries{
 					&controller.GitHubContentRegistry{
-						Name:      "official",
+						Name:      "standard",
 						RepoOwner: "suzuki-shunsuke",
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
@@ -41,7 +41,7 @@ packages:
 				Packages: []*controller.Package{
 					{
 						Name:     "cmdx",
-						Registry: "official",
+						Registry: "standard",
 						Version:  "v1.6.0",
 					},
 				},
