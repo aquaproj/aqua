@@ -20,7 +20,7 @@ var (
 	errCommandIsNotFound = errors.New("command is not found")
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:funlen,cyclop,gocognit
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error {
 	if len(args) == 0 {
 		return errCommandIsRequired
 	}
@@ -35,86 +35,43 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		return fmt.Errorf("get the current directory: %w", logerr.WithFields(err, fields))
 	}
 
-	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
-
 	binDir := filepath.Join(ctrl.RootDir, "bin")
 
-	var (
-		pkg     *Package
-		pkgInfo PackageInfo
-		file    *File
-	)
-	if cfgFilePath != "" { //nolint:nestif
-		cfg := &Config{}
-		if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-			return err
-		}
-
-		registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
+	if cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath); cfgFilePath != "" {
+		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
 		if err != nil {
 			return err
 		}
-
-		pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
-		if pkg == nil {
-			cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
-			if _, err := os.Stat(cfgFilePath); err != nil {
-				exePath := lookPath(exeName)
-				if exePath == "" {
-					return errCommandIsNotFound
-				}
-				return ctrl.execCommand(ctx, exePath, args[1:])
-			}
-			cfg := &Config{}
-			if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-				return err
-			}
-
-			registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
-			if err != nil {
-				return err
-			}
-
-			pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
-			if pkg == nil {
-				exePath := lookPath(exeName)
-				if exePath == "" {
-					return errCommandIsNotFound
-				}
-				return ctrl.execCommand(ctx, exePath, args[1:])
-			}
-		}
-	} else {
-		cfgFilePath = ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
-		if _, err := os.Stat(cfgFilePath); err != nil {
-			exePath := lookPath(exeName)
-			if exePath == "" {
-				return logerr.WithFields(errCommandIsNotFound, fields) //nolint:wrapcheck
-			}
-			return ctrl.execCommand(ctx, exePath, args[1:])
-		}
-		cfg := &Config{}
-		if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-			return err
-		}
-
-		registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
-		if err != nil {
-			return err
-		}
-
-		pkg, pkgInfo, file = ctrl.findExecFile(registryContents, cfg, exeName)
-		if pkg == nil {
-			exePath := lookPath(exeName)
-			if exePath == "" {
-				return logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
-					"exe_name": exeName,
-				})
-			}
-			return ctrl.execCommand(ctx, exePath, args[1:])
+		if pkg != nil {
+			return ctrl.installAndExec(ctx, pkgInfo, pkg, file, binDir, args)
 		}
 	}
+	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
+	if _, err := os.Stat(cfgFilePath); err != nil {
+		return ctrl.findAndExecExtCommand(ctx, exeName, args[1:])
+	}
 
+	pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
+	if err != nil {
+		return err
+	}
+	if pkg == nil {
+		return ctrl.findAndExecExtCommand(ctx, exeName, args[1:])
+	}
+	return ctrl.installAndExec(ctx, pkgInfo, pkg, file, binDir, args)
+}
+
+func (ctrl *Controller) findAndExecExtCommand(ctx context.Context, exeName string, args []string) error {
+	exePath := lookPath(exeName)
+	if exePath == "" {
+		return logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
+			"exe_name": exeName,
+		})
+	}
+	return ctrl.execCommand(ctx, exePath, args)
+}
+
+func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo, pkg *Package, file *File, binDir string, args []string) error {
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return fmt.Errorf("get file_src: %w", err)
@@ -127,32 +84,50 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 }
 
-func (ctrl *Controller) findExecFile(registries map[string]*RegistryContent, cfg *Config, exeName string) (*Package, PackageInfo, *File) {
-	for _, pkg := range cfg.Packages {
-		registry, ok := registries[pkg.Registry]
-		if !ok {
-			log.New().Warnf("registry isn't found %s", pkg.Name)
-			continue
-		}
+func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*Package, PackageInfo, *File) {
+	registry, ok := registries[pkg.Registry]
+	if !ok {
+		log.New().Warnf("registry isn't found %s", pkg.Name)
+		return nil, nil, nil
+	}
 
-		m, err := registry.PackageInfos.ToMap()
-		if err != nil {
-			log.New().Warnf("package isn't found %s", pkg.Name)
-			continue
-		}
+	m, err := registry.PackageInfos.ToMap()
+	if err != nil {
+		log.New().WithFields(logrus.Fields{
+			"registry_name": pkg.Registry,
+		}).WithError(err).Warnf("registry is invalid")
+		return nil, nil, nil
+	}
 
-		pkgInfo, ok := m[pkg.Name]
-		if !ok {
-			log.New().Warnf("package isn't found %s", pkg.Name)
-			continue
-		}
-		for _, file := range pkgInfo.GetFiles() {
-			if file.Name == exeName {
-				return pkg, pkgInfo, file
-			}
+	pkgInfo, ok := m[pkg.Name]
+	if !ok {
+		log.New().Warnf("package isn't found %s", pkg.Name)
+		return nil, nil, nil
+	}
+	for _, file := range pkgInfo.GetFiles() {
+		if file.Name == exeName {
+			return pkg, pkgInfo, file
 		}
 	}
 	return nil, nil, nil
+}
+
+func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, PackageInfo, *File, error) {
+	cfg := &Config{}
+	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
+		return nil, nil, nil, err
+	}
+
+	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	for _, pkg := range cfg.Packages {
+		if pkg, pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg); pkg != nil {
+			return pkg, pkgInfo, file, nil
+		}
+	}
+	return nil, nil, nil, nil
 }
 
 func isUnarchived(archiveType, assetName string) bool {
