@@ -37,6 +37,13 @@
       ],
     },
     {
+      fileMatch: ["README.md", "aqua.yaml"],
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        "ref: (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n",
+      ],
+    },
+    {
       fileMatch: [".*\\.go"],
       depNameTemplate: "suzuki-shunsuke/aqua-proxy",
       datasourceTemplate: "github-releases",
