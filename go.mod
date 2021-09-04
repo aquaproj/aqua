@@ -7,6 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v38 v38.1.0
+	github.com/ktr0731/go-fuzzyfinder v0.5.0
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0

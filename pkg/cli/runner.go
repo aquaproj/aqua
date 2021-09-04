@@ -68,6 +68,12 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 				Action: runner.execAction,
 			},
 			{
+				Name:    "generate",
+				Aliases: []string{"g"},
+				Usage:   "Search packages in registries and output the configuration interactively",
+				Action:  runner.generateAction,
+			},
+			{
 				Name:   "version",
 				Usage:  "Show version",
 				Action: runner.versionAction,
