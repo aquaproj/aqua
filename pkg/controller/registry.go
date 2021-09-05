@@ -60,7 +60,10 @@ func (registry *mergedRegistry) GetRegistry() (Registry, error) {
 			Path:      "registry.yaml",
 		}, nil
 	default:
-		return nil, errors.New("type is invalid")
+		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
+			"registry_name": registry.Name,
+			"registry_type": registry.Type,
+		})
 	}
 }
 
