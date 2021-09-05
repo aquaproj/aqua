@@ -265,8 +265,9 @@ Please see [Releases](https://github.com/suzuki-shunsuke/aqua/releases).
 
 ## Blog
 
-* [aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
-* [aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
+* [2021-08-28 aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
+* [2021-09-04 aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
+* [2021-09-05 aqua の設定ファイルをインタラクティブに生成する generate コマンド](https://techblog.szksh.cloud/aqua-generate/)
 
 ## License
 
