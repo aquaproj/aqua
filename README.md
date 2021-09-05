@@ -4,13 +4,124 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/aqua.svg)](https://github.com/suzuki-shunsuke/aqua)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/aqua/main/LICENSE)
 
-Version manager of CLI.
+CLI Version manager.
 
-## Slide
+## Index
 
-[Speaker Deck](https://speakerdeck.com/szksh/introduction-of-aqua)
+* [Slide (Speaker Deck)](https://speakerdeck.com/szksh/introduction-of-aqua)
+* [Tutorial](tutorial/README.md)
+* [Usage](docs/usage.md)
+* [Configuration](docs/config.md)
+* [Registry](docs/registry.md)
 
-[![image](https://user-images.githubusercontent.com/13323303/131992819-e82320f7-0d99-4294-9a44-92602e5ff33e.png)](https://speakerdeck.com/szksh/introduction-of-aqua)
+## Overview
+
+You can install CLI tools and manage their versions with declarative YAML configuration `aqua.yaml`.
+
+e.g. Install jq, direnv, and fzf with aqua.
+
+```yaml
+registries:
+- type: standard
+  ref: v0.2.1 # renovate: depName=suzuki-shunsuke/aqua-registry
+
+packages:
+- name: jq
+  registry: standard
+  version: jq-1.6
+- name: direnv
+  registry: standard
+  version: v2.28.0 # renovate: depName=direnv/direnv
+- name: fzf
+  registry: standard
+  version: 0.27.2 # renovate: depName=junegunn/fzf
+```
+
+After writing the configuration, you can install them by `aqua i`.
+
+```
+$ aqua i
+```
+
+`aqua i` installs all packages all at once.
+Tools are installed in `~/.aqua/pkg` and symbolic links are created in `~/.aqua/bin`, so please add `~/.aqua/bin` to the environment variable `PATH`.
+
+It takes a long time to install many tools all at once, and some tools aren't really needed.
+
+So instead of `aqua i` let's execute `aqua i --only-link`.
+
+```
+$ aqua i --only-link
+```
+
+`--only-link` creates symbolic links to aqua-proxy in `~/.aqua/bin` but skipping the downloading and installing tools.
+When you execute the tool, the tool is installed automatically if it isn't installed yet before it is executed.
+We call this feature as _lazy install_.
+By the lazy install, you don't have to execute aqua explicitly after changing the tool's version.
+When `aqua.yaml` is managed with Git, the lazy install is very useful because `aqua.yaml` is updated by `git pull` then the update is reflected automatically.
+
+By adding `aqua.yaml` in your Git repositories, you can manage tools per repository.
+You can change the version of tools per project.
+
+aqua installs the tools in the shared directory `~/.aqua`,
+so the same version of the same tool is installed only at once.
+It saves the time and the disk usage.
+
+aqua supports the mechanithm named `Registry`.
+You can share and reuse the aqua configuration, so it makes easy to write `aqua.yaml`.
+
+```yaml
+registries:
+- type: standard
+  ref: v0.2.1 # renovate: depName=suzuki-shunsuke/aqua-registry
+
+packages:
+- name: direnv
+  registry: standard
+  version: v2.28.0 # renovate: depName=direnv/direnv
+```
+
+In the above configuration, [the standard Registry](https://github.com/suzuki-shunsuke/aqua-registry/blob/main/registry.yaml) is used so you can install direnv easily.
+
+By the command `aqua generate`, you can check if the registry supports the tool you need and write the configuration quickly.
+
+```
+$ aqua g
+```
+
+`aqua g` launches the interactive UI and you can select the package and it's version interactively.
+
+```
+  direnv (standard)
+  consul (standard)
+  conftest (standard)
+> golangci-lint (standard)
+  47/47
+>
+```
+
+If the selected package type is `github_release`, you can select the package version interactively.
+
+```
+  v1.40.0
+  v1.40.1
+  v1.41.0
+  v1.41.1
+> v1.42.0
+  30/30
+>
+```
+
+After selecting the package and its version, the configuration is outputted.
+
+```console
+$ aqua g
+- name: golangci-lint
+  registry: standard
+  version: v1.42.0
+```
+
+If the Registries don't support the tool, you can send the pull request to the registry or create your own Registry or add the configuration in `aqua.yaml` as `inline` Registry.
 
 ## Quick Start
 
@@ -60,13 +171,6 @@ Run `jq` again, then jq's new version is installed automatically and `jq` is run
 $ jq --version
 jq-1.6
 ```
-
-## Index
-
-* [Tutorial](tutorial/README.md)
-* [Usage](docs/usage.md)
-* [Configuration](docs/config.md)
-* [Registry](docs/registry.md)
 
 ## Main Usecase
 
