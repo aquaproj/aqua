@@ -116,7 +116,9 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 	var failed bool
 	maxInstallChan := make(chan struct{}, getMaxParallelism())
 	registryContents := make(map[string]*RegistryContent, len(cfg.Registries)+1)
-	registryContents["inline"] = cfg.InlineRegistry
+	if cfg.InlineRegistry != nil {
+		registryContents["inline"] = cfg.InlineRegistry
+	}
 
 	for _, registry := range cfg.Registries {
 		go func(registry Registry) {
