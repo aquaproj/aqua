@@ -46,7 +46,7 @@ $ aqua i
 `aqua i` installs all packages all at once.
 Tools are installed in `~/.aqua/pkg` and symbolic links are created in `~/.aqua/bin`, so please add `~/.aqua/bin` to the environment variable `PATH`.
 
-It takes a long time to install many tools all at once, and some tools aren't really needed.
+It takes a long time to install many tools all at once, and some tools might not be actually needed.
 
 So instead of `aqua i` let's execute `aqua i --only-link`.
 
@@ -67,7 +67,7 @@ aqua installs the tools in the shared directory `~/.aqua`,
 so the same version of the same tool is installed only at once.
 It saves the time and the disk usage.
 
-aqua supports the mechanithm named `Registry`.
+aqua supports the mechanism named `Registry`.
 You can share and reuse the aqua configuration, so it makes easy to write `aqua.yaml`.
 
 ```yaml
