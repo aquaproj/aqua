@@ -37,7 +37,10 @@ const (
 	pkgInfoTypeHTTP          = "http"
 )
 
-var errPkgInfoNameIsDuplicated = errors.New("the package info name must be unique in the same registry")
+var (
+	errPkgInfoNameIsDuplicated = errors.New("the package info name must be unique in the same registry")
+	errInvalidType             = errors.New("type is invalid")
+)
 
 func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
 	m := make(map[string]PackageInfo, len(*pkgInfos))
@@ -126,7 +129,10 @@ func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 			Files:       pkgInfo.Files,
 		}, nil
 	default:
-		return nil, errors.New("type is invalid")
+		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
+			"package_name": pkgInfo.Name,
+			"package_type": pkgInfo.Type,
+		})
 	}
 }
 
