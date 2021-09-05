@@ -2,15 +2,9 @@
   extends: [
     "config:base",
     "github>suzuki-shunsuke/renovate-config:golang",
+    "github>suzuki-shunsuke/aqua-renovate-config",
   ],
   regexManagers: [
-    {
-      fileMatch: ["aqua.yaml"],
-      matchStrings: [
-        "version: (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n",
-      ],
-      datasourceTemplate: "github-releases",
-    },
     {
       fileMatch: ["tutorial/docker-compose.yml"],
       depNameTemplate: "suzuki-shunsuke/aqua",
@@ -37,7 +31,7 @@
       ],
     },
     {
-      fileMatch: ["README.md", "aqua.yaml"],
+      fileMatch: ["README.md"],
       datasourceTemplate: "github-releases",
       matchStrings: [
         "ref: (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n",
