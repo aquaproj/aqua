@@ -13,6 +13,7 @@ CLI Version manager.
 * [Usage](docs/usage.md)
 * [Configuration](docs/config.md)
 * [Registry](docs/registry.md)
+* [Continuous update by Renovate](docs/renovate.md)
 
 ## Overview
 
