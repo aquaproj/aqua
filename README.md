@@ -129,7 +129,7 @@ If the Registries don't support the tool, you can send the pull request to the r
 Install aqua.
 
 ```console
-$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.2/aqua-installer | bash -s -- -i bin/aqua
+$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.3/aqua-installer | bash -s -- -i bin/aqua
 $ export PATH=$PWD/bin:$HOME/.aqua/bin:$PATH
 $ export GITHUB_TOKEN=<your personal access token>
 ```
@@ -204,7 +204,7 @@ Or you can install aqua quickly with [aqua-installer](https://github.com/suzuki-
 e.g.
 
 ```
-$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.2/aqua-installer | bash
+$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.3/aqua-installer | bash
 ```
 
 GitHub Actions
@@ -212,7 +212,7 @@ GitHub Actions
 e.g.
 
 ```yaml
-- uses: suzuki-shunsuke/aqua-installer@v0.1.2
+- uses: suzuki-shunsuke/aqua-installer@v0.1.3
   with:
     version: v0.3.1
     install_path: /tmp/bin/aqua
