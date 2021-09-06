@@ -45,7 +45,7 @@ $ aqua i
 ```
 
 `aqua i` installs all packages all at once.
-Tools are installed in `~/.aqua/pkg` and symbolic links are created in `~/.aqua/bin`, so please add `~/.aqua/bin` to the environment variable `PATH`.
+Tools are installed in `~/.aqua/pkgs` and symbolic links are created in `~/.aqua/bin`, so please add `~/.aqua/bin` to the environment variable `PATH`.
 
 It takes a long time to install many tools all at once, and some tools might not be actually needed.
 
