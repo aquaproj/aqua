@@ -23,7 +23,7 @@ packages:
 
 - name: golangci-lint
   registry: local
-  version: v1.42.0 # renovate: depName=golangci/golangci-lint
+  version: v1.42.1 # renovate: depName=golangci/golangci-lint
 
 - name: helm # http
   registry: standard
