@@ -15,6 +15,10 @@ CLI Version manager.
 * [Registry](docs/registry.md)
 * [Continuous update by Renovate](docs/renovate.md)
 
+## Note: Windows isn't supported
+
+Currently, aqua doesn't support Windows.
+
 ## Overview
 
 You can install CLI tools and manage their versions with declarative YAML configuration `aqua.yaml`.
