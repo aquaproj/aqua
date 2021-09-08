@@ -21,7 +21,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) Run(ctx context.Context, args ...string) error {
+func (runner *Runner) Run(ctx context.Context, args ...string) error { //nolint:funlen
 	compiledDate, err := time.Parse(time.RFC3339, runner.LDFlags.Date)
 	if err != nil {
 		compiledDate = time.Now()
@@ -53,8 +53,9 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 				Action:  runner.installAction,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:  "only-link",
-						Usage: "create links but skip download packages",
+						Name:    "only-link",
+						Aliases: []string{"l"},
+						Usage:   "create links but skip download packages",
 					},
 					&cli.BoolFlag{
 						Name:  "test",
