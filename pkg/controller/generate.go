@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -54,7 +55,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 			return fmt.Sprintf("%s\n\n%s\n%s",
 				pkg.PackageInfo.GetName(),
 				pkg.PackageInfo.GetLink(),
-				pkg.PackageInfo.GetDescription())
+				formatDescription(pkg.PackageInfo.GetDescription(), w/2-8)) //nolint:gomnd
 		}))
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
@@ -71,6 +72,23 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 		return fmt.Errorf("output generated package configuration: %w", err)
 	}
 	return nil
+}
+
+func formatDescription(desc string, w int) string {
+	descRune := []rune(desc)
+	lenDescRune := len(descRune)
+	lineWidth := w - len([]rune("\n"))
+	numOfLines := (lenDescRune / lineWidth) + 1
+	descArr := make([]string, numOfLines)
+	for i := 0; i < numOfLines; i++ {
+		start := i * lineWidth
+		end := start + lineWidth
+		if i == numOfLines-1 {
+			end = lenDescRune
+		}
+		descArr[i] = string(descRune[start:end])
+	}
+	return strings.Join(descArr, "\n")
 }
 
 func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) (*Package, error) {
