@@ -10,8 +10,10 @@ import (
 )
 
 type HTTPPackageInfo struct {
-	Name        string  `validate:"required"`
-	ArchiveType string  `yaml:"archive_type"`
+	Name        string `validate:"required"`
+	ArchiveType string `yaml:"archive_type"`
+	Description string
+	Link        string
 	Files       []*File `validate:"required,dive"`
 
 	URL *text.Template `validate:"required"`
@@ -23,6 +25,14 @@ func (pkgInfo *HTTPPackageInfo) GetName() string {
 
 func (pkgInfo *HTTPPackageInfo) GetType() string {
 	return pkgInfoTypeHTTP
+}
+
+func (pkgInfo *HTTPPackageInfo) GetLink() string {
+	return pkgInfo.Link
+}
+
+func (pkgInfo *HTTPPackageInfo) GetDescription() string {
+	return pkgInfo.Description
 }
 
 func (pkgInfo *HTTPPackageInfo) GetArchiveType() string {

@@ -48,7 +48,14 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 	idx, err := fuzzyfinder.Find(pkgs, func(i int) string {
 		pkg := pkgs[i]
 		return fmt.Sprintf("%s (%s)", pkg.PackageInfo.GetName(), pkg.RegistryName)
-	})
+	},
+		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+			pkg := pkgs[i]
+			return fmt.Sprintf("%s\n\n%s\n%s",
+				pkg.PackageInfo.GetName(),
+				pkg.PackageInfo.GetLink(),
+				pkg.PackageInfo.GetDescription())
+		}))
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil
