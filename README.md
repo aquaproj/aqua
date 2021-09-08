@@ -15,6 +15,15 @@ CLI Version manager.
 * [Registry](docs/registry.md)
 * [Continuous update by Renovate](docs/renovate.md)
 
+## Blog
+
+* English
+  * [2021-09-08 aqua - Declarative CLI Version Manager](https://dev.to/suzukishunsuke/aqua-declarative-cli-version-manager-1ibe)
+* Japanese
+  * [2021-08-28 aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
+  * [2021-09-04 aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
+  * [2021-09-05 aqua の設定ファイルをインタラクティブに生成する generate コマンド](https://techblog.szksh.cloud/aqua-generate/)
+
 ## Note: Windows isn't supported
 
 Currently, aqua doesn't support Windows.
@@ -268,12 +277,6 @@ e.g.
 ## Change Log
 
 Please see [Releases](https://github.com/suzuki-shunsuke/aqua/releases).
-
-## Blog
-
-* [2021-08-28 aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
-* [2021-09-04 aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
-* [2021-09-05 aqua の設定ファイルをインタラクティブに生成する generate コマンド](https://techblog.szksh.cloud/aqua-generate/)
 
 ## License
 
