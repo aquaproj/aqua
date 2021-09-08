@@ -49,13 +49,13 @@ Tools are installed in `~/.aqua/pkgs` and symbolic links are created in `~/.aqua
 
 It takes a long time to install many tools all at once, and some tools might not be actually needed.
 
-So instead of `aqua i` let's execute `aqua i --only-link`.
+So instead of `aqua i` let's execute `aqua i -l`.
 
 ```
-$ aqua i --only-link
+$ aqua i -l
 ```
 
-`--only-link` creates symbolic links to aqua-proxy in `~/.aqua/bin` but skipping the downloading and installing tools.
+`aqua i -l` creates symbolic links to aqua-proxy in `~/.aqua/bin` but skipping the downloading and installing tools.
 When you execute the tool, the tool is installed automatically if it isn't installed yet before it is executed.
 We call this feature as _lazy install_.
 By the lazy install, you don't have to execute aqua explicitly after changing the tool's version.
