@@ -97,6 +97,8 @@ type PackageInfo interface {
 	GetFileSrc(pkg *Package, file *File) (string, error)
 	GetPkgPath(rootDir string, pkg *Package) (string, error)
 	RenderAsset(pkg *Package) (string, error)
+	GetLink() string
+	GetDescription() string
 }
 
 type mergedPackageInfo struct {
@@ -108,6 +110,8 @@ type mergedPackageInfo struct {
 	ArchiveType string `yaml:"archive_type"`
 	Files       []*File
 	URL         *text.Template
+	Description string
+	Link        string
 }
 
 func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
@@ -120,6 +124,8 @@ func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 			Asset:       pkgInfo.Asset,
 			ArchiveType: pkgInfo.ArchiveType,
 			Files:       pkgInfo.Files,
+			Link:        pkgInfo.Link,
+			Description: pkgInfo.Description,
 		}, nil
 	case pkgInfoTypeHTTP:
 		return &HTTPPackageInfo{
@@ -127,6 +133,8 @@ func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 			ArchiveType: pkgInfo.ArchiveType,
 			URL:         pkgInfo.URL,
 			Files:       pkgInfo.Files,
+			Link:        pkgInfo.Link,
+			Description: pkgInfo.Description,
 		}, nil
 	default:
 		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck

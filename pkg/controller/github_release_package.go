@@ -9,8 +9,10 @@ import (
 )
 
 type GitHubReleasePackageInfo struct {
-	Name        string  `validate:"required"`
-	ArchiveType string  `yaml:"archive_type"`
+	Name        string `validate:"required"`
+	ArchiveType string `yaml:"archive_type"`
+	Link        string
+	Description string
 	Files       []*File `validate:"required,dive"`
 
 	RepoOwner string         `yaml:"repo_owner" validate:"required"`
@@ -24,6 +26,14 @@ func (pkgInfo *GitHubReleasePackageInfo) GetName() string {
 
 func (pkgInfo *GitHubReleasePackageInfo) GetType() string {
 	return pkgInfoTypeGitHubRelease
+}
+
+func (pkgInfo *GitHubReleasePackageInfo) GetLink() string {
+	return pkgInfo.Link
+}
+
+func (pkgInfo *GitHubReleasePackageInfo) GetDescription() string {
+	return pkgInfo.Description
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetArchiveType() string {
