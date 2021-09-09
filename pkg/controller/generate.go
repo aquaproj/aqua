@@ -51,6 +51,9 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 		return fmt.Sprintf("%s (%s)", pkg.PackageInfo.GetName(), pkg.RegistryName)
 	},
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+			if i < 0 {
+				return ""
+			}
 			pkg := pkgs[i]
 			return fmt.Sprintf("%s\n\n%s\n%s",
 				pkg.PackageInfo.GetName(),
