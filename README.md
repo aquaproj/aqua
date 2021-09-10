@@ -267,7 +267,7 @@ e.g.
 * [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy)
 * [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer): Install aqua quickly
 * [aqua-registry](https://github.com/suzuki-shunsuke/aqua-registry): Standard Registry
-* [aqua-config-renovate](https://github.com/suzuki-shunsuke/aqua-config-renovate): Renovate Configuration to update packages and registries
+* [aqua-renovate-config](https://github.com/suzuki-shunsuke/aqua-renovate-config): Renovate Configuration to update packages and registries
 
 ## Example
 
