@@ -13,12 +13,19 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen
+func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error {
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
 	var failed bool
 	maxInstallChan := make(chan struct{}, getMaxParallelism())
+
+	handleFailure := func() {
+		<-maxInstallChan
+		flagMutex.Lock()
+		failed = true
+		flagMutex.Unlock()
+	}
 
 	for _, pkg := range cfg.Packages {
 		go func(pkg *Package) {
@@ -33,36 +40,27 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			registry, ok := registries[pkg.Registry]
 			if !ok {
 				logE.Error("install the package: registry isn't found")
-				<-maxInstallChan
+				handleFailure()
 				return
 			}
 
 			pkgInfos, err := registry.PackageInfos.ToMap()
 			if err != nil {
-				<-maxInstallChan
 				logE.WithError(fmt.Errorf("convert package infos to map: %w", err)).Error("install the package")
-				flagMutex.Lock()
-				failed = true
-				flagMutex.Unlock()
+				handleFailure()
 				return
 			}
 
 			pkgInfo, ok := pkgInfos[pkg.Name]
 			if !ok {
-				<-maxInstallChan
 				logE.Error("install the package: package isn't found in the registry")
-				flagMutex.Lock()
-				failed = true
-				flagMutex.Unlock()
+				handleFailure()
 				return
 			}
 
 			if err := ctrl.installPackage(ctx, pkgInfo, pkg, binDir, onlyLink, isTest); err != nil {
-				<-maxInstallChan
 				logE.WithError(err).Error("install the package")
-				flagMutex.Lock()
-				failed = true
-				flagMutex.Unlock()
+				handleFailure()
 				return
 			}
 			<-maxInstallChan
