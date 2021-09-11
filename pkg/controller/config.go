@@ -181,9 +181,7 @@ func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 		return err //nolint:wrapcheck
 	}
 	defer file.Close()
-	decoder := yaml.NewDecoder(file)
-	decoder.SetStrict(true)
-	if err := decoder.Decode(&cfg); err != nil {
+	if err := yaml.NewDecoder(file).Decode(&cfg); err != nil {
 		return fmt.Errorf("parse a configuration file as YAML %s: %w", configFilePath, err)
 	}
 	return nil

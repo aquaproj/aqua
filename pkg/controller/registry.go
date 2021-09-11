@@ -214,9 +214,7 @@ func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry, 
 	}
 	defer f.Close()
 	registryContent := &RegistryContent{}
-	decoder := yaml.NewDecoder(f)
-	decoder.SetStrict(true)
-	if err := decoder.Decode(registryContent); err != nil {
+	if err := yaml.NewDecoder(f).Decode(registryContent); err != nil {
 		return nil, fmt.Errorf("parse the registry configuration: %w", err)
 	}
 	return registryContent, nil
