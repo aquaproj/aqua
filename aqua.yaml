@@ -25,6 +25,6 @@ packages:
   registry: local
   version: v1.42.1 # renovate: depName=golangci/golangci-lint
 
-- name: helm # http
+- name: helm/helm # http
   registry: standard
   version: v3.6.3 # renovate: depName=helm/helm
