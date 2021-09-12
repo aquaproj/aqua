@@ -52,10 +52,18 @@ func (pkgInfo *HTTPPackageInfo) GetReplacements() map[string]string {
 
 func (pkgInfo *HTTPPackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
 	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
+		"Version":     pkg.Version,
 		"OS":          runtime.GOOS,
 		"Arch":        runtime.GOARCH,
+		"ArchiveType": pkgInfo.GetArchiveType(),
+		"Replacements": map[string]interface{}{
+			"OS":   replace(runtime.GOOS, pkgInfo.Replacements),
+			"Arch": replace(runtime.GOARCH, pkgInfo.Replacements),
+		},
+
+		// DEPRECATED: don't use these variables
+		"Package":     pkg,
+		"PackageInfo": pkgInfo,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)
@@ -91,14 +99,18 @@ func (pkgInfo *HTTPPackageInfo) GetFileSrc(pkg *Package, file *File) (string, er
 
 func (pkgInfo *HTTPPackageInfo) RenderURL(pkg *Package) (string, error) {
 	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
+		"Version":     pkg.Version,
 		"OS":          runtime.GOOS,
 		"Arch":        runtime.GOARCH,
+		"ArchiveType": pkgInfo.GetArchiveType(),
 		"Replacements": map[string]interface{}{
 			"OS":   replace(runtime.GOOS, pkgInfo.Replacements),
 			"Arch": replace(runtime.GOARCH, pkgInfo.Replacements),
 		},
+
+		// DEPRECATED: don't use these variables
+		"Package":     pkg,
+		"PackageInfo": pkgInfo,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)
