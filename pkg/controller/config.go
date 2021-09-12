@@ -99,42 +99,46 @@ type PackageInfo interface {
 	RenderAsset(pkg *Package) (string, error)
 	GetLink() string
 	GetDescription() string
+	GetReplacements() map[string]string
 }
 
 type mergedPackageInfo struct {
-	Name        string
-	Type        string
-	RepoOwner   string `yaml:"repo_owner"`
-	RepoName    string `yaml:"repo_name"`
-	Asset       *text.Template
-	ArchiveType string `yaml:"archive_type"`
-	Files       []*File
-	URL         *text.Template
-	Description string
-	Link        string
+	Name         string
+	Type         string
+	RepoOwner    string `yaml:"repo_owner"`
+	RepoName     string `yaml:"repo_name"`
+	Asset        *text.Template
+	ArchiveType  string `yaml:"archive_type"`
+	Files        []*File
+	URL          *text.Template
+	Description  string
+	Link         string
+	Replacements map[string]string
 }
 
 func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 	switch pkgInfo.Type {
 	case pkgInfoTypeGitHubRelease:
 		return &GitHubReleasePackageInfo{
-			Name:        pkgInfo.Name,
-			RepoOwner:   pkgInfo.RepoOwner,
-			RepoName:    pkgInfo.RepoName,
-			Asset:       pkgInfo.Asset,
-			ArchiveType: pkgInfo.ArchiveType,
-			Files:       pkgInfo.Files,
-			Link:        pkgInfo.Link,
-			Description: pkgInfo.Description,
+			Name:         pkgInfo.Name,
+			RepoOwner:    pkgInfo.RepoOwner,
+			RepoName:     pkgInfo.RepoName,
+			Asset:        pkgInfo.Asset,
+			ArchiveType:  pkgInfo.ArchiveType,
+			Files:        pkgInfo.Files,
+			Link:         pkgInfo.Link,
+			Description:  pkgInfo.Description,
+			Replacements: pkgInfo.Replacements,
 		}, nil
 	case pkgInfoTypeHTTP:
 		return &HTTPPackageInfo{
-			Name:        pkgInfo.Name,
-			ArchiveType: pkgInfo.ArchiveType,
-			URL:         pkgInfo.URL,
-			Files:       pkgInfo.Files,
-			Link:        pkgInfo.Link,
-			Description: pkgInfo.Description,
+			Name:         pkgInfo.Name,
+			ArchiveType:  pkgInfo.ArchiveType,
+			URL:          pkgInfo.URL,
+			Files:        pkgInfo.Files,
+			Link:         pkgInfo.Link,
+			Description:  pkgInfo.Description,
+			Replacements: pkgInfo.Replacements,
 		}, nil
 	default:
 		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
@@ -156,6 +160,10 @@ func (file *File) RenderSrc(pkg *Package, pkgInfo PackageInfo) (string, error) {
 		"OS":          runtime.GOOS,
 		"Arch":        runtime.GOARCH,
 		"File":        file,
+		"Replacements": map[string]interface{}{
+			"OS":   replace(runtime.GOOS, pkgInfo.GetReplacements()),
+			"Arch": replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		},
 	})
 }
 
