@@ -163,15 +163,20 @@ type File struct {
 
 func (file *File) RenderSrc(pkg *Package, pkgInfo PackageInfo) (string, error) {
 	return file.Src.Execute(map[string]interface{}{ //nolint:wrapcheck
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
+		"Version":     pkg.Version,
 		"OS":          runtime.GOOS,
 		"Arch":        runtime.GOARCH,
-		"File":        file,
+		"ArchiveType": pkgInfo.GetArchiveType(),
 		"Replacements": map[string]interface{}{
 			"OS":   replace(runtime.GOOS, pkgInfo.GetReplacements()),
 			"Arch": replace(runtime.GOARCH, pkgInfo.GetReplacements()),
 		},
+		"FileName": file.Name,
+
+		// DEPRECATED: don't use these variables
+		"File":        file,
+		"Package":     pkg,
+		"PackageInfo": pkgInfo,
 	})
 }
 
