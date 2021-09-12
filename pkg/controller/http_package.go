@@ -10,12 +10,13 @@ import (
 )
 
 type HTTPPackageInfo struct {
-	Name         string `validate:"required"`
-	ArchiveType  string `yaml:"archive_type"`
-	Description  string
-	Link         string
-	Files        []*File `validate:"required,dive"`
-	Replacements map[string]string
+	Name                 string `validate:"required"`
+	ArchiveType          string
+	Description          string
+	Link                 string
+	Files                []*File `validate:"required,dive"`
+	Replacements         map[string]string
+	ArchiveTypeOverrides []*ArchiveTypeOverride
 
 	URL *text.Template `validate:"required"`
 }
@@ -37,6 +38,11 @@ func (pkgInfo *HTTPPackageInfo) GetDescription() string {
 }
 
 func (pkgInfo *HTTPPackageInfo) GetArchiveType() string {
+	for _, arcTypeOverride := range pkgInfo.ArchiveTypeOverrides {
+		if arcTypeOverride.GOOS == runtime.GOOS {
+			return arcTypeOverride.ArchiveType
+		}
+	}
 	return pkgInfo.ArchiveType
 }
 

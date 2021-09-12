@@ -9,15 +9,16 @@ import (
 )
 
 type GitHubReleasePackageInfo struct {
-	Name         string `validate:"required"`
-	ArchiveType  string `yaml:"archive_type"`
-	Link         string
-	Description  string
-	Files        []*File `validate:"required,dive"`
-	Replacements map[string]string
+	Name                 string `validate:"required"`
+	ArchiveType          string
+	Link                 string
+	Description          string
+	Files                []*File `validate:"required,dive"`
+	Replacements         map[string]string
+	ArchiveTypeOverrides []*ArchiveTypeOverride
 
-	RepoOwner string         `yaml:"repo_owner" validate:"required"`
-	RepoName  string         `yaml:"repo_name" validate:"required"`
+	RepoOwner string
+	RepoName  string
 	Asset     *text.Template `validate:"required"`
 }
 
@@ -38,6 +39,11 @@ func (pkgInfo *GitHubReleasePackageInfo) GetDescription() string {
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetArchiveType() string {
+	for _, arcTypeOverride := range pkgInfo.ArchiveTypeOverrides {
+		if arcTypeOverride.GOOS == runtime.GOOS {
+			return arcTypeOverride.ArchiveType
+		}
+	}
 	return pkgInfo.ArchiveType
 }
 

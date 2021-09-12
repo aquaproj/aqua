@@ -103,42 +103,50 @@ type PackageInfo interface {
 }
 
 type mergedPackageInfo struct {
-	Name         string
-	Type         string
-	RepoOwner    string `yaml:"repo_owner"`
-	RepoName     string `yaml:"repo_name"`
-	Asset        *text.Template
-	ArchiveType  string `yaml:"archive_type"`
-	Files        []*File
-	URL          *text.Template
-	Description  string
-	Link         string
-	Replacements map[string]string
+	Name                 string
+	Type                 string
+	RepoOwner            string `yaml:"repo_owner"`
+	RepoName             string `yaml:"repo_name"`
+	Asset                *text.Template
+	ArchiveType          string `yaml:"archive_type"`
+	Files                []*File
+	URL                  *text.Template
+	Description          string
+	Link                 string
+	Replacements         map[string]string
+	ArchiveTypeOverrides []*ArchiveTypeOverride `yaml:"archive_type_overrides"`
+}
+
+type ArchiveTypeOverride struct {
+	GOOS        string
+	ArchiveType string `yaml:"archive_type"`
 }
 
 func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 	switch pkgInfo.Type {
 	case pkgInfoTypeGitHubRelease:
 		return &GitHubReleasePackageInfo{
-			Name:         pkgInfo.Name,
-			RepoOwner:    pkgInfo.RepoOwner,
-			RepoName:     pkgInfo.RepoName,
-			Asset:        pkgInfo.Asset,
-			ArchiveType:  pkgInfo.ArchiveType,
-			Files:        pkgInfo.Files,
-			Link:         pkgInfo.Link,
-			Description:  pkgInfo.Description,
-			Replacements: pkgInfo.Replacements,
+			Name:                 pkgInfo.Name,
+			RepoOwner:            pkgInfo.RepoOwner,
+			RepoName:             pkgInfo.RepoName,
+			Asset:                pkgInfo.Asset,
+			ArchiveType:          pkgInfo.ArchiveType,
+			ArchiveTypeOverrides: pkgInfo.ArchiveTypeOverrides,
+			Files:                pkgInfo.Files,
+			Link:                 pkgInfo.Link,
+			Description:          pkgInfo.Description,
+			Replacements:         pkgInfo.Replacements,
 		}, nil
 	case pkgInfoTypeHTTP:
 		return &HTTPPackageInfo{
-			Name:         pkgInfo.Name,
-			ArchiveType:  pkgInfo.ArchiveType,
-			URL:          pkgInfo.URL,
-			Files:        pkgInfo.Files,
-			Link:         pkgInfo.Link,
-			Description:  pkgInfo.Description,
-			Replacements: pkgInfo.Replacements,
+			Name:                 pkgInfo.Name,
+			ArchiveType:          pkgInfo.ArchiveType,
+			ArchiveTypeOverrides: pkgInfo.ArchiveTypeOverrides,
+			URL:                  pkgInfo.URL,
+			Files:                pkgInfo.Files,
+			Link:                 pkgInfo.Link,
+			Description:          pkgInfo.Description,
+			Replacements:         pkgInfo.Replacements,
 		}, nil
 	default:
 		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
