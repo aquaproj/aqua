@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -40,7 +41,11 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		"config":    param.ConfigFilePath,
 	}).Debug("CLI args")
 	text.SetTemplateFunc(func(s string) (*template.Template, error) {
-		return template.New("_").Funcs(sprig.TxtFuncMap()).Parse(s) //nolint:wrapcheck
+		return template.New("_").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{ //nolint:wrapcheck
+			"trimV": func(s string) string {
+				return strings.TrimPrefix(s, "v")
+			},
+		}).Parse(s)
 	})
 	ctrl := Controller{
 		Stdin:        os.Stdin,
