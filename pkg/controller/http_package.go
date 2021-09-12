@@ -10,11 +10,13 @@ import (
 )
 
 type HTTPPackageInfo struct {
-	Name        string `validate:"required"`
-	ArchiveType string `yaml:"archive_type"`
-	Description string
-	Link        string
-	Files       []*File `validate:"required,dive"`
+	Name                 string `validate:"required"`
+	ArchiveType          string
+	Description          string
+	Link                 string
+	Files                []*File `validate:"required,dive"`
+	Replacements         map[string]string
+	ArchiveTypeOverrides []*ArchiveTypeOverride
 
 	URL *text.Template `validate:"required"`
 }
@@ -36,7 +38,16 @@ func (pkgInfo *HTTPPackageInfo) GetDescription() string {
 }
 
 func (pkgInfo *HTTPPackageInfo) GetArchiveType() string {
+	for _, arcTypeOverride := range pkgInfo.ArchiveTypeOverrides {
+		if arcTypeOverride.GOOS == runtime.GOOS {
+			return arcTypeOverride.ArchiveType
+		}
+	}
 	return pkgInfo.ArchiveType
+}
+
+func (pkgInfo *HTTPPackageInfo) GetReplacements() map[string]string {
+	return pkgInfo.Replacements
 }
 
 func (pkgInfo *HTTPPackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
@@ -84,6 +95,10 @@ func (pkgInfo *HTTPPackageInfo) RenderURL(pkg *Package) (string, error) {
 		"PackageInfo": pkgInfo,
 		"OS":          runtime.GOOS,
 		"Arch":        runtime.GOARCH,
+		"Replacements": map[string]interface{}{
+			"OS":   replace(runtime.GOOS, pkgInfo.Replacements),
+			"Arch": replace(runtime.GOARCH, pkgInfo.Replacements),
+		},
 	})
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)

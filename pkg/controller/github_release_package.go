@@ -9,14 +9,16 @@ import (
 )
 
 type GitHubReleasePackageInfo struct {
-	Name        string `validate:"required"`
-	ArchiveType string `yaml:"archive_type"`
-	Link        string
-	Description string
-	Files       []*File `validate:"required,dive"`
+	Name                 string `validate:"required"`
+	ArchiveType          string
+	Link                 string
+	Description          string
+	Files                []*File `validate:"required,dive"`
+	Replacements         map[string]string
+	ArchiveTypeOverrides []*ArchiveTypeOverride
 
-	RepoOwner string         `yaml:"repo_owner" validate:"required"`
-	RepoName  string         `yaml:"repo_name" validate:"required"`
+	RepoOwner string
+	RepoName  string
 	Asset     *text.Template `validate:"required"`
 }
 
@@ -37,7 +39,16 @@ func (pkgInfo *GitHubReleasePackageInfo) GetDescription() string {
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetArchiveType() string {
+	for _, arcTypeOverride := range pkgInfo.ArchiveTypeOverrides {
+		if arcTypeOverride.GOOS == runtime.GOOS {
+			return arcTypeOverride.ArchiveType
+		}
+	}
 	return pkgInfo.ArchiveType
+}
+
+func (pkgInfo *GitHubReleasePackageInfo) GetReplacements() map[string]string {
+	return pkgInfo.Replacements
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
@@ -76,5 +87,9 @@ func (pkgInfo *GitHubReleasePackageInfo) RenderAsset(pkg *Package) (string, erro
 		"PackageInfo": pkgInfo,
 		"OS":          runtime.GOOS,
 		"Arch":        runtime.GOARCH,
+		"Replacements": map[string]interface{}{
+			"OS":   replace(runtime.GOOS, pkgInfo.Replacements),
+			"Arch": replace(runtime.GOARCH, pkgInfo.Replacements),
+		},
 	})
 }
