@@ -32,10 +32,10 @@
       ],
     },
     {
-      fileMatch: ["README.md"],
+      fileMatch: ["README\\.md", "docs/.*\\.md"],
       datasourceTemplate: "github-releases",
       matchStrings: [
-        "ref: (?<currentValue>.*?) # renovate: depName=(?<depName>.*?)\\n",
+        '(version|ref): "?(?<currentValue>.*?)"? +# renovate: depName=(?<depName>.*?)\\n',
       ],
     },
     {

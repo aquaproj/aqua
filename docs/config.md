@@ -1,6 +1,6 @@
 # Configuration
 
-e.g. [tutorial/aqua.yaml](../tutorial/aqua.yaml), [suzuki-shunsuke/my-aqua-config](https://github.com/suzuki-shunsuke/my-aqua-config/blob/main/aqua.yaml)
+e.g. [tutorial/aqua.yaml](../tutorial/aqua.yaml), [suzuki-shunsuke/my-aqua-config](https://github.com/suzuki-shunsuke/my-aqua-config/blob/main/aqua.yaml), [suzuki-shunsuke/aqua-registry](https://github.com/suzuki-shunsuke/aqua-registry/blob/main/registry.yaml)
 
 ## Configuration File Path
 
@@ -40,6 +40,8 @@ PackageInfo is the package metadata how the package is installed.
 * `type`: the package type. Either `github_release` or `http` is supported
 * `archive_type`: the archive type (e.g. `zip`, `tar.gz`). Basically you don't have to specify this field because `aqua` understand the archive type from the filename extension.
   If the `archive_type` is `raw` or the filename has no extension, `aqua` treats the file isn't archived and uncompressed.
+* `archive_type_overrides`
+* `replacements`
 * `description`
 * `link`
 * `files`: The list of files which the archive includes
@@ -79,7 +81,7 @@ Only `ref` field is supported.
 ```yaml
 registries:
 - type: standard
-  ref: v0.1.1-0
+  ref: v0.1.1-0 # renovate: depName=suzuki-shunsuke/aqua-registry
 ```
 
 This is equivalent to the following definition.
@@ -90,7 +92,7 @@ registries:
   type: github_content
   repo_owner: suzuki-shunsuke
   repo_name: aqua-registry
-  ref: v0.1.1-0
+  ref: v0.1.1-0 # renovate: depName=suzuki-shunsuke/aqua-registry
   path: registry.yaml
 ```
 
@@ -107,9 +109,18 @@ Some fields are parsed with [Go's text/template](https://pkg.go.dev/text/templat
 * `PackageInfo.url`
 * `File.src`
 
+#### `PackageInfo.url`, `PackageInfo.asset`
+
 The following variables are passed to the template.
 
-`PackageInfo.url`, `PackageInfo.asset`
+* `OS`
+* `Arch`
+* `GOOS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
+* `GOARCH`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
+* `Version`
+* `ArchiveType`
+
+:warning: The following Template Variables are deprecated.
 
 * `Package`: the Package
   * `Name`
@@ -118,10 +129,20 @@ The following variables are passed to the template.
   * `Name`
   * `RepoOwner`
   * `RepoName`
-* `OS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
-* `Arch`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
 
-`File.src`
+#### `File.src`
+
+The following variables are passed to the template.
+
+* `OS`
+* `Arch`
+* `GOOS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
+* `GOARCH`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
+* `Version`
+* `ArchiveType`
+* `FileName`
+
+:warning: The following Template Variables are deprecated.
 
 * `Package`: Package
   * `Name`
@@ -130,7 +151,5 @@ The following variables are passed to the template.
   * `Name`
   * `RepoOwner`
   * `RepoName`
-* `OS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
-* `Arch`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
 * `File`: File
   * `Name`
