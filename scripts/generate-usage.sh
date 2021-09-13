@@ -28,4 +28,8 @@ $(command_console aqua help exec)
 
 ## aqua generate
 
-$(command_console aqua help generate)" 
+$(command_console aqua help generate)
+
+## aqua list
+
+$(command_console aqua help list)"

@@ -11,11 +11,12 @@ USAGE:
    aqua [global options] command [command options] [arguments...]
 
 VERSION:
-   0.5.1-0 (0afa9d9ddd069d726e9f2e8b1467db1c4956c931)
+   0.6.0 (25414837c10bcf6f64ab16bfa11d4146e882c2c3)
 
 COMMANDS:
    install, i   Install tools
    exec         Execute tool
+   list         List packages in Registries
    generate, g  Search packages in registries and output the configuration interactively
    version      Show version
    help, h      Shows a list of commands or help for one command
@@ -38,8 +39,8 @@ USAGE:
    aqua install [command options] [arguments...]
 
 OPTIONS:
-   --only-link  create links but skip download packages (default: false)
-   --test       test file.src after installing the package (default: false)
+   --only-link, -l  create links but skip download packages (default: false)
+   --test           test file.src after installing the package (default: false)
    
 ```
 
@@ -62,5 +63,20 @@ NAME:
    aqua generate - Search packages in registries and output the configuration interactively
 
 USAGE:
-   aqua generate [arguments...]
+   aqua generate [command options] [arguments...]
+
+OPTIONS:
+   -f value  the file path of packages list.
+   
+```
+
+## aqua list
+
+```console
+$ aqua help list
+NAME:
+   aqua list - List packages in Registries
+
+USAGE:
+   aqua list [arguments...]
 ```
