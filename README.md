@@ -269,6 +269,8 @@ e.g.
 * [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer): Install aqua quickly
 * [aqua-registry](https://github.com/suzuki-shunsuke/aqua-registry): Standard Registry
 * [aqua-renovate-config](https://github.com/suzuki-shunsuke/aqua-renovate-config): Renovate Configuration to update packages and registries
+* Third Party Projects
+  * [int128/aqua-action](https://github.com/int128/aqua-action) - Action to install packages using aqua
 
 ## Example
 
