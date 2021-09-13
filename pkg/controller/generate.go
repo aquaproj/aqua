@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -17,7 +19,7 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //nolint:cyclop
+func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -37,6 +39,11 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 	if err != nil {
 		return err
 	}
+
+	if param.File != "" {
+		return ctrl.outputListedPkgs(ctx, param, registryContents)
+	}
+
 	var pkgs []*FindingPackage
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
@@ -94,6 +101,54 @@ func formatDescription(desc string, w int) string {
 	return strings.Join(descArr, "\n")
 }
 
+func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, registryContents map[string]*RegistryContent) error {
+	m := map[string]*FindingPackage{}
+	for registryName, registryContent := range registryContents {
+		for _, pkg := range registryContent.PackageInfos {
+			m[registryName+","+pkg.GetName()] = &FindingPackage{
+				PackageInfo:  pkg,
+				RegistryName: registryName,
+			}
+		}
+	}
+
+	var file io.Reader
+	if param.File == "-" {
+		file = ctrl.Stdin
+	} else {
+		f, err := os.Open(param.File)
+		if err != nil {
+			return fmt.Errorf("open the package list file: %w", err)
+		}
+		defer f.Close()
+		file = f
+	}
+
+	scanner := bufio.NewScanner(file)
+
+	outputPkgs := []*Package{}
+	for scanner.Scan() {
+		txt := scanner.Text()
+		findingPkg, ok := m[txt]
+		if !ok {
+			return errors.New("unknown package: " + txt)
+		}
+		outputPkg, err := ctrl.getOutputtedPkg(ctx, findingPkg)
+		if err != nil {
+			return err
+		}
+		outputPkgs = append(outputPkgs, outputPkg)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("failed to read the file: %w", err)
+	}
+	if err := yaml.NewEncoder(ctrl.Stdout).Encode(outputPkgs); err != nil {
+		return fmt.Errorf("output generated package configuration: %w", err)
+	}
+	return nil
+}
+
 func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) (*Package, error) {
 	outputPkg := &Package{
 		Name:     pkg.PackageInfo.GetName(),
@@ -109,24 +164,11 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if !ok {
 		return nil, errGitHubReleaseTypeAssertion
 	}
-	releases, _, err := ctrl.GitHub.Repositories.ListReleases(ctx, p.RepoOwner, p.RepoName, nil)
+	release, _, err := ctrl.GitHub.Repositories.GetLatestRelease(ctx, p.RepoOwner, p.RepoName)
 	if err != nil {
-		logrus.WithError(err).Warn("list releases")
+		logrus.WithError(err).Warn("get the latest release")
 		return outputPkg, nil
 	}
-	idx, err := fuzzyfinder.Find(releases, func(i int) string {
-		release := releases[i]
-		if release.GetPrerelease() {
-			return release.GetTagName() + " (prerelease)"
-		}
-		return release.GetTagName()
-	})
-	if err != nil {
-		if !errors.Is(err, fuzzyfinder.ErrAbort) {
-			logrus.WithError(err).Warn("find versions")
-		}
-		return outputPkg, nil
-	}
-	outputPkg.Version = releases[idx].GetTagName()
+	outputPkg.Version = release.GetTagName()
 	return outputPkg, nil
 }
