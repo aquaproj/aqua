@@ -15,6 +15,7 @@ Declarative CLI Version manager. Support `Lazy Install` and Sharable configurati
 * [Registry](docs/registry.md)
 * [Continuous update by Renovate](docs/renovate.md)
 * [How does Lazy Install works?](docs/lazy-install.md)
+* [How to uninstall aqua](docs/uninstall.md)
 
 ## Blog
 
