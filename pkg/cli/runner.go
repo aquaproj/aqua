@@ -69,10 +69,21 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error { //nolint:
 				Action: runner.execAction,
 			},
 			{
+				Name:   "list",
+				Usage:  "List packages in Registries",
+				Action: runner.listAction,
+			},
+			{
 				Name:    "generate",
 				Aliases: []string{"g"},
 				Usage:   "Search packages in registries and output the configuration interactively",
 				Action:  runner.generateAction,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "f",
+						Usage: "the file path of packages list.",
+					},
+				},
 			},
 			{
 				Name:   "version",
