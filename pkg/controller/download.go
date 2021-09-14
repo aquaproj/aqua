@@ -56,7 +56,7 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo Pack
 	}
 
 	defer body.Close()
-	return unarchive(body, assetName, pkgInfo.GetArchiveType(), dest)
+	return unarchive(body, assetName, pkgInfo.GetFormat(), dest)
 }
 
 var errGitHubTokenIsRequired = errors.New("GITHUB_TOKEN is required for the type `github_release`")

@@ -38,9 +38,9 @@ PackageInfo is the package metadata how the package is installed.
 
 * `name`: the package name
 * `type`: the package type. Either `github_release` or `http` is supported
-* `archive_type`: the archive type (e.g. `zip`, `tar.gz`). Basically you don't have to specify this field because `aqua` understand the archive type from the filename extension.
-  If the `archive_type` is `raw` or the filename has no extension, `aqua` treats the file isn't archived and uncompressed.
-* `archive_type_overrides`
+* `format`: the archive type (e.g. `zip`, `tar.gz`). Basically you don't have to specify this field because `aqua` understand the archive type from the filename extension.
+  If the `format` is `raw` or the filename has no extension, `aqua` treats the file isn't archived and uncompressed.
+* `format_overrides`
 * `replacements`
 * `description`
 * `link`
@@ -118,7 +118,7 @@ The following variables are passed to the template.
 * `GOOS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
 * `GOARCH`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
 * `Version`
-* `ArchiveType`
+* `Format`
 
 #### `File.src`
 
@@ -129,5 +129,5 @@ The following variables are passed to the template.
 * `GOOS`: Go's [runtime.GOOS](https://pkg.go.dev/runtime#pkg-constants)
 * `GOARCH`: Go's [runtime.GOARCH](https://pkg.go.dev/runtime#pkg-constants)
 * `Version`
-* `ArchiveType`
+* `Format`
 * `FileName`

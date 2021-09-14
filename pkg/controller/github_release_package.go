@@ -9,13 +9,13 @@ import (
 )
 
 type GitHubReleasePackageInfo struct {
-	Name                 string
-	ArchiveType          string
-	Link                 string
-	Description          string
-	Files                []*File `validate:"required,dive"`
-	Replacements         map[string]string
-	ArchiveTypeOverrides []*ArchiveTypeOverride
+	Name            string
+	Format          string
+	Link            string
+	Description     string
+	Files           []*File `validate:"dive"`
+	Replacements    map[string]string
+	FormatOverrides []*FormatOverride
 
 	RepoOwner string
 	RepoName  string
@@ -44,13 +44,13 @@ func (pkgInfo *GitHubReleasePackageInfo) GetDescription() string {
 	return pkgInfo.Description
 }
 
-func (pkgInfo *GitHubReleasePackageInfo) GetArchiveType() string {
-	for _, arcTypeOverride := range pkgInfo.ArchiveTypeOverrides {
+func (pkgInfo *GitHubReleasePackageInfo) GetFormat() string {
+	for _, arcTypeOverride := range pkgInfo.FormatOverrides {
 		if arcTypeOverride.GOOS == runtime.GOOS {
-			return arcTypeOverride.ArchiveType
+			return arcTypeOverride.Format
 		}
 	}
-	return pkgInfo.ArchiveType
+	return pkgInfo.Format
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetReplacements() map[string]string {
@@ -66,7 +66,14 @@ func (pkgInfo *GitHubReleasePackageInfo) GetPkgPath(rootDir string, pkg *Package
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetFiles() []*File {
-	return pkgInfo.Files
+	if len(pkgInfo.Files) != 0 {
+		return pkgInfo.Files
+	}
+	return []*File{
+		{
+			Name: pkgInfo.RepoName,
+		},
+	}
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetFileSrc(pkg *Package, file *File) (string, error) {
@@ -74,7 +81,7 @@ func (pkgInfo *GitHubReleasePackageInfo) GetFileSrc(pkg *Package, file *File) (s
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
-	if isUnarchived(pkgInfo.GetArchiveType(), assetName) {
+	if isUnarchived(pkgInfo.GetFormat(), assetName) {
 		return assetName, nil
 	}
 	if file.Src == nil {
@@ -89,11 +96,11 @@ func (pkgInfo *GitHubReleasePackageInfo) GetFileSrc(pkg *Package, file *File) (s
 
 func (pkgInfo *GitHubReleasePackageInfo) RenderAsset(pkg *Package) (string, error) {
 	return pkgInfo.Asset.Execute(map[string]interface{}{ //nolint:wrapcheck
-		"Version":     pkg.Version,
-		"GOOS":        runtime.GOOS,
-		"GOARCH":      runtime.GOARCH,
-		"OS":          replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
-		"ArchiveType": pkgInfo.GetArchiveType(),
+		"Version": pkg.Version,
+		"GOOS":    runtime.GOOS,
+		"GOARCH":  runtime.GOARCH,
+		"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
+		"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		"Format":  pkgInfo.GetFormat(),
 	})
 }

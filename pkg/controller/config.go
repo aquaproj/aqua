@@ -45,12 +45,13 @@ var (
 func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
 	m := make(map[string]PackageInfo, len(*pkgInfos))
 	for _, pkgInfo := range *pkgInfos {
-		if _, ok := m[pkgInfo.GetName()]; ok {
+		name := pkgInfo.GetName()
+		if _, ok := m[name]; ok {
 			return nil, logerr.WithFields(errPkgInfoNameIsDuplicated, logrus.Fields{ //nolint:wrapcheck
-				"package_info_name": pkgInfo.GetName(),
+				"package_info_name": name,
 			})
 		}
-		m[pkgInfo.GetName()] = pkgInfo
+		m[name] = pkgInfo
 	}
 	return m, nil
 }
@@ -92,7 +93,7 @@ func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) e
 type PackageInfo interface {
 	GetName() string
 	GetType() string
-	GetArchiveType() string
+	GetFormat() string
 	GetFiles() []*File
 	GetFileSrc(pkg *Package, file *File) (string, error)
 	GetPkgPath(rootDir string, pkg *Package) (string, error)
@@ -103,50 +104,50 @@ type PackageInfo interface {
 }
 
 type mergedPackageInfo struct {
-	Name                 string
-	Type                 string
-	RepoOwner            string `yaml:"repo_owner"`
-	RepoName             string `yaml:"repo_name"`
-	Asset                *text.Template
-	ArchiveType          string `yaml:"archive_type"`
-	Files                []*File
-	URL                  *text.Template
-	Description          string
-	Link                 string
-	Replacements         map[string]string
-	ArchiveTypeOverrides []*ArchiveTypeOverride `yaml:"archive_type_overrides"`
+	Name            string
+	Type            string
+	RepoOwner       string `yaml:"repo_owner"`
+	RepoName        string `yaml:"repo_name"`
+	Asset           *text.Template
+	Format          string `yaml:"format"`
+	Files           []*File
+	URL             *text.Template
+	Description     string
+	Link            string
+	Replacements    map[string]string
+	FormatOverrides []*FormatOverride `yaml:"format_overrides"`
 }
 
-type ArchiveTypeOverride struct {
-	GOOS        string
-	ArchiveType string `yaml:"archive_type"`
+type FormatOverride struct {
+	GOOS   string
+	Format string `yaml:"format"`
 }
 
 func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 	switch pkgInfo.Type {
 	case pkgInfoTypeGitHubRelease:
 		return &GitHubReleasePackageInfo{
-			Name:                 pkgInfo.Name,
-			RepoOwner:            pkgInfo.RepoOwner,
-			RepoName:             pkgInfo.RepoName,
-			Asset:                pkgInfo.Asset,
-			ArchiveType:          pkgInfo.ArchiveType,
-			ArchiveTypeOverrides: pkgInfo.ArchiveTypeOverrides,
-			Files:                pkgInfo.Files,
-			Link:                 pkgInfo.Link,
-			Description:          pkgInfo.Description,
-			Replacements:         pkgInfo.Replacements,
+			Name:            pkgInfo.Name,
+			RepoOwner:       pkgInfo.RepoOwner,
+			RepoName:        pkgInfo.RepoName,
+			Asset:           pkgInfo.Asset,
+			Format:          pkgInfo.Format,
+			FormatOverrides: pkgInfo.FormatOverrides,
+			Files:           pkgInfo.Files,
+			Link:            pkgInfo.Link,
+			Description:     pkgInfo.Description,
+			Replacements:    pkgInfo.Replacements,
 		}, nil
 	case pkgInfoTypeHTTP:
 		return &HTTPPackageInfo{
-			Name:                 pkgInfo.Name,
-			ArchiveType:          pkgInfo.ArchiveType,
-			ArchiveTypeOverrides: pkgInfo.ArchiveTypeOverrides,
-			URL:                  pkgInfo.URL,
-			Files:                pkgInfo.Files,
-			Link:                 pkgInfo.Link,
-			Description:          pkgInfo.Description,
-			Replacements:         pkgInfo.Replacements,
+			Name:            pkgInfo.Name,
+			Format:          pkgInfo.Format,
+			FormatOverrides: pkgInfo.FormatOverrides,
+			URL:             pkgInfo.URL,
+			Files:           pkgInfo.Files,
+			Link:            pkgInfo.Link,
+			Description:     pkgInfo.Description,
+			Replacements:    pkgInfo.Replacements,
 		}, nil
 	default:
 		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
@@ -163,13 +164,13 @@ type File struct {
 
 func (file *File) RenderSrc(pkg *Package, pkgInfo PackageInfo) (string, error) {
 	return file.Src.Execute(map[string]interface{}{ //nolint:wrapcheck
-		"Version":     pkg.Version,
-		"GOOS":        runtime.GOOS,
-		"GOARCH":      runtime.GOARCH,
-		"OS":          replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
-		"ArchiveType": pkgInfo.GetArchiveType(),
-		"FileName":    file.Name,
+		"Version":  pkg.Version,
+		"GOOS":     runtime.GOOS,
+		"GOARCH":   runtime.GOARCH,
+		"OS":       replace(runtime.GOOS, pkgInfo.GetReplacements()),
+		"Arch":     replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		"Format":   pkgInfo.GetFormat(),
+		"FileName": file.Name,
 	})
 }
 

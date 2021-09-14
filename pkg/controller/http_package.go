@@ -10,13 +10,13 @@ import (
 )
 
 type HTTPPackageInfo struct {
-	Name                 string `validate:"required"`
-	ArchiveType          string
-	Description          string
-	Link                 string
-	Files                []*File `validate:"required,dive"`
-	Replacements         map[string]string
-	ArchiveTypeOverrides []*ArchiveTypeOverride
+	Name            string `validate:"required"`
+	Format          string
+	Description     string
+	Link            string
+	Files           []*File `validate:"required,dive"`
+	Replacements    map[string]string
+	FormatOverrides []*FormatOverride
 
 	URL *text.Template `validate:"required"`
 }
@@ -37,13 +37,13 @@ func (pkgInfo *HTTPPackageInfo) GetDescription() string {
 	return pkgInfo.Description
 }
 
-func (pkgInfo *HTTPPackageInfo) GetArchiveType() string {
-	for _, arcTypeOverride := range pkgInfo.ArchiveTypeOverrides {
+func (pkgInfo *HTTPPackageInfo) GetFormat() string {
+	for _, arcTypeOverride := range pkgInfo.FormatOverrides {
 		if arcTypeOverride.GOOS == runtime.GOOS {
-			return arcTypeOverride.ArchiveType
+			return arcTypeOverride.Format
 		}
 	}
-	return pkgInfo.ArchiveType
+	return pkgInfo.Format
 }
 
 func (pkgInfo *HTTPPackageInfo) GetReplacements() map[string]string {
@@ -52,12 +52,12 @@ func (pkgInfo *HTTPPackageInfo) GetReplacements() map[string]string {
 
 func (pkgInfo *HTTPPackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
 	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
-		"Version":     pkg.Version,
-		"GOOS":        runtime.GOOS,
-		"GOARCH":      runtime.GOARCH,
-		"OS":          replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
-		"ArchiveType": pkgInfo.GetArchiveType(),
+		"Version": pkg.Version,
+		"GOOS":    runtime.GOOS,
+		"GOARCH":  runtime.GOARCH,
+		"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
+		"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)
@@ -78,7 +78,7 @@ func (pkgInfo *HTTPPackageInfo) GetFileSrc(pkg *Package, file *File) (string, er
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
-	if isUnarchived(pkgInfo.GetArchiveType(), assetName) {
+	if isUnarchived(pkgInfo.GetFormat(), assetName) {
 		return assetName, nil
 	}
 	if file.Src == nil {
@@ -93,12 +93,12 @@ func (pkgInfo *HTTPPackageInfo) GetFileSrc(pkg *Package, file *File) (string, er
 
 func (pkgInfo *HTTPPackageInfo) RenderURL(pkg *Package) (string, error) {
 	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
-		"Version":     pkg.Version,
-		"GOOS":        runtime.GOOS,
-		"GOARCH":      runtime.GOARCH,
-		"OS":          replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
-		"ArchiveType": pkgInfo.GetArchiveType(),
+		"Version": pkg.Version,
+		"GOOS":    runtime.GOOS,
+		"GOARCH":  runtime.GOARCH,
+		"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
+		"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)
