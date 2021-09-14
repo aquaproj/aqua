@@ -5,6 +5,12 @@
     "github>suzuki-shunsuke/renovate-config:golang",
     "github>suzuki-shunsuke/aqua-renovate-config",
   ],
+  packageRules: [
+    {
+      automerge: false,
+      "matchUpdateTypes": ["major"],
+    },
+  ],
   regexManagers: [
     {
       fileMatch: ["tutorial/docker-compose.yml"],
