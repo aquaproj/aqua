@@ -42,7 +42,7 @@ registries:
 - type: standard
   ref: v0.6.1 # renovate: depName=suzuki-shunsuke/aqua-registry
 packages:
-- name: gh
+- name: cli/cli
   registry: standard
   version: v2.0.0 # renovate: depName=cli/cli
 ```
@@ -55,7 +55,7 @@ Let's install tools with aqua.
 bash-5.1# aqua install
 INFO[0000] download and unarchive the package            package_name=aqua-proxy package_version=v0.1.2 program=aqua registry=inline
 INFO[0001] create a symbolic link                        link_file=/root/.aqua/bin/gh new=aqua-proxy program=aqua
-INFO[0001] download and unarchive the package            package_name=gh package_version=v2.0.0 program=aqua registry=standard
+INFO[0001] download and unarchive the package            package_name=cli/cli package_version=v2.0.0 program=aqua registry=standard
 ```
 
 In addition to gh, [aqua-proxy](https://github.com/suzuki-shunsuke/aqua-proxy) is installed. aqua-proxy is required for aqua.
@@ -215,7 +215,7 @@ You don't have to run `aqua i` in advance.
 
 ```console
 bash-5.1# gh version
-INFO[0000] download and unarchive the package            package_name=gh package_version=v1.13.1 program=aqua registry=standard
+INFO[0000] download and unarchive the package            package_name=cli/cli package_version=v1.13.1 program=aqua registry=standard
 gh version 1.13.1 (2021-07-20)
 https://github.com/cli/cli/releases/tag/v1.13.1
 ```

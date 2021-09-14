@@ -43,13 +43,13 @@ registries:
   ref: v0.6.1 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
-- name: jq
+- name: stedolan/jq
   registry: standard
   version: jq-1.6
-- name: direnv
+- name: direnv/direnv
   registry: standard
   version: v2.28.0 # renovate: depName=direnv/direnv
-- name: fzf
+- name: junegunn/fzf
   registry: standard
   version: 0.27.2 # renovate: depName=junegunn/fzf
 ```
@@ -93,7 +93,7 @@ registries:
   ref: v0.6.1 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
-- name: direnv
+- name: direnv/direnv
   registry: standard
   version: v2.28.0 # renovate: depName=direnv/direnv
 ```
@@ -154,7 +154,7 @@ Write `aqua.yaml`.
 
 ```yaml
 packages:
-- name: jq
+- name: stedolan/jq
   registry: standard
   version: jq-1.5
 
