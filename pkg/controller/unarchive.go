@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
@@ -18,7 +19,7 @@ func getUnarchiver(filename, typ string) (interface{}, error) {
 	return archiver.ByExtension(filename) //nolint:wrapcheck
 }
 
-func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cyclop
+func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cyclop,funlen
 	if isUnarchived(typ, filename) {
 		log.New().Debug("archive type is raw")
 		if err := mkdirAll(dest); err != nil {
@@ -59,7 +60,10 @@ func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cycl
 		}
 		return t.Unarchive(f.Name(), dest) //nolint:wrapcheck
 	case archiver.Decompressor:
-		f, err := os.Open(dest)
+		if err := mkdirAll(dest); err != nil {
+			return fmt.Errorf("create a directory (%s): %w", dest, err)
+		}
+		f, err := os.OpenFile(filepath.Join(dest, strings.TrimSuffix(filename, filepath.Ext(filename))), os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
 		if err != nil {
 			return fmt.Errorf("open the file (%s): %w", dest, err)
 		}
