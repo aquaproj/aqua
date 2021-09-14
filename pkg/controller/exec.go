@@ -35,15 +35,13 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 		return fmt.Errorf("get the current directory: %w", logerr.WithFields(err, fields))
 	}
 
-	binDir := filepath.Join(ctrl.RootDir, "bin")
-
 	if cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath); cfgFilePath != "" {
 		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
 		if err != nil {
 			return err
 		}
 		if pkg != nil {
-			return ctrl.installAndExec(ctx, pkgInfo, pkg, file, binDir, args)
+			return ctrl.installAndExec(ctx, pkgInfo, pkg, file, args)
 		}
 	}
 	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
@@ -58,7 +56,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 	if pkg == nil {
 		return ctrl.findAndExecExtCommand(ctx, exeName, args[1:])
 	}
-	return ctrl.installAndExec(ctx, pkgInfo, pkg, file, binDir, args)
+	return ctrl.installAndExec(ctx, pkgInfo, pkg, file, args)
 }
 
 func (ctrl *Controller) findAndExecExtCommand(ctx context.Context, exeName string, args []string) error {
@@ -71,13 +69,13 @@ func (ctrl *Controller) findAndExecExtCommand(ctx context.Context, exeName strin
 	return ctrl.execCommand(ctx, exePath, args)
 }
 
-func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo, pkg *Package, file *File, binDir string, args []string) error {
+func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo, pkg *Package, file *File, args []string) error {
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return fmt.Errorf("get file_src: %w", err)
 	}
 
-	if err := ctrl.installPackage(ctx, pkgInfo, pkg, binDir, false, false); err != nil {
+	if err := ctrl.installPackage(ctx, pkgInfo, pkg, false); err != nil {
 		return err
 	}
 
