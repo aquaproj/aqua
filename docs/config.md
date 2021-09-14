@@ -81,7 +81,7 @@ Only `ref` field is supported.
 ```yaml
 registries:
 - type: standard
-  ref: v0.6.1 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.7.0 # renovate: depName=suzuki-shunsuke/aqua-registry
 ```
 
 This is equivalent to the following definition.
@@ -92,7 +92,7 @@ registries:
   type: github_content
   repo_owner: suzuki-shunsuke
   repo_name: aqua-registry
-  ref: v0.6.1 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.7.0 # renovate: depName=suzuki-shunsuke/aqua-registry
   path: registry.yaml
 ```
 
