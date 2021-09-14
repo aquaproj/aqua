@@ -13,7 +13,7 @@ type GitHubReleasePackageInfo struct {
 	Format          string
 	Link            string
 	Description     string
-	Files           []*File `validate:"required,dive"`
+	Files           []*File `validate:"dive"`
 	Replacements    map[string]string
 	FormatOverrides []*FormatOverride
 
@@ -66,7 +66,14 @@ func (pkgInfo *GitHubReleasePackageInfo) GetPkgPath(rootDir string, pkg *Package
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetFiles() []*File {
-	return pkgInfo.Files
+	if len(pkgInfo.Files) != 0 {
+		return pkgInfo.Files
+	}
+	return []*File{
+		{
+			Name: pkgInfo.RepoName,
+		},
+	}
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetFileSrc(pkg *Package, file *File) (string, error) {
