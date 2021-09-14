@@ -13,11 +13,42 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error {
+func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop
+	var failed bool
+	for _, pkg := range cfg.Packages {
+		logE := log.New().WithFields(logrus.Fields{
+			"package_name":    pkg.Name,
+			"package_version": pkg.Version,
+			"registry":        pkg.Registry,
+		})
+		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
+		if err != nil {
+			logE.WithError(err).Error("install the package")
+			failed = true
+			continue
+		}
+		for _, file := range pkgInfo.GetFiles() {
+			if err := ctrl.createLink(binDir, file); err != nil {
+				logE.WithError(err).Error("create the symbolic link")
+				failed = true
+				continue
+			}
+		}
+	}
+
+	if onlyLink {
+		logrus.WithFields(logrus.Fields{
+			"only_link": true,
+		}).Debug("skip downloading the package")
+		if failed {
+			return errInstallFailure
+		}
+		return nil
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
-	var failed bool
 	maxInstallChan := make(chan struct{}, getMaxParallelism())
 
 	handleFailure := func() {
@@ -36,29 +67,14 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				"package_version": pkg.Version,
 				"registry":        pkg.Registry,
 			})
-
-			registry, ok := registries[pkg.Registry]
-			if !ok {
-				logE.Error("install the package: registry isn't found")
-				handleFailure()
-				return
-			}
-
-			pkgInfos, err := registry.PackageInfos.ToMap()
+			pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 			if err != nil {
-				logE.WithError(fmt.Errorf("convert package infos to map: %w", err)).Error("install the package")
+				logE.WithError(err).Error("install the package")
 				handleFailure()
 				return
 			}
 
-			pkgInfo, ok := pkgInfos[pkg.Name]
-			if !ok {
-				logE.Error("install the package: package isn't found in the registry")
-				handleFailure()
-				return
-			}
-
-			if err := ctrl.installPackage(ctx, pkgInfo, pkg, binDir, onlyLink, isTest); err != nil {
+			if err := ctrl.installPackage(ctx, pkgInfo, pkg, isTest); err != nil {
 				logE.WithError(err).Error("install the package")
 				handleFailure()
 				return
@@ -73,7 +89,25 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	return nil
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo, pkg *Package, binDir string, onlyLink, isTest bool) error { //nolint:cyclop
+func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Package) (PackageInfo, error) {
+	registry, ok := registries[pkg.Registry]
+	if !ok {
+		return nil, errors.New("registry isn't found")
+	}
+
+	pkgInfos, err := registry.PackageInfos.ToMap()
+	if err != nil {
+		return nil, fmt.Errorf("convert package infos to map: %w", err)
+	}
+
+	pkgInfo, ok := pkgInfos[pkg.Name]
+	if !ok {
+		return nil, errors.New("package isn't found in the registry")
+	}
+	return pkgInfo, nil
+}
+
+func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo, pkg *Package, isTest bool) error {
 	logE := log.New().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -83,19 +117,6 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo,
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
-	}
-
-	for _, file := range pkgInfo.GetFiles() {
-		if err := ctrl.createLink(binDir, file); err != nil {
-			return err
-		}
-	}
-
-	if onlyLink {
-		logE.WithFields(logrus.Fields{
-			"only_link": true,
-		}).Debug("skip downloading the package")
-		return nil
 	}
 
 	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
