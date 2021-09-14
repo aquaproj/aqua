@@ -34,7 +34,10 @@ func (pkgInfo *GitHubReleasePackageInfo) GetType() string {
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetLink() string {
-	return pkgInfo.Link
+	if pkgInfo.Link != "" {
+		return pkgInfo.Link
+	}
+	return "https://github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetDescription() string {
