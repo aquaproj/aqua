@@ -9,7 +9,7 @@ import (
 )
 
 type GitHubReleasePackageInfo struct {
-	Name                 string `validate:"required"`
+	Name                 string
 	ArchiveType          string
 	Link                 string
 	Description          string
@@ -23,7 +23,10 @@ type GitHubReleasePackageInfo struct {
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetName() string {
-	return pkgInfo.Name
+	if pkgInfo.Name != "" {
+		return pkgInfo.Name
+	}
+	return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetType() string {
