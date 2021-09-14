@@ -58,10 +58,6 @@ func (pkgInfo *HTTPPackageInfo) GetPkgPath(rootDir string, pkg *Package) (string
 		"OS":          replace(runtime.GOOS, pkgInfo.GetReplacements()),
 		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
 		"ArchiveType": pkgInfo.GetArchiveType(),
-
-		// DEPRECATED: don't use these variables
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)
@@ -103,10 +99,6 @@ func (pkgInfo *HTTPPackageInfo) RenderURL(pkg *Package) (string, error) {
 		"OS":          replace(runtime.GOOS, pkgInfo.GetReplacements()),
 		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
 		"ArchiveType": pkgInfo.GetArchiveType(),
-
-		// DEPRECATED: don't use these variables
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render URL: %w", err)

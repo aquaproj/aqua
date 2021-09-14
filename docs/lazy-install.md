@@ -23,7 +23,7 @@ inline_registry:
   packages:
   - name: go
     type: http
-    url: https://golang.org/dl/go{{.Package.Version}}.{{.OS}}-{{.Arch}}.tar.gz
+    url: https://golang.org/dl/go{{.Version}}.{{.OS}}-{{.Arch}}.tar.gz
     files:
     - name: go # the symbolic `go` is created
       src: go/bin/go
@@ -59,7 +59,7 @@ inline_registry:
   packages:
   - name: go
     type: http
-    url: https://golang.org/dl/go{{.Package.Version}}.{{.OS}}-{{.Arch}}.tar.gz
+    url: https://golang.org/dl/go{{.Version}}.{{.OS}}-{{.Arch}}.tar.gz
     link: https://golang.org/
     description: The Go programming language
     files:

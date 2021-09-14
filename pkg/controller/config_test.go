@@ -56,7 +56,7 @@ inline_registry:
     type: github_release
     repo_owner: suzuki-shunsuke
     repo_name: cmdx
-    asset: 'cmdx_{{.Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+    asset: 'cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
     files:
     - name: cmdx
 packages:
@@ -71,7 +71,7 @@ packages:
 							Name:      "cmdx",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "cmdx",
-							Asset:     text.NewForTest(t, `cmdx_{{.Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
+							Asset:     text.NewForTest(t, `cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
 							Files: []*controller.File{
 								{
 									Name: "cmdx",

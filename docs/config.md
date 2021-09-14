@@ -120,16 +120,6 @@ The following variables are passed to the template.
 * `Version`
 * `ArchiveType`
 
-:warning: The following Template Variables are deprecated.
-
-* `Package`: the Package
-  * `Name`
-  * `Version`
-* `PackageInfo`: the Package
-  * `Name`
-  * `RepoOwner`
-  * `RepoName`
-
 #### `File.src`
 
 The following variables are passed to the template.
@@ -141,15 +131,3 @@ The following variables are passed to the template.
 * `Version`
 * `ArchiveType`
 * `FileName`
-
-:warning: The following Template Variables are deprecated.
-
-* `Package`: Package
-  * `Name`
-  * `Version`
-* `PackageInfo`: PackageInfo
-  * `Name`
-  * `RepoOwner`
-  * `RepoName`
-* `File`: File
-  * `Name`
