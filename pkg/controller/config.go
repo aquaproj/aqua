@@ -170,11 +170,6 @@ func (file *File) RenderSrc(pkg *Package, pkgInfo PackageInfo) (string, error) {
 		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
 		"ArchiveType": pkgInfo.GetArchiveType(),
 		"FileName":    file.Name,
-
-		// DEPRECATED: don't use these variables
-		"File":        file,
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
 	})
 }
 

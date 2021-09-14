@@ -89,9 +89,5 @@ func (pkgInfo *GitHubReleasePackageInfo) RenderAsset(pkg *Package) (string, erro
 		"OS":          replace(runtime.GOOS, pkgInfo.GetReplacements()),
 		"Arch":        replace(runtime.GOARCH, pkgInfo.GetReplacements()),
 		"ArchiveType": pkgInfo.GetArchiveType(),
-
-		// DEPRECATED: don't use these variables
-		"Package":     pkg,
-		"PackageInfo": pkgInfo,
 	})
 }

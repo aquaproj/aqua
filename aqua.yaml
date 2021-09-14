@@ -12,7 +12,7 @@ inline_registry:
     type: github_release
     repo_owner: suzuki-shunsuke
     repo_name: cmdx
-    asset: 'cmdx_{{trimPrefix "v" .Package.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+    asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
     files:
     - name: cmdx
 
