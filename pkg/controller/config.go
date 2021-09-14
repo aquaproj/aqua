@@ -45,12 +45,13 @@ var (
 func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
 	m := make(map[string]PackageInfo, len(*pkgInfos))
 	for _, pkgInfo := range *pkgInfos {
-		if _, ok := m[pkgInfo.GetName()]; ok {
+		name := pkgInfo.GetName()
+		if _, ok := m[name]; ok {
 			return nil, logerr.WithFields(errPkgInfoNameIsDuplicated, logrus.Fields{ //nolint:wrapcheck
-				"package_info_name": pkgInfo.GetName(),
+				"package_info_name": name,
 			})
 		}
-		m[pkgInfo.GetName()] = pkgInfo
+		m[name] = pkgInfo
 	}
 	return m, nil
 }
