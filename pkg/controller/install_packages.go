@@ -152,6 +152,7 @@ func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *Fil
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
+	logE := logrus.WithFields(fields)
 
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
@@ -171,7 +172,25 @@ func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *Fil
 	if finfo.IsDir() {
 		return logerr.WithFields(errors.New("exe_path is directory"), fields) //nolint:wrapcheck
 	}
+
+	logE.Debug("check the permission")
+	if mode := finfo.Mode().Perm(); !isOwnerExecutable(mode) {
+		logE.Debug("add the permission to execute the command")
+		if err := os.Chmod(exePath, allowOwnerExec(mode)); err != nil {
+			return logerr.WithFields(errors.New("add the permission to execute the command"), fields) //nolint:wrapcheck
+		}
+	}
 	return nil
+}
+
+const OwnerExecutable os.FileMode = 64
+
+func isOwnerExecutable(mode os.FileMode) bool {
+	return mode&OwnerExecutable != 0
+}
+
+func allowOwnerExec(mode os.FileMode) os.FileMode {
+	return mode | OwnerExecutable
 }
 
 func (ctrl *Controller) createLink(binDir string, file *File) error {
