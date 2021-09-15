@@ -27,4 +27,4 @@ packages:
 
 - name: helm/helm # http
   registry: standard
-  version: v3.6.3 # renovate: depName=helm/helm
+  version: v3.7.0 # renovate: depName=helm/helm
