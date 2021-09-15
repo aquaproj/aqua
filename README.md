@@ -117,19 +117,7 @@ $ aqua g
 >
 ```
 
-If the selected package type is `github_release`, you can select the package version interactively.
-
-```
-  v1.40.0
-  v1.40.1
-  v1.41.0
-  v1.41.1
-> v1.42.0
-  30/30
->
-```
-
-After selecting the package and its version, the configuration is outputted.
+After selecting the package, the configuration is outputted.
 
 ```console
 $ aqua g
