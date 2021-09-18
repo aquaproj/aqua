@@ -33,7 +33,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return err
 	}
-	if err := validate.Struct(cfg); err != nil {
+	if err := validateConfig(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)

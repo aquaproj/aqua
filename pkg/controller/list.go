@@ -20,7 +20,7 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 		return err
 	}
 
-	if err := validate.Struct(cfg); err != nil {
+	if err := validateConfig(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 

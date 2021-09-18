@@ -28,7 +28,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 	}
 	rootBin := filepath.Join(ctrl.RootDir, "bin")
 
-	if err := validate.Struct(cfg); err != nil {
+	if err := validateConfig(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 

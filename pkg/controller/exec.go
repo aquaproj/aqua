@@ -110,6 +110,9 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return nil, nil, nil, err
 	}
+	if err := validateConfig(cfg); err != nil {
+		return nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)
+	}
 
 	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
