@@ -3,7 +3,8 @@ package controller
 import "errors"
 
 var (
-	errPkgInfoNameIsDuplicated            = errors.New("the package info name must be unique in the same registry")
+	errPkgNameMustBeUniqueInRegistry      = errors.New("the package name must be unique in the same registry")
+	errPairPkgNameAndRegistryMustBeUnique = errors.New("the pair of package name and registry must be unique")
 	errInvalidType                        = errors.New("type is invalid")
 	errConfigFileNotFound                 = errors.New("configuration file isn't found")
 	errUnknownPkg                         = errors.New("unknown package")
@@ -23,4 +24,5 @@ var (
 	errChmod                              = errors.New("add the permission to execute the command")
 	errInvalidHTTPStatusCode              = errors.New("status code >= 400")
 	errInstallFailure                     = errors.New("it failed to install some packages")
+	errRegistryNameIsDuplicated           = errors.New("registry name is duplicated")
 )

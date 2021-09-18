@@ -147,6 +147,14 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 		return nil, errInstallFailure
 	}
 
+	for registryName, registryContent := range registryContents {
+		if err := validateRegistryContent(registryContent); err != nil {
+			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+				"registry_name": registryName,
+			})
+		}
+	}
+
 	return registryContents, nil
 }
 
