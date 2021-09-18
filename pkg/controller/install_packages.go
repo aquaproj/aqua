@@ -16,7 +16,7 @@ import (
 func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop
 	var failed bool
 	for _, pkg := range cfg.Packages {
-		logE := log.New().WithFields(logrus.Fields{
+		logE := ctrl.logE().WithFields(logrus.Fields{
 			"package_name":    pkg.Name,
 			"package_version": pkg.Version,
 			"registry":        pkg.Registry,
@@ -37,7 +37,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	}
 
 	if onlyLink {
-		logrus.WithFields(logrus.Fields{
+		ctrl.logE().WithFields(logrus.Fields{
 			"only_link": true,
 		}).Debug("skip downloading the package")
 		if failed {
@@ -62,7 +62,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			logE := log.New().WithFields(logrus.Fields{
+			logE := ctrl.logE().WithFields(logrus.Fields{
 				"package_name":    pkg.Name,
 				"package_version": pkg.Version,
 				"registry":        pkg.Registry,
@@ -89,10 +89,15 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	return nil
 }
 
+var (
+	errRegistryNotFound = errors.New("registry isn't found")
+	errPkgNotFound      = errors.New("package isn't found in the registry")
+)
+
 func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Package) (PackageInfo, error) {
 	registry, ok := registries[pkg.Registry]
 	if !ok {
-		return nil, errors.New("registry isn't found")
+		return nil, errRegistryNotFound
 	}
 
 	pkgInfos, err := registry.PackageInfos.ToMap()
@@ -102,13 +107,13 @@ func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Packa
 
 	pkgInfo, ok := pkgInfos[pkg.Name]
 	if !ok {
-		return nil, errors.New("package isn't found in the registry")
+		return nil, errPkgNotFound
 	}
 	return pkgInfo, nil
 }
 
 func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo, pkg *Package, isTest bool) error {
-	logE := log.New().WithFields(logrus.Fields{
+	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -148,11 +153,13 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo,
 	return nil
 }
 
+var errExePathIsDirectory = errors.New("exe_path is directory")
+
 func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *File) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
-	logE := logrus.WithFields(fields)
+	logE := ctrl.logE().WithFields(fields)
 
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
@@ -170,7 +177,7 @@ func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *Fil
 		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))
 	}
 	if finfo.IsDir() {
-		return logerr.WithFields(errors.New("exe_path is directory"), fields) //nolint:wrapcheck
+		return logerr.WithFields(errExePathIsDirectory, fields) //nolint:wrapcheck
 	}
 
 	logE.Debug("check the permission")
@@ -213,7 +220,7 @@ func (ctrl *Controller) createLink(binDir string, file *File) error {
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
-	log.New().WithFields(logrus.Fields{
+	ctrl.logE().WithFields(logrus.Fields{
 		"link_file": linkPath,
 		"new":       linkDest,
 	}).Info("create a symbolic link")
@@ -233,6 +240,7 @@ func recreateLink(linkPath, linkDest string) error {
 	}
 	// recreate link
 	log.New().WithFields(logrus.Fields{
+		// TODO add version
 		"link_file": linkPath,
 		"old":       lnDest,
 		"new":       linkDest,

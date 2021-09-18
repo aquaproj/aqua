@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -83,23 +82,25 @@ func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo,
 }
 
 func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*Package, PackageInfo, *File) {
+	logE := ctrl.logE().WithFields(logrus.Fields{
+		"registry_name": pkg.Registry,
+		"package_name":  pkg.Name,
+	})
 	registry, ok := registries[pkg.Registry]
 	if !ok {
-		log.New().Warnf("registry isn't found %s", pkg.Name)
+		logE.Warn("registry isn't found")
 		return nil, nil, nil
 	}
 
 	m, err := registry.PackageInfos.ToMap()
 	if err != nil {
-		log.New().WithFields(logrus.Fields{
-			"registry_name": pkg.Registry,
-		}).WithError(err).Warnf("registry is invalid")
+		logE.WithError(err).Warnf("registry is invalid")
 		return nil, nil, nil
 	}
 
 	pkgInfo, ok := m[pkg.Name]
 	if !ok {
-		log.New().Warnf("package isn't found %s", pkg.Name)
+		logE.Warn("package isn't found")
 		return nil, nil, nil
 	}
 	for _, file := range pkgInfo.GetFiles() {
@@ -153,7 +154,7 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 	cmd.Stderr = ctrl.Stderr
 	runner := timeout.NewRunner(0)
 
-	logE := log.New().WithField("exe_path", exePath)
+	logE := ctrl.logE().WithField("exe_path", exePath)
 	logE.Debug("execute the command")
 	if err := runner.Run(ctx, cmd); err != nil {
 		exitCode := cmd.ProcessState.ExitCode()

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 )
 
@@ -17,7 +16,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		Version:  "v0.1.2", // renovate: depName=suzuki-shunsuke/aqua-proxy
 		Registry: "inline",
 	}
-	logE := log.New().WithFields(logrus.Fields{
+	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,

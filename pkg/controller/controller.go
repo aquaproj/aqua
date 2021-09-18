@@ -24,6 +24,7 @@ type Controller struct {
 	ConfigReader ConfigReader
 	GitHub       *github.Client
 	RootDir      string
+	Version      string
 }
 
 func New(ctx context.Context, param *Param) (*Controller, error) {
@@ -31,14 +32,16 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		lvl, err := logrus.ParseLevel(param.LogLevel)
 		if err != nil {
 			log.New().WithFields(logrus.Fields{
-				"log_level": param.LogLevel,
+				"log_level":    param.LogLevel,
+				"aqua_version": param.AQUAVersion,
 			}).WithError(err).Error("the log level is invalid")
 		}
 		logrus.SetLevel(lvl)
 	}
 	log.New().WithFields(logrus.Fields{
-		"log_level": param.LogLevel,
-		"config":    param.ConfigFilePath,
+		"log_level":    param.LogLevel,
+		"config":       param.ConfigFilePath,
+		"aqua_version": param.AQUAVersion,
 	}).Debug("CLI args")
 	text.SetTemplateFunc(func(s string) (*template.Template, error) {
 		return template.New("_").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{ //nolint:wrapcheck
@@ -54,6 +57,7 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		ConfigFinder: &configFinder{},
 		ConfigReader: &configReader{},
 		RootDir:      os.Getenv("AQUA_ROOT_DIR"),
+		Version:      param.AQUAVersion,
 	}
 	if ctrl.RootDir == "" {
 		ctrl.RootDir = filepath.Join(os.Getenv("HOME"), ".aqua")
@@ -66,4 +70,8 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 	}
 
 	return &ctrl, nil
+}
+
+func (ctrl *Controller) logE() *logrus.Entry {
+	return log.New().WithField("aqua_version", ctrl.Version)
 }

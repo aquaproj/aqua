@@ -166,7 +166,10 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	}
 	release, _, err := ctrl.GitHub.Repositories.GetLatestRelease(ctx, p.RepoOwner, p.RepoName)
 	if err != nil {
-		logrus.WithError(err).Warn("get the latest release")
+		ctrl.logE().WithError(err).WithFields(logrus.Fields{
+			"repo_owner": p.RepoOwner,
+			"repo_name":  p.RepoName,
+		}).Warn("get the latest release")
 		return outputPkg, nil
 	}
 	outputPkg.Version = release.GetTagName()

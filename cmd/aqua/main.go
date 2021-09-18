@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/cli"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -23,14 +24,17 @@ type HasExitCode interface {
 }
 
 func main() {
+	fields := logrus.Fields{
+		"aqua_version": version,
+	}
 	if err := core(); err != nil {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
 			code := hasExitCode.ExitCode()
-			logerr.WithError(log.New().WithField("exit_code", code), err).Debug("command failed")
+			logerr.WithError(log.New().WithField("exit_code", code).WithFields(fields), err).Debug("command failed")
 			os.Exit(code)
 		}
-		logerr.WithError(log.New(), err).Fatal("aqua failed")
+		logerr.WithError(log.New(), err).WithFields(fields).Fatal("aqua failed")
 	}
 }
 
