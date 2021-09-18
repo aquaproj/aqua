@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -50,8 +49,6 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 
 	return ctrl.installPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest)
 }
-
-var errInstallFailure = errors.New("it failed to install some packages")
 
 const defaultMaxParallelism = 5
 

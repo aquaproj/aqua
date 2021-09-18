@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -35,11 +34,6 @@ type (
 const (
 	pkgInfoTypeGitHubRelease = "github_release"
 	pkgInfoTypeHTTP          = "http"
-)
-
-var (
-	errPkgInfoNameIsDuplicated = errors.New("the package info name must be unique in the same registry")
-	errInvalidType             = errors.New("type is invalid")
 )
 
 func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
@@ -182,8 +176,6 @@ type Param struct {
 	File           string
 	AQUAVersion    string
 }
-
-var errConfigFileNotFound = errors.New("configuration file isn't found")
 
 func (ctrl *Controller) getConfigFilePath(wd, configFilePath string) string {
 	if configFilePath != "" {
