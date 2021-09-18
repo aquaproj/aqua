@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,7 +17,7 @@ func (ctrl *Controller) downloadFromURL(ctx context.Context, u string) (io.ReadC
 		return nil, fmt.Errorf("send http request: %w", err)
 	}
 	if resp.StatusCode >= 400 { //nolint:gomnd
-		return resp.Body, errors.New("status code >= 400")
+		return resp.Body, errInvalidHTTPStatusCode
 	}
 	return resp.Body, nil
 }

@@ -2,14 +2,11 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"io"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-var errGitHubReleaseTypeAssertion = errors.New("pkg typs is github_release, but it isn't *GitHubReleasePackageInfo")
 
 func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo PackageInfo, dest, assetName string) error {
 	logE := ctrl.logE().WithFields(logrus.Fields{
@@ -37,7 +34,7 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo Pack
 	case pkgInfoTypeHTTP:
 		p, ok := pkgInfo.(*HTTPPackageInfo)
 		if !ok {
-			return errors.New("pkg typs is http, but it isn't *HTTPPackageInfo")
+			return errTypeAssertionHTTPPackageInfo
 		}
 		uS, err := p.RenderURL(pkg)
 		if err != nil {
@@ -49,7 +46,7 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo Pack
 		}
 		body = b
 	default:
-		return logerr.WithFields(errors.New("invalid type"), logrus.Fields{ //nolint:wrapcheck
+		return logerr.WithFields(errInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),
 		})
 	}
@@ -57,5 +54,3 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo Pack
 	defer body.Close()
 	return unarchive(body, assetName, pkgInfo.GetFormat(), dest)
 }
-
-var errGitHubTokenIsRequired = errors.New("GITHUB_TOKEN is required for the type `github_release`")

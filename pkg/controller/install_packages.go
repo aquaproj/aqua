@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -89,11 +88,6 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	return nil
 }
 
-var (
-	errRegistryNotFound = errors.New("registry isn't found")
-	errPkgNotFound      = errors.New("package isn't found in the registry")
-)
-
 func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Package) (PackageInfo, error) {
 	registry, ok := registries[pkg.Registry]
 	if !ok {
@@ -153,8 +147,6 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo,
 	return nil
 }
 
-var errExePathIsDirectory = errors.New("exe_path is directory")
-
 func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *File) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
@@ -184,7 +176,7 @@ func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *Fil
 	if mode := finfo.Mode().Perm(); !isOwnerExecutable(mode) {
 		logE.Debug("add the permission to execute the command")
 		if err := os.Chmod(exePath, allowOwnerExec(mode)); err != nil {
-			return logerr.WithFields(errors.New("add the permission to execute the command"), fields) //nolint:wrapcheck
+			return logerr.WithFields(errChmod, fields) //nolint:wrapcheck
 		}
 	}
 	return nil

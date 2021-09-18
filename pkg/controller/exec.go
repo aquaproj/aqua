@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,11 +11,6 @@ import (
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-)
-
-var (
-	errCommandIsRequired = errors.New("command is required")
-	errCommandIsNotFound = errors.New("command is not found")
 )
 
 func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error {

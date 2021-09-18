@@ -11,6 +11,7 @@ import (
 
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -131,7 +132,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 		txt := scanner.Text()
 		findingPkg, ok := m[txt]
 		if !ok {
-			return errors.New("unknown package: " + txt)
+			return logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
 		}
 		outputPkg, err := ctrl.getOutputtedPkg(ctx, findingPkg)
 		if err != nil {

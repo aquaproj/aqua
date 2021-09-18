@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -157,7 +156,7 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry R
 	}
 	r, ok := registry.(*GitHubContentRegistry)
 	if !ok {
-		return nil, errors.New("registry.GetType() is github_content, but registry isn't *GitHubContentRegistry")
+		return nil, errTypeAssertionGitHubContentRegistry
 	}
 
 	file, _, _, err := ctrl.GitHub.Repositories.GetContents(ctx, r.RepoOwner, r.RepoName, r.Path, &github.RepositoryContentGetOptions{
@@ -167,7 +166,7 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry R
 		return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
 	}
 	if file == nil {
-		return nil, errors.New("ref must be not a directory but a file")
+		return nil, errGitHubContentMustBeFile
 	}
 	content, err := file.GetContent()
 	if err != nil {
@@ -182,11 +181,6 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry R
 	}
 	return registryContent, nil
 }
-
-var (
-	errUnsupportedRegistryType = errors.New("unsupported registry type")
-	errLocalRegistryNotFound   = errors.New("local registry isn't found")
-)
 
 func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
 	// file doesn't exist
