@@ -15,6 +15,7 @@ func (runner *Runner) setCLIArg(c *cli.Context, param *controller.Param) error {
 	param.OnlyLink = c.Bool("only-link")
 	param.IsTest = c.Bool("test")
 	param.File = c.String("f")
+	param.AQUAVersion = runner.LDFlags.Version
 	return nil
 }
 

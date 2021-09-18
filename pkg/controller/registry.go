@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
@@ -130,7 +129,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 			registryContent, err := ctrl.installRegistry(ctx, registry, cfgFilePath)
 			if err != nil {
 				<-maxInstallChan
-				log.New().WithFields(logrus.Fields{
+				ctrl.logE().WithFields(logrus.Fields{
 					"registry_name": registry.GetName(),
 				}).WithError(err).Error("install the registry")
 				flagMutex.Lock()
@@ -184,6 +183,11 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry R
 	return registryContent, nil
 }
 
+var (
+	errUnsupportedRegistryType = errors.New("unsupported registry type")
+	errLocalRegistryNotFound   = errors.New("local registry isn't found")
+)
+
 func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
 	// file doesn't exist
 	// download and install file
@@ -191,11 +195,11 @@ func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, regi
 	case registryTypeGitHubContent:
 		return ctrl.getGitHubContentRegistry(ctx, registry, registryFilePath)
 	case registryTypeLocal:
-		return nil, logerr.WithFields(errors.New("local registry isn't found"), logrus.Fields{ //nolint:wrapcheck
+		return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
 			"local_registry_file_path": registryFilePath,
 		})
 	}
-	return nil, errors.New("unsupported registry type")
+	return nil, errUnsupportedRegistryType
 }
 
 func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry, cfgFilePath string) (*RegistryContent, error) {

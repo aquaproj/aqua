@@ -6,14 +6,13 @@ import (
 	"io"
 
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 var errGitHubReleaseTypeAssertion = errors.New("pkg typs is github_release, but it isn't *GitHubReleasePackageInfo")
 
 func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo PackageInfo, dest, assetName string) error {
-	logE := log.New().WithFields(logrus.Fields{
+	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,

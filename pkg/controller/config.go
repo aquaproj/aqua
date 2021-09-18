@@ -180,6 +180,7 @@ type Param struct {
 	OnlyLink       bool
 	IsTest         bool
 	File           string
+	AQUAVersion    string
 }
 
 var errConfigFileNotFound = errors.New("configuration file isn't found")
