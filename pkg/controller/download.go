@@ -19,7 +19,7 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo Pack
 	var body io.ReadCloser
 	switch pkgInfo.GetType() {
 	case pkgInfoTypeGitHubRelease:
-		if ctrl.GitHub == nil {
+		if ctrl.GitHubRepositoryService == nil {
 			return errGitHubTokenIsRequired
 		}
 		p, ok := pkgInfo.(*GitHubReleasePackageInfo)

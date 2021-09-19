@@ -8,7 +8,7 @@ import (
 )
 
 func (ctrl *Controller) downloadFromGitHub(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
-	release, _, err := ctrl.GitHub.Repositories.GetReleaseByTag(ctx, owner, repoName, version)
+	release, _, err := ctrl.GitHubRepositoryService.GetReleaseByTag(ctx, owner, repoName, version)
 	if err != nil {
 		return nil, fmt.Errorf("get the GitHub Release by Tag: %w", err)
 	}
@@ -22,7 +22,7 @@ func (ctrl *Controller) downloadFromGitHub(ctx context.Context, owner, repoName,
 	if assetID == 0 {
 		return nil, fmt.Errorf("the asset isn't found: %s", assetName)
 	}
-	body, redirectURL, err := ctrl.GitHub.Repositories.DownloadReleaseAsset(ctx, owner, repoName, assetID, http.DefaultClient)
+	body, redirectURL, err := ctrl.GitHubRepositoryService.DownloadReleaseAsset(ctx, owner, repoName, assetID, http.DefaultClient)
 	if err != nil {
 		return nil, fmt.Errorf("download the release asset (asset id: %d): %w", assetID, err)
 	}

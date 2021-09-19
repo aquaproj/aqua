@@ -158,14 +158,14 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if pkg.PackageInfo.GetType() != pkgInfoTypeGitHubRelease {
 		return outputPkg, nil
 	}
-	if ctrl.GitHub == nil {
+	if ctrl.GitHubRepositoryService == nil {
 		return outputPkg, nil
 	}
 	p, ok := pkg.PackageInfo.(*GitHubReleasePackageInfo)
 	if !ok {
 		return nil, errGitHubReleaseTypeAssertion
 	}
-	release, _, err := ctrl.GitHub.Repositories.GetLatestRelease(ctx, p.RepoOwner, p.RepoName)
+	release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, p.RepoOwner, p.RepoName)
 	if err != nil {
 		ctrl.logE().WithError(err).WithFields(logrus.Fields{
 			"repo_owner": p.RepoOwner,
