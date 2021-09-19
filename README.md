@@ -6,30 +6,21 @@
 
 Declarative CLI Version manager. Support `Lazy Install` and Sharable configuration mechanism named `Registry`. Switch versions seamlessly.
 
-## Index
+[Config](docs/config.md) | [Usage](docs/usage.md) | [Document](docs) | [Release Note](https://github.com/suzuki-shunsuke/aqua/releases)
 
-* [Slide (Speaker Deck)](https://speakerdeck.com/szksh/introduction-of-aqua)
-* [Tutorial](tutorial/README.md)
-* [Usage](docs/usage.md)
-* [Configuration](docs/config.md)
-* [Registry](docs/registry.md)
-* [Continuous update by Renovate](docs/renovate.md)
-* [How does Lazy Install works?](docs/lazy-install.md)
-* [How to uninstall aqua](docs/uninstall.md)
-* [How to clean unused packages](docs/clean.md)
+**Currently, aqua doesn't support Windows.**
 
-## Blog
+## Feature
 
-* English
-  * [2021-09-08 aqua - Declarative CLI Version Manager](https://dev.to/suzukishunsuke/aqua-declarative-cli-version-manager-1ibe)
-* Japanese
-  * [2021-08-28 aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
-  * [2021-09-04 aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
-  * [2021-09-05 aqua の設定ファイルをインタラクティブに生成する generate コマンド](https://techblog.szksh.cloud/aqua-generate/)
-
-## Note: Windows isn't supported
-
-Currently, aqua doesn't support Windows.
+* Install tools easily by the declarative YAML Configuration and simple command `aqua i`
+* Unify tool versions between all developers and CI/CD for the project
+  * It solves the problem due to the difference of versions
+* Support using defferent versions per project
+* Lazy Install
+* Registry - Sharable Configuration mechanism
+  * Welcome your contribution to [Standard Registry](https://github.com/suzuki-shunsuke/aqua-registry)!
+* Save installation time and disk by sharing tools across projects
+* Set up your laptops quickly
 
 ## Overview
 
@@ -54,7 +45,7 @@ packages:
   version: 0.27.2 # renovate: depName=junegunn/fzf
 ```
 
-After writing the configuration, you can install them by `aqua i`.
+You can install tools by `aqua i`.
 
 ```
 $ aqua i
@@ -78,11 +69,11 @@ By the lazy install, you don't have to execute aqua explicitly after changing th
 When `aqua.yaml` is managed with Git, the lazy install is very useful because `aqua.yaml` is updated by `git pull` then the update is reflected automatically.
 
 By adding `aqua.yaml` in your Git repositories, you can manage tools per repository.
-You can change the version of tools per project.
+You can use the different version of tools per project.
 
 aqua installs the tools in the shared directory `~/.aqua`,
 so the same version of the same tool is installed only at once.
-It saves the time and the disk usage.
+It saves the installation time and the disk usage.
 
 aqua supports the mechanism named `Registry`.
 You can share and reuse the aqua configuration, so it makes easy to write `aqua.yaml`.
@@ -98,7 +89,7 @@ packages:
   version: v2.28.0 # renovate: depName=direnv/direnv
 ```
 
-In the above configuration, [the standard Registry](https://github.com/suzuki-shunsuke/aqua-registry/blob/main/registry.yaml) is used so you can install direnv easily.
+In the above configuration, [the Standard Registry](https://github.com/suzuki-shunsuke/aqua-registry/blob/main/registry.yaml) is used so you can install direnv easily.
 
 By the command `aqua generate`, you can check if the registry supports the tool you need and write the configuration quickly.
 
@@ -128,87 +119,16 @@ $ aqua g
 
 If the Registries don't support the tool, you can send the pull request to the registry or create your own Registry or add the configuration in `aqua.yaml` as `inline` Registry.
 
-## Quick Start
-
-Install aqua.
-
-```console
-$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.3/aqua-installer | bash -s -- -i bin/aqua
-$ export PATH=$PWD/bin:$HOME/.aqua/bin:$PATH
-$ export GITHUB_TOKEN=<your personal access token>
-```
-
-Write `aqua.yaml`.
-
-```yaml
-packages:
-- name: stedolan/jq
-  registry: standard
-  version: jq-1.5
-
-registries:
-- type: standard
-  ref: v0.8.4 # renovate: depName=suzuki-shunsuke/aqua-registry
-```
-
-Install tools.
-
-```console
-$ aqua i
-```
-
-Tools are installed successfully.
-
-```console
-$ jq --version
-jq-1.5
-```
-
-Edit `aqua.yaml`.
-
-```
-$ sed -i "s/jq-1\.5/jq-1.6/" aqua.yaml
-```
-
-Run `jq` again, then jq's new version is installed automatically and `jq` is run.
-
-```
-$ jq --version
-jq-1.6
-```
-
-## Main Usecase
-
-* Install tools in CI/CD
-  * [Example](https://github.com/suzuki-shunsuke/example-aqua#install-tools-in-cicd)
-* Install tools for your project's local development
-  * [Example](https://github.com/suzuki-shunsuke/example-aqua#install-tools-for-this-projects-local-development)
-* Install tools in your laptop
-  * [Example](https://github.com/suzuki-shunsuke/my-aqua-config)
-
-## Feature
-
-* Declarative YAML Configuration
-  * You don't have to execute commands imperatively to install tools
-* Manage versions per project
-  * You can change tools version per project
-* Install tools when they are executed
-  * When you execute the tool which isn't installed yet, aqua installs the tool and execute the tool
-* Share tools across projects
-  * aqua installs tools in the shared directory `~/.aqua`. It saves time and disk to install tools
-* Ecosystem named `Registry` - it eases to write aqua configuration
-  * You can share and reuse the aqua configuration. We provide the standard registry too
-
 ## Install
 
-Please download a binary from the [Release Page](https://github.com/suzuki-shunsuke/aqua/releases).
-
-Or you can install aqua quickly with [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer).
+Please download a binary from the [Release Page](https://github.com/suzuki-shunsuke/aqua/releases). Or you can install aqua quickly with [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer).
 
 e.g.
 
-```
-$ curl -sSfL https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.3/aqua-installer | bash
+```console
+$ curl -sSfL \
+  https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.3/aqua-installer |
+  bash -s -- -i ~/bin/aqua -v v0.7.1
 ```
 
 GitHub Actions
@@ -218,39 +138,30 @@ e.g.
 ```yaml
 - uses: suzuki-shunsuke/aqua-installer@v0.1.3
   with:
-    version: v0.3.1
+    version: v0.7.1
     install_path: /tmp/bin/aqua
 ```
 
-## Where are tools installed?
+aqua requires the environment variable `GITHUB_TOKEN`, which is GitHub Access Token.
+Add `~/.aqua/bin` to the environmenet variable `PATH`.
 
-* Symbolic links are created in `$HOME/.aqua/bin`, so add this to the environment variable `PATH`
-* Tools are installed in `$HOME/.aqua/pkgs`
+```console
+$ export GITHUB_TOKEN=xxx
+$ export PATH=$HOME/.aqua/bin:$PATH
+```
+
+## Install tools in your laptop
+
+If you want to install tools in your laptop regardless specific project,
+create the global configuration `~/.aqua/global/aqua.yaml`.
+Like dotfiles, it is good to manage the Global Configuration with Git and share it with your multiple laptops.
+
+For example,
 
 ```
-(your working directory)/
-  aqua.yaml
-~/.aqua/ # $AQUA_ROOT_DIR (default ~/.aqua)
-  bin/
-    aqua-proxy (symbolic link to aqua-proxy)
-    <tool> (symbolic link to aqua-proxy)
-  global/
-    aqua.yaml # global configuration
-  pkgs/
-    github_release/
-      github.com/
-        suzuki-shunsuke/
-          aqua-proxy/
-            v0.1.0/
-              aqua-proxy_darwin_amd64.tar.gz
-                aqua-proxy
-  registries/
-    github_content/
-      github.com/
-        suzuki-shunsuke/
-          aqua-registry/
-            v0.1.1-0/
-              registry.yaml
+$ git clone https://github.com/suzuki-shunsuke/my-aqua-config ~/.aqua/global
+$ cd ~/.aqua/global
+$ aqua i -l
 ```
 
 ## Related Projects
@@ -262,14 +173,21 @@ e.g.
 * Third Party Projects
   * [int128/aqua-action](https://github.com/int128/aqua-action) - Action to install packages using aqua
 
-## Example
+## Welcome your contribution to Standard Registry!
 
-* [suzuki-shunsuke/my-aqua-config](https://github.com/suzuki-shunsuke/my-aqua-config)
-* [suzuki-shunsuke/example-aqua](https://github.com/suzuki-shunsuke/example-aqua)
+https://github.com/suzuki-shunsuke/aqua-registry
 
-## Change Log
+If tools you want aren't found in [Standard Registry](https://github.com/suzuki-shunsuke/aqua-registry), please create issues or send pull requests!
 
-Please see [Releases](https://github.com/suzuki-shunsuke/aqua/releases).
+## Slide, Blog
+
+* English
+  * [2021-09-08 aqua - Declarative CLI Version Manager](https://dev.to/suzukishunsuke/aqua-declarative-cli-version-manager-1ibe)
+  * [2021-09-02 Slide - Introduction of aqua](https://speakerdeck.com/szksh/introduction-of-aqua)
+* Japanese
+  * [2021-08-28 aqua - CLI ツールのバージョン管理](https://techblog.szksh.cloud/aqua/)
+  * [2021-09-04 aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
+  * [2021-09-05 aqua の設定ファイルをインタラクティブに生成する generate コマンド](https://techblog.szksh.cloud/aqua-generate/)
 
 ## Versioning Policy
 

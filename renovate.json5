@@ -13,22 +13,6 @@
   ],
   regexManagers: [
     {
-      fileMatch: ["tutorial/docker-compose.yml"],
-      depNameTemplate: "suzuki-shunsuke/aqua",
-      datasourceTemplate: "github-releases",
-      matchStrings: [
-        "aqua_version: (?<currentValue>.*)",
-      ],
-    },
-    {
-      fileMatch: ["tutorial/docker-compose.yml"],
-      depNameTemplate: "suzuki-shunsuke/aqua-installer",
-      datasourceTemplate: "github-releases",
-      matchStrings: [
-        "aqua_installer_version: (?<currentValue>.*)",
-      ],
-    },
-    {
       fileMatch: ["README.md"],
       depNameTemplate: "suzuki-shunsuke/aqua-installer",
       datasourceTemplate: "github-releases",
