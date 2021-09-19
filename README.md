@@ -13,7 +13,7 @@ Declarative CLI Version manager. Support `Lazy Install` and Sharable configurati
 ## Feature
 
 * Install tools easily by the declarative YAML Configuration and simple command `aqua i`
-* Unify tool versions between all developers and CI/CD for the project
+* Unify tool versions at local development environment and CI/CD for the project
   * It solves the problem due to the difference of versions
 * Support using defferent versions per project
 * Lazy Install
