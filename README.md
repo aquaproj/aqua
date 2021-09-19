@@ -18,6 +18,7 @@ Declarative CLI Version manager. Support `Lazy Install` and Sharable configurati
 * Support using defferent versions per project
 * Lazy Install
 * Registry - Sharable Configuration mechanism
+  * Welcome your contribution to [Standard Registry](https://github.com/suzuki-shunsuke/aqua-registry)!
 * Save installation time and disk by sharing tools across projects
 * Set up your laptops quickly
 
@@ -171,6 +172,12 @@ $ aqua i -l
 * [aqua-renovate-config](https://github.com/suzuki-shunsuke/aqua-renovate-config): Renovate Configuration to update packages and registries
 * Third Party Projects
   * [int128/aqua-action](https://github.com/int128/aqua-action) - Action to install packages using aqua
+
+## Welcome your contribution to Standard Registry!
+
+https://github.com/suzuki-shunsuke/aqua-registry
+
+If tools you want aren't found in [Standard Registry](https://github.com/suzuki-shunsuke/aqua-registry), please create issues or send pull requests!
 
 ## Slide, Blog
 
