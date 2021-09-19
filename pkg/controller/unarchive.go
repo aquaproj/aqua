@@ -12,30 +12,102 @@ import (
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
-func getUnarchiver(filename, typ string) (interface{}, error) {
-	if typ != "" {
-		filename = "." + typ
-	}
-	return archiver.ByExtension(filename) //nolint:wrapcheck
+type Unarchiver interface {
+	Unarchive(body io.Reader) error
 }
 
-func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cyclop,funlen
+func getUnarchiver(filename, typ, dest string) (Unarchiver, error) {
 	if isUnarchived(typ, filename) {
-		log.New().Debug("archive type is raw")
-		if err := mkdirAll(dest); err != nil {
-			return fmt.Errorf("create a directory (%s): %w", dest, err)
-		}
-		f, err := os.OpenFile(filepath.Join(dest, filename), os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
-		if err != nil {
-			return fmt.Errorf("open the file (%s): %w", dest, err)
-		}
-		defer f.Close()
-		if _, err := io.Copy(f, body); err != nil {
-			return fmt.Errorf("copy the body to %s: %w", dest, err)
-		}
-		return nil
+		return &rawUnarchiver{
+			dest: filepath.Join(dest, filename),
+		}, nil
 	}
-	arc, err := getUnarchiver(filename, typ)
+
+	f := filename
+	if typ != "" {
+		f = "." + typ
+	}
+	arc, err := archiver.ByExtension(f)
+	if err != nil {
+		return nil, fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
+	}
+
+	switch t := arc.(type) {
+	case archiver.Unarchiver:
+		return &unarchiverWithUnarchiver{
+			unarchiver: t,
+			dest:       dest,
+		}, nil
+	case archiver.Decompressor:
+		return &Decompressor{
+			decompressor: t,
+			dest:         filepath.Join(dest, strings.TrimSuffix(filename, filepath.Ext(filename))),
+		}, nil
+	}
+	return nil, errUnsupportedFileFormat
+}
+
+type rawUnarchiver struct {
+	dest string
+}
+
+func (unarchiver *rawUnarchiver) Unarchive(body io.Reader) error {
+	dest := unarchiver.dest
+	if err := mkdirAll(filepath.Dir(dest)); err != nil {
+		return fmt.Errorf("create a directory (%s): %w", dest, err)
+	}
+	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
+	if err != nil {
+		return fmt.Errorf("open the file (%s): %w", dest, err)
+	}
+	defer f.Close()
+	if _, err := io.Copy(f, body); err != nil {
+		return fmt.Errorf("copy the body to %s: %w", dest, err)
+	}
+	return nil
+}
+
+type unarchiverWithUnarchiver struct {
+	unarchiver archiver.Unarchiver
+	dest       string
+}
+
+func (unarchiver *unarchiverWithUnarchiver) Unarchive(body io.Reader) error {
+	dest := unarchiver.dest
+	f, err := os.CreateTemp("", "")
+	if err != nil {
+		return fmt.Errorf("create a temporal file: %w", err)
+	}
+	defer func() {
+		f.Close()
+		os.Remove(f.Name())
+	}()
+	if _, err := io.Copy(f, body); err != nil {
+		return fmt.Errorf("copy the file to the temporal file: %w", err)
+	}
+	return unarchiver.unarchiver.Unarchive(f.Name(), dest) //nolint:wrapcheck
+}
+
+type Decompressor struct {
+	decompressor archiver.Decompressor
+	dest         string
+}
+
+func (decomressor *Decompressor) Unarchive(body io.Reader) error {
+	dest := decomressor.dest
+	if err := mkdirAll(filepath.Dir(dest)); err != nil {
+		return fmt.Errorf("create a directory (%s): %w", dest, err)
+	}
+	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
+	if err != nil {
+		return fmt.Errorf("open the file (%s): %w", dest, err)
+	}
+	defer f.Close()
+	return decomressor.decompressor.Decompress(body, f) //nolint:wrapcheck
+}
+
+func unarchive(body io.Reader, filename, typ, dest string) error {
+	arc, err := getUnarchiver(filename, typ, dest)
 	if err != nil {
 		log.New().WithFields(logrus.Fields{
 			"format":                 typ,
@@ -45,38 +117,5 @@ func unarchive(body io.Reader, filename, typ, dest string) error { //nolint:cycl
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	switch t := arc.(type) {
-	case archiver.Unarchiver:
-		f, err := os.CreateTemp("", "")
-		if err != nil {
-			return fmt.Errorf("create a temporal file: %w", err)
-		}
-		defer func() {
-			f.Close()
-			os.Remove(f.Name())
-		}()
-		if _, err := io.Copy(f, body); err != nil {
-			return fmt.Errorf("copy the file to the temporal file: %w", err)
-		}
-		return t.Unarchive(f.Name(), dest) //nolint:wrapcheck
-	case archiver.Decompressor:
-		if err := mkdirAll(dest); err != nil {
-			return fmt.Errorf("create a directory (%s): %w", dest, err)
-		}
-		f, err := os.OpenFile(filepath.Join(dest, strings.TrimSuffix(filename, filepath.Ext(filename))), os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
-		if err != nil {
-			return fmt.Errorf("open the file (%s): %w", dest, err)
-		}
-		defer f.Close()
-		return t.Decompress(body, f) //nolint:wrapcheck
-	}
-	f, err := os.Open(dest)
-	if err != nil {
-		return fmt.Errorf("open the file (%s): %w", dest, err)
-	}
-	defer f.Close()
-	if _, err := io.Copy(f, body); err != nil {
-		return fmt.Errorf("copy the file to %s: %w", dest, err)
-	}
-	return nil
+	return arc.Unarchive(body) //nolint:wrapcheck
 }
