@@ -7,12 +7,12 @@ import (
 	"net/http"
 )
 
-func (ctrl *Controller) downloadFromURL(ctx context.Context, u string) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) downloadFromURL(ctx context.Context, u string, httpClient *http.Client) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create a http request: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("send http request: %w", err)
 	}

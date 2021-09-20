@@ -159,7 +159,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 }
 
 func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
-	if ctrl.GitHub == nil {
+	if ctrl.GitHubRepositoryService == nil {
 		return nil, errGitHubTokenIsRequired
 	}
 	r, ok := registry.(*GitHubContentRegistry)
@@ -167,7 +167,7 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry R
 		return nil, errTypeAssertionGitHubContentRegistry
 	}
 
-	file, _, _, err := ctrl.GitHub.Repositories.GetContents(ctx, r.RepoOwner, r.RepoName, r.Path, &github.RepositoryContentGetOptions{
+	file, _, _, err := ctrl.GitHubRepositoryService.GetContents(ctx, r.RepoOwner, r.RepoName, r.Path, &github.RepositoryContentGetOptions{
 		Ref: r.Ref,
 	})
 	if err != nil {

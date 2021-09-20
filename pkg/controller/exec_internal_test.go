@@ -1,47 +1,94 @@
 package controller
 
 import (
+	"context"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
-func Test_isUnarchived(t *testing.T) {
+func TestController_findExecFileFromPkg(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		title       string
-		archiveType string
-		assetName   string
-		exp         bool
+		title          string
+		registries     map[string]*RegistryContent
+		exeName        string
+		pkg            *Package
+		expPackageInfo PackageInfo
+		expFile        *File
 	}{
 		{
-			title:     "tar.gz",
-			assetName: "foo.tar.gz",
-			exp:       false,
-		},
-		{
-			title:     "archive is empty and assetName has no extension",
-			assetName: "foo",
-			exp:       true,
-		},
-		{
-			title:       "archiveType is raw",
-			assetName:   "foo-v3.0.0",
-			archiveType: "raw",
-			exp:         true,
-		},
-		{
-			title:       "archiveTyps is set and isn't raw",
-			assetName:   "foo",
-			archiveType: "tar.gz",
-			exp:         false,
+			title:   "normal",
+			exeName: "kubectl",
+			pkg: &Package{
+				Registry: "standard",
+				Name:     "kubernetes/kubectl",
+			},
+			expPackageInfo: &HTTPPackageInfo{
+				Name: "kubernetes/kubectl",
+				Files: []*File{
+					{
+						Name: "kubectl",
+					},
+				},
+			},
+			expFile: &File{
+				Name: "kubectl",
+			},
+			registries: map[string]*RegistryContent{
+				"standard": {
+					PackageInfos: PackageInfos{
+						&HTTPPackageInfo{
+							Name: "kubernetes/kubectl",
+							Files: []*File{
+								{
+									Name: "kubectl",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
+	ctrl := &Controller{}
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			f := isUnarchived(d.archiveType, d.assetName)
-			if f != d.exp {
-				t.Fatalf("wanted %v, got %v", d.exp, f)
+			pkgInfo, file := ctrl.findExecFileFromPkg(d.registries, d.exeName, d.pkg)
+			if diff := cmp.Diff(d.expPackageInfo, pkgInfo); diff != "" {
+				t.Fatal(diff)
+			}
+			if diff := cmp.Diff(d.expFile, file); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
+func TestController_execCommand(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		title   string
+		exePath string
+		args    []string
+	}{
+		{
+			title:   "normal",
+			exePath: "echo",
+			args:    []string{"hello"},
+		},
+	}
+	ctrl := &Controller{}
+	ctx := context.Background()
+	for _, d := range data {
+		d := d
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			err := ctrl.execCommand(ctx, d.exePath, d.args)
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
 	}

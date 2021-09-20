@@ -105,3 +105,44 @@ packages:
 		})
 	}
 }
+
+func TestPackageInfos_ToMap(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		title    string
+		pkgInfos *controller.PackageInfos
+		exp      map[string]controller.PackageInfo
+		isErr    bool
+	}{
+		{
+			title: "normal",
+			pkgInfos: &controller.PackageInfos{
+				&controller.HTTPPackageInfo{
+					Name: "foo",
+				},
+			},
+			exp: map[string]controller.PackageInfo{
+				"foo": &controller.HTTPPackageInfo{
+					Name: "foo",
+				},
+			},
+		},
+	}
+
+	for _, d := range data {
+		d := d
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			m, err := d.pkgInfos.ToMap()
+			if d.isErr {
+				if err == nil {
+					t.Fatal("error should be returned")
+				}
+				return
+			}
+			if diff := cmp.Diff(d.exp, m); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}

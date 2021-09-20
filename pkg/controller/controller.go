@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,14 +18,22 @@ import (
 )
 
 type Controller struct {
-	Stdin        io.Reader
-	Stdout       io.Writer
-	Stderr       io.Writer
-	ConfigFinder ConfigFinder
-	ConfigReader ConfigReader
-	GitHub       *github.Client
-	RootDir      string
-	Version      string
+	Stdin                   io.Reader
+	Stdout                  io.Writer
+	Stderr                  io.Writer
+	ConfigFinder            ConfigFinder
+	ConfigReader            ConfigReader
+	GitHubRepositoryService GitHubRepositoryService
+	PackageDownloader       PackageDownloader
+	RootDir                 string
+	Version                 string
+}
+
+type GitHubRepositoryService interface {
+	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
+	GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
+	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
+	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
 }
 
 func New(ctx context.Context, param *Param) (*Controller, error) {
@@ -63,10 +72,13 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		ctrl.RootDir = filepath.Join(os.Getenv("HOME"), ".aqua")
 	}
 	if ghToken := os.Getenv("GITHUB_TOKEN"); ghToken != "" {
-		ctrl.GitHub = github.NewClient(
+		ctrl.GitHubRepositoryService = github.NewClient(
 			oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 				&oauth2.Token{AccessToken: ghToken},
-			)))
+			))).Repositories
+	}
+	ctrl.PackageDownloader = &pkgDownloader{
+		GitHubRepositoryService: ctrl.GitHubRepositoryService,
 	}
 
 	return &ctrl, nil

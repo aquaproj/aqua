@@ -25,4 +25,5 @@ var (
 	errInvalidHTTPStatusCode              = errors.New("status code >= 400")
 	errInstallFailure                     = errors.New("it failed to install some packages")
 	errRegistryNameIsDuplicated           = errors.New("registry name is duplicated")
+	errUnsupportedFileFormat              = errors.New("unsupported file format")
 )
