@@ -33,3 +33,10 @@ tasks:
   description: go build
   usage: go build
   script: go build -o dist/aqua ./cmd/aqua
+- name: coverage
+  short: c
+  description: coverage test
+  usage: coverage test
+  script: "bash scripts/coverage.sh {{.target}}"
+  args:
+  - name: target

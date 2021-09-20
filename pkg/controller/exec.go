@@ -75,7 +75,7 @@ func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo,
 	return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 }
 
-func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*Package, PackageInfo, *File) {
+func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (PackageInfo, *File) {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
@@ -83,26 +83,26 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 	registry, ok := registries[pkg.Registry]
 	if !ok {
 		logE.Warn("registry isn't found")
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	m, err := registry.PackageInfos.ToMap()
 	if err != nil {
 		logE.WithError(err).Warnf("registry is invalid")
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	pkgInfo, ok := m[pkg.Name]
 	if !ok {
 		logE.Warn("package isn't found")
-		return nil, nil, nil
+		return nil, nil
 	}
 	for _, file := range pkgInfo.GetFiles() {
 		if file.Name == exeName {
-			return pkg, pkgInfo, file
+			return pkgInfo, file
 		}
 	}
-	return nil, nil, nil
+	return nil, nil
 }
 
 func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, PackageInfo, *File, error) {
@@ -119,15 +119,11 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 		return nil, nil, nil, err
 	}
 	for _, pkg := range cfg.Packages {
-		if pkg, pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg); pkg != nil {
+		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg); pkgInfo != nil {
 			return pkg, pkgInfo, file, nil
 		}
 	}
 	return nil, nil, nil, nil
-}
-
-func isUnarchived(archiveType, assetName string) bool {
-	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
 }
 
 func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo PackageInfo, src string, args []string) error {

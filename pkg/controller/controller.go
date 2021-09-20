@@ -24,6 +24,7 @@ type Controller struct {
 	ConfigFinder            ConfigFinder
 	ConfigReader            ConfigReader
 	GitHubRepositoryService GitHubRepositoryService
+	PackageDownloader       PackageDownloader
 	RootDir                 string
 	Version                 string
 }
@@ -75,6 +76,9 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 			oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 				&oauth2.Token{AccessToken: ghToken},
 			))).Repositories
+	}
+	ctrl.PackageDownloader = &pkgDownloader{
+		GitHubRepositoryService: ctrl.GitHubRepositoryService,
 	}
 
 	return &ctrl, nil

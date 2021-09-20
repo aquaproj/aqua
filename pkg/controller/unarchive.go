@@ -16,6 +16,10 @@ type Unarchiver interface {
 	Unarchive(body io.Reader) error
 }
 
+func isUnarchived(archiveType, assetName string) bool {
+	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
+}
+
 func getUnarchiver(filename, typ, dest string) (Unarchiver, error) {
 	if isUnarchived(typ, filename) {
 		return &rawUnarchiver{
