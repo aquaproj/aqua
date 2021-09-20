@@ -142,6 +142,14 @@ e.g.
     install_path: /tmp/bin/aqua
 ```
 
+[int128/aqua-action](https://github.com/int128/aqua-action)
+
+```yaml
+- uses: int128/aqua-action@v1
+  with:
+    version: v0.7.1
+```
+
 aqua requires the environment variable `GITHUB_TOKEN`, which is GitHub Access Token.
 Add `~/.aqua/bin` to the environmenet variable `PATH`.
 
