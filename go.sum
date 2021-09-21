@@ -562,8 +562,6 @@ github.com/suzuki-shunsuke/go-findconfig v1.0.0 h1:RSETNCdYurpepqz/z9iM8DzJKK6Tb
 github.com/suzuki-shunsuke/go-findconfig v1.0.0/go.mod h1:u/0Zz6/GDE6G0gofzVhR9UPOIKLSUoDMjUoFWqOoVlg=
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2 h1:A4czEbmFqSELTbrEtXVo4dSgfz2e2Z0y6G3OpExUML8=
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2/go.mod h1:ETXAwfruZTqMMKDxc9CYoS34CNSsnzcdcVIAW3+RujI=
-github.com/suzuki-shunsuke/go-template-unmarshaler v0.1.0 h1:KZDo2ehzMj3zYrTSd6tlguq2kYOE5A88+EIzbwXUV1Q=
-github.com/suzuki-shunsuke/go-template-unmarshaler v0.1.0/go.mod h1:6Qd4LMPwAXbtKvgEoAQ7ZmVVyKcFVBOKTbNVLNtAQzU=
 github.com/suzuki-shunsuke/go-timeout v1.0.0 h1:SWiJc8HuLWK4N01x76XUg75rbbwDiHiFoyPbwHcNI4Q=
 github.com/suzuki-shunsuke/go-timeout v1.0.0/go.mod h1:ZX3QIig4tvTVXnZUJE3ivC9qy5TJy9Uk5sIcvwjwSNE=
 github.com/suzuki-shunsuke/gomic v0.6.0 h1:oSmoXR1nmt7X05TssjBTcX9BCTNnFCcNlA5yshaTjsk=

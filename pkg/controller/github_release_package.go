@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
-
-	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 )
 
 type GitHubReleasePackageInfo struct {
@@ -19,7 +17,7 @@ type GitHubReleasePackageInfo struct {
 
 	RepoOwner string
 	RepoName  string
-	Asset     *text.Template `validate:"required"`
+	Asset     *Template `validate:"required"`
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetName() string {
@@ -95,7 +93,7 @@ func (pkgInfo *GitHubReleasePackageInfo) GetFileSrc(pkg *Package, file *File) (s
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) RenderAsset(pkg *Package) (string, error) {
-	return pkgInfo.Asset.Execute(map[string]interface{}{ //nolint:wrapcheck
+	return pkgInfo.Asset.Execute(map[string]interface{}{
 		"Version": pkg.Version,
 		"GOOS":    runtime.GOOS,
 		"GOARCH":  runtime.GOARCH,
