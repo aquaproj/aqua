@@ -4,9 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/suzuki-shunsuke/aqua/pkg/controller"
-	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 	"gopkg.in/yaml.v2"
 )
 
@@ -71,7 +69,7 @@ packages:
 							Name:      "cmdx",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "cmdx",
-							Asset:     text.NewForTest(t, `cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
+							Asset:     controller.NewTemplate(`cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
 							Files: []*controller.File{
 								{
 									Name: "cmdx",
@@ -99,7 +97,7 @@ packages:
 			if err := yaml.Unmarshal([]byte(d.yaml), cfg); err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(d.exp, cfg, cmpopts.IgnoreUnexported(text.Template{})); diff != "" {
+			if diff := cmp.Diff(d.exp, cfg, cmp.AllowUnexported(controller.Template{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})

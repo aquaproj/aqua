@@ -6,14 +6,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
-	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/aqua/pkg/log"
-	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 	"golang.org/x/oauth2"
 )
 
@@ -52,13 +48,6 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		"config":       param.ConfigFilePath,
 		"aqua_version": param.AQUAVersion,
 	}).Debug("CLI args")
-	text.SetTemplateFunc(func(s string) (*template.Template, error) {
-		return template.New("_").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{ //nolint:wrapcheck
-			"trimV": func(s string) string {
-				return strings.TrimPrefix(s, "v")
-			},
-		}).Parse(s)
-	})
 	ctrl := Controller{
 		Stdin:        os.Stdin,
 		Stdout:       os.Stdout,

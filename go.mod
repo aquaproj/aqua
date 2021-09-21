@@ -13,7 +13,6 @@ require (
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.0.0
-	github.com/suzuki-shunsuke/go-template-unmarshaler v0.1.0
 	github.com/suzuki-shunsuke/go-timeout v1.0.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.2
 	github.com/urfave/cli/v2 v2.3.0

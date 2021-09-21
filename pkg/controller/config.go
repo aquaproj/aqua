@@ -9,7 +9,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
-	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
@@ -102,10 +101,10 @@ type mergedPackageInfo struct {
 	Type            string
 	RepoOwner       string `yaml:"repo_owner"`
 	RepoName        string `yaml:"repo_name"`
-	Asset           *text.Template
+	Asset           *Template
 	Format          string `yaml:"format"`
 	Files           []*File
-	URL             *text.Template
+	URL             *Template
 	Description     string
 	Link            string
 	Replacements    map[string]string
@@ -153,11 +152,11 @@ func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 
 type File struct {
 	Name string `validate:"required"`
-	Src  *text.Template
+	Src  *Template
 }
 
 func (file *File) RenderSrc(pkg *Package, pkgInfo PackageInfo) (string, error) {
-	return file.Src.Execute(map[string]interface{}{ //nolint:wrapcheck
+	return file.Src.Execute(map[string]interface{}{
 		"Version":  pkg.Version,
 		"GOOS":     runtime.GOOS,
 		"GOARCH":   runtime.GOARCH,

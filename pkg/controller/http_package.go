@@ -5,8 +5,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"runtime"
-
-	"github.com/suzuki-shunsuke/go-template-unmarshaler/text"
 )
 
 type HTTPPackageInfo struct {
@@ -18,7 +16,7 @@ type HTTPPackageInfo struct {
 	Replacements    map[string]string
 	FormatOverrides []*FormatOverride
 
-	URL *text.Template `validate:"required"`
+	URL *Template `validate:"required"`
 }
 
 func (pkgInfo *HTTPPackageInfo) GetName() string {
