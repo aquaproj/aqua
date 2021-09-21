@@ -21,8 +21,9 @@ jobs:
     - run: echo "$HOME/.aqua/bin" >> $GITHUB_PATH
 
     - run: aqua i --test
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - run: aqua list
+
     - run: cmdx -v
     - run: golangci-lint version
-    - run: helm version
+    - run: kind version
+    - run: restic version
