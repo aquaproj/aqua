@@ -1,12 +1,19 @@
 registries:
-- type: standard
+- type: standard # standard registry
   ref: v0.8.4 # renovate: depName=suzuki-shunsuke/aqua-registry
 
-- name: local
+- name: local # local registry
   type: local
   path: registry.yaml
 
-inline_registry:
+- name: aqua-registry
+  type: github_content # github_content registry
+  ref: v0.8.4 # renovate: depName=suzuki-shunsuke/aqua-registry
+  repo_owner: suzuki-shunsuke
+  repo_name: aqua-registry
+  path: registry.yaml
+
+inline_registry: # inline registry
   packages:
   - name: cmdx
     type: github_release
@@ -17,14 +24,18 @@ inline_registry:
     - name: cmdx
 
 packages:
-- name: cmdx
+- name: cmdx # inline registry
   registry: inline
   version: v1.6.0 # renovate: depName=suzuki-shunsuke/cmdx
 
-- name: golangci-lint
+- name: golangci-lint # local registry
   registry: local
   version: v1.42.1 # renovate: depName=golangci/golangci-lint
 
-- name: helm/helm # http
-  registry: standard
-  version: v3.7.0 # renovate: depName=helm/helm
+- name: kubernetes-sigs/kind # http package, raw format
+  registry: standard # standard registry
+  version: v0.11.1 # renovate: depName=kubernetes-sigs/kind
+
+- name: restic/restic # decompressor
+  registry: aqua-registry # github content registry
+  version: v0.12.1 # renovate: depName=restic/restic
