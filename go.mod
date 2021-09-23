@@ -8,7 +8,7 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v39 v39.0.0
-	github.com/hashicorp/go-version v1.2.1
+	github.com/hashicorp/go-version v1.3.0
 	github.com/ktr0731/go-fuzzyfinder v0.5.0
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/sirupsen/logrus v1.8.1
