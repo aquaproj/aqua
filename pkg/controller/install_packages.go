@@ -136,7 +136,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo,
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
-		if err := ctrl.warnFileSrc(pkg, pkgInfo, file); err != nil {
+		if err := ctrl.checkFileSrc(pkg, pkgInfo, file); err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -147,7 +147,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo,
 	return nil
 }
 
-func (ctrl *Controller) warnFileSrc(pkg *Package, pkgInfo PackageInfo, file *File) error {
+func (ctrl *Controller) checkFileSrc(pkg *Package, pkgInfo PackageInfo, file *File) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
