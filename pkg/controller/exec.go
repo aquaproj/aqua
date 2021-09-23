@@ -97,6 +97,13 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 		logE.Warn("package isn't found")
 		return nil, nil
 	}
+
+	pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
+	if err != nil {
+		logE.Warn("version constraint is invalid")
+		return nil, nil
+	}
+
 	for _, file := range pkgInfo.GetFiles() {
 		if file.Name == exeName {
 			return pkgInfo, file

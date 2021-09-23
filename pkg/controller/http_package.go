@@ -19,6 +19,11 @@ type HTTPPackageInfo struct {
 	URL *Template `validate:"required"`
 }
 
+func (pkgInfo *HTTPPackageInfo) SetVersion(v string) (PackageInfo, error) {
+	// TODO
+	return pkgInfo, nil
+}
+
 func (pkgInfo *HTTPPackageInfo) GetName() string {
 	return pkgInfo.Name
 }

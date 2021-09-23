@@ -94,21 +94,33 @@ type PackageInfo interface {
 	GetLink() string
 	GetDescription() string
 	GetReplacements() map[string]string
+	SetVersion(v string) (PackageInfo, error)
 }
 
 type mergedPackageInfo struct {
-	Name            string
-	Type            string
-	RepoOwner       string `yaml:"repo_owner"`
-	RepoName        string `yaml:"repo_name"`
-	Asset           *Template
-	Format          string `yaml:"format"`
-	Files           []*File
-	URL             *Template
-	Description     string
-	Link            string
-	Replacements    map[string]string
-	FormatOverrides []*FormatOverride `yaml:"format_overrides"`
+	Name               string
+	Type               string
+	RepoOwner          string `yaml:"repo_owner"`
+	RepoName           string `yaml:"repo_name"`
+	Asset              *Template
+	Format             string
+	Files              []*File
+	URL                *Template
+	Description        string
+	Link               string
+	Replacements       map[string]string
+	FormatOverrides    []*FormatOverride        `yaml:"format_overrides"`
+	VersionConstraints *VersionConstraints      `yaml:"version_constraint"`
+	VersionOverrides   []*mergedVersionOverride `yaml:"version_overrides"`
+}
+
+type mergedVersionOverride struct {
+	VersionConstraints *VersionConstraints `yaml:"version_constraint"`
+	Asset              *Template
+	Files              []*File `validate:"dive"`
+	Format             string
+	FormatOverrides    []*FormatOverride `yaml:"format_overrides"`
+	Replacements       map[string]string
 }
 
 type FormatOverride struct {
@@ -119,17 +131,33 @@ type FormatOverride struct {
 func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 	switch pkgInfo.Type {
 	case pkgInfoTypeGitHubRelease:
+		var versionOverrides []*GitHubReleaseVersionOverride
+		if pkgInfo.VersionOverrides != nil {
+			versionOverrides = make([]*GitHubReleaseVersionOverride, len(pkgInfo.VersionOverrides))
+			for i, vo := range pkgInfo.VersionOverrides {
+				versionOverrides[i] = &GitHubReleaseVersionOverride{
+					VersionConstraints: vo.VersionConstraints,
+					Asset:              vo.Asset,
+					Files:              vo.Files,
+					Format:             vo.Format,
+					FormatOverrides:    vo.FormatOverrides,
+					Replacements:       vo.Replacements,
+				}
+			}
+		}
 		return &GitHubReleasePackageInfo{
-			Name:            pkgInfo.Name,
-			RepoOwner:       pkgInfo.RepoOwner,
-			RepoName:        pkgInfo.RepoName,
-			Asset:           pkgInfo.Asset,
-			Format:          pkgInfo.Format,
-			FormatOverrides: pkgInfo.FormatOverrides,
-			Files:           pkgInfo.Files,
-			Link:            pkgInfo.Link,
-			Description:     pkgInfo.Description,
-			Replacements:    pkgInfo.Replacements,
+			Name:               pkgInfo.Name,
+			RepoOwner:          pkgInfo.RepoOwner,
+			RepoName:           pkgInfo.RepoName,
+			Asset:              pkgInfo.Asset,
+			Format:             pkgInfo.Format,
+			FormatOverrides:    pkgInfo.FormatOverrides,
+			Files:              pkgInfo.Files,
+			Link:               pkgInfo.Link,
+			Description:        pkgInfo.Description,
+			Replacements:       pkgInfo.Replacements,
+			VersionConstraints: pkgInfo.VersionConstraints,
+			VersionOverrides:   versionOverrides,
 		}, nil
 	case pkgInfoTypeHTTP:
 		return &HTTPPackageInfo{
