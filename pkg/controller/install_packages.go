@@ -26,6 +26,10 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			failed = true
 			continue
 		}
+		pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
+		if err != nil {
+			return fmt.Errorf("evaluate version constraints: %w", err)
+		}
 		for _, file := range pkgInfo.GetFiles() {
 			if err := ctrl.createLink(binDir, file); err != nil {
 				logE.WithError(err).Error("create the symbolic link")
@@ -67,6 +71,12 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				"registry":        pkg.Registry,
 			})
 			pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
+			if err != nil {
+				logE.WithError(err).Error("install the package")
+				handleFailure()
+				return
+			}
+			pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
 			if err != nil {
 				logE.WithError(err).Error("install the package")
 				handleFailure()

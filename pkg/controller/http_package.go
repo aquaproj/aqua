@@ -8,15 +8,78 @@ import (
 )
 
 type HTTPPackageInfo struct {
-	Name            string `validate:"required"`
-	Format          string
-	Description     string
-	Link            string
-	Files           []*File `validate:"required,dive"`
-	Replacements    map[string]string
-	FormatOverrides []*FormatOverride
+	Name               string `validate:"required"`
+	Format             string
+	Description        string
+	Link               string
+	Files              []*File `validate:"required,dive"`
+	Replacements       map[string]string
+	FormatOverrides    []*FormatOverride
+	VersionConstraints *VersionConstraints
+	VersionOverrides   []*HTTPVersionOverride
 
 	URL *Template `validate:"required"`
+}
+
+func (pkgInfo *HTTPPackageInfo) SetVersion(v string) (PackageInfo, error) {
+	if pkgInfo.VersionConstraints == nil {
+		return pkgInfo, nil
+	}
+	a, err := pkgInfo.VersionConstraints.Check(v)
+	if err != nil {
+		return nil, err
+	}
+	if a {
+		return pkgInfo, nil
+	}
+	for _, vo := range pkgInfo.VersionOverrides {
+		a, err := vo.VersionConstraints.Check(v)
+		if err != nil {
+			return nil, err
+		}
+		if a {
+			return overrideHTTPPackageInfo(pkgInfo, vo), nil
+		}
+	}
+	return pkgInfo, nil
+}
+
+type HTTPVersionOverride struct {
+	VersionConstraints *VersionConstraints
+	URL                *Template `validate:"required"`
+	Files              []*File   `validate:"dive"`
+	Format             string
+	FormatOverrides    []*FormatOverride
+	Replacements       map[string]string
+}
+
+func overrideHTTPPackageInfo(base *HTTPPackageInfo, vo *HTTPVersionOverride) *HTTPPackageInfo {
+	p := &HTTPPackageInfo{
+		Name:            base.Name,
+		Format:          base.Format,
+		Link:            base.Link,
+		Description:     base.Description,
+		Files:           base.Files,
+		Replacements:    base.Replacements,
+		FormatOverrides: base.FormatOverrides,
+		URL:             base.URL,
+	}
+	if vo.URL != nil {
+		p.URL = vo.URL
+	}
+	if vo.Files != nil {
+		p.Files = vo.Files
+	}
+	if vo.Format != "" {
+		p.Format = vo.Format
+	}
+	if vo.FormatOverrides != nil {
+		p.FormatOverrides = vo.FormatOverrides
+	}
+	if vo.Replacements != nil {
+		p.Replacements = vo.Replacements
+	}
+	return p
 }
 
 func (pkgInfo *HTTPPackageInfo) GetName() string {

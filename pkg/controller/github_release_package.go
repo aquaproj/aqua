@@ -7,17 +7,82 @@ import (
 )
 
 type GitHubReleasePackageInfo struct {
-	Name            string
-	Format          string
-	Link            string
-	Description     string
-	Files           []*File `validate:"dive"`
-	Replacements    map[string]string
-	FormatOverrides []*FormatOverride
+	Name               string
+	Format             string
+	Link               string
+	Description        string
+	Files              []*File `validate:"dive"`
+	Replacements       map[string]string
+	FormatOverrides    []*FormatOverride
+	VersionConstraints *VersionConstraints
+	VersionOverrides   []*GitHubReleaseVersionOverride
 
 	RepoOwner string
 	RepoName  string
 	Asset     *Template `validate:"required"`
+}
+
+func (pkgInfo *GitHubReleasePackageInfo) SetVersion(v string) (PackageInfo, error) {
+	if pkgInfo.VersionConstraints == nil {
+		return pkgInfo, nil
+	}
+	a, err := pkgInfo.VersionConstraints.Check(v)
+	if err != nil {
+		return nil, err
+	}
+	if a {
+		return pkgInfo, nil
+	}
+	for _, vo := range pkgInfo.VersionOverrides {
+		a, err := vo.VersionConstraints.Check(v)
+		if err != nil {
+			return nil, err
+		}
+		if a {
+			return overrideGitHubReleasePackageInfo(pkgInfo, vo), nil
+		}
+	}
+	return pkgInfo, nil
+}
+
+func overrideGitHubReleasePackageInfo(base *GitHubReleasePackageInfo, vo *GitHubReleaseVersionOverride) *GitHubReleasePackageInfo {
+	p := &GitHubReleasePackageInfo{
+		Name:            base.Name,
+		Format:          base.Format,
+		Link:            base.Link,
+		Description:     base.Description,
+		Files:           base.Files,
+		Replacements:    base.Replacements,
+		FormatOverrides: base.FormatOverrides,
+		RepoOwner:       base.RepoOwner,
+		RepoName:        base.RepoName,
+		Asset:           base.Asset,
+	}
+	if vo.Asset != nil {
+		p.Asset = vo.Asset
+	}
+	if vo.Files != nil {
+		p.Files = vo.Files
+	}
+	if vo.Format != "" {
+		p.Format = vo.Format
+	}
+	if vo.FormatOverrides != nil {
+		p.FormatOverrides = vo.FormatOverrides
+	}
+	if vo.Replacements != nil {
+		p.Replacements = vo.Replacements
+	}
+	return p
+}
+
+type GitHubReleaseVersionOverride struct {
+	VersionConstraints *VersionConstraints
+	Asset              *Template `validate:"required"`
+	Files              []*File   `validate:"dive"`
+	Format             string
+	FormatOverrides    []*FormatOverride
+	Replacements       map[string]string
 }
 
 func (pkgInfo *GitHubReleasePackageInfo) GetName() string {
