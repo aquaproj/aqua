@@ -26,6 +26,7 @@
       datasourceTemplate: "github-releases",
       matchStrings: [
         '(version|ref): "?(?<currentValue>.*?)"? +# renovate: depName=(?<depName>.*?)\\n',
+        '-v "?(?<currentValue>.*?)"? +# renovate: depName=(?<depName>.*?)\\n',
       ],
     },
     {
