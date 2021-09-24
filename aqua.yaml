@@ -39,3 +39,11 @@ packages:
 - name: restic/restic # decompressor
   registry: aqua-registry # github content registry
   version: v0.12.1 # renovate: depName=restic/restic
+
+- name: golang-migrate/migrate # version_constraint
+  registry: aqua-registry # github content registry
+  version: v4.14.1
+
+- name: golang-migrate/migrate # version_constraint
+  registry: standard
+  version: v4.15.0 # renovate: depName=golang-migrate/migrate

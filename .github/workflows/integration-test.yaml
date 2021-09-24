@@ -27,3 +27,4 @@ jobs:
     - run: golangci-lint version
     - run: kind version
     - run: restic version
+    - run: migrate -version
