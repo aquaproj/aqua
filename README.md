@@ -21,6 +21,7 @@ Declarative CLI Version manager. Support `Lazy Install` and Sharable configurati
   * Welcome your contribution to [Standard Registry](https://github.com/suzuki-shunsuke/aqua-registry)!
 * Save installation time and disk by sharing tools across projects
 * Set up your laptops quickly
+* [Share aqua configuration for teams and organizations](docs/global_config.md)
 
 ## Overview
 

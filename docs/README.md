@@ -4,6 +4,7 @@
 * [Configuration](config.md)
 * [Registry Configuration](registry_config.md)
 * [Continuous update by Renovate](renovate.md)
+* [Share aqua configuration for teams and organizations](docs/global_config.md)
 * [How does Lazy Install works?](lazy_install.md)
 * [How to uninstall aqua](uninstall.md)
 * [How to clean unused packages](clean.md)
