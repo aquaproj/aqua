@@ -11,7 +11,7 @@ USAGE:
    aqua [global options] command [command options] [arguments...]
 
 VERSION:
-   0.6.0 (25414837c10bcf6f64ab16bfa11d4146e882c2c3)
+   0.7.3 (1cbadea41fa6dbd6e71d82ddc9aec9fac43908f1)
 
 COMMANDS:
    install, i   Install tools
@@ -41,6 +41,7 @@ USAGE:
 OPTIONS:
    --only-link, -l  create links but skip download packages (default: false)
    --test           test file.src after installing the package (default: false)
+   --all, -a        install all aqua configuration packages (default: false)
    
 ```
 
