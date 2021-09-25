@@ -217,7 +217,9 @@ type Param struct {
 	LogLevel       string
 	OnlyLink       bool
 	IsTest         bool
+	All            bool
 	File           string
+	GlobalConfigs  []string
 	AQUAVersion    string
 }
 
