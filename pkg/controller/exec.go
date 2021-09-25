@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
@@ -13,7 +14,19 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error {
+func getGlobalConfigFilePaths() []string {
+	src := strings.Split(os.Getenv("AQUA_GLOBAL_CONFIG"), ":")
+	paths := make([]string, 0, len(src))
+	for _, s := range src {
+		if s == "" {
+			continue
+		}
+		paths = append(paths, s)
+	}
+	return paths
+}
+
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:cyclop
 	if len(args) == 0 {
 		return errCommandIsRequired
 	}
@@ -37,6 +50,19 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) e
 			return ctrl.installAndExec(ctx, pkgInfo, pkg, file, args)
 		}
 	}
+
+	for _, cfgFilePath := range getGlobalConfigFilePaths() {
+		if _, err := os.Stat(cfgFilePath); err == nil {
+			pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
+			if err != nil {
+				return err
+			}
+			if pkg != nil {
+				return ctrl.installAndExec(ctx, pkgInfo, pkg, file, args)
+			}
+		}
+	}
+
 	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
 	if _, err := os.Stat(cfgFilePath); err != nil {
 		return ctrl.findAndExecExtCommand(ctx, exeName, args[1:])

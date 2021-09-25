@@ -1,0 +1,8 @@
+registries:
+- type: standard # standard registry
+  ref: v0.8.6 # renovate: depName=suzuki-shunsuke/aqua-registry
+
+packages:
+- name: cli/cli
+  registry: standard
+  version: v2.0.0 # renovate: depName=cli/cli

@@ -61,6 +61,11 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error { //nolint:
 						Name:  "test",
 						Usage: "test file.src after installing the package",
 					},
+					&cli.BoolFlag{
+						Name:    "all",
+						Aliases: []string{"a"},
+						Usage:   "install all aqua configuration packages",
+					},
 				},
 			},
 			{

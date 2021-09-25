@@ -14,23 +14,11 @@ import (
 const proxyName = "aqua-proxy"
 
 func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
-	cfg := &Config{}
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	param.ConfigFilePath = ctrl.getConfigFilePath(wd, param.ConfigFilePath)
-	if param.ConfigFilePath == "" {
-		return errConfigFileNotFound
-	}
-	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
-		return err
-	}
 	rootBin := filepath.Join(ctrl.RootDir, "bin")
-
-	if err := validateConfig(cfg); err != nil {
-		return fmt.Errorf("configuration is invalid: %w", err)
-	}
 
 	if err := mkdirAll(rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
@@ -42,7 +30,52 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 		}
 	}
 
-	registryContents, err := ctrl.installRegistries(ctx, cfg, param.ConfigFilePath)
+	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
+	if cfgFilePath == "" {
+		return errConfigFileNotFound
+	}
+	if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
+		return err
+	}
+	return ctrl.installAll(ctx, rootBin, param)
+}
+
+func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *Param) error {
+	if !param.All {
+		return nil
+	}
+	for _, cfgFilePath := range getGlobalConfigFilePaths() {
+		if _, err := os.Stat(cfgFilePath); err != nil {
+			continue
+		}
+		if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
+			return err
+		}
+	}
+	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
+	if _, err := os.Stat(cfgFilePath); err != nil {
+		return nil //nolint:nilerr
+	}
+	if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *Param) error {
+	cfg := &Config{}
+	if cfgFilePath == "" {
+		return errConfigFileNotFound
+	}
+	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
+		return err
+	}
+
+	if err := validateConfig(cfg); err != nil {
+		return fmt.Errorf("configuration is invalid: %w", err)
+	}
+
+	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
 		return err
 	}
