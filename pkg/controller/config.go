@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
@@ -17,6 +18,32 @@ type Package struct {
 	Name     string `validate:"required"`
 	Registry string `validate:"required"`
 	Version  string `validate:"required"`
+}
+
+func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type alias Package
+	a := alias(*pkg)
+	if err := unmarshal(&a); err != nil {
+		return err
+	}
+	name, version := parseNameWithVersion(a.Name)
+	if name != "" {
+		a.Name = name
+	}
+	if version != "" {
+		a.Version = version
+	}
+	*pkg = Package(a)
+
+	return nil
+}
+
+func parseNameWithVersion(name string) (string, string) {
+	idx := strings.Index(name, "@")
+	if idx == -1 {
+		return name, ""
+	}
+	return name[:idx], name[idx+1:]
 }
 
 type Config struct {
