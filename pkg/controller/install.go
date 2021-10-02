@@ -31,11 +31,14 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 	}
 
 	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
-	if cfgFilePath == "" {
-		return errConfigFileNotFound
-	}
-	if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
-		return err
+	if cfgFilePath != "" {
+		if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
+			return err
+		}
+	} else {
+		if !param.All {
+			return errConfigFileNotFound
+		}
 	}
 	return ctrl.installAll(ctx, rootBin, param)
 }
