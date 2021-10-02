@@ -17,7 +17,7 @@ import (
 type Package struct {
 	Name     string `validate:"required"`
 	Registry string `validate:"required"`
-	Version  string `validate:"required"`
+	Version  string `validate:"required" yaml:",omitempty"`
 }
 
 func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
