@@ -9,9 +9,7 @@ registries:
 
 packages:
 - name: helm/helm@v3.7.0
-  registry: standard
 - name: golangci/golangci-lint@v1.42.1
-  registry: standard
 ```
 
 ## Configuration File Path
@@ -117,7 +115,6 @@ e.g.
 ```yaml
 packages:
 - name: helm/helm
-  registry: standard
   version: v3.7.0 # renovate: depName=helm/helm
 - name: golangci/golangci-lint@v1.42.1
   registry: standard
@@ -125,7 +122,8 @@ packages:
 
 * `name`: (string, required) package name
   * format: `<package name>[@<package version>]`
-* `registry`: (string, required) registry name
+* `registry`: (string, optional) registry name
+  * default value is `standard`
 * `version`: (string, optional) package version
 
 The following two configuration is equivalent.
