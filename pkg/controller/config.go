@@ -16,7 +16,7 @@ import (
 
 type Package struct {
 	Name     string `validate:"required"`
-	Registry string `validate:"required"`
+	Registry string `validate:"required" yaml:",omitempty"`
 	Version  string `validate:"required" yaml:",omitempty"`
 }
 
@@ -34,6 +34,9 @@ func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		a.Version = version
 	}
 	*pkg = Package(a)
+	if pkg.Registry == "" {
+		pkg.Registry = "standard"
+	}
 
 	return nil
 }

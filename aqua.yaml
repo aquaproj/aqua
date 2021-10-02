@@ -43,6 +43,5 @@ packages:
   registry: aqua-registry # github content registry
   version: v4.14.1
 
-- name: golang-migrate/migrate # version_constraint
-  registry: standard
+- name: golang-migrate/migrate # version_constraint, omit "registry"
   version: v4.15.0 # renovate: depName=golang-migrate/migrate

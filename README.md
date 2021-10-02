@@ -36,12 +36,9 @@ registries:
 
 packages:
 - name: stedolan/jq
-  registry: standard
   version: jq-1.6
 - name: direnv/direnv@v2.28.0
-  registry: standard
 - name: junegunn/fzf@0.27.2
-  registry: standard
 ```
 
 You can install tools by `aqua i`.
@@ -84,7 +81,8 @@ registries:
 
 packages:
 - name: direnv/direnv@v2.28.0
-  registry: standard
+  # The default value of `registry` is `standard`
+  # registry: standard
 ```
 
 In the above configuration, [the Standard Registry](https://github.com/suzuki-shunsuke/aqua-registry/blob/main/registry.yaml) is used so you can install direnv easily.
@@ -111,7 +109,6 @@ After selecting the package, the configuration is outputted.
 ```console
 $ aqua g
 - name: golangci-lint@v1.42.0
-  registry: standard
 ```
 
 If the Registries don't support the tool, you can send the pull request to the registry or create your own Registry or add the configuration in `aqua.yaml` as `inline` Registry.
