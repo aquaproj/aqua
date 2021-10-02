@@ -87,6 +87,35 @@ packages:
 				},
 			},
 		},
+		{
+			title: "parse package name with version",
+			yaml: `
+registries:
+- type: standard
+  ref: v0.2.0
+packages:
+- name: suzuki-shunsuke/cmdx@v1.6.0
+  registry: standard
+`,
+			exp: &controller.Config{
+				Registries: controller.Registries{
+					&controller.GitHubContentRegistry{
+						Name:      "standard",
+						RepoOwner: "suzuki-shunsuke",
+						RepoName:  "aqua-registry",
+						Path:      "registry.yaml",
+						Ref:       "v0.2.0",
+					},
+				},
+				Packages: []*controller.Package{
+					{
+						Name:     "suzuki-shunsuke/cmdx",
+						Registry: "standard",
+						Version:  "v1.6.0",
+					},
+				},
+			},
+		},
 	}
 
 	for _, d := range data {

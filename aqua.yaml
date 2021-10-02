@@ -36,9 +36,8 @@ packages:
   registry: standard # standard registry
   version: v0.11.1 # renovate: depName=kubernetes-sigs/kind
 
-- name: restic/restic # decompressor
+- name: restic/restic@v0.12.1 # decompressor, package name with version
   registry: aqua-registry # github content registry
-  version: v0.12.1 # renovate: depName=restic/restic
 
 - name: golang-migrate/migrate # version_constraint
   registry: aqua-registry # github content registry

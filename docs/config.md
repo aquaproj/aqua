@@ -8,12 +8,10 @@ registries:
   ref: v0.8.8 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
-- name: helm/helm
+- name: helm/helm@v3.7.0
   registry: standard
-  version: v3.7.0 # renovate: depName=helm/helm
-- name: golangci/golangci-lint
+- name: golangci/golangci-lint@v1.42.1
   registry: standard
-  version: v1.42.1 # renovate: depName=golangci/golangci-lint
 ```
 
 ## Configuration File Path
@@ -121,14 +119,47 @@ packages:
 - name: helm/helm
   registry: standard
   version: v3.7.0 # renovate: depName=helm/helm
+- name: golangci/golangci-lint@v1.42.1
+  registry: standard
+```
+
+* `name`: (string, required) package name
+  * format: `<package name>[@<package version>]`
+* `registry`: (string, required) registry name
+* `version`: (string, optional) package version
+
+The following two configuration is equivalent.
+
+```yaml
+- name: golangci/golangci-lint@v1.42.1
+  registry: standard
+```
+
+```yaml
+- name: golangci/golangci-lint
+  registry: standard
+  version: v1.42.1
+```
+
+When you want to update the package with Renovate,
+the first style is better because you don't have to write code comments for Renovate's Regex Manager.
+
+```yaml
 - name: golangci/golangci-lint
   registry: standard
   version: v1.42.1 # renovate: depName=golangci/golangci-lint
 ```
 
-* `name`: (string, required) package name
-* `registry`: (string, required) registry name
-* `version`: (string, required) package version
+If the package name in the code comment is wrong, the package version is changed wrongly.
+
+```yaml
+- name: golangci/golangci-lint
+  registry: standard
+  # depName is wrong!
+  version: v1.42.1 # renovate: depName=helm/helm
+```
+
+On the other hand, you can prevent such a mis configuration by the first style.
 
 ## `inline_registry`
 
