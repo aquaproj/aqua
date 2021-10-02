@@ -156,6 +156,9 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 		Registry: pkg.RegistryName,
 		Version:  "[SET PACKAGE VERSION]",
 	}
+	if outputPkg.Registry == "standard" {
+		outputPkg.Registry = ""
+	}
 	if pkg.PackageInfo.GetType() != pkgInfoTypeGitHubRelease {
 		return outputPkg, nil
 	}
