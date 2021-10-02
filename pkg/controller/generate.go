@@ -154,6 +154,7 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	outputPkg := &Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
+		Version:  "[SET PACKAGE VERSION]",
 	}
 	if pkg.PackageInfo.GetType() != pkgInfoTypeGitHubRelease {
 		return outputPkg, nil
@@ -173,6 +174,11 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 		}).Warn("get the latest release")
 		return outputPkg, nil
 	}
-	outputPkg.Version = release.GetTagName()
+	if pkg.PackageInfo.GetName() == p.RepoOwner+"/"+p.RepoName {
+		outputPkg.Name += "@" + release.GetTagName()
+		outputPkg.Version = ""
+	} else {
+		outputPkg.Version = release.GetTagName()
+	}
 	return outputPkg, nil
 }
