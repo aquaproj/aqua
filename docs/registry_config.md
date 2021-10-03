@@ -21,6 +21,7 @@ packages:
 
 * [github_release](#github_release-package): The package is downloaded from GitHub Releases
 * [http](#http-package): The package is donwloaded from the specified URL
+* [github_content](#github_content-package): The package is downloaded from GitHub Content
 
 ## Package's Common attributes
 
@@ -53,6 +54,13 @@ packages:
 
 * `url`: The template string of URL where the package is downloaded
   * e.g. `'https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl'`
+
+## `github_content` Package
+
+* `repo_owner`: The repository owner name
+* `repo_name`: The repository name
+* `path`: The template string of GitHub Content's file path
+  * e.g. `'foo-{{title .OS}}.sh'`
 
 ## `replacements`, `format_overrides`
 
