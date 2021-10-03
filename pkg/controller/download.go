@@ -17,27 +17,48 @@ type pkgDownloader struct {
 	GitHubRepositoryService GitHubRepositoryService
 }
 
+func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *Package, pkgInfo PackageInfo, assetName string) (io.ReadCloser, error) {
+	if downloader.GitHubRepositoryService == nil {
+		return nil, errGitHubTokenIsRequired
+	}
+	p, ok := pkgInfo.(*GitHubReleasePackageInfo)
+	if !ok {
+		return nil, errGitHubReleaseTypeAssertion
+	}
+	return downloader.downloadFromGitHubRelease(ctx, p.RepoOwner, p.RepoName, pkg.Version, assetName)
+}
+
+func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *Package, pkgInfo PackageInfo, assetName string) (io.ReadCloser, error) {
+	if downloader.GitHubRepositoryService == nil {
+		return nil, errGitHubTokenIsRequired
+	}
+	p, ok := pkgInfo.(*GitHubContentPackageInfo)
+	if !ok {
+		return nil, errGitHubReleaseTypeAssertion
+	}
+	return downloader.downloadGitHubContent(ctx, p.RepoOwner, p.RepoName, pkg.Version, assetName)
+}
+
+func (downloader *pkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg *Package, pkgInfo PackageInfo) (io.ReadCloser, error) {
+	p, ok := pkgInfo.(*HTTPPackageInfo)
+	if !ok {
+		return nil, errTypeAssertionHTTPPackageInfo
+	}
+	uS, err := p.RenderURL(pkg)
+	if err != nil {
+		return nil, err
+	}
+	return downloader.downloadFromURL(ctx, uS, http.DefaultClient)
+}
+
 func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *Package, pkgInfo PackageInfo, assetName string) (io.ReadCloser, error) {
 	switch pkgInfo.GetType() {
 	case pkgInfoTypeGitHubRelease:
-		if downloader.GitHubRepositoryService == nil {
-			return nil, errGitHubTokenIsRequired
-		}
-		p, ok := pkgInfo.(*GitHubReleasePackageInfo)
-		if !ok {
-			return nil, errGitHubReleaseTypeAssertion
-		}
-		return downloader.downloadFromGitHub(ctx, p.RepoOwner, p.RepoName, pkg.Version, assetName)
+		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, pkgInfo, assetName)
+	case pkgInfoTypeGitHubContent:
+		return downloader.getReadCloserFromGitHubContent(ctx, pkg, pkgInfo, assetName)
 	case pkgInfoTypeHTTP:
-		p, ok := pkgInfo.(*HTTPPackageInfo)
-		if !ok {
-			return nil, errTypeAssertionHTTPPackageInfo
-		}
-		uS, err := p.RenderURL(pkg)
-		if err != nil {
-			return nil, err
-		}
-		return downloader.downloadFromURL(ctx, uS, http.DefaultClient)
+		return downloader.getReadCloserFromHTTP(ctx, pkg, pkgInfo)
 	default:
 		return nil, logerr.WithFields(errInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),

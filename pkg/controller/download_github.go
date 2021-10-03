@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/google/go-github/v39/github"
 )
@@ -18,7 +19,7 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
 }
 
-func (downloader *pkgDownloader) downloadFromGitHub(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
 	release, _, err := downloader.GitHubRepositoryService.GetReleaseByTag(ctx, owner, repoName, version)
 	if err != nil {
 		return nil, fmt.Errorf("get the GitHub Release by Tag: %w", err)
@@ -42,4 +43,21 @@ func (downloader *pkgDownloader) downloadFromGitHub(ctx context.Context, owner, 
 		return nil, err
 	}
 	return b, nil
+}
+
+func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+	file, _, _, err := downloader.GitHubRepositoryService.GetContents(ctx, owner, repoName, assetName, &github.RepositoryContentGetOptions{
+		Ref: version,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
+	}
+	if file == nil {
+		return nil, errGitHubContentMustBeFile
+	}
+	content, err := file.GetContent()
+	if err != nil {
+		return nil, fmt.Errorf("get the registry configuration content: %w", err)
+	}
+	return io.NopCloser(strings.NewReader(content)), nil
 }
