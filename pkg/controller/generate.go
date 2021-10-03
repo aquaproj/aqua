@@ -20,7 +20,7 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
+func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //nolint:cyclop
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -75,10 +75,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 		return fmt.Errorf("find the package: %w", err)
 	}
 	pkg := pkgs[idx]
-	outputPkg, err := ctrl.getOutputtedPkg(ctx, pkg)
-	if err != nil {
-		return err
-	}
+	outputPkg := ctrl.getOutputtedPkg(ctx, pkg)
 	if err := yaml.NewEncoder(ctrl.Stdout).Encode([]interface{}{outputPkg}); err != nil {
 		return fmt.Errorf("output generated package configuration: %w", err)
 	}
@@ -134,10 +131,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 		if !ok {
 			return logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
 		}
-		outputPkg, err := ctrl.getOutputtedPkg(ctx, findingPkg)
-		if err != nil {
-			return err
-		}
+		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 
@@ -150,7 +144,24 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 	return nil
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) (*Package, error) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgName, repoOwner, repoName string) {
+	release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
+	if err != nil {
+		ctrl.logE().WithError(err).WithFields(logrus.Fields{
+			"repo_owner": repoOwner,
+			"repo_name":  repoName,
+		}).Warn("get the latest release")
+		return
+	}
+	if pkgName == repoOwner+"/"+repoName {
+		outputPkg.Name += "@" + release.GetTagName()
+		outputPkg.Version = ""
+	} else {
+		outputPkg.Version = release.GetTagName()
+	}
+}
+
+func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) *Package {
 	outputPkg := &Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
@@ -159,29 +170,17 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if outputPkg.Registry == "standard" {
 		outputPkg.Registry = ""
 	}
-	if pkg.PackageInfo.GetType() != pkgInfoTypeGitHubRelease {
-		return outputPkg, nil
-	}
 	if ctrl.GitHubRepositoryService == nil {
-		return outputPkg, nil
+		return outputPkg
 	}
-	p, ok := pkg.PackageInfo.(*GitHubReleasePackageInfo)
-	if !ok {
-		return nil, errGitHubReleaseTypeAssertion
+	switch pkgInfo := pkg.PackageInfo.(type) {
+	case *GitHubReleasePackageInfo:
+		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
+		return outputPkg
+	case *GitHubContentPackageInfo:
+		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
+		return outputPkg
+	default:
+		return outputPkg
 	}
-	release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, p.RepoOwner, p.RepoName)
-	if err != nil {
-		ctrl.logE().WithError(err).WithFields(logrus.Fields{
-			"repo_owner": p.RepoOwner,
-			"repo_name":  p.RepoName,
-		}).Warn("get the latest release")
-		return outputPkg, nil
-	}
-	if pkg.PackageInfo.GetName() == p.RepoOwner+"/"+p.RepoName {
-		outputPkg.Name += "@" + release.GetTagName()
-		outputPkg.Version = ""
-	} else {
-		outputPkg.Version = release.GetTagName()
-	}
-	return outputPkg, nil
 }
