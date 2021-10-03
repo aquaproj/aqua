@@ -33,3 +33,4 @@ jobs:
     - run: migrate -version
     - run: ghq -version
     - run: gh version
+    - run: aqua-installer -v v0.7.4 -i /tmp/aqua

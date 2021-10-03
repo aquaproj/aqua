@@ -23,6 +23,11 @@ inline_registry: # inline registry
     files:
     - name: cmdx
 
+  - type: github_content # github_content package
+    repo_owner: suzuki-shunsuke
+    repo_name: aqua-installer
+    path: aqua-installer
+
 packages:
 - name: cmdx # inline registry
   registry: inline
@@ -45,3 +50,6 @@ packages:
 
 - name: golang-migrate/migrate # version_constraint, omit "registry"
   version: v4.15.0 # renovate: depName=golang-migrate/migrate
+
+- name: suzuki-shunsuke/aqua-installer@v0.1.3 # github_content package
+  registry: inline
