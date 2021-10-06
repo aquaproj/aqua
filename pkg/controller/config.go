@@ -63,6 +63,7 @@ type (
 const (
 	pkgInfoTypeGitHubRelease = "github_release"
 	pkgInfoTypeGitHubContent = "github_content"
+	pkgInfoTypeGitHubArchive = "github_archive"
 	pkgInfoTypeHTTP          = "http"
 )
 
@@ -224,6 +225,29 @@ func (pkgInfo *mergedPackageInfo) getGitHubContent() PackageInfo {
 	}
 }
 
+func (pkgInfo *mergedPackageInfo) getGitHubArchive() PackageInfo {
+	var versionOverrides []*GitHubArchiveVersionOverride
+	if pkgInfo.VersionOverrides != nil {
+		versionOverrides = make([]*GitHubArchiveVersionOverride, len(pkgInfo.VersionOverrides))
+		for i, vo := range pkgInfo.VersionOverrides {
+			versionOverrides[i] = &GitHubArchiveVersionOverride{
+				VersionConstraints: vo.VersionConstraints,
+				Files:              vo.Files,
+			}
+		}
+	}
+	return &GitHubArchivePackageInfo{
+		Name:               pkgInfo.Name,
+		RepoOwner:          pkgInfo.RepoOwner,
+		RepoName:           pkgInfo.RepoName,
+		Files:              pkgInfo.Files,
+		Link:               pkgInfo.Link,
+		Description:        pkgInfo.Description,
+		VersionConstraints: pkgInfo.VersionConstraints,
+		VersionOverrides:   versionOverrides,
+	}
+}
+
 func (pkgInfo *mergedPackageInfo) getHTTP() PackageInfo {
 	var versionOverrides []*HTTPVersionOverride
 	if pkgInfo.VersionOverrides != nil {
@@ -259,6 +283,8 @@ func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 		return pkgInfo.getGitHubRelease(), nil
 	case pkgInfoTypeGitHubContent:
 		return pkgInfo.getGitHubContent(), nil
+	case pkgInfoTypeGitHubArchive:
+		return pkgInfo.getGitHubArchive(), nil
 	case pkgInfoTypeHTTP:
 		return pkgInfo.getHTTP(), nil
 	default:

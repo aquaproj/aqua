@@ -180,6 +180,9 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	case *GitHubContentPackageInfo:
 		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
 		return outputPkg
+	case *GitHubArchivePackageInfo:
+		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
+		return outputPkg
 	default:
 		return outputPkg
 	}
