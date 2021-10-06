@@ -122,7 +122,7 @@ e.g.
 ```console
 $ curl -sSfL \
   https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.3/aqua-installer |
-  bash -s -- -i ~/bin/aqua -v v0.7.5 # renovate: depName=suzuki-shunsuke/aqua
+  bash -s -- -i ~/bin/aqua -v v0.7.6 # renovate: depName=suzuki-shunsuke/aqua
 ```
 
 GitHub Actions
@@ -132,7 +132,7 @@ e.g.
 ```yaml
 - uses: suzuki-shunsuke/aqua-installer@v0.1.3
   with:
-  version: v0.7.5 # renovate: depName=suzuki-shunsuke/aqua
+  version: v0.7.6 # renovate: depName=suzuki-shunsuke/aqua
     install_path: /tmp/bin/aqua
 ```
 
@@ -141,7 +141,7 @@ e.g.
 ```yaml
 - uses: int128/aqua-action@v1
   with:
-    version: v0.7.5 # renovate: depName=suzuki-shunsuke/aqua
+    version: v0.7.6 # renovate: depName=suzuki-shunsuke/aqua
 ```
 
 aqua requires the environment variable `GITHUB_TOKEN`, which is GitHub Access Token.
