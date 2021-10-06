@@ -9,6 +9,8 @@ var (
 	errConfigFileNotFound                 = errors.New("configuration file isn't found")
 	errUnknownPkg                         = errors.New("unknown package")
 	errGitHubReleaseTypeAssertion         = errors.New("pkg typs is github_release, but it isn't *GitHubReleasePackageInfo")
+	errGitHubContentTypeAssertion         = errors.New("pkg typs is github_content, but it isn't *GitHubContentPackageInfo")
+	errGitHubArchiveTypeAssertion         = errors.New("pkg typs is github_archive, but it isn't *GitHubArchivePackageInfo")
 	errTypeAssertionHTTPPackageInfo       = errors.New("pkg typs is http, but it isn't *HTTPPackageInfo")
 	errTypeAssertionGitHubContentRegistry = errors.New("registry.GetType() is github_content, but registry isn't *GitHubContentRegistry")
 	errInvalidPackageType                 = errors.New("package type is invalid")

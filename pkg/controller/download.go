@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -28,13 +29,22 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Cont
 	return downloader.downloadFromGitHubRelease(ctx, p.RepoOwner, p.RepoName, pkg.Version, assetName)
 }
 
+func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *Package, pkgInfo PackageInfo) (io.ReadCloser, error) {
+	p, ok := pkgInfo.(*GitHubArchivePackageInfo)
+	if !ok {
+		return nil, errGitHubArchiveTypeAssertion
+	}
+	url := fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", p.RepoOwner, p.RepoName, pkg.Version)
+	return downloader.downloadFromURL(ctx, url, http.DefaultClient)
+}
+
 func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *Package, pkgInfo PackageInfo, assetName string) (io.ReadCloser, error) {
 	if downloader.GitHubRepositoryService == nil {
 		return nil, errGitHubTokenIsRequired
 	}
 	p, ok := pkgInfo.(*GitHubContentPackageInfo)
 	if !ok {
-		return nil, errGitHubReleaseTypeAssertion
+		return nil, errGitHubContentTypeAssertion
 	}
 	return downloader.downloadGitHubContent(ctx, p.RepoOwner, p.RepoName, pkg.Version, assetName)
 }
@@ -57,6 +67,8 @@ func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *Package
 		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, pkgInfo, assetName)
 	case pkgInfoTypeGitHubContent:
 		return downloader.getReadCloserFromGitHubContent(ctx, pkg, pkgInfo, assetName)
+	case pkgInfoTypeGitHubArchive:
+		return downloader.getReadCloserFromGitHubArchive(ctx, pkg, pkgInfo)
 	case pkgInfoTypeHTTP:
 		return downloader.getReadCloserFromHTTP(ctx, pkg, pkgInfo)
 	default:

@@ -22,6 +22,7 @@ packages:
 * [github_release](#github_release-package): The package is downloaded from GitHub Releases
 * [http](#http-package): The package is donwloaded from the specified URL
 * [github_content](#github_content-package): The package is downloaded from GitHub Content
+* [github_archive](#github_archive-package): The package is downloaded from GitHub Archive
 
 ## Package's Common attributes
 
@@ -62,6 +63,11 @@ packages:
 * `path`: The template string of GitHub Content's file path
   * e.g. `'foo-{{title .OS}}.sh'`
 
+## `github_content` Package
+
+* `repo_owner`: The repository owner name
+* `repo_name`: The repository name
+
 ## `replacements`, `format_overrides`
 
 These attributes are inspired to [goreleaser's Archive](https://goreleaser.com/customization/archive/).
@@ -77,7 +83,7 @@ e.g.
   * [.goreleaser.yml](https://github.com/iawia002/annie/blob/v0.11.0/.goreleaser.yml#L51-L54)
   * [registry.yaml](https://github.com/suzuki-shunsuke/aqua-registry/blob/v0.8.0/registry.yaml#L361-L364)
 
-## Default values of `github_release` package
+## Default values of `github_release`, `github_content`, and `github_archive` package
 
 * `name`: `<repo owner>/<repo name>`
 * `link`: `https://github.com/<repo owner>/<repo name>`
