@@ -1,6 +1,6 @@
 registries:
 - type: standard
-  ref: v0.8.6 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.9.0 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
 - name: x-motemen/ghq@v1.2.1
