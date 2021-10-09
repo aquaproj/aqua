@@ -6,7 +6,7 @@
 
 Declarative CLI Version manager. Support `Lazy Install` and Sharable configuration mechanism named `Registry`. Switch versions seamlessly.
 
-[Config](docs/config.md) | [Usage](docs/usage.md) | [Document](docs) | [Release Note](https://github.com/suzuki-shunsuke/aqua/releases)
+[Install](#install) | [Config](docs/config.md) | [Usage](docs/usage.md) | [Document](docs) | [Release Note](https://github.com/suzuki-shunsuke/aqua/releases)
 
 **Currently, aqua doesn't support Windows.**
 
@@ -115,34 +115,10 @@ If the Registries don't support the tool, you can send the pull request to the r
 
 ## Install
 
-Please download a binary from the [Release Page](https://github.com/suzuki-shunsuke/aqua/releases). Or you can install aqua quickly with [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer).
-
-e.g.
-
-```console
-$ curl -sSfL \
-  https://raw.githubusercontent.com/suzuki-shunsuke/aqua-installer/v0.1.3/aqua-installer |
-  bash -s -- -i ~/bin/aqua -v v0.7.6 # renovate: depName=suzuki-shunsuke/aqua
-```
-
-GitHub Actions
-
-e.g.
-
-```yaml
-- uses: suzuki-shunsuke/aqua-installer@v0.1.3
-  with:
-  version: v0.7.6 # renovate: depName=suzuki-shunsuke/aqua
-    install_path: /tmp/bin/aqua
-```
-
-[int128/aqua-action](https://github.com/int128/aqua-action)
-
-```yaml
-- uses: int128/aqua-action@v1
-  with:
-    version: v0.7.6 # renovate: depName=suzuki-shunsuke/aqua
-```
+* [GitHub Releases](https://github.com/suzuki-shunsuke/aqua/releases)
+* [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer): Shell Script and GitHub Actions
+* [int128/aqua-action](https://github.com/int128/aqua-action): GitHub Actions
+* [circleci-orb-aqua](https://circleci.com/developer/orbs/orb/suzuki-shunsuke/aqua): CircleCI Orb
 
 aqua requires the environment variable `GITHUB_TOKEN`, which is GitHub Access Token.
 Add `~/.aqua/bin` to the environmenet variable `PATH`.
@@ -172,6 +148,7 @@ $ aqua i -l
 * [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer): Install aqua quickly
 * [aqua-registry](https://github.com/suzuki-shunsuke/aqua-registry): Standard Registry
 * [aqua-renovate-config](https://github.com/suzuki-shunsuke/aqua-renovate-config): Renovate Configuration to update packages and registries
+* [circleci-orb-aqua](https://github.com/suzuki-shunsuke/circleci-orb-aqua): CircleCI Orb for aqua. Install aqua and run `aqua install`. Cache aqua and tools
 * Third Party Projects
   * [int128/aqua-action](https://github.com/int128/aqua-action) - Action to install packages using aqua
 
