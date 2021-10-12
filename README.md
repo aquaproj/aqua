@@ -32,7 +32,7 @@ e.g. Install jq, direnv, and fzf with aqua.
 ```yaml
 registries:
 - type: standard
-  ref: v0.9.1 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.9.2 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
 - name: stedolan/jq
@@ -77,7 +77,7 @@ You can share and reuse the aqua configuration, so it makes easy to write `aqua.
 ```yaml
 registries:
 - type: standard
-  ref: v0.9.1 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.9.2 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
 - name: direnv/direnv@v2.28.0
