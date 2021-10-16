@@ -82,7 +82,7 @@ func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
 }
 
 func (pkgInfos *PackageInfos) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var arr []mergedPackageInfo
+	var arr []MergedPackageInfo
 	if err := unmarshal(&arr); err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ type PackageInfo interface {
 	SetVersion(v string) (PackageInfo, error)
 }
 
-type mergedPackageInfo struct {
+type MergedPackageInfo struct {
 	Name               string
 	Type               string
 	RepoOwner          string `yaml:"repo_owner"`
@@ -163,7 +163,7 @@ type FormatOverride struct {
 	Format string `yaml:"format"`
 }
 
-func (pkgInfo *mergedPackageInfo) getGitHubRelease() PackageInfo {
+func (pkgInfo *MergedPackageInfo) getGitHubRelease() PackageInfo {
 	var versionOverrides []*GitHubReleaseVersionOverride
 	if pkgInfo.VersionOverrides != nil {
 		versionOverrides = make([]*GitHubReleaseVersionOverride, len(pkgInfo.VersionOverrides))
@@ -194,7 +194,7 @@ func (pkgInfo *mergedPackageInfo) getGitHubRelease() PackageInfo {
 	}
 }
 
-func (pkgInfo *mergedPackageInfo) getGitHubContent() PackageInfo {
+func (pkgInfo *MergedPackageInfo) getGitHubContent() PackageInfo {
 	var versionOverrides []*GitHubContentVersionOverride
 	if pkgInfo.VersionOverrides != nil {
 		versionOverrides = make([]*GitHubContentVersionOverride, len(pkgInfo.VersionOverrides))
@@ -225,7 +225,7 @@ func (pkgInfo *mergedPackageInfo) getGitHubContent() PackageInfo {
 	}
 }
 
-func (pkgInfo *mergedPackageInfo) getGitHubArchive() PackageInfo {
+func (pkgInfo *MergedPackageInfo) getGitHubArchive() PackageInfo {
 	var versionOverrides []*GitHubArchiveVersionOverride
 	if pkgInfo.VersionOverrides != nil {
 		versionOverrides = make([]*GitHubArchiveVersionOverride, len(pkgInfo.VersionOverrides))
@@ -248,7 +248,7 @@ func (pkgInfo *mergedPackageInfo) getGitHubArchive() PackageInfo {
 	}
 }
 
-func (pkgInfo *mergedPackageInfo) getHTTP() PackageInfo {
+func (pkgInfo *MergedPackageInfo) getHTTP() PackageInfo {
 	var versionOverrides []*HTTPVersionOverride
 	if pkgInfo.VersionOverrides != nil {
 		versionOverrides = make([]*HTTPVersionOverride, len(pkgInfo.VersionOverrides))
@@ -277,7 +277,7 @@ func (pkgInfo *mergedPackageInfo) getHTTP() PackageInfo {
 	}
 }
 
-func (pkgInfo *mergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
+func (pkgInfo *MergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
 	switch pkgInfo.Type {
 	case pkgInfoTypeGitHubRelease:
 		return pkgInfo.getGitHubRelease(), nil
