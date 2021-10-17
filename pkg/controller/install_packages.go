@@ -98,7 +98,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	return nil
 }
 
-func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Package) (PackageInfo, error) {
+func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Package) (*MergedPackageInfo, error) {
 	registry, ok := registries[pkg.Registry]
 	if !ok {
 		return nil, errRegistryNotFound
@@ -116,7 +116,7 @@ func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Packa
 	return pkgInfo, nil
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo, pkg *Package, isTest bool) error {
+func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *MergedPackageInfo, pkg *Package, isTest bool) error {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -157,7 +157,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo PackageInfo,
 	return nil
 }
 
-func (ctrl *Controller) checkFileSrc(pkg *Package, pkgInfo PackageInfo, file *File) error {
+func (ctrl *Controller) checkFileSrc(pkg *Package, pkgInfo *MergedPackageInfo, file *File) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}

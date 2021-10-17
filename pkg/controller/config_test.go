@@ -65,8 +65,9 @@ packages:
 			exp: &controller.Config{
 				InlineRegistry: &controller.RegistryContent{
 					PackageInfos: controller.PackageInfos{
-						&controller.GitHubReleasePackageInfo{
+						&controller.MergedPackageInfo{
 							Name:      "cmdx",
+							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "cmdx",
 							Asset:     controller.NewTemplate(`cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
@@ -138,18 +139,20 @@ func TestPackageInfos_ToMap(t *testing.T) {
 	data := []struct {
 		title    string
 		pkgInfos *controller.PackageInfos
-		exp      map[string]controller.PackageInfo
+		exp      map[string]*controller.MergedPackageInfo
 		isErr    bool
 	}{
 		{
 			title: "normal",
 			pkgInfos: &controller.PackageInfos{
-				&controller.HTTPPackageInfo{
+				&controller.MergedPackageInfo{
+					Type: "github_release",
 					Name: "foo",
 				},
 			},
-			exp: map[string]controller.PackageInfo{
-				"foo": &controller.HTTPPackageInfo{
+			exp: map[string]*controller.MergedPackageInfo{
+				"foo": {
+					Type: "github_release",
 					Name: "foo",
 				},
 			},

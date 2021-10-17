@@ -152,13 +152,16 @@ The list of version override.
 
 The following attributes are supported.
 
-* `version_constraint`
-* `files`
-* `format`
-* `format_overrides`
-* `replacements`
+* `type`
+* `repo_owner`
+* `repo_name`
 * `asset`
+* `path`
+* `format`
+* `files`
 * `url`
+* `replacements`
+* `format_overrides`
 
 e.g.
 

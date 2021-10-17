@@ -14,7 +14,7 @@ func TestController_findExecFileFromPkg(t *testing.T) {
 		registries     map[string]*RegistryContent
 		exeName        string
 		pkg            *Package
-		expPackageInfo PackageInfo
+		expPackageInfo *MergedPackageInfo
 		expFile        *File
 	}{
 		{
@@ -24,7 +24,7 @@ func TestController_findExecFileFromPkg(t *testing.T) {
 				Registry: "standard",
 				Name:     "kubernetes/kubectl",
 			},
-			expPackageInfo: &HTTPPackageInfo{
+			expPackageInfo: &MergedPackageInfo{
 				Name: "kubernetes/kubectl",
 				Files: []*File{
 					{
@@ -38,7 +38,7 @@ func TestController_findExecFileFromPkg(t *testing.T) {
 			registries: map[string]*RegistryContent{
 				"standard": {
 					PackageInfos: PackageInfos{
-						&HTTPPackageInfo{
+						&MergedPackageInfo{
 							Name: "kubernetes/kubectl",
 							Files: []*File{
 								{

@@ -7,24 +7,26 @@ import (
 	"github.com/suzuki-shunsuke/aqua/pkg/controller"
 )
 
-func TestGitHubReleasePackageInfo_GetName(t *testing.T) {
+func TestMergedPackageInfo_GetName(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.GitHubReleasePackageInfo
+		pkgInfo *controller.MergedPackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "foo",
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
+				Type: "github_release",
 				Name: "foo",
 			},
 		},
 		{
 			title: "default",
 			exp:   "suzuki-shunsuke/ci-info",
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 			},
@@ -41,17 +43,19 @@ func TestGitHubReleasePackageInfo_GetName(t *testing.T) {
 	}
 }
 
-func TestGitHubReleasePackageInfo_GetType(t *testing.T) {
+func TestMergedPackageInfo_GetType(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.GitHubReleasePackageInfo
+		pkgInfo *controller.MergedPackageInfo
 	}{
 		{
-			title:   "normal",
-			exp:     "github_release",
-			pkgInfo: &controller.GitHubReleasePackageInfo{},
+			title: "normal",
+			exp:   "github_release",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type: "github_release",
+			},
 		},
 	}
 	for _, d := range data {
@@ -65,24 +69,26 @@ func TestGitHubReleasePackageInfo_GetType(t *testing.T) {
 	}
 }
 
-func TestGitHubReleasePackageInfo_GetLink(t *testing.T) {
+func TestMergedPackageInfo_GetLink(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.GitHubReleasePackageInfo
+		pkgInfo *controller.MergedPackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "http://example.com",
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
+				Type: "github_release",
 				Link: "http://example.com",
 			},
 		},
 		{
 			title: "default",
 			exp:   "https://github.com/suzuki-shunsuke/ci-info",
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 			},
@@ -99,24 +105,24 @@ func TestGitHubReleasePackageInfo_GetLink(t *testing.T) {
 	}
 }
 
-func TestGitHubReleasePackageInfo_GetDescription(t *testing.T) {
+func TestMergedPackageInfo_GetDescription(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.GitHubReleasePackageInfo
+		pkgInfo *controller.MergedPackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "hello world",
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
 				Description: "hello world",
 			},
 		},
 		{
 			title:   "empty",
 			exp:     "",
-			pkgInfo: &controller.GitHubReleasePackageInfo{},
+			pkgInfo: &controller.MergedPackageInfo{},
 		},
 	}
 	for _, d := range data {
@@ -130,24 +136,24 @@ func TestGitHubReleasePackageInfo_GetDescription(t *testing.T) {
 	}
 }
 
-func TestGitHubReleasePackageInfo_GetFormat(t *testing.T) {
+func TestMergedPackageInfo_GetFormat(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.GitHubReleasePackageInfo
+		pkgInfo *controller.MergedPackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "tar.gz",
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
 				Format: "tar.gz",
 			},
 		},
 		{
 			title:   "empty",
 			exp:     "",
-			pkgInfo: &controller.GitHubReleasePackageInfo{},
+			pkgInfo: &controller.MergedPackageInfo{},
 		},
 	}
 	for _, d := range data {
@@ -161,19 +167,19 @@ func TestGitHubReleasePackageInfo_GetFormat(t *testing.T) {
 	}
 }
 
-func TestGitHubReleasePackageInfo_GetReplacements(t *testing.T) {
+func TestMergedPackageInfo_GetReplacements(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     map[string]string
-		pkgInfo *controller.GitHubReleasePackageInfo
+		pkgInfo *controller.MergedPackageInfo
 	}{
 		{
 			title: "normal",
 			exp: map[string]string{
 				"amd64": "x86_64",
 			},
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
 				Replacements: map[string]string{
 					"amd64": "x86_64",
 				},
@@ -182,7 +188,7 @@ func TestGitHubReleasePackageInfo_GetReplacements(t *testing.T) {
 		{
 			title:   "empty",
 			exp:     nil,
-			pkgInfo: &controller.GitHubReleasePackageInfo{},
+			pkgInfo: &controller.MergedPackageInfo{},
 		},
 	}
 	for _, d := range data {
@@ -197,12 +203,12 @@ func TestGitHubReleasePackageInfo_GetReplacements(t *testing.T) {
 	}
 }
 
-func TestGitHubReleasePackageInfo_GetFiles(t *testing.T) {
+func TestMergedPackageInfo_GetFiles(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     []*controller.File
-		pkgInfo *controller.GitHubReleasePackageInfo
+		pkgInfo *controller.MergedPackageInfo
 	}{
 		{
 			title: "normal",
@@ -214,7 +220,7 @@ func TestGitHubReleasePackageInfo_GetFiles(t *testing.T) {
 					Name: "gofmt",
 				},
 			},
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
 				Files: []*controller.File{
 					{
 						Name: "go",
@@ -232,7 +238,8 @@ func TestGitHubReleasePackageInfo_GetFiles(t *testing.T) {
 					Name: "ci-info",
 				},
 			},
-			pkgInfo: &controller.GitHubReleasePackageInfo{
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:     "github_release",
 				RepoName: "ci-info",
 			},
 		},
