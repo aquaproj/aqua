@@ -16,7 +16,7 @@ import (
 )
 
 type FindingPackage struct {
-	PackageInfo  PackageInfo
+	PackageInfo  *MergedPackageInfo
 	RegistryName string
 }
 
@@ -173,17 +173,10 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if ctrl.GitHubRepositoryService == nil {
 		return outputPkg
 	}
-	switch pkgInfo := pkg.PackageInfo.(type) {
-	case *GitHubReleasePackageInfo:
+	pkgInfo := pkg.PackageInfo
+	if pkgInfo.HasRepo() {
 		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
-		return outputPkg
-	case *GitHubContentPackageInfo:
-		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
-		return outputPkg
-	case *GitHubArchivePackageInfo:
-		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
-		return outputPkg
-	default:
 		return outputPkg
 	}
+	return outputPkg
 }

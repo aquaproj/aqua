@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -56,7 +57,7 @@ type Config struct {
 }
 
 type (
-	PackageInfos []PackageInfo
+	PackageInfos []*MergedPackageInfo
 	Registries   []Registry
 )
 
@@ -67,9 +68,10 @@ const (
 	pkgInfoTypeHTTP          = "http"
 )
 
-func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
-	m := make(map[string]PackageInfo, len(*pkgInfos))
+func (pkgInfos *PackageInfos) ToMap() (map[string]*MergedPackageInfo, error) {
+	m := make(map[string]*MergedPackageInfo, len(*pkgInfos))
 	for _, pkgInfo := range *pkgInfos {
+		pkgInfo := pkgInfo
 		name := pkgInfo.GetName()
 		if _, ok := m[name]; ok {
 			return nil, logerr.WithFields(errPkgNameMustBeUniqueInRegistry, logrus.Fields{ //nolint:wrapcheck
@@ -79,23 +81,6 @@ func (pkgInfos *PackageInfos) ToMap() (map[string]PackageInfo, error) {
 		m[name] = pkgInfo
 	}
 	return m, nil
-}
-
-func (pkgInfos *PackageInfos) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var arr []MergedPackageInfo
-	if err := unmarshal(&arr); err != nil {
-		return err
-	}
-	list := make([]PackageInfo, len(arr))
-	for i, p := range arr {
-		pkgInfo, err := p.GetPackageInfo()
-		if err != nil {
-			return err
-		}
-		list[i] = pkgInfo
-	}
-	*pkgInfos = list
-	return nil
 }
 
 func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -115,23 +100,9 @@ func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return nil
 }
 
-type PackageInfo interface {
-	GetName() string
-	GetType() string
-	GetFormat() string
-	GetFiles() []*File
-	GetFileSrc(pkg *Package, file *File) (string, error)
-	GetPkgPath(rootDir string, pkg *Package) (string, error)
-	RenderAsset(pkg *Package) (string, error)
-	GetLink() string
-	GetDescription() string
-	GetReplacements() map[string]string
-	SetVersion(v string) (PackageInfo, error)
-}
-
 type MergedPackageInfo struct {
 	Name               string
-	Type               string
+	Type               string `validate:"required"`
 	RepoOwner          string `yaml:"repo_owner"`
 	RepoName           string `yaml:"repo_name"`
 	Asset              *Template
@@ -142,20 +113,232 @@ type MergedPackageInfo struct {
 	Description        string
 	Link               string
 	Replacements       map[string]string
-	FormatOverrides    []*FormatOverride        `yaml:"format_overrides"`
-	VersionConstraints *VersionConstraints      `yaml:"version_constraint"`
-	VersionOverrides   []*mergedVersionOverride `yaml:"version_overrides"`
+	FormatOverrides    []*FormatOverride    `yaml:"format_overrides"`
+	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
+	VersionOverrides   []*MergedPackageInfo `yaml:"version_overrides"`
 }
 
-type mergedVersionOverride struct {
-	VersionConstraints *VersionConstraints `yaml:"version_constraint"`
-	Asset              *Template
-	Path               *Template
-	URL                *Template
-	Files              []*File `validate:"dive"`
-	Format             string
-	FormatOverrides    []*FormatOverride `yaml:"format_overrides"`
-	Replacements       map[string]string
+func (pkgInfo *MergedPackageInfo) HasRepo() bool {
+	switch pkgInfo.Type {
+	case pkgInfoTypeGitHubRelease, pkgInfoTypeGitHubArchive, pkgInfoTypeGitHubContent:
+		return true
+	}
+	return false
+}
+
+func (pkgInfo *MergedPackageInfo) GetName() string {
+	if pkgInfo.Name != "" {
+		return pkgInfo.Name
+	}
+	if pkgInfo.HasRepo() {
+		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
+	}
+	return ""
+}
+
+func (pkgInfo *MergedPackageInfo) GetLink() string {
+	if pkgInfo.Link != "" {
+		return pkgInfo.Link
+	}
+	if pkgInfo.HasRepo() {
+		return "https://github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
+	}
+	return ""
+}
+
+func (pkgInfo *MergedPackageInfo) GetFormat() string {
+	if pkgInfo.Type == pkgInfoTypeGitHubArchive {
+		return "tar.gz"
+	}
+	for _, arcTypeOverride := range pkgInfo.FormatOverrides {
+		if arcTypeOverride.GOOS == runtime.GOOS {
+			return arcTypeOverride.Format
+		}
+	}
+	return pkgInfo.Format
+}
+
+func (pkgInfo *MergedPackageInfo) GetFileSrc(pkg *Package, file *File) (string, error) {
+	assetName, err := pkgInfo.RenderAsset(pkg)
+	if err != nil {
+		return "", fmt.Errorf("render the asset name: %w", err)
+	}
+	if isUnarchived(pkgInfo.GetFormat(), assetName) {
+		return assetName, nil
+	}
+	if file.Src == nil {
+		return file.Name, nil
+	}
+	src, err := file.RenderSrc(pkg, pkgInfo)
+	if err != nil {
+		return "", fmt.Errorf("render the template file.src: %w", err)
+	}
+	return src, nil
+}
+
+func (pkgInfo *MergedPackageInfo) GetDescription() string {
+	return pkgInfo.Description
+}
+
+func (pkgInfo *MergedPackageInfo) GetType() string {
+	return pkgInfo.Type
+}
+
+func (pkgInfo *MergedPackageInfo) SetVersion(v string) (*MergedPackageInfo, error) {
+	if pkgInfo.VersionConstraints == nil {
+		return pkgInfo, nil
+	}
+	a, err := pkgInfo.VersionConstraints.Check(v)
+	if err != nil {
+		return nil, err
+	}
+	if a {
+		return pkgInfo, nil
+	}
+	for _, vo := range pkgInfo.VersionOverrides {
+		a, err := vo.VersionConstraints.Check(v)
+		if err != nil {
+			return nil, err
+		}
+		if a {
+			pkgInfo.override(vo)
+			return pkgInfo, nil
+		}
+	}
+	return pkgInfo, nil
+}
+
+func (pkgInfo *MergedPackageInfo) override(child *MergedPackageInfo) { //nolint:cyclop
+	if child.Type != "" {
+		pkgInfo.Type = child.Type
+	}
+	if child.RepoOwner != "" {
+		pkgInfo.RepoOwner = child.RepoOwner
+	}
+	if child.RepoName != "" {
+		pkgInfo.RepoName = child.RepoName
+	}
+	if child.Asset != nil {
+		pkgInfo.Asset = child.Asset
+	}
+	if child.Path != nil {
+		pkgInfo.Path = child.Path
+	}
+	if child.Format != "" {
+		pkgInfo.Format = child.Format
+	}
+	if child.Files != nil {
+		pkgInfo.Files = child.Files
+	}
+	if child.URL != nil {
+		pkgInfo.URL = child.URL
+	}
+	if child.Replacements != nil {
+		pkgInfo.Replacements = child.Replacements
+	}
+	if child.FormatOverrides != nil {
+		pkgInfo.FormatOverrides = child.FormatOverrides
+	}
+}
+
+func (pkgInfo *MergedPackageInfo) GetReplacements() map[string]string {
+	return pkgInfo.Replacements
+}
+
+func (pkgInfo *MergedPackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
+	assetName, err := pkgInfo.RenderAsset(pkg)
+	if err != nil {
+		return "", fmt.Errorf("render the asset name: %w", err)
+	}
+	switch pkgInfo.Type {
+	case pkgInfoTypeGitHubArchive:
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+	case pkgInfoTypeGitHubContent, pkgInfoTypeGitHubRelease:
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+	case pkgInfoTypeHTTP:
+		uS, err := pkgInfo.URL.Execute(map[string]interface{}{
+			"Version": pkg.Version,
+			"GOOS":    runtime.GOOS,
+			"GOARCH":  runtime.GOARCH,
+			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
+			"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+			"Format":  pkgInfo.GetFormat(),
+		})
+		if err != nil {
+			return "", fmt.Errorf("render URL: %w", err)
+		}
+		u, err := url.Parse(uS)
+		if err != nil {
+			return "", fmt.Errorf("parse the URL: %w", err)
+		}
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), u.Host, u.Path), nil
+	}
+	return "", nil
+}
+
+func (pkgInfo *MergedPackageInfo) RenderAsset(pkg *Package) (string, error) {
+	switch pkgInfo.Type {
+	case pkgInfoTypeGitHubArchive:
+		return "", nil
+	case pkgInfoTypeGitHubContent:
+		return pkgInfo.Path.Execute(map[string]interface{}{
+			"Version": pkg.Version,
+			"GOOS":    runtime.GOOS,
+			"GOARCH":  runtime.GOARCH,
+			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
+			"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+			"Format":  pkgInfo.GetFormat(),
+		})
+	case pkgInfoTypeGitHubRelease:
+		return pkgInfo.Asset.Execute(map[string]interface{}{
+			"Version": pkg.Version,
+			"GOOS":    runtime.GOOS,
+			"GOARCH":  runtime.GOARCH,
+			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
+			"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+			"Format":  pkgInfo.GetFormat(),
+		})
+	case pkgInfoTypeHTTP:
+		uS, err := pkgInfo.renderURL(pkg)
+		if err != nil {
+			return "", fmt.Errorf("render URL: %w", err)
+		}
+		u, err := url.Parse(uS)
+		if err != nil {
+			return "", fmt.Errorf("parse the URL: %w", err)
+		}
+		return filepath.Base(u.Path), nil
+	}
+	return "", nil
+}
+
+func (pkgInfo *MergedPackageInfo) renderURL(pkg *Package) (string, error) {
+	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
+		"Version": pkg.Version,
+		"GOOS":    runtime.GOOS,
+		"GOARCH":  runtime.GOARCH,
+		"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
+		"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		"Format":  pkgInfo.GetFormat(),
+	})
+	if err != nil {
+		return "", fmt.Errorf("render URL: %w", err)
+	}
+	return uS, nil
+}
+
+func (pkgInfo *MergedPackageInfo) GetFiles() []*File {
+	if len(pkgInfo.Files) != 0 {
+		return pkgInfo.Files
+	}
+	if pkgInfo.HasRepo() {
+		return []*File{
+			{
+				Name: pkgInfo.RepoName,
+			},
+		}
+	}
+	return pkgInfo.Files
 }
 
 type FormatOverride struct {
@@ -163,144 +346,12 @@ type FormatOverride struct {
 	Format string `yaml:"format"`
 }
 
-func (pkgInfo *MergedPackageInfo) getGitHubRelease() PackageInfo {
-	var versionOverrides []*GitHubReleaseVersionOverride
-	if pkgInfo.VersionOverrides != nil {
-		versionOverrides = make([]*GitHubReleaseVersionOverride, len(pkgInfo.VersionOverrides))
-		for i, vo := range pkgInfo.VersionOverrides {
-			versionOverrides[i] = &GitHubReleaseVersionOverride{
-				VersionConstraints: vo.VersionConstraints,
-				Asset:              vo.Asset,
-				Files:              vo.Files,
-				Format:             vo.Format,
-				FormatOverrides:    vo.FormatOverrides,
-				Replacements:       vo.Replacements,
-			}
-		}
-	}
-	return &GitHubReleasePackageInfo{
-		Name:               pkgInfo.Name,
-		RepoOwner:          pkgInfo.RepoOwner,
-		RepoName:           pkgInfo.RepoName,
-		Asset:              pkgInfo.Asset,
-		Format:             pkgInfo.Format,
-		FormatOverrides:    pkgInfo.FormatOverrides,
-		Files:              pkgInfo.Files,
-		Link:               pkgInfo.Link,
-		Description:        pkgInfo.Description,
-		Replacements:       pkgInfo.Replacements,
-		VersionConstraints: pkgInfo.VersionConstraints,
-		VersionOverrides:   versionOverrides,
-	}
-}
-
-func (pkgInfo *MergedPackageInfo) getGitHubContent() PackageInfo {
-	var versionOverrides []*GitHubContentVersionOverride
-	if pkgInfo.VersionOverrides != nil {
-		versionOverrides = make([]*GitHubContentVersionOverride, len(pkgInfo.VersionOverrides))
-		for i, vo := range pkgInfo.VersionOverrides {
-			versionOverrides[i] = &GitHubContentVersionOverride{
-				VersionConstraints: vo.VersionConstraints,
-				Files:              vo.Files,
-				Format:             vo.Format,
-				FormatOverrides:    vo.FormatOverrides,
-				Replacements:       vo.Replacements,
-				Path:               vo.Path,
-			}
-		}
-	}
-	return &GitHubContentPackageInfo{
-		Name:               pkgInfo.Name,
-		RepoOwner:          pkgInfo.RepoOwner,
-		RepoName:           pkgInfo.RepoName,
-		Format:             pkgInfo.Format,
-		FormatOverrides:    pkgInfo.FormatOverrides,
-		Files:              pkgInfo.Files,
-		Link:               pkgInfo.Link,
-		Description:        pkgInfo.Description,
-		Replacements:       pkgInfo.Replacements,
-		VersionConstraints: pkgInfo.VersionConstraints,
-		VersionOverrides:   versionOverrides,
-		Path:               pkgInfo.Path,
-	}
-}
-
-func (pkgInfo *MergedPackageInfo) getGitHubArchive() PackageInfo {
-	var versionOverrides []*GitHubArchiveVersionOverride
-	if pkgInfo.VersionOverrides != nil {
-		versionOverrides = make([]*GitHubArchiveVersionOverride, len(pkgInfo.VersionOverrides))
-		for i, vo := range pkgInfo.VersionOverrides {
-			versionOverrides[i] = &GitHubArchiveVersionOverride{
-				VersionConstraints: vo.VersionConstraints,
-				Files:              vo.Files,
-			}
-		}
-	}
-	return &GitHubArchivePackageInfo{
-		Name:               pkgInfo.Name,
-		RepoOwner:          pkgInfo.RepoOwner,
-		RepoName:           pkgInfo.RepoName,
-		Files:              pkgInfo.Files,
-		Link:               pkgInfo.Link,
-		Description:        pkgInfo.Description,
-		VersionConstraints: pkgInfo.VersionConstraints,
-		VersionOverrides:   versionOverrides,
-	}
-}
-
-func (pkgInfo *MergedPackageInfo) getHTTP() PackageInfo {
-	var versionOverrides []*HTTPVersionOverride
-	if pkgInfo.VersionOverrides != nil {
-		versionOverrides = make([]*HTTPVersionOverride, len(pkgInfo.VersionOverrides))
-		for i, vo := range pkgInfo.VersionOverrides {
-			versionOverrides[i] = &HTTPVersionOverride{
-				VersionConstraints: vo.VersionConstraints,
-				URL:                vo.URL,
-				Files:              vo.Files,
-				Format:             vo.Format,
-				FormatOverrides:    vo.FormatOverrides,
-				Replacements:       vo.Replacements,
-			}
-		}
-	}
-	return &HTTPPackageInfo{
-		Name:               pkgInfo.Name,
-		Format:             pkgInfo.Format,
-		FormatOverrides:    pkgInfo.FormatOverrides,
-		URL:                pkgInfo.URL,
-		Files:              pkgInfo.Files,
-		Link:               pkgInfo.Link,
-		Description:        pkgInfo.Description,
-		Replacements:       pkgInfo.Replacements,
-		VersionConstraints: pkgInfo.VersionConstraints,
-		VersionOverrides:   versionOverrides,
-	}
-}
-
-func (pkgInfo *MergedPackageInfo) GetPackageInfo() (PackageInfo, error) {
-	switch pkgInfo.Type {
-	case pkgInfoTypeGitHubRelease:
-		return pkgInfo.getGitHubRelease(), nil
-	case pkgInfoTypeGitHubContent:
-		return pkgInfo.getGitHubContent(), nil
-	case pkgInfoTypeGitHubArchive:
-		return pkgInfo.getGitHubArchive(), nil
-	case pkgInfoTypeHTTP:
-		return pkgInfo.getHTTP(), nil
-	default:
-		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
-			"package_name": pkgInfo.Name,
-			"package_type": pkgInfo.Type,
-		})
-	}
-}
-
 type File struct {
 	Name string `validate:"required"`
 	Src  *Template
 }
 
-func (file *File) RenderSrc(pkg *Package, pkgInfo PackageInfo) (string, error) {
+func (file *File) RenderSrc(pkg *Package, pkgInfo *MergedPackageInfo) (string, error) {
 	return file.Src.Execute(map[string]interface{}{
 		"Version":  pkg.Version,
 		"GOOS":     runtime.GOOS,

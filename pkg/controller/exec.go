@@ -88,7 +88,7 @@ func (ctrl *Controller) findAndExecExtCommand(ctx context.Context, exeName strin
 	return ctrl.execCommand(ctx, exePath, args)
 }
 
-func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo, pkg *Package, file *File, args []string) error {
+func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo *MergedPackageInfo, pkg *Package, file *File, args []string) error {
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return fmt.Errorf("get file_src: %w", err)
@@ -101,7 +101,7 @@ func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo PackageInfo,
 	return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
 }
 
-func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (PackageInfo, *File) {
+func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*MergedPackageInfo, *File) {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
@@ -138,7 +138,7 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 	return nil, nil
 }
 
-func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, PackageInfo, *File, error) {
+func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, *MergedPackageInfo, *File, error) {
 	cfg := &Config{}
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return nil, nil, nil, err
@@ -159,7 +159,7 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	return nil, nil, nil, nil
 }
 
-func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo PackageInfo, src string, args []string) error {
+func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo, src string, args []string) error {
 	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
 	if err != nil {
 		return fmt.Errorf("get pkg install path: %w", err)
