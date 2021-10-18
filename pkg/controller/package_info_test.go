@@ -321,3 +321,79 @@ func TestMergedPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	rootDir := "/tmp/aqua"
+	data := []struct {
+		title   string
+		exp     string
+		pkgInfo *controller.MergedPackageInfo
+		pkg     *controller.Package
+	}{
+		{
+			title: "github_archive",
+			exp:   "/tmp/aqua/pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:      "github_archive",
+				RepoOwner: "tfutils",
+				RepoName:  "tfenv",
+			},
+			pkg: &controller.Package{
+				Version: "v2.2.2",
+			},
+		},
+		{
+			title: "github_content",
+			exp:   "/tmp/aqua/pkgs/github_content/github.com/suzuki-shunsuke/aqua-installer/v0.2.0/aqua-installer",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:      "github_content",
+				Path:      controller.NewTemplate("aqua-installer"),
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "aqua-installer",
+			},
+			pkg: &controller.Package{
+				Version: "v0.2.0",
+			},
+		},
+		{
+			title: "github_release",
+			exp:   "/tmp/aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua/v0.7.7/aqua.tar.gz",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "aqua",
+				Asset:     controller.NewTemplate("aqua.{{.Format}}"),
+				Format:    "tar.gz",
+			},
+			pkg: &controller.Package{
+				Version: "v0.7.7",
+			},
+		},
+		{
+			title: "http",
+			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:   "http",
+				URL:    controller.NewTemplate("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+				Format: "zip",
+			},
+			pkg: &controller.Package{
+				Version: "v1.0.0",
+			},
+		},
+	}
+	for _, d := range data {
+		d := d
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			pkgPath, err := d.pkgInfo.GetPkgPath(rootDir, d.pkg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if pkgPath != d.exp {
+				t.Fatalf("wanted %v, got %v", d.exp, pkgPath)
+			}
+		})
+	}
+}
