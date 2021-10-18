@@ -255,3 +255,69 @@ func TestMergedPackageInfo_GetFiles(t *testing.T) {
 		})
 	}
 }
+
+func TestMergedPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		exp     string
+		pkgInfo *controller.MergedPackageInfo
+		pkg     *controller.Package
+	}{
+		{
+			title: "github_archive",
+			exp:   "",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type: "github_archive",
+			},
+		},
+		{
+			title: "github_content",
+			exp:   "foo",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type: "github_content",
+				Path: controller.NewTemplate("foo"),
+			},
+			pkg: &controller.Package{
+				Version: "v1.0.0",
+			},
+		},
+		{
+			title: "github_release",
+			exp:   "foo-1.0.0.zip",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:   "github_release",
+				Asset:  controller.NewTemplate("foo-{{trimV .Version}}.{{.Format}}"),
+				Format: "zip",
+			},
+			pkg: &controller.Package{
+				Version: "v1.0.0",
+			},
+		},
+		{
+			title: "http",
+			exp:   "foo-1.0.0.zip",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:   "http",
+				URL:    controller.NewTemplate("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+				Format: "zip",
+			},
+			pkg: &controller.Package{
+				Version: "v1.0.0",
+			},
+		},
+	}
+	for _, d := range data {
+		d := d
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			asset, err := d.pkgInfo.RenderAsset(d.pkg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if asset != d.exp {
+				t.Fatalf("wanted %v, got %v", d.exp, asset)
+			}
+		})
+	}
+}
