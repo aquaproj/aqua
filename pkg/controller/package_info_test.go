@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/suzuki-shunsuke/aqua/pkg/controller"
 )
 
@@ -393,6 +394,152 @@ func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			}
 			if pkgPath != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, pkgPath)
+			}
+		})
+	}
+}
+
+func TestMergedPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		exp     string
+		pkgInfo *controller.MergedPackageInfo
+		pkg     *controller.Package
+		file    *controller.File
+	}{
+		{
+			title: "unarchived",
+			exp:   "foo",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type: "github_content",
+				Path: controller.NewTemplate("foo"),
+			},
+			pkg: &controller.Package{
+				Version: "v1.0.0",
+			},
+		},
+		{
+			title: "github_release",
+			exp:   "aqua",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "aqua",
+				Asset:     controller.NewTemplate("aqua.{{.Format}}"),
+				Format:    "tar.gz",
+			},
+			pkg: &controller.Package{
+				Version: "v0.7.7",
+			},
+			file: &controller.File{
+				Name: "aqua",
+			},
+		},
+		{
+			title: "github_release",
+			exp:   "bin/aqua",
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "aqua",
+				Asset:     controller.NewTemplate("aqua.{{.Format}}"),
+				Format:    "tar.gz",
+			},
+			pkg: &controller.Package{
+				Version: "v0.7.7",
+			},
+			file: &controller.File{
+				Name: "aqua",
+				Src:  controller.NewTemplate("bin/aqua"),
+			},
+		},
+	}
+	for _, d := range data {
+		d := d
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			asset, err := d.pkgInfo.GetFileSrc(d.pkg, d.file)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if asset != d.exp {
+				t.Fatalf("wanted %v, got %v", d.exp, asset)
+			}
+		})
+	}
+}
+
+func TestMergedPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		version string
+		pkgInfo *controller.MergedPackageInfo
+		exp     *controller.MergedPackageInfo
+	}{
+		{
+			title: "no version constraint",
+			exp: &controller.MergedPackageInfo{
+				Type: "github_content",
+				Path: controller.NewTemplate("foo"),
+			},
+			pkgInfo: &controller.MergedPackageInfo{
+				Type: "github_content",
+				Path: controller.NewTemplate("foo"),
+			},
+		},
+		{
+			title: "version constraint",
+			exp: &controller.MergedPackageInfo{
+				Type:               "github_content",
+				Path:               controller.NewTemplate("foo"),
+				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
+			},
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:               "github_content",
+				Path:               controller.NewTemplate("foo"),
+				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
+			},
+			version: "v0.5.0",
+		},
+		{
+			title: "child version constraint",
+			exp: &controller.MergedPackageInfo{
+				Type:               "github_content",
+				Path:               controller.NewTemplate("bar"),
+				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
+				VersionOverrides: []*controller.MergedPackageInfo{
+					{
+						VersionConstraints: controller.NewVersionConstraints(`semver("< 0.4.0")`),
+						Path:               controller.NewTemplate("bar"),
+					},
+				},
+			},
+			pkgInfo: &controller.MergedPackageInfo{
+				Type:               "github_content",
+				Path:               controller.NewTemplate("foo"),
+				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
+				VersionOverrides: []*controller.MergedPackageInfo{
+					{
+						VersionConstraints: controller.NewVersionConstraints(`semver("< 0.4.0")`),
+						Path:               controller.NewTemplate("bar"),
+					},
+				},
+			},
+			version: "v0.3.0",
+		},
+	}
+	for _, d := range data {
+		d := d
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			pkgInfo, err := d.pkgInfo.SetVersion(d.version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(pkgInfo, d.exp, cmpopts.IgnoreUnexported(controller.VersionConstraints{}), cmp.AllowUnexported(controller.Template{})); diff != "" {
+				t.Fatal(diff)
 			}
 		})
 	}
