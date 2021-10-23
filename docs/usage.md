@@ -11,12 +11,13 @@ USAGE:
    aqua [global options] command [command options] [arguments...]
 
 VERSION:
-   0.7.3 (1cbadea41fa6dbd6e71d82ddc9aec9fac43908f1)
+   0.7.8 (91ac6d29f77ecadc960e04c1b3b6cff704141fff)
 
 COMMANDS:
    install, i   Install tools
    exec         Execute tool
    list         List packages in Registries
+   which        Output the file path of the given command
    generate, g  Search packages in registries and output the configuration interactively
    version      Show version
    help, h      Shows a list of commands or help for one command
