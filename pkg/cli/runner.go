@@ -79,6 +79,11 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error { //nolint:
 				Action: runner.listAction,
 			},
 			{
+				Name:   "which",
+				Usage:  "Output the file path of the given command",
+				Action: runner.whichAction,
+			},
+			{
 				Name:    "generate",
 				Aliases: []string{"g"},
 				Usage:   "Search packages in registries and output the configuration interactively",

@@ -28,6 +28,8 @@ jobs:
     - run: aqua i -l -a
     - run: cmdx -v
     - run: aqua i --test
+    - run: aqua which golangci-lint
+    - run: aqua which go
     - run: golangci-lint version
     - run: kind version
     - run: restic version
