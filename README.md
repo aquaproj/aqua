@@ -115,6 +115,7 @@ If the Registries don't support the tool, you can send the pull request to the r
 
 ## Install
 
+* [Homebrew](https://brew.sh/): `$ brew install suzuki-shunsuke/aqua/aqua`
 * [GitHub Releases](https://github.com/suzuki-shunsuke/aqua/releases)
 * [aqua-installer](https://github.com/suzuki-shunsuke/aqua-installer): Shell Script and GitHub Actions
 * [int128/aqua-action](https://github.com/int128/aqua-action): GitHub Actions
