@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func getGlobalConfigFilePaths() []string {
@@ -26,79 +24,17 @@ func getGlobalConfigFilePaths() []string {
 	return paths
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, args []string) error { //nolint:cyclop
-	if len(args) == 0 {
-		return errCommandIsRequired
-	}
-
-	exeName := filepath.Base(args[0])
-	fields := logrus.Fields{
-		"exe_name": exeName,
-	}
-
-	wd, err := os.Getwd()
+func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, args []string) error {
+	which, err := ctrl.which(ctx, param, exeName)
 	if err != nil {
-		return fmt.Errorf("get the current directory: %w", logerr.WithFields(err, fields))
+		return err
 	}
-
-	if cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath); cfgFilePath != "" {
-		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
-		if err != nil {
+	if which.Package != nil {
+		if err := ctrl.installPackage(ctx, which.PkgInfo, which.Package, false); err != nil {
 			return err
 		}
-		if pkg != nil {
-			return ctrl.installAndExec(ctx, pkgInfo, pkg, file, args)
-		}
 	}
-
-	for _, cfgFilePath := range getGlobalConfigFilePaths() {
-		if _, err := os.Stat(cfgFilePath); err == nil {
-			pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
-			if err != nil {
-				return err
-			}
-			if pkg != nil {
-				return ctrl.installAndExec(ctx, pkgInfo, pkg, file, args)
-			}
-		}
-	}
-
-	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
-	if _, err := os.Stat(cfgFilePath); err != nil {
-		return ctrl.findAndExecExtCommand(ctx, exeName, args[1:])
-	}
-
-	pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
-	if err != nil {
-		return err
-	}
-	if pkg == nil {
-		return ctrl.findAndExecExtCommand(ctx, exeName, args[1:])
-	}
-	return ctrl.installAndExec(ctx, pkgInfo, pkg, file, args)
-}
-
-func (ctrl *Controller) findAndExecExtCommand(ctx context.Context, exeName string, args []string) error {
-	exePath := lookPath(exeName)
-	if exePath == "" {
-		return logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
-			"exe_name": exeName,
-		})
-	}
-	return ctrl.execCommand(ctx, exePath, args)
-}
-
-func (ctrl *Controller) installAndExec(ctx context.Context, pkgInfo *MergedPackageInfo, pkg *Package, file *File, args []string) error {
-	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
-	if err != nil {
-		return fmt.Errorf("get file_src: %w", err)
-	}
-
-	if err := ctrl.installPackage(ctx, pkgInfo, pkg, false); err != nil {
-		return err
-	}
-
-	return ctrl.exec(ctx, pkg, pkgInfo, fileSrc, args[1:])
+	return ctrl.execCommand(ctx, which.ExePath, args)
 }
 
 func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*MergedPackageInfo, *File) {
@@ -157,20 +93,6 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 		}
 	}
 	return nil, nil, nil, nil
-}
-
-func (ctrl *Controller) exec(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo, src string, args []string) error {
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
-	if err != nil {
-		return fmt.Errorf("get pkg install path: %w", err)
-	}
-	exePath := filepath.Join(pkgPath, src)
-
-	if _, err := os.Stat(exePath); err != nil {
-		return fmt.Errorf("file.src is invalid. file isn't found %s: %w", exePath, err)
-	}
-
-	return ctrl.execCommand(ctx, exePath, args)
 }
 
 func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) error {

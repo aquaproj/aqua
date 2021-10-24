@@ -1,11 +1,22 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/suzuki-shunsuke/aqua/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
+
+var errCommandIsRequired = errors.New("command is required")
+
+func parseExecArgs(args []string) (string, []string, error) {
+	if len(args) == 0 {
+		return "", nil, errCommandIsRequired
+	}
+	return filepath.Base(args[0]), args[1:], nil
+}
 
 func (runner *Runner) execAction(c *cli.Context) error {
 	param := &controller.Param{}
@@ -17,6 +28,10 @@ func (runner *Runner) execAction(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize a controller: %w", err)
 	}
+	exeName, args, err := parseExecArgs(c.Args().Slice())
+	if err != nil {
+		return err
+	}
 
-	return ctrl.Exec(c.Context, param, c.Args().Slice()) //nolint:wrapcheck
+	return ctrl.Exec(c.Context, param, exeName, args) //nolint:wrapcheck
 }

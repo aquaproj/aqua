@@ -18,5 +18,10 @@ func (runner *Runner) whichAction(c *cli.Context) error {
 		return fmt.Errorf("initialize a controller: %w", err)
 	}
 
-	return ctrl.Which(c.Context, param, c.Args().Slice()) //nolint:wrapcheck
+	exeName, _, err := parseExecArgs(c.Args().Slice())
+	if err != nil {
+		return err
+	}
+
+	return ctrl.Which(c.Context, param, exeName) //nolint:wrapcheck
 }
