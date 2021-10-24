@@ -16,3 +16,37 @@ builds:
   - arm64
 release:
   prerelease: true
+brews:
+-
+  # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
+  # same kind. We will probably unify this in the next major version like it is done with scoop.
+
+  # GitHub/GitLab repository to push the formula to
+  tap:
+    owner: suzuki-shunsuke
+    name: homebrew-aqua
+    token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+  # The project name and current git tag are used in the format string.
+  commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+  # Your app's homepage.
+  # Default is empty.
+  homepage: https://github.com/suzuki-shunsuke/aqua
+
+  # Template of your app's description.
+  # Default is empty.
+  description: |
+    Declarative CLI Version manager. Support Lazy Install and Sharable configuration mechanism named Registry. Switch versions seamlessly
+  license: MIT
+
+  # Setting this will prevent goreleaser to actually try to commit the updated
+  # formula - instead, the formula file will be stored on the dist folder only,
+  # leaving the responsibility of publishing it to the user.
+  # If set to auto, the release will not be uploaded to the homebrew tap
+  # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
+  # Default is false.
+  skip_upload: auto
+
+  # So you can `brew test` your formula.
+  # Default is empty.
+  test: |
+    system "#{bin}/aqua --version"
