@@ -3,4 +3,4 @@ registries:
   ref: v0.10.1 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
-- name: cli/cli@v2.1.0
+- name: cli/cli@v2.2.0
