@@ -40,7 +40,7 @@ inline_registry: # inline registry
 packages:
 - name: cmdx # inline registry
   registry: inline
-  version: v1.6.0 # renovate: depName=suzuki-shunsuke/cmdx
+  version: v1.6.1 # renovate: depName=suzuki-shunsuke/cmdx
 
 - name: golangci-lint # local registry
   registry: local
