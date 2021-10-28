@@ -26,11 +26,17 @@ jobs:
 
     - run: aqua list
     - run: aqua i -l -a
+      working-directory: tests
     - run: cmdx -v
+      working-directory: tests
     - run: aqua i --test
+      working-directory: tests
     - run: aqua which golangci-lint
+      working-directory: tests
     - run: aqua which go
     - run: golangci-lint version
+    - run: kind version
+      working-directory: tests
     - run: kind version
     - run: restic version
     - run: migrate -version

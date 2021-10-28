@@ -1,0 +1,8 @@
+registries:
+- type: standard
+  ref: v0.10.3 # renovate: depName=suzuki-shunsuke/aqua-registry
+
+packages:
+- name: kubernetes-sigs/kind # http package, raw format
+  registry: standard # standard registry
+  version: v0.11.0 # renovate: depName=kubernetes-sigs/kind
