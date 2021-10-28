@@ -32,6 +32,13 @@ type GitHubRepositoryService interface {
 	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
 }
 
+func getGitHubToken() string {
+	if token := os.Getenv("AQUA_GITHUB_TOKEN"); token != "" {
+		return token
+	}
+	return os.Getenv("GITHUB_TOKEN")
+}
+
 func New(ctx context.Context, param *Param) (*Controller, error) {
 	if param.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(param.LogLevel)
@@ -60,7 +67,7 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 	if ctrl.RootDir == "" {
 		ctrl.RootDir = filepath.Join(os.Getenv("HOME"), ".aqua")
 	}
-	if ghToken := os.Getenv("GITHUB_TOKEN"); ghToken != "" {
+	if ghToken := getGitHubToken(); ghToken != "" {
 		ctrl.GitHubRepositoryService = github.NewClient(
 			oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 				&oauth2.Token{AccessToken: ghToken},

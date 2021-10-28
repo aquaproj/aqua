@@ -19,7 +19,7 @@ aqua searches the following configuration files.
 1. `--config (-c)` option (environment variable `AQUA_CONFIG`
 1. `\.?aqua\.ya?ml` from the current directory to the root directory. If configuration files are found in the multiple directories, aqua read all of them
 1. global configuration: environment variable `AQUA_GLOBAL_CONFIG`
-1. global configuration: `$AQUA_ROOT/global/\.?aqua\.ya?ml`
+1. global configuration: `$AQUA_ROOT_DIR/global/\.?aqua\.ya?ml`
 
 `aqua exec` and `aqua install -a` reads global configuration files, but otherwise aqua doesn't read global configuration files.
 
@@ -27,9 +27,10 @@ aqua searches the following configuration files.
 
 * `AQUA_LOG_LEVEL`: (default: `info`) Log level
 * `AQUA_CONFIG`: configuration file path
+* `AQUA_GLOBAL_CONFIG`: global configuration file paths separated by semicolon `:`
 * `AQUA_ROOT_DIR`: (default: `$HOME/.aqua`)
 * `AQUA_MAX_PARALLELISM`: (default: `5`) The maximum number of packages which are installed in parallel at the same time
-* `GITHUB_TOKEN`: GitHub Access Token. This is required to install `github_release` packages
+* `AQUA_GITHUB_TOKEN`, `GITHUB_TOKEN`: GitHub Access Token. This is required to install `github_release` packages
 
 ## Configuration attributes
 
