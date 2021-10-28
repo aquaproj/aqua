@@ -19,9 +19,13 @@ inline_registry: # inline registry
     type: github_release
     repo_owner: suzuki-shunsuke
     repo_name: cmdx
-    asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+    asset: 'cmdx_{{.OS}}_{{.Arch}}.tar.gz'
     files:
     - name: cmdx
+    version_constraint: 'semver(">= 1.6.1")'
+    version_overrides:
+    - version_constraint: 'semver("< 1.6.1")'
+      asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
 
   - type: github_content # github_content package
     repo_owner: suzuki-shunsuke
@@ -40,7 +44,7 @@ inline_registry: # inline registry
 packages:
 - name: cmdx # inline registry
   registry: inline
-  version: v1.6.0 # renovate: depName=suzuki-shunsuke/cmdx
+  version: v1.6.1 # renovate: depName=suzuki-shunsuke/cmdx
 
 - name: golangci-lint # local registry
   registry: local
