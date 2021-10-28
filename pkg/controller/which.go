@@ -36,7 +36,7 @@ func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string)
 		return nil, fmt.Errorf("get the current directory: %w", logerr.WithFields(err, fields))
 	}
 
-	if cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath); cfgFilePath != "" {
+	for _, cfgFilePath := range ctrl.getConfigFilePaths(wd, param.ConfigFilePath) {
 		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err

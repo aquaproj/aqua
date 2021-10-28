@@ -139,6 +139,13 @@ func (ctrl *Controller) getConfigFilePath(wd, configFilePath string) string {
 	return ctrl.ConfigFinder.Find(wd)
 }
 
+func (ctrl *Controller) getConfigFilePaths(wd, configFilePath string) []string {
+	if configFilePath == "" {
+		return ctrl.ConfigFinder.Finds(wd)
+	}
+	return append([]string{configFilePath}, ctrl.ConfigFinder.Finds(wd)...)
+}
+
 func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 	file, err := ctrl.ConfigReader.Read(configFilePath)
 	if err != nil {
@@ -153,6 +160,7 @@ func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 
 type ConfigFinder interface {
 	Find(wd string) string
+	Finds(wd string) []string
 	FindGlobal(rootDir string) string
 }
 
@@ -160,6 +168,10 @@ type configFinder struct{}
 
 func (finder *configFinder) Find(wd string) string {
 	return findconfig.Find(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+}
+
+func (finder *configFinder) Finds(wd string) []string {
+	return findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
 }
 
 func (finder *configFinder) FindGlobal(rootDir string) string {

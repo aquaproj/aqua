@@ -14,9 +14,14 @@ packages:
 
 ## Configuration File Path
 
-The configuration file path can be specified with the `--config (-c)` option.
-If the confgiuration file path isn't specified, the file named `[.]aqua.y[a]ml` would be searched from the current directory to the root directory.
-Furthermore, in case of `aqua exec` command the global configuration `~/.aqua/global/[.]aqua.y[a]ml` is also read.
+aqua searches the following configuration files.
+
+1. `--config (-c)` option (environment variable `AQUA_CONFIG`
+1. `\.?aqua\.ya?ml` from the current directory to the root directory. If configuration files are found in the multiple directories, aqua read all of them
+1. global configuration: environment variable `AQUA_GLOBAL_CONFIG`
+1. global configuration: `$AQUA_ROOT/global/\.?aqua\.ya?ml`
+
+`aqua exec` and `aqua install -a` reads global configuration files, but otherwise aqua doesn't read global configuration files.
 
 ## Environment variables
 
