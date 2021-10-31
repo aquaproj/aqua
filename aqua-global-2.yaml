@@ -1,6 +1,6 @@
 registries:
 - type: standard
-  ref: v0.10.3 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.10.4 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
 - name: cli/cli@v2.2.0
