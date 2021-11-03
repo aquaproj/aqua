@@ -151,7 +151,7 @@ the first style is better because you don't have to write code comments for Reno
 ```yaml
 - name: golangci/golangci-lint
   registry: standard
-  version: v1.42.1 # renovate: depName=golangci/golangci-lint
+  version: v1.43.0 # renovate: depName=golangci/golangci-lint
 ```
 
 If the package name in the code comment is wrong, the package version is changed wrongly.
