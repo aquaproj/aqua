@@ -14,3 +14,5 @@ linters:
   - golint
   - tagliatelle
   - exhaustivestruct # https://github.com/mbilski/exhaustivestruct
+  - ireturn
+  - varnamelen

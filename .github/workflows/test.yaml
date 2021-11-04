@@ -15,10 +15,23 @@ jobs:
       with:
         go-version: '1.17'
 
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v2
+    - name: cache ~/.aqua
+      uses: actions/cache@v2
       with:
-        version: v1.42
+        path: |
+          ~/.aqua/pkgs
+          ~/.aqua/registries
+        key: v1-${{ runner.os }}-${{ hashFiles('registry.yaml') }}-${{ hashFiles('aqua-all.yaml') }}
+        restore-keys: |
+          v1-${{ runner.os }}-${{ hashFiles('registry.yaml') }}-
+          v1-${{ runner.os }}-
+    - run: go build -o /usr/local/bin/aqua ./cmd/aqua
+    - run: echo "$HOME/.aqua/bin" >> $GITHUB_PATH
+    - run: aqua i
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: suzuki-shunsuke/github-action-golangci-lint@v0.1.1
 
     - run: go test -v ./... -race -covermode=atomic
 
