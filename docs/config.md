@@ -121,7 +121,7 @@ e.g.
 ```yaml
 packages:
 - name: helm/helm
-  version: v3.7.0 # renovate: depName=helm/helm
+  version: v3.7.1 # renovate: depName=helm/helm
 - name: golangci/golangci-lint@v1.42.1
   registry: standard
 ```
@@ -161,7 +161,7 @@ If the package name in the code comment is wrong, the package version is changed
 - name: golangci/golangci-lint
   registry: standard
   # depName is wrong!
-  version: v1.42.1 # renovate: depName=helm/helm
+  version: v3.7.1 # renovate: depName=helm/helm
 ```
 
 On the other hand, you can prevent such a mis configuration by the first style.
