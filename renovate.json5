@@ -4,6 +4,9 @@
     "config:base",
     "github>suzuki-shunsuke/renovate-config:golang",
     "github>suzuki-shunsuke/aqua-renovate-config",
+    "github>suzuki-shunsuke/aqua-renovate-config:file(aqua-global.yaml)",
+    "github>suzuki-shunsuke/aqua-renovate-config:file(aqua-global-2.yaml)",
+    "github>suzuki-shunsuke/aqua-renovate-config:file(aqua/.*\\.ya?ml)",
   ],
   packageRules: [
     {
@@ -36,21 +39,6 @@
       matchStrings: [
         '"(?<currentValue>.*)", // renovate: depName=suzuki-shunsuke/aqua-proxy',
       ],
-    },
-    {
-      fileMatch: [
-        "aqua-global\\.yaml",
-        "aqua-global-2\\.yaml",
-      ],
-      matchStrings: [
-        " +(version|ref): (?<currentValue>[^'\"\\n]*) +# renovate: depName=(?<depName>[^\\n]+)",
-        " +(version|ref): \"(?<currentValue>[^'\"\\n]*)\" +# renovate: depName=(?<depName>[^\\n]+)",
-        " +(version|ref): '(?<currentValue>[^'\"\\n]*)' +# renovate: depName=(?<depName>[^\\n]+)",
-        " +name: (?<depName>[^'\"\\n]*)@(?<currentValue>[^'\"\\n]+)",
-        " +name: \"(?<depName>[^'\\n]*)@(?<currentValue>[^'\"\\n]+)\"",
-        " +name: '(?<depName>[^\"\\n]*)@(?<currentValue>[^'\"\\n]+)'"
-      ],
-      datasourceTemplate: "github-releases"
     },
   ],
 }
