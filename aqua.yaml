@@ -70,4 +70,4 @@ packages:
 - name: tfutils/tfenv@v2.2.2 # github_archive package
   registry: inline
 
-- name: reviewdog/reviewdog@v0.13.0
+- import: aqua/*.yaml

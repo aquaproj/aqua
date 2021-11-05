@@ -126,11 +126,12 @@ packages:
   registry: standard
 ```
 
-* `name`: (string, required) package name
+* `name`: (string, optional) package name. If `import` isn't set, this is required
   * format: `<package name>[@<package version>]`
 * `registry`: (string, optional) registry name
   * default value is `standard`
 * `version`: (string, optional) package version
+* `import`: (string, optional) glob pattern of package files. This is relative path from the configuration file. This is parsed with [filepath.Glob](https://pkg.go.dev/path/filepath#Glob). Please see [Split packages definition with `import`](#split-packages-definition-with-import) too
 
 The following two configuration is equivalent.
 
@@ -164,6 +165,48 @@ If the package name in the code comment is wrong, the package version is changed
 ```
 
 On the other hand, you can prevent such a mis configuration by the first style.
+
+### Split packages definition with `import`
+
+e.g.
+
+Directory structure
+
+```
+aqua.yaml
+aqua/
+  conftest.yaml
+```
+
+aqua.yaml
+
+```yaml
+registries:
+- type: standard # standard registry
+  ref: v0.10.5 # renovate: depName=suzuki-shunsuke/aqua-registry
+- import: aqua/*.yaml
+```
+
+aqua/conftest.yaml
+
+```yaml
+packages:
+- name: open-policy-agent/conftest@v0.28.2
+```
+
+`import` is useful for CI.
+You can execute test and lint only when the specific package is updated.
+
+ex. GitHub Actions' [`on.<push|pull_request>.paths`](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#onpushpull_requestpaths)
+
+```yaml
+name: conftest
+on:
+  pull_request:
+    paths:
+    - policy/**.rego
+    - aqua/conftest.yaml
+```
 
 ## `inline_registry`
 

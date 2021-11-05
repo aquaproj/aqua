@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -18,6 +19,7 @@ type Package struct {
 	Name     string `validate:"required"`
 	Registry string `validate:"required" yaml:",omitempty"`
 	Version  string `validate:"required" yaml:",omitempty"`
+	Import   string `yaml:",omitempty"`
 }
 
 func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -146,6 +148,31 @@ func (ctrl *Controller) getConfigFilePaths(wd, configFilePath string) []string {
 	return append([]string{configFilePath}, ctrl.ConfigFinder.Finds(wd)...)
 }
 
+func (ctrl *Controller) readImports(configFilePath string, cfg *Config) error {
+	pkgs := []*Package{}
+	for _, pkg := range cfg.Packages {
+		if pkg.Import == "" {
+			pkgs = append(pkgs, pkg)
+			continue
+		}
+		p := filepath.Join(filepath.Dir(configFilePath), pkg.Import)
+		filePaths, err := filepath.Glob(p)
+		if err != nil {
+			return fmt.Errorf("read files with glob pattern (%s): %w", p, err)
+		}
+		sort.Strings(filePaths)
+		for _, filePath := range filePaths {
+			subCfg := &Config{}
+			if err := ctrl.readConfig(filePath, subCfg); err != nil {
+				return err
+			}
+			pkgs = append(pkgs, subCfg.Packages...)
+		}
+	}
+	cfg.Packages = pkgs
+	return nil
+}
+
 func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 	file, err := ctrl.ConfigReader.Read(configFilePath)
 	if err != nil {
@@ -154,6 +181,9 @@ func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 	defer file.Close()
 	if err := yaml.NewDecoder(file).Decode(&cfg); err != nil {
 		return fmt.Errorf("parse a configuration file as YAML %s: %w", configFilePath, err)
+	}
+	if err := ctrl.readImports(configFilePath, cfg); err != nil {
+		return fmt.Errorf("read imports (%s): %w", configFilePath, err)
 	}
 	return nil
 }
