@@ -3,4 +3,4 @@ registries:
   ref: v0.10.5 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
-- name: x-motemen/ghq@v1.2.0
+- name: x-motemen/ghq@v1.2.1
