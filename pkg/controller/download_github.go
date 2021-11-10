@@ -20,6 +20,19 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 }
 
 func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+	// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
+	// As a result of test, it seems not to be limited.
+	// So at first aqua tries to download assets without GitHub API.
+	// And if it failed, aqua tries again with GitHub API.
+	// It avoids the rate limit of the access token.
+	b, err := downloader.downloadFromURL(ctx, "https://github.com/"+owner+"/"+repoName+"/releases/download/"+version+"/"+assetName, http.DefaultClient)
+	if err == nil {
+		return b, nil
+	}
+	if b != nil {
+		b.Close()
+	}
+
 	release, _, err := downloader.GitHubRepositoryService.GetReleaseByTag(ctx, owner, repoName, version)
 	if err != nil {
 		return nil, fmt.Errorf("get the GitHub Release by Tag: %w", err)
@@ -35,7 +48,7 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	if body != nil {
 		return body, nil
 	}
-	b, err := downloader.downloadFromURL(ctx, redirectURL, http.DefaultClient)
+	b, err = downloader.downloadFromURL(ctx, redirectURL, http.DefaultClient)
 	if err != nil {
 		if b != nil {
 			b.Close()
