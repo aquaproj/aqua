@@ -62,9 +62,6 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
-	if err := os.Symlink(a, filepath.Join(ctrl.RootDir, "bin", proxyName)); err != nil {
-		return fmt.Errorf("create a symbolic link: %w", err)
-	}
 
-	return nil
+	return ctrl.createLink(filepath.Join(ctrl.RootDir, "bin", proxyName), a)
 }

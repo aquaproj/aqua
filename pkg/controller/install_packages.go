@@ -31,7 +31,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			return fmt.Errorf("evaluate version constraints: %w", err)
 		}
 		for _, file := range pkgInfo.GetFiles() {
-			if err := ctrl.createLink(binDir, file); err != nil {
+			if err := ctrl.createLink(filepath.Join(binDir, file.Name), proxyName); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue
@@ -202,9 +202,7 @@ func allowOwnerExec(mode os.FileMode) os.FileMode {
 	return mode | OwnerExecutable
 }
 
-func (ctrl *Controller) createLink(binDir string, file *File) error {
-	linkPath := filepath.Join(binDir, file.Name)
-	linkDest := proxyName
+func (ctrl *Controller) createLink(linkPath, linkDest string) error {
 	if fileInfo, err := os.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
