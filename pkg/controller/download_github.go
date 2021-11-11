@@ -74,6 +74,15 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 }
 
 func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+	// https://github.com/suzuki-shunsuke/aqua/issues/391
+	body, err := downloadFromURL(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName, http.DefaultClient)
+	if err == nil {
+		return body, nil
+	}
+	if body != nil {
+		body.Close()
+	}
+
 	file, _, _, err := downloader.GitHubRepositoryService.GetContents(ctx, owner, repoName, assetName, &github.RepositoryContentGetOptions{
 		Ref: version,
 	})
