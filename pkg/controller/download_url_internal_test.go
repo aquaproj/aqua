@@ -9,7 +9,7 @@ import (
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
-func Test_pkgDownloader_downloadFromURL(t *testing.T) { //nolint:funlen
+func Test_downloadFromURL(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title      string
@@ -48,13 +48,12 @@ func Test_pkgDownloader_downloadFromURL(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	downloader := &pkgDownloader{}
 	ctx := context.Background()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			readCloser, err := downloader.downloadFromURL(ctx, d.url, d.httpClient)
+			readCloser, err := downloadFromURL(ctx, d.url, d.httpClient)
 			if readCloser != nil {
 				defer readCloser.Close()
 			}
