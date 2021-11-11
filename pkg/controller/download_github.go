@@ -48,6 +48,10 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 		"asset_name":    assetName,
 	}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
 
+	if downloader.GitHubRepositoryService == nil {
+		return nil, errGitHubTokenIsRequired
+	}
+
 	release, _, err := downloader.GitHubRepositoryService.GetReleaseByTag(ctx, owner, repoName, version)
 	if err != nil {
 		return nil, fmt.Errorf("get the GitHub Release by Tag: %w", err)
@@ -81,6 +85,10 @@ func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owne
 	}
 	if body != nil {
 		body.Close()
+	}
+
+	if downloader.GitHubRepositoryService == nil {
+		return nil, errGitHubTokenIsRequired
 	}
 
 	file, _, _, err := downloader.GitHubRepositoryService.GetContents(ctx, owner, repoName, assetName, &github.RepositoryContentGetOptions{
