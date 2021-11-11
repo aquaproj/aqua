@@ -130,9 +130,9 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 			registryContent, err := ctrl.installRegistry(ctx, registry, cfgFilePath)
 			if err != nil {
 				<-maxInstallChan
-				ctrl.logE().WithFields(logrus.Fields{
+				logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
 					"registry_name": registry.GetName(),
-				}).WithError(err).Error("install the registry")
+				}).Error("install the registry")
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
@@ -173,7 +173,7 @@ func (ctrl *Controller) getGitHubContentFile(ctx context.Context, repoOwner, rep
 		}
 	}
 
-	ctrl.logE().WithError(err).WithFields(logrus.Fields{
+	logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
 		"repo_owner": repoOwner,
 		"repo_name":  repoName,
 		"ref":        ref,
