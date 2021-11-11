@@ -121,11 +121,9 @@ If the Registries don't support the tool, you can send the pull request to the r
 * [int128/aqua-action](https://github.com/int128/aqua-action): GitHub Actions
 * [circleci-orb-aqua](https://circleci.com/developer/orbs/orb/suzuki-shunsuke/aqua): CircleCI Orb
 
-aqua requires the environment variable `AQUA_GITHUB_TOKEN` or `GITHUB_TOKEN`, which is GitHub Access Token.
 Add `~/.aqua/bin` to the environmenet variable `PATH`.
 
 ```console
-$ export GITHUB_TOKEN=xxx
 $ export PATH=$HOME/.aqua/bin:$PATH
 ```
 
