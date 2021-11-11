@@ -147,7 +147,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgName, repoOwner, repoName string) {
 	release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
 	if err != nil {
-		ctrl.logE().WithError(err).WithFields(logrus.Fields{
+		logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
 			"repo_owner": repoOwner,
 			"repo_name":  repoName,
 		}).Warn("get the latest release")

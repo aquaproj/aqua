@@ -28,7 +28,7 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Cont
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo) (io.ReadCloser, error) {
 	url := fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)
-	return downloader.downloadFromURL(ctx, url, http.DefaultClient)
+	return downloadFromURL(ctx, url, http.DefaultClient)
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo, assetName string) (io.ReadCloser, error) {
@@ -43,7 +43,7 @@ func (downloader *pkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg 
 	if err != nil {
 		return nil, err
 	}
-	return downloader.downloadFromURL(ctx, uS, http.DefaultClient)
+	return downloadFromURL(ctx, uS, http.DefaultClient)
 }
 
 func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo, assetName string) (io.ReadCloser, error) {

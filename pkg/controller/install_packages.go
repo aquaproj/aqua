@@ -22,7 +22,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 		})
 		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 		if err != nil {
-			logE.WithError(err).Error("install the package")
+			logerr.WithError(logE, err).Error("install the package")
 			failed = true
 			continue
 		}
@@ -32,7 +32,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 		}
 		for _, file := range pkgInfo.GetFiles() {
 			if err := ctrl.createLink(binDir, file); err != nil {
-				logE.WithError(err).Error("create the symbolic link")
+				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue
 			}
@@ -72,19 +72,19 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			})
 			pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 			if err != nil {
-				logE.WithError(err).Error("install the package")
+				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
 			}
 			pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
 			if err != nil {
-				logE.WithError(err).Error("install the package")
+				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
 			}
 
 			if err := ctrl.installPackage(ctx, pkgInfo, pkg, isTest); err != nil {
-				logE.WithError(err).Error("install the package")
+				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
 			}
@@ -150,7 +150,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *MergedPacka
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
-			logE.WithError(err).Warn("check file_src is correct")
+			logerr.WithError(logE, err).Warn("check file_src is correct")
 		}
 	}
 

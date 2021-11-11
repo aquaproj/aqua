@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func getGlobalConfigFilePaths() []string {
@@ -50,7 +51,7 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 
 	m, err := registry.PackageInfos.ToMap()
 	if err != nil {
-		logE.WithError(err).Warnf("registry is invalid")
+		logerr.WithError(logE, err).Warnf("registry is invalid")
 		return nil, nil
 	}
 
@@ -106,7 +107,7 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 	logE.Debug("execute the command")
 	if err := runner.Run(ctx, cmd); err != nil {
 		exitCode := cmd.ProcessState.ExitCode()
-		logE.WithError(err).WithField("exit_code", exitCode).Debug("command was executed but it failed")
+		logerr.WithError(logE, err).WithField("exit_code", exitCode).Debug("command was executed but it failed")
 		return ecerror.Wrap(err, exitCode)
 	}
 	return nil
