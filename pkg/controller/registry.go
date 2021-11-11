@@ -173,6 +173,13 @@ func (ctrl *Controller) getGitHubContentFile(ctx context.Context, repoOwner, rep
 		}
 	}
 
+	ctrl.logE().WithError(err).WithFields(logrus.Fields{
+		"repo_owner": repoOwner,
+		"repo_name":  repoName,
+		"ref":        ref,
+		"path":       path,
+	}).Debug("failed to download a content from GitHub without GitHub API. Try again with GitHub API")
+
 	if ctrl.GitHubRepositoryService == nil {
 		return nil, errGitHubTokenIsRequired
 	}
