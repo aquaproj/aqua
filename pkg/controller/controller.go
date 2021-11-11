@@ -39,6 +39,15 @@ func getGitHubToken() string {
 	return os.Getenv("GITHUB_TOKEN")
 }
 
+func getHTTPClientForGitHub(ctx context.Context, token string) *http.Client {
+	if token == "" {
+		return http.DefaultClient
+	}
+	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	))
+}
+
 func New(ctx context.Context, param *Param) (*Controller, error) {
 	if param.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(param.LogLevel)
@@ -67,12 +76,7 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 	if ctrl.RootDir == "" {
 		ctrl.RootDir = filepath.Join(os.Getenv("HOME"), ".aqua")
 	}
-	if ghToken := getGitHubToken(); ghToken != "" {
-		ctrl.GitHubRepositoryService = github.NewClient(
-			oauth2.NewClient(ctx, oauth2.StaticTokenSource(
-				&oauth2.Token{AccessToken: ghToken},
-			))).Repositories
-	}
+	ctrl.GitHubRepositoryService = github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
 	ctrl.PackageDownloader = &pkgDownloader{
 		GitHubRepositoryService: ctrl.GitHubRepositoryService,
 		logE:                    ctrl.logE,

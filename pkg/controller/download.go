@@ -20,9 +20,6 @@ type pkgDownloader struct {
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo, assetName string) (io.ReadCloser, error) {
-	if downloader.GitHubRepositoryService == nil {
-		return nil, errGitHubTokenIsRequired
-	}
 	return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
 }
 
@@ -32,9 +29,6 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Cont
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo, assetName string) (io.ReadCloser, error) {
-	if downloader.GitHubRepositoryService == nil {
-		return nil, errGitHubTokenIsRequired
-	}
 	return downloader.downloadGitHubContent(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
 }
 

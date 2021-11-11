@@ -30,7 +30,7 @@ aqua searches the following configuration files.
 * `AQUA_GLOBAL_CONFIG`: global configuration file paths separated by semicolon `:`
 * `AQUA_ROOT_DIR`: (default: `$HOME/.aqua`)
 * `AQUA_MAX_PARALLELISM`: (default: `5`) The maximum number of packages which are installed in parallel at the same time
-* `AQUA_GITHUB_TOKEN`, `GITHUB_TOKEN`: GitHub Access Token. This is required to install `github_release` packages
+* `AQUA_GITHUB_TOKEN`, `GITHUB_TOKEN`: GitHub Access Token. This is required to install private repository's package
 
 ## Configuration attributes
 
