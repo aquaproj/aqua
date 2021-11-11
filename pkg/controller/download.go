@@ -16,6 +16,7 @@ type PackageDownloader interface {
 
 type pkgDownloader struct {
 	GitHubRepositoryService GitHubRepositoryService
+	logE                    func() *logrus.Entry
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *Package, pkgInfo *MergedPackageInfo, assetName string) (io.ReadCloser, error) {

@@ -75,6 +75,7 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 	}
 	ctrl.PackageDownloader = &pkgDownloader{
 		GitHubRepositoryService: ctrl.GitHubRepositoryService,
+		logE:                    ctrl.logE,
 	}
 
 	return &ctrl, nil

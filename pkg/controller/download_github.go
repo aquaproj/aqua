@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v39/github"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int64, error) {
@@ -17,6 +19,13 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 		}
 	}
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
+}
+
+func (downloader *pkgDownloader) getlogE() *logrus.Entry {
+	if downloader.logE == nil {
+		return log.New()
+	}
+	return downloader.logE()
 }
 
 func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
@@ -32,6 +41,12 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	if b != nil {
 		b.Close()
 	}
+	downloader.getlogE().WithError(err).WithFields(logrus.Fields{
+		"repo_owner":    owner,
+		"repo_name":     repoName,
+		"asset_version": version,
+		"asset_name":    assetName,
+	}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
 
 	release, _, err := downloader.GitHubRepositoryService.GetReleaseByTag(ctx, owner, repoName, version)
 	if err != nil {
