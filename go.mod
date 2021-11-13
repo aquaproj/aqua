@@ -16,7 +16,7 @@ require (
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.1.0
 	github.com/suzuki-shunsuke/go-timeout v1.0.0
-	github.com/suzuki-shunsuke/logrus-error v0.1.2
+	github.com/suzuki-shunsuke/logrus-error v0.1.3
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
 	gopkg.in/yaml.v2 v2.4.0
