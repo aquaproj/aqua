@@ -1,3 +1,5 @@
+<img src="./logo/aqua_horizontal.svg" height="300">
+
 # aqua
 
 [![Build Status](https://github.com/suzuki-shunsuke/aqua/workflows/test/badge.svg)](https://github.com/suzuki-shunsuke/aqua/actions)
