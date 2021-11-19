@@ -163,6 +163,7 @@ If tools you want aren't found in [Standard Registry](https://github.com/suzuki-
   * [2021-09-08 aqua - Declarative CLI Version Manager](https://dev.to/suzukishunsuke/aqua-declarative-cli-version-manager-1ibe)
   * [2021-09-02 Slide - Introduction of aqua](https://speakerdeck.com/szksh/introduction-of-aqua)
 * Japanese
+  * [2021-11-18 aqua の最近の update (v0.7.4 ~ v0.7.16)](https://techblog.szksh.cloud/update-aqua-v0.7.16/)
   * [2021-09-25 aqua で組織・チームのツール群を管理](https://techblog.szksh.cloud/aqua-global-configs/)
   * [2021-09-05 aqua の設定ファイルをインタラクティブに生成する generate コマンド](https://techblog.szksh.cloud/aqua-generate/)
   * [2021-09-04 aqua v0.1.0 から v0.5.0 での変更点](https://techblog.szksh.cloud/aqua-v0.5/)
