@@ -184,3 +184,5 @@ About logo, please see [logo](logo).
 ## License
 
 [MIT](LICENSE)
+
+About the license of logo, please see [here](logo/README.md#license).
