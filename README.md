@@ -1,4 +1,8 @@
-# aqua
+<p align="center" width="100%">
+<img src="./logo/aqua_horizontal.svg" width="400">
+</p>
+
+#
 
 [![Build Status](https://github.com/suzuki-shunsuke/aqua/workflows/test/badge.svg)](https://github.com/suzuki-shunsuke/aqua/actions)
 [![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/aqua.svg)](https://github.com/suzuki-shunsuke/aqua)
