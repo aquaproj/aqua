@@ -177,6 +177,10 @@ If tools you want aren't found in [Standard Registry](https://github.com/suzuki-
 
 We are Conforming [suzuki-shunsuke/versioning-policy v0.1.0](https://github.com/suzuki-shunsuke/versioning-policy/blob/v0.1.0/POLICY.md), which is compatible with [Semantic Versioning 2.0.0](https://semver.org/).
 
+## Logo
+
+About logo, please see [logo](logo).
+
 ## License
 
 [MIT](LICENSE)
