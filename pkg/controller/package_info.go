@@ -71,7 +71,7 @@ func (pkgInfo *MergedPackageInfo) GetFileSrc(pkg *Package, file *File) (string, 
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
 	if isUnarchived(pkgInfo.GetFormat(), assetName) {
-		return assetName, nil
+		return filepath.Base(assetName), nil
 	}
 	if file.Src == nil {
 		return file.Name, nil
