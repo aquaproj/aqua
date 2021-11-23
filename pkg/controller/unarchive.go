@@ -21,6 +21,7 @@ func isUnarchived(archiveType, assetName string) bool {
 }
 
 func getUnarchiver(filename, typ, dest string) (Unarchiver, error) {
+	filename = filepath.Base(filename)
 	if isUnarchived(typ, filename) {
 		return &rawUnarchiver{
 			dest: filepath.Join(dest, filename),
