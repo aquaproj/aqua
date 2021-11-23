@@ -164,6 +164,7 @@ If tools you want aren't found in [Standard Registry](https://github.com/suzuki-
 ## Slide, Blog
 
 * English
+  * [2021-11-23 aqua - CLI Version Manager (5min LT)](https://techblog.szksh.cloud/slides/aqua/introduction-5min)
   * [2021-09-08 aqua - Declarative CLI Version Manager](https://dev.to/suzukishunsuke/aqua-declarative-cli-version-manager-1ibe)
   * [2021-09-02 Slide - Introduction of aqua](https://speakerdeck.com/szksh/introduction-of-aqua)
 * Japanese
