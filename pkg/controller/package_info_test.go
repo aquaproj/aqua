@@ -3,9 +3,9 @@ package controller_test
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/controller"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/aquaproj/aqua/pkg/controller"
 )
 
 func TestMergedPackageInfo_GetName(t *testing.T) {

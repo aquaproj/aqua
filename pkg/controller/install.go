@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/sirupsen/logrus"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/sirupsen/logrus"
 )
 
 const proxyName = "aqua-proxy"

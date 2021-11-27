@@ -3,8 +3,8 @@ package controller_test
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 )
 

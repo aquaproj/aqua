@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
-	"github.com/aquaproj/aqua/pkg/log"
 	"golang.org/x/oauth2"
 )
 

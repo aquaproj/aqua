@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
-	"github.com/aquaproj/aqua/pkg/log"
 )
 
 func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int64, error) {
