@@ -23,7 +23,7 @@ jobs:
     - run: echo "AQUA_GLOBAL_CONFIG=$PWD/aqua-global.yaml:$PWD/aqua-global-2.yaml" >> $GITHUB_ENV
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "standard,x-motemen/ghq" | aqua g -f -
-    - run: echo "inline,suzuki-shunsuke/aqua-installer" | aqua g -f -
+    - run: echo "inline,aquaproj/aqua-installer" | aqua g -f -
 
     - run: aqua list
     - run: aqua i -l -a

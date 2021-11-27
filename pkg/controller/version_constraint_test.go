@@ -3,7 +3,7 @@ package controller_test
 import (
 	"testing"
 
-	"github.com/suzuki-shunsuke/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/controller"
 )
 
 func TestVersionConstraints_Check(t *testing.T) {

@@ -24,7 +24,7 @@ func Test_validateConfig(t *testing.T) {
 				Registries: Registries{
 					&GitHubContentRegistry{
 						Name:      "standard",
-						RepoOwner: "suzuki-shunsuke",
+						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
 						Ref:       "v0.8.0",
 						Path:      "registry.yaml",
@@ -63,8 +63,8 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 					Path:      "registry.yaml",
 				},
 				&GitHubContentRegistry{
-					Name:      "suzuki-shunsuke/aqua-registry",
-					RepoOwner: "suzuki-shunsuke",
+					Name:      "aquaproj/aqua-registry",
+					RepoOwner: "aquaproj",
 					RepoName:  "aqua-registry",
 					Ref:       "v0.8.0",
 					Path:      "registry.yaml",

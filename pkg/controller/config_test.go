@@ -3,8 +3,8 @@ package controller_test
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/controller"
 	"github.com/google/go-cmp/cmp"
-	"github.com/suzuki-shunsuke/aqua/pkg/controller"
 	"gopkg.in/yaml.v2"
 )
 
@@ -30,7 +30,7 @@ packages:
 				Registries: controller.Registries{
 					&controller.GitHubContentRegistry{
 						Name:      "standard",
-						RepoOwner: "suzuki-shunsuke",
+						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 						Ref:       "v0.2.0",
@@ -102,7 +102,7 @@ packages:
 				Registries: controller.Registries{
 					&controller.GitHubContentRegistry{
 						Name:      "standard",
-						RepoOwner: "suzuki-shunsuke",
+						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 						Ref:       "v0.2.0",

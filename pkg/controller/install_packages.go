@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int64, error) {
@@ -78,7 +78,7 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 }
 
 func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
-	// https://github.com/suzuki-shunsuke/aqua/issues/391
+	// https://github.com/aquaproj/aqua/issues/391
 	body, err := downloadFromURL(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName, http.DefaultClient)
 	if err == nil {
 		return body, nil

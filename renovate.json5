@@ -3,10 +3,10 @@
   extends: [
     "config:base",
     "github>suzuki-shunsuke/renovate-config:golang",
-    "github>suzuki-shunsuke/aqua-renovate-config",
-    "github>suzuki-shunsuke/aqua-renovate-config:file(aqua-global.yaml)",
-    "github>suzuki-shunsuke/aqua-renovate-config:file(aqua-global-2.yaml)",
-    "github>suzuki-shunsuke/aqua-renovate-config:file(aqua/.*\\.ya?ml)",
+    "github>aquaproj/aqua-renovate-config",
+    "github>aquaproj/aqua-renovate-config:file(aqua-global.yaml)",
+    "github>aquaproj/aqua-renovate-config:file(aqua-global-2.yaml)",
+    "github>aquaproj/aqua-renovate-config:file(aqua/.*\\.ya?ml)",
   ],
   packageRules: [
     {
@@ -17,7 +17,7 @@
   regexManagers: [
     {
       fileMatch: ["README.md"],
-      depNameTemplate: "suzuki-shunsuke/aqua-installer",
+      depNameTemplate: "aquaproj/aqua-installer",
       datasourceTemplate: "github-releases",
       matchStrings: [
         "aqua-installer/(?<currentValue>.*)/aqua-installer",
@@ -34,10 +34,10 @@
     },
     {
       fileMatch: [".*\\.go"],
-      depNameTemplate: "suzuki-shunsuke/aqua-proxy",
+      depNameTemplate: "aquaproj/aqua-proxy",
       datasourceTemplate: "github-releases",
       matchStrings: [
-        '"(?<currentValue>.*)", // renovate: depName=suzuki-shunsuke/aqua-proxy',
+        '"(?<currentValue>.*)", // renovate: depName=aquaproj/aqua-proxy',
       ],
     },
   ],

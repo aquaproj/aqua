@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/suzuki-shunsuke/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 

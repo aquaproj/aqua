@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 )
 
 type Unarchiver interface {

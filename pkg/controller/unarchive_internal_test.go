@@ -22,26 +22,26 @@ func Test_getUnarchiver(t *testing.T) {
 			title:    "raw",
 			typ:      "raw",
 			filename: "foo",
-			dest:     "/home/foo/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/foo/v1.0.0/foo",
+			dest:     "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo",
 			exp: &rawUnarchiver{
-				dest: "/home/foo/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/foo/v1.0.0/foo/foo",
+				dest: "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo/foo",
 			},
 		},
 		{
 			title:    "ext is tar.gz",
 			filename: "foo.tar.gz",
-			dest:     "/home/foo/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/foo/v1.0.0/foo",
+			dest:     "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo",
 			exp: &unarchiverWithUnarchiver{
-				dest:       "/home/foo/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/foo/v1.0.0/foo",
+				dest:       "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo",
 				unarchiver: archiver.NewTarGz(),
 			},
 		},
 		{
 			title:    "ext is bz2",
 			filename: "yoo.bz2",
-			dest:     "/home/foo/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/foo/v1.0.0/foo",
+			dest:     "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo",
 			exp: &Decompressor{
-				dest:         "/home/foo/.aqua/pkgs/github_release/github.com/suzuki-shunsuke/foo/v1.0.0/foo/yoo",
+				dest:         "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo/yoo",
 				decompressor: archiver.NewBz2(),
 			},
 		},

@@ -23,14 +23,14 @@ brews:
 
   # GitHub/GitLab repository to push the formula to
   tap:
-    owner: suzuki-shunsuke
+    owner: aquaproj
     name: homebrew-aqua
     token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
   # The project name and current git tag are used in the format string.
   commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
   # Your app's homepage.
   # Default is empty.
-  homepage: https://github.com/suzuki-shunsuke/aqua
+  homepage: https://github.com/aquaproj/aqua
 
   # Template of your app's description.
   # Default is empty.

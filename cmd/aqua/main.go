@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/aquaproj/aqua/pkg/cli"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/cli"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 

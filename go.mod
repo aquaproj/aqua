@@ -1,4 +1,4 @@
-module github.com/suzuki-shunsuke/aqua
+module github.com/aquaproj/aqua
 
 go 1.16
 
