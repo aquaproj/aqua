@@ -52,7 +52,7 @@ inline_registry:
   packages:
   - name: cmdx
     type: github_release
-    repo_owner: aquaproj
+    repo_owner: suzuki-shunsuke
     repo_name: cmdx
     asset: 'cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
     files:
@@ -68,7 +68,7 @@ packages:
 						&controller.MergedPackageInfo{
 							Name:      "cmdx",
 							Type:      "github_release",
-							RepoOwner: "aquaproj",
+							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "cmdx",
 							Asset:     controller.NewTemplate(`cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
 							Files: []*controller.File{
@@ -95,7 +95,7 @@ registries:
 - type: standard
   ref: v0.2.0
 packages:
-- name: aquaproj/cmdx@v1.6.0
+- name: suzuki-shunsuke/cmdx@v1.6.0
   registry: standard
 `,
 			exp: &controller.Config{
@@ -110,7 +110,7 @@ packages:
 				},
 				Packages: []*controller.Package{
 					{
-						Name:     "aquaproj/cmdx",
+						Name:     "suzuki-shunsuke/cmdx",
 						Registry: "standard",
 						Version:  "v1.6.0",
 					},

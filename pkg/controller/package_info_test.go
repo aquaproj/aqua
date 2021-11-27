@@ -25,10 +25,10 @@ func TestMergedPackageInfo_GetName(t *testing.T) {
 		},
 		{
 			title: "default",
-			exp:   "aquaproj/ci-info",
+			exp:   "suzuki-shunsuke/ci-info",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_release",
-				RepoOwner: "aquaproj",
+				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 			},
 		},
@@ -87,10 +87,10 @@ func TestMergedPackageInfo_GetLink(t *testing.T) {
 		},
 		{
 			title: "default",
-			exp:   "https://github.com/aquaproj/ci-info",
+			exp:   "https://github.com/suzuki-shunsuke/ci-info",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_release",
-				RepoOwner: "aquaproj",
+				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 			},
 		},
