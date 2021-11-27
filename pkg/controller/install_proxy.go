@@ -12,7 +12,7 @@ import (
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
 		Name:     proxyName,
-		Version:  "v0.1.2", // renovate: depName=aquaproj/aqua-proxy
+		Version:  "v0.2.0", // renovate: depName=aquaproj/aqua-proxy
 		Registry: "inline",
 	}
 	logE := ctrl.logE().WithFields(logrus.Fields{
