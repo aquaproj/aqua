@@ -28,7 +28,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error { //nolint:
 	}
 	app := cli.App{
 		Name:           "aqua",
-		Usage:          "Version Manager of CLI. https://github.com/suzuki-shunsuke/aqua",
+		Usage:          "Version Manager of CLI. https://github.com/aquaproj/aqua",
 		Version:        runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
 		Compiled:       compiledDate,
 		ExitErrHandler: exitErrHandlerFunc,

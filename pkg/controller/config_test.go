@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/suzuki-shunsuke/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/controller"
 	"gopkg.in/yaml.v2"
 )
 
@@ -30,7 +30,7 @@ packages:
 				Registries: controller.Registries{
 					&controller.GitHubContentRegistry{
 						Name:      "standard",
-						RepoOwner: "suzuki-shunsuke",
+						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 						Ref:       "v0.2.0",
@@ -52,7 +52,7 @@ inline_registry:
   packages:
   - name: cmdx
     type: github_release
-    repo_owner: suzuki-shunsuke
+    repo_owner: aquaproj
     repo_name: cmdx
     asset: 'cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
     files:
@@ -68,7 +68,7 @@ packages:
 						&controller.MergedPackageInfo{
 							Name:      "cmdx",
 							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
+							RepoOwner: "aquaproj",
 							RepoName:  "cmdx",
 							Asset:     controller.NewTemplate(`cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
 							Files: []*controller.File{
@@ -95,14 +95,14 @@ registries:
 - type: standard
   ref: v0.2.0
 packages:
-- name: suzuki-shunsuke/cmdx@v1.6.0
+- name: aquaproj/cmdx@v1.6.0
   registry: standard
 `,
 			exp: &controller.Config{
 				Registries: controller.Registries{
 					&controller.GitHubContentRegistry{
 						Name:      "standard",
-						RepoOwner: "suzuki-shunsuke",
+						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 						Ref:       "v0.2.0",
@@ -110,7 +110,7 @@ packages:
 				},
 				Packages: []*controller.Package{
 					{
-						Name:     "suzuki-shunsuke/cmdx",
+						Name:     "aquaproj/cmdx",
 						Registry: "standard",
 						Version:  "v1.6.0",
 					},

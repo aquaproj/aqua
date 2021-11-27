@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/suzuki-shunsuke/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/controller"
 )
 
 func TestMergedPackageInfo_GetName(t *testing.T) {
@@ -25,10 +25,10 @@ func TestMergedPackageInfo_GetName(t *testing.T) {
 		},
 		{
 			title: "default",
-			exp:   "suzuki-shunsuke/ci-info",
+			exp:   "aquaproj/ci-info",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "ci-info",
 			},
 		},
@@ -87,10 +87,10 @@ func TestMergedPackageInfo_GetLink(t *testing.T) {
 		},
 		{
 			title: "default",
-			exp:   "https://github.com/suzuki-shunsuke/ci-info",
+			exp:   "https://github.com/aquaproj/ci-info",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "ci-info",
 			},
 		},
@@ -346,11 +346,11 @@ func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content",
-			exp:   "/tmp/aqua/pkgs/github_content/github.com/suzuki-shunsuke/aqua-installer/v0.2.0/aqua-installer",
+			exp:   "/tmp/aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_content",
 				Path:      controller.NewTemplate("aqua-installer"),
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "aqua-installer",
 			},
 			pkg: &controller.Package{
@@ -359,10 +359,10 @@ func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_release",
-			exp:   "/tmp/aqua/pkgs/github_release/github.com/suzuki-shunsuke/aqua/v0.7.7/aqua.tar.gz",
+			exp:   "/tmp/aqua/pkgs/github_release/github.com/aquaproj/aqua/v0.7.7/aqua.tar.gz",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
 				Asset:     controller.NewTemplate("aqua.{{.Format}}"),
 				Format:    "tar.gz",
@@ -424,7 +424,7 @@ func TestMergedPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			exp:   "aqua",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
 				Asset:     controller.NewTemplate("aqua.{{.Format}}"),
 				Format:    "tar.gz",
@@ -441,7 +441,7 @@ func TestMergedPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			exp:   "bin/aqua",
 			pkgInfo: &controller.MergedPackageInfo{
 				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
 				Asset:     controller.NewTemplate("aqua.{{.Format}}"),
 				Format:    "tar.gz",

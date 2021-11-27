@@ -3,7 +3,7 @@ package controller_test
 import (
 	"testing"
 
-	"github.com/suzuki-shunsuke/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/controller"
 )
 
 func TestGitHubContentRegistry_GetType(t *testing.T) {
@@ -41,10 +41,10 @@ func TestGitHubContentRegistry_GetFilePath(t *testing.T) {
 	}{
 		{
 			title:   "normal",
-			exp:     "/root/.aqua/registries/github_content/github.com/suzuki-shunsuke/aqua-registry/v0.8.0/foo.yaml",
+			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
 			rootDir: "/root/.aqua",
 			registry: &controller.GitHubContentRegistry{
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "aqua-registry",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",

@@ -12,7 +12,7 @@ import (
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
 		Name:     proxyName,
-		Version:  "v0.1.2", // renovate: depName=suzuki-shunsuke/aqua-proxy
+		Version:  "v0.1.2", // renovate: depName=aquaproj/aqua-proxy
 		Registry: "inline",
 	}
 	logE := ctrl.logE().WithFields(logrus.Fields{
@@ -24,7 +24,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	logE.Debug("install the proxy")
 	pkgInfo := &MergedPackageInfo{
 		Type:      "github_release",
-		RepoOwner: "suzuki-shunsuke",
+		RepoOwner: "aquaproj",
 		RepoName:  proxyName,
 		Asset: &Template{
 			raw: `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`,

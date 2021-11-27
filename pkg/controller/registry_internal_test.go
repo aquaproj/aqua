@@ -31,14 +31,14 @@ func Test_mergedRegistry_GetRegistry(t *testing.T) { //nolint:funlen
 			registry: &mergedRegistry{
 				Type:      registryTypeGitHubContent,
 				Name:      "foo",
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "ci-info",
 				Ref:       "v1.0.0",
 				Path:      "registry.yaml",
 			},
 			exp: &GitHubContentRegistry{
 				Name:      "foo",
-				RepoOwner: "suzuki-shunsuke",
+				RepoOwner: "aquaproj",
 				RepoName:  "ci-info",
 				Ref:       "v1.0.0",
 				Path:      "registry.yaml",

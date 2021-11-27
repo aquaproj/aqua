@@ -54,7 +54,7 @@ func (registry *mergedRegistry) GetRegistry() (Registry, error) {
 	case registryTypeStandard:
 		return &GitHubContentRegistry{
 			Name:      "standard",
-			RepoOwner: "suzuki-shunsuke",
+			RepoOwner: "aquaproj",
 			RepoName:  "aqua-registry",
 			Ref:       registry.Ref,
 			Path:      "registry.yaml",
@@ -161,7 +161,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 }
 
 func (ctrl *Controller) getGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error) {
-	// https://github.com/suzuki-shunsuke/aqua/issues/391
+	// https://github.com/aquaproj/aqua/issues/391
 	body, err := downloadFromURL(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path, http.DefaultClient)
 	if body != nil {
 		defer body.Close()

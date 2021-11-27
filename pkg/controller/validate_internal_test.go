@@ -16,7 +16,7 @@ func Test_validateConfig(t *testing.T) {
 			cfg: &Config{
 				Packages: []*Package{
 					{
-						Name:     "suzuki-shunsuke/ci-info",
+						Name:     "aquaproj/ci-info",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
@@ -24,7 +24,7 @@ func Test_validateConfig(t *testing.T) {
 				Registries: Registries{
 					&GitHubContentRegistry{
 						Name:      "standard",
-						RepoOwner: "suzuki-shunsuke",
+						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
 						Ref:       "v0.8.0",
 						Path:      "registry.yaml",
@@ -56,15 +56,15 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 			title: "normal",
 			registries: Registries{
 				&GitHubContentRegistry{
-					Name:      "suzuki-shunsuke/ci-info",
-					RepoOwner: "suzuki-shunsuke",
+					Name:      "aquaproj/ci-info",
+					RepoOwner: "aquaproj",
 					RepoName:  "ci-info",
 					Ref:       "v1.0.0",
 					Path:      "registry.yaml",
 				},
 				&GitHubContentRegistry{
-					Name:      "suzuki-shunsuke/aqua-registry",
-					RepoOwner: "suzuki-shunsuke",
+					Name:      "aquaproj/aqua-registry",
+					RepoOwner: "aquaproj",
 					RepoName:  "aqua-registry",
 					Ref:       "v0.8.0",
 					Path:      "registry.yaml",
@@ -76,15 +76,15 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 			isErr: true,
 			registries: Registries{
 				&GitHubContentRegistry{
-					Name:      "suzuki-shunsuke/ci-info",
-					RepoOwner: "suzuki-shunsuke",
+					Name:      "aquaproj/ci-info",
+					RepoOwner: "aquaproj",
 					RepoName:  "ci-info",
 					Ref:       "v1.0.0",
 					Path:      "registry.yaml",
 				},
 				&GitHubContentRegistry{
-					Name:      "suzuki-shunsuke/ci-info",
-					RepoOwner: "suzuki-shunsuke",
+					Name:      "aquaproj/ci-info",
+					RepoOwner: "aquaproj",
 					RepoName:  "ci-info",
 					Ref:       "v0.8.0",
 					Path:      "registry.yaml",
@@ -121,7 +121,7 @@ func Test_validatePackages(t *testing.T) {
 			title: "normal",
 			pkgs: []*Package{
 				{
-					Name:     "suzuki-shunsuke/cmdx",
+					Name:     "aquaproj/cmdx",
 					Registry: "standard",
 				},
 			},
@@ -130,11 +130,11 @@ func Test_validatePackages(t *testing.T) {
 			title: "duplicated",
 			pkgs: []*Package{
 				{
-					Name:     "suzuki-shunsuke/cmdx",
+					Name:     "aquaproj/cmdx",
 					Registry: "standard",
 				},
 				{
-					Name:     "suzuki-shunsuke/cmdx",
+					Name:     "aquaproj/cmdx",
 					Registry: "standard",
 				},
 			},

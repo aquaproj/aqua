@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/log"
 	"golang.org/x/oauth2"
 )
 
