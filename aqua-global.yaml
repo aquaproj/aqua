@@ -1,6 +1,6 @@
 registries:
 - type: standard
-  ref: v0.10.10 # renovate: depName=aquaproj/aqua-registry
+  ref: v0.10.11 # renovate: depName=aquaproj/aqua-registry
 
 packages:
 - name: x-motemen/ghq@v1.2.1
