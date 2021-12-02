@@ -1,0 +1,4 @@
+blank_issues_enabled: true
+contact_links:
+- name: Issue of Standard Registry
+  url: https://github.com/aquaproj/aqua-registry/issues
