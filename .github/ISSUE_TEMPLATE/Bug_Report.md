@@ -1,5 +1,6 @@
 ---
 name: Bug Report
+about: If something isn't working as expected.
 ---
 
 ## aqua version
@@ -12,6 +13,8 @@ $ aqua -v
 ```
 
 ## Environment
+
+:warning: aqua doesn't support Windows.
 
 * OS (Linux, macOS, etc):
 * CPU Architecture (amd64, arm64, etc):
