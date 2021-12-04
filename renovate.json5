@@ -11,27 +11,10 @@
   packageRules: [
     {
       automerge: false,
-      "matchUpdateTypes": ["major"],
+      matchUpdateTypes: ["major"],
     },
   ],
   regexManagers: [
-    {
-      fileMatch: ["README.md"],
-      depNameTemplate: "aquaproj/aqua-installer",
-      datasourceTemplate: "github-releases",
-      matchStrings: [
-        "aqua-installer/(?<currentValue>.*)/aqua-installer",
-        "aqua-installer@(?<currentValue>.*)",
-      ],
-    },
-    {
-      fileMatch: ["README\\.md", "docs/.*\\.md"],
-      datasourceTemplate: "github-releases",
-      matchStrings: [
-        '(version|ref): "?(?<currentValue>.*?)"? +# renovate: depName=(?<depName>.*?)\\n',
-        '-v "?(?<currentValue>.*?)"? +# renovate: depName=(?<depName>.*?)\\n',
-      ],
-    },
     {
       fileMatch: [".*\\.go"],
       depNameTemplate: "aquaproj/aqua-proxy",
