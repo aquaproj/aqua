@@ -63,13 +63,20 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 
 	for _, pkg := range cfg.Packages {
 		go func(pkg *Package) {
-			defer wg.Done()
 			maxInstallChan <- struct{}{}
+			defer func() {
+				wg.Done()
+				<-maxInstallChan
+			}()
 			logE := ctrl.logE().WithFields(logrus.Fields{
 				"package_name":    pkg.Name,
 				"package_version": pkg.Version,
 				"registry":        pkg.Registry,
 			})
+			if pkg.LazyInstall {
+				logE.Debug("skip to install the package")
+				return
+			}
 			pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 			if err != nil {
 				logerr.WithError(logE, err).Error("install the package")
@@ -88,7 +95,6 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				handleFailure()
 				return
 			}
-			<-maxInstallChan
 		}(pkg)
 	}
 	wg.Wait()

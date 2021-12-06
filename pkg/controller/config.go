@@ -16,10 +16,11 @@ import (
 )
 
 type Package struct {
-	Name     string `validate:"required"`
-	Registry string `validate:"required" yaml:",omitempty"`
-	Version  string `validate:"required" yaml:",omitempty"`
-	Import   string `yaml:",omitempty"`
+	Name        string `validate:"required"`
+	Registry    string `validate:"required" yaml:",omitempty"`
+	Version     string `validate:"required" yaml:",omitempty"`
+	Import      string `yaml:",omitempty"`
+	LazyInstall bool   `yaml:"lazy,omitempty"`
 }
 
 func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
