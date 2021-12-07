@@ -12,7 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop
+func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop,gocognit
 	var failed bool
 	for _, pkg := range cfg.Packages {
 		logE := ctrl.logE().WithFields(logrus.Fields{
@@ -29,6 +29,17 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 		pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
 		if err != nil {
 			return fmt.Errorf("evaluate version constraints: %w", err)
+		}
+		if pkgInfo.SupportedIf != nil {
+			supported, err := pkgInfo.SupportedIf.Check(pkg.Version)
+			if err != nil {
+				logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
+				continue
+			}
+			if !supported {
+				logE.WithField("supported_if", pkgInfo.SupportedIf.Raw()).Debug("the package isn't supported on this environment")
+				continue
+			}
 		}
 		for _, file := range pkgInfo.GetFiles() {
 			if err := ctrl.createLink(filepath.Join(binDir, file.Name), proxyName); err != nil {
@@ -81,6 +92,15 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
+			}
+			if pkgInfo.SupportedIf != nil {
+				supported, err := pkgInfo.SupportedIf.Check(pkg.Version)
+				if err != nil {
+					return
+				}
+				if !supported {
+					return
+				}
 			}
 
 			if err := ctrl.installPackage(ctx, pkgInfo, pkg, isTest); err != nil {

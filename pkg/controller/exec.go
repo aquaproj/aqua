@@ -67,6 +67,18 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 		return nil, nil
 	}
 
+	if pkgInfo.SupportedIf != nil {
+		supported, err := pkgInfo.SupportedIf.Check(pkg.Version)
+		if err != nil {
+			logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
+			return nil, nil
+		}
+		if !supported {
+			logE.WithField("supported_if", pkgInfo.SupportedIf.Raw()).Debug("the package isn't supported on this environment")
+			return nil, nil
+		}
+	}
+
 	for _, file := range pkgInfo.GetFiles() {
 		if file.Name == exeName {
 			return pkgInfo, file

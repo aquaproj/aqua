@@ -41,6 +41,12 @@ inline_registry: # inline registry
     - name: terraform
       src: tfenv-{{trimV .Version}}/bin/terraform
 
+  - type: github_release
+    repo_owner: containerd
+    repo_name: nerdctl
+    asset: 'nerdctl-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
+    supported_if: GOOS != "darwin" # supported_if
+
 packages:
 - name: cmdx # inline registry
   registry: inline
@@ -68,6 +74,9 @@ packages:
   registry: inline
 
 - name: tfutils/tfenv@v2.2.2 # github_archive package
+  registry: inline
+
+- name: containerd/nerdctl@v0.14.0 # supported_if
   registry: inline
 
 - import: aqua/*.yaml

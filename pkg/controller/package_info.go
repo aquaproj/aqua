@@ -23,6 +23,7 @@ type MergedPackageInfo struct {
 	FormatOverrides    []*FormatOverride    `yaml:"format_overrides"`
 	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
 	VersionOverrides   []*MergedPackageInfo `yaml:"version_overrides"`
+	SupportedIf        *PackageCondition    `yaml:"supported_if"`
 }
 
 func (pkgInfo *MergedPackageInfo) HasRepo() bool {
@@ -145,6 +146,9 @@ func (pkgInfo *MergedPackageInfo) override(child *MergedPackageInfo) { //nolint:
 	}
 	if child.FormatOverrides != nil {
 		pkgInfo.FormatOverrides = child.FormatOverrides
+	}
+	if child.SupportedIf != nil {
+		pkgInfo.SupportedIf = child.SupportedIf
 	}
 }
 
