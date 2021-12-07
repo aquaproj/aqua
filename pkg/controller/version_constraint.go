@@ -40,7 +40,7 @@ func (constraints *VersionConstraints) Check(v string) (bool, error) {
 		return false, err
 	}
 	a, err := expr.Run(constraints.expr, map[string]interface{}{
-		"version": v,
+		"Version": v,
 		"semver": func(s string) bool {
 			a, err := version.NewConstraint(s)
 			if err != nil {
