@@ -125,7 +125,7 @@ func (file *File) RenderSrc(pkg *Package, pkgInfo *MergedPackageInfo) (string, e
 		"GOOS":     runtime.GOOS,
 		"GOARCH":   runtime.GOARCH,
 		"OS":       replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})
