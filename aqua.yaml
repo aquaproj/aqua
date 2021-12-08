@@ -60,7 +60,8 @@ packages:
   registry: standard # standard registry
   version: v0.11.1 # renovate: depName=kubernetes-sigs/kind
 
-- name: restic/restic@v0.12.1 # decompressor, package name with version
+- name: restic/restic@v0.12.1
+  # decompressor, package name with version
   registry: aqua-registry # github content registry
 
 - name: golang-migrate/migrate # version_constraint
@@ -70,13 +71,16 @@ packages:
 - name: golang-migrate/migrate # version_constraint, omit "registry"
   version: v4.15.1 # renovate: depName=golang-migrate/migrate
 
-- name: aquaproj/aqua-installer@v0.1.3 # github_content package
+- name: aquaproj/aqua-installer@v0.3.0
+  # github_content package
   registry: inline
 
-- name: tfutils/tfenv@v2.2.2 # github_archive package
+- name: tfutils/tfenv@v2.2.2
+  # github_archive package
   registry: inline
 
-- name: containerd/nerdctl@v0.14.0 # supported_if
+- name: containerd/nerdctl@v0.14.0
+  # supported_if
   registry: inline
 
 - import: aqua/*.yaml
