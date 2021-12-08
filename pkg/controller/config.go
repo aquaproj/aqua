@@ -111,13 +111,21 @@ type File struct {
 	Src  *Template
 }
 
+func getArch(rosetta2 bool, replacements map[string]string) string {
+	if rosetta2 && runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
+		// Rosetta 2
+		return replace("amd64", replacements)
+	}
+	return replace(runtime.GOARCH, replacements)
+}
+
 func (file *File) RenderSrc(pkg *Package, pkgInfo *MergedPackageInfo) (string, error) {
 	return file.Src.Execute(map[string]interface{}{
 		"Version":  pkg.Version,
 		"GOOS":     runtime.GOOS,
 		"GOARCH":   runtime.GOARCH,
 		"OS":       replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.GetReplacements()),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})

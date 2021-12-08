@@ -24,6 +24,7 @@ type MergedPackageInfo struct {
 	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
 	VersionOverrides   []*MergedPackageInfo `yaml:"version_overrides"`
 	SupportedIf        *PackageCondition    `yaml:"supported_if"`
+	Rosetta2           bool
 }
 
 func (pkgInfo *MergedPackageInfo) HasRepo() bool {
@@ -172,7 +173,7 @@ func (pkgInfo *MergedPackageInfo) GetPkgPath(rootDir string, pkg *Package) (stri
 			"GOOS":    runtime.GOOS,
 			"GOARCH":  runtime.GOARCH,
 			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+			"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.GetReplacements()),
 			"Format":  pkgInfo.GetFormat(),
 		})
 		if err != nil {
@@ -197,7 +198,7 @@ func (pkgInfo *MergedPackageInfo) RenderAsset(pkg *Package) (string, error) {
 			"GOOS":    runtime.GOOS,
 			"GOARCH":  runtime.GOARCH,
 			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+			"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.GetReplacements()),
 			"Format":  pkgInfo.GetFormat(),
 		})
 	case pkgInfoTypeGitHubRelease:
@@ -206,7 +207,7 @@ func (pkgInfo *MergedPackageInfo) RenderAsset(pkg *Package) (string, error) {
 			"GOOS":    runtime.GOOS,
 			"GOARCH":  runtime.GOARCH,
 			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+			"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.GetReplacements()),
 			"Format":  pkgInfo.GetFormat(),
 		})
 	case pkgInfoTypeHTTP:
@@ -229,7 +230,7 @@ func (pkgInfo *MergedPackageInfo) renderURL(pkg *Package) (string, error) {
 		"GOOS":    runtime.GOOS,
 		"GOARCH":  runtime.GOARCH,
 		"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":    replace(runtime.GOARCH, pkgInfo.GetReplacements()),
+		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.GetReplacements()),
 		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
