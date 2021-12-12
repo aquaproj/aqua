@@ -66,7 +66,6 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	maxInstallChan := make(chan struct{}, getMaxParallelism())
 
 	handleFailure := func() {
-		<-maxInstallChan
 		flagMutex.Lock()
 		failed = true
 		flagMutex.Unlock()
@@ -76,6 +75,9 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 		go func(pkg *Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
+			defer func() {
+				<-maxInstallChan
+			}()
 			logE := ctrl.logE().WithFields(logrus.Fields{
 				"package_name":    pkg.Name,
 				"package_version": pkg.Version,
@@ -96,6 +98,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			if pkgInfo.SupportedIf != nil {
 				supported, err := pkgInfo.SupportedIf.Check(pkg.Version)
 				if err != nil {
+					handleFailure()
 					return
 				}
 				if !supported {
@@ -108,7 +111,6 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				handleFailure()
 				return
 			}
-			<-maxInstallChan
 		}(pkg)
 	}
 	wg.Wait()
