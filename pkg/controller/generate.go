@@ -20,7 +20,7 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //nolint:cyclop
+func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -56,7 +56,17 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 	}
 	idx, err := fuzzyfinder.Find(pkgs, func(i int) string {
 		pkg := pkgs[i]
-		return fmt.Sprintf("%s (%s)", pkg.PackageInfo.GetName(), pkg.RegistryName)
+		files := pkg.PackageInfo.GetFiles()
+		fileNames := make([]string, len(files))
+		for i, file := range files {
+			fileNames[i] = file.Name
+		}
+		fileNamesStr := strings.Join(fileNames, ", ")
+		pkgName := pkg.PackageInfo.GetName()
+		if strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {
+			return fmt.Sprintf("%s (%s)", pkgName, pkg.RegistryName)
+		}
+		return fmt.Sprintf("%s (%s) (%s)", pkgName, pkg.RegistryName, fileNamesStr)
 	},
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
 			if i < 0 {
