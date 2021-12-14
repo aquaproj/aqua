@@ -79,7 +79,7 @@ packages:
   # github_archive package
   registry: inline
 
-- name: containerd/nerdctl@v0.14.0
+- name: containerd/nerdctl@v0.15.0
   # supported_if
   registry: inline
 
