@@ -266,7 +266,7 @@ func recreateLink(linkPath, linkDest string) error {
 		"link_file": linkPath,
 		"old":       lnDest,
 		"new":       linkDest,
-	}).Info("recreate a symbolic link")
+	}).Debug("recreate a symbolic link")
 	if err := os.Remove(linkPath); err != nil {
 		return fmt.Errorf("remove a symbolic link (%s): %w", linkPath, err)
 	}

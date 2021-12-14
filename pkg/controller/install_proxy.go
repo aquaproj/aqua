@@ -44,7 +44,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	logE.Debug("check if the package is already installed")
+	logE.Debug("check if aqua-proxy is already installed")
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
