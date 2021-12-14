@@ -24,10 +24,8 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(rootBin, proxyName)); err != nil {
-		if err := ctrl.installProxy(ctx); err != nil {
-			return err
-		}
+	if err := ctrl.installProxy(ctx); err != nil {
+		return err
 	}
 
 	for _, cfgFilePath := range ctrl.getConfigFilePaths(wd, param.ConfigFilePath) {
