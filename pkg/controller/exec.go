@@ -26,6 +26,9 @@ func getGlobalConfigFilePaths() []string {
 }
 
 func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, args []string) error {
+	if exeName == "aqua" {
+		return errAquaCantBeExec
+	}
 	which, err := ctrl.which(ctx, param, exeName)
 	if err != nil {
 		return err

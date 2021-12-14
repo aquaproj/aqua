@@ -23,4 +23,6 @@ var (
 	errInstallFailure                     = errors.New("it failed to install some packages")
 	errRegistryNameIsDuplicated           = errors.New("registry name is duplicated")
 	errUnsupportedFileFormat              = errors.New("unsupported file format")
+
+	errAquaCantBeExec = errors.New(`the command "aqua" can't be executed via aqua to prevent infinite loop`)
 )
