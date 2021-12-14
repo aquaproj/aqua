@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
@@ -24,8 +25,15 @@ func (constraints *VersionConstraints) Compile() error {
 		return nil
 	}
 	a, err := expr.Compile(constraints.raw, expr.AsBool(), expr.Env(map[string]interface{}{
+		"Version": "",
 		"semver": func(s string) bool {
 			return false
+		},
+		"semverWithVersion": func(constr, ver string) bool {
+			return false
+		},
+		"trimPrefix": func(s, prefix string) string {
+			return ""
 		},
 	}))
 	if err != nil {
@@ -52,6 +60,18 @@ func (constraints *VersionConstraints) Check(v string) (bool, error) {
 			}
 			return a.Check(ver)
 		},
+		"semverWithVersion": func(constr, ver string) bool {
+			a, err := version.NewConstraint(constr)
+			if err != nil {
+				panic(err)
+			}
+			v, err := version.NewVersion(ver)
+			if err != nil {
+				panic(err)
+			}
+			return a.Check(v)
+		},
+		"trimPrefix": strings.TrimPrefix,
 	})
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)
