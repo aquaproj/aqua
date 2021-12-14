@@ -1,0 +1,85 @@
+registries:
+- type: standard # standard registry
+  ref: v0.11.4 # renovate: depName=aquaproj/aqua-registry
+
+- name: local # local registry
+  type: local
+  path: registry.yaml
+
+- name: aqua-registry
+  type: github_content # github_content registry
+  ref: v0.11.4 # renovate: depName=aquaproj/aqua-registry
+  repo_owner: aquaproj
+  repo_name: aqua-registry
+  path: registry.yaml
+
+
+inline_registry: # inline registry
+  packages:
+  - name: cmdx
+    type: github_release
+    repo_owner: suzuki-shunsuke
+    repo_name: cmdx
+    rosetta2: true
+    asset: 'cmdx_{{.OS}}_{{.Arch}}.tar.gz'
+    version_constraint: 'semver(">= 1.6.1")'
+    version_overrides:
+    - version_constraint: 'semver("< 1.6.1")'
+      asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+
+  - type: github_content # github_content package
+    repo_owner: aquaproj
+    repo_name: aqua-installer
+    path: aqua-installer
+
+  - type: github_archive # github_archive package
+    repo_owner: tfutils
+    repo_name: tfenv
+    files:
+    - name: tfenv
+      src: tfenv-{{trimV .Version}}/bin/tfenv
+    - name: terraform
+      src: tfenv-{{trimV .Version}}/bin/terraform
+
+  - type: github_release
+    repo_owner: containerd
+    repo_name: nerdctl
+    asset: 'nerdctl-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
+    supported_if: GOOS != "darwin" # supported_if
+
+packages:
+- name: cmdx # inline registry
+  registry: inline
+  version: v1.6.1 # renovate: depName=suzuki-shunsuke/cmdx
+- name: x-motemen/ghq@v1.2.1
+
+- name: golangci-lint # local registry
+  registry: local
+  version: v1.43.0 # renovate: depName=golangci/golangci-lint
+
+- name: kubernetes-sigs/kind # http package, raw format
+  registry: standard # standard registry
+  version: v0.11.1 # renovate: depName=kubernetes-sigs/kind
+
+- name: restic/restic@v0.12.1
+  # decompressor, package name with version
+  registry: aqua-registry # github content registry
+
+- name: golang-migrate/migrate # version_constraint
+  registry: aqua-registry # github content registry
+  version: v4.14.1
+
+- name: golang-migrate/migrate # version_constraint, omit "registry"
+  version: v4.15.1 # renovate: depName=golang-migrate/migrate
+
+- name: aquaproj/aqua-installer@v0.3.0
+  # github_content package
+  registry: inline
+
+- name: tfutils/tfenv@v2.2.2
+  # github_archive package
+  registry: inline
+
+- name: containerd/nerdctl@v0.15.0
+  # supported_if
+  registry: inline
