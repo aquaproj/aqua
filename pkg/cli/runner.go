@@ -74,6 +74,11 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error { //nolint:
 				Action: runner.execAction,
 			},
 			{
+				Name:   "init",
+				Usage:  "Create aqua.yaml",
+				Action: runner.initAction,
+			},
+			{
 				Name:   "list",
 				Usage:  "List packages in Registries",
 				Action: runner.listAction,
