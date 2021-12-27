@@ -1,6 +1,6 @@
 registries:
 - type: standard
-  ref: v0.12.1 # renovate: depName=aquaproj/aqua-registry
+  ref: v0.12.2 # renovate: depName=aquaproj/aqua-registry
 
 packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
