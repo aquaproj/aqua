@@ -18,5 +18,5 @@ func (runner *Runner) generateAction(c *cli.Context) error {
 		return fmt.Errorf("initialize a controller: %w", err)
 	}
 
-	return ctrl.Generate(c.Context, param) //nolint:wrapcheck
+	return ctrl.Generate(c.Context, param, c.Args().Slice()...) //nolint:wrapcheck
 }

@@ -20,7 +20,7 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //nolint:cyclop,funlen
+func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...string) error { //nolint:cyclop,funlen
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -41,8 +41,8 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param) error { //no
 		return err
 	}
 
-	if param.File != "" {
-		return ctrl.outputListedPkgs(ctx, param, registryContents)
+	if param.File != "" || len(args) != 0 {
+		return ctrl.outputListedPkgs(ctx, param, registryContents, args...)
 	}
 
 	var pkgs []*FindingPackage
@@ -109,7 +109,14 @@ func formatDescription(desc string, w int) string {
 	return strings.Join(descArr, "\n")
 }
 
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, registryContents map[string]*RegistryContent) error {
+func getGeneratePkg(s string) string {
+	if !strings.Contains(s, ",") {
+		return "standard," + s
+	}
+	return s
+}
+
+func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, registryContents map[string]*RegistryContent, pkgNames ...string) error { //nolint:cyclop
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
@@ -120,37 +127,44 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 		}
 	}
 
-	var file io.Reader
-	if param.File == "-" {
-		file = ctrl.Stdin
-	} else {
-		f, err := os.Open(param.File)
-		if err != nil {
-			return fmt.Errorf("open the package list file: %w", err)
-		}
-		defer f.Close()
-		file = f
-	}
-
-	scanner := bufio.NewScanner(file)
-
 	outputPkgs := []*Package{}
-	for scanner.Scan() {
-		txt := scanner.Text()
-		if !strings.Contains(txt, ",") {
-			txt = "standard," + txt
-		}
-		findingPkg, ok := m[txt]
+	for _, pkgName := range pkgNames {
+		pkgName = getGeneratePkg(pkgName)
+		findingPkg, ok := m[pkgName]
 		if !ok {
-			return logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
+			return logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": pkgName}) //nolint:wrapcheck
 		}
 		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("failed to read the file: %w", err)
+	if param.File != "" { //nolint:nestif
+		var file io.Reader
+		if param.File == "-" {
+			file = ctrl.Stdin
+		} else {
+			f, err := os.Open(param.File)
+			if err != nil {
+				return fmt.Errorf("open the package list file: %w", err)
+			}
+			defer f.Close()
+			file = f
+		}
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			txt := getGeneratePkg(scanner.Text())
+			findingPkg, ok := m[txt]
+			if !ok {
+				return logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
+			}
+			outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg)
+			outputPkgs = append(outputPkgs, outputPkg)
+		}
+		if err := scanner.Err(); err != nil {
+			return fmt.Errorf("failed to read the file: %w", err)
+		}
 	}
+
 	if err := yaml.NewEncoder(ctrl.Stdout).Encode(outputPkgs); err != nil {
 		return fmt.Errorf("output generated package configuration: %w", err)
 	}
