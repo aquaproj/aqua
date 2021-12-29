@@ -143,11 +143,13 @@ FATA[0000] aqua failed                                   aqua_version=0.8.6 erro
 				Action: runner.whichAction,
 			},
 			{
-				Name:    "generate",
-				Aliases: []string{"g"},
-				Usage:   "Search packages in registries and output the configuration interactively",
+				Name:      "generate",
+				Aliases:   []string{"g"},
+				Usage:     "Search packages in registries and output the configuration interactively",
+				ArgsUsage: `[<registry name>,<package name> ...]`,
 				Description: `Search packages in registries and output the configuration interactively.
-Interactive fuzzy finder is launched.
+
+If no argument is passed, interactive fuzzy finder is launched.
 
 $ aqua g
 
@@ -183,7 +185,20 @@ You can update the configuration file directly by "aqua g >> <configuration file
 
 $ aqua g >> aqua.yaml
 
-With "-f" option, you can pass packages without interactive UI.
+You can pass packages with positional arguments.
+
+$ aqua g [<registry name>,<package name> ...]
+
+$ aqua g standard,cli/cli standard,junegunn/fzf
+- name: cli/cli@v2.2.0
+- name: junegunn/fzf@0.28.0
+
+You can omit the registry name if it is "standard".
+
+$ aqua g cli/cli
+- name: cli/cli@v2.2.0
+
+With "-f" option, you can pass packages.
 
 $ aqua g -f packages.txt # list of <registry name>,<package name>
 - name: cli/cli@v2.2.0
@@ -195,11 +210,12 @@ $ cat packages.txt | aqua g -f -
 - name: junegunn/fzf@0.28.0
 - name: tfmigrator/cli@v0.2.1
 
+$ aqua list | aqua g -f - # Generate configuration to install all packages
+
 You can omit the registry name if it is "standard".
 
 echo "cli/cli" | aqua g -f -
-
-$ aqua list | aqua g -f - # Generate configuration to install all packages`,
+- name: cli/cli@v2.2.0`,
 				Action: runner.generateAction,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
