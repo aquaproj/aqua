@@ -195,6 +195,10 @@ $ cat packages.txt | aqua g -f -
 - name: junegunn/fzf@0.28.0
 - name: tfmigrator/cli@v0.2.1
 
+You can omit the registry name if it is "standard".
+
+echo "cli/cli" | aqua g -f -
+
 $ aqua list | aqua g -f - # Generate configuration to install all packages`,
 				Action: runner.generateAction,
 				Flags: []cli.Flag{
