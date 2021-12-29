@@ -137,6 +137,9 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 	outputPkgs := []*Package{}
 	for scanner.Scan() {
 		txt := scanner.Text()
+		if !strings.Contains(txt, ",") {
+			txt = "standard," + txt
+		}
 		findingPkg, ok := m[txt]
 		if !ok {
 			return logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
