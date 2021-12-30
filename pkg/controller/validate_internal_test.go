@@ -138,7 +138,7 @@ func Test_validatePackages(t *testing.T) {
 					Registry: "standard",
 				},
 			},
-			isErr: true,
+			isErr: false,
 		},
 	}
 	for _, d := range data {
@@ -147,9 +147,7 @@ func Test_validatePackages(t *testing.T) {
 			t.Parallel()
 			err := validatePackages(d.pkgs)
 			if d.isErr {
-				if !errors.Is(err, errPairPkgNameAndRegistryMustBeUnique) {
-					t.Fatal(err)
-				}
+				t.Fatal(err)
 				return
 			}
 			if err != nil {
