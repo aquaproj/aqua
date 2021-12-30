@@ -180,7 +180,7 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Pa
 		}).Warn("get the latest release")
 		return
 	}
-	if pkgName == repoOwner+"/"+repoName {
+	if pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
 		outputPkg.Name += "@" + release.GetTagName()
 		outputPkg.Version = ""
 	} else {
