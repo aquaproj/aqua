@@ -16,11 +16,11 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v2
       with:
-        go-version: '1.17'
+        go-version: '1.17.5'
 
     - run: go build -o /usr/local/bin/aqua ./cmd/aqua
-    - run: echo "$HOME/.aqua/bin" >> $GITHUB_PATH
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> $GITHUB_ENV
+    - run: echo "$HOME/.aqua/bin" >> "$GITHUB_PATH"
+    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: echo "inline,aquaproj/aqua-installer" | aqua -c tests/aqua-global.yaml g -f -
