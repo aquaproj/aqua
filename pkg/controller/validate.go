@@ -47,17 +47,6 @@ func validateConfig(cfg *Config) error {
 }
 
 func validatePackages(pkgs []*Package) error {
-	names := map[string]struct{}{}
-	for _, pkg := range pkgs {
-		key := pkg.Registry + " " + pkg.Name
-		if _, ok := names[key]; ok {
-			return logerr.WithFields(errPairPkgNameAndRegistryMustBeUnique, logrus.Fields{ //nolint:wrapcheck
-				"package_name":  pkg.Name,
-				"retistry_name": pkg.Registry,
-			})
-		}
-		names[key] = struct{}{}
-	}
 	return nil
 }
 
