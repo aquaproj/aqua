@@ -63,7 +63,7 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 
 	pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
 	if err != nil {
-		logE.Warn("version constraint is invalid")
+		logE.WithError(err).Warn("version constraint is invalid")
 		return nil, nil
 	}
 
