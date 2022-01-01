@@ -240,8 +240,9 @@ func TestMergedPackageInfo_GetFiles(t *testing.T) {
 				},
 			},
 			pkgInfo: &controller.MergedPackageInfo{
-				Type:     "github_release",
-				RepoName: "ci-info",
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
 			},
 		},
 	}

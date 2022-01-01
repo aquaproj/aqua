@@ -32,11 +32,7 @@ func (pkgInfo *MergedPackageInfo) GetRosetta2() bool {
 }
 
 func (pkgInfo *MergedPackageInfo) HasRepo() bool {
-	switch pkgInfo.Type {
-	case pkgInfoTypeGitHubRelease, pkgInfoTypeGitHubArchive, pkgInfoTypeGitHubContent:
-		return true
-	}
-	return false
+	return pkgInfo.RepoOwner != "" && pkgInfo.RepoName != ""
 }
 
 func (pkgInfo *MergedPackageInfo) GetName() string {
