@@ -1,18 +1,10 @@
 {
-  automerge: true,
   extends: [
     "config:base",
-    "github>suzuki-shunsuke/renovate-config:golang",
+    "github>suzuki-shunsuke/renovate-config",
     "github>aquaproj/aqua-renovate-config",
-    "github>aquaproj/aqua-renovate-config:file(aqua-global.yaml)",
-    "github>aquaproj/aqua-renovate-config:file(aqua-global-2.yaml)",
+    "github>aquaproj/aqua-renovate-config:file(tests/aqua.*\\.yaml)",
     "github>aquaproj/aqua-renovate-config:file(aqua/.*\\.ya?ml)",
-  ],
-  packageRules: [
-    {
-      automerge: false,
-      matchUpdateTypes: ["major"],
-    },
   ],
   regexManagers: [
     {
