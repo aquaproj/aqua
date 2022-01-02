@@ -46,4 +46,5 @@ jobs:
     - run: ghq -version
     - run: gh version
     - run: tfenv --version
+    - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
     - run: aqua-installer -v v0.8.1 -i /tmp/aqua

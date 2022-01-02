@@ -7,3 +7,13 @@ packages:
   files:
   - name: golangci-lint
     src: 'golangci-lint-{{trimV .Version}}-{{.OS}}-{{.Arch}}/golangci-lint'
+
+- type: github_release
+  repo_owner: kubernetes-sigs
+  repo_name: kustomize
+  asset: 'kustomize_{{trimPrefix "kustomize/" .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+  version_filter: 'Version startsWith "kustomize/"'
+  version_constraint: 'semverWithVersion(">= 4.2.0", trimPrefix(Version, "kustomize/"))'
+  version_overrides:
+  - version_constraint: 'semverWithVersion("< 4.2.0", trimPrefix(Version, "kustomize/"))'
+    rosetta2: true

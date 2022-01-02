@@ -24,6 +24,7 @@ type MergedPackageInfo struct {
 	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
 	VersionOverrides   []*MergedPackageInfo `yaml:"version_overrides"`
 	SupportedIf        *PackageCondition    `yaml:"supported_if"`
+	VersionFilter      *VersionFilter       `yaml:"version_filter"`
 	Rosetta2           *bool
 }
 

@@ -171,20 +171,44 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 	return nil
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgName, repoOwner, repoName string) {
-	release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
-	if err != nil {
-		logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
-			"repo_owner": repoOwner,
-			"repo_name":  repoName,
-		}).Warn("get the latest release")
-		return
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgInfo *MergedPackageInfo) {
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
+	pkgName := pkgInfo.GetName()
+	tagName := ""
+	if pkgInfo.VersionFilter != nil {
+		releases, _, err := ctrl.GitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, nil)
+		if err != nil {
+			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
+				"repo_owner": repoOwner,
+				"repo_name":  repoName,
+			}).Warn("list releases")
+			return
+		}
+		for _, release := range releases {
+			f, err := pkgInfo.VersionFilter.Check(release.GetTagName())
+			if err != nil || !f {
+				continue
+			}
+			tagName = release.GetTagName()
+			break
+		}
+	} else {
+		release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
+		if err != nil {
+			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
+				"repo_owner": repoOwner,
+				"repo_name":  repoName,
+			}).Warn("get the latest release")
+			return
+		}
+		tagName = release.GetTagName()
 	}
 	if pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
-		outputPkg.Name += "@" + release.GetTagName()
+		outputPkg.Name += "@" + tagName
 		outputPkg.Version = ""
 	} else {
-		outputPkg.Version = release.GetTagName()
+		outputPkg.Version = tagName
 	}
 }
 
@@ -200,9 +224,8 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if ctrl.GitHubRepositoryService == nil {
 		return outputPkg
 	}
-	pkgInfo := pkg.PackageInfo
-	if pkgInfo.HasRepo() {
-		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
+	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {
+		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkgInfo)
 		return outputPkg
 	}
 	return outputPkg
