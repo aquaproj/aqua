@@ -171,7 +171,31 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 	return nil
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgName, repoOwner, repoName string) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgInfo *MergedPackageInfo) {
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
+	pkgName := pkgInfo.GetName()
+	if pkgInfo.VersionSource == "github_tag" {
+		tags, _, err := ctrl.GitHubRepositoryService.ListTags(ctx, repoOwner, repoName, nil)
+		if err != nil {
+			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
+				"repo_owner": repoOwner,
+				"repo_name":  repoName,
+			}).Warn("list GitHub tags")
+			return
+		}
+		if len(tags) == 0 {
+			return
+		}
+		tag := tags[0]
+		if pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
+			outputPkg.Name += "@" + tag.GetName()
+			outputPkg.Version = ""
+		} else {
+			outputPkg.Version = tag.GetName()
+		}
+		return
+	}
 	release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
 	if err != nil {
 		logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
@@ -200,9 +224,8 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if ctrl.GitHubRepositoryService == nil {
 		return outputPkg
 	}
-	pkgInfo := pkg.PackageInfo
-	if pkgInfo.HasRepo() {
-		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkg.PackageInfo.GetName(), pkgInfo.RepoOwner, pkgInfo.RepoName)
+	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {
+		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkgInfo)
 		return outputPkg
 	}
 	return outputPkg

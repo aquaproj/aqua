@@ -19,6 +19,7 @@ type MergedPackageInfo struct {
 	URL                *Template
 	Description        string
 	Link               string
+	VersionSource      string `yaml:"version_source"`
 	Replacements       map[string]string
 	FormatOverrides    []*FormatOverride    `yaml:"format_overrides"`
 	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
