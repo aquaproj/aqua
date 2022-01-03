@@ -38,7 +38,7 @@ func (pkgCondition *PackageCondition) Compile() error {
 	return nil
 }
 
-func (pkgCondition *PackageCondition) Check(v string) (bool, error) {
+func (pkgCondition *PackageCondition) Check() (bool, error) {
 	if err := pkgCondition.Compile(); err != nil {
 		return false, err
 	}
