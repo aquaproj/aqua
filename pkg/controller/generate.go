@@ -188,6 +188,9 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *MergedPa
 			return ""
 		}
 		for _, release := range releases {
+			if release.GetPrerelease() {
+				continue
+			}
 			f, err := pkgInfo.VersionFilter.Check(release.GetTagName())
 			if err != nil || !f {
 				continue
