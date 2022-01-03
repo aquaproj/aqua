@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"runtime"
 	"strings"
 
 	"github.com/antonmedv/expr"
@@ -29,8 +28,6 @@ func (vf *VersionFilter) Compile() error {
 		return nil
 	}
 	a, err := expr.Compile(vf.raw, expr.AsBool(), expr.Env(map[string]interface{}{
-		"GOOS":    "",
-		"GOARCH":  "",
 		"Version": "",
 		"semver": func(s string) bool {
 			return false
@@ -54,8 +51,6 @@ func (vf *VersionFilter) Check(v string) (bool, error) {
 		return false, err
 	}
 	a, err := expr.Run(vf.expr, map[string]interface{}{
-		"GOOS":              runtime.GOOS,
-		"GOARCH":            runtime.GOARCH,
 		"Version":           v,
 		"semver":            getSemverFunc(v),
 		"semverWithVersion": semverWithVersion,

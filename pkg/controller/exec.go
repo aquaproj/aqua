@@ -68,7 +68,7 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 	}
 
 	if pkgInfo.SupportedIf != nil {
-		supported, err := pkgInfo.SupportedIf.Check(pkg.Version)
+		supported, err := pkgInfo.SupportedIf.Check()
 		if err != nil {
 			logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
 			return nil, nil
