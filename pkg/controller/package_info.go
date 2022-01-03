@@ -155,6 +155,9 @@ func (pkgInfo *MergedPackageInfo) override(child *MergedPackageInfo) { //nolint:
 	if child.Rosetta2 != nil {
 		pkgInfo.Rosetta2 = child.Rosetta2
 	}
+	if child.VersionFilter != nil {
+		pkgInfo.VersionFilter = child.VersionFilter
+	}
 }
 
 func (pkgInfo *MergedPackageInfo) GetReplacements() map[string]string {
