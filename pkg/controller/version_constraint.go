@@ -43,35 +43,41 @@ func (constraints *VersionConstraints) Compile() error {
 	return nil
 }
 
+func getSemverFunc(v string) func(s string) bool {
+	return func(s string) bool {
+		a, err := version.NewConstraint(s)
+		if err != nil {
+			panic(err)
+		}
+		ver, err := version.NewVersion(v)
+		if err != nil {
+			panic(err)
+		}
+		return a.Check(ver)
+	}
+}
+
+func semverWithVersion(constr, ver string) bool {
+	a, err := version.NewConstraint(constr)
+	if err != nil {
+		panic(err)
+	}
+	v, err := version.NewVersion(ver)
+	if err != nil {
+		panic(err)
+	}
+	return a.Check(v)
+}
+
 func (constraints *VersionConstraints) Check(v string) (bool, error) {
 	if err := constraints.Compile(); err != nil {
 		return false, err
 	}
 	a, err := expr.Run(constraints.expr, map[string]interface{}{
-		"Version": v,
-		"semver": func(s string) bool {
-			a, err := version.NewConstraint(s)
-			if err != nil {
-				panic(err)
-			}
-			ver, err := version.NewVersion(v)
-			if err != nil {
-				panic(err)
-			}
-			return a.Check(ver)
-		},
-		"semverWithVersion": func(constr, ver string) bool {
-			a, err := version.NewConstraint(constr)
-			if err != nil {
-				panic(err)
-			}
-			v, err := version.NewVersion(ver)
-			if err != nil {
-				panic(err)
-			}
-			return a.Check(v)
-		},
-		"trimPrefix": strings.TrimPrefix,
+		"Version":           v,
+		"semver":            getSemverFunc(v),
+		"semverWithVersion": semverWithVersion,
+		"trimPrefix":        strings.TrimPrefix,
 	})
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)

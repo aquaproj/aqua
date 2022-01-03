@@ -24,6 +24,7 @@ type MergedPackageInfo struct {
 	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
 	VersionOverrides   []*MergedPackageInfo `yaml:"version_overrides"`
 	SupportedIf        *PackageCondition    `yaml:"supported_if"`
+	VersionFilter      *VersionFilter       `yaml:"version_filter"`
 	Rosetta2           *bool
 }
 
@@ -153,6 +154,9 @@ func (pkgInfo *MergedPackageInfo) override(child *MergedPackageInfo) { //nolint:
 	}
 	if child.Rosetta2 != nil {
 		pkgInfo.Rosetta2 = child.Rosetta2
+	}
+	if child.VersionFilter != nil {
+		pkgInfo.VersionFilter = child.VersionFilter
 	}
 }
 
