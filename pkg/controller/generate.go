@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/google/go-github/v39/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -171,28 +172,42 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 	return nil
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgInfo *MergedPackageInfo) {
+func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *MergedPackageInfo) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
-	pkgName := pkgInfo.GetName()
-	tagName := ""
-	if pkgInfo.VersionFilter != nil {
-		releases, _, err := ctrl.GitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, nil)
+	opt := &github.ListOptions{
+		PerPage: 30, //nolint:gomnd
+	}
+	for {
+		releases, _, err := ctrl.GitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
 				"repo_name":  repoName,
 			}).Warn("list releases")
-			return
+			return ""
 		}
 		for _, release := range releases {
 			f, err := pkgInfo.VersionFilter.Check(release.GetTagName())
 			if err != nil || !f {
 				continue
 			}
-			tagName = release.GetTagName()
-			break
+			return release.GetTagName()
 		}
+		if len(releases) != opt.PerPage {
+			return ""
+		}
+		opt.Page++
+	}
+}
+
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgInfo *MergedPackageInfo) {
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
+	pkgName := pkgInfo.GetName()
+	var tagName string
+	if pkgInfo.VersionFilter != nil {
+		tagName = ctrl.listAndGetTagName(ctx, pkgInfo)
 	} else {
 		release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
 		if err != nil {
