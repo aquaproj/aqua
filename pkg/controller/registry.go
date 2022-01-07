@@ -20,8 +20,8 @@ type MergedRegistry struct {
 	Type      string `validate:"required"`
 	RepoOwner string `yaml:"repo_owner"`
 	RepoName  string `yaml:"repo_name"`
-	Ref       string `validate:"required"`
-	Path      string `validate:"required"`
+	Ref       string
+	Path      string
 }
 
 const (
