@@ -82,23 +82,15 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return nil
 }
 
-func (registry *Registry) GetName() string {
-	return registry.Name
-}
-
-func (registry *Registry) GetType() string {
-	return registry.Type
-}
-
 func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) string {
-	switch registry.GetType() {
+	switch registry.Type {
 	case registryTypeLocal:
 		if filepath.IsAbs(registry.Path) {
 			return registry.Path
 		}
 		return filepath.Join(filepath.Dir(cfgFilePath), registry.Path)
 	case registryTypeGitHubContent:
-		return filepath.Join(rootDir, "registries", registry.GetType(), "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
+		return filepath.Join(rootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	}
 	return ""
 }
@@ -127,7 +119,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 			if err != nil {
 				<-maxInstallChan
 				logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
-					"registry_name": registry.GetName(),
+					"registry_name": registry.Name,
 				}).Error("install the registry")
 				flagMutex.Lock()
 				failed = true
@@ -135,7 +127,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 				return
 			}
 			registriesMutex.Lock()
-			registryContents[registry.GetName()] = registryContent
+			registryContents[registry.Name] = registryContent
 			registriesMutex.Unlock()
 			<-maxInstallChan
 		}(registry)
@@ -216,7 +208,7 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry *
 func (ctrl *Controller) getRegistry(ctx context.Context, registry *Registry, registryFilePath string) (*RegistryContent, error) {
 	// file doesn't exist
 	// download and install file
-	switch registry.GetType() {
+	switch registry.Type {
 	case registryTypeGitHubContent:
 		return ctrl.getGitHubContentRegistry(ctx, registry, registryFilePath)
 	case registryTypeLocal:
