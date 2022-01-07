@@ -20,6 +20,9 @@ func validateRegistries(registries Registries) error {
 			})
 		}
 		names[name] = struct{}{}
+		if err := registry.validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

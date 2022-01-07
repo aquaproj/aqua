@@ -4,9 +4,14 @@ import "errors"
 
 var (
 	errPkgNameMustBeUniqueInRegistry = errors.New("the package name must be unique in the same registry")
+	errInvalidRegistryType           = errors.New("registry type is invalid")
 	errConfigFileNotFound            = errors.New("configuration file isn't found")
 	errUnknownPkg                    = errors.New("unknown package")
 	errInvalidPackageType            = errors.New("package type is invalid")
+	errPathIsRequired                = errors.New("path is required for local registry")
+	errRepoOwnerIsRequired           = errors.New("repo_owner is required for github_content registry")
+	errRepoNameIsRequired            = errors.New("repo_name is required for github_content registry")
+	errRefIsRequired                 = errors.New("ref is required for github_content registry")
 	errGitHubTokenIsRequired         = errors.New("GITHUB_TOKEN is required for the type `github_release`")
 	errCommandIsNotFound             = errors.New("command is not found")
 	errGitHubContentMustBeFile       = errors.New("ref must be not a directory but a file")

@@ -21,7 +21,7 @@ type MergedRegistry struct {
 	RepoOwner string `yaml:"repo_owner"`
 	RepoName  string `yaml:"repo_name"`
 	Ref       string
-	Path      string
+	Path      string `validate:"required"`
 }
 
 const (
@@ -29,6 +29,39 @@ const (
 	registryTypeLocal         = "local"
 	registryTypeStandard      = "standard"
 )
+
+func (registry *MergedRegistry) validate() error {
+	switch registry.Type {
+	case registryTypeLocal:
+		return registry.validateLocal()
+	case registryTypeGitHubContent:
+		return registry.validateGitHubContent()
+	default:
+		return logerr.WithFields(errInvalidRegistryType, logrus.Fields{ //nolint:wrapcheck
+			"registry_type": registry.Type,
+		})
+	}
+}
+
+func (registry *MergedRegistry) validateLocal() error {
+	if registry.Path == "" {
+		return errPathIsRequired
+	}
+	return nil
+}
+
+func (registry *MergedRegistry) validateGitHubContent() error {
+	if registry.RepoOwner == "" {
+		return errRepoOwnerIsRequired
+	}
+	if registry.RepoName == "" {
+		return errRepoNameIsRequired
+	}
+	if registry.Ref == "" {
+		return errRefIsRequired
+	}
+	return nil
+}
 
 func (registry *MergedRegistry) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type alias MergedRegistry
