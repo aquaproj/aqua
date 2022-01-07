@@ -6,24 +6,24 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller"
 )
 
-func TestMergedRegistry_GetType(t *testing.T) {
+func TestRegistry_GetType(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title    string
 		exp      string
-		registry *controller.MergedRegistry
+		registry *controller.Registry
 	}{
 		{
 			title: "github_content",
 			exp:   "github_content",
-			registry: &controller.MergedRegistry{
+			registry: &controller.Registry{
 				Type: "github_content",
 			},
 		},
 		{
 			title: "local",
 			exp:   "local",
-			registry: &controller.MergedRegistry{
+			registry: &controller.Registry{
 				Type: "local",
 			},
 		},
@@ -39,12 +39,12 @@ func TestMergedRegistry_GetType(t *testing.T) {
 	}
 }
 
-func TestMergedRegistry_GetFilePath(t *testing.T) {
+func TestRegistry_GetFilePath(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.MergedRegistry
+		registry    *controller.Registry
 		rootDir     string
 		cfgFilePath string
 	}{
@@ -52,7 +52,7 @@ func TestMergedRegistry_GetFilePath(t *testing.T) {
 			title:   "github_content",
 			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
 			rootDir: "/root/.aqua",
-			registry: &controller.MergedRegistry{
+			registry: &controller.Registry{
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua-registry",
 				Ref:       "v0.8.0",
@@ -72,19 +72,19 @@ func TestMergedRegistry_GetFilePath(t *testing.T) {
 	}
 }
 
-func TestMergedRegistry_GetName(t *testing.T) {
+func TestRegistry_GetName(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.MergedRegistry
+		registry    *controller.Registry
 		rootDir     string
 		cfgFilePath string
 	}{
 		{
 			title: "local",
 			exp:   "foo",
-			registry: &controller.MergedRegistry{
+			registry: &controller.Registry{
 				Type: "local",
 				Name: "foo",
 			},
@@ -106,7 +106,7 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.MergedRegistry
+		registry    *controller.Registry
 		rootDir     string
 		cfgFilePath string
 	}{
@@ -115,7 +115,7 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 			exp:         "ci/foo.yaml",
 			rootDir:     "/root/.aqua",
 			cfgFilePath: "ci/aqua.yaml",
-			registry: &controller.MergedRegistry{
+			registry: &controller.Registry{
 				Path: "foo.yaml",
 				Type: "local",
 			},

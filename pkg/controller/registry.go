@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type MergedRegistry struct {
+type Registry struct {
 	Name      string `validate:"required"`
 	Type      string `validate:"required"`
 	RepoOwner string `yaml:"repo_owner"`
@@ -30,7 +30,7 @@ const (
 	registryTypeStandard      = "standard"
 )
 
-func (registry *MergedRegistry) validate() error {
+func (registry *Registry) validate() error {
 	switch registry.Type {
 	case registryTypeLocal:
 		return registry.validateLocal()
@@ -43,14 +43,14 @@ func (registry *MergedRegistry) validate() error {
 	}
 }
 
-func (registry *MergedRegistry) validateLocal() error {
+func (registry *Registry) validateLocal() error {
 	if registry.Path == "" {
 		return errPathIsRequired
 	}
 	return nil
 }
 
-func (registry *MergedRegistry) validateGitHubContent() error {
+func (registry *Registry) validateGitHubContent() error {
 	if registry.RepoOwner == "" {
 		return errRepoOwnerIsRequired
 	}
@@ -63,8 +63,8 @@ func (registry *MergedRegistry) validateGitHubContent() error {
 	return nil
 }
 
-func (registry *MergedRegistry) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type alias MergedRegistry
+func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type alias Registry
 	a := alias(*registry)
 	if err := unmarshal(&a); err != nil {
 		return err
@@ -78,19 +78,19 @@ func (registry *MergedRegistry) UnmarshalYAML(unmarshal func(interface{}) error)
 		a.RepoName = "aqua-registry"
 		a.Path = "registry.yaml"
 	}
-	*registry = MergedRegistry(a)
+	*registry = Registry(a)
 	return nil
 }
 
-func (registry *MergedRegistry) GetName() string {
+func (registry *Registry) GetName() string {
 	return registry.Name
 }
 
-func (registry *MergedRegistry) GetType() string {
+func (registry *Registry) GetType() string {
 	return registry.Type
 }
 
-func (registry *MergedRegistry) GetFilePath(rootDir, cfgFilePath string) string {
+func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) string {
 	switch registry.GetType() {
 	case registryTypeLocal:
 		if filepath.IsAbs(registry.Path) {
@@ -120,7 +120,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 	}
 
 	for _, registry := range cfg.Registries {
-		go func(registry *MergedRegistry) {
+		go func(registry *Registry) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
 			registryContent, err := ctrl.installRegistry(ctx, registry, cfgFilePath)
@@ -197,7 +197,7 @@ func (ctrl *Controller) getGitHubContentFile(ctx context.Context, repoOwner, rep
 	return []byte(content), nil
 }
 
-func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry *MergedRegistry, registryFilePath string) (*RegistryContent, error) {
+func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry *Registry, registryFilePath string) (*RegistryContent, error) {
 	b, err := ctrl.getGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	if err != nil {
 		return nil, err
@@ -213,7 +213,7 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry *
 	return registryContent, nil
 }
 
-func (ctrl *Controller) getRegistry(ctx context.Context, registry *MergedRegistry, registryFilePath string) (*RegistryContent, error) {
+func (ctrl *Controller) getRegistry(ctx context.Context, registry *Registry, registryFilePath string) (*RegistryContent, error) {
 	// file doesn't exist
 	// download and install file
 	switch registry.GetType() {
@@ -227,7 +227,7 @@ func (ctrl *Controller) getRegistry(ctx context.Context, registry *MergedRegistr
 	return nil, errUnsupportedRegistryType
 }
 
-func (ctrl *Controller) installRegistry(ctx context.Context, registry *MergedRegistry, cfgFilePath string) (*RegistryContent, error) {
+func (ctrl *Controller) installRegistry(ctx context.Context, registry *Registry, cfgFilePath string) (*RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(ctrl.RootDir, cfgFilePath)
 	if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)

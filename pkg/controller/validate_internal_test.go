@@ -22,7 +22,7 @@ func Test_validateConfig(t *testing.T) {
 					},
 				},
 				Registries: Registries{
-					&MergedRegistry{
+					&Registry{
 						Name:      "standard",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
@@ -55,7 +55,7 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 		{
 			title: "normal",
 			registries: Registries{
-				&MergedRegistry{
+				&Registry{
 					Name:      "suzuki-shunsuke/ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
@@ -63,7 +63,7 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 					Path:      "registry.yaml",
 					Type:      "github_content",
 				},
-				&MergedRegistry{
+				&Registry{
 					Name:      "aquaproj/aqua-registry",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-registry",
@@ -77,7 +77,7 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 			title: "duplicated",
 			isErr: true,
 			registries: Registries{
-				&MergedRegistry{
+				&Registry{
 					Name:      "suzuki-shunsuke/ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
@@ -85,7 +85,7 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 					Path:      "registry.yaml",
 					Type:      "github_content",
 				},
-				&MergedRegistry{
+				&Registry{
 					Name:      "suzuki-shunsuke/ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",

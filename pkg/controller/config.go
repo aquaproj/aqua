@@ -59,7 +59,7 @@ type Config struct {
 
 type (
 	PackageInfos []*MergedPackageInfo
-	Registries   []*MergedRegistry
+	Registries   []*Registry
 )
 
 const (
