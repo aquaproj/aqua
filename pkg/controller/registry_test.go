@@ -6,17 +6,26 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller"
 )
 
-func TestGitHubContentRegistry_GetType(t *testing.T) {
+func TestMergedRegistry_GetType(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title    string
 		exp      string
-		registry *controller.GitHubContentRegistry
+		registry *controller.MergedRegistry
 	}{
 		{
-			title:    "normal",
-			exp:      "github_content",
-			registry: &controller.GitHubContentRegistry{},
+			title: "github_content",
+			exp:   "github_content",
+			registry: &controller.MergedRegistry{
+				Type: "github_content",
+			},
+		},
+		{
+			title: "local",
+			exp:   "local",
+			registry: &controller.MergedRegistry{
+				Type: "local",
+			},
 		},
 	}
 	for _, d := range data {
@@ -30,24 +39,25 @@ func TestGitHubContentRegistry_GetType(t *testing.T) {
 	}
 }
 
-func TestGitHubContentRegistry_GetFilePath(t *testing.T) {
+func TestMergedRegistry_GetFilePath(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.GitHubContentRegistry
+		registry    *controller.MergedRegistry
 		rootDir     string
 		cfgFilePath string
 	}{
 		{
-			title:   "normal",
+			title:   "github_content",
 			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
 			rootDir: "/root/.aqua",
-			registry: &controller.GitHubContentRegistry{
+			registry: &controller.MergedRegistry{
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua-registry",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",
+				Type:      "github_content",
 			},
 		},
 	}
@@ -62,19 +72,20 @@ func TestGitHubContentRegistry_GetFilePath(t *testing.T) {
 	}
 }
 
-func TestGitHubContentRegistry_GetName(t *testing.T) {
+func TestMergedRegistry_GetName(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.LocalRegistry
+		registry    *controller.MergedRegistry
 		rootDir     string
 		cfgFilePath string
 	}{
 		{
-			title: "normal",
+			title: "local",
 			exp:   "foo",
-			registry: &controller.LocalRegistry{
+			registry: &controller.MergedRegistry{
+				Type: "local",
 				Name: "foo",
 			},
 		},
@@ -90,62 +101,12 @@ func TestGitHubContentRegistry_GetName(t *testing.T) {
 	}
 }
 
-func TestLocalRegistry_GetName(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title    string
-		exp      string
-		registry *controller.LocalRegistry
-	}{
-		{
-			title: "normal",
-			exp:   "foo",
-			registry: &controller.LocalRegistry{
-				Name: "foo",
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if name := d.registry.GetName(); name != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, name)
-			}
-		})
-	}
-}
-
-func TestLocalRegistry_GetType(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title    string
-		exp      string
-		registry *controller.LocalRegistry
-	}{
-		{
-			title:    "normal",
-			exp:      "local",
-			registry: &controller.LocalRegistry{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if typ := d.registry.GetType(); typ != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, typ)
-			}
-		})
-	}
-}
-
 func TestLocalRegistry_GetFilePath(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.LocalRegistry
+		registry    *controller.MergedRegistry
 		rootDir     string
 		cfgFilePath string
 	}{
@@ -154,8 +115,9 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 			exp:         "ci/foo.yaml",
 			rootDir:     "/root/.aqua",
 			cfgFilePath: "ci/aqua.yaml",
-			registry: &controller.LocalRegistry{
+			registry: &controller.MergedRegistry{
 				Path: "foo.yaml",
+				Type: "local",
 			},
 		},
 	}

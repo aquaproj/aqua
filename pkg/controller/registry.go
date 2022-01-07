@@ -15,13 +15,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Registry interface {
-	GetName() string
-	GetType() string
-	GetFilePath(rootDir, cfgFilePath string) string
-}
-
-type mergedRegistry struct {
+type MergedRegistry struct {
 	Name      string `validate:"required"`
 	Type      string `validate:"required"`
 	RepoOwner string `yaml:"repo_owner"`
@@ -36,75 +30,44 @@ const (
 	registryTypeStandard      = "standard"
 )
 
-func (registry *mergedRegistry) GetRegistry() (Registry, error) {
-	switch registry.Type {
-	case registryTypeGitHubContent:
-		return &GitHubContentRegistry{
-			Name:      registry.Name,
-			RepoOwner: registry.RepoOwner,
-			RepoName:  registry.RepoName,
-			Ref:       registry.Ref,
-			Path:      registry.Path,
-		}, nil
+func (registry *MergedRegistry) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type alias MergedRegistry
+	a := alias(*registry)
+	if err := unmarshal(&a); err != nil {
+		return err
+	}
+	if a.Type == registryTypeStandard {
+		if a.Name == "" {
+			a.Name = registryTypeStandard
+		}
+		a.Type = registryTypeGitHubContent
+		a.RepoOwner = "aquaproj"
+		a.RepoName = "aqua-registry"
+		a.Path = "registry.yaml"
+	}
+	*registry = MergedRegistry(a)
+	return nil
+}
+
+func (registry *MergedRegistry) GetName() string {
+	return registry.Name
+}
+
+func (registry *MergedRegistry) GetType() string {
+	return registry.Type
+}
+
+func (registry *MergedRegistry) GetFilePath(rootDir, cfgFilePath string) string {
+	switch registry.GetType() {
 	case registryTypeLocal:
-		return &LocalRegistry{
-			Name: registry.Name,
-			Path: registry.Path,
-		}, nil
-	case registryTypeStandard:
-		return &GitHubContentRegistry{
-			Name:      "standard",
-			RepoOwner: "aquaproj",
-			RepoName:  "aqua-registry",
-			Ref:       registry.Ref,
-			Path:      "registry.yaml",
-		}, nil
-	default:
-		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
-			"registry_name": registry.Name,
-			"registry_type": registry.Type,
-		})
+		if filepath.IsAbs(registry.Path) {
+			return registry.Path
+		}
+		return filepath.Join(filepath.Dir(cfgFilePath), registry.Path)
+	case registryTypeGitHubContent:
+		return filepath.Join(rootDir, "registries", registry.GetType(), "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	}
-}
-
-type GitHubContentRegistry struct {
-	Name      string `validate:"required"`
-	RepoOwner string `yaml:"repo_owner"`
-	RepoName  string `yaml:"repo_name"`
-	Ref       string `validate:"required"`
-	Path      string `validate:"required"`
-}
-
-func (registry *GitHubContentRegistry) GetName() string {
-	return registry.Name
-}
-
-func (registry *GitHubContentRegistry) GetType() string {
-	return registryTypeGitHubContent
-}
-
-func (registry *GitHubContentRegistry) GetFilePath(rootDir, cfgFilePath string) string {
-	return filepath.Join(rootDir, "registries", registry.GetType(), "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
-}
-
-type LocalRegistry struct {
-	Name string `validate:"required"`
-	Path string `validate:"required"`
-}
-
-func (registry *LocalRegistry) GetName() string {
-	return registry.Name
-}
-
-func (registry *LocalRegistry) GetType() string {
-	return registryTypeLocal
-}
-
-func (registry *LocalRegistry) GetFilePath(rootDir, cfgFilePath string) string {
-	if filepath.IsAbs(registry.Path) {
-		return registry.Path
-	}
-	return filepath.Join(filepath.Dir(cfgFilePath), registry.Path)
+	return ""
 }
 
 type RegistryContent struct {
@@ -124,7 +87,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 	}
 
 	for _, registry := range cfg.Registries {
-		go func(registry Registry) {
+		go func(registry *MergedRegistry) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
 			registryContent, err := ctrl.installRegistry(ctx, registry, cfgFilePath)
@@ -201,13 +164,8 @@ func (ctrl *Controller) getGitHubContentFile(ctx context.Context, repoOwner, rep
 	return []byte(content), nil
 }
 
-func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
-	r, ok := registry.(*GitHubContentRegistry)
-	if !ok {
-		return nil, errTypeAssertionGitHubContentRegistry
-	}
-
-	b, err := ctrl.getGitHubContentFile(ctx, r.RepoOwner, r.RepoName, r.Ref, r.Path)
+func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry *MergedRegistry, registryFilePath string) (*RegistryContent, error) {
+	b, err := ctrl.getGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +180,7 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry R
 	return registryContent, nil
 }
 
-func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
+func (ctrl *Controller) getRegistry(ctx context.Context, registry *MergedRegistry, registryFilePath string) (*RegistryContent, error) {
 	// file doesn't exist
 	// download and install file
 	switch registry.GetType() {
@@ -236,7 +194,7 @@ func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, regi
 	return nil, errUnsupportedRegistryType
 }
 
-func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry, cfgFilePath string) (*RegistryContent, error) {
+func (ctrl *Controller) installRegistry(ctx context.Context, registry *MergedRegistry, cfgFilePath string) (*RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(ctrl.RootDir, cfgFilePath)
 	if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
