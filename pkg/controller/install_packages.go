@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/log"
@@ -138,6 +139,42 @@ func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Packa
 	return pkgInfo, nil
 }
 
+const maxRetryDownload = 1
+
+func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkgInfo *MergedPackageInfo, pkg *Package, pkgPath, assetName string) error {
+	logE := ctrl.logE().WithFields(logrus.Fields{
+		"package_name":    pkg.Name,
+		"package_version": pkg.Version,
+		"registry":        pkg.Registry,
+	})
+	retryCount := 0
+	for {
+		logE.Debug("check if the package is already installed")
+		finfo, err := os.Stat(pkgPath)
+		if err != nil { //nolint:nestif
+			// file doesn't exist
+			if err := ctrl.download(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+				if strings.Contains(err.Error(), "file already exists") {
+					if retryCount >= maxRetryDownload {
+						return err
+					}
+					retryCount++
+					logerr.WithError(logE, err).WithFields(logrus.Fields{
+						"retry_count": retryCount,
+					}).Info("retry installing the package")
+					continue
+				}
+				return err
+			}
+			return nil
+		}
+		if !finfo.IsDir() {
+			return fmt.Errorf("%s isn't a directory", pkgPath)
+		}
+		return nil
+	}
+}
+
 func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *MergedPackageInfo, pkg *Package, isTest bool) error {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
@@ -154,17 +191,9 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *MergedPacka
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
-	logE.Debug("check if the package is already installed")
-	finfo, err := os.Stat(pkgPath)
-	if err != nil {
-		// file doesn't exist
-		if err := ctrl.download(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
-			return err
-		}
-	} else {
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", pkgPath)
-		}
+
+	if err := ctrl.downloadWithRetry(ctx, pkgInfo, pkg, pkgPath, assetName); err != nil {
+		return err
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
