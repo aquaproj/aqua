@@ -6,17 +6,17 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestMergedPackageInfo_override(t *testing.T) {
+func TestPackageInfo_override(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
-		pkgInfo *MergedPackageInfo
-		child   *MergedPackageInfo
-		exp     *MergedPackageInfo
+		pkgInfo *PackageInfo
+		child   *PackageInfo
+		exp     *PackageInfo
 	}{
 		{
 			title: "normal",
-			pkgInfo: &MergedPackageInfo{
+			pkgInfo: &PackageInfo{
 				Type:        pkgInfoTypeGitHubRelease,
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",
@@ -30,13 +30,13 @@ func TestMergedPackageInfo_override(t *testing.T) {
 					},
 				},
 			},
-			child: &MergedPackageInfo{
+			child: &PackageInfo{
 				Type: pkgInfoTypeGitHubContent,
 				Path: &Template{
 					raw: "colima",
 				},
 			},
-			exp: &MergedPackageInfo{
+			exp: &PackageInfo{
 				Type:        pkgInfoTypeGitHubContent,
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",

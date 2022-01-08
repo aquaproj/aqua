@@ -8,17 +8,17 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func TestMergedPackageInfo_GetName(t *testing.T) {
+func TestPackageInfo_GetName(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "foo",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type: "github_release",
 				Name: "foo",
 			},
@@ -26,7 +26,7 @@ func TestMergedPackageInfo_GetName(t *testing.T) {
 		{
 			title: "default",
 			exp:   "suzuki-shunsuke/ci-info",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
@@ -44,17 +44,17 @@ func TestMergedPackageInfo_GetName(t *testing.T) {
 	}
 }
 
-func TestMergedPackageInfo_GetType(t *testing.T) {
+func TestPackageInfo_GetType(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "github_release",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type: "github_release",
 			},
 		},
@@ -70,17 +70,17 @@ func TestMergedPackageInfo_GetType(t *testing.T) {
 	}
 }
 
-func TestMergedPackageInfo_GetLink(t *testing.T) {
+func TestPackageInfo_GetLink(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "http://example.com",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type: "github_release",
 				Link: "http://example.com",
 			},
@@ -88,7 +88,7 @@ func TestMergedPackageInfo_GetLink(t *testing.T) {
 		{
 			title: "default",
 			exp:   "https://github.com/suzuki-shunsuke/ci-info",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
@@ -106,24 +106,24 @@ func TestMergedPackageInfo_GetLink(t *testing.T) {
 	}
 }
 
-func TestMergedPackageInfo_GetDescription(t *testing.T) {
+func TestPackageInfo_GetDescription(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "hello world",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Description: "hello world",
 			},
 		},
 		{
 			title:   "empty",
 			exp:     "",
-			pkgInfo: &controller.MergedPackageInfo{},
+			pkgInfo: &controller.PackageInfo{},
 		},
 	}
 	for _, d := range data {
@@ -137,24 +137,24 @@ func TestMergedPackageInfo_GetDescription(t *testing.T) {
 	}
 }
 
-func TestMergedPackageInfo_GetFormat(t *testing.T) {
+func TestPackageInfo_GetFormat(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 	}{
 		{
 			title: "normal",
 			exp:   "tar.gz",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Format: "tar.gz",
 			},
 		},
 		{
 			title:   "empty",
 			exp:     "",
-			pkgInfo: &controller.MergedPackageInfo{},
+			pkgInfo: &controller.PackageInfo{},
 		},
 	}
 	for _, d := range data {
@@ -168,19 +168,19 @@ func TestMergedPackageInfo_GetFormat(t *testing.T) {
 	}
 }
 
-func TestMergedPackageInfo_GetReplacements(t *testing.T) {
+func TestPackageInfo_GetReplacements(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     map[string]string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 	}{
 		{
 			title: "normal",
 			exp: map[string]string{
 				"amd64": "x86_64",
 			},
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Replacements: map[string]string{
 					"amd64": "x86_64",
 				},
@@ -189,7 +189,7 @@ func TestMergedPackageInfo_GetReplacements(t *testing.T) {
 		{
 			title:   "empty",
 			exp:     nil,
-			pkgInfo: &controller.MergedPackageInfo{},
+			pkgInfo: &controller.PackageInfo{},
 		},
 	}
 	for _, d := range data {
@@ -204,12 +204,12 @@ func TestMergedPackageInfo_GetReplacements(t *testing.T) {
 	}
 }
 
-func TestMergedPackageInfo_GetFiles(t *testing.T) {
+func TestPackageInfo_GetFiles(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     []*controller.File
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 	}{
 		{
 			title: "normal",
@@ -221,7 +221,7 @@ func TestMergedPackageInfo_GetFiles(t *testing.T) {
 					Name: "gofmt",
 				},
 			},
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Files: []*controller.File{
 					{
 						Name: "go",
@@ -239,7 +239,7 @@ func TestMergedPackageInfo_GetFiles(t *testing.T) {
 					Name: "ci-info",
 				},
 			},
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
@@ -258,25 +258,25 @@ func TestMergedPackageInfo_GetFiles(t *testing.T) {
 	}
 }
 
-func TestMergedPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
+func TestPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 		pkg     *controller.Package
 	}{
 		{
 			title: "github_archive",
 			exp:   "",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type: "github_archive",
 			},
 		},
 		{
 			title: "github_content",
 			exp:   "foo",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type: "github_content",
 				Path: controller.NewTemplate("foo"),
 			},
@@ -287,7 +287,7 @@ func TestMergedPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 		{
 			title: "github_release",
 			exp:   "foo-1.0.0.zip",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:   "github_release",
 				Asset:  controller.NewTemplate("foo-{{trimV .Version}}.{{.Format}}"),
 				Format: "zip",
@@ -299,7 +299,7 @@ func TestMergedPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 		{
 			title: "http",
 			exp:   "foo-1.0.0.zip",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:   "http",
 				URL:    controller.NewTemplate("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 				Format: "zip",
@@ -324,19 +324,19 @@ func TestMergedPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
+func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	rootDir := "/tmp/aqua"
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 		pkg     *controller.Package
 	}{
 		{
 			title: "github_archive",
 			exp:   "/tmp/aqua/pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_archive",
 				RepoOwner: "tfutils",
 				RepoName:  "tfenv",
@@ -348,7 +348,7 @@ func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		{
 			title: "github_content",
 			exp:   "/tmp/aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_content",
 				Path:      controller.NewTemplate("aqua-installer"),
 				RepoOwner: "aquaproj",
@@ -361,7 +361,7 @@ func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		{
 			title: "github_release",
 			exp:   "/tmp/aqua/pkgs/github_release/github.com/aquaproj/aqua/v0.7.7/aqua.tar.gz",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
@@ -375,7 +375,7 @@ func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		{
 			title: "http",
 			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:   "http",
 				URL:    controller.NewTemplate("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 				Format: "zip",
@@ -400,19 +400,19 @@ func TestMergedPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestMergedPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
+func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
 		exp     string
-		pkgInfo *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
 		pkg     *controller.Package
 		file    *controller.File
 	}{
 		{
 			title: "unarchived",
 			exp:   "foo",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type: "github_content",
 				Path: controller.NewTemplate("foo"),
 			},
@@ -423,7 +423,7 @@ func TestMergedPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 		{
 			title: "github_release",
 			exp:   "aqua",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
@@ -440,7 +440,7 @@ func TestMergedPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 		{
 			title: "github_release",
 			exp:   "bin/aqua",
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
@@ -471,33 +471,33 @@ func TestMergedPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestMergedPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
+func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
 		version string
-		pkgInfo *controller.MergedPackageInfo
-		exp     *controller.MergedPackageInfo
+		pkgInfo *controller.PackageInfo
+		exp     *controller.PackageInfo
 	}{
 		{
 			title: "no version constraint",
-			exp: &controller.MergedPackageInfo{
+			exp: &controller.PackageInfo{
 				Type: "github_content",
 				Path: controller.NewTemplate("foo"),
 			},
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type: "github_content",
 				Path: controller.NewTemplate("foo"),
 			},
 		},
 		{
 			title: "version constraint",
-			exp: &controller.MergedPackageInfo{
+			exp: &controller.PackageInfo{
 				Type:               "github_content",
 				Path:               controller.NewTemplate("foo"),
 				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
 			},
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:               "github_content",
 				Path:               controller.NewTemplate("foo"),
 				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
@@ -506,22 +506,22 @@ func TestMergedPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "child version constraint",
-			exp: &controller.MergedPackageInfo{
+			exp: &controller.PackageInfo{
 				Type:               "github_content",
 				Path:               controller.NewTemplate("bar"),
 				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
-				VersionOverrides: []*controller.MergedPackageInfo{
+				VersionOverrides: []*controller.PackageInfo{
 					{
 						VersionConstraints: controller.NewVersionConstraints(`semver("< 0.4.0")`),
 						Path:               controller.NewTemplate("bar"),
 					},
 				},
 			},
-			pkgInfo: &controller.MergedPackageInfo{
+			pkgInfo: &controller.PackageInfo{
 				Type:               "github_content",
 				Path:               controller.NewTemplate("foo"),
 				VersionConstraints: controller.NewVersionConstraints(`semver(">= 0.4.0")`),
-				VersionOverrides: []*controller.MergedPackageInfo{
+				VersionOverrides: []*controller.PackageInfo{
 					{
 						VersionConstraints: controller.NewVersionConstraints(`semver("< 0.4.0")`),
 						Path:               controller.NewTemplate("bar"),

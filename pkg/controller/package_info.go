@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-type MergedPackageInfo struct {
+type PackageInfo struct {
 	Name               string
 	Type               string `validate:"required"`
 	RepoOwner          string `yaml:"repo_owner"`
@@ -20,23 +20,23 @@ type MergedPackageInfo struct {
 	Description        string
 	Link               string
 	Replacements       map[string]string
-	FormatOverrides    []*FormatOverride    `yaml:"format_overrides"`
-	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
-	VersionOverrides   []*MergedPackageInfo `yaml:"version_overrides"`
-	SupportedIf        *PackageCondition    `yaml:"supported_if"`
-	VersionFilter      *VersionFilter       `yaml:"version_filter"`
+	FormatOverrides    []*FormatOverride   `yaml:"format_overrides"`
+	VersionConstraints *VersionConstraints `yaml:"version_constraint"`
+	VersionOverrides   []*PackageInfo      `yaml:"version_overrides"`
+	SupportedIf        *PackageCondition   `yaml:"supported_if"`
+	VersionFilter      *VersionFilter      `yaml:"version_filter"`
 	Rosetta2           *bool
 }
 
-func (pkgInfo *MergedPackageInfo) GetRosetta2() bool {
+func (pkgInfo *PackageInfo) GetRosetta2() bool {
 	return pkgInfo.Rosetta2 != nil && *pkgInfo.Rosetta2
 }
 
-func (pkgInfo *MergedPackageInfo) HasRepo() bool {
+func (pkgInfo *PackageInfo) HasRepo() bool {
 	return pkgInfo.RepoOwner != "" && pkgInfo.RepoName != ""
 }
 
-func (pkgInfo *MergedPackageInfo) GetName() string {
+func (pkgInfo *PackageInfo) GetName() string {
 	if pkgInfo.Name != "" {
 		return pkgInfo.Name
 	}
@@ -46,7 +46,7 @@ func (pkgInfo *MergedPackageInfo) GetName() string {
 	return ""
 }
 
-func (pkgInfo *MergedPackageInfo) GetLink() string {
+func (pkgInfo *PackageInfo) GetLink() string {
 	if pkgInfo.Link != "" {
 		return pkgInfo.Link
 	}
@@ -56,7 +56,7 @@ func (pkgInfo *MergedPackageInfo) GetLink() string {
 	return ""
 }
 
-func (pkgInfo *MergedPackageInfo) GetFormat() string {
+func (pkgInfo *PackageInfo) GetFormat() string {
 	if pkgInfo.Type == pkgInfoTypeGitHubArchive {
 		return "tar.gz"
 	}
@@ -68,7 +68,7 @@ func (pkgInfo *MergedPackageInfo) GetFormat() string {
 	return pkgInfo.Format
 }
 
-func (pkgInfo *MergedPackageInfo) GetFileSrc(pkg *Package, file *File) (string, error) {
+func (pkgInfo *PackageInfo) GetFileSrc(pkg *Package, file *File) (string, error) {
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
@@ -86,15 +86,15 @@ func (pkgInfo *MergedPackageInfo) GetFileSrc(pkg *Package, file *File) (string, 
 	return src, nil
 }
 
-func (pkgInfo *MergedPackageInfo) GetDescription() string {
+func (pkgInfo *PackageInfo) GetDescription() string {
 	return pkgInfo.Description
 }
 
-func (pkgInfo *MergedPackageInfo) GetType() string {
+func (pkgInfo *PackageInfo) GetType() string {
 	return pkgInfo.Type
 }
 
-func (pkgInfo *MergedPackageInfo) SetVersion(v string) (*MergedPackageInfo, error) {
+func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
 	if pkgInfo.VersionConstraints == nil {
 		return pkgInfo, nil
 	}
@@ -118,7 +118,7 @@ func (pkgInfo *MergedPackageInfo) SetVersion(v string) (*MergedPackageInfo, erro
 	return pkgInfo, nil
 }
 
-func (pkgInfo *MergedPackageInfo) override(child *MergedPackageInfo) { //nolint:cyclop
+func (pkgInfo *PackageInfo) override(child *PackageInfo) { //nolint:cyclop
 	if child.Type != "" {
 		pkgInfo.Type = child.Type
 	}
@@ -160,11 +160,11 @@ func (pkgInfo *MergedPackageInfo) override(child *MergedPackageInfo) { //nolint:
 	}
 }
 
-func (pkgInfo *MergedPackageInfo) GetReplacements() map[string]string {
+func (pkgInfo *PackageInfo) GetReplacements() map[string]string {
 	return pkgInfo.Replacements
 }
 
-func (pkgInfo *MergedPackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
+func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
@@ -195,7 +195,7 @@ func (pkgInfo *MergedPackageInfo) GetPkgPath(rootDir string, pkg *Package) (stri
 	return "", nil
 }
 
-func (pkgInfo *MergedPackageInfo) RenderAsset(pkg *Package) (string, error) {
+func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
 	switch pkgInfo.Type {
 	case pkgInfoTypeGitHubArchive:
 		return "", nil
@@ -231,7 +231,7 @@ func (pkgInfo *MergedPackageInfo) RenderAsset(pkg *Package) (string, error) {
 	return "", nil
 }
 
-func (pkgInfo *MergedPackageInfo) renderURL(pkg *Package) (string, error) {
+func (pkgInfo *PackageInfo) renderURL(pkg *Package) (string, error) {
 	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
 		"Version": pkg.Version,
 		"GOOS":    runtime.GOOS,
@@ -246,7 +246,7 @@ func (pkgInfo *MergedPackageInfo) renderURL(pkg *Package) (string, error) {
 	return uS, nil
 }
 
-func (pkgInfo *MergedPackageInfo) GetFiles() []*File {
+func (pkgInfo *PackageInfo) GetFiles() []*File {
 	if len(pkgInfo.Files) != 0 {
 		return pkgInfo.Files
 	}
