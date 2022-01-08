@@ -64,7 +64,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string) error {
 		}
 	}
 	cfgStr := strings.Replace(configTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1)
-	if err := os.WriteFile(cfgFilePath, []byte(cfgStr), 0o755); err != nil { //nolint:gosec,gomnd
+	if err := os.WriteFile(cfgFilePath, []byte(cfgStr), 0o644); err != nil { //nolint:gosec,gomnd
 		return fmt.Errorf("write a configuration file: %w", logerr.WithFields(err, logrus.Fields{
 			"configuration_file_path": cfgFilePath,
 		}))
