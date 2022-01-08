@@ -59,7 +59,7 @@ type Config struct {
 
 type (
 	PackageInfos []*PackageInfo
-	Registries   []*Registry
+	Registries   map[string]*Registry
 )
 
 const (
@@ -68,6 +68,19 @@ const (
 	pkgInfoTypeGitHubArchive = "github_archive"
 	pkgInfoTypeHTTP          = "http"
 )
+
+func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	arr := []*Registry{}
+	if err := unmarshal(&arr); err != nil {
+		return err
+	}
+	m := make(map[string]*Registry, len(arr))
+	for _, registry := range arr {
+		m[registry.Name] = registry
+	}
+	*registries = m
+	return nil
+}
 
 func (pkgInfos *PackageInfos) ToMap() (map[string]*PackageInfo, error) {
 	m := make(map[string]*PackageInfo, len(*pkgInfos))

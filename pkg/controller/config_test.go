@@ -28,7 +28,7 @@ packages:
 `,
 			exp: &controller.Config{
 				Registries: controller.Registries{
-					&controller.Registry{
+					"standard": &controller.Registry{
 						Name:      "standard",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
@@ -101,7 +101,7 @@ packages:
 `,
 			exp: &controller.Config{
 				Registries: controller.Registries{
-					&controller.Registry{
+					"standard": &controller.Registry{
 						Name:      "standard",
 						Type:      "github_content",
 						RepoOwner: "aquaproj",
