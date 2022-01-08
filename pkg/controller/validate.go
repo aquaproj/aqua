@@ -11,14 +11,7 @@ import (
 var validate = validator.New() //nolint:gochecknoglobals
 
 func validateRegistries(registries Registries) error {
-	names := make(map[string]struct{}, len(registries))
 	for _, registry := range registries {
-		if _, ok := names[registry.Name]; ok {
-			return logerr.WithFields(errRegistryNameIsDuplicated, logrus.Fields{ //nolint:wrapcheck
-				"registry_name": registry.Name,
-			})
-		}
-		names[registry.Name] = struct{}{}
 		if err := registry.validate(); err != nil {
 			return err
 		}

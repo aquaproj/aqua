@@ -22,7 +22,7 @@ func Test_validateConfig(t *testing.T) {
 					},
 				},
 				Registries: Registries{
-					&Registry{
+					"standard": &Registry{
 						Name:      "standard",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
@@ -45,7 +45,7 @@ func Test_validateConfig(t *testing.T) {
 	}
 }
 
-func Test_validateRegistries(t *testing.T) { //nolint:funlen
+func Test_validateRegistries(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title      string
@@ -55,40 +55,18 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 		{
 			title: "normal",
 			registries: Registries{
-				&Registry{
-					Name:      "suzuki-shunsuke/ci-info",
+				"ci-info": &Registry{
+					Name:      "ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
 					Ref:       "v1.0.0",
 					Path:      "registry.yaml",
 					Type:      "github_content",
 				},
-				&Registry{
-					Name:      "aquaproj/aqua-registry",
+				"standard": &Registry{
+					Name:      "standard",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-registry",
-					Ref:       "v0.8.0",
-					Path:      "registry.yaml",
-					Type:      "github_content",
-				},
-			},
-		},
-		{
-			title: "duplicated",
-			isErr: true,
-			registries: Registries{
-				&Registry{
-					Name:      "suzuki-shunsuke/ci-info",
-					RepoOwner: "suzuki-shunsuke",
-					RepoName:  "ci-info",
-					Ref:       "v1.0.0",
-					Path:      "registry.yaml",
-					Type:      "github_content",
-				},
-				&Registry{
-					Name:      "suzuki-shunsuke/ci-info",
-					RepoOwner: "suzuki-shunsuke",
-					RepoName:  "ci-info",
 					Ref:       "v0.8.0",
 					Path:      "registry.yaml",
 					Type:      "github_content",
