@@ -20,11 +20,11 @@ type PackageInfo struct {
 	Description        string
 	Link               string
 	Replacements       map[string]string
-	FormatOverrides    []*FormatOverride    `yaml:"format_overrides"`
-	VersionConstraints *VersionConstraints  `yaml:"version_constraint"`
-	VersionOverrides   []*PackageInfo `yaml:"version_overrides"`
-	SupportedIf        *PackageCondition    `yaml:"supported_if"`
-	VersionFilter      *VersionFilter       `yaml:"version_filter"`
+	FormatOverrides    []*FormatOverride   `yaml:"format_overrides"`
+	VersionConstraints *VersionConstraints `yaml:"version_constraint"`
+	VersionOverrides   []*PackageInfo      `yaml:"version_overrides"`
+	SupportedIf        *PackageCondition   `yaml:"supported_if"`
+	VersionFilter      *VersionFilter      `yaml:"version_filter"`
 	Rosetta2           *bool
 }
 
