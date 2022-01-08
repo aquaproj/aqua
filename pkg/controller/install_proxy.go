@@ -22,7 +22,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	})
 
 	logE.Debug("install the proxy")
-	pkgInfo := &MergedPackageInfo{
+	pkgInfo := &PackageInfo{
 		Type:      "github_release",
 		RepoOwner: "aquaproj",
 		RepoName:  proxyName,

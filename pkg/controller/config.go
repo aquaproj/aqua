@@ -58,7 +58,7 @@ type Config struct {
 }
 
 type (
-	PackageInfos []*MergedPackageInfo
+	PackageInfos []*PackageInfo
 	Registries   []*Registry
 )
 
@@ -69,8 +69,8 @@ const (
 	pkgInfoTypeHTTP          = "http"
 )
 
-func (pkgInfos *PackageInfos) ToMap() (map[string]*MergedPackageInfo, error) {
-	m := make(map[string]*MergedPackageInfo, len(*pkgInfos))
+func (pkgInfos *PackageInfos) ToMap() (map[string]*PackageInfo, error) {
+	m := make(map[string]*PackageInfo, len(*pkgInfos))
 	for _, pkgInfo := range *pkgInfos {
 		pkgInfo := pkgInfo
 		name := pkgInfo.GetName()
@@ -102,7 +102,7 @@ func getArch(rosetta2 bool, replacements map[string]string) string {
 	return replace(runtime.GOARCH, replacements)
 }
 
-func (file *File) RenderSrc(pkg *Package, pkgInfo *MergedPackageInfo) (string, error) {
+func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo) (string, error) {
 	return file.Src.Execute(map[string]interface{}{
 		"Version":  pkg.Version,
 		"GOOS":     runtime.GOOS,

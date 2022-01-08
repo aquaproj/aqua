@@ -171,7 +171,7 @@ func Test_validatePackageInfos(t *testing.T) { //nolint:funlen
 		{
 			title: "normal",
 			pkgInfos: PackageInfos{
-				&MergedPackageInfo{
+				&PackageInfo{
 					Name: "foo",
 					Files: []*File{
 						{
@@ -179,7 +179,7 @@ func Test_validatePackageInfos(t *testing.T) { //nolint:funlen
 						},
 					},
 				},
-				&MergedPackageInfo{
+				&PackageInfo{
 					Name: "bar",
 					Files: []*File{
 						{
@@ -193,7 +193,7 @@ func Test_validatePackageInfos(t *testing.T) { //nolint:funlen
 			title: "duplicated",
 			isErr: true,
 			pkgInfos: PackageInfos{
-				&MergedPackageInfo{
+				&PackageInfo{
 					Name: "foo",
 					Files: []*File{
 						{
@@ -201,7 +201,7 @@ func Test_validatePackageInfos(t *testing.T) { //nolint:funlen
 						},
 					},
 				},
-				&MergedPackageInfo{
+				&PackageInfo{
 					Name: "foo",
 					Files: []*File{
 						{

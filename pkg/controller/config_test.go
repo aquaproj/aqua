@@ -66,7 +66,7 @@ packages:
 			exp: &controller.Config{
 				InlineRegistry: &controller.RegistryContent{
 					PackageInfos: controller.PackageInfos{
-						&controller.MergedPackageInfo{
+						&controller.PackageInfo{
 							Name:      "cmdx",
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
@@ -141,18 +141,18 @@ func TestPackageInfos_ToMap(t *testing.T) {
 	data := []struct {
 		title    string
 		pkgInfos *controller.PackageInfos
-		exp      map[string]*controller.MergedPackageInfo
+		exp      map[string]*controller.PackageInfo
 		isErr    bool
 	}{
 		{
 			title: "normal",
 			pkgInfos: &controller.PackageInfos{
-				&controller.MergedPackageInfo{
+				&controller.PackageInfo{
 					Type: "github_release",
 					Name: "foo",
 				},
 			},
-			exp: map[string]*controller.MergedPackageInfo{
+			exp: map[string]*controller.PackageInfo{
 				"foo": {
 					Type: "github_release",
 					Name: "foo",

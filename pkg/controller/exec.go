@@ -38,7 +38,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, 
 	return ctrl.execCommand(ctx, which.ExePath, args)
 }
 
-func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*MergedPackageInfo, *File) {
+func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*PackageInfo, *File) {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
@@ -87,7 +87,7 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 	return nil, nil
 }
 
-func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, *MergedPackageInfo, *File, error) {
+func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, *PackageInfo, *File, error) {
 	cfg := &Config{}
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return nil, nil, nil, err

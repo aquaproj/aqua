@@ -21,7 +21,7 @@ func (ctrl *Controller) Which(ctx context.Context, param *Param, exeName string)
 
 type Which struct {
 	Package *Package
-	PkgInfo *MergedPackageInfo
+	PkgInfo *PackageInfo
 	File    *File
 	ExePath string
 }
@@ -91,7 +91,7 @@ func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string)
 	return ctrl.whichFile(pkg, pkgInfo, file)
 }
 
-func (ctrl *Controller) whichFile(pkg *Package, pkgInfo *MergedPackageInfo, file *File) (*Which, error) {
+func (ctrl *Controller) whichFile(pkg *Package, pkgInfo *PackageInfo, file *File) (*Which, error) {
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return nil, fmt.Errorf("get file_src: %w", err)

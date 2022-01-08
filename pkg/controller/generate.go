@@ -17,7 +17,7 @@ import (
 )
 
 type FindingPackage struct {
-	PackageInfo  *MergedPackageInfo
+	PackageInfo  *PackageInfo
 	RegistryName string
 }
 
@@ -172,7 +172,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 	return nil
 }
 
-func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *MergedPackageInfo) string {
+func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *PackageInfo) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -204,7 +204,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *MergedPa
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgInfo *MergedPackageInfo) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgInfo *PackageInfo) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	pkgName := pkgInfo.GetName()
