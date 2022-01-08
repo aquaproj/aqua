@@ -21,6 +21,11 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			"package_version": pkg.Version,
 			"registry":        pkg.Registry,
 		})
+		if registry, ok := cfg.Registries[pkg.Registry]; ok {
+			if registry.Ref != "" {
+				logE = logE.WithField("registry_ref", registry.Ref)
+			}
+		}
 		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 		if err != nil {
 			logerr.WithError(logE, err).Error("install the package")
@@ -84,6 +89,11 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				"package_version": pkg.Version,
 				"registry":        pkg.Registry,
 			})
+			if registry, ok := cfg.Registries[pkg.Registry]; ok {
+				if registry.Ref != "" {
+					logE = logE.WithField("registry_ref", registry.Ref)
+				}
+			}
 			pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 			if err != nil {
 				logerr.WithError(logE, err).Error("install the package")
