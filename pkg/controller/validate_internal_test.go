@@ -22,12 +22,13 @@ func Test_validateConfig(t *testing.T) {
 					},
 				},
 				Registries: Registries{
-					&GitHubContentRegistry{
+					&Registry{
 						Name:      "standard",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
 						Ref:       "v0.8.0",
 						Path:      "registry.yaml",
+						Type:      "github_content",
 					},
 				},
 			},
@@ -37,8 +38,7 @@ func Test_validateConfig(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			err := validateConfig(d.cfg)
-			if err != nil {
+			if err := validateConfig(d.cfg); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -55,19 +55,21 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 		{
 			title: "normal",
 			registries: Registries{
-				&GitHubContentRegistry{
+				&Registry{
 					Name:      "suzuki-shunsuke/ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
 					Ref:       "v1.0.0",
 					Path:      "registry.yaml",
+					Type:      "github_content",
 				},
-				&GitHubContentRegistry{
+				&Registry{
 					Name:      "aquaproj/aqua-registry",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-registry",
 					Ref:       "v0.8.0",
 					Path:      "registry.yaml",
+					Type:      "github_content",
 				},
 			},
 		},
@@ -75,19 +77,21 @@ func Test_validateRegistries(t *testing.T) { //nolint:funlen
 			title: "duplicated",
 			isErr: true,
 			registries: Registries{
-				&GitHubContentRegistry{
+				&Registry{
 					Name:      "suzuki-shunsuke/ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
 					Ref:       "v1.0.0",
 					Path:      "registry.yaml",
+					Type:      "github_content",
 				},
-				&GitHubContentRegistry{
+				&Registry{
 					Name:      "suzuki-shunsuke/ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
 					Ref:       "v0.8.0",
 					Path:      "registry.yaml",
+					Type:      "github_content",
 				},
 			},
 		},

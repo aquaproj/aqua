@@ -15,18 +15,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Registry interface {
-	GetName() string
-	GetType() string
-	GetFilePath(rootDir, cfgFilePath string) string
-}
-
-type mergedRegistry struct {
+type Registry struct {
 	Name      string `validate:"required"`
 	Type      string `validate:"required"`
 	RepoOwner string `yaml:"repo_owner"`
 	RepoName  string `yaml:"repo_name"`
-	Ref       string `validate:"required"`
+	Ref       string
 	Path      string `validate:"required"`
 }
 
@@ -36,75 +30,69 @@ const (
 	registryTypeStandard      = "standard"
 )
 
-func (registry *mergedRegistry) GetRegistry() (Registry, error) {
+func (registry *Registry) validate() error {
 	switch registry.Type {
-	case registryTypeGitHubContent:
-		return &GitHubContentRegistry{
-			Name:      registry.Name,
-			RepoOwner: registry.RepoOwner,
-			RepoName:  registry.RepoName,
-			Ref:       registry.Ref,
-			Path:      registry.Path,
-		}, nil
 	case registryTypeLocal:
-		return &LocalRegistry{
-			Name: registry.Name,
-			Path: registry.Path,
-		}, nil
-	case registryTypeStandard:
-		return &GitHubContentRegistry{
-			Name:      "standard",
-			RepoOwner: "aquaproj",
-			RepoName:  "aqua-registry",
-			Ref:       registry.Ref,
-			Path:      "registry.yaml",
-		}, nil
+		return registry.validateLocal()
+	case registryTypeGitHubContent:
+		return registry.validateGitHubContent()
 	default:
-		return nil, logerr.WithFields(errInvalidType, logrus.Fields{ //nolint:wrapcheck
-			"registry_name": registry.Name,
+		return logerr.WithFields(errInvalidRegistryType, logrus.Fields{ //nolint:wrapcheck
 			"registry_type": registry.Type,
 		})
 	}
 }
 
-type GitHubContentRegistry struct {
-	Name      string `validate:"required"`
-	RepoOwner string `yaml:"repo_owner"`
-	RepoName  string `yaml:"repo_name"`
-	Ref       string `validate:"required"`
-	Path      string `validate:"required"`
-}
-
-func (registry *GitHubContentRegistry) GetName() string {
-	return registry.Name
-}
-
-func (registry *GitHubContentRegistry) GetType() string {
-	return registryTypeGitHubContent
-}
-
-func (registry *GitHubContentRegistry) GetFilePath(rootDir, cfgFilePath string) string {
-	return filepath.Join(rootDir, "registries", registry.GetType(), "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
-}
-
-type LocalRegistry struct {
-	Name string `validate:"required"`
-	Path string `validate:"required"`
-}
-
-func (registry *LocalRegistry) GetName() string {
-	return registry.Name
-}
-
-func (registry *LocalRegistry) GetType() string {
-	return registryTypeLocal
-}
-
-func (registry *LocalRegistry) GetFilePath(rootDir, cfgFilePath string) string {
-	if filepath.IsAbs(registry.Path) {
-		return registry.Path
+func (registry *Registry) validateLocal() error {
+	if registry.Path == "" {
+		return errPathIsRequired
 	}
-	return filepath.Join(filepath.Dir(cfgFilePath), registry.Path)
+	return nil
+}
+
+func (registry *Registry) validateGitHubContent() error {
+	if registry.RepoOwner == "" {
+		return errRepoOwnerIsRequired
+	}
+	if registry.RepoName == "" {
+		return errRepoNameIsRequired
+	}
+	if registry.Ref == "" {
+		return errRefIsRequired
+	}
+	return nil
+}
+
+func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type alias Registry
+	a := alias(*registry)
+	if err := unmarshal(&a); err != nil {
+		return err
+	}
+	if a.Type == registryTypeStandard {
+		if a.Name == "" {
+			a.Name = registryTypeStandard
+		}
+		a.Type = registryTypeGitHubContent
+		a.RepoOwner = "aquaproj"
+		a.RepoName = "aqua-registry"
+		a.Path = "registry.yaml"
+	}
+	*registry = Registry(a)
+	return nil
+}
+
+func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) string {
+	switch registry.Type {
+	case registryTypeLocal:
+		if filepath.IsAbs(registry.Path) {
+			return registry.Path
+		}
+		return filepath.Join(filepath.Dir(cfgFilePath), registry.Path)
+	case registryTypeGitHubContent:
+		return filepath.Join(rootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
+	}
+	return ""
 }
 
 type RegistryContent struct {
@@ -124,14 +112,14 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 	}
 
 	for _, registry := range cfg.Registries {
-		go func(registry Registry) {
+		go func(registry *Registry) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
 			registryContent, err := ctrl.installRegistry(ctx, registry, cfgFilePath)
 			if err != nil {
 				<-maxInstallChan
 				logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
-					"registry_name": registry.GetName(),
+					"registry_name": registry.Name,
 				}).Error("install the registry")
 				flagMutex.Lock()
 				failed = true
@@ -139,7 +127,7 @@ func (ctrl *Controller) installRegistries(ctx context.Context, cfg *Config, cfgF
 				return
 			}
 			registriesMutex.Lock()
-			registryContents[registry.GetName()] = registryContent
+			registryContents[registry.Name] = registryContent
 			registriesMutex.Unlock()
 			<-maxInstallChan
 		}(registry)
@@ -201,13 +189,8 @@ func (ctrl *Controller) getGitHubContentFile(ctx context.Context, repoOwner, rep
 	return []byte(content), nil
 }
 
-func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
-	r, ok := registry.(*GitHubContentRegistry)
-	if !ok {
-		return nil, errTypeAssertionGitHubContentRegistry
-	}
-
-	b, err := ctrl.getGitHubContentFile(ctx, r.RepoOwner, r.RepoName, r.Ref, r.Path)
+func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry *Registry, registryFilePath string) (*RegistryContent, error) {
+	b, err := ctrl.getGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -222,10 +205,10 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry R
 	return registryContent, nil
 }
 
-func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, registryFilePath string) (*RegistryContent, error) {
+func (ctrl *Controller) getRegistry(ctx context.Context, registry *Registry, registryFilePath string) (*RegistryContent, error) {
 	// file doesn't exist
 	// download and install file
-	switch registry.GetType() {
+	switch registry.Type {
 	case registryTypeGitHubContent:
 		return ctrl.getGitHubContentRegistry(ctx, registry, registryFilePath)
 	case registryTypeLocal:
@@ -236,7 +219,7 @@ func (ctrl *Controller) getRegistry(ctx context.Context, registry Registry, regi
 	return nil, errUnsupportedRegistryType
 }
 
-func (ctrl *Controller) installRegistry(ctx context.Context, registry Registry, cfgFilePath string) (*RegistryContent, error) {
+func (ctrl *Controller) installRegistry(ctx context.Context, registry *Registry, cfgFilePath string) (*RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(ctrl.RootDir, cfgFilePath)
 	if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)

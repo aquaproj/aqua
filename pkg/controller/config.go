@@ -37,7 +37,7 @@ func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	*pkg = Package(a)
 	if pkg.Registry == "" {
-		pkg.Registry = "standard"
+		pkg.Registry = registryTypeStandard
 	}
 
 	return nil
@@ -59,7 +59,7 @@ type Config struct {
 
 type (
 	PackageInfos []*MergedPackageInfo
-	Registries   []Registry
+	Registries   []*Registry
 )
 
 const (
@@ -82,23 +82,6 @@ func (pkgInfos *PackageInfos) ToMap() (map[string]*MergedPackageInfo, error) {
 		m[name] = pkgInfo
 	}
 	return m, nil
-}
-
-func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var arr []mergedRegistry
-	if err := unmarshal(&arr); err != nil {
-		return err
-	}
-	list := make([]Registry, len(arr))
-	for i, p := range arr {
-		registry, err := p.GetRegistry()
-		if err != nil {
-			return err
-		}
-		list[i] = registry
-	}
-	*registries = list
-	return nil
 }
 
 type FormatOverride struct {
