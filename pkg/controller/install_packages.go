@@ -21,14 +21,10 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 			"package_version": pkg.Version,
 			"registry":        pkg.Registry,
 		})
-		registry, ok := cfg.Registries[pkg.Registry]
-		if !ok {
-			logerr.WithError(logE, errRegistryNotFound).Error("install the package")
-			failed = true
-			continue
-		}
-		if registry.Ref != "" {
-			logE = logE.WithField("registry_ref", registry.Ref)
+		if registry, ok := cfg.Registries[pkg.Registry]; ok {
+			if registry.Ref != "" {
+				logE = logE.WithField("registry_ref", registry.Ref)
+			}
 		}
 		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 		if err != nil {
@@ -93,14 +89,10 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 				"package_version": pkg.Version,
 				"registry":        pkg.Registry,
 			})
-			registry, ok := cfg.Registries[pkg.Registry]
-			if !ok {
-				logerr.WithError(logE, errRegistryNotFound).Error("install the package")
-				handleFailure()
-				return
-			}
-			if registry.Ref != "" {
-				logE = logE.WithField("registry_ref", registry.Ref)
+			if registry, ok := cfg.Registries[pkg.Registry]; ok {
+				if registry.Ref != "" {
+					logE = logE.WithField("registry_ref", registry.Ref)
+				}
 			}
 			pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
 			if err != nil {
