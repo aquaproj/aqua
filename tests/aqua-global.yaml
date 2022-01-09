@@ -13,13 +13,9 @@ registries:
   repo_name: aqua-registry
   path: registry.yaml
 
-- name: inline
-  type: local
-  path: local.yaml
-
 packages:
 - name: cmdx
-  registry: inline
+  registry: local
   version: v1.6.1 # renovate: depName=suzuki-shunsuke/cmdx
 - name: x-motemen/ghq@v1.2.1
 
@@ -44,12 +40,12 @@ packages:
 
 - name: aquaproj/aqua-installer@v0.3.0
   # github_content package
-  registry: inline
+  registry: local
 
 - name: tfutils/tfenv@v2.2.2
   # github_archive package
-  registry: inline
+  registry: local
 
 - name: containerd/nerdctl@v0.15.0
   # supported_if
-  registry: inline
+  registry: local
