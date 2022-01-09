@@ -151,7 +151,7 @@ func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Packa
 
 const maxRetryDownload = 1
 
-func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkgInfo *PackageInfo, pkg *Package, pkgPath, assetName string) error {
+func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, dest, assetName string) error {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -160,10 +160,10 @@ func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkgInfo *PackageI
 	retryCount := 0
 	for {
 		logE.Debug("check if the package is already installed")
-		finfo, err := os.Stat(pkgPath)
+		finfo, err := os.Stat(dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := ctrl.download(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+			if err := ctrl.download(ctx, pkg, pkgInfo, dest, assetName); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err
@@ -179,7 +179,7 @@ func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkgInfo *PackageI
 			return nil
 		}
 		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", pkgPath)
+			return fmt.Errorf("%s isn't a directory", dest)
 		}
 		return nil
 	}
@@ -202,7 +202,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *PackageInfo
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := ctrl.downloadWithRetry(ctx, pkgInfo, pkg, pkgPath, assetName); err != nil {
+	if err := ctrl.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
 		return err
 	}
 
