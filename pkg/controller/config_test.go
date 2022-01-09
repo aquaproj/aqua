@@ -47,49 +47,6 @@ packages:
 			},
 		},
 		{
-			title: "inline registry",
-			yaml: `
-inline_registry:
-  packages:
-  - name: cmdx
-    type: github_release
-    repo_owner: suzuki-shunsuke
-    repo_name: cmdx
-    asset: 'cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz'
-    files:
-    - name: cmdx
-packages:
-- name: cmdx
-  registry: inline
-  version: v1.6.0
-`,
-			exp: &controller.Config{
-				InlineRegistry: &controller.RegistryContent{
-					PackageInfos: controller.PackageInfos{
-						&controller.PackageInfo{
-							Name:      "cmdx",
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "cmdx",
-							Asset:     controller.NewTemplate(`cmdx_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz`),
-							Files: []*controller.File{
-								{
-									Name: "cmdx",
-								},
-							},
-						},
-					},
-				},
-				Packages: []*controller.Package{
-					{
-						Name:     "cmdx",
-						Registry: "inline",
-						Version:  "v1.6.0",
-					},
-				},
-			},
-		},
-		{
 			title: "parse package name with version",
 			yaml: `
 registries:

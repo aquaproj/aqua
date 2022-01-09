@@ -30,11 +30,6 @@ func validateConfig(cfg *Config) error {
 	if err := validatePackages(cfg.Packages); err != nil {
 		return err
 	}
-	if cfg.InlineRegistry != nil {
-		if err := validateRegistryContent(cfg.InlineRegistry); err != nil {
-			return err
-		}
-	}
 	if err := validateRegistries(cfg.Registries); err != nil {
 		return err
 	}
