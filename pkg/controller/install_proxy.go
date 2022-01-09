@@ -48,7 +48,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		if err := ctrl.download(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+		if err := ctrl.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
 			return err
 		}
 	} else {
