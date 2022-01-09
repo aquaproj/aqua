@@ -11,9 +11,8 @@ import (
 
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
-		Name:     proxyName,
-		Version:  "v0.2.1", // renovate: depName=aquaproj/aqua-proxy
-		Registry: "inline",
+		Name:    proxyName,
+		Version: "v0.2.1", // renovate: depName=aquaproj/aqua-proxy
 	}
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
