@@ -6,6 +6,7 @@
     "github>aquaproj/aqua-renovate-config:file#0.1.8(tests/aqua.*\\.yaml)",
     "github>aquaproj/aqua-renovate-config:file#0.1.8(aqua/.*\\.ya?ml)",
   ],
+  ignorePaths: [],
   regexManagers: [
     {
       fileMatch: [".*\\.go"],
