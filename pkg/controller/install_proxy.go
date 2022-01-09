@@ -11,9 +11,8 @@ import (
 
 func (ctrl *Controller) installProxy(ctx context.Context) error {
 	pkg := &Package{
-		Name:     proxyName,
-		Version:  "v0.2.1", // renovate: depName=aquaproj/aqua-proxy
-		Registry: "inline",
+		Name:    proxyName,
+		Version: "v0.2.1", // renovate: depName=aquaproj/aqua-proxy
 	}
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
@@ -48,7 +47,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		if err := ctrl.download(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+		if err := ctrl.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
 			return err
 		}
 	} else {

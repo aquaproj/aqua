@@ -52,9 +52,8 @@ func parseNameWithVersion(name string) (string, string) {
 }
 
 type Config struct {
-	Packages       []*Package       `validate:"dive"`
-	InlineRegistry *RegistryContent `yaml:"inline_registry"`
-	Registries     Registries       `validate:"dive"`
+	Packages   []*Package `validate:"dive"`
+	Registries Registries `validate:"dive"`
 }
 
 type (
