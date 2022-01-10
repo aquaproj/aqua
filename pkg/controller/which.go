@@ -26,7 +26,7 @@ type Which struct {
 	ExePath string
 }
 
-func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string) (*Which, error) { //nolint:cyclop,funlen
+func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string) (*Which, error) {
 	fields := logrus.Fields{
 		"exe_name": exeName,
 	}
@@ -59,36 +59,15 @@ func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string)
 		}
 	}
 
-	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
-	if _, err := os.Stat(cfgFilePath); err != nil {
-		exePath := lookPath(exeName)
-		if exePath == "" {
-			return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
-				"exe_name": exeName,
-			})
-		}
-		return &Which{
-			ExePath: exePath,
-		}, nil
+	exePath := lookPath(exeName)
+	if exePath == "" {
+		return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
+			"exe_name": exeName,
+		})
 	}
-
-	pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName)
-	if err != nil {
-		return nil, err
-	}
-	if pkg == nil {
-		exePath := lookPath(exeName)
-		if exePath == "" {
-			return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
-				"exe_name": exeName,
-			})
-		}
-		return &Which{
-			ExePath: exePath,
-		}, nil
-	}
-
-	return ctrl.whichFile(pkg, pkgInfo, file)
+	return &Which{
+		ExePath: exePath,
+	}, nil
 }
 
 func (ctrl *Controller) whichFile(pkg *Package, pkgInfo *PackageInfo, file *File) (*Which, error) {

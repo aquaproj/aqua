@@ -49,13 +49,6 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *P
 			return err
 		}
 	}
-	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
-	if _, err := os.Stat(cfgFilePath); err != nil {
-		return nil //nolint:nilerr
-	}
-	if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
-		return err
-	}
 	return nil
 }
 

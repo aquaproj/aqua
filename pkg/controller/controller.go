@@ -22,6 +22,7 @@ type Controller struct {
 	GitHubRepositoryService GitHubRepositoryService
 	PackageDownloader       PackageDownloader
 	RootDir                 string
+	GlobalConfingDir        string
 	Version                 string
 }
 
@@ -75,8 +76,18 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		Version:      param.AQUAVersion,
 	}
 	if ctrl.RootDir == "" {
-		ctrl.RootDir = filepath.Join(os.Getenv("HOME"), ".aqua")
+		xdgDataHome := os.Getenv("XDG_DATA_HOME")
+		if xdgDataHome == "" {
+			xdgDataHome = filepath.Join(os.Getenv("HOME"), ".local", "share")
+		}
+		ctrl.RootDir = filepath.Join(xdgDataHome, "aquaproj-aqua")
 	}
+	xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
+	if xdgConfigHome == "" {
+		xdgConfigHome = filepath.Join(os.Getenv("HOME"), ".config")
+	}
+	ctrl.GlobalConfingDir = filepath.Join(xdgConfigHome, "aquaproj-aqua")
+
 	ctrl.GitHubRepositoryService = github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
 	ctrl.PackageDownloader = &pkgDownloader{
 		GitHubRepositoryService: ctrl.GitHubRepositoryService,
