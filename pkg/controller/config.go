@@ -209,7 +209,7 @@ func (finder *configFinder) Finds(wd string) []string {
 
 func (finder *configFinder) FindGlobal(rootDir string) string {
 	for _, file := range []string{"aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml"} {
-		cfgFilePath := filepath.Join(rootDir, "global", file)
+		cfgFilePath := filepath.Join(rootDir, file)
 		if _, err := os.Stat(cfgFilePath); err == nil {
 			return cfgFilePath
 		}

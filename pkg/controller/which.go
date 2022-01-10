@@ -59,7 +59,7 @@ func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string)
 		}
 	}
 
-	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
+	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.GlobalConfingDir)
 	if _, err := os.Stat(cfgFilePath); err != nil {
 		exePath := lookPath(exeName)
 		if exePath == "" {

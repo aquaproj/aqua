@@ -49,7 +49,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *P
 			return err
 		}
 	}
-	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.RootDir)
+	cfgFilePath := ctrl.ConfigFinder.FindGlobal(ctrl.GlobalConfingDir)
 	if _, err := os.Stat(cfgFilePath); err != nil {
 		return nil //nolint:nilerr
 	}
