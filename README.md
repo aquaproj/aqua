@@ -8,7 +8,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/aquaproj/aqua.svg)](https://github.com/aquaproj/aqua)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/aquaproj/aqua/main/LICENSE)
 
-Declarative CLI Version manager. Support `Lazy Install` and Sharable configuration mechanism named `Registry`. Switch versions seamlessly.
+Declarative CLI Version manager. Support `Lazy Install` and shareable configuration mechanism named `Registry`. Switch versions seamlessly.
 
 ## Document
 
@@ -20,7 +20,7 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Versioning Policy
 
-We are Conforming [suzuki-shunsuke/versioning-policy v0.1.0](https://github.com/suzuki-shunsuke/versioning-policy/blob/v0.1.0/POLICY.md), which is compatible with [Semantic Versioning 2.0.0](https://semver.org/).
+We are conforming [suzuki-shunsuke/versioning-policy v0.1.0](https://github.com/suzuki-shunsuke/versioning-policy/blob/v0.1.0/POLICY.md), which is compatible with [Semantic Versioning 2.0.0](https://semver.org/).
 
 ## Logo
 
