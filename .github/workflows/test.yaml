@@ -19,7 +19,7 @@ jobs:
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
     - run: aqua i
 
-    - uses: suzuki-shunsuke/github-action-golangci-lint@v0.1.1
+    - uses: suzuki-shunsuke/github-action-golangci-lint@v0.1.2
 
     - run: go test -v ./... -race -covermode=atomic
 
