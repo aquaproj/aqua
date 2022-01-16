@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
@@ -30,12 +31,40 @@ func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, 
 	if err != nil {
 		return err
 	}
-	if which.Package != nil {
+	if which.Package != nil { //nolint:nestif
+		logE := ctrl.logE().WithFields(logrus.Fields{
+			"exe_path": which.ExePath,
+			"package":  which.Package.Name,
+		})
 		if err := ctrl.installPackage(ctx, which.PkgInfo, which.Package, false); err != nil {
 			return err
 		}
+		for i := 0; i < 10; i++ {
+			logE.Debug("check if exec file exists")
+			if fi, err := os.Stat(which.ExePath); err == nil {
+				if isOwnerExecutable(fi.Mode()) {
+					break
+				}
+			}
+			logE.WithFields(logrus.Fields{
+				"retry_count": i + 1,
+			}).Debug("command isn't found. wait for lazy install")
+			if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+				return err
+			}
+		}
 	}
 	return ctrl.execCommand(ctx, which.ExePath, args)
+}
+
+func wait(ctx context.Context, duration time.Duration) error {
+	timer := time.NewTimer(duration)
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err() //nolint:wrapcheck
+	}
 }
 
 func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*PackageInfo, *File) {
@@ -109,18 +138,31 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 }
 
 func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) error {
-	cmd := exec.Command(exePath, args...)
-	cmd.Stdin = ctrl.Stdin
-	cmd.Stdout = ctrl.Stdout
-	cmd.Stderr = ctrl.Stderr
-	runner := timeout.NewRunner(0)
-
 	logE := ctrl.logE().WithField("exe_path", exePath)
 	logE.Debug("execute the command")
-	if err := runner.Run(ctx, cmd); err != nil {
-		exitCode := cmd.ProcessState.ExitCode()
-		logerr.WithError(logE, err).WithField("exit_code", exitCode).Debug("command was executed but it failed")
-		return ecerror.Wrap(err, exitCode)
+	for i := 0; i < 10; i++ {
+		logE.Debug("execute the command")
+		cmd := exec.Command(exePath, args...)
+		cmd.Stdin = ctrl.Stdin
+		cmd.Stdout = ctrl.Stdout
+		cmd.Stderr = ctrl.Stderr
+		runner := timeout.NewRunner(0)
+		if err := runner.Run(ctx, cmd); err != nil {
+			exitCode := cmd.ProcessState.ExitCode()
+			// https://pkg.go.dev/os#ProcessState.ExitCode
+			// > ExitCode returns the exit code of the exited process,
+			// > or -1 if the process hasn't exited or was terminated by a signal.
+			if exitCode == -1 && ctx.Err() == nil {
+				logE.WithField("retry_count", i+1).Debug("the process isn't started. retry")
+				if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+					return err
+				}
+				continue
+			}
+			logerr.WithError(logE, err).WithField("exit_code", exitCode).Debug("command was executed but it failed")
+			return ecerror.Wrap(err, exitCode)
+		}
+		return nil
 	}
 	return nil
 }
