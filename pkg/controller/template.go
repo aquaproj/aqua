@@ -50,6 +50,9 @@ func (tpl *Template) Parse() error {
 }
 
 func (tpl *Template) Execute(param interface{}) (string, error) {
+	if tpl == nil {
+		return "", nil
+	}
 	if err := tpl.Parse(); err != nil {
 		return "", err
 	}

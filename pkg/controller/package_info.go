@@ -195,6 +195,41 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, er
 	return "", nil
 }
 
+func (pkgInfo *PackageInfo) validate() error { //nolint:cyclop
+	if name := pkgInfo.GetName(); name == "" {
+		return errPkgNameIsRequired
+	}
+	switch pkgInfo.Type {
+	case pkgInfoTypeGitHubArchive:
+		if !pkgInfo.HasRepo() {
+			return errRepoRequired
+		}
+		return nil
+	case pkgInfoTypeGitHubContent:
+		if !pkgInfo.HasRepo() {
+			return errRepoRequired
+		}
+		if pkgInfo.Path == nil {
+			return errGitHubContentRequirePath
+		}
+		return nil
+	case pkgInfoTypeGitHubRelease:
+		if !pkgInfo.HasRepo() {
+			return errRepoRequired
+		}
+		if pkgInfo.Asset == nil {
+			return errAssetRequired
+		}
+		return nil
+	case pkgInfoTypeHTTP:
+		if pkgInfo.URL == nil {
+			return errURLRequired
+		}
+		return nil
+	}
+	return errInvalidPackageType
+}
+
 func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
 	switch pkgInfo.Type {
 	case pkgInfoTypeGitHubArchive:
