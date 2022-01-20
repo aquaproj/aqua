@@ -192,6 +192,10 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *PackageInfo
 		"registry":        pkg.Registry,
 	})
 	logE.Debug("install the package")
+
+	if err := pkgInfo.validate(); err != nil {
+		return fmt.Errorf("invalid package: %w", err)
+	}
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
