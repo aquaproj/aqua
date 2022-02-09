@@ -42,7 +42,7 @@ packages:
   # github_content package
   registry: local
 
-- name: tfutils/tfenv@v2.2.2
+- name: tfutils/tfenv@v2.2.3
   # github_archive package
   registry: local
 
