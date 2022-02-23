@@ -45,13 +45,10 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...stri
 		if err := yaml.NewEncoder(ctrl.Stdout).Encode(list); err != nil {
 			return fmt.Errorf("output generated package configuration: %w", err)
 		}
+		return nil
 	}
 
-	if err := ctrl.generateInsert(cfgFilePath, list); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.generateInsert(cfgFilePath, list)
 }
 
 func (ctrl *Controller) generate(ctx context.Context, param *Param, cfgFilePath string, args ...string) (interface{}, error) {
