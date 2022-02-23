@@ -181,9 +181,9 @@ Please copy and paste the outputted configuration in the aqua configuration file
 $ aqua g # tfmigrator/cli is selected
 - name: tfmigrator/cli@v0.2.1
 
-You can update the configuration file directly by "aqua g >> <configuration file>".
+You can update the configuration file directly with "-i" option.
 
-$ aqua g >> aqua.yaml
+$ aqua g -i
 
 You can pass packages with positional arguments.
 
