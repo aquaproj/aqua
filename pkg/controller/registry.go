@@ -202,9 +202,8 @@ func (ctrl *Controller) getGitHubContentRegistry(ctx context.Context, registry *
 	return registryContent, nil
 }
 
+// getRegistry downloads and installs the registry file.
 func (ctrl *Controller) getRegistry(ctx context.Context, registry *Registry, registryFilePath string) (*RegistryContent, error) {
-	// file doesn't exist
-	// download and install file
 	switch registry.Type {
 	case registryTypeGitHubContent:
 		return ctrl.getGitHubContentRegistry(ctx, registry, registryFilePath)
@@ -216,6 +215,8 @@ func (ctrl *Controller) getRegistry(ctx context.Context, registry *Registry, reg
 	return nil, errUnsupportedRegistryType
 }
 
+// installRegistry installs and reads the registry file and returns the registry content.
+// If the registry file already exists, the installation is skipped.
 func (ctrl *Controller) installRegistry(ctx context.Context, registry *Registry, cfgFilePath string) (*RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(ctrl.RootDir, cfgFilePath)
 	if err := mkdirAll(filepath.Dir(registryFilePath)); err != nil {
