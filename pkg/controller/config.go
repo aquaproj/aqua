@@ -9,10 +9,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"gopkg.in/yaml.v2"
 )
 
 type Package struct {
