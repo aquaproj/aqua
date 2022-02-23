@@ -84,6 +84,13 @@ $ aqua i -a
 				},
 			},
 			{
+				Name:        "update",
+				Aliases:     []string{"u"},
+				Usage:       "Update tools",
+				Description: `Update tools.`,
+				Action:      runner.updateAction,
+			},
+			{
 				Name:  "exec",
 				Usage: "Execute tool",
 				Description: `Basically you don't have to use this command, because this is used by aqua internally. aqua-proxy invokes this command.
