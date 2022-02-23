@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v2
       with:
-        go-version: '1.17.5'
+        go-version: '1.17.7'
 
     - run: go build -o /usr/local/bin/aqua ./cmd/aqua
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
@@ -47,4 +47,10 @@ jobs:
     - run: gh version
     - run: tfenv --version
     - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
+
+    - run: aqua g -i suzuki-shunsuke/tfcmt
+      working-directory: tests
+    - run: git diff aqua.yaml
+      working-directory: tests
+
     - run: aqua-installer -v v0.8.1 -i /tmp/aqua

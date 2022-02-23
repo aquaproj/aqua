@@ -9,10 +9,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"gopkg.in/yaml.v2"
 )
 
 type Package struct {
@@ -132,6 +132,7 @@ type Param struct {
 	OnlyLink       bool
 	IsTest         bool
 	All            bool
+	Insert         bool
 	File           string
 	GlobalConfigs  []string
 	AQUAVersion    string
@@ -182,7 +183,7 @@ func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 		return err //nolint:wrapcheck
 	}
 	defer file.Close()
-	if err := yaml.NewDecoder(file).Decode(&cfg); err != nil {
+	if err := yaml.NewDecoder(file).Decode(cfg); err != nil {
 		return fmt.Errorf("parse a configuration file as YAML %s: %w", configFilePath, err)
 	}
 	if err := ctrl.readImports(configFilePath, cfg); err != nil {

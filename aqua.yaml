@@ -1,3 +1,6 @@
+---
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
 registries:
 - type: standard
   ref: v1.4.0 # renovate: depName=aquaproj/aqua-registry
