@@ -132,6 +132,7 @@ type Param struct {
 	OnlyLink       bool
 	IsTest         bool
 	All            bool
+	Insert         bool
 	File           string
 	GlobalConfigs  []string
 	AQUAVersion    string

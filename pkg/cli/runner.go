@@ -222,6 +222,10 @@ echo "cli/cli" | aqua g -f -
 						Name:  "f",
 						Usage: `the file path of packages list. When the value is "-", the list is passed from the standard input`,
 					},
+					&cli.BoolFlag{
+						Name:  "i",
+						Usage: `Insert packages to configuration file`,
+					},
 				},
 			},
 			{

@@ -25,29 +25,36 @@ type FindingPackage struct {
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
 func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...string) error {
-	list, err := ctrl.generate(ctx, param, args...)
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get the current directory: %w", err)
+	}
+
+	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
+	if cfgFilePath == "" {
+		return errConfigFileNotFound
+	}
+	list, err := ctrl.generate(ctx, param, cfgFilePath, args...)
 	if err != nil {
 		return err
 	}
 	if list == nil {
 		return nil
 	}
-	if err := yaml.NewEncoder(ctrl.Stdout).Encode(list); err != nil {
-		return fmt.Errorf("output generated package configuration: %w", err)
+	if !param.Insert {
+		if err := yaml.NewEncoder(ctrl.Stdout).Encode(list); err != nil {
+			return fmt.Errorf("output generated package configuration: %w", err)
+		}
 	}
+
+	if err := ctrl.generateInsert(cfgFilePath, list); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (ctrl *Controller) generate(ctx context.Context, param *Param, args ...string) (interface{}, error) { //nolint:cyclop
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("get the current directory: %w", err)
-	}
-
-	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
-	if cfgFilePath == "" {
-		return nil, errConfigFileNotFound
-	}
+func (ctrl *Controller) generate(ctx context.Context, param *Param, cfgFilePath string, args ...string) (interface{}, error) {
 	cfg := &Config{}
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return nil, err
