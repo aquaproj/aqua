@@ -16,3 +16,4 @@ linters:
   - exhaustivestruct # https://github.com/mbilski/exhaustivestruct
   - ireturn
   - varnamelen
+  - exhaustive

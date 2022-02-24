@@ -4,7 +4,6 @@
 registries:
 - type: standard
   ref: v1.4.0 # renovate: depName=aquaproj/aqua-registry
-
 packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
 - name: golangci/golangci-lint@v1.43.0
