@@ -51,7 +51,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...stri
 	return ctrl.generateInsert(cfgFilePath, list)
 }
 
-func (ctrl *Controller) generate(ctx context.Context, param *Param, cfgFilePath string, args ...string) (interface{}, error) {
+func (ctrl *Controller) generate(ctx context.Context, param *Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
 	cfg := &Config{}
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return nil, err
@@ -80,16 +80,19 @@ func (ctrl *Controller) generate(ctx context.Context, param *Param, cfgFilePath 
 	}
 
 	// Launch the fuzzy finder
-	idx, err := ctrl.launchFuzzyFinder(pkgs)
+	idxes, err := ctrl.launchFuzzyFinder(pkgs)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil, nil //nolint:nilnil
 		}
 		return nil, fmt.Errorf("find the package: %w", err)
 	}
-	pkg := pkgs[idx]
+	arr := make([]interface{}, len(idxes))
+	for i, idx := range idxes {
+		arr[i] = ctrl.getOutputtedPkg(ctx, pkgs[idx])
+	}
 
-	return []interface{}{ctrl.getOutputtedPkg(ctx, pkg)}, nil
+	return arr, nil
 }
 
 func getGeneratePkg(s string) string {
