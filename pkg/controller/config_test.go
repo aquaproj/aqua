@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/controller"
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"gopkg.in/yaml.v2"
 )
 
 func TestConfig_UnmarshalYAML(t *testing.T) { //nolint:funlen
