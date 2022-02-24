@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"gopkg.in/yaml.v2" // read from yaml.v2 for performance
+	"gopkg.in/yaml.v2"
 )
 
 type Registry struct {
