@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-github/v39 v39.2.0
 	github.com/hashicorp/go-version v1.4.0
-	github.com/ktr0731/go-fuzzyfinder v0.5.1
+	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/suzuki-shunsuke/flute v1.0.1
@@ -20,5 +20,5 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 )
