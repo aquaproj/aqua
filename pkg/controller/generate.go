@@ -32,8 +32,18 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...stri
 
 	cfgFilePath := ctrl.getConfigFilePath(wd, param.ConfigFilePath)
 	if cfgFilePath == "" {
-		return errConfigFileNotFound
+		for _, p := range getGlobalConfigFilePaths() {
+			if _, err := os.Stat(p); err != nil {
+				continue
+			}
+			cfgFilePath = p
+			break
+		}
+		if cfgFilePath == "" {
+			return errConfigFileNotFound
+		}
 	}
+
 	list, err := ctrl.generate(ctx, param, cfgFilePath, args...)
 	if err != nil {
 		return err
