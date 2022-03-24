@@ -36,3 +36,16 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 
 	return nil
 }
+
+func (ctrl *Controller) getFirstConfig(wd, cfgFilePath string) (string, error) {
+	if cfgFilePath = ctrl.getConfigFilePath(wd, cfgFilePath); cfgFilePath != "" {
+		return cfgFilePath, nil
+	}
+	for _, p := range getGlobalConfigFilePaths() {
+		if _, err := os.Stat(p); err != nil {
+			continue
+		}
+		return p, nil
+	}
+	return "", errConfigFileNotFound
+}
