@@ -12,11 +12,13 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	param.ConfigFilePath = ctrl.getConfigFilePath(wd, param.ConfigFilePath)
-	if param.ConfigFilePath == "" {
-		return errConfigFileNotFound
+
+	cfgFilePath, err := ctrl.getFirstConfig(wd, param.ConfigFilePath)
+	if err != nil {
+		return err
 	}
-	if err := ctrl.readConfig(param.ConfigFilePath, cfg); err != nil {
+
+	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
 		return err
 	}
 
@@ -24,7 +26,7 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.installRegistries(ctx, cfg, param.ConfigFilePath)
+	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
 		return err
 	}
@@ -35,4 +37,17 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 	}
 
 	return nil
+}
+
+func (ctrl *Controller) getFirstConfig(wd, cfgFilePath string) (string, error) {
+	if cfgFilePath = ctrl.getConfigFilePath(wd, cfgFilePath); cfgFilePath != "" {
+		return cfgFilePath, nil
+	}
+	for _, p := range getGlobalConfigFilePaths() {
+		if _, err := os.Stat(p); err != nil {
+			continue
+		}
+		return p, nil
+	}
+	return "", errConfigFileNotFound
 }
