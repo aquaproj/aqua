@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
@@ -138,13 +137,6 @@ type Param struct {
 	AQUAVersion    string
 }
 
-func (ctrl *Controller) getConfigFilePaths(wd, configFilePath string) []string {
-	if configFilePath == "" {
-		return ctrl.ConfigFinder.Finds(wd)
-	}
-	return append([]string{configFilePath}, ctrl.ConfigFinder.Finds(wd)...)
-}
-
 func (ctrl *Controller) readImports(configFilePath string, cfg *Config) error {
 	pkgs := []*Package{}
 	for _, pkg := range cfg.Packages {
@@ -189,29 +181,6 @@ type ConfigFinder interface {
 	Find(wd string) string
 	Finds(wd string) []string
 	FindFirstConfig(wd string) (string, error)
-}
-
-type configFinder struct{}
-
-func (finder *configFinder) Find(wd string) string {
-	return findconfig.Find(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
-}
-
-func (finder *configFinder) Finds(wd string) []string {
-	return findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
-}
-
-func (finder *configFinder) FindFirstConfig(wd string) (string, error) {
-	if cfgFilePath := finder.Find(wd); cfgFilePath != "" {
-		return cfgFilePath, nil
-	}
-	for _, p := range getGlobalConfigFilePaths() {
-		if _, err := os.Stat(p); err != nil {
-			continue
-		}
-		return p, nil
-	}
-	return "", errConfigFileNotFound
 }
 
 type ConfigReader interface {

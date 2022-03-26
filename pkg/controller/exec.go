@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -13,18 +12,6 @@ import (
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-func getGlobalConfigFilePaths() []string {
-	src := strings.Split(os.Getenv("AQUA_GLOBAL_CONFIG"), ":")
-	paths := make([]string, 0, len(src))
-	for _, s := range src {
-		if s == "" {
-			continue
-		}
-		paths = append(paths, s)
-	}
-	return paths
-}
 
 func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, args []string) error {
 	which, err := ctrl.which(ctx, param, exeName)
