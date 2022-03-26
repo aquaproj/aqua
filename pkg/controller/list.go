@@ -13,9 +13,12 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 
-	cfgFilePath, err := ctrl.getFirstConfig(wd, param.ConfigFilePath)
-	if err != nil {
-		return err
+	cfgFilePath := param.ConfigFilePath
+	if cfgFilePath == "" {
+		cfgFilePath, err = ctrl.ConfigFinder.FindFirstConfig(wd)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 
 	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
@@ -37,20 +40,4 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 	}
 
 	return nil
-}
-
-func (ctrl *Controller) getFirstConfig(wd, cfgFilePath string) (string, error) {
-	if cfgFilePath == "" {
-		cfgFilePath = ctrl.ConfigFinder.Find(wd)
-	}
-	if cfgFilePath != "" {
-		return cfgFilePath, nil
-	}
-	for _, p := range getGlobalConfigFilePaths() {
-		if _, err := os.Stat(p); err != nil {
-			continue
-		}
-		return p, nil
-	}
-	return "", errConfigFileNotFound
 }
