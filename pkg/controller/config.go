@@ -178,9 +178,8 @@ func (ctrl *Controller) readConfig(configFilePath string, cfg *Config) error {
 }
 
 type ConfigFinder interface {
-	Find(wd string) string
-	Finds(wd string) []string
-	FindFirstConfig(wd string) (string, error)
+	Find(wd, configFilePath string) (string, error)
+	Finds(wd, configFilePath string) []string
 }
 
 type ConfigReader interface {

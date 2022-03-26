@@ -30,12 +30,9 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...stri
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 
-	cfgFilePath := param.ConfigFilePath
-	if cfgFilePath == "" {
-		cfgFilePath, err = ctrl.ConfigFinder.FindFirstConfig(wd)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
+	cfgFilePath, err := ctrl.ConfigFinder.Find(wd, param.ConfigFilePath)
+	if err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	list, err := ctrl.generate(ctx, param, cfgFilePath, args...)

@@ -28,7 +28,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 		return err
 	}
 
-	for _, cfgFilePath := range ctrl.getConfigFilePaths(wd, param.ConfigFilePath) {
+	for _, cfgFilePath := range ctrl.ConfigFinder.Finds(wd, param.ConfigFilePath) {
 		if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
 			return err
 		}

@@ -19,26 +19,15 @@ func getGlobalConfigFilePaths() []string {
 	return paths
 }
 
-func (ctrl *Controller) getConfigFilePaths(wd, configFilePath string) []string {
-	if configFilePath == "" {
-		return ctrl.ConfigFinder.Finds(wd)
-	}
-	return append([]string{configFilePath}, ctrl.ConfigFinder.Finds(wd)...)
-}
-
 type configFinder struct{}
 
-func (finder *configFinder) Find(wd string) string {
-	return findconfig.Find(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
-}
-
-func (finder *configFinder) Finds(wd string) []string {
-	return findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
-}
-
-func (finder *configFinder) FindFirstConfig(wd string) (string, error) {
-	if cfgFilePath := finder.Find(wd); cfgFilePath != "" {
-		return cfgFilePath, nil
+func (finder *configFinder) Find(wd, configFilePath string) (string, error) {
+	if configFilePath != "" {
+		return configFilePath, nil
+	}
+	configFilePath = findconfig.Find(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+	if configFilePath != "" {
+		return configFilePath, nil
 	}
 	for _, p := range getGlobalConfigFilePaths() {
 		if _, err := os.Stat(p); err != nil {
@@ -47,4 +36,11 @@ func (finder *configFinder) FindFirstConfig(wd string) (string, error) {
 		return p, nil
 	}
 	return "", errConfigFileNotFound
+}
+
+func (finder *configFinder) Finds(wd, configFilePath string) []string {
+	if configFilePath == "" {
+		return findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+	}
+	return append([]string{configFilePath}, findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")...)
 }
