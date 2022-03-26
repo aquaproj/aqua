@@ -285,10 +285,16 @@ func (ctrl *Controller) createLink(linkPath, linkDest string) error {
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
+
+	logLinkPath := linkPath
+	if home := os.Getenv("HOME"); strings.HasPrefix(linkPath, home) {
+		logLinkPath = strings.Replace(logLinkPath, home, "~", 1)
+	}
 	ctrl.logE().WithFields(logrus.Fields{
-		"link_file": linkPath,
+		"link_file": logLinkPath,
 		"new":       linkDest,
 	}).Info("create a symbolic link")
+
 	if err := os.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
