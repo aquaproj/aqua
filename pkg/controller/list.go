@@ -40,7 +40,10 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 }
 
 func (ctrl *Controller) getFirstConfig(wd, cfgFilePath string) (string, error) {
-	if cfgFilePath = ctrl.getConfigFilePath(wd, cfgFilePath); cfgFilePath != "" {
+	if cfgFilePath == "" {
+		cfgFilePath = ctrl.ConfigFinder.Find(wd)
+	}
+	if cfgFilePath != "" {
 		return cfgFilePath, nil
 	}
 	for _, p := range getGlobalConfigFilePaths() {

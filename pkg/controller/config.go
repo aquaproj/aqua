@@ -138,13 +138,6 @@ type Param struct {
 	AQUAVersion    string
 }
 
-func (ctrl *Controller) getConfigFilePath(wd, configFilePath string) string {
-	if configFilePath != "" {
-		return configFilePath
-	}
-	return ctrl.ConfigFinder.Find(wd)
-}
-
 func (ctrl *Controller) getConfigFilePaths(wd, configFilePath string) []string {
 	if configFilePath == "" {
 		return ctrl.ConfigFinder.Finds(wd)
