@@ -27,7 +27,7 @@ packages:
   registry: standard # standard registry
   version: v0.12.0 # renovate: depName=kubernetes-sigs/kind
 
-- name: restic/restic@v0.12.1
+- name: restic/restic@v0.13.0
   # decompressor, package name with version
   registry: aqua-registry # github content registry
 
