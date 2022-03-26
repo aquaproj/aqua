@@ -105,8 +105,8 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 
 func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, *PackageInfo, *File, error) {
 	cfg := &Config{}
-	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-		return nil, nil, nil, err
+	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+		return nil, nil, nil, err //nolint:wrapcheck
 	}
 	if err := validateConfig(cfg); err != nil {
 		return nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)

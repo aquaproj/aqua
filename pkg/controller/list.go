@@ -18,8 +18,8 @@ func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) e
 		return err //nolint:wrapcheck
 	}
 
-	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-		return err
+	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	if err := validateConfig(cfg); err != nil {

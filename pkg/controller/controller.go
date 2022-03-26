@@ -71,9 +71,11 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		Stdout:       os.Stdout,
 		Stderr:       os.Stderr,
 		ConfigFinder: &configFinder{},
-		ConfigReader: &configReader{},
-		RootDir:      os.Getenv("AQUA_ROOT_DIR"),
-		Version:      param.AQUAVersion,
+		ConfigReader: &configReader{
+			reader: &fileReader{},
+		},
+		RootDir: os.Getenv("AQUA_ROOT_DIR"),
+		Version: param.AQUAVersion,
 	}
 	if ctrl.RootDir == "" {
 		xdgDataHome := os.Getenv("XDG_DATA_HOME")

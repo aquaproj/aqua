@@ -57,8 +57,8 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 	if cfgFilePath == "" {
 		return errConfigFileNotFound
 	}
-	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-		return err
+	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	if err := validateConfig(cfg); err != nil {

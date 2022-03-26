@@ -54,8 +54,8 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...stri
 
 func (ctrl *Controller) generate(ctx context.Context, param *Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
 	cfg := &Config{}
-	if err := ctrl.readConfig(cfgFilePath, cfg); err != nil {
-		return nil, err
+	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+		return nil, err //nolint:wrapcheck
 	}
 	if err := validateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("configuration is invalid: %w", err)
