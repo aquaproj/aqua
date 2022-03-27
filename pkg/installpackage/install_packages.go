@@ -1,4 +1,4 @@
-package controller
+package installpackage
 
 import (
 	"context"
@@ -9,16 +9,43 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) installPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop,gocognit
+const proxyName = "aqua-proxy"
+
+type Installer interface {
+	InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool) error
+	InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool) error
+	InstallProxy(ctx context.Context) error
+}
+
+func New(v, rootDir string, downloader download.PackageDownloader) Installer {
+	return &installer{
+		Version:           v,
+		RootDir:           rootDir,
+		PackageDownloader: downloader,
+	}
+}
+
+type installer struct {
+	Version           string
+	RootDir           string
+	PackageDownloader download.PackageDownloader
+}
+
+func (inst *installer) logE() *logrus.Entry {
+	return log.New().WithField("aqua_version", inst.Version)
+}
+
+func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop,gocognit
 	var failed bool
 	for _, pkg := range cfg.Packages {
-		logE := ctrl.logE().WithFields(logrus.Fields{
+		logE := inst.logE().WithFields(logrus.Fields{
 			"package_name":    pkg.Name,
 			"package_version": pkg.Version,
 			"registry":        pkg.Registry,
@@ -50,7 +77,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *config.Config,
 			}
 		}
 		for _, file := range pkgInfo.GetFiles() {
-			if err := ctrl.createLink(filepath.Join(binDir, file.Name), proxyName); err != nil {
+			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue
@@ -59,7 +86,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *config.Config,
 	}
 
 	if onlyLink {
-		ctrl.logE().WithFields(logrus.Fields{
+		inst.logE().WithFields(logrus.Fields{
 			"only_link": true,
 		}).Debug("skip downloading the package")
 		if failed {
@@ -86,7 +113,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *config.Config,
 			defer func() {
 				<-maxInstallChan
 			}()
-			logE := ctrl.logE().WithFields(logrus.Fields{
+			logE := inst.logE().WithFields(logrus.Fields{
 				"package_name":    pkg.Name,
 				"package_version": pkg.Version,
 				"registry":        pkg.Registry,
@@ -119,7 +146,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *config.Config,
 				}
 			}
 
-			if err := ctrl.installPackage(ctx, pkgInfo, pkg, isTest); err != nil {
+			if err := inst.InstallPackage(ctx, pkgInfo, pkg, isTest); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -153,8 +180,8 @@ func getPkgInfoFromRegistries(registries map[string]*config.RegistryContent, pkg
 
 const maxRetryDownload = 1
 
-func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string) error {
-	logE := ctrl.logE().WithFields(logrus.Fields{
+func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string) error {
+	logE := inst.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -165,7 +192,7 @@ func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkg *config.Packa
 		finfo, err := os.Stat(dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := ctrl.download(ctx, pkg, pkgInfo, dest, assetName); err != nil {
+			if err := inst.download(ctx, pkg, pkgInfo, dest, assetName); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err
@@ -187,8 +214,8 @@ func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkg *config.Packa
 	}
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool) error {
-	logE := ctrl.logE().WithFields(logrus.Fields{
+func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool) error {
+	logE := inst.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -203,17 +230,17 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *config.Pack
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(inst.RootDir, pkg)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := ctrl.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
 		return err
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
-		if err := ctrl.checkFileSrc(pkg, pkgInfo, file); err != nil {
+		if err := inst.checkFileSrc(pkg, pkgInfo, file); err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -224,18 +251,18 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *config.Pack
 	return nil
 }
 
-func (ctrl *Controller) checkFileSrc(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) error {
+func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
-	logE := ctrl.logE().WithFields(fields)
+	logE := inst.logE().WithFields(fields)
 
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return fmt.Errorf("get file_src: %w", err)
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(inst.RootDir, pkg)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
@@ -250,26 +277,16 @@ func (ctrl *Controller) checkFileSrc(pkg *config.Package, pkgInfo *config.Packag
 	}
 
 	logE.Debug("check the permission")
-	if mode := finfo.Mode().Perm(); !isOwnerExecutable(mode) {
+	if mode := finfo.Mode().Perm(); !util.IsOwnerExecutable(mode) {
 		logE.Debug("add the permission to execute the command")
-		if err := os.Chmod(exePath, allowOwnerExec(mode)); err != nil {
+		if err := os.Chmod(exePath, util.AllowOwnerExec(mode)); err != nil {
 			return logerr.WithFields(errChmod, fields) //nolint:wrapcheck
 		}
 	}
 	return nil
 }
 
-const OwnerExecutable os.FileMode = 64
-
-func isOwnerExecutable(mode os.FileMode) bool {
-	return mode&OwnerExecutable != 0
-}
-
-func allowOwnerExec(mode os.FileMode) os.FileMode {
-	return mode | OwnerExecutable
-}
-
-func (ctrl *Controller) createLink(linkPath, linkDest string) error {
+func (inst *installer) createLink(linkPath, linkDest string) error {
 	if fileInfo, err := os.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -287,7 +304,7 @@ func (ctrl *Controller) createLink(linkPath, linkDest string) error {
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
-	ctrl.logE().WithFields(logrus.Fields{
+	inst.logE().WithFields(logrus.Fields{
 		"link_file": linkPath,
 		"new":       linkDest,
 	}).Info("create a symbolic link")

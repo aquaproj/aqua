@@ -1,4 +1,4 @@
-package controller
+package installpackage
 
 import (
 	"context"
@@ -11,12 +11,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) installProxy(ctx context.Context) error {
+func (inst *installer) InstallProxy(ctx context.Context) error {
 	pkg := &config.Package{
 		Name:    proxyName,
 		Version: "v0.2.1", // renovate: depName=aquaproj/aqua-proxy
 	}
-	logE := ctrl.logE().WithFields(logrus.Fields{
+	logE := inst.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -39,7 +39,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 		return err //nolint:wrapcheck
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(inst.RootDir, pkg)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -47,7 +47,7 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		if err := ctrl.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+		if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
 			return err
 		}
 	} else {
@@ -57,10 +57,10 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	}
 
 	// create a symbolic link
-	a, err := filepath.Rel(filepath.Join(ctrl.RootDir, "bin"), filepath.Join(pkgPath, proxyName))
+	a, err := filepath.Rel(filepath.Join(inst.RootDir, "bin"), filepath.Join(pkgPath, proxyName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return ctrl.createLink(filepath.Join(ctrl.RootDir, "bin", proxyName), a)
+	return inst.createLink(filepath.Join(inst.RootDir, "bin", proxyName), a)
 }

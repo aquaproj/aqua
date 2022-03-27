@@ -25,8 +25,8 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error 
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	if err := ctrl.installProxy(ctx); err != nil {
-		return err
+	if err := ctrl.PackageInstaller.InstallProxy(ctx); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	for _, cfgFilePath := range ctrl.ConfigFinder.Finds(wd, param.ConfigFilePath) {
@@ -71,5 +71,5 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.installPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest)
+	return ctrl.PackageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest) //nolint:wrapcheck
 }

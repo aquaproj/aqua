@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
@@ -25,13 +26,13 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"exe_path": which.ExePath,
 			"package":  which.Package.Name,
 		})
-		if err := ctrl.installPackage(ctx, which.PkgInfo, which.Package, false); err != nil {
-			return err
+		if err := ctrl.PackageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false); err != nil {
+			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {
 			logE.Debug("check if exec file exists")
 			if fi, err := os.Stat(which.ExePath); err == nil {
-				if isOwnerExecutable(fi.Mode()) {
+				if util.IsOwnerExecutable(fi.Mode()) {
 					break
 				}
 			}
