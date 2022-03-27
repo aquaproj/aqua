@@ -19,7 +19,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error 
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	rootBin := filepath.Join(ctrl.RootDir, "bin")
+	rootBin := filepath.Join(ctrl.rootDir, "bin")
 
 	if err := util.MkdirAll(rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)

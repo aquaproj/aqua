@@ -76,7 +76,7 @@ func (ctrl *Controller) whichFile(pkg *config.Package, pkgInfo *config.PackageIn
 	if err != nil {
 		return nil, fmt.Errorf("get file_src: %w", err)
 	}
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(ctrl.rootDir, pkg)
 	if err != nil {
 		return nil, fmt.Errorf("get pkg install path: %w", err)
 	}

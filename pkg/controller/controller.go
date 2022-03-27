@@ -27,7 +27,7 @@ type Controller struct {
 	GitHubRepositoryService GitHubRepositoryService
 	RegistryInstaller       registry.Installer
 	PackageInstaller        installpackage.Installer
-	RootDir                 string
+	rootDir                 string
 	GlobalConfingDir        string
 	Version                 string
 }
@@ -80,15 +80,15 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 		ConfigReader: &configReader{
 			reader: &fileReader{},
 		},
-		RootDir: os.Getenv("AQUA_ROOT_DIR"),
+		rootDir: os.Getenv("AQUA_ROOT_DIR"),
 		Version: param.AQUAVersion,
 	}
-	if ctrl.RootDir == "" {
+	if ctrl.rootDir == "" {
 		xdgDataHome := os.Getenv("XDG_DATA_HOME")
 		if xdgDataHome == "" {
 			xdgDataHome = filepath.Join(os.Getenv("HOME"), ".local", "share")
 		}
-		ctrl.RootDir = filepath.Join(xdgDataHome, "aquaproj-aqua")
+		ctrl.rootDir = filepath.Join(xdgDataHome, "aquaproj-aqua")
 	}
 	xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
 	if xdgConfigHome == "" {
@@ -97,11 +97,11 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 	ctrl.GlobalConfingDir = filepath.Join(xdgConfigHome, "aquaproj-aqua")
 
 	ctrl.GitHubRepositoryService = github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
-	ctrl.PackageInstaller = installpackage.New(ctrl.Version, ctrl.RootDir, &download.PkgDownloader{
+	ctrl.PackageInstaller = installpackage.New(ctrl.Version, ctrl.rootDir, &download.PkgDownloader{
 		GitHubRepositoryService: ctrl.GitHubRepositoryService,
 		LogE:                    ctrl.logE,
 	})
-	ctrl.RegistryInstaller = registry.New(ctrl.Version, ctrl.RootDir, download.NewRegistryDownloader(ctrl.GitHubRepositoryService, ctrl.Version))
+	ctrl.RegistryInstaller = registry.New(ctrl.Version, ctrl.rootDir, download.NewRegistryDownloader(ctrl.GitHubRepositoryService, ctrl.Version))
 
 	return &ctrl, nil
 }
