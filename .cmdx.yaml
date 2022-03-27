@@ -40,3 +40,8 @@ tasks:
   script: "bash scripts/coverage.sh {{.target}}"
   args:
   - name: target
+- name: wire
+  short: w
+  description: google/wire
+  usage: google/wire
+  script: "wire ./..."

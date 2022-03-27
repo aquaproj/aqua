@@ -41,7 +41,7 @@ func (runner *Runner) execAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	ctrl, err := controller.New(c.Context, param)
+	ctrl, err := controller.NewController(c.Context, param.AQUAVersion, param)
 	if err != nil {
 		return fmt.Errorf("initialize a controller: %w", err)
 	}

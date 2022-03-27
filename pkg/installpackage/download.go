@@ -16,7 +16,7 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, pkgInf
 	})
 	logE.Info("download and unarchive the package")
 
-	body, err := inst.PackageDownloader.GetReadCloser(ctx, pkg, pkgInfo, assetName)
+	body, err := inst.packageDownloader.GetReadCloser(ctx, pkg, pkgInfo, assetName)
 	if body != nil {
 		defer body.Close()
 	}

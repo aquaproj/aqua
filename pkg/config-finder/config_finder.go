@@ -22,13 +22,23 @@ func getGlobalConfigFilePaths() []string {
 	return paths
 }
 
-type ConfigFinder struct{}
+type configFinder struct{}
 
-func (finder *ConfigFinder) GetGlobalConfigFilePaths() []string {
+type ConfigFinder interface {
+	Find(wd, configFilePath string) (string, error)
+	Finds(wd, configFilePath string) []string
+	GetGlobalConfigFilePaths() []string
+}
+
+func NewConfigFinder() ConfigFinder {
+	return &configFinder{}
+}
+
+func (finder *configFinder) GetGlobalConfigFilePaths() []string {
 	return getGlobalConfigFilePaths()
 }
 
-func (finder *ConfigFinder) Find(wd, configFilePath string) (string, error) {
+func (finder *configFinder) Find(wd, configFilePath string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
@@ -45,7 +55,7 @@ func (finder *ConfigFinder) Find(wd, configFilePath string) (string, error) {
 	return "", ErrConfigFileNotFound
 }
 
-func (finder *ConfigFinder) Finds(wd, configFilePath string) []string {
+func (finder *configFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
 		return findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
 	}

@@ -26,7 +26,7 @@ func (runner *Runner) initAction(c *cli.Context) error {
 	if err := runner.setCLIArg(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.New(c.Context, param)
+	ctrl, err := controller.NewController(c.Context, param.AQUAVersion, param)
 	if err != nil {
 		return fmt.Errorf("initialize a controller: %w", err)
 	}

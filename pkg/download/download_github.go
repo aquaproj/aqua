@@ -7,16 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
 )
-
-type GitHubRepositoryService interface {
-	GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
-	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
-	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
-}
 
 func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int64, error) {
 	for _, asset := range assets {
@@ -25,13 +18,6 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 		}
 	}
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
-}
-
-func (downloader *PkgDownloader) getlogE() *logrus.Entry {
-	if downloader.LogE == nil {
-		return log.New()
-	}
-	return downloader.LogE()
 }
 
 func (downloader *PkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
@@ -47,7 +33,7 @@ func (downloader *PkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	if b != nil {
 		b.Close()
 	}
-	downloader.getlogE().WithError(err).WithFields(logrus.Fields{
+	downloader.logE().WithError(err).WithFields(logrus.Fields{
 		"repo_owner":    owner,
 		"repo_name":     repoName,
 		"asset_version": version,

@@ -22,21 +22,21 @@ type Installer interface {
 }
 
 type installer struct {
-	Version            string
-	RootDir            string
-	RegistryDownloader download.RegistryDownloader
+	rootDir            string
+	registryDownloader download.RegistryDownloader
+	logger             *log.Logger
 }
 
-func New(v, rootDir string, downloader download.RegistryDownloader) Installer {
+func New(rootDir config.RootDir, logger *log.Logger, downloader download.RegistryDownloader) Installer {
 	return &installer{
-		Version:            v,
-		RootDir:            rootDir,
-		RegistryDownloader: downloader,
+		rootDir:            string(rootDir),
+		registryDownloader: downloader,
+		logger:             logger,
 	}
 }
 
 func (inst *installer) logE() *logrus.Entry {
-	return log.New().WithField("aqua_version", inst.Version)
+	return inst.logger.LogE()
 }
 
 func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string) (map[string]*config.RegistryContent, error) {
@@ -88,7 +88,7 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
 func (inst *installer) installRegistry(ctx context.Context, registry *config.Registry, cfgFilePath string) (*config.RegistryContent, error) {
-	registryFilePath := registry.GetFilePath(inst.RootDir, cfgFilePath)
+	registryFilePath := registry.GetFilePath(inst.rootDir, cfgFilePath)
 	if err := util.MkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
@@ -123,7 +123,7 @@ func (inst *installer) getRegistry(ctx context.Context, registry *config.Registr
 }
 
 func (inst *installer) getGitHubContentRegistry(ctx context.Context, registry *config.Registry, registryFilePath string) (*config.RegistryContent, error) {
-	b, err := inst.RegistryDownloader.GetGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
+	b, err := inst.registryDownloader.GetGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

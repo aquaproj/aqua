@@ -9,6 +9,7 @@ require (
 	github.com/goccy/go-yaml v1.9.5
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-github/v39 v39.2.0
+	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.4.0
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mholt/archiver/v3 v3.5.1

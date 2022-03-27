@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -16,8 +18,12 @@ type PackageDownloader interface {
 }
 
 type PkgDownloader struct {
-	GitHubRepositoryService GitHubRepositoryService
-	LogE                    func() *logrus.Entry
+	GitHubRepositoryService github.RepositoryService
+	logger                  *log.Logger
+}
+
+func (downloader *PkgDownloader) logE() *logrus.Entry {
+	return downloader.logger.LogE()
 }
 
 func (downloader *PkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {

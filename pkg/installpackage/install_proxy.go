@@ -39,7 +39,7 @@ func (inst *installer) InstallProxy(ctx context.Context) error {
 		return err //nolint:wrapcheck
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(inst.RootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -57,10 +57,10 @@ func (inst *installer) InstallProxy(ctx context.Context) error {
 	}
 
 	// create a symbolic link
-	a, err := filepath.Rel(filepath.Join(inst.RootDir, "bin"), filepath.Join(pkgPath, proxyName))
+	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filepath.Join(pkgPath, proxyName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return inst.createLink(filepath.Join(inst.RootDir, "bin", proxyName), a)
+	return inst.createLink(filepath.Join(inst.rootDir, "bin", proxyName), a)
 }

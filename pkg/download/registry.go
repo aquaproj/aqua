@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
@@ -16,20 +17,20 @@ type RegistryDownloader interface {
 	GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error)
 }
 
-func NewRegistryDownloader(gh GitHubRepositoryService, v string) RegistryDownloader {
+func NewRegistryDownloader(gh githubSvc.RepositoryService, logger *log.Logger) RegistryDownloader {
 	return &registryDownloader{
 		GitHubRepositoryService: gh,
-		Version:                 v,
+		logger:                  logger,
 	}
 }
 
 type registryDownloader struct {
-	GitHubRepositoryService GitHubRepositoryService
-	Version                 string
+	GitHubRepositoryService githubSvc.RepositoryService
+	logger                  *log.Logger
 }
 
 func (downloader *registryDownloader) logE() *logrus.Entry {
-	return log.New().WithField("aqua_version", downloader.Version)
+	return downloader.logger.LogE()
 }
 
 func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error) {
