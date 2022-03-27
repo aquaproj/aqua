@@ -2,12 +2,12 @@ package util
 
 import "os"
 
-const OwnerExecutable os.FileMode = 64
+const ownerExecutable os.FileMode = 64
 
 func IsOwnerExecutable(mode os.FileMode) bool {
-	return mode&OwnerExecutable != 0
+	return mode&ownerExecutable != 0
 }
 
 func AllowOwnerExec(mode os.FileMode) os.FileMode {
-	return mode | OwnerExecutable
+	return mode | ownerExecutable
 }
