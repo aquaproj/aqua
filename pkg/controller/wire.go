@@ -33,3 +33,8 @@ func InitializeInitCommandController(ctx context.Context, aquaVersion string, pa
 	wire.Build(initcmd.New, log.NewLogger, github.NewGitHub)
 	return &initcmd.Controller{}
 }
+
+func InitializeGenerateCommandController(ctx context.Context, aquaVersion string, param *config.Param) *GenerateController {
+	wire.Build(NewGenerateController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	return &GenerateController{}
+}

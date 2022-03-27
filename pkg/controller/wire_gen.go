@@ -59,3 +59,16 @@ func InitializeInitCommandController(ctx context.Context, aquaVersion string, pa
 	controller := initcmd.New(logger, repositoryService)
 	return controller
 }
+
+func InitializeGenerateCommandController(ctx context.Context, aquaVersion string, param *config.Param) *GenerateController {
+	configFinder := finder.NewConfigFinder()
+	fileReader := reader.NewFileReader()
+	configReader := reader.New(fileReader)
+	logger := log.NewLogger(aquaVersion)
+	rootDir := config.NewRootDir()
+	repositoryService := github.NewGitHub(ctx)
+	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
+	installer := registry.New(rootDir, logger, registryDownloader)
+	generateController := NewGenerateController(configFinder, configReader, logger, installer, repositoryService)
+	return generateController
+}

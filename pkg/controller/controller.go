@@ -50,6 +50,7 @@ func New(ctx context.Context, rootDir config.RootDir, configFinder finder.Config
 		gitHubRepositoryService: gh,
 		packageInstaller:        pkgInstaller,
 		registryInstaller:       registInstaller,
+		logger:                  logger,
 	}
 
 	return &ctrl, nil

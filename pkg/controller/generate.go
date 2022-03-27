@@ -10,6 +10,11 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/google/go-github/v39/github"
 	"github.com/ktr0731/go-fuzzyfinder"
@@ -17,6 +22,28 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
+
+type GenerateController struct {
+	stdin                   io.Reader
+	stdout                  io.Writer
+	gitHubRepositoryService githubSvc.RepositoryService
+	registryInstaller       registry.Installer
+	configFinder            finder.ConfigFinder
+	configReader            reader.ConfigReader
+	logger                  *log.Logger
+}
+
+func NewGenerateController(configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, registInstaller registry.Installer, gh githubSvc.RepositoryService) *GenerateController {
+	return &GenerateController{
+		stdin:                   os.Stdin,
+		stdout:                  os.Stdout,
+		configFinder:            configFinder,
+		configReader:            configReader,
+		logger:                  logger,
+		registryInstaller:       registInstaller,
+		gitHubRepositoryService: gh,
+	}
+}
 
 type FindingPackage struct {
 	PackageInfo  *config.PackageInfo
@@ -26,7 +53,7 @@ type FindingPackage struct {
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args ...string) error {
+func (ctrl *GenerateController) Generate(ctx context.Context, param *config.Param, args ...string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -54,7 +81,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args 
 	return ctrl.generateInsert(cfgFilePath, list)
 }
 
-func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
+func (ctrl *GenerateController) generate(ctx context.Context, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
 	cfg := &config.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
@@ -105,7 +132,7 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *config.Param, registryContents map[string]*config.RegistryContent, pkgNames ...string) (interface{}, error) {
+func (ctrl *GenerateController) outputListedPkgs(ctx context.Context, param *config.Param, registryContents map[string]*config.RegistryContent, pkgNames ...string) (interface{}, error) {
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
@@ -137,7 +164,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *config.Para
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*config.Package, m map[string]*FindingPackage) ([]*config.Package, error) {
+func (ctrl *GenerateController) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*config.Package, m map[string]*FindingPackage) ([]*config.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
 		file = ctrl.stdin
@@ -165,7 +192,7 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *co
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.PackageInfo) string {
+func (ctrl *GenerateController) listAndGetTagName(ctx context.Context, pkgInfo *config.PackageInfo) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -197,7 +224,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo) {
+func (ctrl *GenerateController) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	pkgName := pkgInfo.GetName()
@@ -223,7 +250,7 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *co
 	}
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) *config.Package {
+func (ctrl *GenerateController) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) *config.Package {
 	outputPkg := &config.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
@@ -240,4 +267,8 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 		return outputPkg
 	}
 	return outputPkg
+}
+
+func (ctrl *GenerateController) logE() *logrus.Entry {
+	return ctrl.logger.LogE()
 }

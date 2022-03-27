@@ -7,7 +7,7 @@ import (
 	"github.com/ktr0731/go-fuzzyfinder"
 )
 
-func (ctrl *Controller) launchFuzzyFinder(pkgs []*FindingPackage) ([]int, error) {
+func (ctrl *GenerateController) launchFuzzyFinder(pkgs []*FindingPackage) ([]int, error) {
 	return fuzzyfinder.FindMulti(pkgs, func(i int) string { //nolint:wrapcheck
 		pkg := pkgs[i]
 		files := pkg.PackageInfo.GetFiles()
