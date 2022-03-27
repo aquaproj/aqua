@@ -5,9 +5,7 @@ import "errors"
 var (
 	errPkgNameMustBeUniqueInRegistry = errors.New("the package name must be unique in the same registry")
 	errUnknownPkg                    = errors.New("unknown package")
-	errGitHubTokenIsRequired         = errors.New("GITHUB_TOKEN is required for the type `github_release`")
 	errCommandIsNotFound             = errors.New("command is not found")
-	errGitHubContentMustBeFile       = errors.New("ref must be not a directory but a file")
 	errUnsupportedRegistryType       = errors.New("unsupported registry type")
 	errLocalRegistryNotFound         = errors.New("local registry isn't found")
 	errRegistryNotFound              = errors.New("registry isn't found")
