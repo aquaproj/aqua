@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
@@ -46,12 +47,12 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) WhichController {
-	wire.Build(NewWhichController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) which.Controller {
+	wire.Build(which.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return nil
 }
 
 func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ExecController {
-	wire.Build(NewExecController, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, NewWhichController)
+	wire.Build(NewExecController, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New)
 	return &ExecController{}
 }

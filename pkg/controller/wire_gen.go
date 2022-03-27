@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/install-registry"
@@ -88,7 +89,7 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	return controller
 }
 
-func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) WhichController {
+func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) which.Controller {
 	rootDir := config.NewRootDir()
 	configFinder := finder.NewConfigFinder()
 	fileReader := reader.NewFileReader()
@@ -97,8 +98,8 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 	repositoryService := github.NewGitHub(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
-	controllerWhichController := NewWhichController(rootDir, configFinder, configReader, logger, installer)
-	return controllerWhichController
+	controller := which.New(rootDir, configFinder, configReader, logger, installer)
+	return controller
 }
 
 func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ExecController {
@@ -112,7 +113,7 @@ func InitializeExecCommandController(ctx context.Context, aquaVersion string, pa
 	configReader := reader.New(fileReader)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	registryInstaller := registry.New(rootDir, logger, registryDownloader)
-	controllerWhichController := NewWhichController(rootDir, configFinder, configReader, logger, registryInstaller)
-	execController := NewExecController(installer, logger, controllerWhichController)
+	controller := which.New(rootDir, configFinder, configReader, logger, registryInstaller)
+	execController := NewExecController(installer, logger, controller)
 	return execController
 }

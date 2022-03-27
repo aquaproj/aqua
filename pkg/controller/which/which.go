@@ -1,4 +1,4 @@
-package controller
+package which
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type whichController struct {
+type controller struct {
 	stdout            io.Writer
 	rootDir           string
 	configFinder      finder.ConfigFinder
@@ -26,16 +26,16 @@ type whichController struct {
 	logger            *log.Logger
 }
 
-type WhichController interface {
+type Controller interface {
 	Which(ctx context.Context, param *config.Param, exeName string) (*Which, error)
 }
 
-func (ctrl *whichController) logE() *logrus.Entry {
+func (ctrl *controller) logE() *logrus.Entry {
 	return ctrl.logger.LogE()
 }
 
-func NewWhichController(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, registInstaller registry.Installer) WhichController {
-	return &whichController{
+func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, registInstaller registry.Installer) Controller {
+	return &controller{
 		stdout:            os.Stdout,
 		rootDir:           string(rootDir),
 		configFinder:      configFinder,
@@ -45,7 +45,7 @@ func NewWhichController(rootDir config.RootDir, configFinder finder.ConfigFinder
 	}
 }
 
-// func (ctrl *whichController) Which(ctx context.Context, param *config.Param, exeName string) error {
+// func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string) error {
 // 	which, err := ctrl.which(ctx, param, exeName)
 // 	if err != nil {
 // 		return err
@@ -61,7 +61,7 @@ type Which struct {
 	ExePath string
 }
 
-func (ctrl *whichController) Which(ctx context.Context, param *config.Param, exeName string) (*Which, error) {
+func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string) (*Which, error) {
 	fields := logrus.Fields{
 		"exe_name": exeName,
 	}
@@ -105,7 +105,7 @@ func (ctrl *whichController) Which(ctx context.Context, param *config.Param, exe
 	}, nil
 }
 
-func (ctrl *whichController) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
+func (ctrl *controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return nil, fmt.Errorf("get file_src: %w", err)
@@ -122,7 +122,7 @@ func (ctrl *whichController) whichFile(pkg *config.Package, pkgInfo *config.Pack
 	}, nil
 }
 
-func (ctrl *whichController) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*config.Package, *config.PackageInfo, *config.File, error) {
+func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*config.Package, *config.PackageInfo, *config.File, error) {
 	cfg := &config.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, nil, nil, err //nolint:wrapcheck
@@ -143,7 +143,7 @@ func (ctrl *whichController) findExecFile(ctx context.Context, cfgFilePath, exeN
 	return nil, nil, nil, nil
 }
 
-func (ctrl *whichController) findExecFileFromPkg(registries map[string]*config.RegistryContent, exeName string, pkg *config.Package) (*config.PackageInfo, *config.File) {
+func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.RegistryContent, exeName string, pkg *config.Package) (*config.PackageInfo, *config.File) {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,

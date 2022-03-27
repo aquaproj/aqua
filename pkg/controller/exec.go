@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -21,12 +22,12 @@ type ExecController struct {
 	stdin            io.Reader
 	stdout           io.Writer
 	stderr           io.Writer
-	which            WhichController
+	which            which.Controller
 	logger           *log.Logger
 	packageInstaller installpackage.Installer
 }
 
-func NewExecController(pkgInstaller installpackage.Installer, logger *log.Logger, which WhichController) *ExecController {
+func NewExecController(pkgInstaller installpackage.Installer, logger *log.Logger, which which.Controller) *ExecController {
 	return &ExecController{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
