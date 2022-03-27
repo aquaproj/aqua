@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
@@ -102,7 +103,7 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 	return controller
 }
 
-func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ExecController {
+func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *exec.Controller {
 	logger := log.NewLogger(aquaVersion)
 	repositoryService := github.NewGitHub(ctx)
 	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
@@ -114,6 +115,6 @@ func InitializeExecCommandController(ctx context.Context, aquaVersion string, pa
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	registryInstaller := registry.New(rootDir, logger, registryDownloader)
 	controller := which.New(rootDir, configFinder, configReader, logger, registryInstaller)
-	execController := NewExecController(installer, logger, controller)
+	execController := exec.New(installer, logger, controller)
 	return execController
 }

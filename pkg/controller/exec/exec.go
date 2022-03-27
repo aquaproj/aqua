@@ -1,4 +1,4 @@
-package controller
+package exec
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type ExecController struct {
+type Controller struct {
 	stdin            io.Reader
 	stdout           io.Writer
 	stderr           io.Writer
@@ -27,8 +27,8 @@ type ExecController struct {
 	packageInstaller installpackage.Installer
 }
 
-func NewExecController(pkgInstaller installpackage.Installer, logger *log.Logger, which which.Controller) *ExecController {
-	return &ExecController{
+func New(pkgInstaller installpackage.Installer, logger *log.Logger, which which.Controller) *Controller {
+	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		stderr:           os.Stderr,
@@ -38,11 +38,11 @@ func NewExecController(pkgInstaller installpackage.Installer, logger *log.Logger
 	}
 }
 
-func (ctrl *ExecController) logE() *logrus.Entry {
+func (ctrl *Controller) logE() *logrus.Entry {
 	return ctrl.logger.LogE()
 }
 
-func (ctrl *ExecController) Exec(ctx context.Context, param *config.Param, exeName string, args []string) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string) error {
 	which, err := ctrl.which.Which(ctx, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -83,7 +83,7 @@ func wait(ctx context.Context, duration time.Duration) error {
 	}
 }
 
-func (ctrl *ExecController) execCommand(ctx context.Context, exePath string, args []string) error {
+func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) error {
 	logE := ctrl.logE().WithField("exe_path", exePath)
 	logE.Debug("execute the command")
 	for i := 0; i < 10; i++ {

@@ -1,4 +1,4 @@
-package controller
+package exec
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/log"
 )
 
-func TestExecController_execCommand(t *testing.T) {
+func TestController_execCommand(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -21,7 +21,7 @@ func TestExecController_execCommand(t *testing.T) {
 			args:    []string{"hello"},
 		},
 	}
-	ctrl := &ExecController{
+	ctrl := &Controller{
 		stdin:  os.Stdin,
 		stdout: os.Stdout,
 		stderr: os.Stderr,

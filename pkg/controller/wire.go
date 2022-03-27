@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
@@ -52,7 +53,7 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ExecController {
-	wire.Build(NewExecController, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New)
-	return &ExecController{}
+func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *exec.Controller {
+	wire.Build(exec.New, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New)
+	return &exec.Controller{}
 }
