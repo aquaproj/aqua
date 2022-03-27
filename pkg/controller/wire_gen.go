@@ -26,24 +26,6 @@ import (
 
 // Injectors from wire.go:
 
-func NewController(ctx context.Context, aquaVersion string, param *config.Param) (*Controller, error) {
-	rootDir := config.NewRootDir()
-	configFinder := finder.NewConfigFinder()
-	fileReader := reader.NewFileReader()
-	configReader := reader.New(fileReader)
-	logger := log.NewLogger(aquaVersion)
-	repositoryService := github.NewGitHub(ctx)
-	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
-	installer := installpackage.New(aquaVersion, logger, packageDownloader)
-	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
-	registryInstaller := registry.New(rootDir, logger, registryDownloader)
-	controller, err := New(rootDir, configFinder, configReader, logger, installer, repositoryService, registryInstaller, param)
-	if err != nil {
-		return nil, err
-	}
-	return controller, nil
-}
-
 func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *list.Controller {
 	configFinder := finder.NewConfigFinder()
 	fileReader := reader.NewFileReader()
