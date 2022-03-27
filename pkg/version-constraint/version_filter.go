@@ -23,7 +23,7 @@ func (vf *VersionFilter) Raw() string {
 	return vf.raw
 }
 
-func (vf *VersionFilter) Compile() error {
+func (vf *VersionFilter) compile() error {
 	if vf.expr != nil {
 		return nil
 	}
@@ -47,7 +47,7 @@ func (vf *VersionFilter) Compile() error {
 }
 
 func (vf *VersionFilter) Check(v string) (bool, error) {
-	if err := vf.Compile(); err != nil {
+	if err := vf.compile(); err != nil {
 		return false, err
 	}
 	a, err := expr.Run(vf.expr, map[string]interface{}{
