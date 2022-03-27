@@ -10,6 +10,7 @@ import (
 	"context"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
+	"github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/install-registry"
@@ -22,13 +23,15 @@ import (
 func NewController(ctx context.Context, aquaVersion string, param *config.Param) (*Controller, error) {
 	rootDir := config.NewRootDir()
 	configFinder := finder.NewConfigFinder()
+	fileReader := reader.NewFileReader()
+	configReader := reader.New(fileReader)
 	logger := log.NewLogger(aquaVersion)
 	repositoryService := github.NewGitHub(ctx)
 	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
 	installer := installpackage.New(aquaVersion, logger, packageDownloader)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	registryInstaller := registry.New(rootDir, logger, registryDownloader)
-	controller, err := New(ctx, rootDir, configFinder, logger, installer, repositoryService, registryInstaller, param)
+	controller, err := New(ctx, rootDir, configFinder, configReader, logger, installer, repositoryService, registryInstaller, param)
 	if err != nil {
 		return nil, err
 	}
@@ -37,11 +40,13 @@ func NewController(ctx context.Context, aquaVersion string, param *config.Param)
 
 func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ListCommandController {
 	configFinder := finder.NewConfigFinder()
+	fileReader := reader.NewFileReader()
+	configReader := reader.New(fileReader)
 	rootDir := config.NewRootDir()
 	logger := log.NewLogger(aquaVersion)
 	repositoryService := github.NewGitHub(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
-	listCommandController := NewListCommandController(configFinder, installer)
+	listCommandController := NewListCommandController(configFinder, configReader, installer)
 	return listCommandController
 }

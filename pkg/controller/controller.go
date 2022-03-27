@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
@@ -18,8 +19,8 @@ type Controller struct {
 	stdin                   io.Reader
 	stdout                  io.Writer
 	stderr                  io.Writer
-	configFinder            ConfigFinder
-	configReader            ConfigReader
+	configFinder            finder.ConfigFinder
+	configReader            reader.ConfigReader
 	gitHubRepositoryService githubSvc.RepositoryService
 	registryInstaller       registry.Installer
 	packageInstaller        installpackage.Installer
@@ -27,7 +28,7 @@ type Controller struct {
 	logger                  *log.Logger
 }
 
-func New(ctx context.Context, rootDir config.RootDir, configFinder finder.ConfigFinder, logger *log.Logger, pkgInstaller installpackage.Installer, gh githubSvc.RepositoryService, registInstaller registry.Installer, param *config.Param) (*Controller, error) {
+func New(ctx context.Context, rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, pkgInstaller installpackage.Installer, gh githubSvc.RepositoryService, registInstaller registry.Installer, param *config.Param) (*Controller, error) {
 	if param.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(param.LogLevel)
 		if err != nil {
@@ -40,13 +41,11 @@ func New(ctx context.Context, rootDir config.RootDir, configFinder finder.Config
 		"config":    param.ConfigFilePath,
 	}).Debug("CLI args")
 	ctrl := Controller{
-		stdin:        os.Stdin,
-		stdout:       os.Stdout,
-		stderr:       os.Stderr,
-		configFinder: configFinder,
-		configReader: &configReader{
-			reader: &fileReader{},
-		},
+		stdin:                   os.Stdin,
+		stdout:                  os.Stdout,
+		stderr:                  os.Stderr,
+		configFinder:            configFinder,
+		configReader:            configReader,
 		rootDir:                 string(rootDir),
 		gitHubRepositoryService: gh,
 		packageInstaller:        pkgInstaller,

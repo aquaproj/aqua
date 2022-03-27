@@ -8,24 +8,23 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
 )
 
 type ListCommandController struct {
 	stdout            io.Writer
-	configFinder      ConfigFinder
-	configReader      ConfigReader
+	configFinder      finder.ConfigFinder
+	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 }
 
-func NewListCommandController(configFinder finder.ConfigFinder, registInstaller registry.Installer) *ListCommandController {
+func NewListCommandController(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer) *ListCommandController {
 	return &ListCommandController{
-		stdout:       os.Stdout,
-		configFinder: configFinder,
-		configReader: &configReader{
-			reader: &fileReader{},
-		},
+		stdout:            os.Stdout,
+		configFinder:      configFinder,
+		configReader:      configReader,
 		registryInstaller: registInstaller,
 	}
 }

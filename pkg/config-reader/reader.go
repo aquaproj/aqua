@@ -1,4 +1,4 @@
-package controller
+package reader
 
 import (
 	"fmt"
@@ -15,14 +15,28 @@ type FileReader interface {
 	Read(p string) (io.ReadCloser, error)
 }
 
+func NewFileReader() FileReader {
+	return &fileReader{}
+}
+
 type fileReader struct{}
 
 func (reader *fileReader) Read(p string) (io.ReadCloser, error) {
 	return os.Open(p) //nolint:wrapcheck
 }
 
+type ConfigReader interface {
+	Read(configFilePath string, cfg *config.Config) error
+}
+
 type configReader struct {
 	reader FileReader
+}
+
+func New(reader FileReader) ConfigReader {
+	return &configReader{
+		reader: reader,
+	}
 }
 
 func (reader *configReader) Read(configFilePath string, cfg *config.Config) error {
