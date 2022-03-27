@@ -25,7 +25,6 @@ type Controller struct {
 	ConfigReader            ConfigReader
 	GitHubRepositoryService GitHubRepositoryService
 	PackageDownloader       download.PackageDownloader
-	RegistryDownloader      download.RegistryDownloader
 	RegistryInstaller       registry.Installer
 	RootDir                 string
 	GlobalConfingDir        string
@@ -101,8 +100,7 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 		GitHubRepositoryService: ctrl.GitHubRepositoryService,
 		LogE:                    ctrl.logE,
 	}
-	ctrl.RegistryDownloader = download.NewRegistryDownloader(ctrl.GitHubRepositoryService, ctrl.Version)
-	ctrl.RegistryInstaller = registry.New(ctrl.Version, ctrl.RootDir, ctrl.RegistryDownloader)
+	ctrl.RegistryInstaller = registry.New(ctrl.Version, ctrl.RootDir, download.NewRegistryDownloader(ctrl.GitHubRepositoryService, ctrl.Version))
 
 	return &ctrl, nil
 }
