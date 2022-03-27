@@ -1,4 +1,4 @@
-package controller
+package download
 
 import (
 	"testing"

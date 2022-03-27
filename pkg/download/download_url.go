@@ -1,4 +1,4 @@
-package controller
+package download
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func downloadFromURL(ctx context.Context, u string, httpClient *http.Client) (io.ReadCloser, error) {
+func FromURL(ctx context.Context, u string, httpClient *http.Client) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create a http request: %w", err)

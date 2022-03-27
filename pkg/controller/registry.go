@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -16,7 +17,7 @@ import (
 
 func (ctrl *Controller) getGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error) {
 	// https://github.com/aquaproj/aqua/issues/391
-	body, err := downloadFromURL(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path, http.DefaultClient)
+	body, err := download.FromURL(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path, http.DefaultClient)
 	if body != nil {
 		defer body.Close()
 	}
