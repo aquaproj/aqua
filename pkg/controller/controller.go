@@ -54,7 +54,3 @@ func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader 
 
 	return &ctrl, nil
 }
-
-func (ctrl *Controller) logE() *logrus.Entry {
-	return ctrl.logger.LogE()
-}

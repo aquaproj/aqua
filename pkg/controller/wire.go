@@ -45,3 +45,13 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	wire.Build(install.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return &install.Controller{}
 }
+
+func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) WhichController {
+	wire.Build(NewWhichController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	return nil
+}
+
+func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ExecController {
+	wire.Build(NewExecController, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, NewWhichController)
+	return &ExecController{}
+}

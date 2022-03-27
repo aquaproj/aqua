@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
@@ -38,15 +39,17 @@ func (runner *Runner) whichAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	ctrl, err := controller.NewController(c.Context, param.AQUAVersion, param)
-	if err != nil {
-		return fmt.Errorf("initialize a controller: %w", err)
-	}
+	ctrl := controller.InitializeWhichCommandController(c.Context, param.AQUAVersion, param)
 
 	exeName, _, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
 
-	return ctrl.Which(c.Context, param, exeName) //nolint:wrapcheck
+	which, err := ctrl.Which(c.Context, param, exeName)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	fmt.Fprintln(os.Stdout, which.ExePath)
+	return nil
 }

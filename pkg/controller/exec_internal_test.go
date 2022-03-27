@@ -2,13 +2,15 @@ package controller
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestController_findExecFileFromPkg(t *testing.T) {
+func Test_whichController_findExecFileFromPkg(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title          string
@@ -52,7 +54,9 @@ func TestController_findExecFileFromPkg(t *testing.T) {
 			},
 		},
 	}
-	ctrl := &Controller{}
+	ctrl := &whichController{
+		logger: log.NewLogger(""),
+	}
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
@@ -68,7 +72,7 @@ func TestController_findExecFileFromPkg(t *testing.T) {
 	}
 }
 
-func TestController_execCommand(t *testing.T) {
+func TestExecController_execCommand(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -81,7 +85,12 @@ func TestController_execCommand(t *testing.T) {
 			args:    []string{"hello"},
 		},
 	}
-	ctrl := &Controller{}
+	ctrl := &ExecController{
+		stdin:  os.Stdin,
+		stdout: os.Stdout,
+		stderr: os.Stderr,
+		logger: log.NewLogger(""),
+	}
 	ctx := context.Background()
 	for _, d := range data {
 		d := d

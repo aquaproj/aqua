@@ -2,24 +2,49 @@ package controller
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/util"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string) error {
-	which, err := ctrl.which(ctx, param, exeName)
+type ExecController struct {
+	stdin            io.Reader
+	stdout           io.Writer
+	stderr           io.Writer
+	which            WhichController
+	logger           *log.Logger
+	packageInstaller installpackage.Installer
+}
+
+func NewExecController(pkgInstaller installpackage.Installer, logger *log.Logger, which WhichController) *ExecController {
+	return &ExecController{
+		stdin:            os.Stdin,
+		stdout:           os.Stdout,
+		stderr:           os.Stderr,
+		packageInstaller: pkgInstaller,
+		logger:           logger,
+		which:            which,
+	}
+}
+
+func (ctrl *ExecController) logE() *logrus.Entry {
+	return ctrl.logger.LogE()
+}
+
+func (ctrl *ExecController) Exec(ctx context.Context, param *config.Param, exeName string, args []string) error {
+	which, err := ctrl.which.Which(ctx, param, exeName)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
 	if which.Package != nil { //nolint:nestif
 		logE := ctrl.logE().WithFields(logrus.Fields{
@@ -57,77 +82,7 @@ func wait(ctx context.Context, duration time.Duration) error {
 	}
 }
 
-func (ctrl *Controller) findExecFileFromPkg(registries map[string]*config.RegistryContent, exeName string, pkg *config.Package) (*config.PackageInfo, *config.File) {
-	logE := ctrl.logE().WithFields(logrus.Fields{
-		"registry_name": pkg.Registry,
-		"package_name":  pkg.Name,
-	})
-	registry, ok := registries[pkg.Registry]
-	if !ok {
-		logE.Warn("registry isn't found")
-		return nil, nil
-	}
-
-	m, err := registry.PackageInfos.ToMap()
-	if err != nil {
-		logerr.WithError(logE, err).Warn("registry is invalid")
-		return nil, nil
-	}
-
-	pkgInfo, ok := m[pkg.Name]
-	if !ok {
-		logE.Warn("package isn't found")
-		return nil, nil
-	}
-
-	pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
-	if err != nil {
-		logerr.WithError(logE, err).Warn("version constraint is invalid")
-		return nil, nil
-	}
-
-	if pkgInfo.SupportedIf != nil {
-		supported, err := pkgInfo.SupportedIf.Check()
-		if err != nil {
-			logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
-			return nil, nil
-		}
-		if !supported {
-			logE.WithField("supported_if", pkgInfo.SupportedIf.Raw()).Debug("the package isn't supported on this environment")
-			return nil, nil
-		}
-	}
-
-	for _, file := range pkgInfo.GetFiles() {
-		if file.Name == exeName {
-			return pkgInfo, file
-		}
-	}
-	return nil, nil
-}
-
-func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*config.Package, *config.PackageInfo, *config.File, error) {
-	cfg := &config.Config{}
-	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
-		return nil, nil, nil, err //nolint:wrapcheck
-	}
-	if err := validate.Config(cfg); err != nil {
-		return nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)
-	}
-
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
-	if err != nil {
-		return nil, nil, nil, err //nolint:wrapcheck
-	}
-	for _, pkg := range cfg.Packages {
-		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg); pkgInfo != nil {
-			return pkg, pkgInfo, file, nil
-		}
-	}
-	return nil, nil, nil, nil
-}
-
-func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) error {
+func (ctrl *ExecController) execCommand(ctx context.Context, exePath string, args []string) error {
 	logE := ctrl.logE().WithField("exe_path", exePath)
 	logE.Debug("execute the command")
 	for i := 0; i < 10; i++ {

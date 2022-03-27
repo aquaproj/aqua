@@ -87,3 +87,32 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	controller := install.New(rootDir, configFinder, configReader, installer)
 	return controller
 }
+
+func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) WhichController {
+	rootDir := config.NewRootDir()
+	configFinder := finder.NewConfigFinder()
+	fileReader := reader.NewFileReader()
+	configReader := reader.New(fileReader)
+	logger := log.NewLogger(aquaVersion)
+	repositoryService := github.NewGitHub(ctx)
+	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
+	installer := registry.New(rootDir, logger, registryDownloader)
+	controllerWhichController := NewWhichController(rootDir, configFinder, configReader, logger, installer)
+	return controllerWhichController
+}
+
+func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ExecController {
+	logger := log.NewLogger(aquaVersion)
+	repositoryService := github.NewGitHub(ctx)
+	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
+	installer := installpackage.New(aquaVersion, logger, packageDownloader)
+	rootDir := config.NewRootDir()
+	configFinder := finder.NewConfigFinder()
+	fileReader := reader.NewFileReader()
+	configReader := reader.New(fileReader)
+	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
+	registryInstaller := registry.New(rootDir, logger, registryDownloader)
+	controllerWhichController := NewWhichController(rootDir, configFinder, configReader, logger, registryInstaller)
+	execController := NewExecController(installer, logger, controllerWhichController)
+	return execController
+}
