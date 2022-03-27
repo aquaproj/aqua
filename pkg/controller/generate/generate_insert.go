@@ -1,4 +1,4 @@
-package controller
+package generate
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/goccy/go-yaml/parser"
 )
 
-func (ctrl *GenerateController) generateInsert(cfgFilePath string, pkgs interface{}) error {
+func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) error {
 	file, err := parser.ParseFile(cfgFilePath, parser.ParseComments)
 	if err != nil {
 		return fmt.Errorf("parse configuration file as YAML: %w", err)
@@ -30,7 +30,7 @@ func (ctrl *GenerateController) generateInsert(cfgFilePath string, pkgs interfac
 	return nil
 }
 
-func (ctrl *GenerateController) updateASTFile(file *ast.File, pkgs interface{}) error {
+func (ctrl *Controller) updateASTFile(file *ast.File, pkgs interface{}) error {
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)

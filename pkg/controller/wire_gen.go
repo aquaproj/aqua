@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/download"
@@ -60,7 +61,7 @@ func InitializeInitCommandController(ctx context.Context, aquaVersion string, pa
 	return controller
 }
 
-func InitializeGenerateCommandController(ctx context.Context, aquaVersion string, param *config.Param) *GenerateController {
+func InitializeGenerateCommandController(ctx context.Context, aquaVersion string, param *config.Param) *generate.Controller {
 	configFinder := finder.NewConfigFinder()
 	fileReader := reader.NewFileReader()
 	configReader := reader.New(fileReader)
@@ -69,6 +70,6 @@ func InitializeGenerateCommandController(ctx context.Context, aquaVersion string
 	repositoryService := github.NewGitHub(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
-	generateController := NewGenerateController(configFinder, configReader, logger, installer, repositoryService)
-	return generateController
+	controller := generate.New(configFinder, configReader, logger, installer, repositoryService)
+	return controller
 }
