@@ -10,6 +10,16 @@ import (
 
 var ErrConfigFileNotFound = errors.New("configuration file isn't found")
 
+type ConfigFinder interface {
+	Find(wd, configFilePath string) (string, error)
+	Finds(wd, configFilePath string) []string
+	GetGlobalConfigFilePaths() []string
+}
+
+func NewConfigFinder() ConfigFinder {
+	return &configFinder{}
+}
+
 func getGlobalConfigFilePaths() []string {
 	src := strings.Split(os.Getenv("AQUA_GLOBAL_CONFIG"), ":")
 	paths := make([]string, 0, len(src))
@@ -23,16 +33,6 @@ func getGlobalConfigFilePaths() []string {
 }
 
 type configFinder struct{}
-
-type ConfigFinder interface {
-	Find(wd, configFilePath string) (string, error)
-	Finds(wd, configFilePath string) []string
-	GetGlobalConfigFilePaths() []string
-}
-
-func NewConfigFinder() ConfigFinder {
-	return &configFinder{}
-}
 
 func (finder *configFinder) GetGlobalConfigFilePaths() []string {
 	return getGlobalConfigFilePaths()

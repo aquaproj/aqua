@@ -18,20 +18,6 @@ import (
 
 const proxyName = "aqua-proxy"
 
-type Installer interface {
-	InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool) error
-	InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool) error
-	InstallProxy(ctx context.Context) error
-}
-
-func New(rootDir config.RootDir, logger *log.Logger, downloader download.PackageDownloader) Installer {
-	return &installer{
-		logger:            logger,
-		rootDir:           string(rootDir),
-		packageDownloader: downloader,
-	}
-}
-
 type installer struct {
 	rootDir           string
 	packageDownloader download.PackageDownloader

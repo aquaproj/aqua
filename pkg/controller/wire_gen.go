@@ -32,7 +32,7 @@ func InitializeListCommandController(ctx context.Context, aquaVersion string, pa
 	configReader := reader.New(fileReader)
 	rootDir := config.NewRootDir()
 	logger := log.NewLogger(aquaVersion)
-	repositoryService := github.NewGitHub(ctx)
+	repositoryService := github.New(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
 	controller := list.NewController(configFinder, configReader, installer)
@@ -41,7 +41,7 @@ func InitializeListCommandController(ctx context.Context, aquaVersion string, pa
 
 func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *initcmd.Controller {
 	logger := log.NewLogger(aquaVersion)
-	repositoryService := github.NewGitHub(ctx)
+	repositoryService := github.New(ctx)
 	controller := initcmd.New(logger, repositoryService)
 	return controller
 }
@@ -52,7 +52,7 @@ func InitializeGenerateCommandController(ctx context.Context, aquaVersion string
 	configReader := reader.New(fileReader)
 	logger := log.NewLogger(aquaVersion)
 	rootDir := config.NewRootDir()
-	repositoryService := github.NewGitHub(ctx)
+	repositoryService := github.New(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
 	controller := generate.New(configFinder, configReader, logger, installer, repositoryService)
@@ -65,7 +65,7 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	fileReader := reader.NewFileReader()
 	configReader := reader.New(fileReader)
 	logger := log.NewLogger(aquaVersion)
-	repositoryService := github.NewGitHub(ctx)
+	repositoryService := github.New(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
 	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
@@ -80,7 +80,7 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 	fileReader := reader.NewFileReader()
 	configReader := reader.New(fileReader)
 	logger := log.NewLogger(aquaVersion)
-	repositoryService := github.NewGitHub(ctx)
+	repositoryService := github.New(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
 	controller := which.New(rootDir, configFinder, configReader, logger, installer)
@@ -90,7 +90,7 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *exec.Controller {
 	rootDir := config.NewRootDir()
 	logger := log.NewLogger(aquaVersion)
-	repositoryService := github.NewGitHub(ctx)
+	repositoryService := github.New(ctx)
 	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
 	installer := installpackage.New(rootDir, logger, packageDownloader)
 	configFinder := finder.NewConfigFinder()

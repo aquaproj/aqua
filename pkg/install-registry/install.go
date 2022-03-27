@@ -17,22 +17,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Installer interface {
-	InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string) (map[string]*config.RegistryContent, error)
-}
-
 type installer struct {
 	rootDir            string
 	registryDownloader download.RegistryDownloader
 	logger             *log.Logger
-}
-
-func New(rootDir config.RootDir, logger *log.Logger, downloader download.RegistryDownloader) Installer {
-	return &installer{
-		rootDir:            string(rootDir),
-		registryDownloader: downloader,
-		logger:             logger,
-	}
 }
 
 func (inst *installer) logE() *logrus.Entry {

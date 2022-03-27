@@ -20,7 +20,7 @@ func NewVersionConstraints(s string) *VersionConstraints {
 	}
 }
 
-func (constraints *VersionConstraints) Compile() error {
+func (constraints *VersionConstraints) compile() error {
 	if constraints.expr != nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func semverWithVersion(constr, ver string) bool {
 }
 
 func (constraints *VersionConstraints) Check(v string) (bool, error) {
-	if err := constraints.Compile(); err != nil {
+	if err := constraints.compile(); err != nil {
 		return false, err
 	}
 	a, err := expr.Run(constraints.expr, map[string]interface{}{

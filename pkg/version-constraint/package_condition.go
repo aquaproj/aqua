@@ -23,7 +23,7 @@ func (pkgCondition *PackageCondition) Raw() string {
 	return pkgCondition.raw
 }
 
-func (pkgCondition *PackageCondition) Compile() error {
+func (pkgCondition *PackageCondition) compile() error {
 	if pkgCondition.expr != nil {
 		return nil
 	}
@@ -39,7 +39,7 @@ func (pkgCondition *PackageCondition) Compile() error {
 }
 
 func (pkgCondition *PackageCondition) Check() (bool, error) {
-	if err := pkgCondition.Compile(); err != nil {
+	if err := pkgCondition.compile(); err != nil {
 		return false, err
 	}
 	a, err := expr.Run(pkgCondition.expr, map[string]interface{}{

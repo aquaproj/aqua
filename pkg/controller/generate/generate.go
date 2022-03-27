@@ -45,11 +45,6 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, log
 	}
 }
 
-type FindingPackage struct {
-	PackageInfo  *config.PackageInfo
-	RegistryName string
-}
-
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
@@ -79,6 +74,11 @@ func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args 
 	}
 
 	return ctrl.generateInsert(cfgFilePath, list)
+}
+
+type FindingPackage struct {
+	PackageInfo  *config.PackageInfo
+	RegistryName string
 }
 
 func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop

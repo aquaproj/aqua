@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -37,10 +36,6 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
 }
 
-func mkdirAll(p string) error {
-	return os.MkdirAll(p, 0o775) //nolint:gomnd,wrapcheck
-}
-
 func getUnarchiver(filename, typ, dest string) (Unarchiver, error) {
 	filename = filepath.Base(filename)
 	if IsUnarchived(typ, filename) {
@@ -71,63 +66,4 @@ func getUnarchiver(filename, typ, dest string) (Unarchiver, error) {
 		}, nil
 	}
 	return nil, errUnsupportedFileFormat
-}
-
-type rawUnarchiver struct {
-	dest string
-}
-
-func (unarchiver *rawUnarchiver) Unarchive(body io.Reader) error {
-	dest := unarchiver.dest
-	if err := mkdirAll(filepath.Dir(dest)); err != nil {
-		return fmt.Errorf("create a directory (%s): %w", dest, err)
-	}
-	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
-	if err != nil {
-		return fmt.Errorf("open the file (%s): %w", dest, err)
-	}
-	defer f.Close()
-	if _, err := io.Copy(f, body); err != nil {
-		return fmt.Errorf("copy the body to %s: %w", dest, err)
-	}
-	return nil
-}
-
-type unarchiverWithUnarchiver struct {
-	unarchiver archiver.Unarchiver
-	dest       string
-}
-
-func (unarchiver *unarchiverWithUnarchiver) Unarchive(body io.Reader) error {
-	dest := unarchiver.dest
-	f, err := os.CreateTemp("", "")
-	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
-	}
-	defer func() {
-		f.Close()
-		os.Remove(f.Name())
-	}()
-	if _, err := io.Copy(f, body); err != nil {
-		return fmt.Errorf("copy the file to the temporal file: %w", err)
-	}
-	return unarchiver.unarchiver.Unarchive(f.Name(), dest) //nolint:wrapcheck
-}
-
-type Decompressor struct {
-	decompressor archiver.Decompressor
-	dest         string
-}
-
-func (decomressor *Decompressor) Unarchive(body io.Reader) error {
-	dest := decomressor.dest
-	if err := mkdirAll(filepath.Dir(dest)); err != nil {
-		return fmt.Errorf("create a directory (%s): %w", dest, err)
-	}
-	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
-	if err != nil {
-		return fmt.Errorf("open the file (%s): %w", dest, err)
-	}
-	defer f.Close()
-	return decomressor.decompressor.Decompress(body, f) //nolint:wrapcheck
 }

@@ -24,31 +24,31 @@ import (
 )
 
 func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *list.Controller {
-	wire.Build(list.NewController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	wire.Build(list.NewController, finder.NewConfigFinder, log.NewLogger, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return &list.Controller{}
 }
 
 func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *initcmd.Controller {
-	wire.Build(initcmd.New, log.NewLogger, github.NewGitHub)
+	wire.Build(initcmd.New, log.NewLogger, github.New)
 	return &initcmd.Controller{}
 }
 
 func InitializeGenerateCommandController(ctx context.Context, aquaVersion string, param *config.Param) *generate.Controller {
-	wire.Build(generate.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	wire.Build(generate.New, finder.NewConfigFinder, log.NewLogger, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return &generate.Controller{}
 }
 
 func InitializeInstallCommandController(ctx context.Context, aquaVersion string, param *config.Param) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, installpackage.New, download.NewPackageDownloader)
+	wire.Build(install.New, finder.NewConfigFinder, log.NewLogger, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, installpackage.New, download.NewPackageDownloader)
 	return &install.Controller{}
 }
 
 func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) which.Controller {
-	wire.Build(which.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	wire.Build(which.New, finder.NewConfigFinder, log.NewLogger, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return nil
 }
 
 func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *exec.Controller {
-	wire.Build(exec.New, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New)
+	wire.Build(exec.New, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New)
 	return &exec.Controller{}
 }

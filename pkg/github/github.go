@@ -18,6 +18,10 @@ type RepositoryService interface {
 	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
 }
 
+func New(ctx context.Context) RepositoryService {
+	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
+}
+
 func getGitHubToken() string {
 	if token := os.Getenv("AQUA_GITHUB_TOKEN"); token != "" {
 		return token
@@ -32,8 +36,4 @@ func getHTTPClientForGitHub(ctx context.Context, token string) *http.Client {
 	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	))
-}
-
-func NewGitHub(ctx context.Context) RepositoryService {
-	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
 }
