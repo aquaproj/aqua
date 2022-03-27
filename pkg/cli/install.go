@@ -7,20 +7,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) setCLIArg(c *cli.Context, param *controller.Param) error { //nolint:unparam
-	if logLevel := c.String("log-level"); logLevel != "" {
-		param.LogLevel = logLevel
-	}
-	param.ConfigFilePath = c.String("config")
-	param.OnlyLink = c.Bool("only-link")
-	param.IsTest = c.Bool("test")
-	param.Insert = c.Bool("i")
-	param.All = c.Bool("all")
-	param.File = c.String("f")
-	param.AQUAVersion = runner.LDFlags.Version
-	return nil
-}
-
 func (runner *Runner) newInstallCommand() *cli.Command {
 	return &cli.Command{
 		Name:    "install",
