@@ -32,10 +32,7 @@ func (runner *Runner) listAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	ctrl, err := controller.NewController(c.Context, param.AQUAVersion, param)
-	if err != nil {
-		return fmt.Errorf("initialize a controller: %w", err)
-	}
+	ctrl := controller.InitializeListCommandController(c.Context, param.AQUAVersion, param)
 
 	return ctrl.List(c.Context, param, c.Args().Slice()) //nolint:wrapcheck
 }

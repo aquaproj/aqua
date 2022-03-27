@@ -3,13 +3,34 @@ package controller
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
 )
 
-func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []string) error {
+type ListCommandController struct {
+	stdout            io.Writer
+	configFinder      ConfigFinder
+	configReader      ConfigReader
+	registryInstaller registry.Installer
+}
+
+func NewListCommandController(configFinder finder.ConfigFinder, registInstaller registry.Installer) *ListCommandController {
+	return &ListCommandController{
+		stdout:       os.Stdout,
+		configFinder: configFinder,
+		configReader: &configReader{
+			reader: &fileReader{},
+		},
+		registryInstaller: registInstaller,
+	}
+}
+
+func (ctrl *ListCommandController) List(ctx context.Context, param *config.Param, args []string) error {
 	cfg := &config.Config{}
 	wd, err := os.Getwd()
 	if err != nil {

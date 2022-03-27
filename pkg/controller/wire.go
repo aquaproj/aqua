@@ -20,3 +20,8 @@ func NewController(ctx context.Context, aquaVersion string, param *config.Param)
 	wire.Build(New, finder.NewConfigFinder, log.NewLogger, download.NewPackageDownloader, installpackage.New, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader)
 	return &Controller{}, nil
 }
+
+func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ListCommandController {
+	wire.Build(NewListCommandController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader)
+	return &ListCommandController{}
+}

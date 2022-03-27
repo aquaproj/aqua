@@ -34,3 +34,14 @@ func NewController(ctx context.Context, aquaVersion string, param *config.Param)
 	}
 	return controller, nil
 }
+
+func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ListCommandController {
+	configFinder := finder.NewConfigFinder()
+	rootDir := config.NewRootDir()
+	logger := log.NewLogger(aquaVersion)
+	repositoryService := github.NewGitHub(ctx)
+	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
+	installer := registry.New(rootDir, logger, registryDownloader)
+	listCommandController := NewListCommandController(configFinder, installer)
+	return listCommandController
+}
