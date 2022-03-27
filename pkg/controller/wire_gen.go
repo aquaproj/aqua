@@ -69,7 +69,7 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
 	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
-	installpackageInstaller := installpackage.New(aquaVersion, logger, packageDownloader)
+	installpackageInstaller := installpackage.New(rootDir, logger, packageDownloader)
 	controller := install.New(rootDir, configFinder, configReader, installer, installpackageInstaller)
 	return controller
 }
@@ -88,11 +88,11 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 }
 
 func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *exec.Controller {
+	rootDir := config.NewRootDir()
 	logger := log.NewLogger(aquaVersion)
 	repositoryService := github.NewGitHub(ctx)
 	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
-	installer := installpackage.New(aquaVersion, logger, packageDownloader)
-	rootDir := config.NewRootDir()
+	installer := installpackage.New(rootDir, logger, packageDownloader)
 	configFinder := finder.NewConfigFinder()
 	fileReader := reader.NewFileReader()
 	configReader := reader.New(fileReader)

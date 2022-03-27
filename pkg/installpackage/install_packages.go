@@ -24,10 +24,10 @@ type Installer interface {
 	InstallProxy(ctx context.Context) error
 }
 
-func New(rootDir string, logger *log.Logger, downloader download.PackageDownloader) Installer {
+func New(rootDir config.RootDir, logger *log.Logger, downloader download.PackageDownloader) Installer {
 	return &installer{
 		logger:            logger,
-		rootDir:           rootDir,
+		rootDir:           string(rootDir),
 		packageDownloader: downloader,
 	}
 }
