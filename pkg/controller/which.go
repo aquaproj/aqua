@@ -46,7 +46,7 @@ func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string)
 		}
 	}
 
-	for _, cfgFilePath := range getGlobalConfigFilePaths() {
+	for _, cfgFilePath := range ctrl.ConfigFinder.GetGlobalConfigFilePaths() {
 		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}

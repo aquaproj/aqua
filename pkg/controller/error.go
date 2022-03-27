@@ -5,7 +5,6 @@ import "errors"
 var (
 	errPkgNameMustBeUniqueInRegistry = errors.New("the package name must be unique in the same registry")
 	errInvalidRegistryType           = errors.New("registry type is invalid")
-	errConfigFileNotFound            = errors.New("configuration file isn't found")
 	errUnknownPkg                    = errors.New("unknown package")
 	errInvalidPackageType            = errors.New("package type is invalid")
 	errPathIsRequired                = errors.New("path is required for local registry")

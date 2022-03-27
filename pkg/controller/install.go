@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
 )
@@ -41,7 +42,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *P
 	if !param.All {
 		return nil
 	}
-	for _, cfgFilePath := range getGlobalConfigFilePaths() {
+	for _, cfgFilePath := range ctrl.ConfigFinder.GetGlobalConfigFilePaths() {
 		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
@@ -55,7 +56,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *P
 func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *Param) error {
 	cfg := &Config{}
 	if cfgFilePath == "" {
-		return errConfigFileNotFound
+		return finder.ErrConfigFileNotFound
 	}
 	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck

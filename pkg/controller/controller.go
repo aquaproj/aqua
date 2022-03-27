@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
@@ -70,7 +71,7 @@ func New(ctx context.Context, param *Param) (*Controller, error) {
 		Stdin:        os.Stdin,
 		Stdout:       os.Stdout,
 		Stderr:       os.Stderr,
-		ConfigFinder: &configFinder{},
+		ConfigFinder: &finder.ConfigFinder{},
 		ConfigReader: &configReader{
 			reader: &fileReader{},
 		},

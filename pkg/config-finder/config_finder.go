@@ -1,11 +1,14 @@
-package controller
+package finder
 
 import (
+	"errors"
 	"os"
 	"strings"
 
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 )
+
+var ErrConfigFileNotFound = errors.New("configuration file isn't found")
 
 func getGlobalConfigFilePaths() []string {
 	src := strings.Split(os.Getenv("AQUA_GLOBAL_CONFIG"), ":")
@@ -19,9 +22,13 @@ func getGlobalConfigFilePaths() []string {
 	return paths
 }
 
-type configFinder struct{}
+type ConfigFinder struct{}
 
-func (finder *configFinder) Find(wd, configFilePath string) (string, error) {
+func (finder *ConfigFinder) GetGlobalConfigFilePaths() []string {
+	return getGlobalConfigFilePaths()
+}
+
+func (finder *ConfigFinder) Find(wd, configFilePath string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
@@ -29,16 +36,16 @@ func (finder *configFinder) Find(wd, configFilePath string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
-	for _, p := range getGlobalConfigFilePaths() {
+	for _, p := range finder.GetGlobalConfigFilePaths() {
 		if _, err := os.Stat(p); err != nil {
 			continue
 		}
 		return p, nil
 	}
-	return "", errConfigFileNotFound
+	return "", ErrConfigFileNotFound
 }
 
-func (finder *configFinder) Finds(wd, configFilePath string) []string {
+func (finder *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
 		return findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
 	}
