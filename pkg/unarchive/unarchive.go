@@ -1,6 +1,7 @@
-package controller
+package unarchive
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -12,17 +13,37 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var errUnsupportedFileFormat = errors.New("unsupported file format")
+
 type Unarchiver interface {
 	Unarchive(body io.Reader) error
 }
 
-func isUnarchived(archiveType, assetName string) bool {
+func Unarchive(body io.Reader, filename, typ, dest string) error {
+	arc, err := getUnarchiver(filename, typ, dest)
+	if err != nil {
+		log.New().WithFields(logrus.Fields{
+			"format":                 typ,
+			"filename":               filename,
+			"filepath.Ext(filename)": filepath.Ext(filename),
+		}).Error("get the unarchiver or decompressor")
+		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
+	}
+
+	return arc.Unarchive(body) //nolint:wrapcheck
+}
+
+func IsUnarchived(archiveType, assetName string) bool {
 	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
+}
+
+func mkdirAll(p string) error {
+	return os.MkdirAll(p, 0o775) //nolint:gomnd,wrapcheck
 }
 
 func getUnarchiver(filename, typ, dest string) (Unarchiver, error) {
 	filename = filepath.Base(filename)
-	if isUnarchived(typ, filename) {
+	if IsUnarchived(typ, filename) {
 		return &rawUnarchiver{
 			dest: filepath.Join(dest, filename),
 		}, nil
@@ -109,18 +130,4 @@ func (decomressor *Decompressor) Unarchive(body io.Reader) error {
 	}
 	defer f.Close()
 	return decomressor.decompressor.Decompress(body, f) //nolint:wrapcheck
-}
-
-func unarchive(body io.Reader, filename, typ, dest string) error {
-	arc, err := getUnarchiver(filename, typ, dest)
-	if err != nil {
-		log.New().WithFields(logrus.Fields{
-			"format":                 typ,
-			"filename":               filename,
-			"filepath.Ext(filename)": filepath.Ext(filename),
-		}).Error("get the unarchiver or decompressor")
-		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
-	}
-
-	return arc.Unarchive(body) //nolint:wrapcheck
 }

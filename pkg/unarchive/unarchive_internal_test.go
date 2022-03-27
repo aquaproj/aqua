@@ -1,4 +1,4 @@
-package controller
+package unarchive
 
 import (
 	"testing"
@@ -65,7 +65,7 @@ func Test_getUnarchiver(t *testing.T) {
 	}
 }
 
-func Test_isUnarchived(t *testing.T) {
+func TestIsUnarchived(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
@@ -100,7 +100,7 @@ func Test_isUnarchived(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			f := isUnarchived(d.archiveType, d.assetName)
+			f := IsUnarchived(d.archiveType, d.assetName)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)
 			}

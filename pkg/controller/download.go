@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -73,5 +74,5 @@ func (ctrl *Controller) download(ctx context.Context, pkg *Package, pkgInfo *Pac
 		return err //nolint:wrapcheck
 	}
 
-	return unarchive(body, assetName, pkgInfo.GetFormat(), dest)
+	return unarchive.Unarchive(body, assetName, pkgInfo.GetFormat(), dest) //nolint:wrapcheck
 }

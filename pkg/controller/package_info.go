@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"path/filepath"
 	"runtime"
+
+	"github.com/aquaproj/aqua/pkg/unarchive"
 )
 
 type PackageInfo struct {
@@ -73,7 +75,7 @@ func (pkgInfo *PackageInfo) GetFileSrc(pkg *Package, file *File) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
-	if isUnarchived(pkgInfo.GetFormat(), assetName) {
+	if unarchive.IsUnarchived(pkgInfo.GetFormat(), assetName) {
 		return filepath.Base(assetName), nil
 	}
 	if file.Src == nil {

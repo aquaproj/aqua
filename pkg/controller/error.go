@@ -24,7 +24,6 @@ var (
 	errInvalidHTTPStatusCode         = errors.New("status code >= 400")
 	errInstallFailure                = errors.New("it failed to install some packages")
 	errRegistryNameIsDuplicated      = errors.New("registry name is duplicated")
-	errUnsupportedFileFormat         = errors.New("unsupported file format")
 	errPkgNameIsRequired             = errors.New("package name is required")
 	errRepoRequired                  = errors.New("repo_owner and repo_name are required")
 	errAssetRequired                 = errors.New("github_release package requires asset")
