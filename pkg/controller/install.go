@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	"github.com/aquaproj/aqua/pkg/log"
-	"github.com/sirupsen/logrus"
+	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/pkg/validate"
 )
 
 const proxyName = "aqua-proxy"
@@ -22,7 +21,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error 
 	}
 	rootBin := filepath.Join(ctrl.RootDir, "bin")
 
-	if err := mkdirAll(rootBin); err != nil {
+	if err := util.MkdirAll(rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
@@ -63,34 +62,14 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return err //nolint:wrapcheck
 	}
 
-	if err := validateConfig(cfg); err != nil {
+	if err := validate.Config(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
 
 	return ctrl.installPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest)
-}
-
-const defaultMaxParallelism = 5
-
-func getMaxParallelism() int {
-	envMaxParallelism := os.Getenv("AQUA_MAX_PARALLELISM")
-	if envMaxParallelism == "" {
-		return defaultMaxParallelism
-	}
-	num, err := strconv.Atoi(envMaxParallelism)
-	if err != nil {
-		log.New().WithFields(logrus.Fields{
-			"AQUA_MAX_PARALLELISM": envMaxParallelism,
-		}).Warn("the environment variable AQUA_MAX_PARALLELISM must be a number")
-		return defaultMaxParallelism
-	}
-	if num <= 0 {
-		return defaultMaxParallelism
-	}
-	return num
 }

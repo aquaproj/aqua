@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
@@ -109,13 +110,13 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, nil, nil, err //nolint:wrapcheck
 	}
-	if err := validateConfig(cfg); err != nil {
+	if err := validate.Config(cfg); err != nil {
 		return nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
 		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg); pkgInfo != nil {

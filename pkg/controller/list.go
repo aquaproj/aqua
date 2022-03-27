@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/validate"
 )
 
 func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []string) error {
@@ -24,13 +25,13 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []st
 		return err //nolint:wrapcheck
 	}
 
-	if err := validateConfig(cfg); err != nil {
+	if err := validate.Config(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
 	for registryName, registryContent := range registryContents {
 		for _, pkgInfo := range registryContent.PackageInfos {

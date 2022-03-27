@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/download"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
@@ -25,6 +26,7 @@ type Controller struct {
 	GitHubRepositoryService GitHubRepositoryService
 	PackageDownloader       download.PackageDownloader
 	RegistryDownloader      download.RegistryDownloader
+	RegistryInstaller       registry.Installer
 	RootDir                 string
 	GlobalConfingDir        string
 	Version                 string
@@ -100,6 +102,7 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 		LogE:                    ctrl.logE,
 	}
 	ctrl.RegistryDownloader = download.NewRegistryDownloader(ctrl.GitHubRepositoryService, ctrl.Version)
+	ctrl.RegistryInstaller = registry.New(ctrl.Version, ctrl.RootDir, ctrl.RegistryDownloader)
 
 	return &ctrl, nil
 }

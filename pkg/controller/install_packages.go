@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -70,7 +71,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *config.Config,
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
-	maxInstallChan := make(chan struct{}, getMaxParallelism())
+	maxInstallChan := make(chan struct{}, util.GetMaxParallelism())
 
 	handleFailure := func() {
 		flagMutex.Lock()

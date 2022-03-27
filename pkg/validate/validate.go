@@ -1,4 +1,4 @@
-package controller
+package validate
 
 import (
 	"fmt"
@@ -11,20 +11,11 @@ import (
 
 var validate = validator.New() //nolint:gochecknoglobals
 
-func validateRegistries(registries config.Registries) error {
-	for _, registry := range registries {
-		if err := registry.Validate(); err != nil {
-			return err //nolint:wrapcheck
-		}
-	}
-	return nil
-}
-
-func validateRegistryContent(registryContent *config.RegistryContent) error {
+func RegistryContent(registryContent *config.RegistryContent) error {
 	return validatePackageInfos(registryContent.PackageInfos)
 }
 
-func validateConfig(cfg *config.Config) error {
+func Config(cfg *config.Config) error {
 	if err := validate.Struct(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
@@ -33,6 +24,15 @@ func validateConfig(cfg *config.Config) error {
 	}
 	if err := validateRegistries(cfg.Registries); err != nil {
 		return err
+	}
+	return nil
+}
+
+func validateRegistries(registries config.Registries) error {
+	for _, registry := range registries {
+		if err := registry.Validate(); err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 	return nil
 }

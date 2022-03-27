@@ -1,4 +1,4 @@
-package controller
+package validate
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 )
 
-func Test_validateConfig(t *testing.T) {
+func TestConfig(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
@@ -40,7 +40,7 @@ func Test_validateConfig(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if err := validateConfig(d.cfg); err != nil {
+			if err := Config(d.cfg); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -82,7 +82,7 @@ func Test_validateRegistries(t *testing.T) {
 			t.Parallel()
 			err := validateRegistries(d.registries)
 			if d.isErr {
-				if !errors.Is(err, errRegistryNameIsDuplicated) {
+				if !errors.Is(err, ErrRegistryNameIsDuplicated) {
 					t.Fatal(err)
 				}
 				return
@@ -141,7 +141,7 @@ func Test_validatePackages(t *testing.T) {
 	}
 }
 
-func Test_validatePackageInfos(t *testing.T) { //nolint:funlen
+func TestPackageInfos(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title    string

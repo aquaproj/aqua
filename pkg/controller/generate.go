@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/google/go-github/v39/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -58,12 +59,12 @@ func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFi
 	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	if err := validateConfig(cfg); err != nil {
+	if err := validate.Config(cfg); err != nil {
 		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
-	registryContents, err := ctrl.installRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 
 	if param.File != "" || len(args) != 0 {
