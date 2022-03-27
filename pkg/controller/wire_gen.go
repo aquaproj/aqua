@@ -68,7 +68,9 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	repositoryService := github.NewGitHub(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
-	controller := install.New(rootDir, configFinder, configReader, installer)
+	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
+	installpackageInstaller := installpackage.New(aquaVersion, logger, packageDownloader)
+	controller := install.New(rootDir, configFinder, configReader, installer, installpackageInstaller)
 	return controller
 }
 

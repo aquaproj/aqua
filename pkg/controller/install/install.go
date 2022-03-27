@@ -23,12 +23,13 @@ type Controller struct {
 	registryInstaller registry.Installer
 }
 
-func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer) *Controller {
+func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer) *Controller {
 	return &Controller{
 		rootDir:           string(rootDir),
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,
+		packageInstaller:  pkgInstaller,
 	}
 }
 

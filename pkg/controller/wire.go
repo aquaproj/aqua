@@ -39,7 +39,7 @@ func InitializeGenerateCommandController(ctx context.Context, aquaVersion string
 }
 
 func InitializeInstallCommandController(ctx context.Context, aquaVersion string, param *config.Param) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	wire.Build(install.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, installpackage.New, download.NewPackageDownloader)
 	return &install.Controller{}
 }
 
