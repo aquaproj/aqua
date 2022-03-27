@@ -38,10 +38,6 @@ func New(pkgInstaller installpackage.Installer, logger *log.Logger, which which.
 	}
 }
 
-func (ctrl *Controller) logE() *logrus.Entry {
-	return ctrl.logger.LogE()
-}
-
 func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string) error {
 	which, err := ctrl.which.Which(ctx, param, exeName)
 	if err != nil {
@@ -71,6 +67,10 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 		}
 	}
 	return ctrl.execCommand(ctx, which.ExePath, args)
+}
+
+func (ctrl *Controller) logE() *logrus.Entry {
+	return ctrl.logger.LogE()
 }
 
 func wait(ctx context.Context, duration time.Duration) error {
