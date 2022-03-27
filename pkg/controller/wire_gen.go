@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -52,9 +53,9 @@ func InitializeListCommandController(ctx context.Context, aquaVersion string, pa
 	return controller
 }
 
-func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *InitController {
+func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *initcmd.Controller {
 	logger := log.NewLogger(aquaVersion)
 	repositoryService := github.NewGitHub(ctx)
-	initController := NewInitController(logger, repositoryService)
-	return initController
+	controller := initcmd.New(logger, repositoryService)
+	return controller
 }

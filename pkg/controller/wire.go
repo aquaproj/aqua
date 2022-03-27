@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -28,7 +29,7 @@ func InitializeListCommandController(ctx context.Context, aquaVersion string, pa
 	return &list.Controller{}
 }
 
-func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *InitController {
-	wire.Build(NewInitController, log.NewLogger, github.NewGitHub)
-	return &InitController{}
+func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *initcmd.Controller {
+	wire.Build(initcmd.New, log.NewLogger, github.NewGitHub)
+	return &initcmd.Controller{}
 }

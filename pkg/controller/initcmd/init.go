@@ -1,4 +1,4 @@
-package controller
+package initcmd
 
 import (
 	"context"
@@ -29,23 +29,23 @@ var globalVarCfgFileNameMap = map[string]struct{}{ //nolint:gochecknoglobals
 	".aqua.yml":  {},
 }
 
-type InitController struct {
+type Controller struct {
 	logger                  *log.Logger
 	gitHubRepositoryService githubSvc.RepositoryService
 }
 
-func NewInitController(logger *log.Logger, gh githubSvc.RepositoryService) *InitController {
-	return &InitController{
+func New(logger *log.Logger, gh githubSvc.RepositoryService) *Controller {
+	return &Controller{
 		logger:                  logger,
 		gitHubRepositoryService: gh,
 	}
 }
 
-func (ctrl *InitController) logE() *logrus.Entry {
+func (ctrl *Controller) logE() *logrus.Entry {
 	return ctrl.logger.LogE()
 }
 
-func (ctrl *InitController) Init(ctx context.Context, cfgFilePath string) error {
+func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua.yaml"
 	}
