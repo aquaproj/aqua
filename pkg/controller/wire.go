@@ -27,3 +27,8 @@ func InitializeListCommandController(ctx context.Context, aquaVersion string, pa
 	wire.Build(list.NewController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return &list.Controller{}
 }
+
+func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *InitController {
+	wire.Build(NewInitController, log.NewLogger, github.NewGitHub)
+	return &InitController{}
+}

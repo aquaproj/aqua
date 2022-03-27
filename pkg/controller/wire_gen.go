@@ -51,3 +51,10 @@ func InitializeListCommandController(ctx context.Context, aquaVersion string, pa
 	controller := list.NewController(configFinder, configReader, installer)
 	return controller
 }
+
+func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *InitController {
+	logger := log.NewLogger(aquaVersion)
+	repositoryService := github.NewGitHub(ctx)
+	initController := NewInitController(logger, repositoryService)
+	return initController
+}

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -27,7 +29,23 @@ var globalVarCfgFileNameMap = map[string]struct{}{ //nolint:gochecknoglobals
 	".aqua.yml":  {},
 }
 
-func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string) error {
+type InitController struct {
+	logger                  *log.Logger
+	gitHubRepositoryService githubSvc.RepositoryService
+}
+
+func NewInitController(logger *log.Logger, gh githubSvc.RepositoryService) *InitController {
+	return &InitController{
+		logger:                  logger,
+		gitHubRepositoryService: gh,
+	}
+}
+
+func (ctrl *InitController) logE() *logrus.Entry {
+	return ctrl.logger.LogE()
+}
+
+func (ctrl *InitController) Init(ctx context.Context, cfgFilePath string) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua.yaml"
 	}
