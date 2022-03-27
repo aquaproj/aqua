@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
@@ -22,7 +23,7 @@ func NewController(ctx context.Context, aquaVersion string, param *config.Param)
 	return &Controller{}, nil
 }
 
-func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ListCommandController {
-	wire.Build(NewListCommandController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
-	return &ListCommandController{}
+func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *list.Controller {
+	wire.Build(list.NewController, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	return &list.Controller{}
 }

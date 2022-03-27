@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/install-registry"
@@ -38,7 +39,7 @@ func NewController(ctx context.Context, aquaVersion string, param *config.Param)
 	return controller, nil
 }
 
-func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *ListCommandController {
+func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *list.Controller {
 	configFinder := finder.NewConfigFinder()
 	fileReader := reader.NewFileReader()
 	configReader := reader.New(fileReader)
@@ -47,6 +48,6 @@ func InitializeListCommandController(ctx context.Context, aquaVersion string, pa
 	repositoryService := github.NewGitHub(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
-	listCommandController := NewListCommandController(configFinder, configReader, installer)
-	return listCommandController
+	controller := list.NewController(configFinder, configReader, installer)
+	return controller
 }

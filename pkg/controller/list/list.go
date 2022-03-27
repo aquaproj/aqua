@@ -1,4 +1,4 @@
-package controller
+package list
 
 import (
 	"context"
@@ -13,15 +13,15 @@ import (
 	"github.com/aquaproj/aqua/pkg/validate"
 )
 
-type ListCommandController struct {
+type Controller struct {
 	stdout            io.Writer
 	configFinder      finder.ConfigFinder
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 }
 
-func NewListCommandController(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer) *ListCommandController {
-	return &ListCommandController{
+func NewController(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer) *Controller {
+	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
 		configReader:      configReader,
@@ -29,7 +29,7 @@ func NewListCommandController(configFinder finder.ConfigFinder, configReader rea
 	}
 }
 
-func (ctrl *ListCommandController) List(ctx context.Context, param *config.Param, args []string) error {
+func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []string) error {
 	cfg := &config.Config{}
 	wd, err := os.Getwd()
 	if err != nil {
