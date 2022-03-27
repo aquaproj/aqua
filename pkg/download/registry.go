@@ -13,20 +13,9 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type RegistryDownloader interface {
-	GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error)
-}
-
-func NewRegistryDownloader(gh githubSvc.RepositoryService, logger *log.Logger) RegistryDownloader {
-	return &registryDownloader{
-		GitHubRepositoryService: gh,
-		logger:                  logger,
-	}
-}
-
 type registryDownloader struct {
-	GitHubRepositoryService githubSvc.RepositoryService
-	logger                  *log.Logger
+	github githubSvc.RepositoryService
+	logger *log.Logger
 }
 
 func (downloader *registryDownloader) logE() *logrus.Entry {
@@ -35,7 +24,7 @@ func (downloader *registryDownloader) logE() *logrus.Entry {
 
 func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error) {
 	// https://github.com/aquaproj/aqua/issues/391
-	body, err := FromURL(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path, http.DefaultClient)
+	body, err := fromURL(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path, http.DefaultClient)
 	if body != nil {
 		defer body.Close()
 	}
@@ -53,11 +42,11 @@ func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, 
 		"path":       path,
 	}).Debug("failed to download a content from GitHub without GitHub API. Try again with GitHub API")
 
-	if downloader.GitHubRepositoryService == nil {
+	if downloader.github == nil {
 		return nil, errGitHubTokenIsRequired
 	}
 
-	file, _, _, err := downloader.GitHubRepositoryService.GetContents(ctx, repoOwner, repoName, path, &github.RepositoryContentGetOptions{
+	file, _, _, err := downloader.github.GetContents(ctx, repoOwner, repoName, path, &github.RepositoryContentGetOptions{
 		Ref: ref,
 	})
 	if err != nil {

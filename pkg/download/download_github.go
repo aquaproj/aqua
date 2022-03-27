@@ -20,13 +20,13 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
 }
 
-func (downloader *PkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
 	// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
 	// As a result of test, it seems not to be limited.
 	// So at first aqua tries to download assets without GitHub API.
 	// And if it failed, aqua tries again with GitHub API.
 	// It avoids the rate limit of the access token.
-	b, err := FromURL(ctx, "https://github.com/"+owner+"/"+repoName+"/releases/download/"+version+"/"+assetName, http.DefaultClient)
+	b, err := fromURL(ctx, "https://github.com/"+owner+"/"+repoName+"/releases/download/"+version+"/"+assetName, http.DefaultClient)
 	if err == nil {
 		return b, nil
 	}
@@ -40,11 +40,11 @@ func (downloader *PkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 		"asset_name":    assetName,
 	}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
 
-	if downloader.GitHubRepositoryService == nil {
+	if downloader.github == nil {
 		return nil, errGitHubTokenIsRequired
 	}
 
-	release, _, err := downloader.GitHubRepositoryService.GetReleaseByTag(ctx, owner, repoName, version)
+	release, _, err := downloader.github.GetReleaseByTag(ctx, owner, repoName, version)
 	if err != nil {
 		return nil, fmt.Errorf("get the GitHub Release by Tag: %w", err)
 	}
@@ -52,14 +52,14 @@ func (downloader *PkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	body, redirectURL, err := downloader.GitHubRepositoryService.DownloadReleaseAsset(ctx, owner, repoName, assetID, http.DefaultClient)
+	body, redirectURL, err := downloader.github.DownloadReleaseAsset(ctx, owner, repoName, assetID, http.DefaultClient)
 	if err != nil {
 		return nil, fmt.Errorf("download the release asset (asset id: %d): %w", assetID, err)
 	}
 	if body != nil {
 		return body, nil
 	}
-	b, err = FromURL(ctx, redirectURL, http.DefaultClient)
+	b, err = fromURL(ctx, redirectURL, http.DefaultClient)
 	if err != nil {
 		if b != nil {
 			b.Close()
@@ -69,9 +69,9 @@ func (downloader *PkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	return b, nil
 }
 
-func (downloader *PkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
 	// https://github.com/aquaproj/aqua/issues/391
-	body, err := FromURL(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName, http.DefaultClient)
+	body, err := fromURL(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName, http.DefaultClient)
 	if err == nil {
 		return body, nil
 	}
@@ -79,11 +79,11 @@ func (downloader *PkgDownloader) downloadGitHubContent(ctx context.Context, owne
 		body.Close()
 	}
 
-	if downloader.GitHubRepositoryService == nil {
+	if downloader.github == nil {
 		return nil, errGitHubTokenIsRequired
 	}
 
-	file, _, _, err := downloader.GitHubRepositoryService.GetContents(ctx, owner, repoName, assetName, &github.RepositoryContentGetOptions{
+	file, _, _, err := downloader.github.GetContents(ctx, owner, repoName, assetName, &github.RepositoryContentGetOptions{
 		Ref: version,
 	})
 	if err != nil {

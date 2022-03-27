@@ -13,41 +13,12 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type PackageDownloader interface {
-	GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error)
+type pkgDownloader struct {
+	github github.RepositoryService
+	logger *log.Logger
 }
 
-type PkgDownloader struct {
-	GitHubRepositoryService github.RepositoryService
-	logger                  *log.Logger
-}
-
-func (downloader *PkgDownloader) logE() *logrus.Entry {
-	return downloader.logger.LogE()
-}
-
-func (downloader *PkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
-	return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
-}
-
-func (downloader *PkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
-	url := fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)
-	return FromURL(ctx, url, http.DefaultClient)
-}
-
-func (downloader *PkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
-	return downloader.downloadGitHubContent(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
-}
-
-func (downloader *PkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
-	uS, err := pkgInfo.RenderURL(pkg)
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-	return FromURL(ctx, uS, http.DefaultClient)
-}
-
-func (downloader *PkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
 	switch pkgInfo.GetType() {
 	case config.PkgInfoTypeGitHubRelease:
 		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, pkgInfo, assetName)
@@ -62,4 +33,29 @@ func (downloader *PkgDownloader) GetReadCloser(ctx context.Context, pkg *config.
 			"package_type": pkgInfo.GetType(),
 		})
 	}
+}
+
+func (downloader *pkgDownloader) logE() *logrus.Entry {
+	return downloader.logger.LogE()
+}
+
+func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
+	return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
+}
+
+func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
+	url := fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)
+	return fromURL(ctx, url, http.DefaultClient)
+}
+
+func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
+	return downloader.downloadGitHubContent(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
+}
+
+func (downloader *pkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
+	uS, err := pkgInfo.RenderURL(pkg)
+	if err != nil {
+		return nil, err //nolint:wrapcheck
+	}
+	return fromURL(ctx, uS, http.DefaultClient)
 }

@@ -1,4 +1,4 @@
-package download_test
+package download
 
 import (
 	"context"
@@ -6,11 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
-func TestFromURL(t *testing.T) { //nolint:funlen
+func Test_fromURL(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title      string
@@ -54,7 +53,7 @@ func TestFromURL(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			readCloser, err := download.FromURL(ctx, d.url, d.httpClient)
+			readCloser, err := fromURL(ctx, d.url, d.httpClient)
 			if readCloser != nil {
 				defer readCloser.Close()
 			}
