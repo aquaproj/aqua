@@ -25,11 +25,11 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error 
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	if err := ctrl.PackageInstaller.InstallProxy(ctx); err != nil {
+	if err := ctrl.packageInstaller.InstallProxy(ctx); err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	for _, cfgFilePath := range ctrl.ConfigFinder.Finds(wd, param.ConfigFilePath) {
+	for _, cfgFilePath := range ctrl.configFinder.Finds(wd, param.ConfigFilePath) {
 		if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
 			return err
 		}
@@ -42,7 +42,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 	if !param.All {
 		return nil
 	}
-	for _, cfgFilePath := range ctrl.ConfigFinder.GetGlobalConfigFilePaths() {
+	for _, cfgFilePath := range ctrl.configFinder.GetGlobalConfigFilePaths() {
 		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
@@ -58,7 +58,7 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 
@@ -66,10 +66,10 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.PackageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest) //nolint:wrapcheck
+	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest) //nolint:wrapcheck
 }

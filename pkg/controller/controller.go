@@ -21,15 +21,15 @@ import (
 type Controller struct {
 	stdin                   io.Reader
 	stdout                  io.Writer
-	Stderr                  io.Writer
-	ConfigFinder            ConfigFinder
-	ConfigReader            ConfigReader
-	GitHubRepositoryService GitHubRepositoryService
-	RegistryInstaller       registry.Installer
-	PackageInstaller        installpackage.Installer
+	stderr                  io.Writer
+	configFinder            ConfigFinder
+	configReader            ConfigReader
+	gitHubRepositoryService GitHubRepositoryService
+	registryInstaller       registry.Installer
+	packageInstaller        installpackage.Installer
 	rootDir                 string
-	GlobalConfingDir        string
-	Version                 string
+	globalConfingDir        string
+	version                 string
 }
 
 type GitHubRepositoryService interface {
@@ -75,13 +75,13 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 	ctrl := Controller{
 		stdin:        os.Stdin,
 		stdout:       os.Stdout,
-		Stderr:       os.Stderr,
-		ConfigFinder: &finder.ConfigFinder{},
-		ConfigReader: &configReader{
+		stderr:       os.Stderr,
+		configFinder: &finder.ConfigFinder{},
+		configReader: &configReader{
 			reader: &fileReader{},
 		},
 		rootDir: os.Getenv("AQUA_ROOT_DIR"),
-		Version: param.AQUAVersion,
+		version: param.AQUAVersion,
 	}
 	if ctrl.rootDir == "" {
 		xdgDataHome := os.Getenv("XDG_DATA_HOME")
@@ -94,18 +94,18 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 	if xdgConfigHome == "" {
 		xdgConfigHome = filepath.Join(os.Getenv("HOME"), ".config")
 	}
-	ctrl.GlobalConfingDir = filepath.Join(xdgConfigHome, "aquaproj-aqua")
+	ctrl.globalConfingDir = filepath.Join(xdgConfigHome, "aquaproj-aqua")
 
-	ctrl.GitHubRepositoryService = github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
-	ctrl.PackageInstaller = installpackage.New(ctrl.Version, ctrl.rootDir, &download.PkgDownloader{
-		GitHubRepositoryService: ctrl.GitHubRepositoryService,
+	ctrl.gitHubRepositoryService = github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
+	ctrl.packageInstaller = installpackage.New(ctrl.version, ctrl.rootDir, &download.PkgDownloader{
+		GitHubRepositoryService: ctrl.gitHubRepositoryService,
 		LogE:                    ctrl.logE,
 	})
-	ctrl.RegistryInstaller = registry.New(ctrl.Version, ctrl.rootDir, download.NewRegistryDownloader(ctrl.GitHubRepositoryService, ctrl.Version))
+	ctrl.registryInstaller = registry.New(ctrl.version, ctrl.rootDir, download.NewRegistryDownloader(ctrl.gitHubRepositoryService, ctrl.version))
 
 	return &ctrl, nil
 }
 
 func (ctrl *Controller) logE() *logrus.Entry {
-	return log.New().WithField("aqua_version", ctrl.Version)
+	return log.New().WithField("aqua_version", ctrl.version)
 }

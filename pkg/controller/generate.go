@@ -32,7 +32,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args 
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 
-	cfgFilePath, err := ctrl.ConfigFinder.Find(wd, param.ConfigFilePath)
+	cfgFilePath, err := ctrl.configFinder.Find(wd, param.ConfigFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -56,13 +56,13 @@ func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args 
 
 func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
 	cfg := &config.Config{}
-	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 	if err := validate.Config(cfg); err != nil {
 		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
-	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -172,7 +172,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 		PerPage: 30, //nolint:gomnd
 	}
 	for {
-		releases, _, err := ctrl.GitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, _, err := ctrl.gitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -205,7 +205,7 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *co
 	if pkgInfo.VersionFilter != nil {
 		tagName = ctrl.listAndGetTagName(ctx, pkgInfo)
 	} else {
-		release, _, err := ctrl.GitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
+		release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
 		if err != nil {
 			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -232,7 +232,7 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if outputPkg.Registry == "standard" {
 		outputPkg.Registry = ""
 	}
-	if ctrl.GitHubRepositoryService == nil {
+	if ctrl.gitHubRepositoryService == nil {
 		return outputPkg
 	}
 	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {

@@ -26,7 +26,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"exe_path": which.ExePath,
 			"package":  which.Package.Name,
 		})
-		if err := ctrl.PackageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false); err != nil {
+		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false); err != nil {
 			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {
@@ -108,14 +108,14 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*config.Regist
 
 func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*config.Package, *config.PackageInfo, *config.File, error) {
 	cfg := &config.Config{}
-	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, nil, nil, err //nolint:wrapcheck
 	}
 	if err := validate.Config(cfg); err != nil {
 		return nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
 		return nil, nil, nil, err //nolint:wrapcheck
 	}
@@ -135,7 +135,7 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 		cmd := exec.Command(exePath, args...)
 		cmd.Stdin = ctrl.stdin
 		cmd.Stdout = ctrl.stdout
-		cmd.Stderr = ctrl.Stderr
+		cmd.Stderr = ctrl.stderr
 		runner := timeout.NewRunner(0)
 		if err := runner.Run(ctx, cmd); err != nil {
 			exitCode := cmd.ProcessState.ExitCode()

@@ -16,12 +16,12 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []st
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 
-	cfgFilePath, err := ctrl.ConfigFinder.Find(wd, param.ConfigFilePath)
+	cfgFilePath, err := ctrl.configFinder.Find(wd, param.ConfigFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
+	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 
@@ -29,7 +29,7 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []st
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.RegistryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
