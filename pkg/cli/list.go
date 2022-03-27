@@ -7,6 +7,24 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func (runner *Runner) newListCommand() *cli.Command {
+	return &cli.Command{
+		Name:   "list",
+		Usage:  "List packages in Registries",
+		Action: runner.listAction,
+		Description: `Output the list of packages in registries.
+The output format is <registry name>,<package name>
+
+e.g.
+$ aqua list
+standard,99designs/aws-vault
+standard,abiosoft/colima
+standard,abs-lang/abs
+...
+`,
+	}
+}
+
 func (runner *Runner) listAction(c *cli.Context) error {
 	param := &controller.Param{}
 	if err := runner.setCLIArg(c, param); err != nil {

@@ -7,6 +7,19 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func (runner *Runner) newInitCommand() *cli.Command {
+	return &cli.Command{
+		Name:      "init",
+		Usage:     "Create a configuration file if it doesn't exist",
+		ArgsUsage: `[<created file path. The default value is "aqua.yaml">]`,
+		Description: `Create a configuration file if it doesn't exist
+e.g.
+$ aqua init # create "aqua.yaml"
+$ aqua init foo.yaml # create foo.yaml`,
+		Action: runner.initAction,
+	}
+}
+
 func (runner *Runner) initAction(c *cli.Context) error {
 	param := &controller.Param{}
 	if err := runner.setCLIArg(c, param); err != nil {
