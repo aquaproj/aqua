@@ -16,7 +16,7 @@ func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName 
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(ctrl.Stdout, which.ExePath)
+	fmt.Fprintln(ctrl.stdout, which.ExePath)
 	return nil
 }
 

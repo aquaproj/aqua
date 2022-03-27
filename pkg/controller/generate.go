@@ -45,7 +45,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args 
 		return nil
 	}
 	if !param.Insert {
-		if err := yaml.NewEncoder(ctrl.Stdout).Encode(list); err != nil {
+		if err := yaml.NewEncoder(ctrl.stdout).Encode(list); err != nil {
 			return fmt.Errorf("output generated package configuration: %w", err)
 		}
 		return nil

@@ -134,7 +134,7 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 		logE.Debug("execute the command")
 		cmd := exec.Command(exePath, args...)
 		cmd.Stdin = ctrl.stdin
-		cmd.Stdout = ctrl.Stdout
+		cmd.Stdout = ctrl.stdout
 		cmd.Stderr = ctrl.Stderr
 		runner := timeout.NewRunner(0)
 		if err := runner.Run(ctx, cmd); err != nil {

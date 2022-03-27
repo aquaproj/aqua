@@ -20,7 +20,7 @@ import (
 
 type Controller struct {
 	stdin                   io.Reader
-	Stdout                  io.Writer
+	stdout                  io.Writer
 	Stderr                  io.Writer
 	ConfigFinder            ConfigFinder
 	ConfigReader            ConfigReader
@@ -74,7 +74,7 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 	}).Debug("CLI args")
 	ctrl := Controller{
 		stdin:        os.Stdin,
-		Stdout:       os.Stdout,
+		stdout:       os.Stdout,
 		Stderr:       os.Stderr,
 		ConfigFinder: &finder.ConfigFinder{},
 		ConfigReader: &configReader{

@@ -35,7 +35,7 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []st
 	}
 	for registryName, registryContent := range registryContents {
 		for _, pkgInfo := range registryContent.PackageInfos {
-			fmt.Fprintln(ctrl.Stdout, registryName+","+pkgInfo.GetName())
+			fmt.Fprintln(ctrl.stdout, registryName+","+pkgInfo.GetName())
 		}
 	}
 
