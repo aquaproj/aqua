@@ -140,7 +140,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *config.Para
 func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*config.Package, m map[string]*FindingPackage) ([]*config.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
-		file = ctrl.Stdin
+		file = ctrl.stdin
 	} else {
 		f, err := os.Open(param.File)
 		if err != nil {

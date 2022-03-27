@@ -19,7 +19,7 @@ import (
 )
 
 type Controller struct {
-	Stdin                   io.Reader
+	stdin                   io.Reader
 	Stdout                  io.Writer
 	Stderr                  io.Writer
 	ConfigFinder            ConfigFinder
@@ -73,7 +73,7 @@ func New(ctx context.Context, param *config.Param) (*Controller, error) {
 		"aqua_version": param.AQUAVersion,
 	}).Debug("CLI args")
 	ctrl := Controller{
-		Stdin:        os.Stdin,
+		stdin:        os.Stdin,
 		Stdout:       os.Stdout,
 		Stderr:       os.Stderr,
 		ConfigFinder: &finder.ConfigFinder{},
