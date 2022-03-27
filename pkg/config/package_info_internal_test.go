@@ -1,10 +1,13 @@
-package controller
+package config
 
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/google/go-cmp/cmp"
 )
+
+const proxyName = "aqua-proxy"
 
 func TestPackageInfo_override(t *testing.T) {
 	t.Parallel()
@@ -17,13 +20,11 @@ func TestPackageInfo_override(t *testing.T) {
 		{
 			title: "normal",
 			pkgInfo: &PackageInfo{
-				Type:        pkgInfoTypeGitHubRelease,
+				Type:        PkgInfoTypeGitHubRelease,
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
-				Asset: &Template{
-					raw: "colima-amd64",
-				},
+				Asset:       template.NewTemplate("colima-amd64"),
 				Files: []*File{
 					{
 						Name: proxyName,
@@ -31,27 +32,21 @@ func TestPackageInfo_override(t *testing.T) {
 				},
 			},
 			child: &PackageInfo{
-				Type: pkgInfoTypeGitHubContent,
-				Path: &Template{
-					raw: "colima",
-				},
+				Type: PkgInfoTypeGitHubContent,
+				Path: template.NewTemplate("colima"),
 			},
 			exp: &PackageInfo{
-				Type:        pkgInfoTypeGitHubContent,
+				Type:        PkgInfoTypeGitHubContent,
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
-				Asset: &Template{
-					raw: "colima-amd64",
-				},
+				Asset:       template.NewTemplate("colima-amd64"),
 				Files: []*File{
 					{
 						Name: proxyName,
 					},
 				},
-				Path: &Template{
-					raw: "colima",
-				},
+				Path: template.NewTemplate("colima"),
 			},
 		},
 	}
@@ -60,7 +55,7 @@ func TestPackageInfo_override(t *testing.T) {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			d.pkgInfo.override(d.child)
-			if diff := cmp.Diff(d.exp, d.pkgInfo, cmp.AllowUnexported(Template{})); diff != "" {
+			if diff := cmp.Diff(d.exp, d.pkgInfo, cmp.AllowUnexported(template.Template{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})

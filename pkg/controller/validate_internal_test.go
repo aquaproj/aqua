@@ -3,26 +3,28 @@ package controller
 import (
 	"errors"
 	"testing"
+
+	"github.com/aquaproj/aqua/pkg/config"
 )
 
 func Test_validateConfig(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
-		cfg   *Config
+		cfg   *config.Config
 	}{
 		{
 			title: "normal",
-			cfg: &Config{
-				Packages: []*Package{
+			cfg: &config.Config{
+				Packages: []*config.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
 				},
-				Registries: Registries{
-					"standard": &Registry{
+				Registries: config.Registries{
+					"standard": &config.Registry{
 						Name:      "standard",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
@@ -49,13 +51,13 @@ func Test_validateRegistries(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title      string
-		registries Registries
+		registries config.Registries
 		isErr      bool
 	}{
 		{
 			title: "normal",
-			registries: Registries{
-				"ci-info": &Registry{
+			registries: config.Registries{
+				"ci-info": &config.Registry{
 					Name:      "ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
@@ -63,7 +65,7 @@ func Test_validateRegistries(t *testing.T) {
 					Path:      "registry.yaml",
 					Type:      "github_content",
 				},
-				"standard": &Registry{
+				"standard": &config.Registry{
 					Name:      "standard",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-registry",
@@ -96,12 +98,12 @@ func Test_validatePackages(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
-		pkgs  []*Package
+		pkgs  []*config.Package
 		isErr bool
 	}{
 		{
 			title: "normal",
-			pkgs: []*Package{
+			pkgs: []*config.Package{
 				{
 					Name:     "suzuki-shunsuke/cmdx",
 					Registry: "standard",
@@ -110,7 +112,7 @@ func Test_validatePackages(t *testing.T) {
 		},
 		{
 			title: "duplicated",
-			pkgs: []*Package{
+			pkgs: []*config.Package{
 				{
 					Name:     "suzuki-shunsuke/cmdx",
 					Registry: "standard",
@@ -143,23 +145,23 @@ func Test_validatePackageInfos(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title    string
-		pkgInfos PackageInfos
+		pkgInfos config.PackageInfos
 		isErr    bool
 	}{
 		{
 			title: "normal",
-			pkgInfos: PackageInfos{
-				&PackageInfo{
+			pkgInfos: config.PackageInfos{
+				&config.PackageInfo{
 					Name: "foo",
-					Files: []*File{
+					Files: []*config.File{
 						{
 							Name: "foo",
 						},
 					},
 				},
-				&PackageInfo{
+				&config.PackageInfo{
 					Name: "bar",
-					Files: []*File{
+					Files: []*config.File{
 						{
 							Name: "bar",
 						},
@@ -170,18 +172,18 @@ func Test_validatePackageInfos(t *testing.T) { //nolint:funlen
 		{
 			title: "duplicated",
 			isErr: true,
-			pkgInfos: PackageInfos{
-				&PackageInfo{
+			pkgInfos: config.PackageInfos{
+				&config.PackageInfo{
 					Name: "foo",
-					Files: []*File{
+					Files: []*config.File{
 						{
 							Name: "foo",
 						},
 					},
 				},
-				&PackageInfo{
+				&config.PackageInfo{
 					Name: "foo",
-					Files: []*File{
+					Files: []*config.File{
 						{
 							Name: "foo",
 						},

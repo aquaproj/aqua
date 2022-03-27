@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
@@ -21,7 +22,7 @@ $ aqua init foo.yaml # create foo.yaml`,
 }
 
 func (runner *Runner) initAction(c *cli.Context) error {
-	param := &controller.Param{}
+	param := &config.Param{}
 	if err := runner.setCLIArg(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}

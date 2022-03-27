@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/google/go-github/v39/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -17,14 +18,14 @@ import (
 )
 
 type FindingPackage struct {
-	PackageInfo  *PackageInfo
+	PackageInfo  *config.PackageInfo
 	RegistryName string
 }
 
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...string) error {
+func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args ...string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -52,8 +53,8 @@ func (ctrl *Controller) Generate(ctx context.Context, param *Param, args ...stri
 	return ctrl.generateInsert(cfgFilePath, list)
 }
 
-func (ctrl *Controller) generate(ctx context.Context, param *Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
-	cfg := &Config{}
+func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
+	cfg := &config.Config{}
 	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -103,7 +104,7 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, registryContents map[string]*RegistryContent, pkgNames ...string) (interface{}, error) {
+func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *config.Param, registryContents map[string]*config.RegistryContent, pkgNames ...string) (interface{}, error) {
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
@@ -114,7 +115,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 		}
 	}
 
-	outputPkgs := []*Package{}
+	outputPkgs := []*config.Package{}
 	for _, pkgName := range pkgNames {
 		pkgName = getGeneratePkg(pkgName)
 		findingPkg, ok := m[pkgName]
@@ -135,7 +136,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *Param, regi
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *Param, outputPkgs []*Package, m map[string]*FindingPackage) ([]*Package, error) {
+func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*config.Package, m map[string]*FindingPackage) ([]*config.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
 		file = ctrl.Stdin
@@ -163,7 +164,7 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *Pa
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *PackageInfo) string {
+func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.PackageInfo) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -195,7 +196,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *PackageI
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Package, pkgInfo *PackageInfo) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	pkgName := pkgInfo.GetName()
@@ -221,8 +222,8 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *Pa
 	}
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) *Package {
-	outputPkg := &Package{
+func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) *config.Package {
+	outputPkg := &config.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
 		Version:  "[SET PACKAGE VERSION]",

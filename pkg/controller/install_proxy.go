@@ -6,11 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/sirupsen/logrus"
 )
 
 func (ctrl *Controller) installProxy(ctx context.Context) error {
-	pkg := &Package{
+	pkg := &config.Package{
 		Name:    proxyName,
 		Version: "v0.2.1", // renovate: depName=aquaproj/aqua-proxy
 	}
@@ -21,14 +23,12 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	})
 
 	logE.Debug("install the proxy")
-	pkgInfo := &PackageInfo{
+	pkgInfo := &config.PackageInfo{
 		Type:      "github_release",
 		RepoOwner: "aquaproj",
 		RepoName:  proxyName,
-		Asset: &Template{
-			raw: `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`,
-		},
-		Files: []*File{
+		Asset:     template.NewTemplate(`aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`),
+		Files: []*config.File{
 			{
 				Name: proxyName,
 			},
@@ -36,12 +36,12 @@ func (ctrl *Controller) installProxy(ctx context.Context) error {
 	}
 	assetName, err := pkgInfo.RenderAsset(pkg)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
 
 	pkgPath, err := pkgInfo.GetPkgPath(ctrl.RootDir, pkg)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
 	logE.Debug("check if aqua-proxy is already installed")
 	finfo, err := os.Stat(pkgPath)

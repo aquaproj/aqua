@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"gopkg.in/yaml.v2"
 )
 
@@ -24,7 +25,7 @@ type configReader struct {
 	reader FileReader
 }
 
-func (reader *configReader) Read(configFilePath string, cfg *Config) error {
+func (reader *configReader) Read(configFilePath string, cfg *config.Config) error {
 	file, err := reader.reader.Read(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -39,8 +40,8 @@ func (reader *configReader) Read(configFilePath string, cfg *Config) error {
 	return nil
 }
 
-func (reader *configReader) readImports(configFilePath string, cfg *Config) error {
-	pkgs := []*Package{}
+func (reader *configReader) readImports(configFilePath string, cfg *config.Config) error {
+	pkgs := []*config.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg.Import == "" {
 			pkgs = append(pkgs, pkg)
@@ -53,7 +54,7 @@ func (reader *configReader) readImports(configFilePath string, cfg *Config) erro
 		}
 		sort.Strings(filePaths)
 		for _, filePath := range filePaths {
-			subCfg := &Config{}
+			subCfg := &config.Config{}
 			if err := reader.Read(filePath, subCfg); err != nil {
 				return err
 			}

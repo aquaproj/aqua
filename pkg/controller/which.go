@@ -6,11 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) Which(ctx context.Context, param *Param, exeName string) error {
+func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName string) error {
 	which, err := ctrl.which(ctx, param, exeName)
 	if err != nil {
 		return err
@@ -20,13 +21,13 @@ func (ctrl *Controller) Which(ctx context.Context, param *Param, exeName string)
 }
 
 type Which struct {
-	Package *Package
-	PkgInfo *PackageInfo
-	File    *File
+	Package *config.Package
+	PkgInfo *config.PackageInfo
+	File    *config.File
 	ExePath string
 }
 
-func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string) (*Which, error) {
+func (ctrl *Controller) which(ctx context.Context, param *config.Param, exeName string) (*Which, error) {
 	fields := logrus.Fields{
 		"exe_name": exeName,
 	}
@@ -70,7 +71,7 @@ func (ctrl *Controller) which(ctx context.Context, param *Param, exeName string)
 	}, nil
 }
 
-func (ctrl *Controller) whichFile(pkg *Package, pkgInfo *PackageInfo, file *File) (*Which, error) {
+func (ctrl *Controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
 	if err != nil {
 		return nil, fmt.Errorf("get file_src: %w", err)

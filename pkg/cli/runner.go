@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/urfave/cli/v2"
 )
 
@@ -22,7 +22,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setCLIArg(c *cli.Context, param *controller.Param) error { //nolint:unparam
+func (runner *Runner) setCLIArg(c *cli.Context, param *config.Param) error { //nolint:unparam
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}

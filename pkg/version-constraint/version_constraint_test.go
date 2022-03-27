@@ -1,9 +1,9 @@
-package controller_test
+package constraint_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/controller"
+	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 )
 
 func TestVersionConstraints_Check(t *testing.T) {
@@ -39,7 +39,7 @@ func TestVersionConstraints_Check(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			constraints := controller.NewVersionConstraints(d.constraints)
+			constraints := constraint.NewVersionConstraints(d.constraints)
 			b, err := constraints.Check(d.version)
 			if d.isErr {
 				if err == nil {

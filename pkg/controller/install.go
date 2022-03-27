@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
@@ -14,7 +15,7 @@ import (
 
 const proxyName = "aqua-proxy"
 
-func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
+func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -38,7 +39,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *Param) error {
 	return ctrl.installAll(ctx, rootBin, param)
 }
 
-func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *Param) error {
+func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *config.Param) error {
 	if !param.All {
 		return nil
 	}
@@ -53,8 +54,8 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *P
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *Param) error {
-	cfg := &Config{}
+func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *config.Param) error {
+	cfg := &config.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}

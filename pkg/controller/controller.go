@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
@@ -51,7 +52,7 @@ func getHTTPClientForGitHub(ctx context.Context, token string) *http.Client {
 	))
 }
 
-func New(ctx context.Context, param *Param) (*Controller, error) {
+func New(ctx context.Context, param *config.Param) (*Controller, error) {
 	if param.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(param.LogLevel)
 		if err != nil {

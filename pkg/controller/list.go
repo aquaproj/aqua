@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+
+	"github.com/aquaproj/aqua/pkg/config"
 )
 
-func (ctrl *Controller) List(ctx context.Context, param *Param, args []string) error {
-	cfg := &Config{}
+func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []string) error {
+	cfg := &config.Config{}
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)

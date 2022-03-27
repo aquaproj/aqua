@@ -1,9 +1,10 @@
-package controller_test
+package config_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 )
@@ -13,7 +14,7 @@ func TestConfig_UnmarshalYAML(t *testing.T) { //nolint:funlen
 	data := []struct {
 		title string
 		yaml  string
-		exp   *controller.Config
+		exp   *config.Config
 	}{
 		{
 			title: "standard registry",
@@ -26,9 +27,9 @@ packages:
   registry: standard
   version: v1.6.0
 `,
-			exp: &controller.Config{
-				Registries: controller.Registries{
-					"standard": &controller.Registry{
+			exp: &config.Config{
+				Registries: config.Registries{
+					"standard": &config.Registry{
 						Name:      "standard",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
@@ -37,7 +38,7 @@ packages:
 						Ref:       "v0.2.0",
 					},
 				},
-				Packages: []*controller.Package{
+				Packages: []*config.Package{
 					{
 						Name:     "cmdx",
 						Registry: "standard",
@@ -56,9 +57,9 @@ packages:
 - name: suzuki-shunsuke/cmdx@v1.6.0
   registry: standard
 `,
-			exp: &controller.Config{
-				Registries: controller.Registries{
-					"standard": &controller.Registry{
+			exp: &config.Config{
+				Registries: config.Registries{
+					"standard": &config.Registry{
 						Name:      "standard",
 						Type:      "github_content",
 						RepoOwner: "aquaproj",
@@ -67,7 +68,7 @@ packages:
 						Ref:       "v0.2.0",
 					},
 				},
-				Packages: []*controller.Package{
+				Packages: []*config.Package{
 					{
 						Name:     "suzuki-shunsuke/cmdx",
 						Registry: "standard",
@@ -82,11 +83,11 @@ packages:
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			cfg := &controller.Config{}
+			cfg := &config.Config{}
 			if err := yaml.Unmarshal([]byte(d.yaml), cfg); err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(d.exp, cfg, cmp.AllowUnexported(controller.Template{})); diff != "" {
+			if diff := cmp.Diff(d.exp, cfg, cmp.AllowUnexported(template.Template{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})
@@ -97,19 +98,19 @@ func TestPackageInfos_ToMap(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title    string
-		pkgInfos *controller.PackageInfos
-		exp      map[string]*controller.PackageInfo
+		pkgInfos *config.PackageInfos
+		exp      map[string]*config.PackageInfo
 		isErr    bool
 	}{
 		{
 			title: "normal",
-			pkgInfos: &controller.PackageInfos{
-				&controller.PackageInfo{
+			pkgInfos: &config.PackageInfos{
+				&config.PackageInfo{
 					Type: "github_release",
 					Name: "foo",
 				},
 			},
-			exp: map[string]*controller.PackageInfo{
+			exp: map[string]*config.PackageInfo{
 				"foo": {
 					Type: "github_release",
 					Name: "foo",

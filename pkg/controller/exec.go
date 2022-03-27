@@ -7,13 +7,14 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) Exec(ctx context.Context, param *Param, exeName string, args []string) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string) error {
 	which, err := ctrl.which(ctx, param, exeName)
 	if err != nil {
 		return err
@@ -54,7 +55,7 @@ func wait(ctx context.Context, duration time.Duration) error {
 	}
 }
 
-func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryContent, exeName string, pkg *Package) (*PackageInfo, *File) {
+func (ctrl *Controller) findExecFileFromPkg(registries map[string]*config.RegistryContent, exeName string, pkg *config.Package) (*config.PackageInfo, *config.File) {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
@@ -103,8 +104,8 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*RegistryConte
 	return nil, nil
 }
 
-func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*Package, *PackageInfo, *File, error) {
-	cfg := &Config{}
+func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string) (*config.Package, *config.PackageInfo, *config.File, error) {
+	cfg := &config.Config{}
 	if err := ctrl.ConfigReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, nil, nil, err //nolint:wrapcheck
 	}

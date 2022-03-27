@@ -1,4 +1,4 @@
-package controller
+package config
 
 import (
 	"fmt"
@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/aquaproj/aqua/pkg/unarchive"
+	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 )
 
 type PackageInfo struct {
@@ -14,19 +16,19 @@ type PackageInfo struct {
 	Type               string `validate:"required"`
 	RepoOwner          string `yaml:"repo_owner"`
 	RepoName           string `yaml:"repo_name"`
-	Asset              *Template
-	Path               *Template
+	Asset              *template.Template
+	Path               *template.Template
 	Format             string
 	Files              []*File
-	URL                *Template
+	URL                *template.Template
 	Description        string
 	Link               string
 	Replacements       map[string]string
-	FormatOverrides    []*FormatOverride   `yaml:"format_overrides"`
-	VersionConstraints *VersionConstraints `yaml:"version_constraint"`
-	VersionOverrides   []*PackageInfo      `yaml:"version_overrides"`
-	SupportedIf        *PackageCondition   `yaml:"supported_if"`
-	VersionFilter      *VersionFilter      `yaml:"version_filter"`
+	FormatOverrides    []*FormatOverride              `yaml:"format_overrides"`
+	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint"`
+	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides"`
+	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if"`
+	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter"`
 	Rosetta2           *bool
 }
 
@@ -59,7 +61,7 @@ func (pkgInfo *PackageInfo) GetLink() string {
 }
 
 func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == pkgInfoTypeGitHubArchive {
+	if pkgInfo.Type == PkgInfoTypeGitHubArchive {
 		return "tar.gz"
 	}
 	for _, arcTypeOverride := range pkgInfo.FormatOverrides {
@@ -102,7 +104,7 @@ func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
 	}
 	a, err := pkgInfo.VersionConstraints.Check(v)
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 	if a {
 		return pkgInfo, nil
@@ -110,7 +112,7 @@ func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
 	for _, vo := range pkgInfo.VersionOverrides {
 		a, err := vo.VersionConstraints.Check(v)
 		if err != nil {
-			return nil, err
+			return nil, err //nolint:wrapcheck
 		}
 		if a {
 			pkgInfo.override(vo)
@@ -172,11 +174,11 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, er
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
 	switch pkgInfo.Type {
-	case pkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
-	case pkgInfoTypeGitHubContent, pkgInfoTypeGitHubRelease:
+	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-	case pkgInfoTypeHTTP:
+	case PkgInfoTypeHTTP:
 		uS, err := pkgInfo.URL.Execute(map[string]interface{}{
 			"Version": pkg.Version,
 			"GOOS":    runtime.GOOS,
@@ -197,17 +199,17 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, er
 	return "", nil
 }
 
-func (pkgInfo *PackageInfo) validate() error { //nolint:cyclop
+func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 	if name := pkgInfo.GetName(); name == "" {
 		return errPkgNameIsRequired
 	}
 	switch pkgInfo.Type {
-	case pkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
 		}
 		return nil
-	case pkgInfoTypeGitHubContent:
+	case PkgInfoTypeGitHubContent:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
 		}
@@ -215,7 +217,7 @@ func (pkgInfo *PackageInfo) validate() error { //nolint:cyclop
 			return errGitHubContentRequirePath
 		}
 		return nil
-	case pkgInfoTypeGitHubRelease:
+	case PkgInfoTypeGitHubRelease:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
 		}
@@ -223,7 +225,7 @@ func (pkgInfo *PackageInfo) validate() error { //nolint:cyclop
 			return errAssetRequired
 		}
 		return nil
-	case pkgInfoTypeHTTP:
+	case PkgInfoTypeHTTP:
 		if pkgInfo.URL == nil {
 			return errURLRequired
 		}
@@ -234,10 +236,10 @@ func (pkgInfo *PackageInfo) validate() error { //nolint:cyclop
 
 func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
 	switch pkgInfo.Type {
-	case pkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive:
 		return "", nil
-	case pkgInfoTypeGitHubContent:
-		return pkgInfo.Path.Execute(map[string]interface{}{
+	case PkgInfoTypeGitHubContent:
+		return pkgInfo.Path.Execute(map[string]interface{}{ //nolint:wrapcheck
 			"Version": pkg.Version,
 			"GOOS":    runtime.GOOS,
 			"GOARCH":  runtime.GOARCH,
@@ -245,8 +247,8 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
 			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
 			"Format":  pkgInfo.GetFormat(),
 		})
-	case pkgInfoTypeGitHubRelease:
-		return pkgInfo.Asset.Execute(map[string]interface{}{
+	case PkgInfoTypeGitHubRelease:
+		return pkgInfo.Asset.Execute(map[string]interface{}{ //nolint:wrapcheck
 			"Version": pkg.Version,
 			"GOOS":    runtime.GOOS,
 			"GOARCH":  runtime.GOARCH,
@@ -254,8 +256,8 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
 			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
 			"Format":  pkgInfo.GetFormat(),
 		})
-	case pkgInfoTypeHTTP:
-		uS, err := pkgInfo.renderURL(pkg)
+	case PkgInfoTypeHTTP:
+		uS, err := pkgInfo.RenderURL(pkg)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -268,7 +270,7 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
 	return "", nil
 }
 
-func (pkgInfo *PackageInfo) renderURL(pkg *Package) (string, error) {
+func (pkgInfo *PackageInfo) RenderURL(pkg *Package) (string, error) {
 	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
 		"Version": pkg.Version,
 		"GOOS":    runtime.GOOS,

@@ -8,12 +8,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, registries map[string]*RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop,gocognit
+func (ctrl *Controller) installPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop,gocognit
 	var failed bool
 	for _, pkg := range cfg.Packages {
 		logE := ctrl.logE().WithFields(logrus.Fields{
@@ -78,7 +79,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	}
 
 	for _, pkg := range cfg.Packages {
-		go func(pkg *Package) {
+		go func(pkg *config.Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
 			defer func() {
@@ -131,7 +132,7 @@ func (ctrl *Controller) installPackages(ctx context.Context, cfg *Config, regist
 	return nil
 }
 
-func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Package) (*PackageInfo, error) {
+func getPkgInfoFromRegistries(registries map[string]*config.RegistryContent, pkg *config.Package) (*config.PackageInfo, error) {
 	registry, ok := registries[pkg.Registry]
 	if !ok {
 		return nil, errRegistryNotFound
@@ -151,7 +152,7 @@ func getPkgInfoFromRegistries(registries map[string]*RegistryContent, pkg *Packa
 
 const maxRetryDownload = 1
 
-func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkg *Package, pkgInfo *PackageInfo, dest, assetName string) error {
+func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string) error {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -185,7 +186,7 @@ func (ctrl *Controller) downloadWithRetry(ctx context.Context, pkg *Package, pkg
 	}
 }
 
-func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *PackageInfo, pkg *Package, isTest bool) error {
+func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool) error {
 	logE := ctrl.logE().WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -193,7 +194,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *PackageInfo
 	})
 	logE.Debug("install the package")
 
-	if err := pkgInfo.validate(); err != nil {
+	if err := pkgInfo.Validate(); err != nil {
 		return fmt.Errorf("invalid package: %w", err)
 	}
 	assetName, err := pkgInfo.RenderAsset(pkg)
@@ -222,7 +223,7 @@ func (ctrl *Controller) installPackage(ctx context.Context, pkgInfo *PackageInfo
 	return nil
 }
 
-func (ctrl *Controller) checkFileSrc(pkg *Package, pkgInfo *PackageInfo, file *File) error {
+func (ctrl *Controller) checkFileSrc(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}

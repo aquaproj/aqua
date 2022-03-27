@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -11,36 +12,36 @@ func TestController_findExecFileFromPkg(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title          string
-		registries     map[string]*RegistryContent
+		registries     map[string]*config.RegistryContent
 		exeName        string
-		pkg            *Package
-		expPackageInfo *PackageInfo
-		expFile        *File
+		pkg            *config.Package
+		expPackageInfo *config.PackageInfo
+		expFile        *config.File
 	}{
 		{
 			title:   "normal",
 			exeName: "kubectl",
-			pkg: &Package{
+			pkg: &config.Package{
 				Registry: "standard",
 				Name:     "kubernetes/kubectl",
 			},
-			expPackageInfo: &PackageInfo{
+			expPackageInfo: &config.PackageInfo{
 				Name: "kubernetes/kubectl",
-				Files: []*File{
+				Files: []*config.File{
 					{
 						Name: "kubectl",
 					},
 				},
 			},
-			expFile: &File{
+			expFile: &config.File{
 				Name: "kubectl",
 			},
-			registries: map[string]*RegistryContent{
+			registries: map[string]*config.RegistryContent{
 				"standard": {
-					PackageInfos: PackageInfos{
-						&PackageInfo{
+					PackageInfos: config.PackageInfos{
+						&config.PackageInfo{
 							Name: "kubernetes/kubectl",
-							Files: []*File{
+							Files: []*config.File{
 								{
 									Name: "kubectl",
 								},

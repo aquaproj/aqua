@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
@@ -35,7 +36,7 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 }
 
 func (runner *Runner) execAction(c *cli.Context) error {
-	param := &controller.Param{}
+	param := &config.Param{}
 	if err := runner.setCLIArg(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}

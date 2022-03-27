@@ -1,9 +1,9 @@
-package controller_test
+package config_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/config"
 )
 
 func TestRegistry_GetFilePath(t *testing.T) {
@@ -11,7 +11,7 @@ func TestRegistry_GetFilePath(t *testing.T) {
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.Registry
+		registry    *config.Registry
 		rootDir     string
 		cfgFilePath string
 	}{
@@ -19,7 +19,7 @@ func TestRegistry_GetFilePath(t *testing.T) {
 			title:   "github_content",
 			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
 			rootDir: "/root/.aqua",
-			registry: &controller.Registry{
+			registry: &config.Registry{
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua-registry",
 				Ref:       "v0.8.0",
@@ -44,7 +44,7 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 	data := []struct {
 		title       string
 		exp         string
-		registry    *controller.Registry
+		registry    *config.Registry
 		rootDir     string
 		cfgFilePath string
 	}{
@@ -53,7 +53,7 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 			exp:         "ci/foo.yaml",
 			rootDir:     "/root/.aqua",
 			cfgFilePath: "ci/aqua.yaml",
-			registry: &controller.Registry{
+			registry: &config.Registry{
 				Path: "foo.yaml",
 				Type: "local",
 			},

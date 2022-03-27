@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -10,20 +11,20 @@ import (
 
 var validate = validator.New() //nolint:gochecknoglobals
 
-func validateRegistries(registries Registries) error {
+func validateRegistries(registries config.Registries) error {
 	for _, registry := range registries {
-		if err := registry.validate(); err != nil {
-			return err
+		if err := registry.Validate(); err != nil {
+			return err //nolint:wrapcheck
 		}
 	}
 	return nil
 }
 
-func validateRegistryContent(registryContent *RegistryContent) error {
+func validateRegistryContent(registryContent *config.RegistryContent) error {
 	return validatePackageInfos(registryContent.PackageInfos)
 }
 
-func validateConfig(cfg *Config) error {
+func validateConfig(cfg *config.Config) error {
 	if err := validate.Struct(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
@@ -36,11 +37,11 @@ func validateConfig(cfg *Config) error {
 	return nil
 }
 
-func validatePackages(pkgs []*Package) error {
+func validatePackages(pkgs []*config.Package) error {
 	return nil
 }
 
-func validatePackageInfos(pkgInfos PackageInfos) error {
+func validatePackageInfos(pkgInfos config.PackageInfos) error {
 	names := make(map[string]struct{}, len(pkgInfos))
 	for _, pkgInfo := range pkgInfos {
 		name := pkgInfo.GetName()
