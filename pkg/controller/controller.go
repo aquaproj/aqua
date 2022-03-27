@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"io"
 	"os"
 
@@ -28,7 +27,7 @@ type Controller struct {
 	logger                  *log.Logger
 }
 
-func New(ctx context.Context, rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, pkgInstaller installpackage.Installer, gh githubSvc.RepositoryService, registInstaller registry.Installer, param *config.Param) (*Controller, error) {
+func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, pkgInstaller installpackage.Installer, gh githubSvc.RepositoryService, registInstaller registry.Installer, param *config.Param) (*Controller, error) {
 	if param.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(param.LogLevel)
 		if err != nil {

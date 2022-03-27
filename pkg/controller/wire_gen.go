@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
+	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -34,7 +35,7 @@ func NewController(ctx context.Context, aquaVersion string, param *config.Param)
 	installer := installpackage.New(aquaVersion, logger, packageDownloader)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	registryInstaller := registry.New(rootDir, logger, registryDownloader)
-	controller, err := New(ctx, rootDir, configFinder, configReader, logger, installer, repositoryService, registryInstaller, param)
+	controller, err := New(rootDir, configFinder, configReader, logger, installer, repositoryService, registryInstaller, param)
 	if err != nil {
 		return nil, err
 	}
@@ -71,5 +72,18 @@ func InitializeGenerateCommandController(ctx context.Context, aquaVersion string
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
 	controller := generate.New(configFinder, configReader, logger, installer, repositoryService)
+	return controller
+}
+
+func InitializeInstallCommandController(ctx context.Context, aquaVersion string, param *config.Param) *install.Controller {
+	rootDir := config.NewRootDir()
+	configFinder := finder.NewConfigFinder()
+	fileReader := reader.NewFileReader()
+	configReader := reader.New(fileReader)
+	logger := log.NewLogger(aquaVersion)
+	repositoryService := github.NewGitHub(ctx)
+	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
+	installer := registry.New(rootDir, logger, registryDownloader)
+	controller := install.New(rootDir, configFinder, configReader, installer)
 	return controller
 }

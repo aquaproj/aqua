@@ -11,6 +11,7 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
+	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -38,4 +39,9 @@ func InitializeInitCommandController(ctx context.Context, aquaVersion string, pa
 func InitializeGenerateCommandController(ctx context.Context, aquaVersion string, param *config.Param) *generate.Controller {
 	wire.Build(generate.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return &generate.Controller{}
+}
+
+func InitializeInstallCommandController(ctx context.Context, aquaVersion string, param *config.Param) *install.Controller {
+	wire.Build(install.New, finder.NewConfigFinder, log.NewLogger, github.NewGitHub, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	return &install.Controller{}
 }

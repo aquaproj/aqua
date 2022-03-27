@@ -1,4 +1,4 @@
-package controller
+package install
 
 import (
 	"context"
@@ -8,11 +8,29 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/aquaproj/aqua/pkg/validate"
 )
 
-const proxyName = "aqua-proxy"
+type Controller struct {
+	packageInstaller  installpackage.Installer
+	rootDir           string
+	configFinder      finder.ConfigFinder
+	configReader      reader.ConfigReader
+	registryInstaller registry.Installer
+}
+
+func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer) *Controller {
+	return &Controller{
+		rootDir:           string(rootDir),
+		configFinder:      configFinder,
+		configReader:      configReader,
+		registryInstaller: registInstaller,
+	}
+}
 
 func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error {
 	wd, err := os.Getwd()

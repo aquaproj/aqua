@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const proxyName = "aqua-proxy"
+
 func lookPath(exeName string) string {
 	for _, p := range strings.Split(os.Getenv("PATH"), ":") {
 		bin := filepath.Join(p, exeName)

@@ -54,10 +54,7 @@ func (runner *Runner) installAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	ctrl, err := controller.NewController(c.Context, param.AQUAVersion, param)
-	if err != nil {
-		return fmt.Errorf("initialize a controller: %w", err)
-	}
+	ctrl := controller.InitializeInstallCommandController(c.Context, param.AQUAVersion, param)
 
 	return ctrl.Install(c.Context, param) //nolint:wrapcheck
 }
