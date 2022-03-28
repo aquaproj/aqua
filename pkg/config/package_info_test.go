@@ -190,7 +190,7 @@ func TestPackageInfo_GetReplacements(t *testing.T) {
 		},
 		{
 			title:   "empty",
-			exp:     nil,
+			exp:     map[string]string{},
 			pkgInfo: &config.PackageInfo{},
 		},
 	}
