@@ -12,24 +12,25 @@ import (
 )
 
 type PackageInfo struct {
-	Name               string
-	Type               string `validate:"required"`
-	RepoOwner          string `yaml:"repo_owner"`
-	RepoName           string `yaml:"repo_name"`
-	Asset              *template.Template
-	Path               *template.Template
-	Format             string
-	Files              []*File
-	URL                *template.Template
-	Description        string
-	Link               string
-	Replacements       map[string]string
-	FormatOverrides    []*FormatOverride              `yaml:"format_overrides"`
-	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint"`
-	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides"`
-	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if"`
-	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter"`
-	Rosetta2           *bool
+	Name                  string
+	Type                  string `validate:"required"`
+	RepoOwner             string `yaml:"repo_owner"`
+	RepoName              string `yaml:"repo_name"`
+	Asset                 *template.Template
+	Path                  *template.Template
+	Format                string
+	Files                 []*File
+	URL                   *template.Template
+	Description           string
+	Link                  string
+	Replacements          map[string]string
+	ReplacementsOverrides []*ReplacementsOverride        `yaml:"replacements_overrides"`
+	FormatOverrides       []*FormatOverride              `yaml:"format_overrides"`
+	VersionConstraints    *constraint.VersionConstraints `yaml:"version_constraint"`
+	VersionOverrides      []*PackageInfo                 `yaml:"version_overrides"`
+	SupportedIf           *constraint.PackageCondition   `yaml:"supported_if"`
+	VersionFilter         *constraint.VersionFilter      `yaml:"version_filter"`
+	Rosetta2              *bool
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
@@ -150,6 +151,9 @@ func (pkgInfo *PackageInfo) override(child *PackageInfo) { //nolint:cyclop
 	if child.Replacements != nil {
 		pkgInfo.Replacements = child.Replacements
 	}
+	if child.ReplacementsOverrides != nil {
+		pkgInfo.ReplacementsOverrides = child.ReplacementsOverrides
+	}
 	if child.FormatOverrides != nil {
 		pkgInfo.FormatOverrides = child.FormatOverrides
 	}
@@ -165,7 +169,23 @@ func (pkgInfo *PackageInfo) override(child *PackageInfo) { //nolint:cyclop
 }
 
 func (pkgInfo *PackageInfo) GetReplacements() map[string]string {
-	return pkgInfo.Replacements
+	m := make(map[string]string, len(pkgInfo.Replacements))
+	for k, v := range pkgInfo.Replacements {
+		m[k] = v
+	}
+	for _, ro := range pkgInfo.ReplacementsOverrides {
+		if ro.GOOS != "" && ro.GOOS != runtime.GOOS {
+			continue
+		}
+		if ro.GOArch != "" && ro.GOArch != runtime.GOARCH {
+			continue
+		}
+		for k, v := range ro.Replacements {
+			m[k] = v
+		}
+		return m
+	}
+	return m
 }
 
 func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
