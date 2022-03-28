@@ -5,9 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/template"
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestPackageInfo_GetName(t *testing.T) {
@@ -190,7 +188,7 @@ func TestPackageInfo_GetReplacements(t *testing.T) {
 		},
 		{
 			title:   "empty",
-			exp:     map[string]string{},
+			exp:     nil,
 			pkgInfo: &config.PackageInfo{},
 		},
 	}
@@ -468,81 +466,6 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			}
 			if asset != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, asset)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
-	t.Parallel()
-	data := []struct {
-		title   string
-		version string
-		pkgInfo *config.PackageInfo
-		exp     *config.PackageInfo
-	}{
-		{
-			title: "no version constraint",
-			exp: &config.PackageInfo{
-				Type: "github_content",
-				Path: template.NewTemplate("foo"),
-			},
-			pkgInfo: &config.PackageInfo{
-				Type: "github_content",
-				Path: template.NewTemplate("foo"),
-			},
-		},
-		{
-			title: "version constraint",
-			exp: &config.PackageInfo{
-				Type:               "github_content",
-				Path:               template.NewTemplate("foo"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:               "github_content",
-				Path:               template.NewTemplate("foo"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
-			},
-			version: "v0.5.0",
-		},
-		{
-			title: "child version constraint",
-			exp: &config.PackageInfo{
-				Type:               "github_content",
-				Path:               template.NewTemplate("bar"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
-				VersionOverrides: []*config.PackageInfo{
-					{
-						VersionConstraints: constraint.NewVersionConstraints(`semver("< 0.4.0")`),
-						Path:               template.NewTemplate("bar"),
-					},
-				},
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:               "github_content",
-				Path:               template.NewTemplate("foo"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
-				VersionOverrides: []*config.PackageInfo{
-					{
-						VersionConstraints: constraint.NewVersionConstraints(`semver("< 0.4.0")`),
-						Path:               template.NewTemplate("bar"),
-					},
-				},
-			},
-			version: "v0.3.0",
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			pkgInfo, err := d.pkgInfo.SetVersion(d.version)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if diff := cmp.Diff(pkgInfo, d.exp, cmpopts.IgnoreUnexported(constraint.VersionConstraints{}), cmp.AllowUnexported(template.Template{})); diff != "" {
-				t.Fatal(diff)
 			}
 		})
 	}
