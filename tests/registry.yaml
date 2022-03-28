@@ -48,3 +48,22 @@ packages:
   repo_name: nerdctl
   asset: 'nerdctl-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
   supported_if: GOOS != "darwin" # supported_if
+
+- type: github_release
+  repo_owner: aristocratos
+  repo_name: btop
+  asset: 'btop-{{.Arch}}-{{.OS}}.tbz'
+  format: tar.bz2
+  description: 'A monitor of resources'
+  replacements:
+    linux: linux-musl
+    darwin: macos-monterey
+    amd64: x86_64
+  replacements_overrides:
+  - goos: linux
+    goarch: arm64
+    replacements:
+      arm64: aarch64
+  files:
+  - name: btop
+    src: bin/btop
