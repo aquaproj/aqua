@@ -59,7 +59,7 @@ packages:
     linux: linux-musl
     darwin: macos-monterey
     amd64: x86_64
-  replacements_overrides:
+  overrides:
   - goos: linux
     goarch: arm64
     replacements:
