@@ -24,6 +24,7 @@ type PackageInfo struct {
 	Description        string
 	Link               string
 	Replacements       map[string]string
+	Overrides          []*Override
 	FormatOverrides    []*FormatOverride              `yaml:"format_overrides"`
 	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint"`
 	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides"`
@@ -64,11 +65,6 @@ func (pkgInfo *PackageInfo) GetFormat() string {
 	if pkgInfo.Type == PkgInfoTypeGitHubArchive {
 		return "tar.gz"
 	}
-	for _, arcTypeOverride := range pkgInfo.FormatOverrides {
-		if arcTypeOverride.GOOS == runtime.GOOS {
-			return arcTypeOverride.Format
-		}
-	}
 	return pkgInfo.Format
 }
 
@@ -98,74 +94,12 @@ func (pkgInfo *PackageInfo) GetType() string {
 	return pkgInfo.Type
 }
 
-func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
-	if pkgInfo.VersionConstraints == nil {
-		return pkgInfo, nil
-	}
-	a, err := pkgInfo.VersionConstraints.Check(v)
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-	if a {
-		return pkgInfo, nil
-	}
-	for _, vo := range pkgInfo.VersionOverrides {
-		a, err := vo.VersionConstraints.Check(v)
-		if err != nil {
-			return nil, err //nolint:wrapcheck
-		}
-		if a {
-			pkgInfo.override(vo)
-			return pkgInfo, nil
-		}
-	}
-	return pkgInfo, nil
-}
-
-func (pkgInfo *PackageInfo) override(child *PackageInfo) { //nolint:cyclop
-	if child.Type != "" {
-		pkgInfo.Type = child.Type
-	}
-	if child.RepoOwner != "" {
-		pkgInfo.RepoOwner = child.RepoOwner
-	}
-	if child.RepoName != "" {
-		pkgInfo.RepoName = child.RepoName
-	}
-	if child.Asset != nil {
-		pkgInfo.Asset = child.Asset
-	}
-	if child.Path != nil {
-		pkgInfo.Path = child.Path
-	}
-	if child.Format != "" {
-		pkgInfo.Format = child.Format
-	}
-	if child.Files != nil {
-		pkgInfo.Files = child.Files
-	}
-	if child.URL != nil {
-		pkgInfo.URL = child.URL
-	}
-	if child.Replacements != nil {
-		pkgInfo.Replacements = child.Replacements
-	}
-	if child.FormatOverrides != nil {
-		pkgInfo.FormatOverrides = child.FormatOverrides
-	}
-	if child.SupportedIf != nil {
-		pkgInfo.SupportedIf = child.SupportedIf
-	}
-	if child.Rosetta2 != nil {
-		pkgInfo.Rosetta2 = child.Rosetta2
-	}
-	if child.VersionFilter != nil {
-		pkgInfo.VersionFilter = child.VersionFilter
-	}
-}
-
 func (pkgInfo *PackageInfo) GetReplacements() map[string]string {
 	return pkgInfo.Replacements
+}
+
+func (pkgInfo *PackageInfo) GetAsset() *template.Template {
+	return pkgInfo.Asset
 }
 
 func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {

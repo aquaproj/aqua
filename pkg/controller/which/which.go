@@ -166,8 +166,7 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.Regist
 		return nil, nil
 	}
 
-	pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
-	if err != nil {
+	if err := pkgInfo.Override(pkg.Version); err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil, nil
 	}

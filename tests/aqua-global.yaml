@@ -49,3 +49,7 @@ packages:
 - name: containerd/nerdctl@v0.18.0
   # supported_if
   registry: local
+
+- name: aristocratos/btop@v1.2.5
+  # replacements_overrides
+  registry: local
