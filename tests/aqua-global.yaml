@@ -21,7 +21,7 @@ packages:
 
 - name: golangci-lint # local registry
   registry: local
-  version: v1.43.0 # renovate: depName=golangci/golangci-lint
+  version: v1.45.2 # renovate: depName=golangci/golangci-lint
 
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard # standard registry
