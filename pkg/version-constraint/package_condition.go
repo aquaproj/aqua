@@ -6,6 +6,7 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
+	"github.com/invopop/jsonschema"
 )
 
 type PackageCondition struct {
@@ -16,6 +17,13 @@ type PackageCondition struct {
 func NewPackageCondition(s string) *PackageCondition {
 	return &PackageCondition{
 		raw: s,
+	}
+}
+
+func (PackageCondition) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type:        "string",
+		Description: "expr's expression. The evaluation result must be a boolean. If the evaluation result is false, aqua skips installing the package and outputs the debug log. If supported_if isn't set, the package is always installed.",
 	}
 }
 

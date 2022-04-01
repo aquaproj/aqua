@@ -6,6 +6,7 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
+	"github.com/invopop/jsonschema"
 )
 
 type VersionFilter struct {
@@ -16,6 +17,13 @@ type VersionFilter struct {
 func NewVersionFilter(s string) *VersionFilter {
 	return &VersionFilter{
 		raw: s,
+	}
+}
+
+func (VersionFilter) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type:        "string",
+		Description: "expr's expression. The evaluation result must be a boolean",
 	}
 }
 

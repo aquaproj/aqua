@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/invopop/jsonschema"
 )
 
 type Template struct {
@@ -17,6 +18,13 @@ type Template struct {
 func NewTemplate(raw string) *Template {
 	return &Template{
 		raw: raw,
+	}
+}
+
+func (Template) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type:        "string",
+		Description: "Go's text/template",
 	}
 }
 
