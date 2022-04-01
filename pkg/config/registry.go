@@ -17,16 +17,16 @@ var (
 )
 
 type RegistryContent struct {
-	PackageInfos PackageInfos `yaml:"packages" validate:"dive"`
+	PackageInfos PackageInfos `yaml:"packages" validate:"dive" json:"packages"`
 }
 
 type Registry struct {
-	Name      string `validate:"required"`
-	Type      string `validate:"required"`
-	RepoOwner string `yaml:"repo_owner"`
-	RepoName  string `yaml:"repo_name"`
-	Ref       string
-	Path      string `validate:"required"`
+	Name      string `validate:"required" json:"name"`
+	Type      string `validate:"required" json:"type"`
+	RepoOwner string `yaml:"repo_owner" json:"repo_owner"`
+	RepoName  string `yaml:"repo_name" json:"repo_name"`
+	Ref       string `json:"ref"`
+	Path      string `validate:"required" json:"path"`
 }
 
 const (

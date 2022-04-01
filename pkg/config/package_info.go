@@ -12,25 +12,25 @@ import (
 )
 
 type PackageInfo struct {
-	Name               string
-	Type               string `validate:"required"`
-	RepoOwner          string `yaml:"repo_owner"`
-	RepoName           string `yaml:"repo_name"`
-	Asset              *template.Template
-	Path               *template.Template
-	Format             string
-	Files              []*File
-	URL                *template.Template
-	Description        string
-	Link               string
-	Replacements       map[string]string
-	Overrides          []*Override
-	FormatOverrides    []*FormatOverride              `yaml:"format_overrides"`
-	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint"`
-	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides"`
-	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if"`
-	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter"`
-	Rosetta2           *bool
+	Name               string                         `json:"name"`
+	Type               string                         `validate:"required" json:"type"`
+	RepoOwner          string                         `yaml:"repo_owner" json:"repo_owner"`
+	RepoName           string                         `yaml:"repo_name" json:"repo_name"`
+	Asset              *template.Template             `json:"asset"`
+	Path               *template.Template             `json:"path"`
+	Format             string                         `json:"format"`
+	Files              []*File                        `json:"files"`
+	URL                *template.Template             `json:"url"`
+	Description        string                         `json:"description"`
+	Link               string                         `json:"link"`
+	Replacements       map[string]string              `json:"replacements"`
+	Overrides          []*Override                    `json:"overrides"`
+	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides"`
+	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint"`
+	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides" json:"version_overrides"`
+	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if"`
+	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter"`
+	Rosetta2           *bool                          `json:"rosseta2"`
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
