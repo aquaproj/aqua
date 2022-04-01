@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aquaproj/aqua/pkg/config/config",
+  "$ref": "#/$defs/Config",
+  "$defs": {
+    "Config": {
+      "properties": {
+        "packages": {
+          "items": {
+            "$ref": "#/$defs/Package"
+          },
+          "type": "array"
+        },
+        "registries": {
+          "patternProperties": {
+            ".*": {
+              "$ref": "#/$defs/Registry"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "packages",
+        "registries"
+      ]
+    },
+    "Package": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "registry": {
+          "type": "string",
+          "description": "Registry name",
+          "default": "standard",
+          "examples": [
+            "foo"
+          ]
+        },
+        "version": {
+          "type": "string"
+        },
+        "import": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "Registry": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "local",
+            "github_content"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}

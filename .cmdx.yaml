@@ -45,3 +45,7 @@ tasks:
   description: google/wire
   usage: google/wire
   script: "wire ./..."
+- name: js
+  description: Generate JSON Schema
+  usage: Generate JSON Schema
+  script: "go run ./cmd/gen-jsonschema"

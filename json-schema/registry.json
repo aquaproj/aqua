@@ -1,0 +1,214 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aquaproj/aqua/pkg/config/registry-content",
+  "$ref": "#/$defs/RegistryContent",
+  "$defs": {
+    "File": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "src": {
+          "$ref": "#/$defs/Template"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "FormatOverride": {
+      "properties": {
+        "goos": {
+          "type": "string",
+          "examples": [
+            "darwin",
+            "linux"
+          ]
+        },
+        "format": {
+          "type": "string",
+          "examples": [
+            "tar.gz",
+            "raw"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "goos",
+        "format"
+      ]
+    },
+    "Override": {
+      "properties": {
+        "goos": {
+          "type": "string",
+          "examples": [
+            "darwin",
+            "linux"
+          ]
+        },
+        "goarch": {
+          "type": "string",
+          "examples": [
+            "amd64",
+            "arm64"
+          ]
+        },
+        "replacements": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "format": {
+          "type": "string",
+          "examples": [
+            "tar.gz",
+            "raw"
+          ]
+        },
+        "asset": {
+          "$ref": "#/$defs/Template"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
+        "url": {
+          "$ref": "#/$defs/Template"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "PackageCondition": {
+      "type": "string",
+      "description": "expr's expression. The evaluation result must be a boolean. If the evaluation result is false, aqua skips installing the package and outputs the debug log. If supported_if isn't set, the package is always installed."
+    },
+    "PackageInfo": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "github_content",
+            "github_archive",
+            "http"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "asset": {
+          "$ref": "#/$defs/Template"
+        },
+        "path": {
+          "$ref": "#/$defs/Template"
+        },
+        "format": {
+          "type": "string",
+          "examples": [
+            "tar.gz",
+            "raw"
+          ]
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
+        "url": {
+          "$ref": "#/$defs/Template"
+        },
+        "description": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "replacements": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "overrides": {
+          "items": {
+            "$ref": "#/$defs/Override"
+          },
+          "type": "array"
+        },
+        "format_overrides": {
+          "items": {
+            "$ref": "#/$defs/FormatOverride"
+          },
+          "type": "array"
+        },
+        "version_constraint": {
+          "$ref": "#/$defs/VersionConstraints"
+        },
+        "version_overrides": {
+          "items": {
+            "$ref": "#/$defs/PackageInfo"
+          },
+          "type": "array"
+        },
+        "supported_if": {
+          "$ref": "#/$defs/PackageCondition"
+        },
+        "version_filter": {
+          "$ref": "#/$defs/VersionFilter"
+        },
+        "rosseta2": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ]
+    },
+    "RegistryContent": {
+      "properties": {
+        "packages": {
+          "items": {
+            "$ref": "#/$defs/PackageInfo"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "packages"
+      ]
+    },
+    "Template": {
+      "type": "string",
+      "description": "Go's text/template"
+    },
+    "VersionConstraints": {
+      "type": "string",
+      "description": "expr's expression. The evaluation result must be a boolean"
+    },
+    "VersionFilter": {
+      "type": "string",
+      "description": "expr's expression. The evaluation result must be a boolean"
+    }
+  }
+}

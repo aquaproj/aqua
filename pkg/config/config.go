@@ -10,10 +10,10 @@ import (
 )
 
 type Package struct {
-	Name     string `validate:"required"`
-	Registry string `validate:"required" yaml:",omitempty"`
-	Version  string `validate:"required" yaml:",omitempty"`
-	Import   string `yaml:",omitempty"`
+	Name     string `validate:"required" json:"name"`
+	Registry string `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,default=standard"`
+	Version  string `validate:"required" yaml:",omitempty" json:"version,omitempty"`
+	Import   string `yaml:",omitempty" json:"import,omitempty"`
 }
 
 func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -46,8 +46,8 @@ func parseNameWithVersion(name string) (string, string) {
 }
 
 type Config struct {
-	Packages   []*Package `validate:"dive"`
-	Registries Registries `validate:"dive"`
+	Packages   []*Package `validate:"dive" json:"packages"`
+	Registries Registries `validate:"dive" json:"registries"`
 }
 
 type (
@@ -91,13 +91,13 @@ func (pkgInfos *PackageInfos) ToMap() (map[string]*PackageInfo, error) {
 }
 
 type FormatOverride struct {
-	GOOS   string
-	Format string `yaml:"format"`
+	GOOS   string `json:"goos" jsonschema:"example=darwin,example=linux"`
+	Format string `yaml:"format" json:"format" jsonschema:"example=tar.gz,example=raw"`
 }
 
 type File struct {
-	Name string `validate:"required"`
-	Src  *template.Template
+	Name string             `validate:"required" json:"name,omitempty"`
+	Src  *template.Template `json:"src,omitempty"`
 }
 
 func getArch(rosetta2 bool, replacements map[string]string) string {

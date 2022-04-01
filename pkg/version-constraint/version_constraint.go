@@ -7,6 +7,7 @@ import (
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/hashicorp/go-version"
+	"github.com/invopop/jsonschema"
 )
 
 type VersionConstraints struct {
@@ -17,6 +18,13 @@ type VersionConstraints struct {
 func NewVersionConstraints(s string) *VersionConstraints {
 	return &VersionConstraints{
 		raw: s,
+	}
+}
+
+func (VersionConstraints) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type:        "string",
+		Description: "expr's expression. The evaluation result must be a boolean",
 	}
 }
 
