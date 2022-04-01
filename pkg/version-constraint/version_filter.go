@@ -59,7 +59,11 @@ func (vf *VersionFilter) Check(v string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)
 	}
-	return a.(bool), nil
+	f, ok := a.(bool)
+	if !ok {
+		return false, errVersionFilterMustBeBoolean
+	}
+	return f, nil
 }
 
 func (vf *VersionFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
