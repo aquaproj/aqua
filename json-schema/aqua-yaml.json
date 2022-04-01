@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/aquaproj/aqua/pkg/config/config",
   "$ref": "#/$defs/Config",
   "$defs": {
@@ -48,10 +48,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name"
-      ]
+      "type": "object"
     },
     "Registry": {
       "properties": {
