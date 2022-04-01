@@ -7,13 +7,13 @@ import (
 )
 
 type Override struct {
-	GOOS         string             `json:"goos"`
-	GOArch       string             `json:"goarch"`
-	Replacements map[string]string  `json:"replacements"`
-	Format       string             `json:"format"`
-	Asset        *template.Template `json:"asset"`
-	Files        []*File            `json:"files"`
-	URL          *template.Template `json:"url"`
+	GOOS         string             `json:"goos,omitempty" jsonschema:"example=darwin,example=linux"`
+	GOArch       string             `json:"goarch,omitempty" jsonschema:"example=amd64,example=arm64"`
+	Replacements map[string]string  `json:"replacements,omitempty"`
+	Format       string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Asset        *template.Template `json:"asset,omitempty"`
+	Files        []*File            `json:"files,omitempty"`
+	URL          *template.Template `json:"url,omitempty"`
 }
 
 func (ov *Override) Match() bool {

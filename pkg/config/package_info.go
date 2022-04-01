@@ -12,25 +12,25 @@ import (
 )
 
 type PackageInfo struct {
-	Name               string                         `json:"name"`
-	Type               string                         `validate:"required" json:"type"`
-	RepoOwner          string                         `yaml:"repo_owner" json:"repo_owner"`
-	RepoName           string                         `yaml:"repo_name" json:"repo_name"`
-	Asset              *template.Template             `json:"asset"`
-	Path               *template.Template             `json:"path"`
-	Format             string                         `json:"format"`
-	Files              []*File                        `json:"files"`
-	URL                *template.Template             `json:"url"`
-	Description        string                         `json:"description"`
-	Link               string                         `json:"link"`
-	Replacements       map[string]string              `json:"replacements"`
-	Overrides          []*Override                    `json:"overrides"`
-	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides"`
-	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint"`
-	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides" json:"version_overrides"`
-	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if"`
-	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter"`
-	Rosetta2           *bool                          `json:"rosseta2"`
+	Name               string                         `json:"name,omitempty"`
+	Type               string                         `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	RepoOwner          string                         `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName           string                         `yaml:"repo_name" json:"repo_name,omitempty"`
+	Asset              *template.Template             `json:"asset,omitempty"`
+	Path               *template.Template             `json:"path,omitempty"`
+	Format             string                         `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Files              []*File                        `json:"files,omitempty"`
+	URL                *template.Template             `json:"url,omitempty"`
+	Description        string                         `json:"description,omitempty"`
+	Link               string                         `json:"link,omitempty"`
+	Replacements       map[string]string              `json:"replacements,omitempty"`
+	Overrides          []*Override                    `json:"overrides,omitempty"`
+	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides,omitempty"`
+	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
+	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides" json:"version_overrides,omitempty"`
+	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
+	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
+	Rosetta2           *bool                          `json:"rosseta2,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
