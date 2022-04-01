@@ -49,7 +49,11 @@ func (pkgCondition *PackageCondition) Check() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)
 	}
-	return a.(bool), nil
+	f, ok := a.(bool)
+	if !ok {
+		return false, errPackageConditionMustBeBoolean
+	}
+	return f, nil
 }
 
 func (pkgCondition *PackageCondition) UnmarshalYAML(unmarshal func(interface{}) error) error {

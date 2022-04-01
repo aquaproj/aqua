@@ -6,6 +6,6 @@ registries:
   ref: v1.11.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
-- name: golangci/golangci-lint@v1.43.0
+- name: golangci/golangci-lint@v1.45.2
 - name: rhysd/actionlint@v1.6.10
 - import: aqua/*.yaml

@@ -227,7 +227,6 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
-	pkgName := pkgInfo.GetName()
 	var tagName string
 	if pkgInfo.VersionFilter != nil {
 		tagName = ctrl.listAndGetTagName(ctx, pkgInfo)
@@ -242,7 +241,7 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *co
 		}
 		tagName = release.GetTagName()
 	}
-	if pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
+	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
 		outputPkg.Name += "@" + tagName
 		outputPkg.Version = ""
 	} else {

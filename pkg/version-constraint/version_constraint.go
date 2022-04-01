@@ -82,7 +82,11 @@ func (constraints *VersionConstraints) Check(v string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)
 	}
-	return a.(bool), nil
+	f, ok := a.(bool)
+	if !ok {
+		return false, errVersionConstraintsMustBeBoolean
+	}
+	return f, nil
 }
 
 func (constraints *VersionConstraints) UnmarshalYAML(unmarshal func(interface{}) error) error {
