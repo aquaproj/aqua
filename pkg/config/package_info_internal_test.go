@@ -16,7 +16,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 	data := []struct {
 		title   string
 		pkgInfo *PackageInfo
-		child   *PackageInfo
+		child   *VersionOverride
 		exp     *PackageInfo
 	}{
 		{
@@ -33,7 +33,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 					},
 				},
 			},
-			child: &PackageInfo{
+			child: &VersionOverride{
 				Type: PkgInfoTypeGitHubContent,
 				Path: template.NewTemplate("colima"),
 			},
@@ -103,7 +103,7 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 				Type:               "github_content",
 				Path:               template.NewTemplate("bar"),
 				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
-				VersionOverrides: []*PackageInfo{
+				VersionOverrides: []*VersionOverride{
 					{
 						VersionConstraints: constraint.NewVersionConstraints(`semver("< 0.4.0")`),
 						Path:               template.NewTemplate("bar"),
@@ -114,7 +114,7 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 				Type:               "github_content",
 				Path:               template.NewTemplate("foo"),
 				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
-				VersionOverrides: []*PackageInfo{
+				VersionOverrides: []*VersionOverride{
 					{
 						VersionConstraints: constraint.NewVersionConstraints(`semver("< 0.4.0")`),
 						Path:               template.NewTemplate("bar"),

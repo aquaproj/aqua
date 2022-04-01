@@ -24,7 +24,7 @@ func (pkgInfo *PackageInfo) setVersion(v string) error {
 	return nil
 }
 
-func (pkgInfo *PackageInfo) overrideVersion(child *PackageInfo) { //nolint:cyclop
+func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) { //nolint:cyclop
 	if child.Type != "" {
 		pkgInfo.Type = child.Type
 	}
