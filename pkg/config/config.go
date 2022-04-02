@@ -100,7 +100,7 @@ func (pkgInfos *PackageInfos) ToMap() (map[string]*PackageInfo, error) {
 }
 
 type FormatOverride struct {
-	GOOS   string `json:"goos" jsonschema:"example=darwin,example=linux"`
+	GOOS   string `json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=js,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
 	Format string `yaml:"format" json:"format" jsonschema:"example=tar.gz,example=raw"`
 }
 
