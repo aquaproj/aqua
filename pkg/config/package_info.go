@@ -30,7 +30,7 @@ type PackageInfo struct {
 	VersionOverrides   []*VersionOverride             `yaml:"version_overrides" json:"version_overrides,omitempty"`
 	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
 	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
-	Rosetta2           *bool                          `json:"rosseta2,omitempty"`
+	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
 }
 
 type VersionOverride struct {
@@ -48,7 +48,7 @@ type VersionOverride struct {
 	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
 	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
-	Rosetta2           *bool                          `json:"rosseta2,omitempty"`
+	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
