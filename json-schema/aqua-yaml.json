@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/aquaproj/aqua/pkg/config/config",
   "$ref": "#/$defs/Config",
   "$defs": {
@@ -12,12 +12,7 @@
           "type": "array"
         },
         "registries": {
-          "patternProperties": {
-            ".*": {
-              "$ref": "#/$defs/Registry"
-            }
-          },
-          "type": "object"
+          "$ref": "#/$defs/Registries"
         }
       },
       "additionalProperties": false,
@@ -48,39 +43,39 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name"
-      ]
-    },
-    "Registry": {
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "standard",
-            "local",
-            "github_content"
-          ]
-        },
-        "repo_owner": {
-          "type": "string"
-        },
-        "repo_name": {
-          "type": "string"
-        },
-        "ref": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
       "type": "object"
+    },
+    "Registries": {
+      "items": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "local",
+              "github_content"
+            ]
+          },
+          "repo_owner": {
+            "type": "string"
+          },
+          "repo_name": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "type": "array"
     }
   }
 }

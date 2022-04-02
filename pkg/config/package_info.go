@@ -27,10 +27,28 @@ type PackageInfo struct {
 	Overrides          []*Override                    `json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides,omitempty"`
 	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
-	VersionOverrides   []*PackageInfo                 `yaml:"version_overrides" json:"version_overrides,omitempty"`
+	VersionOverrides   []*VersionOverride             `yaml:"version_overrides" json:"version_overrides,omitempty"`
 	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
 	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
-	Rosetta2           *bool                          `json:"rosseta2,omitempty"`
+	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
+}
+
+type VersionOverride struct {
+	Type               string                         `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	RepoOwner          string                         `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName           string                         `yaml:"repo_name" json:"repo_name,omitempty"`
+	Asset              *template.Template             `json:"asset,omitempty"`
+	Path               *template.Template             `json:"path,omitempty"`
+	Format             string                         `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Files              []*File                        `json:"files,omitempty"`
+	URL                *template.Template             `json:"url,omitempty"`
+	Replacements       map[string]string              `json:"replacements,omitempty"`
+	Overrides          []*Override                    `json:"overrides,omitempty"`
+	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides,omitempty"`
+	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
+	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
+	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
+	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
