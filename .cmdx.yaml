@@ -49,3 +49,9 @@ tasks:
   description: Generate JSON Schema
   usage: Generate JSON Schema
   script: "go run ./cmd/gen-jsonschema"
+- name: validate-js
+  description: Validate aqua.yaml and registry.yaml with JSON Schema
+  usage: Validate aqua.yaml and registry.yaml with JSON Schema
+  script: |
+    ajv validate -s json-schema/aqua-yaml.json -d aqua.yaml --spec=draft2020
+    ajv validate -s json-schema/registry.json -d tests/registry.yaml --spec=draft2020
