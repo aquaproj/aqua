@@ -34,7 +34,7 @@ type PackageInfo struct {
 }
 
 type VersionOverride struct {
-	Type               string                         `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	Type               string                         `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
 	RepoOwner          string                         `yaml:"repo_owner" json:"repo_owner,omitempty"`
 	RepoName           string                         `yaml:"repo_name" json:"repo_name,omitempty"`
 	Asset              *template.Template             `json:"asset,omitempty"`
