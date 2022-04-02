@@ -163,7 +163,7 @@
         },
         "version_overrides": {
           "items": {
-            "$ref": "#/$defs/PackageInfo"
+            "$ref": "#/$defs/VersionOverride"
           },
           "type": "array"
         },
@@ -173,7 +173,7 @@
         "version_filter": {
           "$ref": "#/$defs/VersionFilter"
         },
-        "rosseta2": {
+        "rosetta2": {
           "type": "boolean"
         }
       },
@@ -209,6 +209,81 @@
     "VersionFilter": {
       "type": "string",
       "description": "expr's expression. The evaluation result must be a boolean"
+    },
+    "VersionOverride": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "github_content",
+            "github_archive",
+            "http"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "asset": {
+          "$ref": "#/$defs/Template"
+        },
+        "path": {
+          "$ref": "#/$defs/Template"
+        },
+        "format": {
+          "type": "string",
+          "examples": [
+            "tar.gz",
+            "raw"
+          ]
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
+        "url": {
+          "$ref": "#/$defs/Template"
+        },
+        "replacements": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "overrides": {
+          "items": {
+            "$ref": "#/$defs/Override"
+          },
+          "type": "array"
+        },
+        "format_overrides": {
+          "items": {
+            "$ref": "#/$defs/FormatOverride"
+          },
+          "type": "array"
+        },
+        "supported_if": {
+          "$ref": "#/$defs/PackageCondition"
+        },
+        "version_constraint": {
+          "$ref": "#/$defs/VersionConstraints"
+        },
+        "version_filter": {
+          "$ref": "#/$defs/VersionFilter"
+        },
+        "rosetta2": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     }
   }
 }

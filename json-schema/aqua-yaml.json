@@ -12,12 +12,7 @@
           "type": "array"
         },
         "registries": {
-          "patternProperties": {
-            ".*": {
-              "$ref": "#/$defs/Registry"
-            }
-          },
-          "type": "object"
+          "$ref": "#/$defs/Registries"
         }
       },
       "additionalProperties": false,
@@ -50,34 +45,37 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "Registry": {
-      "properties": {
-        "name": {
-          "type": "string"
+    "Registries": {
+      "items": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "local",
+              "github_content"
+            ]
+          },
+          "repo_owner": {
+            "type": "string"
+          },
+          "repo_name": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
         },
-        "type": {
-          "type": "string",
-          "enum": [
-            "standard",
-            "local",
-            "github_content"
-          ]
-        },
-        "repo_owner": {
-          "type": "string"
-        },
-        "repo_name": {
-          "type": "string"
-        },
-        "ref": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        }
+        "additionalProperties": false,
+        "type": "object"
       },
-      "additionalProperties": false,
-      "type": "object"
+      "type": "array"
     }
   }
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/template"
+	"github.com/invopop/jsonschema"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -54,6 +55,14 @@ type (
 	PackageInfos []*PackageInfo
 	Registries   map[string]*Registry
 )
+
+func (Registries) JSONSchema() *jsonschema.Schema {
+	s := jsonschema.Reflect(&Registry{})
+	return &jsonschema.Schema{
+		Type:  "array",
+		Items: s.Definitions["Registry"],
+	}
+}
 
 const (
 	PkgInfoTypeGitHubRelease = "github_release"
