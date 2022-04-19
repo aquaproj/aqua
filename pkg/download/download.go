@@ -9,13 +9,15 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type pkgDownloader struct {
-	github github.RepositoryService
-	logger *log.Logger
+	github  github.RepositoryService
+	logger  *log.Logger
+	runtime *runtime.Runtime
 }
 
 func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
@@ -53,7 +55,7 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Cont
 }
 
 func (downloader *pkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
-	uS, err := pkgInfo.RenderURL(pkg)
+	uS, err := pkgInfo.RenderURL(pkg, downloader.runtime)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

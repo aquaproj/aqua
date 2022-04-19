@@ -22,6 +22,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 )
 
 // Injectors from wire.go:
@@ -68,8 +69,9 @@ func InitializeInstallCommandController(ctx context.Context, aquaVersion string,
 	repositoryService := github.New(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
-	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
-	installpackageInstaller := installpackage.New(rootDir, logger, packageDownloader)
+	runtimeRuntime := runtime.New()
+	packageDownloader := download.NewPackageDownloader(repositoryService, logger, runtimeRuntime)
+	installpackageInstaller := installpackage.New(rootDir, logger, packageDownloader, runtimeRuntime)
 	controller := install.New(rootDir, configFinder, configReader, installer, installpackageInstaller)
 	return controller
 }
@@ -83,7 +85,8 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 	repositoryService := github.New(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	installer := registry.New(rootDir, logger, registryDownloader)
-	controller := which.New(rootDir, configFinder, configReader, logger, installer)
+	runtimeRuntime := runtime.New()
+	controller := which.New(rootDir, configFinder, configReader, logger, installer, runtimeRuntime)
 	return controller
 }
 
@@ -91,14 +94,15 @@ func InitializeExecCommandController(ctx context.Context, aquaVersion string, pa
 	rootDir := config.NewRootDir()
 	logger := log.NewLogger(aquaVersion)
 	repositoryService := github.New(ctx)
-	packageDownloader := download.NewPackageDownloader(repositoryService, logger)
-	installer := installpackage.New(rootDir, logger, packageDownloader)
+	runtimeRuntime := runtime.New()
+	packageDownloader := download.NewPackageDownloader(repositoryService, logger, runtimeRuntime)
+	installer := installpackage.New(rootDir, logger, packageDownloader, runtimeRuntime)
 	configFinder := finder.NewConfigFinder()
 	fileReader := reader.NewFileReader()
 	configReader := reader.New(fileReader)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, logger)
 	registryInstaller := registry.New(rootDir, logger, registryDownloader)
-	controller := which.New(rootDir, configFinder, configReader, logger, registryInstaller)
+	controller := which.New(rootDir, configFinder, configReader, logger, registryInstaller, runtimeRuntime)
 	execController := exec.New(installer, logger, controller)
 	return execController
 }

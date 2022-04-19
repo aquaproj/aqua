@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
-	"runtime"
 
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
@@ -86,8 +86,8 @@ func (pkgInfo *PackageInfo) GetFormat() string {
 	return pkgInfo.Format
 }
 
-func (pkgInfo *PackageInfo) GetFileSrc(pkg *Package, file *File) (string, error) {
-	assetName, err := pkgInfo.RenderAsset(pkg)
+func (pkgInfo *PackageInfo) GetFileSrc(pkg *Package, file *File, rt *runtime.Runtime) (string, error) {
+	assetName, err := pkgInfo.RenderAsset(pkg, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
@@ -97,7 +97,7 @@ func (pkgInfo *PackageInfo) GetFileSrc(pkg *Package, file *File) (string, error)
 	if file.Src == nil {
 		return file.Name, nil
 	}
-	src, err := file.RenderSrc(pkg, pkgInfo)
+	src, err := file.RenderSrc(pkg, pkgInfo, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
@@ -120,8 +120,8 @@ func (pkgInfo *PackageInfo) GetAsset() *template.Template {
 	return pkgInfo.Asset
 }
 
-func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, error) {
-	assetName, err := pkgInfo.RenderAsset(pkg)
+func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime.Runtime) (string, error) {
+	assetName, err := pkgInfo.RenderAsset(pkg, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
@@ -133,10 +133,10 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package) (string, er
 	case PkgInfoTypeHTTP:
 		uS, err := pkgInfo.URL.Execute(map[string]interface{}{
 			"Version": pkg.Version,
-			"GOOS":    runtime.GOOS,
-			"GOARCH":  runtime.GOARCH,
-			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
+			"GOOS":    rt.GOOS,
+			"GOARCH":  rt.GOARCH,
+			"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
+			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
 			"Format":  pkgInfo.GetFormat(),
 		})
 		if err != nil {
@@ -186,30 +186,30 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 	return errInvalidPackageType
 }
 
-func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
+func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (string, error) {
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return "", nil
 	case PkgInfoTypeGitHubContent:
 		return pkgInfo.Path.Execute(map[string]interface{}{ //nolint:wrapcheck
 			"Version": pkg.Version,
-			"GOOS":    runtime.GOOS,
-			"GOARCH":  runtime.GOARCH,
-			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
+			"GOOS":    rt.GOOS,
+			"GOARCH":  rt.GOARCH,
+			"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
+			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
 			"Format":  pkgInfo.GetFormat(),
 		})
 	case PkgInfoTypeGitHubRelease:
 		return pkgInfo.Asset.Execute(map[string]interface{}{ //nolint:wrapcheck
 			"Version": pkg.Version,
-			"GOOS":    runtime.GOOS,
-			"GOARCH":  runtime.GOARCH,
-			"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
+			"GOOS":    rt.GOOS,
+			"GOARCH":  rt.GOARCH,
+			"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
+			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
 			"Format":  pkgInfo.GetFormat(),
 		})
 	case PkgInfoTypeHTTP:
-		uS, err := pkgInfo.RenderURL(pkg)
+		uS, err := pkgInfo.RenderURL(pkg, rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -222,13 +222,13 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package) (string, error) {
 	return "", nil
 }
 
-func (pkgInfo *PackageInfo) RenderURL(pkg *Package) (string, error) {
+func (pkgInfo *PackageInfo) RenderURL(pkg *Package, rt *runtime.Runtime) (string, error) {
 	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
 		"Version": pkg.Version,
-		"GOOS":    runtime.GOOS,
-		"GOARCH":  runtime.GOARCH,
-		"OS":      replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
+		"GOOS":    rt.GOOS,
+		"GOARCH":  rt.GOARCH,
+		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
 		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {

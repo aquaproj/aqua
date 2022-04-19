@@ -12,6 +12,7 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -24,6 +25,7 @@ type controller struct {
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 	logger            *log.Logger
+	runtime           *runtime.Runtime
 }
 
 type Controller interface {
@@ -34,7 +36,7 @@ func (ctrl *controller) logE() *logrus.Entry {
 	return ctrl.logger.LogE()
 }
 
-func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, registInstaller registry.Installer) Controller {
+func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, registInstaller registry.Installer, rt *runtime.Runtime) Controller {
 	return &controller{
 		stdout:            os.Stdout,
 		rootDir:           string(rootDir),
@@ -42,6 +44,7 @@ func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader 
 		configReader:      configReader,
 		registryInstaller: registInstaller,
 		logger:            logger,
+		runtime:           rt,
 	}
 }
 
@@ -106,11 +109,11 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 }
 
 func (ctrl *controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
-	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
+	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, ctrl.runtime)
 	if err != nil {
 		return nil, fmt.Errorf("get file_src: %w", err)
 	}
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.rootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(ctrl.rootDir, pkg, ctrl.runtime)
 	if err != nil {
 		return nil, fmt.Errorf("get pkg install path: %w", err)
 	}
@@ -166,13 +169,13 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.Regist
 		return nil, nil
 	}
 
-	if err := pkgInfo.Override(pkg.Version); err != nil {
+	if err := pkgInfo.Override(pkg.Version, ctrl.runtime); err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil, nil
 	}
 
 	if pkgInfo.SupportedIf != nil {
-		supported, err := pkgInfo.SupportedIf.Check()
+		supported, err := pkgInfo.SupportedIf.Check(ctrl.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
 			return nil, nil

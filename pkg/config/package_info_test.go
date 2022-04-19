@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/google/go-cmp/cmp"
 )
@@ -309,11 +310,12 @@ func TestPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
+	rt := runtime.New()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			asset, err := d.pkgInfo.RenderAsset(d.pkg)
+			asset, err := d.pkgInfo.RenderAsset(d.pkg, rt)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -385,11 +387,12 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
+	rt := runtime.New()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgPath, err := d.pkgInfo.GetPkgPath(rootDir, d.pkg)
+			pkgPath, err := d.pkgInfo.GetPkgPath(rootDir, d.pkg, rt)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -456,11 +459,12 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
+	rt := runtime.New()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			asset, err := d.pkgInfo.GetFileSrc(d.pkg, d.file)
+			asset, err := d.pkgInfo.GetFileSrc(d.pkg, d.file, rt)
 			if err != nil {
 				t.Fatal(err)
 			}
