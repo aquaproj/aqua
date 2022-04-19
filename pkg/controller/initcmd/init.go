@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -30,22 +29,16 @@ var globalVarCfgFileNameMap = map[string]struct{}{ //nolint:gochecknoglobals
 }
 
 type Controller struct {
-	logger                  *log.Logger
 	gitHubRepositoryService githubSvc.RepositoryService
 }
 
-func New(logger *log.Logger, gh githubSvc.RepositoryService) *Controller {
+func New(gh githubSvc.RepositoryService) *Controller {
 	return &Controller{
-		logger:                  logger,
 		gitHubRepositoryService: gh,
 	}
 }
 
-func (ctrl *Controller) logE() *logrus.Entry {
-	return ctrl.logger.LogE()
-}
-
-func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string) error {
+func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua.yaml"
 	}
@@ -53,7 +46,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string) error {
 		for fileName := range globalVarCfgFileNameMap {
 			if _, err := os.Stat(fileName); err == nil {
 				// configuration file already exists, then do nothing.
-				ctrl.logE().WithFields(logrus.Fields{
+				logE.WithFields(logrus.Fields{
 					"configuration_file_path": fileName,
 				}).Info("configuration file already exists")
 				return nil
@@ -67,13 +60,13 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string) error {
 	registryVersion := "v1.10.0"
 	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
-		logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
 			"repo_owner": "aquaproj",
 			"repo_name":  "aqua-registry",
 		}).Warn("get the latest release")
 	} else {
 		if release == nil {
-			ctrl.logE().WithFields(logrus.Fields{
+			logE.WithFields(logrus.Fields{
 				"repo_owner": "aquaproj",
 				"repo_name":  "aqua-registry",
 			}).Warn("failed to get the latest release")

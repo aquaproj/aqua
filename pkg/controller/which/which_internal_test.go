@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 func Test_controller_findExecFileFromPkg(t *testing.T) {
@@ -54,14 +54,14 @@ func Test_controller_findExecFileFromPkg(t *testing.T) {
 		},
 	}
 	ctrl := &controller{
-		logger:  log.NewLogger(""),
 		runtime: runtime.New(),
 	}
+	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgInfo, file := ctrl.findExecFileFromPkg(d.registries, d.exeName, d.pkg)
+			pkgInfo, file := ctrl.findExecFileFromPkg(d.registries, d.exeName, d.pkg, logE)
 			if diff := cmp.Diff(d.expPackageInfo, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}

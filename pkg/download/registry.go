@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/google/go-github/v39/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -15,14 +14,9 @@ import (
 
 type registryDownloader struct {
 	github githubSvc.RepositoryService
-	logger *log.Logger
 }
 
-func (downloader *registryDownloader) logE() *logrus.Entry {
-	return downloader.logger.LogE()
-}
-
-func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error) {
+func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string, logE *logrus.Entry) ([]byte, error) {
 	// https://github.com/aquaproj/aqua/issues/391
 	body, err := fromURL(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path, http.DefaultClient)
 	if body != nil {
@@ -35,7 +29,7 @@ func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, 
 		}
 	}
 
-	logerr.WithError(downloader.logE(), err).WithFields(logrus.Fields{
+	logerr.WithError(logE, err).WithFields(logrus.Fields{
 		"repo_owner": repoOwner,
 		"repo_name":  repoName,
 		"ref":        ref,

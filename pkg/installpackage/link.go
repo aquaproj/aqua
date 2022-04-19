@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *installer) createLink(linkPath, linkDest string) error {
+func (inst *installer) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	if fileInfo, err := os.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -21,12 +20,12 @@ func (inst *installer) createLink(linkPath, linkDest string) error {
 			// TODO if file is a regular file, remove it and create a symlink.
 			return fmt.Errorf("%s has already existed and is a regular file", linkPath)
 		case mode&os.ModeSymlink != 0:
-			return recreateLink(linkPath, linkDest)
+			return recreateLink(linkPath, linkDest, logE)
 		default:
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
-	inst.logE().WithFields(logrus.Fields{
+	logE.WithFields(logrus.Fields{
 		"link_file": linkPath,
 		"new":       linkDest,
 	}).Info("create a symbolic link")
@@ -36,7 +35,7 @@ func (inst *installer) createLink(linkPath, linkDest string) error {
 	return nil
 }
 
-func recreateLink(linkPath, linkDest string) error {
+func recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	lnDest, err := os.Readlink(linkPath)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
@@ -45,7 +44,7 @@ func recreateLink(linkPath, linkDest string) error {
 		return nil
 	}
 	// recreate link
-	log.New().WithFields(logrus.Fields{
+	logE.WithFields(logrus.Fields{
 		// TODO add version
 		"link_file": linkPath,
 		"old":       lnDest,

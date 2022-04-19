@@ -11,6 +11,7 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
+	"github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -29,7 +30,7 @@ func NewController(configFinder finder.ConfigFinder, configReader reader.ConfigR
 	}
 }
 
-func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []string) error {
+func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []string, logE *logrus.Entry) error {
 	cfg := &config.Config{}
 	wd, err := os.Getwd()
 	if err != nil {
@@ -49,7 +50,7 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []st
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

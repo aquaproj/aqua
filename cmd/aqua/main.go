@@ -31,10 +31,10 @@ func main() {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
 			code := hasExitCode.ExitCode()
-			logerr.WithError(log.New().WithField("exit_code", code).WithFields(fields), err).Debug("command failed")
+			logerr.WithError(log.New(version).WithField("exit_code", code).WithFields(fields), err).Debug("command failed")
 			os.Exit(code)
 		}
-		logerr.WithError(log.New(), err).WithFields(fields).Fatal("aqua failed")
+		logerr.WithError(log.New(version), err).WithFields(fields).Fatal("aqua failed")
 	}
 }
 

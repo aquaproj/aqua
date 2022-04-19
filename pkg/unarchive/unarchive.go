@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
 )
@@ -18,10 +17,10 @@ type Unarchiver interface {
 	Unarchive(body io.Reader) error
 }
 
-func Unarchive(body io.Reader, filename, typ, dest string) error {
+func Unarchive(body io.Reader, filename, typ, dest string, logE *logrus.Entry) error {
 	arc, err := getUnarchiver(filename, typ, dest)
 	if err != nil {
-		log.New().WithFields(logrus.Fields{
+		logE.WithFields(logrus.Fields{
 			"format":                 typ,
 			"filename":               filename,
 			"filepath.Ext(filename)": filepath.Ext(filename),

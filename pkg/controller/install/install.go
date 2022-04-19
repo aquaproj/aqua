@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/aquaproj/aqua/pkg/validate"
+	"github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -33,7 +34,7 @@ func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader 
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error {
+func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -44,20 +45,20 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param) error 
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	if err := ctrl.packageInstaller.InstallProxy(ctx); err != nil {
+	if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {
 		return err //nolint:wrapcheck
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(wd, param.ConfigFilePath) {
-		if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
+		if err := ctrl.install(ctx, rootBin, cfgFilePath, param, logE); err != nil {
 			return err
 		}
 	}
 
-	return ctrl.installAll(ctx, rootBin, param)
+	return ctrl.installAll(ctx, rootBin, param, logE)
 }
 
-func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *config.Param) error {
+func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *config.Param, logE *logrus.Entry) error {
 	if !param.All {
 		return nil
 	}
@@ -65,14 +66,14 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := ctrl.install(ctx, rootBin, cfgFilePath, param); err != nil {
+		if err := ctrl.install(ctx, rootBin, cfgFilePath, param, logE); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *config.Param) error {
+func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *config.Param, logE *logrus.Entry) error {
 	cfg := &config.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -85,10 +86,10 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest) //nolint:wrapcheck
+	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest, logE) //nolint:wrapcheck
 }

@@ -9,7 +9,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
@@ -20,30 +19,25 @@ import (
 type installer struct {
 	rootDir            string
 	registryDownloader download.RegistryDownloader
-	logger             *log.Logger
 }
 
-func (inst *installer) logE() *logrus.Entry {
-	return inst.logger.LogE()
-}
-
-func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string) (map[string]*config.RegistryContent, error) {
+func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*config.RegistryContent, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Registries))
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
 	var failed bool
-	maxInstallChan := make(chan struct{}, util.GetMaxParallelism())
+	maxInstallChan := make(chan struct{}, util.GetMaxParallelism(logE))
 	registryContents := make(map[string]*config.RegistryContent, len(cfg.Registries)+1)
 
 	for _, registry := range cfg.Registries {
 		go func(registry *config.Registry) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
-			registryContent, err := inst.installRegistry(ctx, registry, cfgFilePath)
+			registryContent, err := inst.installRegistry(ctx, registry, cfgFilePath, logE)
 			if err != nil {
 				<-maxInstallChan
-				logerr.WithError(inst.logE(), err).WithFields(logrus.Fields{
+				logerr.WithError(logE, err).WithFields(logrus.Fields{
 					"registry_name": registry.Name,
 				}).Error("install the registry")
 				flagMutex.Lock()
@@ -75,14 +69,14 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config
 
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (inst *installer) installRegistry(ctx context.Context, registry *config.Registry, cfgFilePath string) (*config.RegistryContent, error) {
+func (inst *installer) installRegistry(ctx context.Context, registry *config.Registry, cfgFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(inst.rootDir, cfgFilePath)
 	if err := util.MkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
 
 	if _, err := os.Stat(registryFilePath); err != nil {
-		return inst.getRegistry(ctx, registry, registryFilePath)
+		return inst.getRegistry(ctx, registry, registryFilePath, logE)
 	}
 
 	f, err := os.Open(registryFilePath)
@@ -98,10 +92,10 @@ func (inst *installer) installRegistry(ctx context.Context, registry *config.Reg
 }
 
 // getRegistry downloads and installs the registry file.
-func (inst *installer) getRegistry(ctx context.Context, registry *config.Registry, registryFilePath string) (*config.RegistryContent, error) {
+func (inst *installer) getRegistry(ctx context.Context, registry *config.Registry, registryFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
 	switch registry.Type {
 	case config.RegistryTypeGitHubContent:
-		return inst.getGitHubContentRegistry(ctx, registry, registryFilePath)
+		return inst.getGitHubContentRegistry(ctx, registry, registryFilePath, logE)
 	case config.RegistryTypeLocal:
 		return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
 			"local_registry_file_path": registryFilePath,
@@ -110,8 +104,8 @@ func (inst *installer) getRegistry(ctx context.Context, registry *config.Registr
 	return nil, errUnsupportedRegistryType
 }
 
-func (inst *installer) getGitHubContentRegistry(ctx context.Context, registry *config.Registry, registryFilePath string) (*config.RegistryContent, error) {
-	b, err := inst.registryDownloader.GetGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
+func (inst *installer) getGitHubContentRegistry(ctx context.Context, registry *config.Registry, registryFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
+	b, err := inst.registryDownloader.GetGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

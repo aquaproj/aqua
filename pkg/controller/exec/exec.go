@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
@@ -23,32 +22,30 @@ type Controller struct {
 	stdout           io.Writer
 	stderr           io.Writer
 	which            which.Controller
-	logger           *log.Logger
 	packageInstaller installpackage.Installer
 }
 
-func New(pkgInstaller installpackage.Installer, logger *log.Logger, which which.Controller) *Controller {
+func New(pkgInstaller installpackage.Installer, which which.Controller) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		stderr:           os.Stderr,
 		packageInstaller: pkgInstaller,
-		logger:           logger,
 		which:            which,
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string) error {
-	which, err := ctrl.which.Which(ctx, param, exeName)
+func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error {
+	which, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 	if which.Package != nil { //nolint:nestif
-		logE := ctrl.logE().WithFields(logrus.Fields{
+		logE := logE.WithFields(logrus.Fields{
 			"exe_path": which.ExePath,
 			"package":  which.Package.Name,
 		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false); err != nil {
+		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false, logE); err != nil {
 			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {
@@ -66,11 +63,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			}
 		}
 	}
-	return ctrl.execCommand(ctx, which.ExePath, args)
-}
-
-func (ctrl *Controller) logE() *logrus.Entry {
-	return ctrl.logger.LogE()
+	return ctrl.execCommand(ctx, which.ExePath, args, logE)
 }
 
 func wait(ctx context.Context, duration time.Duration) error {
@@ -83,8 +76,8 @@ func wait(ctx context.Context, duration time.Duration) error {
 	}
 }
 
-func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) error {
-	logE := ctrl.logE().WithField("exe_path", exePath)
+func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
+	logE = logE.WithField("exe_path", exePath)
 	logE.Debug("execute the command")
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")

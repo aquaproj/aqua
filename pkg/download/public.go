@@ -6,29 +6,27 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/sirupsen/logrus"
 )
 
 type PackageDownloader interface {
-	GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error)
+	GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string, logE *logrus.Entry) (io.ReadCloser, error)
 }
 
-func NewPackageDownloader(gh github.RepositoryService, logger *log.Logger, rt *runtime.Runtime) PackageDownloader {
+func NewPackageDownloader(gh github.RepositoryService, rt *runtime.Runtime) PackageDownloader {
 	return &pkgDownloader{
 		github:  gh,
-		logger:  logger,
 		runtime: rt,
 	}
 }
 
 type RegistryDownloader interface {
-	GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string) ([]byte, error)
+	GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string, logE *logrus.Entry) ([]byte, error)
 }
 
-func NewRegistryDownloader(gh github.RepositoryService, logger *log.Logger) RegistryDownloader {
+func NewRegistryDownloader(gh github.RepositoryService) RegistryDownloader {
 	return &registryDownloader{
 		github: gh,
-		logger: logger,
 	}
 }
