@@ -1,9 +1,9 @@
 package config
 
 import (
-	"runtime"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/invopop/jsonschema"
 	"github.com/sirupsen/logrus"
@@ -109,21 +109,21 @@ type File struct {
 	Src  *template.Template `json:"src,omitempty"`
 }
 
-func getArch(rosetta2 bool, replacements map[string]string) string {
-	if rosetta2 && runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
+func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime) string {
+	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
 		// Rosetta 2
 		return replace("amd64", replacements)
 	}
-	return replace(runtime.GOARCH, replacements)
+	return replace(rt.GOARCH, replacements)
 }
 
-func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo) (string, error) {
+func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runtime) (string, error) {
 	return file.Src.Execute(map[string]interface{}{ //nolint:wrapcheck
 		"Version":  pkg.Version,
-		"GOOS":     runtime.GOOS,
-		"GOARCH":   runtime.GOARCH,
-		"OS":       replace(runtime.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements()),
+		"GOOS":     rt.GOOS,
+		"GOARCH":   rt.GOARCH,
+		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})

@@ -1,8 +1,7 @@
 package config
 
 import (
-	"runtime"
-
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 )
 
@@ -16,11 +15,11 @@ type Override struct {
 	URL          *template.Template `json:"url,omitempty"`
 }
 
-func (ov *Override) Match() bool {
-	if ov.GOOS != "" && ov.GOOS != runtime.GOOS {
+func (ov *Override) Match(rt *runtime.Runtime) bool {
+	if ov.GOOS != "" && ov.GOOS != rt.GOOS {
 		return false
 	}
-	if ov.GOArch != "" && ov.GOArch != runtime.GOARCH {
+	if ov.GOArch != "" && ov.GOArch != rt.GOARCH {
 		return false
 	}
 	return true

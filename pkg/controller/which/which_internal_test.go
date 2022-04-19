@@ -5,6 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -53,7 +54,8 @@ func Test_controller_findExecFileFromPkg(t *testing.T) {
 		},
 	}
 	ctrl := &controller{
-		logger: log.NewLogger(""),
+		logger:  log.NewLogger(""),
+		runtime: runtime.New(),
 	}
 	for _, d := range data {
 		d := d

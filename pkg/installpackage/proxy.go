@@ -34,12 +34,12 @@ func (inst *installer) InstallProxy(ctx context.Context) error {
 			},
 		},
 	}
-	assetName, err := pkgInfo.RenderAsset(pkg)
+	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

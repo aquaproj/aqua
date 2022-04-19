@@ -2,10 +2,10 @@ package constraint
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/invopop/jsonschema"
 )
 
@@ -46,13 +46,13 @@ func (pkgCondition *PackageCondition) compile() error {
 	return nil
 }
 
-func (pkgCondition *PackageCondition) Check() (bool, error) {
+func (pkgCondition *PackageCondition) Check(rt *runtime.Runtime) (bool, error) {
 	if err := pkgCondition.compile(); err != nil {
 		return false, err
 	}
 	a, err := expr.Run(pkgCondition.expr, map[string]interface{}{
-		"GOOS":   runtime.GOOS,
-		"GOARCH": runtime.GOARCH,
+		"GOOS":   rt.GOOS,
+		"GOARCH": rt.GOARCH,
 	})
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)

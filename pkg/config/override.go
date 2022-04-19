@@ -1,33 +1,33 @@
 package config
 
-import "runtime"
+import "github.com/aquaproj/aqua/pkg/runtime"
 
-func (pkgInfo *PackageInfo) Override(v string) error {
+func (pkgInfo *PackageInfo) Override(v string, rt *runtime.Runtime) error {
 	if err := pkgInfo.setVersion(v); err != nil {
 		return err
 	}
-	pkgInfo.override()
+	pkgInfo.override(rt)
 	return nil
 }
 
-func (pkgInfo *PackageInfo) getOverride() *Override {
+func (pkgInfo *PackageInfo) getOverride(rt *runtime.Runtime) *Override {
 	for _, ov := range pkgInfo.Overrides {
-		if ov.Match() {
+		if ov.Match(rt) {
 			return ov
 		}
 	}
 	return nil
 }
 
-func (pkgInfo *PackageInfo) override() {
+func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) {
 	for _, fo := range pkgInfo.FormatOverrides {
-		if fo.GOOS == runtime.GOOS {
+		if fo.GOOS == rt.GOOS {
 			pkgInfo.Format = fo.Format
 			break
 		}
 	}
 
-	ov := pkgInfo.getOverride()
+	ov := pkgInfo.getOverride(rt)
 	if ov == nil {
 		return
 	}

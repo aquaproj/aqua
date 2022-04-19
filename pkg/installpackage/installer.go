@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -22,6 +23,7 @@ type installer struct {
 	rootDir           string
 	packageDownloader download.PackageDownloader
 	logger            *log.Logger
+	runtime           *runtime.Runtime
 }
 
 func (inst *installer) logE() *logrus.Entry {
@@ -48,11 +50,11 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 			continue
 		}
 
-		if err := pkgInfo.Override(pkg.Version); err != nil {
+		if err := pkgInfo.Override(pkg.Version, inst.runtime); err != nil {
 			return fmt.Errorf("evaluate version constraints: %w", err)
 		}
 		if pkgInfo.SupportedIf != nil {
-			supported, err := pkgInfo.SupportedIf.Check()
+			supported, err := pkgInfo.SupportedIf.Check(inst.runtime)
 			if err != nil {
 				logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
 				continue
@@ -116,13 +118,13 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 				return
 			}
 
-			if err := pkgInfo.Override(pkg.Version); err != nil {
+			if err := pkgInfo.Override(pkg.Version, inst.runtime); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
 			}
 			if pkgInfo.SupportedIf != nil {
-				supported, err := pkgInfo.SupportedIf.Check()
+				supported, err := pkgInfo.SupportedIf.Check(inst.runtime)
 				if err != nil {
 					handleFailure()
 					return
@@ -211,12 +213,12 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 	if err := pkgInfo.Validate(); err != nil {
 		return fmt.Errorf("invalid package: %w", err)
 	}
-	assetName, err := pkgInfo.RenderAsset(pkg)
+	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
@@ -243,12 +245,12 @@ func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.Package
 	}
 	logE := inst.logE().WithFields(fields)
 
-	fileSrc, err := pkgInfo.GetFileSrc(pkg, file)
+	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("get file_src: %w", err)
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg)
+	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}

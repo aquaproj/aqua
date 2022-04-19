@@ -6,6 +6,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 )
 
 type Installer interface {
@@ -14,10 +15,11 @@ type Installer interface {
 	InstallProxy(ctx context.Context) error
 }
 
-func New(rootDir config.RootDir, logger *log.Logger, downloader download.PackageDownloader) Installer {
+func New(rootDir config.RootDir, logger *log.Logger, downloader download.PackageDownloader, rt *runtime.Runtime) Installer {
 	return &installer{
 		logger:            logger,
 		rootDir:           string(rootDir),
 		packageDownloader: downloader,
+		runtime:           rt,
 	}
 }
