@@ -17,7 +17,6 @@ const configTemplate = `---
 registries:
 - type: standard
   ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
-
 packages:
 `
 
@@ -57,7 +56,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		// configuration file already exists, then do nothing.
 		return nil
 	}
-	registryVersion := "v1.10.0"
+	registryVersion := "v1.10.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
