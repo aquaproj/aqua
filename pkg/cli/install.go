@@ -5,6 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -54,7 +55,10 @@ func (runner *Runner) installAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	ctrl := controller.InitializeInstallCommandController(c.Context, param.AQUAVersion, param)
+	logE := log.New(param.AQUAVersion)
+	log.SetLevel(param.LogLevel, logE)
 
-	return ctrl.Install(c.Context, param) //nolint:wrapcheck
+	ctrl := controller.InitializeInstallCommandController(c.Context, param)
+
+	return ctrl.Install(c.Context, param, logE) //nolint:wrapcheck
 }

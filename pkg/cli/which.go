@@ -6,6 +6,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -38,6 +39,8 @@ func (runner *Runner) whichAction(c *cli.Context) error {
 	if err := runner.setCLIArg(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+	logE := log.New(param.AQUAVersion)
+	log.SetLevel(param.LogLevel, logE)
 
 	ctrl := controller.InitializeWhichCommandController(c.Context, param.AQUAVersion, param)
 
@@ -46,7 +49,7 @@ func (runner *Runner) whichAction(c *cli.Context) error {
 		return err
 	}
 
-	which, err := ctrl.Which(c.Context, param, exeName)
+	which, err := ctrl.Which(c.Context, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

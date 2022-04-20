@@ -14,7 +14,6 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/google/go-github/v39/github"
 	"github.com/ktr0731/go-fuzzyfinder"
@@ -30,16 +29,14 @@ type Controller struct {
 	registryInstaller       registry.Installer
 	configFinder            finder.ConfigFinder
 	configReader            reader.ConfigReader
-	logger                  *log.Logger
 }
 
-func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, logger *log.Logger, registInstaller registry.Installer, gh githubSvc.RepositoryService) *Controller {
+func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService) *Controller {
 	return &Controller{
 		stdin:                   os.Stdin,
 		stdout:                  os.Stdout,
 		configFinder:            configFinder,
 		configReader:            configReader,
-		logger:                  logger,
 		registryInstaller:       registInstaller,
 		gitHubRepositoryService: gh,
 	}
@@ -48,7 +45,7 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, log
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args ...string) error {
+func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -59,7 +56,7 @@ func (ctrl *Controller) Generate(ctx context.Context, param *config.Param, args 
 		return err //nolint:wrapcheck
 	}
 
-	list, err := ctrl.generate(ctx, param, cfgFilePath, args...)
+	list, err := ctrl.generate(ctx, logE, param, cfgFilePath, args...)
 	if err != nil {
 		return err
 	}
@@ -81,7 +78,7 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
+func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
 	cfg := &config.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
@@ -89,13 +86,13 @@ func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFi
 	if err := validate.Config(cfg); err != nil {
 		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
 	if param.File != "" || len(args) != 0 {
-		return ctrl.outputListedPkgs(ctx, param, registryContents, args...)
+		return ctrl.outputListedPkgs(ctx, logE, param, registryContents, args...)
 	}
 
 	// maps the package and the registry
@@ -119,7 +116,7 @@ func (ctrl *Controller) generate(ctx context.Context, param *config.Param, cfgFi
 	}
 	arr := make([]interface{}, len(idxes))
 	for i, idx := range idxes {
-		arr[i] = ctrl.getOutputtedPkg(ctx, pkgs[idx])
+		arr[i] = ctrl.getOutputtedPkg(ctx, pkgs[idx], logE)
 	}
 
 	return arr, nil
@@ -132,7 +129,7 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *config.Param, registryContents map[string]*config.RegistryContent, pkgNames ...string) (interface{}, error) {
+func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*config.RegistryContent, pkgNames ...string) (interface{}, error) {
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
@@ -150,12 +147,12 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *config.Para
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": pkgName}) //nolint:wrapcheck
 		}
-		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg)
+		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg, logE)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 
 	if param.File != "" {
-		pkgs, err := ctrl.readGeneratedPkgsFromFile(ctx, param, outputPkgs, m)
+		pkgs, err := ctrl.readGeneratedPkgsFromFile(ctx, param, outputPkgs, m, logE)
 		if err != nil {
 			return nil, err
 		}
@@ -164,7 +161,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, param *config.Para
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*config.Package, m map[string]*FindingPackage) ([]*config.Package, error) {
+func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*config.Package, m map[string]*FindingPackage, logE *logrus.Entry) ([]*config.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
 		file = ctrl.stdin
@@ -183,7 +180,7 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *co
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
 		}
-		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg)
+		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg, logE)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 	if err := scanner.Err(); err != nil {
@@ -192,7 +189,7 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *co
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.PackageInfo) string {
+func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.PackageInfo, logE *logrus.Entry) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -201,7 +198,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 	for {
 		releases, _, err := ctrl.gitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
-			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
 				"repo_name":  repoName,
 			}).Warn("list releases")
@@ -224,16 +221,16 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo, logE *logrus.Entry) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	var tagName string
 	if pkgInfo.VersionFilter != nil {
-		tagName = ctrl.listAndGetTagName(ctx, pkgInfo)
+		tagName = ctrl.listAndGetTagName(ctx, pkgInfo, logE)
 	} else {
 		release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
 		if err != nil {
-			logerr.WithError(ctrl.logE(), err).WithFields(logrus.Fields{
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
 				"repo_name":  repoName,
 			}).Warn("get the latest release")
@@ -249,7 +246,7 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *co
 	}
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage) *config.Package {
+func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage, logE *logrus.Entry) *config.Package {
 	outputPkg := &config.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
@@ -262,12 +259,8 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 		return outputPkg
 	}
 	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {
-		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkgInfo)
+		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkgInfo, logE)
 		return outputPkg
 	}
 	return outputPkg
-}
-
-func (ctrl *Controller) logE() *logrus.Entry {
-	return ctrl.logger.LogE()
 }

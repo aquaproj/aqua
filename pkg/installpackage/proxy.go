@@ -11,12 +11,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *installer) InstallProxy(ctx context.Context) error {
+func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
 	pkg := &config.Package{
 		Name:    proxyName,
 		Version: "v0.2.1", // renovate: depName=aquaproj/aqua-proxy
 	}
-	logE := inst.logE().WithFields(logrus.Fields{
+	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -47,7 +47,7 @@ func (inst *installer) InstallProxy(ctx context.Context) error {
 	finfo, err := os.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+		if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
 			return err
 		}
 	} else {
@@ -62,5 +62,5 @@ func (inst *installer) InstallProxy(ctx context.Context) error {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return inst.createLink(filepath.Join(inst.rootDir, "bin", proxyName), a)
+	return inst.createLink(filepath.Join(inst.rootDir, "bin", proxyName), a, logE)
 }

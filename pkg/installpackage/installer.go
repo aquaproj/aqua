@@ -10,7 +10,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -22,18 +21,13 @@ const proxyName = "aqua-proxy"
 type installer struct {
 	rootDir           string
 	packageDownloader download.PackageDownloader
-	logger            *log.Logger
 	runtime           *runtime.Runtime
 }
 
-func (inst *installer) logE() *logrus.Entry {
-	return inst.logger.LogE()
-}
-
-func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool) error { //nolint:funlen,cyclop,gocognit
+func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop,gocognit
 	var failed bool
 	for _, pkg := range cfg.Packages {
-		logE := inst.logE().WithFields(logrus.Fields{
+		logE := logE.WithFields(logrus.Fields{
 			"package_name":    pkg.Name,
 			"package_version": pkg.Version,
 			"registry":        pkg.Registry,
@@ -65,7 +59,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 			}
 		}
 		for _, file := range pkgInfo.GetFiles() {
-			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName); err != nil {
+			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue
@@ -74,7 +68,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 	}
 
 	if onlyLink {
-		inst.logE().WithFields(logrus.Fields{
+		logE.WithFields(logrus.Fields{
 			"only_link": true,
 		}).Debug("skip downloading the package")
 		if failed {
@@ -86,7 +80,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Packages))
 	var flagMutex sync.Mutex
-	maxInstallChan := make(chan struct{}, util.GetMaxParallelism())
+	maxInstallChan := make(chan struct{}, util.GetMaxParallelism(logE))
 
 	handleFailure := func() {
 		flagMutex.Lock()
@@ -101,7 +95,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 			defer func() {
 				<-maxInstallChan
 			}()
-			logE := inst.logE().WithFields(logrus.Fields{
+			logE := logE.WithFields(logrus.Fields{
 				"package_name":    pkg.Name,
 				"package_version": pkg.Version,
 				"registry":        pkg.Registry,
@@ -134,7 +128,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 				}
 			}
 
-			if err := inst.InstallPackage(ctx, pkgInfo, pkg, isTest); err != nil {
+			if err := inst.InstallPackage(ctx, pkgInfo, pkg, isTest, logE); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -168,8 +162,8 @@ func getPkgInfoFromRegistries(registries map[string]*config.RegistryContent, pkg
 
 const maxRetryDownload = 1
 
-func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string) error {
-	logE := inst.logE().WithFields(logrus.Fields{
+func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string, logE *logrus.Entry) error {
+	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -180,7 +174,7 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 		finfo, err := os.Stat(dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := inst.download(ctx, pkg, pkgInfo, dest, assetName); err != nil {
+			if err := inst.download(ctx, pkg, pkgInfo, dest, assetName, logE); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err
@@ -202,8 +196,8 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 	}
 }
 
-func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool) error {
-	logE := inst.logE().WithFields(logrus.Fields{
+func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool, logE *logrus.Entry) error {
+	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
 		"registry":        pkg.Registry,
@@ -223,12 +217,12 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName); err != nil {
+	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
 		return err
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
-		if err := inst.checkFileSrc(pkg, pkgInfo, file); err != nil {
+		if err := inst.checkFileSrc(pkg, pkgInfo, file, logE); err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -239,11 +233,11 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 	return nil
 }
 
-func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) error {
+func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, logE *logrus.Entry) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
-	logE := inst.logE().WithFields(fields)
+	logE = logE.WithFields(fields)
 
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, inst.runtime)
 	if err != nil {

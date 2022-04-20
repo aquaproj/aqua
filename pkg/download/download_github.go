@@ -20,7 +20,7 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
 }
 
-func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
 	// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
 	// As a result of test, it seems not to be limited.
 	// So at first aqua tries to download assets without GitHub API.
@@ -33,7 +33,7 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	if b != nil {
 		b.Close()
 	}
-	downloader.logE().WithError(err).WithFields(logrus.Fields{
+	logE.WithError(err).WithFields(logrus.Fields{
 		"repo_owner":    owner,
 		"repo_name":     repoName,
 		"asset_version": version,

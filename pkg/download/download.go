@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -16,14 +15,13 @@ import (
 
 type pkgDownloader struct {
 	github  github.RepositoryService
-	logger  *log.Logger
 	runtime *runtime.Runtime
 }
 
-func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
 	switch pkgInfo.GetType() {
 	case config.PkgInfoTypeGitHubRelease:
-		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, pkgInfo, assetName)
+		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, pkgInfo, assetName, logE)
 	case config.PkgInfoTypeGitHubContent:
 		return downloader.getReadCloserFromGitHubContent(ctx, pkg, pkgInfo, assetName)
 	case config.PkgInfoTypeGitHubArchive:
@@ -37,12 +35,8 @@ func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.
 	}
 }
 
-func (downloader *pkgDownloader) logE() *logrus.Entry {
-	return downloader.logger.LogE()
-}
-
-func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
-	return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
+func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
+	return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName, logE)
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
