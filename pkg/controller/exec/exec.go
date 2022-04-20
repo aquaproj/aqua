@@ -41,7 +41,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 		return err //nolint:wrapcheck
 	}
 	if which.Package != nil { //nolint:nestif
-		logE := logE.WithFields(logrus.Fields{
+		logE = logE.WithFields(logrus.Fields{
 			"exe_path": which.ExePath,
 			"package":  which.Package.Name,
 		})
