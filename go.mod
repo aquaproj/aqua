@@ -20,7 +20,7 @@ require (
 	github.com/suzuki-shunsuke/go-findconfig v1.1.0
 	github.com/suzuki-shunsuke/go-timeout v1.0.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
-	github.com/urfave/cli/v2 v2.4.3
+	github.com/urfave/cli/v2 v2.4.4
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	gopkg.in/yaml.v2 v2.4.0
 )
