@@ -7,7 +7,7 @@ require (
 	github.com/antonmedv/expr v1.9.0
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/goccy/go-yaml v1.9.5
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
 	github.com/google/go-github/v39 v39.2.0
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.4.0
