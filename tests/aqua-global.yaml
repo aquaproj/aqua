@@ -36,7 +36,7 @@ packages:
   version: v4.14.1
 
 - name: golang-migrate/migrate # version_constraint, omit "registry"
-  version: v4.15.1 # renovate: depName=golang-migrate/migrate
+  version: v4.15.2 # renovate: depName=golang-migrate/migrate
 
 - name: aquaproj/aqua-installer@v1.0.0
   # github_content package
