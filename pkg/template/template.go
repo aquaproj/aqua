@@ -2,6 +2,7 @@ package template
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"text/template"
@@ -40,6 +41,15 @@ func (tpl *Template) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var raw string
 	if err := unmarshal(&raw); err != nil {
 		return err
+	}
+	tpl.raw = raw
+	return nil
+}
+
+func (tpl *Template) UnmarshalJSON(b []byte) error {
+	var raw string
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return fmt.Errorf("parse a template as JSON: %w", err)
 	}
 	tpl.raw = raw
 	return nil
