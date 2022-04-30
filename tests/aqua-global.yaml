@@ -53,3 +53,8 @@ packages:
 - name: aristocratos/btop@v1.2.6
   # replacements_overrides
   registry: local
+
+- name: ahmetb/kubens
+  # alias
+  registry: local
+  version: v0.9.4 # renovate: depName=ahmetb/kubectx

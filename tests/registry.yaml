@@ -67,3 +67,21 @@ packages:
   files:
   - name: btop
     src: bin/btop
+
+- name: ahmetb/kubectx/kubens
+  aliases:
+  - name: ahmetb/kubens
+  type: github_release
+  repo_owner: ahmetb
+  repo_name: kubectx
+  asset: "kubens_{{.Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"
+  description: Faster way to switch between clusters and namespaces in kubectl
+  files:
+  - name: kubens
+  replacements:
+    386: i386
+    amd64: x86_64
+  format: tar.gz
+  format_overrides:
+  - goos: windows
+    format: zip

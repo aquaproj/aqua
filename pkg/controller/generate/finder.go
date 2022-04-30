@@ -17,10 +17,19 @@ func (ctrl *Controller) launchFuzzyFinder(pkgs []*FindingPackage) ([]int, error)
 		}
 		fileNamesStr := strings.Join(fileNames, ", ")
 		pkgName := pkg.PackageInfo.GetName()
-		if strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {
-			return fmt.Sprintf("%s (%s)", pkgName, pkg.RegistryName)
+		aliases := make([]string, len(pkg.PackageInfo.Aliases))
+		for i, alias := range pkg.PackageInfo.Aliases {
+			aliases[i] = alias.Name
 		}
-		return fmt.Sprintf("%s (%s) (%s)", pkgName, pkg.RegistryName, fileNamesStr)
+		item := pkgName
+		if len(aliases) != 0 {
+			item += " (" + strings.Join(aliases, ", ") + ")"
+		}
+		item += " (" + pkg.RegistryName + ")"
+		if strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {
+			return item
+		}
+		return item + " (" + fileNamesStr + ")"
 	},
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
 			if i < 0 {
