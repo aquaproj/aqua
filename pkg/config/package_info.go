@@ -31,6 +31,11 @@ type PackageInfo struct {
 	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
 	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
 	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
+	Aliases            []*Alias                       `json:"aliases,omitempty"`
+}
+
+type Alias struct {
+	Name string `json:"name"`
 }
 
 type VersionOverride struct {

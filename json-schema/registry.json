@@ -3,6 +3,18 @@
   "$id": "https://github.com/aquaproj/aqua/pkg/config/registry-content",
   "$ref": "#/$defs/RegistryContent",
   "$defs": {
+    "Alias": {
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
     "File": {
       "properties": {
         "name": {
@@ -210,6 +222,12 @@
         },
         "rosetta2": {
           "type": "boolean"
+        },
+        "aliases": {
+          "items": {
+            "$ref": "#/$defs/Alias"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,

@@ -95,6 +95,9 @@ func (pkgInfos *PackageInfos) ToMap() (map[string]*PackageInfo, error) {
 			})
 		}
 		m[name] = pkgInfo
+		for _, alias := range pkgInfo.Aliases {
+			m[alias.Name] = pkgInfo
+		}
 	}
 	return m, nil
 }

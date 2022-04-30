@@ -137,6 +137,12 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 				PackageInfo:  pkg,
 				RegistryName: registryName,
 			}
+			for _, alias := range pkg.Aliases {
+				m[registryName+","+alias.Name] = &FindingPackage{
+					PackageInfo:  pkg,
+					RegistryName: registryName,
+				}
+			}
 		}
 	}
 
