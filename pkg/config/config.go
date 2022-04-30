@@ -96,6 +96,11 @@ func (pkgInfos *PackageInfos) ToMap() (map[string]*PackageInfo, error) {
 		}
 		m[name] = pkgInfo
 		for _, alias := range pkgInfo.Aliases {
+			if _, ok := m[alias.Name]; ok {
+				return nil, logerr.WithFields(errPkgNameMustBeUniqueInRegistry, logrus.Fields{ //nolint:wrapcheck
+					"package_name": alias.Name,
+				})
+			}
 			m[alias.Name] = pkgInfo
 		}
 	}
