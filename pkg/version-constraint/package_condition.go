@@ -1,6 +1,7 @@
 package constraint
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/antonmedv/expr"
@@ -68,6 +69,15 @@ func (pkgCondition *PackageCondition) UnmarshalYAML(unmarshal func(interface{}) 
 	var raw string
 	if err := unmarshal(&raw); err != nil {
 		return err
+	}
+	pkgCondition.raw = raw
+	return nil
+}
+
+func (pkgCondition *PackageCondition) UnmarshalJSON(b []byte) error {
+	var raw string
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return fmt.Errorf("unmarshal package condition as JSON: %w", err)
 	}
 	pkgCondition.raw = raw
 	return nil

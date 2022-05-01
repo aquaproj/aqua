@@ -1,6 +1,7 @@
 package constraint
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -78,6 +79,15 @@ func (vf *VersionFilter) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	var raw string
 	if err := unmarshal(&raw); err != nil {
 		return err
+	}
+	vf.raw = raw
+	return nil
+}
+
+func (vf *VersionFilter) UnmarshalJSON(b []byte) error {
+	var raw string
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return fmt.Errorf("unmarshal version filter as JSON: %w", err)
 	}
 	vf.raw = raw
 	return nil
