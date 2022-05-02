@@ -197,7 +197,7 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (stri
 	case PkgInfoTypeGitHubRelease:
 		return pkgInfo.renderTemplate(pkgInfo.Asset, pkg, rt)
 	case PkgInfoTypeHTTP:
-		uS, err := pkgInfo.renderTemplate(pkgInfo.URL, pkg, rt)
+		uS, err := pkgInfo.RenderURL(pkg, rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
