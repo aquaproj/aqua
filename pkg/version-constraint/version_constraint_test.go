@@ -39,8 +39,7 @@ func TestVersionConstraints_Check(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			constraints := constraint.NewVersionConstraints(d.constraints)
-			b, err := constraints.Check(d.version)
+			b, err := constraint.EvaluateVersionConstraints(d.constraints, d.version)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")
