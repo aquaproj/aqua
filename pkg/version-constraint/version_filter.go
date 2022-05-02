@@ -9,16 +9,10 @@ import (
 
 func CompileVersionFilter(versionFilter string) (*vm.Program, error) {
 	return expr.Compile(versionFilter, expr.AsBool(), expr.Env(map[string]interface{}{ //nolint:wrapcheck
-		"Version": "",
-		"semver": func(s string) bool {
-			return false
-		},
-		"semverWithVersion": func(constr, ver string) bool {
-			return false
-		},
-		"trimPrefix": func(s, prefix string) string {
-			return ""
-		},
+		"Version":           "",
+		"semver":            emptySemver,
+		"semverWithVersion": emptySemverWithVersion,
+		"trimPrefix":        emptyTrimPrefix,
 	}))
 }
 
