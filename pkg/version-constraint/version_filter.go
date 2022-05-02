@@ -1,42 +1,14 @@
 package constraint
 
 import (
-	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	"github.com/invopop/jsonschema"
 )
 
-type VersionFilter struct {
-	raw  string
-	expr *vm.Program
-}
-
-func NewVersionFilter(s string) *VersionFilter {
-	return &VersionFilter{
-		raw: s,
-	}
-}
-
-func (VersionFilter) JSONSchema() *jsonschema.Schema {
-	return &jsonschema.Schema{
-		Type:        "string",
-		Description: "expr's expression. The evaluation result must be a boolean",
-	}
-}
-
-func (vf *VersionFilter) Raw() string {
-	return vf.raw
-}
-
-func (vf *VersionFilter) compile() error {
-	if vf.expr != nil {
-		return nil
-	}
-	a, err := expr.Compile(vf.raw, expr.AsBool(), expr.Env(map[string]interface{}{
+func CompileVersionFilter(versionFilter string) (*vm.Program, error) {
+	return expr.Compile(versionFilter, expr.AsBool(), expr.Env(map[string]interface{}{ //nolint:wrapcheck
 		"Version": "",
 		"semver": func(s string) bool {
 			return false
@@ -48,47 +20,13 @@ func (vf *VersionFilter) compile() error {
 			return ""
 		},
 	}))
-	if err != nil {
-		return fmt.Errorf("parse constraints: %w", err)
-	}
-	vf.expr = a
-	return nil
 }
 
-func (vf *VersionFilter) Check(v string) (bool, error) {
-	if err := vf.compile(); err != nil {
-		return false, err
-	}
-	a, err := expr.Run(vf.expr, map[string]interface{}{
+func EvaluateVersionFilter(prog *vm.Program, v string) (bool, error) {
+	return evaluateBoolProg(prog, map[string]interface{}{
 		"Version":           v,
 		"semver":            getSemverFunc(v),
 		"semverWithVersion": semverWithVersion,
 		"trimPrefix":        strings.TrimPrefix,
 	})
-	if err != nil {
-		return false, fmt.Errorf("evaluate the expression: %w", err)
-	}
-	f, ok := a.(bool)
-	if !ok {
-		return false, errVersionFilterMustBeBoolean
-	}
-	return f, nil
-}
-
-func (vf *VersionFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var raw string
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-	vf.raw = raw
-	return nil
-}
-
-func (vf *VersionFilter) UnmarshalJSON(b []byte) error {
-	var raw string
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return fmt.Errorf("unmarshal version filter as JSON: %w", err)
-	}
-	vf.raw = raw
-	return nil
 }

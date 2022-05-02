@@ -15,6 +15,7 @@ import (
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
+	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/google/go-github/v39/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -201,6 +202,10 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
 	}
+	versionFilter, err := constraint.CompileVersionFilter(*pkgInfo.VersionFilter)
+	if err != nil {
+		return ""
+	}
 	for {
 		releases, _, err := ctrl.gitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
@@ -214,7 +219,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 			if release.GetPrerelease() {
 				continue
 			}
-			f, err := pkgInfo.VersionFilter.Check(release.GetTagName())
+			f, err := constraint.EvaluateVersionFilter(versionFilter, release.GetTagName())
 			if err != nil || !f {
 				continue
 			}

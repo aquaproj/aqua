@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 )
 
 func evaluateBool(expression string, env, input interface{}) (bool, error) {
@@ -11,7 +12,11 @@ func evaluateBool(expression string, env, input interface{}) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("parse the expression: %w", err)
 	}
-	a, err := expr.Run(compiled, input)
+	return evaluateBoolProg(compiled, input)
+}
+
+func evaluateBoolProg(prog *vm.Program, input interface{}) (bool, error) {
+	a, err := expr.Run(prog, input)
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)
 	}
