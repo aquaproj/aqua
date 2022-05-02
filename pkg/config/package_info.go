@@ -34,8 +34,122 @@ type PackageInfo struct {
 	Aliases            []*Alias                       `json:"aliases,omitempty"`
 }
 
-type Alias struct {
-	Name string `json:"name"`
+func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
+	pkg := &PackageInfo{
+		Name:        pkgInfo.Name,
+		Link:        pkgInfo.Link,
+		Description: pkgInfo.Description,
+		Aliases:     pkgInfo.Aliases,
+	}
+	if child.Type == "" {
+		pkg.Type = pkgInfo.Type
+	} else {
+		pkg.Type = child.Type
+	}
+	if child.RepoOwner == "" {
+		pkg.RepoOwner = pkgInfo.RepoOwner
+	} else {
+		pkg.RepoOwner = child.RepoOwner
+	}
+	if child.RepoName == "" {
+		pkg.RepoName = pkgInfo.RepoName
+	} else {
+		pkg.RepoName = child.RepoName
+	}
+	if child.Asset == nil {
+		pkg.Asset = pkgInfo.Asset
+	} else {
+		pkg.Asset = child.Asset
+	}
+	if child.Path == nil {
+		pkg.Path = pkgInfo.Path
+	} else {
+		pkg.Path = child.Path
+	}
+	if child.Format == "" {
+		pkg.Format = pkgInfo.Format
+	} else {
+		pkg.Format = child.Format
+	}
+	if child.Files == nil {
+		pkg.Files = pkgInfo.Files
+	} else {
+		pkg.Files = child.Files
+	}
+	if child.URL == nil {
+		pkg.URL = pkgInfo.URL
+	} else {
+		pkg.URL = child.URL
+	}
+	if child.Replacements == nil {
+		pkg.Replacements = pkgInfo.Replacements
+	} else {
+		pkg.Replacements = child.Replacements
+	}
+	if child.Overrides == nil {
+		pkg.Overrides = pkgInfo.Overrides
+	} else {
+		pkg.Overrides = child.Overrides
+	}
+	if child.FormatOverrides == nil {
+		pkg.FormatOverrides = pkgInfo.FormatOverrides
+	} else {
+		pkg.FormatOverrides = child.FormatOverrides
+	}
+	if child.SupportedIf == nil {
+		pkg.SupportedIf = pkgInfo.SupportedIf
+	} else {
+		pkg.SupportedIf = child.SupportedIf
+	}
+	if child.VersionFilter == nil {
+		pkg.VersionFilter = pkgInfo.VersionFilter
+	} else {
+		pkg.VersionFilter = child.VersionFilter
+	}
+	if child.Rosetta2 == nil {
+		pkg.Rosetta2 = pkgInfo.Rosetta2
+	} else {
+		pkg.Rosetta2 = child.Rosetta2
+	}
+	return pkg
+}
+
+func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) {
+	for _, fo := range pkgInfo.FormatOverrides {
+		if fo.GOOS == rt.GOOS {
+			pkgInfo.Format = fo.Format
+			break
+		}
+	}
+
+	ov := pkgInfo.getOverride(rt)
+	if ov == nil {
+		return
+	}
+
+	if pkgInfo.Replacements == nil {
+		pkgInfo.Replacements = ov.Replacements
+	} else {
+		for k, v := range ov.Replacements {
+			pkgInfo.Replacements[k] = v
+		}
+	}
+
+	if ov.Format != "" {
+		pkgInfo.Format = ov.Format
+	}
+
+	if ov.Asset != nil {
+		pkgInfo.Asset = ov.Asset
+	}
+
+	if ov.Files != nil {
+		pkgInfo.Files = ov.Files
+	}
+
+	if ov.URL != nil {
+		pkgInfo.URL = ov.URL
+	}
 }
 
 type VersionOverride struct {
@@ -54,6 +168,10 @@ type VersionOverride struct {
 	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionFilter      *string                        `yaml:"version_filter" json:"version_filter,omitempty"`
 	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
+}
+
+type Alias struct {
+	Name string `json:"name"`
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
