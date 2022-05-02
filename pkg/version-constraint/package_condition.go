@@ -1,84 +1,18 @@
 package constraint
 
 import (
-	"encoding/json"
-	"fmt"
-
-	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/invopop/jsonschema"
 )
 
-type PackageCondition struct {
-	raw  string
-	expr *vm.Program
-}
-
-func NewPackageCondition(s string) *PackageCondition {
-	return &PackageCondition{
-		raw: s,
+func EvaluateSupportedIf(supportedIf *string, rt *runtime.Runtime) (bool, error) {
+	if supportedIf == nil {
+		return true, nil
 	}
-}
-
-func (PackageCondition) JSONSchema() *jsonschema.Schema {
-	return &jsonschema.Schema{
-		Type:        "string",
-		Description: "expr's expression. The evaluation result must be a boolean. If the evaluation result is false, aqua skips installing the package and outputs the debug log. If supported_if isn't set, the package is always installed.",
-	}
-}
-
-func (pkgCondition *PackageCondition) Raw() string {
-	return pkgCondition.raw
-}
-
-func (pkgCondition *PackageCondition) compile() error {
-	if pkgCondition.expr != nil {
-		return nil
-	}
-	a, err := expr.Compile(pkgCondition.raw, expr.AsBool(), expr.Env(map[string]interface{}{
+	return evaluateBool(*supportedIf, map[string]interface{}{
 		"GOOS":   "",
 		"GOARCH": "",
-	}))
-	if err != nil {
-		return fmt.Errorf("parse constraints: %w", err)
-	}
-	pkgCondition.expr = a
-	return nil
-}
-
-func (pkgCondition *PackageCondition) Check(rt *runtime.Runtime) (bool, error) {
-	if err := pkgCondition.compile(); err != nil {
-		return false, err
-	}
-	a, err := expr.Run(pkgCondition.expr, map[string]interface{}{
+	}, map[string]interface{}{
 		"GOOS":   rt.GOOS,
 		"GOARCH": rt.GOARCH,
 	})
-	if err != nil {
-		return false, fmt.Errorf("evaluate the expression: %w", err)
-	}
-	f, ok := a.(bool)
-	if !ok {
-		return false, errPackageConditionMustBeBoolean
-	}
-	return f, nil
-}
-
-func (pkgCondition *PackageCondition) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var raw string
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-	pkgCondition.raw = raw
-	return nil
-}
-
-func (pkgCondition *PackageCondition) UnmarshalJSON(b []byte) error {
-	var raw string
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return fmt.Errorf("unmarshal package condition as JSON: %w", err)
-	}
-	pkgCondition.raw = raw
-	return nil
 }

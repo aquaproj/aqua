@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
+	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -49,13 +50,13 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 			return fmt.Errorf("evaluate version constraints: %w", err)
 		}
 		if pkgInfo.SupportedIf != nil {
-			supported, err := pkgInfo.SupportedIf.Check(inst.runtime)
+			supported, err := constraint.EvaluateSupportedIf(pkgInfo.SupportedIf, inst.runtime)
 			if err != nil {
-				logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
+				logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
 				continue
 			}
 			if !supported {
-				logE.WithField("supported_if", pkgInfo.SupportedIf.Raw()).Debug("the package isn't supported on this environment")
+				logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
 				continue
 			}
 		}

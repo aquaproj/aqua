@@ -28,7 +28,7 @@ type PackageInfo struct {
 	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides,omitempty"`
 	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride             `yaml:"version_overrides" json:"version_overrides,omitempty"`
-	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
+	SupportedIf        *string                        `yaml:"supported_if" json:"supported_if,omitempty"`
 	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
 	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
 	Aliases            []*Alias                       `json:"aliases,omitempty"`
@@ -50,7 +50,7 @@ type VersionOverride struct {
 	Replacements       map[string]string              `json:"replacements,omitempty"`
 	Overrides          []*Override                    `json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides,omitempty"`
-	SupportedIf        *constraint.PackageCondition   `yaml:"supported_if" json:"supported_if,omitempty"`
+	SupportedIf        *string                        `yaml:"supported_if" json:"supported_if,omitempty"`
 	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionFilter      *constraint.VersionFilter      `yaml:"version_filter" json:"version_filter,omitempty"`
 	Rosetta2           *bool                          `json:"rosetta2,omitempty"`

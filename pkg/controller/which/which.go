@@ -13,6 +13,7 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/validate"
+	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -168,13 +169,13 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.Regist
 	}
 
 	if pkgInfo.SupportedIf != nil {
-		supported, err := pkgInfo.SupportedIf.Check(ctrl.runtime)
+		supported, err := constraint.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
 		if err != nil {
-			logerr.WithError(logE, err).WithField("supported_if", pkgInfo.SupportedIf.Raw()).Error("check if the package is supported")
+			logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
 			return nil, nil
 		}
 		if !supported {
-			logE.WithField("supported_if", pkgInfo.SupportedIf.Raw()).Debug("the package isn't supported on this environment")
+			logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
 			return nil, nil
 		}
 	}
