@@ -113,8 +113,8 @@ type FormatOverride struct {
 }
 
 type File struct {
-	Name string             `validate:"required" json:"name,omitempty"`
-	Src  *template.Template `json:"src,omitempty"`
+	Name string `validate:"required" json:"name,omitempty"`
+	Src  string `json:"src,omitempty"`
 }
 
 func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime) string {
@@ -126,7 +126,7 @@ func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime)
 }
 
 func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runtime) (string, error) {
-	return file.Src.Execute(map[string]interface{}{ //nolint:wrapcheck
+	return template.Execute(file.Src, map[string]interface{}{ //nolint:wrapcheck
 		"Version":  pkg.Version,
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 )
@@ -87,7 +86,7 @@ packages:
 			if err := yaml.Unmarshal([]byte(d.yaml), cfg); err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(d.exp, cfg, cmp.AllowUnexported(template.Template{})); diff != "" {
+			if diff := cmp.Diff(d.exp, cfg); diff != "" {
 				t.Fatal(diff)
 			}
 		})
