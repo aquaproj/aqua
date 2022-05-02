@@ -29,21 +29,27 @@ func (VersionConstraints) JSONSchema() *jsonschema.Schema {
 	}
 }
 
+func emptyTrimPrefix(string, string) string {
+	return ""
+}
+
+func emptySemver(s string) bool {
+	return false
+}
+
+func emptySemverWithVersion(constr, ver string) bool {
+	return false
+}
+
 func (constraints *VersionConstraints) compile() error {
 	if constraints.expr != nil {
 		return nil
 	}
 	a, err := expr.Compile(constraints.raw, expr.AsBool(), expr.Env(map[string]interface{}{
-		"Version": "",
-		"semver": func(s string) bool {
-			return false
-		},
-		"semverWithVersion": func(constr, ver string) bool {
-			return false
-		},
-		"trimPrefix": func(s, prefix string) string {
-			return ""
-		},
+		"Version":           "",
+		"semver":            emptySemver,
+		"semverWithVersion": emptySemverWithVersion,
+		"trimPrefix":        emptyTrimPrefix,
 	}))
 	if err != nil {
 		return fmt.Errorf("parse constraints: %w", err)
@@ -82,20 +88,12 @@ func (constraints *VersionConstraints) Check(v string) (bool, error) {
 	if err := constraints.compile(); err != nil {
 		return false, err
 	}
-	a, err := expr.Run(constraints.expr, map[string]interface{}{
+	return evaluateBoolProg(constraints.expr, map[string]interface{}{
 		"Version":           v,
 		"semver":            getSemverFunc(v),
 		"semverWithVersion": semverWithVersion,
 		"trimPrefix":        strings.TrimPrefix,
 	})
-	if err != nil {
-		return false, fmt.Errorf("evaluate the expression: %w", err)
-	}
-	f, ok := a.(bool)
-	if !ok {
-		return false, errVersionConstraintsMustBeBoolean
-	}
-	return f, nil
 }
 
 func (constraints *VersionConstraints) UnmarshalYAML(unmarshal func(interface{}) error) error {
