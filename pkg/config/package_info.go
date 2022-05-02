@@ -136,14 +136,7 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
-		uS, err := pkgInfo.URL.Execute(map[string]interface{}{
-			"Version": pkg.Version,
-			"GOOS":    rt.GOOS,
-			"GOARCH":  rt.GOARCH,
-			"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-			"Format":  pkgInfo.GetFormat(),
-		})
+		uS, err := pkgInfo.renderTemplate(pkgInfo.URL, pkg, rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -196,25 +189,15 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (stri
 	case PkgInfoTypeGitHubArchive:
 		return "", nil
 	case PkgInfoTypeGitHubContent:
-		return pkgInfo.Path.Execute(map[string]interface{}{ //nolint:wrapcheck
-			"Version": pkg.Version,
-			"GOOS":    rt.GOOS,
-			"GOARCH":  rt.GOARCH,
-			"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-			"Format":  pkgInfo.GetFormat(),
-		})
+		s, err := pkgInfo.renderTemplate(pkgInfo.Path, pkg, rt)
+		if err != nil {
+			return "", fmt.Errorf("render a package path: %w", err)
+		}
+		return s, nil
 	case PkgInfoTypeGitHubRelease:
-		return pkgInfo.Asset.Execute(map[string]interface{}{ //nolint:wrapcheck
-			"Version": pkg.Version,
-			"GOOS":    rt.GOOS,
-			"GOARCH":  rt.GOARCH,
-			"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
-			"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-			"Format":  pkgInfo.GetFormat(),
-		})
+		return pkgInfo.renderTemplate(pkgInfo.Asset, pkg, rt)
 	case PkgInfoTypeHTTP:
-		uS, err := pkgInfo.RenderURL(pkg, rt)
+		uS, err := pkgInfo.renderTemplate(pkgInfo.URL, pkg, rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -227,8 +210,8 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (stri
 	return "", nil
 }
 
-func (pkgInfo *PackageInfo) RenderURL(pkg *Package, rt *runtime.Runtime) (string, error) {
-	uS, err := pkgInfo.URL.Execute(map[string]interface{}{
+func (pkgInfo *PackageInfo) renderTemplate(tpl *template.Template, pkg *Package, rt *runtime.Runtime) (string, error) {
+	uS, err := tpl.Execute(map[string]interface{}{
 		"Version": pkg.Version,
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
@@ -237,9 +220,13 @@ func (pkgInfo *PackageInfo) RenderURL(pkg *Package, rt *runtime.Runtime) (string
 		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
-		return "", fmt.Errorf("render URL: %w", err)
+		return "", fmt.Errorf("render a template: %w", err)
 	}
 	return uS, nil
+}
+
+func (pkgInfo *PackageInfo) RenderURL(pkg *Package, rt *runtime.Runtime) (string, error) {
+	return pkgInfo.renderTemplate(pkgInfo.URL, pkg, rt)
 }
 
 func (pkgInfo *PackageInfo) GetFiles() []*File {
