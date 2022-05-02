@@ -46,7 +46,8 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 			continue
 		}
 
-		if err := pkgInfo.Override(pkg.Version, inst.runtime); err != nil {
+		pkgInfo, err = pkgInfo.Override(pkg.Version, inst.runtime)
+		if err != nil {
 			return fmt.Errorf("evaluate version constraints: %w", err)
 		}
 		if pkgInfo.SupportedIf != nil {
@@ -122,7 +123,8 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 				return
 			}
 
-			if err := pkgInfo.Override(pkg.Version, inst.runtime); err != nil {
+			pkgInfo, err = pkgInfo.Override(pkg.Version, inst.runtime)
+			if err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return

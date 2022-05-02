@@ -56,8 +56,8 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			d.pkgInfo.overrideVersion(d.child)
-			if diff := cmp.Diff(d.exp, d.pkgInfo, cmp.AllowUnexported(template.Template{})); diff != "" {
+			pkgInfo := d.pkgInfo.overrideVersion(d.child)
+			if diff := cmp.Diff(d.exp, pkgInfo, cmp.AllowUnexported(template.Template{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})
@@ -100,15 +100,8 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 		{
 			title: "child version constraint",
 			exp: &PackageInfo{
-				Type:               "github_content",
-				Path:               template.NewTemplate("bar"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
-				VersionOverrides: []*VersionOverride{
-					{
-						VersionConstraints: constraint.NewVersionConstraints(`semver("< 0.4.0")`),
-						Path:               template.NewTemplate("bar"),
-					},
-				},
+				Type: "github_content",
+				Path: template.NewTemplate("bar"),
 			},
 			pkgInfo: &PackageInfo{
 				Type:               "github_content",
@@ -128,10 +121,11 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if err := d.pkgInfo.setVersion(d.version); err != nil {
+			pkgInfo, err := d.pkgInfo.setVersion(d.version)
+			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(d.pkgInfo, d.exp, cmpopts.IgnoreUnexported(constraint.VersionConstraints{}), cmp.AllowUnexported(template.Template{})); diff != "" {
+			if diff := cmp.Diff(pkgInfo, d.exp, cmpopts.IgnoreUnexported(constraint.VersionConstraints{}), cmp.AllowUnexported(template.Template{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})
