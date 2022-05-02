@@ -102,7 +102,7 @@ func downloadTestFile(uri, tempDir string) (string, error) {
 	return filePath, nil
 }
 
-func BenchmarkReadRegistry(b *testing.B) {
+func BenchmarkReadRegistry(b *testing.B) { //nolint:gocognit,funlen,cyclop
 	b.Run("yaml", func(b *testing.B) {
 		registryYAML, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.11.1/registry.yaml", b.TempDir())
 		if err != nil {
@@ -137,6 +137,46 @@ func BenchmarkReadRegistry(b *testing.B) {
 				}
 				defer f.Close()
 				registry := &config.RegistryContent{}
+				if err := json.NewDecoder(f).Decode(registry); err != nil {
+					b.Fatal(err)
+				}
+			}()
+		}
+	})
+	b.Run("yaml-simple", func(b *testing.B) {
+		registryYAML, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.11.1/registry.yaml", b.TempDir())
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			func() {
+				f, err := os.Open(registryYAML)
+				if err != nil {
+					b.Fatal(err)
+				}
+				defer f.Close()
+				registry := &config.RegistryContentSimple{}
+				if err := yaml.NewDecoder(f).Decode(registry); err != nil {
+					b.Fatal(err)
+				}
+			}()
+		}
+	})
+	b.Run("json-simple", func(b *testing.B) {
+		registryJSON, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.11.1/registry.json", b.TempDir())
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			func() {
+				f, err := os.Open(registryJSON)
+				if err != nil {
+					b.Fatal(err)
+				}
+				defer f.Close()
+				registry := &config.RegistryContentSimple{}
 				if err := json.NewDecoder(f).Decode(registry); err != nil {
 					b.Fatal(err)
 				}

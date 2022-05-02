@@ -16,6 +16,10 @@ var (
 	errRefIsRequired       = errors.New("ref is required for github_content registry")
 )
 
+type RegistryContentSimple struct {
+	PackageInfos []*PackageInfoSimple `yaml:"packages" validate:"dive" json:"packages"`
+}
+
 type RegistryContent struct {
 	PackageInfos PackageInfos `yaml:"packages" validate:"dive" json:"packages"`
 }

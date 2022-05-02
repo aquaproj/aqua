@@ -11,6 +11,29 @@ import (
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 )
 
+type PackageInfoSimple struct {
+	Name               string                   `json:"name,omitempty"`
+	Type               string                   `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	RepoOwner          string                   `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName           string                   `yaml:"repo_name" json:"repo_name,omitempty"`
+	Asset              string                   `json:"asset,omitempty"`
+	Path               string                   `json:"path,omitempty"`
+	Format             string                   `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Files              []*FileSimple            `json:"files,omitempty"`
+	URL                string                   `json:"url,omitempty"`
+	Description        string                   `json:"description,omitempty"`
+	Link               string                   `json:"link,omitempty"`
+	Replacements       map[string]string        `json:"replacements,omitempty"`
+	Overrides          []*OverrideSimple        `json:"overrides,omitempty"`
+	FormatOverrides    []*FormatOverride        `yaml:"format_overrides" json:"format_overrides,omitempty"`
+	VersionConstraints string                   `yaml:"version_constraint" json:"version_constraint,omitempty"`
+	VersionOverrides   []*VersionOverrideSimple `yaml:"version_overrides" json:"version_overrides,omitempty"`
+	SupportedIf        string                   `yaml:"supported_if" json:"supported_if,omitempty"`
+	VersionFilter      string                   `yaml:"version_filter" json:"version_filter,omitempty"`
+	Rosetta2           *bool                    `json:"rosetta2,omitempty"`
+	Aliases            []*Alias                 `json:"aliases,omitempty"`
+}
+
 type PackageInfo struct {
 	Name               string                         `json:"name,omitempty"`
 	Type               string                         `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
@@ -36,6 +59,24 @@ type PackageInfo struct {
 
 type Alias struct {
 	Name string `json:"name"`
+}
+
+type VersionOverrideSimple struct {
+	Type               string            `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	RepoOwner          string            `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName           string            `yaml:"repo_name" json:"repo_name,omitempty"`
+	Asset              string            `json:"asset,omitempty"`
+	Path               string            `json:"path,omitempty"`
+	Format             string            `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Files              []*FileSimple     `json:"files,omitempty"`
+	URL                string            `json:"url,omitempty"`
+	Replacements       map[string]string `json:"replacements,omitempty"`
+	Overrides          []*OverrideSimple `json:"overrides,omitempty"`
+	FormatOverrides    []*FormatOverride `yaml:"format_overrides" json:"format_overrides,omitempty"`
+	SupportedIf        string            `yaml:"supported_if" json:"supported_if,omitempty"`
+	VersionConstraints string            `yaml:"version_constraint" json:"version_constraint,omitempty"`
+	VersionFilter      string            `yaml:"version_filter" json:"version_filter,omitempty"`
+	Rosetta2           *bool             `json:"rosetta2,omitempty"`
 }
 
 type VersionOverride struct {

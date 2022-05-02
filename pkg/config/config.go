@@ -112,6 +112,11 @@ type FormatOverride struct {
 	Format string `yaml:"format" json:"format" jsonschema:"example=tar.gz,example=raw"`
 }
 
+type FileSimple struct {
+	Name string `validate:"required" json:"name,omitempty"`
+	Src  string `json:"src,omitempty"`
+}
+
 type File struct {
 	Name string             `validate:"required" json:"name,omitempty"`
 	Src  *template.Template `json:"src,omitempty"`
