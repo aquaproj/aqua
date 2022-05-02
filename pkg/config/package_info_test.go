@@ -5,9 +5,12 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/google/go-cmp/cmp"
 )
+
+func stringP(s string) *string {
+	return &s
+}
 
 func TestPackageInfo_GetName(t *testing.T) {
 	t.Parallel()
@@ -279,7 +282,7 @@ func TestPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 			exp:   "foo",
 			pkgInfo: &config.PackageInfo{
 				Type: "github_content",
-				Path: template.NewTemplate("foo"),
+				Path: stringP("foo"),
 			},
 			pkg: &config.Package{
 				Version: "v1.0.0",
@@ -290,7 +293,7 @@ func TestPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 			exp:   "foo-1.0.0.zip",
 			pkgInfo: &config.PackageInfo{
 				Type:   "github_release",
-				Asset:  template.NewTemplate("foo-{{trimV .Version}}.{{.Format}}"),
+				Asset:  stringP("foo-{{trimV .Version}}.{{.Format}}"),
 				Format: "zip",
 			},
 			pkg: &config.Package{
@@ -302,7 +305,7 @@ func TestPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 			exp:   "foo-1.0.0.zip",
 			pkgInfo: &config.PackageInfo{
 				Type:   "http",
-				URL:    template.NewTemplate("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+				URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 				Format: "zip",
 			},
 			pkg: &config.Package{
@@ -352,7 +355,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			exp:   "/tmp/aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
 			pkgInfo: &config.PackageInfo{
 				Type:      "github_content",
-				Path:      template.NewTemplate("aqua-installer"),
+				Path:      stringP("aqua-installer"),
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua-installer",
 			},
@@ -367,7 +370,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     template.NewTemplate("aqua.{{.Format}}"),
+				Asset:     stringP("aqua.{{.Format}}"),
 				Format:    "tar.gz",
 			},
 			pkg: &config.Package{
@@ -379,7 +382,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
 			pkgInfo: &config.PackageInfo{
 				Type:   "http",
-				URL:    template.NewTemplate("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+				URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 				Format: "zip",
 			},
 			pkg: &config.Package{
@@ -417,7 +420,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			exp:   "foo",
 			pkgInfo: &config.PackageInfo{
 				Type: "github_content",
-				Path: template.NewTemplate("foo"),
+				Path: stringP("foo"),
 			},
 			pkg: &config.Package{
 				Version: "v1.0.0",
@@ -430,7 +433,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     template.NewTemplate("aqua.{{.Format}}"),
+				Asset:     stringP("aqua.{{.Format}}"),
 				Format:    "tar.gz",
 			},
 			pkg: &config.Package{
@@ -447,7 +450,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     template.NewTemplate("aqua.{{.Format}}"),
+				Asset:     stringP("aqua.{{.Format}}"),
 				Format:    "tar.gz",
 			},
 			pkg: &config.Package{
@@ -455,7 +458,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			},
 			file: &config.File{
 				Name: "aqua",
-				Src:  template.NewTemplate("bin/aqua"),
+				Src:  "bin/aqua",
 			},
 		},
 	}

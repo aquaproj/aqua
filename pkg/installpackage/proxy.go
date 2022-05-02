@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,12 +21,13 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 		"registry":        pkg.Registry,
 	})
 
+	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	logE.Debug("install the proxy")
 	pkgInfo := &config.PackageInfo{
 		Type:      "github_release",
 		RepoOwner: "aquaproj",
 		RepoName:  proxyName,
-		Asset:     template.NewTemplate(`aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`),
+		Asset:     &proxyAssetTemplate,
 		Files: []*config.File{
 			{
 				Name: proxyName,
