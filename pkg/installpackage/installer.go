@@ -26,6 +26,7 @@ type installer struct {
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop,gocognit
 	var failed bool
+	pkgs := make([]*config.Package, 0, len(cfg.Packages))
 	for _, pkg := range cfg.Packages {
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":    pkg.Name,
@@ -58,6 +59,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 				continue
 			}
 		}
+		pkgs = append(pkgs, pkg)
 		for _, file := range pkgInfo.GetFiles() {
 			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
@@ -77,8 +79,15 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 		return nil
 	}
 
+	if len(pkgs) == 0 {
+		if failed {
+			return errInstallFailure
+		}
+		return nil
+	}
+
 	var wg sync.WaitGroup
-	wg.Add(len(cfg.Packages))
+	wg.Add(len(pkgs))
 	var flagMutex sync.Mutex
 	maxInstallChan := make(chan struct{}, util.GetMaxParallelism(logE))
 
@@ -88,7 +97,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 		flagMutex.Unlock()
 	}
 
-	for _, pkg := range cfg.Packages {
+	for _, pkg := range pkgs {
 		go func(pkg *config.Package) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
@@ -116,16 +125,6 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
-			}
-			if pkgInfo.SupportedIf != nil {
-				supported, err := pkgInfo.SupportedIf.Check(inst.runtime)
-				if err != nil {
-					handleFailure()
-					return
-				}
-				if !supported {
-					return
-				}
 			}
 
 			if err := inst.InstallPackage(ctx, pkgInfo, pkg, isTest, logE); err != nil {
