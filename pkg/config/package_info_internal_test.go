@@ -4,9 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/template"
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 const proxyName = "aqua-proxy"
@@ -88,12 +86,12 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 			exp: &PackageInfo{
 				Type:               "github_content",
 				Path:               template.NewTemplate("foo"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
+				VersionConstraints: `semver(">= 0.4.0")`,
 			},
 			pkgInfo: &PackageInfo{
 				Type:               "github_content",
 				Path:               template.NewTemplate("foo"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
+				VersionConstraints: `semver(">= 0.4.0")`,
 			},
 			version: "v0.5.0",
 		},
@@ -106,10 +104,10 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 			pkgInfo: &PackageInfo{
 				Type:               "github_content",
 				Path:               template.NewTemplate("foo"),
-				VersionConstraints: constraint.NewVersionConstraints(`semver(">= 0.4.0")`),
+				VersionConstraints: `semver(">= 0.4.0")`,
 				VersionOverrides: []*VersionOverride{
 					{
-						VersionConstraints: constraint.NewVersionConstraints(`semver("< 0.4.0")`),
+						VersionConstraints: `semver("< 0.4.0")`,
 						Path:               template.NewTemplate("bar"),
 					},
 				},
@@ -125,7 +123,7 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(pkgInfo, d.exp, cmpopts.IgnoreUnexported(constraint.VersionConstraints{}), cmp.AllowUnexported(template.Template{})); diff != "" {
+			if diff := cmp.Diff(pkgInfo, d.exp, cmp.AllowUnexported(template.Template{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})

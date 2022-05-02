@@ -8,30 +8,29 @@ import (
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/aquaproj/aqua/pkg/unarchive"
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 )
 
 type PackageInfo struct {
-	Name               string                         `json:"name,omitempty"`
-	Type               string                         `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
-	RepoOwner          string                         `yaml:"repo_owner" json:"repo_owner,omitempty"`
-	RepoName           string                         `yaml:"repo_name" json:"repo_name,omitempty"`
-	Asset              *template.Template             `json:"asset,omitempty"`
-	Path               *template.Template             `json:"path,omitempty"`
-	Format             string                         `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
-	Files              []*File                        `json:"files,omitempty"`
-	URL                *template.Template             `json:"url,omitempty"`
-	Description        string                         `json:"description,omitempty"`
-	Link               string                         `json:"link,omitempty"`
-	Replacements       map[string]string              `json:"replacements,omitempty"`
-	Overrides          []*Override                    `json:"overrides,omitempty"`
-	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides,omitempty"`
-	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
-	VersionOverrides   []*VersionOverride             `yaml:"version_overrides" json:"version_overrides,omitempty"`
-	SupportedIf        *string                        `yaml:"supported_if" json:"supported_if,omitempty"`
-	VersionFilter      *string                        `yaml:"version_filter" json:"version_filter,omitempty"`
-	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
-	Aliases            []*Alias                       `json:"aliases,omitempty"`
+	Name               string             `json:"name,omitempty"`
+	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	RepoOwner          string             `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName           string             `yaml:"repo_name" json:"repo_name,omitempty"`
+	Asset              *template.Template `json:"asset,omitempty"`
+	Path               *template.Template `json:"path,omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Files              []*File            `json:"files,omitempty"`
+	URL                *template.Template `json:"url,omitempty"`
+	Description        string             `json:"description,omitempty"`
+	Link               string             `json:"link,omitempty"`
+	Replacements       map[string]string  `json:"replacements,omitempty"`
+	Overrides          []*Override        `json:"overrides,omitempty"`
+	FormatOverrides    []*FormatOverride  `yaml:"format_overrides" json:"format_overrides,omitempty"`
+	VersionConstraints string             `yaml:"version_constraint" json:"version_constraint,omitempty"`
+	VersionOverrides   []*VersionOverride `yaml:"version_overrides" json:"version_overrides,omitempty"`
+	SupportedIf        *string            `yaml:"supported_if" json:"supported_if,omitempty"`
+	VersionFilter      *string            `yaml:"version_filter" json:"version_filter,omitempty"`
+	Rosetta2           *bool              `json:"rosetta2,omitempty"`
+	Aliases            []*Alias           `json:"aliases,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
@@ -153,21 +152,21 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) {
 }
 
 type VersionOverride struct {
-	Type               string                         `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
-	RepoOwner          string                         `yaml:"repo_owner" json:"repo_owner,omitempty"`
-	RepoName           string                         `yaml:"repo_name" json:"repo_name,omitempty"`
-	Asset              *template.Template             `json:"asset,omitempty"`
-	Path               *template.Template             `json:"path,omitempty"`
-	Format             string                         `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
-	Files              []*File                        `json:"files,omitempty"`
-	URL                *template.Template             `json:"url,omitempty"`
-	Replacements       map[string]string              `json:"replacements,omitempty"`
-	Overrides          []*Override                    `json:"overrides,omitempty"`
-	FormatOverrides    []*FormatOverride              `yaml:"format_overrides" json:"format_overrides,omitempty"`
-	SupportedIf        *string                        `yaml:"supported_if" json:"supported_if,omitempty"`
-	VersionConstraints *constraint.VersionConstraints `yaml:"version_constraint" json:"version_constraint,omitempty"`
-	VersionFilter      *string                        `yaml:"version_filter" json:"version_filter,omitempty"`
-	Rosetta2           *bool                          `json:"rosetta2,omitempty"`
+	Type               string             `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	RepoOwner          string             `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName           string             `yaml:"repo_name" json:"repo_name,omitempty"`
+	Asset              *template.Template `json:"asset,omitempty"`
+	Path               *template.Template `json:"path,omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Files              []*File            `json:"files,omitempty"`
+	URL                *template.Template `json:"url,omitempty"`
+	Replacements       map[string]string  `json:"replacements,omitempty"`
+	Overrides          []*Override        `json:"overrides,omitempty"`
+	FormatOverrides    []*FormatOverride  `yaml:"format_overrides" json:"format_overrides,omitempty"`
+	SupportedIf        *string            `yaml:"supported_if" json:"supported_if,omitempty"`
+	VersionConstraints string             `yaml:"version_constraint" json:"version_constraint,omitempty"`
+	VersionFilter      *string            `yaml:"version_filter" json:"version_filter,omitempty"`
+	Rosetta2           *bool              `json:"rosetta2,omitempty"`
 }
 
 type Alias struct {
