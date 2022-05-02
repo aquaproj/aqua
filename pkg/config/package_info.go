@@ -136,7 +136,7 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
-		uS, err := pkgInfo.renderTemplate(pkgInfo.URL, pkg, rt)
+		uS, err := pkgInfo.RenderURL(pkg, rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
