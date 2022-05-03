@@ -34,87 +34,80 @@ type PackageInfo struct {
 	Aliases            []*Alias           `json:"aliases,omitempty"`
 }
 
-func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
+func (pkgInfo *PackageInfo) copy() *PackageInfo {
 	pkg := &PackageInfo{
-		Name:        pkgInfo.Name,
-		Link:        pkgInfo.Link,
-		Description: pkgInfo.Description,
-		Aliases:     pkgInfo.Aliases,
+		Name:               pkgInfo.Name,
+		Type:               pkgInfo.Type,
+		RepoOwner:          pkgInfo.RepoOwner,
+		RepoName:           pkgInfo.RepoName,
+		Asset:              pkgInfo.Asset,
+		Path:               pkgInfo.Path,
+		Format:             pkgInfo.Format,
+		Files:              pkgInfo.Files,
+		URL:                pkgInfo.URL,
+		Description:        pkgInfo.Description,
+		Link:               pkgInfo.Link,
+		Replacements:       pkgInfo.Replacements,
+		Overrides:          pkgInfo.Overrides,
+		FormatOverrides:    pkgInfo.FormatOverrides,
+		VersionConstraints: pkgInfo.VersionConstraints,
+		VersionOverrides:   pkgInfo.VersionOverrides,
+		SupportedIf:        pkgInfo.SupportedIf,
+		VersionFilter:      pkgInfo.VersionFilter,
+		Rosetta2:           pkgInfo.Rosetta2,
+		Aliases:            pkgInfo.Aliases,
 	}
-	if child.Type == "" {
-		pkg.Type = pkgInfo.Type
-	} else {
+	return pkg
+}
+
+func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop
+	pkg := pkgInfo.copy()
+	if child.Type != "" {
 		pkg.Type = child.Type
 	}
-	if child.RepoOwner == "" {
-		pkg.RepoOwner = pkgInfo.RepoOwner
-	} else {
+	if child.RepoOwner != "" {
 		pkg.RepoOwner = child.RepoOwner
 	}
-	if child.RepoName == "" {
-		pkg.RepoName = pkgInfo.RepoName
-	} else {
+	if child.RepoName != "" {
 		pkg.RepoName = child.RepoName
 	}
-	if child.Asset == nil {
-		pkg.Asset = pkgInfo.Asset
-	} else {
+	if child.Asset != nil {
 		pkg.Asset = child.Asset
 	}
-	if child.Path == nil {
-		pkg.Path = pkgInfo.Path
-	} else {
+	if child.Path != nil {
 		pkg.Path = child.Path
 	}
-	if child.Format == "" {
-		pkg.Format = pkgInfo.Format
-	} else {
+	if child.Format != "" {
 		pkg.Format = child.Format
 	}
-	if child.Files == nil {
-		pkg.Files = pkgInfo.Files
-	} else {
+	if child.Files != nil {
 		pkg.Files = child.Files
 	}
-	if child.URL == nil {
-		pkg.URL = pkgInfo.URL
-	} else {
+	if child.URL != nil {
 		pkg.URL = child.URL
 	}
-	if child.Replacements == nil {
-		pkg.Replacements = pkgInfo.Replacements
-	} else {
+	if child.Replacements != nil {
 		pkg.Replacements = child.Replacements
 	}
-	if child.Overrides == nil {
-		pkg.Overrides = pkgInfo.Overrides
-	} else {
+	if child.Overrides != nil {
 		pkg.Overrides = child.Overrides
 	}
-	if child.FormatOverrides == nil {
-		pkg.FormatOverrides = pkgInfo.FormatOverrides
-	} else {
+	if child.FormatOverrides != nil {
 		pkg.FormatOverrides = child.FormatOverrides
 	}
-	if child.SupportedIf == nil {
-		pkg.SupportedIf = pkgInfo.SupportedIf
-	} else {
+	if child.SupportedIf != nil {
 		pkg.SupportedIf = child.SupportedIf
 	}
-	if child.VersionFilter == nil {
-		pkg.VersionFilter = pkgInfo.VersionFilter
-	} else {
+	if child.VersionFilter != nil {
 		pkg.VersionFilter = child.VersionFilter
 	}
-	if child.Rosetta2 == nil {
-		pkg.Rosetta2 = pkgInfo.Rosetta2
-	} else {
+	if child.Rosetta2 != nil {
 		pkg.Rosetta2 = child.Rosetta2
 	}
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) {
+func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 	for _, fo := range pkgInfo.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
 			pkgInfo.Format = fo.Format
@@ -130,9 +123,14 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) {
 	if pkgInfo.Replacements == nil {
 		pkgInfo.Replacements = ov.Replacements
 	} else {
-		for k, v := range ov.Replacements {
-			pkgInfo.Replacements[k] = v
+		replacements := make(map[string]string, len(pkgInfo.Replacements))
+		for k, v := range pkgInfo.Replacements {
+			replacements[k] = v
 		}
+		for k, v := range ov.Replacements {
+			replacements[k] = v
+		}
+		pkgInfo.Replacements = replacements
 	}
 
 	if ov.Format != "" {
