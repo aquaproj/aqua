@@ -101,8 +101,15 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 		{
 			title: "child version constraint",
 			exp: &PackageInfo{
-				Type: "github_content",
-				Path: stringP("bar"),
+				Type:               "github_content",
+				Path:               stringP("bar"),
+				VersionConstraints: `semver(">= 0.4.0")`,
+				VersionOverrides: []*VersionOverride{
+					{
+						VersionConstraints: `semver("< 0.4.0")`,
+						Path:               stringP("bar"),
+					},
+				},
 			},
 			pkgInfo: &PackageInfo{
 				Type:               "github_content",
