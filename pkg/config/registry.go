@@ -75,13 +75,19 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 		return err
 	}
 	if a.Type == RegistryTypeStandard {
+		a.Type = RegistryTypeGitHubContent
 		if a.Name == "" {
 			a.Name = RegistryTypeStandard
 		}
-		a.Type = RegistryTypeGitHubContent
-		a.RepoOwner = "aquaproj"
-		a.RepoName = "aqua-registry"
-		a.Path = "registry.yaml"
+		if a.RepoOwner == "" {
+			a.RepoOwner = "aquaproj"
+		}
+		if a.RepoName == "" {
+			a.RepoName = "aqua-registry"
+		}
+		if a.Path == "" {
+			a.Path = "registry.yaml"
+		}
 	}
 	*registry = Registry(a)
 	return nil
