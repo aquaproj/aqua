@@ -30,7 +30,7 @@ func NewController(configFinder finder.ConfigFinder, configReader reader.ConfigR
 	}
 }
 
-func (ctrl *Controller) List(ctx context.Context, param *config.Param, args []string, logE *logrus.Entry) error {
+func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
 	cfg := &config.Config{}
 	wd, err := os.Getwd()
 	if err != nil {
