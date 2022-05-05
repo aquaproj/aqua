@@ -91,15 +91,14 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 		}
 	}
 
-	exePath := lookPath(exeName)
-	if exePath == "" {
-		return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
-			"exe_name": exeName,
-		})
+	if exePath := lookPath(exeName); exePath != "" {
+		return &Which{
+			ExePath: exePath,
+		}, nil
 	}
-	return &Which{
-		ExePath: exePath,
-	}, nil
+	return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
+		"exe_name": exeName,
+	})
 }
 
 func (ctrl *controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
