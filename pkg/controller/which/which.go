@@ -42,15 +42,6 @@ func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader 
 	}
 }
 
-// func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string) error {
-// 	which, err := ctrl.which(ctx, param, exeName)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	fmt.Fprintln(ctrl.stdout, which.ExePath)
-// 	return nil
-// }
-
 type Which struct {
 	Package *config.Package
 	PkgInfo *config.PackageInfo
