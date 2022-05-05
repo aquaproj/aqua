@@ -37,5 +37,5 @@ func (runner *Runner) listAction(c *cli.Context) error {
 
 	ctrl := controller.InitializeListCommandController(c.Context, param.AQUAVersion, param)
 
-	return ctrl.List(c.Context, param, c.Args().Slice(), logE) //nolint:wrapcheck
+	return ctrl.List(c.Context, param, logE) //nolint:wrapcheck
 }
