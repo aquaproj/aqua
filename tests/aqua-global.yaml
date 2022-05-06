@@ -17,7 +17,7 @@ packages:
 - name: cmdx
   registry: local
   version: v1.6.1 # renovate: depName=suzuki-shunsuke/cmdx
-- name: x-motemen/ghq@v1.2.1
+- name: x-motemen/ghq@v1.3.0
 
 - name: golangci-lint # local registry
   registry: local
