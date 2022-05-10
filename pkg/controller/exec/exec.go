@@ -2,6 +2,7 @@ package exec
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -76,6 +77,8 @@ func wait(ctx context.Context, duration time.Duration) error {
 	}
 }
 
+var errFailedToStartProcess = errors.New("it failed to start the process")
+
 func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
 	logE = logE.WithField("exe_path", exePath)
 	logE.Debug("execute the command")
@@ -103,5 +106,5 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 		}
 		return nil
 	}
-	return nil
+	return errFailedToStartProcess
 }
