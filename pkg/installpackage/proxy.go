@@ -13,7 +13,7 @@ import (
 func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
 	pkg := &config.Package{
 		Name:    proxyName,
-		Version: "v1.0.0", // renovate: depName=aquaproj/aqua-proxy
+		Version: "v1.1.0-0", // renovate: depName=aquaproj/aqua-proxy
 	}
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
