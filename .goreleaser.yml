@@ -16,7 +16,7 @@ builds:
 release:
   prerelease: true
   header: |
-    [Pull Requests](https://github.com/aquaproj/aqua/pulls?q=is%3Apr+is%3Aclosed+milestone%3A{{.Tag}}) | [Issues](https://github.com/aquaproj/aqua/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/aquaproj/aqua/compare/{{.PreviousTag}}...{{.Tag}}
+    [Pull Requests](https://github.com/aquaproj/aqua/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/aquaproj/aqua/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/aquaproj/aqua/compare/{{.PreviousTag}}...{{.Tag}}
 brews:
 -
   # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
