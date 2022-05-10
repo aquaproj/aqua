@@ -17,8 +17,8 @@ func TestController_execCommand(t *testing.T) {
 	}{
 		{
 			title:   "normal",
-			exePath: "echo",
-			args:    []string{"hello"},
+			exePath: "/bin/date",
+			args:    []string{},
 		},
 	}
 	ctrl := &Controller{
