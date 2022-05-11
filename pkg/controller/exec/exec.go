@@ -79,7 +79,6 @@ var errFailedToStartProcess = errors.New("it failed to start the process")
 
 func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
 	logE = logE.WithField("exe_path", exePath)
-	logE.Debug("execute the command")
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")
 		if err := unix.Exec(exePath, append([]string{filepath.Base(exePath)}, args...), os.Environ()); err != nil {
