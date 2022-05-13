@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_evaluateBool(t *testing.T) {
+func Test_evaluateBool(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title      string
