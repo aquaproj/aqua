@@ -16,7 +16,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"golang.org/x/sys/unix"
 )
 
@@ -68,7 +67,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			}
 		}
 	}
-	return ctrl.execCommand(ctx, which.ExePath, args, logE)
+	return ctrl.execCommandWithRetry(ctx, which.ExePath, args, logE)
 }
 
 func wait(ctx context.Context, duration time.Duration) error {
@@ -83,42 +82,43 @@ func wait(ctx context.Context, duration time.Duration) error {
 
 var errFailedToStartProcess = errors.New("it failed to start the process")
 
-func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
-	logE = logE.WithField("exe_path", exePath)
+func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) (bool, error) {
+	if ctrl.enabledXSysExec {
+		if err := unix.Exec(exePath, append([]string{filepath.Base(exePath)}, args...), os.Environ()); err != nil {
+			return true, err
+		}
+		return false, nil
+	}
+	cmd := exec.Command(exePath, args...)
+	cmd.Stdin = ctrl.stdin
+	cmd.Stdout = ctrl.stdout
+	cmd.Stderr = ctrl.stderr
+	runner := timeout.NewRunner(0)
+	if err := runner.Run(ctx, cmd); err != nil {
+		exitCode := cmd.ProcessState.ExitCode()
+		// https://pkg.go.dev/os#ProcessState.ExitCode
+		// > ExitCode returns the exit code of the exited process,
+		// > or -1 if the process hasn't exited or was terminated by a signal.
+		if exitCode == -1 && ctx.Err() == nil {
+			return true, err
+		}
+		return false, ecerror.Wrap(err, exitCode)
+	}
+	return false, nil
+}
 
+func (ctrl *Controller) execCommandWithRetry(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
+	logE = logE.WithField("exe_path", exePath)
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")
-		if ctrl.enabledXSysExec {
-			if err := unix.Exec(exePath, append([]string{filepath.Base(exePath)}, args...), os.Environ()); err != nil {
-				logE.WithField("retry_count", i+1).Debug("the process isn't started. retry")
-				if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-					return err
-				}
-				continue
-			}
-			return nil
+		retried, err := ctrl.execCommand(ctx, exePath, args)
+		if !retried {
+			return err
 		}
-		cmd := exec.Command(exePath, args...)
-		cmd.Stdin = ctrl.stdin
-		cmd.Stdout = ctrl.stdout
-		cmd.Stderr = ctrl.stderr
-		runner := timeout.NewRunner(0)
-		if err := runner.Run(ctx, cmd); err != nil {
-			exitCode := cmd.ProcessState.ExitCode()
-			// https://pkg.go.dev/os#ProcessState.ExitCode
-			// > ExitCode returns the exit code of the exited process,
-			// > or -1 if the process hasn't exited or was terminated by a signal.
-			if exitCode == -1 && ctx.Err() == nil {
-				logE.WithField("retry_count", i+1).Debug("the process isn't started. retry")
-				if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-					return err
-				}
-				continue
-			}
-			logerr.WithError(logE, err).WithField("exit_code", exitCode).Debug("command was executed but it failed")
-			return ecerror.Wrap(err, exitCode)
+		logE.WithField("retry_count", i+1).Debug("the process isn't started. retry")
+		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+			return err
 		}
-		return nil
 	}
 	return errFailedToStartProcess
 }
