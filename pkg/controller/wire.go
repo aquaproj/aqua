@@ -9,13 +9,14 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/exec"
+	cexec "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
@@ -48,7 +49,7 @@ func InitializeWhichCommandController(ctx context.Context, aquaVersion string, p
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *exec.Controller {
-	wire.Build(exec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New, runtime.New)
-	return &exec.Controller{}
+func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *cexec.Controller {
+	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New, runtime.New, exec.New)
+	return &cexec.Controller{}
 }

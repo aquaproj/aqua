@@ -3,20 +3,18 @@ package exec
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
-	"github.com/suzuki-shunsuke/go-timeout/timeout"
-	"golang.org/x/sys/unix"
 )
 
 type Controller struct {
@@ -26,15 +24,17 @@ type Controller struct {
 	which            which.Controller
 	packageInstaller installpackage.Installer
 	enabledXSysExec  bool
+	executor         exec.Executor
 }
 
-func New(pkgInstaller installpackage.Installer, which which.Controller) *Controller {
+func New(pkgInstaller installpackage.Installer, which which.Controller, executor exec.Executor) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		stderr:           os.Stderr,
 		packageInstaller: pkgInstaller,
 		which:            which,
+		executor:         executor,
 		enabledXSysExec:  os.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
 	}
 }
@@ -84,23 +84,17 @@ var errFailedToStartProcess = errors.New("it failed to start the process")
 
 func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) (bool, error) {
 	if ctrl.enabledXSysExec {
-		if err := unix.Exec(exePath, append([]string{filepath.Base(exePath)}, args...), os.Environ()); err != nil {
-			return true, err
+		if err := ctrl.executor.ExecXSys(exePath, args); err != nil {
+			return true, fmt.Errorf("call execve(2): %w", err)
 		}
 		return false, nil
 	}
-	cmd := exec.Command(exePath, args...)
-	cmd.Stdin = ctrl.stdin
-	cmd.Stdout = ctrl.stdout
-	cmd.Stderr = ctrl.stderr
-	runner := timeout.NewRunner(0)
-	if err := runner.Run(ctx, cmd); err != nil {
-		exitCode := cmd.ProcessState.ExitCode()
+	if exitCode, err := ctrl.executor.Exec(ctx, exePath, args); err != nil {
 		// https://pkg.go.dev/os#ProcessState.ExitCode
 		// > ExitCode returns the exit code of the exited process,
 		// > or -1 if the process hasn't exited or was terminated by a signal.
 		if exitCode == -1 && ctx.Err() == nil {
-			return true, err
+			return true, fmt.Errorf("execute a command: %w", err)
 		}
 		return false, ecerror.Wrap(err, exitCode)
 	}
@@ -115,7 +109,7 @@ func (ctrl *Controller) execCommandWithRetry(ctx context.Context, exePath string
 		if !retried {
 			return err
 		}
-		logE.WithField("retry_count", i+1).Debug("the process isn't started. retry")
+		logE.WithError(err).WithField("retry_count", i+1).Debug("the process isn't started. retry")
 		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
 			return err
 		}
