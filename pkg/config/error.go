@@ -10,4 +10,10 @@ var (
 	errAssetRequired                 = errors.New("github_release package requires asset")
 	errURLRequired                   = errors.New("http package requires url")
 	errInvalidPackageType            = errors.New("package type is invalid")
+
+	errInvalidRegistryType = errors.New("registry type is invalid")
+	errPathIsRequired      = errors.New("path is required for local registry")
+	errRepoOwnerIsRequired = errors.New("repo_owner is required")
+	errRepoNameIsRequired  = errors.New("repo_name is required")
+	errRefIsRequired       = errors.New("ref is required for github_content registry")
 )
