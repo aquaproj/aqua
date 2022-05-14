@@ -18,6 +18,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
+	exec2 "github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
@@ -96,6 +97,7 @@ func InitializeExecCommandController(ctx context.Context, aquaVersion string, pa
 	registryDownloader := download.NewRegistryDownloader(repositoryService)
 	registryInstaller := registry.New(rootDir, registryDownloader)
 	controller := which.New(rootDir, configFinder, configReader, registryInstaller, runtimeRuntime)
-	execController := exec.New(installer, controller)
+	executor := exec2.New()
+	execController := exec.New(installer, controller, executor)
 	return execController
 }
