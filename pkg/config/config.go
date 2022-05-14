@@ -138,15 +138,15 @@ func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runt
 }
 
 type Param struct {
-	ConfigFilePath string
-	LogLevel       string
-	OnlyLink       bool
-	IsTest         bool
-	All            bool
-	Insert         bool
-	File           string
-	GlobalConfigs  []string
-	AQUAVersion    string
-	RootDir        string
-	MaxParallelism int
+	ConfigFilePath        string
+	LogLevel              string
+	OnlyLink              bool
+	IsTest                bool
+	All                   bool
+	Insert                bool
+	File                  string
+	GlobalConfigFilePaths []string
+	AQUAVersion           string
+	RootDir               string
+	MaxParallelism        int
 }
