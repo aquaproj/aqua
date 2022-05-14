@@ -477,3 +477,113 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		pkgInfo *config.PackageInfo
+		isErr   bool
+	}{
+		{
+			title:   "package name is required",
+			pkgInfo: &config.PackageInfo{},
+			isErr:   true,
+		},
+		{
+			title: "repo is required",
+			pkgInfo: &config.PackageInfo{
+				Type: config.PkgInfoTypeGitHubArchive,
+			},
+			isErr: true,
+		},
+		{
+			title: "github_archive",
+			pkgInfo: &config.PackageInfo{
+				Type:      config.PkgInfoTypeGitHubArchive,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+			},
+		},
+		{
+			title: "github_content repo is required",
+			pkgInfo: &config.PackageInfo{
+				Type: config.PkgInfoTypeGitHubContent,
+			},
+			isErr: true,
+		},
+		{
+			title: "github_content path is required",
+			pkgInfo: &config.PackageInfo{
+				Type:      config.PkgInfoTypeGitHubContent,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+			},
+			isErr: true,
+		},
+		{
+			title: "github_content",
+			pkgInfo: &config.PackageInfo{
+				Type:      config.PkgInfoTypeGitHubContent,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Path:      stringP("bin/ci-info"),
+			},
+		},
+		{
+			title: "github_release repo is required",
+			pkgInfo: &config.PackageInfo{
+				Type: config.PkgInfoTypeGitHubRelease,
+			},
+			isErr: true,
+		},
+		{
+			title: "github_release asset is required",
+			pkgInfo: &config.PackageInfo{
+				Type:      config.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+			},
+			isErr: true,
+		},
+		{
+			title: "github_release",
+			pkgInfo: &config.PackageInfo{
+				Type:      config.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Asset:     stringP("ci-info.tar.gz"),
+			},
+		},
+		{
+			title: "http url is required",
+			pkgInfo: &config.PackageInfo{
+				Type: config.PkgInfoTypeHTTP,
+			},
+			isErr: true,
+		},
+		{
+			title: "http",
+			pkgInfo: &config.PackageInfo{
+				Type: config.PkgInfoTypeHTTP,
+				Name: "suzuki-shunsuke/ci-info",
+				URL:  stringP("http://example.com"),
+			},
+		},
+	}
+	for _, d := range data {
+		d := d
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if err := d.pkgInfo.Validate(); err != nil {
+				if d.isErr {
+					return
+				}
+				t.Fatal(err)
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
+	}
+}
