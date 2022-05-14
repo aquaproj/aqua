@@ -62,7 +62,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 	if !param.All {
 		return nil
 	}
-	for _, cfgFilePath := range ctrl.configFinder.GetGlobalConfigFilePaths() {
+	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}

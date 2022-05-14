@@ -3,9 +3,11 @@ package cli
 import (
 	"context"
 	"io"
+	"os"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -39,6 +41,7 @@ func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Ent
 	logE := log.New(param.AQUAVersion)
 	log.SetLevel(param.LogLevel, logE)
 	param.MaxParallelism = config.GetMaxParallelism(logE)
+	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
 	return logE, nil
 }
 

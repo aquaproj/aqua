@@ -11,22 +11,26 @@ import (
 var ErrConfigFileNotFound = errors.New("configuration file isn't found")
 
 type ConfigFinder interface {
-	Find(wd, configFilePath string) (string, error)
+	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 	Finds(wd, configFilePath string) []string
-	GetGlobalConfigFilePaths() []string
 }
 
 func NewConfigFinder() ConfigFinder {
 	return &configFinder{}
 }
 
-func getGlobalConfigFilePaths() []string {
-	src := strings.Split(os.Getenv("AQUA_GLOBAL_CONFIG"), ":")
+func ParseGlobalConfigFilePaths(env string) []string {
+	src := strings.Split(env, ":")
 	paths := make([]string, 0, len(src))
+	m := make(map[string]struct{}, len(src))
 	for _, s := range src {
 		if s == "" {
 			continue
 		}
+		if _, ok := m[s]; ok {
+			continue
+		}
+		m[s] = struct{}{}
 		paths = append(paths, s)
 	}
 	return paths
@@ -34,11 +38,7 @@ func getGlobalConfigFilePaths() []string {
 
 type configFinder struct{}
 
-func (finder *configFinder) GetGlobalConfigFilePaths() []string {
-	return getGlobalConfigFilePaths()
-}
-
-func (finder *configFinder) Find(wd, configFilePath string) (string, error) {
+func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
@@ -46,7 +46,7 @@ func (finder *configFinder) Find(wd, configFilePath string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
-	for _, p := range finder.GetGlobalConfigFilePaths() {
+	for _, p := range globalConfigFilePaths {
 		if _, err := os.Stat(p); err != nil {
 			continue
 		}
