@@ -18,8 +18,8 @@ import (
 )
 
 type installer struct {
-	rootDir            string
 	registryDownloader download.RegistryDownloader
+	param              *config.Param
 }
 
 func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*config.RegistryContent, error) {
@@ -28,7 +28,7 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
 	var failed bool
-	maxInstallChan := make(chan struct{}, util.GetMaxParallelism(logE))
+	maxInstallChan := make(chan struct{}, inst.param.MaxParallelism)
 	registryContents := make(map[string]*config.RegistryContent, len(cfg.Registries)+1)
 
 	for _, registry := range cfg.Registries {
@@ -89,7 +89,7 @@ func readRegistry(p string, registry *config.RegistryContent) error {
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
 func (inst *installer) installRegistry(ctx context.Context, registry *config.Registry, cfgFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
-	registryFilePath := registry.GetFilePath(inst.rootDir, cfgFilePath)
+	registryFilePath := registry.GetFilePath(inst.param.RootDir, cfgFilePath)
 	if err := util.MkdirAll(filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}

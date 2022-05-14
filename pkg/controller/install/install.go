@@ -24,9 +24,9 @@ type Controller struct {
 	registryInstaller registry.Installer
 }
 
-func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer) *Controller {
+func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer) *Controller {
 	return &Controller{
-		rootDir:           string(rootDir),
+		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,
