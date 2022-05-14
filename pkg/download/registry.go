@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	"github.com/google/go-github/v39/github"
+	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )

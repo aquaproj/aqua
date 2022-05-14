@@ -16,7 +16,7 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
-	"github.com/google/go-github/v39/github"
+	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
