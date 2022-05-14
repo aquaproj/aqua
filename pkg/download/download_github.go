@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/go-github/v39/github"
+	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 )
 

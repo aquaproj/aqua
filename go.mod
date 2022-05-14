@@ -8,7 +8,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/goccy/go-yaml v1.9.5
 	github.com/google/go-cmp v0.5.8
-	github.com/google/go-github/v39 v39.2.0
+	github.com/google/go-github/v44 v44.1.0
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.4.0
 	github.com/invopop/jsonschema v0.4.0
