@@ -91,7 +91,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 	var wg sync.WaitGroup
 	wg.Add(len(pkgs))
 	var flagMutex sync.Mutex
-	maxInstallChan := make(chan struct{}, util.GetMaxParallelism(logE))
+	maxInstallChan := make(chan struct{}, config.GetMaxParallelism(logE))
 
 	handleFailure := func() {
 		flagMutex.Lock()

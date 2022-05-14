@@ -147,4 +147,6 @@ type Param struct {
 	File           string
 	GlobalConfigs  []string
 	AQUAVersion    string
+	RootDir        string
+	MaxParallelism int
 }

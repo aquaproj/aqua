@@ -15,9 +15,9 @@ type Installer interface {
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
 }
 
-func New(rootDir config.RootDir, downloader download.PackageDownloader, rt *runtime.Runtime) Installer {
+func New(param *config.Param, downloader download.PackageDownloader, rt *runtime.Runtime) Installer {
 	return &installer{
-		rootDir:           string(rootDir),
+		rootDir:           param.RootDir,
 		packageDownloader: downloader,
 		runtime:           rt,
 	}

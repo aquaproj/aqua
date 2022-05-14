@@ -24,32 +24,32 @@ import (
 	"github.com/google/wire"
 )
 
-func InitializeListCommandController(ctx context.Context, aquaVersion string, param *config.Param) *list.Controller {
-	wire.Build(list.NewController, finder.NewConfigFinder, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+func InitializeListCommandController(ctx context.Context, param *config.Param) *list.Controller {
+	wire.Build(list.NewController, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return &list.Controller{}
 }
 
-func InitializeInitCommandController(ctx context.Context, aquaVersion string, param *config.Param) *initcmd.Controller {
+func InitializeInitCommandController(ctx context.Context, param *config.Param) *initcmd.Controller {
 	wire.Build(initcmd.New, github.New)
 	return &initcmd.Controller{}
 }
 
-func InitializeGenerateCommandController(ctx context.Context, aquaVersion string, param *config.Param) *generate.Controller {
-	wire.Build(generate.New, finder.NewConfigFinder, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+func InitializeGenerateCommandController(ctx context.Context, param *config.Param) *generate.Controller {
+	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
 	return &generate.Controller{}
 }
 
 func InitializeInstallCommandController(ctx context.Context, param *config.Param) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, installpackage.New, download.NewPackageDownloader, runtime.New)
+	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, installpackage.New, download.NewPackageDownloader, runtime.New)
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, aquaVersion string, param *config.Param) which.Controller {
-	wire.Build(which.New, finder.NewConfigFinder, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, runtime.New)
+func InitializeWhichCommandController(ctx context.Context, param *config.Param) which.Controller {
+	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, runtime.New)
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, aquaVersion string, param *config.Param) *cexec.Controller {
-	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, config.NewRootDir, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New, runtime.New, exec.New)
+func InitializeExecCommandController(ctx context.Context, param *config.Param) *cexec.Controller {
+	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New, runtime.New, exec.New)
 	return &cexec.Controller{}
 }

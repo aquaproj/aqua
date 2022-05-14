@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -22,7 +24,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setCLIArg(c *cli.Context, param *config.Param) error { //nolint:unparam
+func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Entry, error) { //nolint:unparam
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
@@ -33,7 +35,11 @@ func (runner *Runner) setCLIArg(c *cli.Context, param *config.Param) error { //n
 	param.All = c.Bool("all")
 	param.File = c.String("f")
 	param.AQUAVersion = runner.LDFlags.Version
-	return nil
+	param.RootDir = config.GetRootDir()
+	logE := log.New(param.AQUAVersion)
+	log.SetLevel(param.LogLevel, logE)
+	param.MaxParallelism = config.GetMaxParallelism(logE)
+	return logE, nil
 }
 
 func (runner *Runner) Run(ctx context.Context, args ...string) error {

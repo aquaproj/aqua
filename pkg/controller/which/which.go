@@ -31,10 +31,10 @@ type Controller interface {
 	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error)
 }
 
-func New(rootDir config.RootDir, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, rt *runtime.Runtime) Controller {
+func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, rt *runtime.Runtime) Controller {
 	return &controller{
 		stdout:            os.Stdout,
-		rootDir:           string(rootDir),
+		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,

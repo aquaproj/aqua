@@ -7,7 +7,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
-	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -38,17 +37,14 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 
 func (runner *Runner) execAction(c *cli.Context) error {
 	param := &config.Param{}
-	if err := runner.setCLIArg(c, param); err != nil {
+	logE, err := runner.setParam(c, param)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	logE := log.New(param.AQUAVersion)
-	log.SetLevel(param.LogLevel, logE)
-
-	ctrl := controller.InitializeExecCommandController(c.Context, param.AQUAVersion, param)
+	ctrl := controller.InitializeExecCommandController(c.Context, param)
 	exeName, args, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
-
 	return ctrl.Exec(c.Context, param, exeName, args, logE) //nolint:wrapcheck
 }
