@@ -21,6 +21,7 @@ const proxyName = "aqua-proxy"
 
 type installer struct {
 	rootDir           string
+	maxParallelism    int
 	packageDownloader download.PackageDownloader
 	runtime           *runtime.Runtime
 }
@@ -91,7 +92,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 	var wg sync.WaitGroup
 	wg.Add(len(pkgs))
 	var flagMutex sync.Mutex
-	maxInstallChan := make(chan struct{}, config.GetMaxParallelism(logE))
+	maxInstallChan := make(chan struct{}, inst.maxParallelism)
 
 	handleFailure := func() {
 		flagMutex.Lock()

@@ -18,6 +18,7 @@ type Installer interface {
 func New(param *config.Param, downloader download.PackageDownloader, rt *runtime.Runtime) Installer {
 	return &installer{
 		rootDir:           param.RootDir,
+		maxParallelism:    param.MaxParallelism,
 		packageDownloader: downloader,
 		runtime:           rt,
 	}
