@@ -48,6 +48,9 @@ jobs:
     - run: tfenv --version
     - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
     - run: btop -v
+    - run: btop -v
+      env:
+        AQUA_EXPERIMENTAL_X_SYS_EXEC: "true"
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests
