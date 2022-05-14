@@ -40,7 +40,7 @@ func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Ent
 	param.RootDir = config.GetRootDir()
 	logE := log.New(param.AQUAVersion)
 	log.SetLevel(param.LogLevel, logE)
-	param.MaxParallelism = config.GetMaxParallelism(logE)
+	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
 	return logE, nil
 }

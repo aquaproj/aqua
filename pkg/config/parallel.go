@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -9,8 +8,7 @@ import (
 
 const defaultMaxParallelism = 5
 
-func GetMaxParallelism(logE *logrus.Entry) int {
-	envMaxParallelism := os.Getenv("AQUA_MAX_PARALLELISM")
+func GetMaxParallelism(envMaxParallelism string, logE *logrus.Entry) int {
 	if envMaxParallelism == "" {
 		return defaultMaxParallelism
 	}
