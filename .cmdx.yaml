@@ -6,7 +6,7 @@ tasks:
   short: t
   description: test
   usage: test
-  script: go test -v ./... -race -covermode=atomic
+  script: go test ./... -race -covermode=atomic
 - name: vet
   short: v
   description: go vet
