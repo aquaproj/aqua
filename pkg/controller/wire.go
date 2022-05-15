@@ -37,7 +37,7 @@ func InitializeInitCommandController(ctx context.Context, param *config.Param) *
 }
 
 func InitializeGenerateCommandController(ctx context.Context, param *config.Param) *generate.Controller {
-	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs)
+	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs, generate.NewFuzzyFinder)
 	return &generate.Controller{}
 }
 

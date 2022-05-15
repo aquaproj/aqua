@@ -54,7 +54,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	repositoryService := github.New(ctx)
 	registryDownloader := download.NewRegistryDownloader(repositoryService)
 	installer := registry.New(param, registryDownloader, fs)
-	controller := generate.New(configFinder, configReader, installer, repositoryService, fs)
+	fuzzyFinder := generate.NewFuzzyFinder()
+	controller := generate.New(configFinder, configReader, installer, repositoryService, fs, fuzzyFinder)
 	return controller
 }
 

@@ -32,12 +32,7 @@ func NewController(configFinder finder.ConfigFinder, configReader reader.ConfigR
 
 func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
 	cfg := &config.Config{}
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("get the current directory: %w", err)
-	}
-
-	cfgFilePath, err := ctrl.configFinder.Find(wd, param.ConfigFilePath)
+	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

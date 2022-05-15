@@ -31,10 +31,11 @@ type Controller struct {
 	registryInstaller       registry.Installer
 	configFinder            finder.ConfigFinder
 	configReader            reader.ConfigReader
+	fuzzyFinder             FuzzyFinder
 	fs                      afero.Fs
 }
 
-func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService, fs afero.Fs) *Controller {
+func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
 	return &Controller{
 		stdin:                   os.Stdin,
 		stdout:                  os.Stdout,
@@ -43,6 +44,7 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, reg
 		registryInstaller:       registInstaller,
 		gitHubRepositoryService: gh,
 		fs:                      fs,
+		fuzzyFinder:             fuzzyFinder,
 	}
 }
 
@@ -50,12 +52,7 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, reg
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
 func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("get the current directory: %w", err)
-	}
-
-	cfgFilePath, err := ctrl.configFinder.Find(wd, param.ConfigFilePath)
+	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -111,7 +108,7 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	}
 
 	// Launch the fuzzy finder
-	idxes, err := ctrl.launchFuzzyFinder(pkgs)
+	idxes, err := ctrl.fuzzyFinder.Find(pkgs)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil, nil //nolint:nilnil

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -27,7 +28,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Entry, error) { //nolint:unparam
+func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Entry, error) {
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
@@ -43,6 +44,11 @@ func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Ent
 	log.SetLevel(param.LogLevel, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("get the current directory: %w", err)
+	}
+	param.PWD = wd
 	return logE, nil
 }
 

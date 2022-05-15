@@ -56,16 +56,7 @@ type Which struct {
 }
 
 func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {
-	fields := logrus.Fields{
-		"exe_name": exeName,
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("get the current directory: %w", logerr.WithFields(err, fields))
-	}
-
-	for _, cfgFilePath := range ctrl.configFinder.Finds(wd, param.ConfigFilePath) {
+	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
