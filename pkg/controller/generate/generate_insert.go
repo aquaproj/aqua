@@ -3,11 +3,11 @@ package generate
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
+	"github.com/spf13/afero"
 )
 
 func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) error {
@@ -24,7 +24,7 @@ func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) err
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := os.WriteFile(cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
+	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil
