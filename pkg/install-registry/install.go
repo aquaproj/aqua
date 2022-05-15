@@ -3,6 +3,7 @@ package registry
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,12 +24,17 @@ type installer struct {
 	fs                 afero.Fs
 }
 
+var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
+
 func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*config.RegistryContent, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Registries))
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
 	var failed bool
+	if inst.param.MaxParallelism <= 0 {
+		return nil, errMaxParallelismMustBeGreaterThanZero
+	}
 	maxInstallChan := make(chan struct{}, inst.param.MaxParallelism)
 	registryContents := make(map[string]*config.RegistryContent, len(cfg.Registries)+1)
 
