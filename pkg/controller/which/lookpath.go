@@ -10,8 +10,8 @@ import (
 
 const proxyName = "aqua-proxy"
 
-func lookPath(exeName string) string {
-	for _, p := range strings.Split(os.Getenv("PATH"), ":") {
+func lookPath(envPath, exeName string) string {
+	for _, p := range strings.Split(envPath, ":") {
 		bin := filepath.Join(p, exeName)
 		finfo, err := readLink(bin)
 		if err != nil {

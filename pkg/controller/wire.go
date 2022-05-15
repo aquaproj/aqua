@@ -22,6 +22,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/wire"
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
 func InitializeListCommandController(ctx context.Context, param *config.Param) *list.Controller {
@@ -45,11 +46,11 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 }
 
 func InitializeWhichCommandController(ctx context.Context, param *config.Param) which.Controller {
-	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, runtime.New)
+	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, runtime.New, osenv.New)
 	return nil
 }
 
 func InitializeExecCommandController(ctx context.Context, param *config.Param) *cexec.Controller {
-	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New, runtime.New, exec.New)
+	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New, runtime.New, exec.New, osenv.New)
 	return &cexec.Controller{}
 }
