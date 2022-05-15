@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/validate"
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -27,13 +28,14 @@ type controller struct {
 	registryInstaller registry.Installer
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
+	fs                afero.Fs
 }
 
 type Controller interface {
 	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error)
 }
 
-func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv) Controller {
+func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs) Controller {
 	return &controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -42,6 +44,7 @@ func New(param *config.Param, configFinder finder.ConfigFinder, configReader rea
 		registryInstaller: registInstaller,
 		runtime:           rt,
 		osenv:             osEnv,
+		fs:                fs,
 	}
 }
 
@@ -73,7 +76,7 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	}
 
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		if _, err := os.Stat(cfgFilePath); err != nil {
+		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
 		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)

@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
@@ -26,9 +27,10 @@ type Controller struct {
 	packageInstaller installpackage.Installer
 	executor         exec.Executor
 	enabledXSysExec  bool
+	fs               afero.Fs
 }
 
-func New(pkgInstaller installpackage.Installer, which which.Controller, executor exec.Executor, osEnv osenv.OSEnv) *Controller {
+func New(pkgInstaller installpackage.Installer, which which.Controller, executor exec.Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
@@ -37,6 +39,7 @@ func New(pkgInstaller installpackage.Installer, which which.Controller, executor
 		which:            which,
 		executor:         executor,
 		enabledXSysExec:  osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		fs:               fs,
 	}
 }
 
@@ -55,7 +58,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 		}
 		for i := 0; i < 10; i++ {
 			logE.Debug("check if exec file exists")
-			if fi, err := os.Stat(which.ExePath); err == nil {
+			if fi, err := ctrl.fs.Stat(which.ExePath); err == nil {
 				if util.IsOwnerExecutable(fi.Mode()) {
 					break
 				}

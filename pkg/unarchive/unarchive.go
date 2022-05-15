@@ -9,15 +9,16 @@ import (
 
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 )
 
 var errUnsupportedFileFormat = errors.New("unsupported file format")
 
 type Unarchiver interface {
-	Unarchive(body io.Reader) error
+	Unarchive(fs afero.Fs, body io.Reader) error
 }
 
-func Unarchive(body io.Reader, filename, typ, dest string, logE *logrus.Entry) error {
+func Unarchive(body io.Reader, filename, typ, dest string, logE *logrus.Entry, fs afero.Fs) error {
 	arc, err := getUnarchiver(filename, typ, dest)
 	if err != nil {
 		logE.WithFields(logrus.Fields{
@@ -28,7 +29,7 @@ func Unarchive(body io.Reader, filename, typ, dest string, logE *logrus.Entry) e
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	return arc.Unarchive(body) //nolint:wrapcheck
+	return arc.Unarchive(fs, body) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {

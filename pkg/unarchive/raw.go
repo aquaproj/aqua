@@ -6,19 +6,24 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/spf13/afero"
 )
 
 type rawUnarchiver struct {
 	dest string
 }
 
-func (unarchiver *rawUnarchiver) Unarchive(body io.Reader) error {
+const (
+	dirPermission  os.FileMode = 0o775
+	filePermission os.FileMode = 0o755
+)
+
+func (unarchiver *rawUnarchiver) Unarchive(fs afero.Fs, body io.Reader) error {
 	dest := unarchiver.dest
-	if err := util.MkdirAll(filepath.Dir(dest)); err != nil {
+	if err := fs.MkdirAll(filepath.Dir(dest), dirPermission); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
-	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0o755) //nolint:gomnd
+	f, err := fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission)
 	if err != nil {
 		return fmt.Errorf("open the file (%s): %w", dest, err)
 	}

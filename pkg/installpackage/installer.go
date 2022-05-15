@@ -3,7 +3,6 @@ package installpackage
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -14,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/util"
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -24,6 +24,7 @@ type installer struct {
 	maxParallelism    int
 	packageDownloader download.PackageDownloader
 	runtime           *runtime.Runtime
+	fs                afero.Fs
 }
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop,gocognit
@@ -174,7 +175,7 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 	retryCount := 0
 	for {
 		logE.Debug("check if the package is already installed")
-		finfo, err := os.Stat(dest)
+		finfo, err := inst.fs.Stat(dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
 			if err := inst.download(ctx, pkg, pkgInfo, dest, assetName, logE); err != nil {
@@ -253,7 +254,7 @@ func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.Package
 	}
 	exePath := filepath.Join(pkgPath, fileSrc)
 
-	finfo, err := os.Stat(exePath)
+	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
 		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))
 	}
@@ -264,7 +265,7 @@ func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.Package
 	logE.Debug("check the permission")
 	if mode := finfo.Mode().Perm(); !util.IsOwnerExecutable(mode) {
 		logE.Debug("add the permission to execute the command")
-		if err := os.Chmod(exePath, util.AllowOwnerExec(mode)); err != nil {
+		if err := inst.fs.Chmod(exePath, util.AllowOwnerExec(mode)); err != nil {
 			return logerr.WithFields(errChmod, fields) //nolint:wrapcheck
 		}
 	}

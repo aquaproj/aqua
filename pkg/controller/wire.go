@@ -22,35 +22,36 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/wire"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
 func InitializeListCommandController(ctx context.Context, param *config.Param) *list.Controller {
-	wire.Build(list.NewController, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	wire.Build(list.NewController, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs)
 	return &list.Controller{}
 }
 
 func InitializeInitCommandController(ctx context.Context, param *config.Param) *initcmd.Controller {
-	wire.Build(initcmd.New, github.New)
+	wire.Build(initcmd.New, github.New, afero.NewOsFs)
 	return &initcmd.Controller{}
 }
 
 func InitializeGenerateCommandController(ctx context.Context, param *config.Param) *generate.Controller {
-	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader)
+	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs)
 	return &generate.Controller{}
 }
 
 func InitializeInstallCommandController(ctx context.Context, param *config.Param) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, installpackage.New, download.NewPackageDownloader, runtime.New)
+	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, runtime.New, afero.NewOsFs)
 	return &install.Controller{}
 }
 
 func InitializeWhichCommandController(ctx context.Context, param *config.Param) which.Controller {
-	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, runtime.New, osenv.New)
+	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, runtime.New, osenv.New, afero.NewOsFs)
 	return nil
 }
 
 func InitializeExecCommandController(ctx context.Context, param *config.Param) *cexec.Controller {
-	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, reader.NewFileReader, which.New, runtime.New, exec.New, osenv.New)
+	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, which.New, runtime.New, exec.New, osenv.New, afero.NewOsFs)
 	return &cexec.Controller{}
 }

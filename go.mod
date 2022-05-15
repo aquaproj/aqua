@@ -15,6 +15,7 @@ require (
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/sirupsen/logrus v1.8.1
+	github.com/spf13/afero v1.8.2
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.1.0
