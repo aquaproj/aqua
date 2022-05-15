@@ -3,7 +3,6 @@ package installpackage
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -44,7 +43,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 		return err //nolint:wrapcheck
 	}
 	logE.Debug("check if aqua-proxy is already installed")
-	finfo, err := os.Stat(pkgPath)
+	finfo, err := inst.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
 		if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {

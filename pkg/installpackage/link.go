@@ -20,7 +20,7 @@ func (inst *installer) createLink(linkPath, linkDest string, logE *logrus.Entry)
 			// TODO if file is a regular file, remove it and create a symlink.
 			return fmt.Errorf("%s has already existed and is a regular file", linkPath)
 		case mode&os.ModeSymlink != 0:
-			return recreateLink(linkPath, linkDest, logE)
+			return inst.recreateLink(linkPath, linkDest, logE)
 		default:
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
@@ -35,7 +35,7 @@ func (inst *installer) createLink(linkPath, linkDest string, logE *logrus.Entry)
 	return nil
 }
 
-func recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
+func (inst *installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	lnDest, err := os.Readlink(linkPath)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
@@ -50,7 +50,7 @@ func recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
 		"old":       lnDest,
 		"new":       linkDest,
 	}).Debug("recreate a symbolic link")
-	if err := os.Remove(linkPath); err != nil {
+	if err := inst.fs.Remove(linkPath); err != nil {
 		return fmt.Errorf("remove a symbolic link (%s): %w", linkPath, err)
 	}
 	if err := os.Symlink(linkDest, linkPath); err != nil {

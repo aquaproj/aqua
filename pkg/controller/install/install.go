@@ -11,9 +11,13 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
+)
+
+const (
+	dirPermission os.FileMode = 0o775
 )
 
 type Controller struct {
@@ -22,15 +26,17 @@ type Controller struct {
 	configFinder      finder.ConfigFinder
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
+	fs                afero.Fs
 }
 
-func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer) *Controller {
+func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,
 		packageInstaller:  pkgInstaller,
+		fs:                fs,
 	}
 }
 
@@ -41,7 +47,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *
 	}
 	rootBin := filepath.Join(ctrl.rootDir, "bin")
 
-	if err := util.MkdirAll(rootBin); err != nil {
+	if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
@@ -63,7 +69,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 		return nil
 	}
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		if _, err := os.Stat(cfgFilePath); err != nil {
+		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
 		if err := ctrl.install(ctx, rootBin, cfgFilePath, param, logE); err != nil {

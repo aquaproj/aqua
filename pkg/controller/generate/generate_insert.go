@@ -20,7 +20,7 @@ func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) err
 		return err
 	}
 
-	stat, err := os.Stat(cfgFilePath)
+	stat, err := ctrl.fs.Stat(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}

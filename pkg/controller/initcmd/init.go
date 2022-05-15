@@ -8,6 +8,7 @@ import (
 
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -29,11 +30,13 @@ var globalVarCfgFileNameMap = map[string]struct{}{ //nolint:gochecknoglobals
 
 type Controller struct {
 	gitHubRepositoryService githubSvc.RepositoryService
+	fs                      afero.Fs
 }
 
-func New(gh githubSvc.RepositoryService) *Controller {
+func New(gh githubSvc.RepositoryService, fs afero.Fs) *Controller {
 	return &Controller{
 		gitHubRepositoryService: gh,
+		fs:                      fs,
 	}
 }
 
@@ -43,7 +46,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 	}
 	if _, ok := globalVarCfgFileNameMap[cfgFilePath]; ok {
 		for fileName := range globalVarCfgFileNameMap {
-			if _, err := os.Stat(fileName); err == nil {
+			if _, err := ctrl.fs.Stat(fileName); err == nil {
 				// configuration file already exists, then do nothing.
 				logE.WithFields(logrus.Fields{
 					"configuration_file_path": fileName,
@@ -52,7 +55,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 			}
 		}
 	}
-	if _, err := os.Stat(cfgFilePath); err == nil {
+	if _, err := ctrl.fs.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.
 		return nil
 	}

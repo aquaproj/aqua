@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mholt/archiver/v3"
+	"github.com/spf13/afero"
 )
 
 func Test_getUnarchiver(t *testing.T) {
@@ -58,7 +59,7 @@ func Test_getUnarchiver(t *testing.T) {
 				return
 			}
 			if diff := cmp.Diff(d.exp, unarchiver, cmp.AllowUnexported(
-				rawUnarchiver{}, unarchiverWithUnarchiver{}, Decompressor{}), cmpopts.IgnoreUnexported(archiver.TarGz{}, archiver.Tar{}, archiver.Bz2{})); diff != "" {
+				rawUnarchiver{}, unarchiverWithUnarchiver{}, Decompressor{}), cmpopts.IgnoreUnexported(archiver.TarGz{}, archiver.Tar{}, archiver.Bz2{}, afero.MemMapFs{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})

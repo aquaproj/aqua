@@ -19,6 +19,7 @@ import (
 	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
@@ -30,9 +31,10 @@ type Controller struct {
 	registryInstaller       registry.Installer
 	configFinder            finder.ConfigFinder
 	configReader            reader.ConfigReader
+	fs                      afero.Fs
 }
 
-func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService) *Controller {
+func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService, fs afero.Fs) *Controller {
 	return &Controller{
 		stdin:                   os.Stdin,
 		stdout:                  os.Stdout,
@@ -40,6 +42,7 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, reg
 		configReader:            configReader,
 		registryInstaller:       registInstaller,
 		gitHubRepositoryService: gh,
+		fs:                      fs,
 	}
 }
 
@@ -173,7 +176,7 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *co
 	if param.File == "-" {
 		file = ctrl.stdin
 	} else {
-		f, err := os.Open(param.File)
+		f, err := ctrl.fs.Open(param.File)
 		if err != nil {
 			return nil, fmt.Errorf("open the package list file: %w", err)
 		}

@@ -24,5 +24,5 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, pkgInf
 		return err //nolint:wrapcheck
 	}
 
-	return unarchive.Unarchive(body, assetName, pkgInfo.GetFormat(), dest, logE) //nolint:wrapcheck
+	return unarchive.Unarchive(body, assetName, pkgInfo.GetFormat(), dest, logE, inst.fs) //nolint:wrapcheck
 }

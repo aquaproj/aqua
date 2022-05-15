@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
 
@@ -13,18 +14,18 @@ type ConfigReader interface {
 	Read(configFilePath string, cfg *config.Config) error
 }
 
-func New(reader FileReader) ConfigReader {
+func New(fs afero.Fs) ConfigReader {
 	return &configReader{
-		reader: reader,
+		fs: fs,
 	}
 }
 
 type configReader struct {
-	reader FileReader
+	fs afero.Fs
 }
 
 func (reader *configReader) Read(configFilePath string, cfg *config.Config) error {
-	file, err := reader.reader.Read(configFilePath)
+	file, err := reader.fs.Open(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

@@ -2,9 +2,9 @@ package finder
 
 import (
 	"errors"
-	"os"
 	"strings"
 
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 )
 
@@ -15,8 +15,14 @@ type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func NewConfigFinder() ConfigFinder {
-	return &configFinder{}
+type configFinder struct {
+	fs afero.Fs
+}
+
+func NewConfigFinder(fs afero.Fs) ConfigFinder {
+	return &configFinder{
+		fs: fs,
+	}
 }
 
 func ParseGlobalConfigFilePaths(env string) []string {
@@ -36,8 +42,6 @@ func ParseGlobalConfigFilePaths(env string) []string {
 	return paths
 }
 
-type configFinder struct{}
-
 func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
@@ -47,7 +51,7 @@ func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePath
 		return configFilePath, nil
 	}
 	for _, p := range globalConfigFilePaths {
-		if _, err := os.Stat(p); err != nil {
+		if _, err := finder.fs.Stat(p); err != nil {
 			continue
 		}
 		return p, nil

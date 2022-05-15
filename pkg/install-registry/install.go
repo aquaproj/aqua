@@ -10,9 +10,9 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
@@ -20,6 +20,7 @@ import (
 type installer struct {
 	registryDownloader download.RegistryDownloader
 	param              *config.Param
+	fs                 afero.Fs
 }
 
 func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*config.RegistryContent, error) {
@@ -68,8 +69,8 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config
 	return registryContents, nil
 }
 
-func readRegistry(p string, registry *config.RegistryContent) error {
-	f, err := os.Open(p)
+func (inst *installer) readRegistry(p string, registry *config.RegistryContent) error {
+	f, err := inst.fs.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
 	}
@@ -86,20 +87,22 @@ func readRegistry(p string, registry *config.RegistryContent) error {
 	return nil
 }
 
+const dirPermission os.FileMode = 0o775
+
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
 func (inst *installer) installRegistry(ctx context.Context, registry *config.Registry, cfgFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(inst.param.RootDir, cfgFilePath)
-	if err := util.MkdirAll(filepath.Dir(registryFilePath)); err != nil {
+	if err := inst.fs.MkdirAll(filepath.Dir(registryFilePath), dirPermission); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
 
-	if _, err := os.Stat(registryFilePath); err != nil {
+	if _, err := inst.fs.Stat(registryFilePath); err != nil {
 		return inst.getRegistry(ctx, registry, registryFilePath, logE)
 	}
 
 	registryContent := &config.RegistryContent{}
-	if err := readRegistry(registryFilePath, registryContent); err != nil {
+	if err := inst.readRegistry(registryFilePath, registryContent); err != nil {
 		return nil, err
 	}
 	return registryContent, nil
