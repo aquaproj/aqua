@@ -149,4 +149,5 @@ type Param struct {
 	AQUAVersion           string
 	RootDir               string
 	MaxParallelism        int
+	PWD                   string
 }

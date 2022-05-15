@@ -41,10 +41,6 @@ func New(param *config.Param, configFinder finder.ConfigFinder, configReader rea
 }
 
 func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("get the current directory: %w", err)
-	}
 	rootBin := filepath.Join(ctrl.rootDir, "bin")
 
 	if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
@@ -55,7 +51,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *
 		return err //nolint:wrapcheck
 	}
 
-	for _, cfgFilePath := range ctrl.configFinder.Finds(wd, param.ConfigFilePath) {
+	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		if err := ctrl.install(ctx, rootBin, cfgFilePath, param, logE); err != nil {
 			return err
 		}
