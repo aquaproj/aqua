@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
 type Controller struct {
@@ -23,11 +24,11 @@ type Controller struct {
 	stderr           io.Writer
 	which            which.Controller
 	packageInstaller installpackage.Installer
-	enabledXSysExec  bool
 	executor         exec.Executor
+	enabledXSysExec  bool
 }
 
-func New(pkgInstaller installpackage.Installer, which which.Controller, executor exec.Executor) *Controller {
+func New(pkgInstaller installpackage.Installer, which which.Controller, executor exec.Executor, osEnv osenv.OSEnv) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
@@ -35,7 +36,7 @@ func New(pkgInstaller installpackage.Installer, which which.Controller, executor
 		packageInstaller: pkgInstaller,
 		which:            which,
 		executor:         executor,
-		enabledXSysExec:  os.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		enabledXSysExec:  osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
 	}
 }
 

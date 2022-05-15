@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/validate"
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -25,13 +26,14 @@ type controller struct {
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 	runtime           *runtime.Runtime
+	osenv             osenv.OSEnv
 }
 
 type Controller interface {
 	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error)
 }
 
-func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, rt *runtime.Runtime) Controller {
+func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv) Controller {
 	return &controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -39,6 +41,7 @@ func New(param *config.Param, configFinder finder.ConfigFinder, configReader rea
 		configReader:      configReader,
 		registryInstaller: registInstaller,
 		runtime:           rt,
+		osenv:             osEnv,
 	}
 }
 
@@ -82,7 +85,7 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 		}
 	}
 
-	if exePath := lookPath(exeName); exePath != "" {
+	if exePath := lookPath(ctrl.osenv.Getenv("PATH"), exeName); exePath != "" {
 		return &Which{
 			ExePath: exePath,
 		}, nil

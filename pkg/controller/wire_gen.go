@@ -23,6 +23,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
 // Injectors from wire.go:
@@ -77,7 +78,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param) 
 	registryDownloader := download.NewRegistryDownloader(repositoryService)
 	installer := registry.New(param, registryDownloader)
 	runtimeRuntime := runtime.New()
-	controller := which.New(param, configFinder, configReader, installer, runtimeRuntime)
+	osEnv := osenv.New()
+	controller := which.New(param, configFinder, configReader, installer, runtimeRuntime, osEnv)
 	return controller
 }
 
@@ -91,8 +93,9 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param) *
 	configReader := reader.New(fileReader)
 	registryDownloader := download.NewRegistryDownloader(repositoryService)
 	registryInstaller := registry.New(param, registryDownloader)
-	controller := which.New(param, configFinder, configReader, registryInstaller, runtimeRuntime)
+	osEnv := osenv.New()
+	controller := which.New(param, configFinder, configReader, registryInstaller, runtimeRuntime, osEnv)
 	executor := exec2.New()
-	execController := exec.New(installer, controller, executor)
+	execController := exec.New(installer, controller, executor, osEnv)
 	return execController
 }
