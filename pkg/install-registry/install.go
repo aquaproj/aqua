@@ -93,19 +93,17 @@ const dirPermission os.FileMode = 0o775
 // If the registry file already exists, the installation is skipped.
 func (inst *installer) installRegistry(ctx context.Context, registry *config.Registry, cfgFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
 	registryFilePath := registry.GetFilePath(inst.param.RootDir, cfgFilePath)
+	if _, err := inst.fs.Stat(registryFilePath); err == nil {
+		registryContent := &config.RegistryContent{}
+		if err := inst.readRegistry(registryFilePath, registryContent); err != nil {
+			return nil, err
+		}
+		return registryContent, nil
+	}
 	if err := inst.fs.MkdirAll(filepath.Dir(registryFilePath), dirPermission); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
-
-	if _, err := inst.fs.Stat(registryFilePath); err != nil {
-		return inst.getRegistry(ctx, registry, registryFilePath, logE)
-	}
-
-	registryContent := &config.RegistryContent{}
-	if err := inst.readRegistry(registryFilePath, registryContent); err != nil {
-		return nil, err
-	}
-	return registryContent, nil
+	return inst.getRegistry(ctx, registry, registryFilePath, logE)
 }
 
 // getRegistry downloads and installs the registry file.
