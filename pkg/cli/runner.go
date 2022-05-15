@@ -10,6 +10,7 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/urfave/cli/v2"
 )
 
@@ -37,7 +38,7 @@ func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Ent
 	param.All = c.Bool("all")
 	param.File = c.String("f")
 	param.AQUAVersion = runner.LDFlags.Version
-	param.RootDir = config.GetRootDir()
+	param.RootDir = config.GetRootDir(osenv.New())
 	logE := log.New(param.AQUAVersion)
 	log.SetLevel(param.LogLevel, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)

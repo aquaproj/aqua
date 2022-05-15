@@ -1,17 +1,18 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
+
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-func GetRootDir() string {
-	if rootDir := os.Getenv("AQUA_ROOT_DIR"); rootDir != "" {
+func GetRootDir(osEnv osenv.OSEnv) string {
+	if rootDir := osEnv.Getenv("AQUA_ROOT_DIR"); rootDir != "" {
 		return rootDir
 	}
-	xdgDataHome := os.Getenv("XDG_DATA_HOME")
+	xdgDataHome := osEnv.Getenv("XDG_DATA_HOME")
 	if xdgDataHome == "" {
-		xdgDataHome = filepath.Join(os.Getenv("HOME"), ".local", "share")
+		xdgDataHome = filepath.Join(osEnv.Getenv("HOME"), ".local", "share")
 	}
 	return filepath.Join(xdgDataHome, "aquaproj-aqua")
 }
