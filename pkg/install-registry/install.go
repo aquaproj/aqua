@@ -127,7 +127,7 @@ func (inst *installer) getGitHubContentRegistry(ctx context.Context, registry *c
 		return nil, err //nolint:wrapcheck
 	}
 
-	if err := os.WriteFile(registryFilePath, b, 0o600); err != nil { //nolint:gomnd
+	if err := afero.WriteFile(inst.fs, registryFilePath, b, 0o600); err != nil { //nolint:gomnd
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
 	registryContent := &config.RegistryContent{}
