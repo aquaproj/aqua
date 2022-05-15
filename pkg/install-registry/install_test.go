@@ -36,7 +36,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 			cfgFilePath: "aqua.yaml",
 			files: map[string]string{
 				"registry.yaml": `packages:
-- type: github_content # github_content package
+- type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
   path: aqua-installer
