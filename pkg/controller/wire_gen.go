@@ -22,6 +22,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -68,7 +69,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	installer := registry.New(param, registryDownloader, fs)
 	runtimeRuntime := runtime.New()
 	packageDownloader := download.NewPackageDownloader(repositoryService, runtimeRuntime)
-	installpackageInstaller := installpackage.New(param, packageDownloader, runtimeRuntime, fs)
+	linker := link.New()
+	installpackageInstaller := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs)
 	return controller
 }
@@ -91,7 +93,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param) *
 	runtimeRuntime := runtime.New()
 	packageDownloader := download.NewPackageDownloader(repositoryService, runtimeRuntime)
 	fs := afero.NewOsFs()
-	installer := installpackage.New(param, packageDownloader, runtimeRuntime, fs)
+	linker := link.New()
+	installer := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	registryDownloader := download.NewRegistryDownloader(repositoryService)
