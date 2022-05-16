@@ -8,7 +8,7 @@ import (
 )
 
 func (inst *installer) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
-	if fileInfo, err := os.Lstat(linkPath); err == nil {
+	if fileInfo, err := inst.linker.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
 			// if file is a directory, raise error
@@ -29,14 +29,14 @@ func (inst *installer) createLink(linkPath, linkDest string, logE *logrus.Entry)
 		"link_file": linkPath,
 		"new":       linkDest,
 	}).Info("create a symbolic link")
-	if err := os.Symlink(linkDest, linkPath); err != nil {
+	if err := inst.linker.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
 	return nil
 }
 
 func (inst *installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
-	lnDest, err := os.Readlink(linkPath)
+	lnDest, err := inst.linker.Readlink(linkPath)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
 	}
@@ -53,7 +53,7 @@ func (inst *installer) recreateLink(linkPath, linkDest string, logE *logrus.Entr
 	if err := inst.fs.Remove(linkPath); err != nil {
 		return fmt.Errorf("remove a symbolic link (%s): %w", linkPath, err)
 	}
-	if err := os.Symlink(linkDest, linkPath); err != nil {
+	if err := inst.linker.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
 	return nil

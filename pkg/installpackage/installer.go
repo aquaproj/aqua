@@ -9,6 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
@@ -25,6 +26,7 @@ type installer struct {
 	packageDownloader download.PackageDownloader
 	runtime           *runtime.Runtime
 	fs                afero.Fs
+	linker            link.Linker
 }
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop,gocognit
@@ -146,6 +148,43 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 	return nil
 }
 
+func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool, logE *logrus.Entry) error {
+	logE = logE.WithFields(logrus.Fields{
+		"package_name":    pkg.Name,
+		"package_version": pkg.Version,
+		"registry":        pkg.Registry,
+	})
+	logE.Debug("install the package")
+
+	if err := pkgInfo.Validate(); err != nil {
+		return fmt.Errorf("invalid package: %w", err)
+	}
+	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
+	if err != nil {
+		return fmt.Errorf("render the asset name: %w", err)
+	}
+
+	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
+	if err != nil {
+		return fmt.Errorf("get the package install path: %w", err)
+	}
+
+	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
+		return err
+	}
+
+	for _, file := range pkgInfo.GetFiles() {
+		if err := inst.checkFileSrc(pkg, pkgInfo, file, logE); err != nil {
+			if isTest {
+				return fmt.Errorf("check file_src is correct: %w", err)
+			}
+			logerr.WithError(logE, err).Warn("check file_src is correct")
+		}
+	}
+
+	return nil
+}
+
 func getPkgInfoFromRegistries(registries map[string]*config.RegistryContent, pkg *config.Package) (*config.PackageInfo, error) {
 	registry, ok := registries[pkg.Registry]
 	if !ok {
@@ -198,43 +237,6 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 		}
 		return nil
 	}
-}
-
-func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool, logE *logrus.Entry) error {
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Name,
-		"package_version": pkg.Version,
-		"registry":        pkg.Registry,
-	})
-	logE.Debug("install the package")
-
-	if err := pkgInfo.Validate(); err != nil {
-		return fmt.Errorf("invalid package: %w", err)
-	}
-	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("render the asset name: %w", err)
-	}
-
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get the package install path: %w", err)
-	}
-
-	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
-		return err
-	}
-
-	for _, file := range pkgInfo.GetFiles() {
-		if err := inst.checkFileSrc(pkg, pkgInfo, file, logE); err != nil {
-			if isTest {
-				return fmt.Errorf("check file_src is correct: %w", err)
-			}
-			logerr.WithError(logE, err).Warn("check file_src is correct")
-		}
-	}
-
-	return nil
 }
 
 func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, logE *logrus.Entry) error {

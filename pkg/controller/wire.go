@@ -20,6 +20,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/wire"
 	"github.com/spf13/afero"
@@ -42,7 +43,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 }
 
 func InitializeInstallCommandController(ctx context.Context, param *config.Param) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, runtime.New, afero.NewOsFs)
+	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, runtime.New, afero.NewOsFs, link.New)
 	return &install.Controller{}
 }
 
@@ -52,6 +53,6 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param) 
 }
 
 func InitializeExecCommandController(ctx context.Context, param *config.Param) *cexec.Controller {
-	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, which.New, runtime.New, exec.New, osenv.New, afero.NewOsFs)
+	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, which.New, runtime.New, exec.New, osenv.New, afero.NewOsFs, link.New)
 	return &cexec.Controller{}
 }
