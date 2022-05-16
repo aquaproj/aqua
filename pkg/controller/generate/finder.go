@@ -19,38 +19,44 @@ func NewFuzzyFinder() FuzzyFinder {
 
 func (finder *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
 	return fuzzyfinder.FindMulti(pkgs, func(i int) string { //nolint:wrapcheck
-		pkg := pkgs[i]
-		files := pkg.PackageInfo.GetFiles()
-		fileNames := make([]string, len(files))
-		for i, file := range files {
-			fileNames[i] = file.Name
-		}
-		fileNamesStr := strings.Join(fileNames, ", ")
-		pkgName := pkg.PackageInfo.GetName()
-		aliases := make([]string, len(pkg.PackageInfo.Aliases))
-		for i, alias := range pkg.PackageInfo.Aliases {
-			aliases[i] = alias.Name
-		}
-		item := pkgName
-		if len(aliases) != 0 {
-			item += " (" + strings.Join(aliases, ", ") + ")"
-		}
-		item += " (" + pkg.RegistryName + ")"
-		if strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {
-			return item
-		}
-		return item + " (" + fileNamesStr + ")"
+		return find(pkgs[i])
 	},
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
-			if i < 0 {
-				return ""
-			}
-			pkg := pkgs[i]
-			return fmt.Sprintf("%s\n\n%s\n%s",
-				pkg.PackageInfo.GetName(),
-				pkg.PackageInfo.GetLink(),
-				formatDescription(pkg.PackageInfo.GetDescription(), w/2-8)) //nolint:gomnd
+			return getPreview(pkgs[i], i, w)
 		}))
+}
+
+func find(pkg *FindingPackage) string {
+	files := pkg.PackageInfo.GetFiles()
+	fileNames := make([]string, len(files))
+	for i, file := range files {
+		fileNames[i] = file.Name
+	}
+	fileNamesStr := strings.Join(fileNames, ", ")
+	pkgName := pkg.PackageInfo.GetName()
+	aliases := make([]string, len(pkg.PackageInfo.Aliases))
+	for i, alias := range pkg.PackageInfo.Aliases {
+		aliases[i] = alias.Name
+	}
+	item := pkgName
+	if len(aliases) != 0 {
+		item += " (" + strings.Join(aliases, ", ") + ")"
+	}
+	item += " (" + pkg.RegistryName + ")"
+	if strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {
+		return item
+	}
+	return item + " (" + fileNamesStr + ")"
+}
+
+func getPreview(pkg *FindingPackage, i, w int) string {
+	if i < 0 {
+		return ""
+	}
+	return fmt.Sprintf("%s\n\n%s\n%s",
+		pkg.PackageInfo.GetName(),
+		pkg.PackageInfo.GetLink(),
+		formatDescription(pkg.PackageInfo.GetDescription(), w/2-8)) //nolint:gomnd
 }
 
 func formatDescription(desc string, w int) string {
