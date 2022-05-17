@@ -29,52 +29,11 @@ type installer struct {
 	linker            link.Linker
 }
 
-func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop,gocognit
-	var failed bool
-	pkgs := make([]*config.Package, 0, len(cfg.Packages))
-	for _, pkg := range cfg.Packages {
-		logE := logE.WithFields(logrus.Fields{
-			"package_name":    pkg.Name,
-			"package_version": pkg.Version,
-			"registry":        pkg.Registry,
-		})
-		if registry, ok := cfg.Registries[pkg.Registry]; ok {
-			if registry.Ref != "" {
-				logE = logE.WithField("registry_ref", registry.Ref)
-			}
-		}
-		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
-		if err != nil {
-			logerr.WithError(logE, err).Error("install the package")
-			failed = true
-			continue
-		}
-
-		pkgInfo, err = pkgInfo.Override(pkg.Version, inst.runtime)
-		if err != nil {
-			return fmt.Errorf("evaluate version constraints: %w", err)
-		}
-		if pkgInfo.SupportedIf != nil {
-			supported, err := constraint.EvaluateSupportedIf(pkgInfo.SupportedIf, inst.runtime)
-			if err != nil {
-				logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
-				continue
-			}
-			if !supported {
-				logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
-				continue
-			}
-		}
-		pkgs = append(pkgs, pkg)
-		for _, file := range pkgInfo.GetFiles() {
-			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
-				logerr.WithError(logE, err).Error("create the symbolic link")
-				failed = true
-				continue
-			}
-		}
+func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop
+	pkgs, failed, err := inst.createLinks(cfg, registries, binDir, logE)
+	if err != nil {
+		return err
 	}
-
 	if onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
@@ -183,6 +142,54 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 	}
 
 	return nil
+}
+
+func (inst *installer) createLinks(cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, logE *logrus.Entry) ([]*config.Package, bool, error) { //nolint:cyclop
+	pkgs := make([]*config.Package, 0, len(cfg.Packages))
+	failed := false
+	for _, pkg := range cfg.Packages {
+		logE := logE.WithFields(logrus.Fields{
+			"package_name":    pkg.Name,
+			"package_version": pkg.Version,
+			"registry":        pkg.Registry,
+		})
+		if registry, ok := cfg.Registries[pkg.Registry]; ok {
+			if registry.Ref != "" {
+				logE = logE.WithField("registry_ref", registry.Ref)
+			}
+		}
+		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
+		if err != nil {
+			logerr.WithError(logE, err).Error("install the package")
+			failed = true
+			continue
+		}
+
+		pkgInfo, err = pkgInfo.Override(pkg.Version, inst.runtime)
+		if err != nil {
+			return nil, false, fmt.Errorf("evaluate version constraints: %w", err)
+		}
+		if pkgInfo.SupportedIf != nil {
+			supported, err := constraint.EvaluateSupportedIf(pkgInfo.SupportedIf, inst.runtime)
+			if err != nil {
+				logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
+				continue
+			}
+			if !supported {
+				logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
+				continue
+			}
+		}
+		pkgs = append(pkgs, pkg)
+		for _, file := range pkgInfo.GetFiles() {
+			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
+				logerr.WithError(logE, err).Error("create the symbolic link")
+				failed = true
+				continue
+			}
+		}
+	}
+	return pkgs, failed, nil
 }
 
 func getPkgInfoFromRegistries(registries map[string]*config.RegistryContent, pkg *config.Package) (*config.PackageInfo, error) {
