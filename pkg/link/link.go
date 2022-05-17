@@ -34,6 +34,10 @@ type mockFileInfo struct {
 	Dest string
 }
 
+func (f *mockFileInfo) Mode() os.FileMode {
+	return os.ModeSymlink
+}
+
 type mockLinker struct {
 	files map[string]*mockFileInfo
 }
