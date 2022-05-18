@@ -286,6 +286,61 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				},
 			},
 		},
+		{
+			name: "http",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+			},
+			pkg: &config.Package{
+				Name:     "GoogleContainerTools/container-diff",
+				Registry: "standard",
+				Version:  "v0.17.0",
+			},
+			pkgInfo: &config.PackageInfo{
+				Type:      "http",
+				RepoOwner: "GoogleContainerTools",
+				RepoName:  "container-diff",
+				URL:       stringP("https://storage.googleapis.com/container-diff/{{.Version}}/container-diff-{{.OS}}-amd64"),
+			},
+			assetName: "container-diff-linux-amd64",
+			exp:       "yoo",
+			github:    nil,
+			httpClient: &http.Client{
+				Transport: &flute.Transport{
+					Services: []flute.Service{
+						{
+							Endpoint: "https://storage.googleapis.com",
+							Routes: []flute.Route{
+								{
+									Name: "download an asset",
+									Matcher: &flute.Matcher{
+										Method: "GET",
+										Path:   "/container-diff/v0.17.0/container-diff-linux-amd64",
+									},
+									Response: &flute.Response{
+										Base: http.Response{
+											StatusCode: 200,
+										},
+										BodyString: "yoo",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid type",
+			pkgInfo: &config.PackageInfo{
+				Type: "invalid-type",
+			},
+			isErr: true,
+		},
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
