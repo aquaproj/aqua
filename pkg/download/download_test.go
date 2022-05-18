@@ -190,6 +190,56 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen
 				},
 			},
 		},
+		{
+			name: "github_content http",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+			},
+			pkg: &config.Package{
+				Name:     "aquaproj/aqua-installer",
+				Registry: "standard",
+				Version:  "v1.1.0",
+			},
+			pkgInfo: &config.PackageInfo{
+				Type:      "github_content",
+				RepoOwner: "aquaproj",
+				RepoName:  "aqua-installer",
+				Path:      stringP("aqua-installer"),
+			},
+			assetName: "aqua-installer",
+			exp:       "github-content",
+			github: githubSvc.NewMock(nil, &github.RepositoryContent{
+				Content: stringP("github-content"),
+			}, "foo"),
+			httpClient: &http.Client{
+				Transport: &flute.Transport{
+					Services: []flute.Service{
+						{
+							Endpoint: "https://raw.githubusercontent.com",
+							Routes: []flute.Route{
+								{
+									Name: "download an asset",
+									Matcher: &flute.Matcher{
+										Method: "GET",
+										Path:   "/aquaproj/aqua-installer/v1.1.0/aqua-installer",
+									},
+									Response: &flute.Response{
+										Base: http.Response{
+											StatusCode: 400,
+										},
+										BodyString: "invalid request",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
