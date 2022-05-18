@@ -2,6 +2,7 @@ package list_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -49,7 +50,7 @@ packages:
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
-	downloader := download.NewRegistryDownloader(nil)
+	downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {

@@ -26,7 +26,7 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	// So at first aqua tries to download assets without GitHub API.
 	// And if it failed, aqua tries again with GitHub API.
 	// It avoids the rate limit of the access token.
-	b, err := fromURL(ctx, "https://github.com/"+owner+"/"+repoName+"/releases/download/"+version+"/"+assetName, http.DefaultClient)
+	b, err := downloader.http.Download(ctx, "https://github.com/"+owner+"/"+repoName+"/releases/download/"+version+"/"+assetName)
 	if err == nil {
 		return b, nil
 	}
@@ -59,19 +59,19 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 	if body != nil {
 		return body, nil
 	}
-	b, err = fromURL(ctx, redirectURL, http.DefaultClient)
+	b, err = downloader.http.Download(ctx, redirectURL)
 	if err != nil {
 		if b != nil {
 			b.Close()
 		}
-		return nil, err
+		return nil, fmt.Errorf("download asset from redirect URL: %w", err)
 	}
 	return b, nil
 }
 
 func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
 	// https://github.com/aquaproj/aqua/issues/391
-	body, err := fromURL(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName, http.DefaultClient)
+	body, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName)
 	if err == nil {
 		return body, nil
 	}

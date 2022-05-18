@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -16,6 +15,7 @@ import (
 type pkgDownloader struct {
 	github  github.RepositoryService
 	runtime *runtime.Runtime
+	http    HTTPDownloader
 }
 
 func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
@@ -41,7 +41,7 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Cont
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
 	url := fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)
-	return fromURL(ctx, url, http.DefaultClient)
+	return downloader.http.Download(ctx, url) //nolint:wrapcheck
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
@@ -53,5 +53,5 @@ func (downloader *pkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg 
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	return fromURL(ctx, uS, http.DefaultClient)
+	return downloader.http.Download(ctx, uS) //nolint:wrapcheck
 }
