@@ -23,7 +23,7 @@ func int64P(i int64) *int64 {
 	return &i
 }
 
-func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen
+func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name       string
@@ -232,6 +232,52 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen
 											StatusCode: 400,
 										},
 										BodyString: "invalid request",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "github_archive",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+			},
+			pkg: &config.Package{
+				Name:     "tfutils/tfenv",
+				Registry: "standard",
+				Version:  "v2.2.3",
+			},
+			pkgInfo: &config.PackageInfo{
+				Type:      "github_archive",
+				RepoOwner: "tfutils",
+				RepoName:  "tfenv",
+			},
+			exp:    "foo",
+			github: githubSvc.NewMock(nil, nil, "foo"),
+			httpClient: &http.Client{
+				Transport: &flute.Transport{
+					Services: []flute.Service{
+						{
+							Endpoint: "https://github.com",
+							Routes: []flute.Route{
+								{
+									Name: "download an asset",
+									Matcher: &flute.Matcher{
+										Method: "GET",
+										Path:   "/tfutils/tfenv/archive/refs/tags/v2.2.3.tar.gz",
+									},
+									Response: &flute.Response{
+										Base: http.Response{
+											StatusCode: 200,
+										},
+										BodyString: "foo",
 									},
 								},
 							},
