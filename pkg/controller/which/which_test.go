@@ -112,9 +112,11 @@ packages:
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"/usr/local/bin/gh": "",
+				"/usr/local/foo/gh": "",
 			},
-			links: map[string]string{},
+			links: map[string]string{
+				"../foo/gh": "/usr/local/bin/gh",
+			},
 			exp: &which.Which{
 				ExePath: "/usr/local/bin/gh",
 			},
