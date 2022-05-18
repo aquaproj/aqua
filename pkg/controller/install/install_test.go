@@ -79,7 +79,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker()
+			linker := link.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

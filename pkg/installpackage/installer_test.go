@@ -97,7 +97,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker()
+			linker := link.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

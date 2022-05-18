@@ -3,6 +3,8 @@ package link
 import (
 	"errors"
 	"os"
+
+	"github.com/spf13/afero"
 )
 
 type Linker interface {
@@ -40,11 +42,13 @@ func (f *mockFileInfo) Mode() os.FileMode {
 
 type mockLinker struct {
 	files map[string]*mockFileInfo
+	fs    afero.Fs
 }
 
-func NewMockLinker() Linker {
+func NewMockLinker(fs afero.Fs) Linker {
 	return &mockLinker{
 		files: map[string]*mockFileInfo{},
+		fs:    fs,
 	}
 }
 
@@ -52,12 +56,15 @@ func (lk *mockLinker) Lstat(s string) (os.FileInfo, error) {
 	if f, ok := lk.files[s]; ok {
 		return f, nil
 	}
-	return nil, errors.New("file isn't found")
+	return lk.fs.Stat(s) //nolint:wrapcheck
 }
 
 func (lk *mockLinker) Symlink(dest, src string) error {
 	if _, ok := lk.files[src]; ok {
 		return errors.New("file already exists")
+	}
+	if _, err := lk.fs.Create(src); err != nil {
+		return err //nolint:wrapcheck
 	}
 	if lk.files == nil {
 		lk.files = map[string]*mockFileInfo{}
