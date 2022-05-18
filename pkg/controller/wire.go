@@ -49,7 +49,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 }
 
 func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) which.Controller {
-	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, runtime.New, osenv.New, afero.NewOsFs, download.NewHTTPDownloader)
+	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, runtime.New, osenv.New, afero.NewOsFs, download.NewHTTPDownloader, link.New)
 	return nil
 }
 
