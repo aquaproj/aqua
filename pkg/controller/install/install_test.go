@@ -2,6 +2,7 @@ package install_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -67,7 +68,7 @@ packages:
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
-	registryDownloader := download.NewRegistryDownloader(nil)
+	registryDownloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
@@ -84,7 +85,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt)
+			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker)
 			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, registryDownloader, fs), pkgInstaller, fs)
 			if err := ctrl.Install(ctx, d.param, logE); err != nil {

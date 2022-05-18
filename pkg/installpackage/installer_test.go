@@ -2,6 +2,7 @@ package installpackage_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -102,7 +103,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt)
+			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker)
 			if err := ctrl.InstallPackages(ctx, d.cfg, d.registries, d.binDir, d.onlyLink, d.isTest, logE); err != nil {
 				if d.isErr {
@@ -166,7 +167,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt)
+			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil)
 			if err := ctrl.InstallPackage(ctx, d.pkgInfo, d.pkg, d.isTest, logE); err != nil {
 				if d.isErr {

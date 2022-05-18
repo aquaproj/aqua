@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
@@ -32,6 +33,6 @@ func (runner *Runner) listAction(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeListCommandController(c.Context, param)
+	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient)
 	return ctrl.List(c.Context, param, logE) //nolint:wrapcheck
 }

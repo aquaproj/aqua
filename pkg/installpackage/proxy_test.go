@@ -2,6 +2,7 @@ package installpackage_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -58,7 +59,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt)
+			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker)
 			if err := ctrl.InstallProxy(ctx, logE); err != nil {
 				if d.isErr {

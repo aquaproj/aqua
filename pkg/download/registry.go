@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
 
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	"github.com/google/go-github/v44/github"
@@ -14,11 +13,12 @@ import (
 
 type registryDownloader struct {
 	github githubSvc.RepositoryService
+	http   HTTPDownloader
 }
 
 func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string, logE *logrus.Entry) ([]byte, error) {
 	// https://github.com/aquaproj/aqua/issues/391
-	body, err := fromURL(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path, http.DefaultClient)
+	body, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path)
 	if body != nil {
 		defer body.Close()
 	}

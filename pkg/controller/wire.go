@@ -5,6 +5,7 @@ package controller
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
@@ -27,8 +28,8 @@ import (
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-func InitializeListCommandController(ctx context.Context, param *config.Param) *list.Controller {
-	wire.Build(list.NewController, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs)
+func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *list.Controller {
+	wire.Build(list.NewController, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs, download.NewHTTPDownloader)
 	return &list.Controller{}
 }
 
@@ -37,22 +38,22 @@ func InitializeInitCommandController(ctx context.Context, param *config.Param) *
 	return &initcmd.Controller{}
 }
 
-func InitializeGenerateCommandController(ctx context.Context, param *config.Param) *generate.Controller {
-	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs, generate.NewFuzzyFinder)
+func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *generate.Controller {
+	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs, generate.NewFuzzyFinder, download.NewHTTPDownloader)
 	return &generate.Controller{}
 }
 
-func InitializeInstallCommandController(ctx context.Context, param *config.Param) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, runtime.New, afero.NewOsFs, link.New)
+func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *install.Controller {
+	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, runtime.New, afero.NewOsFs, link.New, download.NewHTTPDownloader)
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param) which.Controller {
-	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, runtime.New, osenv.New, afero.NewOsFs)
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) which.Controller {
+	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, runtime.New, osenv.New, afero.NewOsFs, download.NewHTTPDownloader)
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param) *cexec.Controller {
-	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, which.New, runtime.New, exec.New, osenv.New, afero.NewOsFs, link.New)
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *cexec.Controller {
+	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, which.New, runtime.New, exec.New, osenv.New, afero.NewOsFs, link.New, download.NewHTTPDownloader)
 	return &cexec.Controller{}
 }
