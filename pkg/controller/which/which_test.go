@@ -112,11 +112,69 @@ packages:
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"/usr/local/bin/gh": "",
+				"/usr/local/foo/gh": "",
 			},
-			links: map[string]string{},
+			links: map[string]string{
+				"../foo/gh": "/usr/local/bin/gh",
+			},
 			exp: &which.Which{
 				ExePath: "/usr/local/bin/gh",
+			},
+		},
+		{
+			name: "global config",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:                   "/home/foo/workspace",
+				RootDir:               "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism:        5,
+				GlobalConfigFilePaths: []string{"/etc/aqua/aqua.yaml"},
+			},
+			exeName: "aqua-installer",
+			files: map[string]string{
+				"/etc/aqua/aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: suzuki-shunsuke/ci-info@v1.0.0
+- name: aquaproj/aqua-installer@v1.0.0
+`,
+				"/etc/aqua/registry.yaml": `packages:
+- type: github_release
+  repo_owner: suzuki-shunsuke
+  repo_name: ci-info
+  asset: "ci-info_{{.Arch}}-{{.OS}}.tar.gz"
+  supported_if: "false"
+- type: github_release
+  repo_owner: suzuki-shunsuke
+  repo_name: github-comment
+  asset: "github-comment_{{.Arch}}-{{.OS}}.tar.gz"
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+			},
+			exp: &which.Which{
+				Package: &config.Package{
+					Name:     "aquaproj/aqua-installer",
+					Registry: "standard",
+					Version:  "v1.0.0",
+				},
+				PkgInfo: &config.PackageInfo{
+					Type:      "github_content",
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua-installer",
+					Path:      stringP("aqua-installer"),
+				},
+				File: &config.File{
+					Name: "aqua-installer",
+				},
+				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 			},
 		},
 	}

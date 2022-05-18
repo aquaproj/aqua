@@ -3,6 +3,7 @@ package link
 import (
 	"errors"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/afero"
 )
@@ -34,10 +35,15 @@ func (lk *linker) Readlink(src string) (string, error) {
 type mockFileInfo struct {
 	os.FileInfo
 	Dest string
+	name string
 }
 
 func (f *mockFileInfo) Mode() os.FileMode {
 	return os.ModeSymlink
+}
+
+func (f *mockFileInfo) Name() string {
+	return f.name
 }
 
 type mockLinker struct {
@@ -71,6 +77,7 @@ func (lk *mockLinker) Symlink(dest, src string) error {
 	}
 	lk.files[src] = &mockFileInfo{
 		Dest: dest,
+		name: filepath.Base(src),
 	}
 	return nil
 }
