@@ -37,7 +37,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 		exp     *which.Which
 	}{
 		{
-			name: "file already exists",
+			name: "normal",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",
@@ -82,6 +82,43 @@ packages:
 				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 			},
 		},
+		{
+			name: "outside aqua",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+			},
+			exeName: "gh",
+			env: map[string]string{
+				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
+			},
+			files: map[string]string{
+				"aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/aqua-installer@v1.0.0
+`,
+				"registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+				"/usr/local/bin/gh": "",
+			},
+			links: map[string]string{},
+			exp: &which.Which{
+				ExePath: "/usr/local/bin/gh",
+			},
+		},
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
@@ -95,7 +132,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker()
+			linker := link.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)
