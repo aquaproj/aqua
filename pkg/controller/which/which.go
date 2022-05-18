@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/validate"
 	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
@@ -29,30 +29,7 @@ type controller struct {
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	fs                afero.Fs
-}
-
-type Controller interface {
-	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error)
-}
-
-func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs) Controller {
-	return &controller{
-		stdout:            os.Stdout,
-		rootDir:           param.RootDir,
-		configFinder:      configFinder,
-		configReader:      configReader,
-		registryInstaller: registInstaller,
-		runtime:           rt,
-		osenv:             osEnv,
-		fs:                fs,
-	}
-}
-
-type Which struct {
-	Package *config.Package
-	PkgInfo *config.PackageInfo
-	File    *config.File
-	ExePath string
+	linker            link.Linker
 }
 
 func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {
@@ -79,7 +56,7 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 		}
 	}
 
-	if exePath := lookPath(ctrl.osenv.Getenv("PATH"), exeName); exePath != "" {
+	if exePath := ctrl.lookPath(ctrl.osenv.Getenv("PATH"), exeName); exePath != "" {
 		return &Which{
 			ExePath: exePath,
 		}, nil

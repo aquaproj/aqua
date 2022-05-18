@@ -89,7 +89,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	installer := registry.New(param, registryDownloader, fs)
 	runtimeRuntime := runtime.New()
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, installer, runtimeRuntime, osEnv, fs)
+	linker := link.New()
+	controller := which.New(param, configFinder, configReader, installer, runtimeRuntime, osEnv, fs, linker)
 	return controller
 }
 
@@ -106,7 +107,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	registryDownloader := download.NewRegistryDownloader(repositoryService, httpDownloader)
 	registryInstaller := registry.New(param, registryDownloader, fs)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, runtimeRuntime, osEnv, fs)
+	controller := which.New(param, configFinder, configReader, registryInstaller, runtimeRuntime, osEnv, fs, linker)
 	executor := exec2.New()
 	execController := exec.New(installer, controller, executor, osEnv, fs)
 	return execController
