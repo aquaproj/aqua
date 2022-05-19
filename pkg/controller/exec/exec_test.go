@@ -1,0 +1,140 @@
+package exec_test
+
+import (
+	"context"
+	"net/http"
+	"testing"
+
+	"github.com/aquaproj/aqua/pkg/config"
+	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	execCtrl "github.com/aquaproj/aqua/pkg/controller/exec"
+	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/exec"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
+)
+
+func Test_controller_Exec(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		name    string
+		files   map[string]string
+		links   map[string]string
+		env     map[string]string
+		param   *config.Param
+		exeName string
+		rt      *runtime.Runtime
+		args    []string
+		isErr   bool
+	}{
+		{
+			name: "normal",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+			},
+			exeName: "aqua-installer",
+			files: map[string]string{
+				"aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/aqua-installer@v1.0.0
+`,
+				"registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+			},
+		},
+		{
+			name: "outside aqua",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+			},
+			exeName: "gh",
+			env: map[string]string{
+				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
+			},
+			files: map[string]string{
+				"aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/aqua-installer@v1.0.0
+`,
+				"registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+				"/usr/local/foo/gh": "",
+			},
+			links: map[string]string{
+				"../foo/gh": "/usr/local/bin/gh",
+			},
+		},
+	}
+	logE := logrus.NewEntry(logrus.New())
+	ctx := context.Background()
+	for _, d := range data {
+		d := d
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			fs := afero.NewMemMapFs()
+			for name, body := range d.files {
+				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			linker := link.NewMockLinker(fs)
+			for dest, src := range d.links {
+				if err := linker.Symlink(dest, src); err != nil {
+					t.Fatal(err)
+				}
+			}
+			downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+			osEnv := osenv.NewMock(d.env)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
+			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker)
+			executor := exec.NewMock(0, nil)
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
+			if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
+				if d.isErr {
+					return
+				}
+				t.Fatal(err)
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
+	}
+}
