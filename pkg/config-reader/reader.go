@@ -47,7 +47,7 @@ func (reader *configReader) readImports(configFilePath string, cfg *config.Confi
 			continue
 		}
 		p := filepath.Join(filepath.Dir(configFilePath), pkg.Import)
-		filePaths, err := filepath.Glob(p)
+		filePaths, err := afero.Glob(reader.fs, p)
 		if err != nil {
 			return fmt.Errorf("read files with glob pattern (%s): %w", p, err)
 		}

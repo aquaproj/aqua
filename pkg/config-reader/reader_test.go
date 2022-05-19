@@ -46,13 +46,17 @@ packages:`,
 			},
 		},
 		{
-			name: "one package",
+			name: "import package",
 			files: map[string]string{
 				"aqua.yaml": `registries:
 - type: standard
   ref: v2.5.0
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
+- import: aqua-installer.yaml
+`,
+				"aqua-installer.yaml": `packages:
+- name: aquaproj/aqua-installer@v1.0.0
 `,
 			},
 			configFilePath: "aqua.yaml",
@@ -73,10 +77,14 @@ packages:
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
+					{
+						Name:     "aquaproj/aqua-installer",
+						Registry: "standard",
+						Version:  "v1.0.0",
+					},
 				},
 			},
 		},
-		// TODO import
 	}
 	for _, d := range data {
 		d := d
