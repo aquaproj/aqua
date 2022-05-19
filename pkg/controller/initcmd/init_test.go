@@ -6,17 +6,24 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
+	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
-func TestController_Init(t *testing.T) {
+func stringP(s string) *string {
+	return &s
+}
+
+func TestController_Init(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		name  string
-		files map[string]string
-		param *config.Param
-		isErr bool
+		name     string
+		files    map[string]string
+		param    *config.Param
+		releases []*github.RepositoryRelease
+		isErr    bool
 	}{
 		{
 			name: "file already exists",
@@ -33,6 +40,19 @@ packages:
 `,
 			},
 		},
+		{
+			name: "normal",
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				MaxParallelism: 5,
+			},
+			files: map[string]string{},
+			releases: []*github.RepositoryRelease{
+				{
+					TagName: stringP("v2.16.0"),
+				},
+			},
+		},
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
@@ -46,7 +66,8 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			ctrl := initcmd.New(nil, fs)
+			gh := githubSvc.NewMock(d.releases, nil, "")
+			ctrl := initcmd.New(gh, fs)
 			if err := ctrl.Init(ctx, "", logE); err != nil {
 				if d.isErr {
 					return
