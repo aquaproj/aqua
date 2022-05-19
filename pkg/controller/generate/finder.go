@@ -17,6 +17,22 @@ func NewFuzzyFinder() FuzzyFinder {
 	return &fuzzyFinder{}
 }
 
+func NewMockFuzzyFinder(idxs []int, err error) FuzzyFinder {
+	return &mockFuzzyFinder{
+		idxs: idxs,
+		err:  err,
+	}
+}
+
+type mockFuzzyFinder struct {
+	idxs []int
+	err  error
+}
+
+func (finder *mockFuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
+	return finder.idxs, finder.err
+}
+
 func (finder *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
 	return fuzzyfinder.FindMulti(pkgs, func(i int) string { //nolint:wrapcheck
 		return find(pkgs[i])
