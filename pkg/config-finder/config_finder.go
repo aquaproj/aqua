@@ -46,7 +46,7 @@ func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePath
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
-	configFilePath = findconfig.Find(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+	configFilePath = findconfig.Find(wd, finder.exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
@@ -61,7 +61,15 @@ func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePath
 
 func (finder *configFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
-		return findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+		return findconfig.Finds(wd, finder.exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
 	}
-	return append([]string{configFilePath}, findconfig.Finds(wd, findconfig.Exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")...)
+	return append([]string{configFilePath}, findconfig.Finds(wd, finder.exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")...)
+}
+
+func (finder *configFinder) exist(p string) bool {
+	b, err := afero.Exists(finder.fs, p)
+	if err != nil {
+		return false
+	}
+	return b
 }
