@@ -18,35 +18,41 @@ type Unarchiver interface {
 	Unarchive(fs afero.Fs, body io.Reader) error
 }
 
-func Unarchive(body io.Reader, filename, typ, dest string, logE *logrus.Entry, fs afero.Fs) error {
-	arc, err := getUnarchiver(filename, typ, dest)
+type File struct {
+	Body     io.Reader
+	Filename string
+	Type     string
+}
+
+func Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs) error {
+	arc, err := getUnarchiver(src, dest)
 	if err != nil {
 		logE.WithFields(logrus.Fields{
-			"format":                 typ,
-			"filename":               filename,
-			"filepath.Ext(filename)": filepath.Ext(filename),
+			"format":                 src.Type,
+			"filename":               src.Filename,
+			"filepath.Ext(filename)": filepath.Ext(src.Filename),
 		}).Error("get the unarchiver or decompressor")
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	return arc.Unarchive(fs, body) //nolint:wrapcheck
+	return arc.Unarchive(fs, src.Body) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
 	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
 }
 
-func getUnarchiver(filename, typ, dest string) (Unarchiver, error) {
-	filename = filepath.Base(filename)
-	if IsUnarchived(typ, filename) {
+func getUnarchiver(src *File, dest string) (Unarchiver, error) {
+	filename := filepath.Base(src.Filename)
+	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
 			dest: filepath.Join(dest, filename),
 		}, nil
 	}
 
 	f := filename
-	if typ != "" {
-		f = "." + typ
+	if src.Type != "" {
+		f = "." + src.Type
 	}
 	arc, err := archiver.ByExtension(f)
 	if err != nil {
