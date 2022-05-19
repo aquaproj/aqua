@@ -5,4 +5,4 @@ registries:
 packages:
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard # standard registry
-  version: v0.13.0 # renovate: depName=kubernetes-sigs/kind
+  version: v0.14.0 # renovate: depName=kubernetes-sigs/kind
