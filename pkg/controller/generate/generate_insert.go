@@ -11,7 +11,11 @@ import (
 )
 
 func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) error {
-	file, err := parser.ParseFile(cfgFilePath, parser.ParseComments)
+	b, err := afero.ReadFile(ctrl.fs, cfgFilePath)
+	if err != nil {
+		return fmt.Errorf("read a configuration file: %w", err)
+	}
+	file, err := parser.ParseBytes(b, parser.ParseComments)
 	if err != nil {
 		return fmt.Errorf("parse configuration file as YAML: %w", err)
 	}
