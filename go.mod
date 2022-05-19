@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-github/v44 v44.1.0
 	github.com/google/wire v0.5.0
-	github.com/hashicorp/go-version v1.4.0
+	github.com/hashicorp/go-version v1.5.0
 	github.com/invopop/jsonschema v0.4.0
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mholt/archiver/v3 v3.5.1
