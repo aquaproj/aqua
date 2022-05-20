@@ -28,6 +28,18 @@ func TestVersionConstraints_Check(t *testing.T) {
 			exp:         false,
 		},
 		{
+			title:       "semverWithVersion true",
+			constraints: `semverWithVersion(">= 4.2.0", trimPrefix(Version, "kustomize/"))`,
+			version:     "kustomize/v4.3.0",
+			exp:         true,
+		},
+		{
+			title:       "semverWithVersion false",
+			constraints: `semverWithVersion(">= 4.2.0", trimPrefix(Version, "kustomize/"))`,
+			version:     "kustomize/v0.3.0",
+			exp:         false,
+		},
+		{
 			title:       "invalid expression",
 			constraints: `>= 0.4.0`,
 			version:     "v0.3.0",
