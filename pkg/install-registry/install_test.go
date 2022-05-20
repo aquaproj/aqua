@@ -2,6 +2,7 @@ package registry_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -10,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/flute/flute"
 )
 
 func stringP(s string) *string {
@@ -49,6 +51,22 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 						Name: "local",
 						Path: "registry.yaml",
 					},
+					"standard": {
+						Type:      "github_content",
+						Name:      "standard",
+						RepoOwner: "aquaproj",
+						RepoName:  "aqua-registry",
+						Ref:       "v2.16.0",
+						Path:      "registry.yaml",
+					},
+					"standard-json": {
+						Type:      "github_content",
+						Name:      "standard-json",
+						RepoOwner: "aquaproj",
+						RepoName:  "aqua-registry",
+						Ref:       "v2.16.0",
+						Path:      "registry.json",
+					},
 				},
 			},
 			exp: map[string]*config.RegistryContent{
@@ -62,7 +80,79 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 						},
 					},
 				},
+				"standard": {
+					PackageInfos: config.PackageInfos{
+						{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "ci-info",
+							Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
+						},
+					},
+				},
+				"standard-json": {
+					PackageInfos: config.PackageInfos{
+						{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "github-comment",
+							Asset:     stringP("github-comment_{{.Arch}}-{{.OS}}.tar.gz"),
+						},
+					},
+				},
 			},
+			downloader: download.NewRegistryDownloader(nil, download.NewHTTPDownloader(&http.Client{
+				Transport: &flute.Transport{
+					Services: []flute.Service{
+						{
+							Endpoint: "https://raw.githubusercontent.com",
+							Routes: []flute.Route{
+								{
+									Name: "download a registry",
+									Matcher: &flute.Matcher{
+										Method: "GET",
+										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.yaml",
+									},
+									Response: &flute.Response{
+										Base: http.Response{
+											StatusCode: 200,
+										},
+										BodyString: `packages:
+- type: github_release
+  repo_owner: suzuki-shunsuke
+  repo_name: ci-info
+  asset: "ci-info_{{.Arch}}-{{.OS}}.tar.gz"
+`,
+									},
+								},
+								{
+									Name: "download a registry.json",
+									Matcher: &flute.Matcher{
+										Method: "GET",
+										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.json",
+									},
+									Response: &flute.Response{
+										Base: http.Response{
+											StatusCode: 200,
+										},
+										BodyString: `{
+  "packages": [
+    {
+      "type": "github_release",
+      "repo_owner": "suzuki-shunsuke",
+      "repo_name": "github-comment",
+      "asset": "github-comment_{{.Arch}}-{{.OS}}.tar.gz"
+    }
+  ]
+}
+`,
+									},
+								},
+							},
+						},
+					},
+				},
+			})),
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
