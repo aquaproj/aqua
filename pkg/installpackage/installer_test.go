@@ -62,6 +62,70 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Registry: "standard",
 						Version:  "v2.0.3",
 					},
+					{
+						Name:     "suzuki-shunsuke/github-comment",
+						Registry: "standard",
+						Version:  "v4.1.0",
+					},
+				},
+			},
+			registries: map[string]*config.RegistryContent{
+				"standard": {
+					PackageInfos: config.PackageInfos{
+						{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "ci-info",
+							Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+						},
+						{
+							Type:        "github_release",
+							RepoOwner:   "suzuki-shunsuke",
+							RepoName:    "github-comment",
+							Asset:       stringP("github-comment_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+							SupportedIf: stringP("false"),
+						},
+					},
+				},
+			},
+			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			files: map[string]string{
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+			},
+			links: map[string]string{
+				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+			},
+		},
+		{
+			name:     "only link",
+			onlyLink: true,
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+			},
+			cfg: &config.Config{
+				Registries: config.Registries{
+					"standard": {
+						Name:      "standard",
+						Type:      "github_content",
+						RepoOwner: "aquaproj",
+						RepoName:  "aqua-registry",
+						Ref:       "v2.15.0",
+						Path:      "registry.yaml",
+					},
+				},
+				Packages: []*config.Package{
+					{
+						Name:     "suzuki-shunsuke/ci-info",
+						Registry: "standard",
+						Version:  "v2.0.3",
+					},
 				},
 			},
 			registries: map[string]*config.RegistryContent{
@@ -83,6 +147,38 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			links: map[string]string{
 				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
 			},
+		},
+		{
+			name: "no package",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+			},
+			cfg: &config.Config{
+				Registries: config.Registries{
+					"standard": {
+						Name:      "standard",
+						Type:      "github_content",
+						RepoOwner: "aquaproj",
+						RepoName:  "aqua-registry",
+						Ref:       "v2.15.0",
+						Path:      "registry.yaml",
+					},
+				},
+				Packages: []*config.Package{},
+			},
+			registries: map[string]*config.RegistryContent{
+				"standard": {
+					PackageInfos: config.PackageInfos{},
+				},
+			},
+			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
