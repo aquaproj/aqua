@@ -52,7 +52,7 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, reg
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
 func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
-	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath)
+	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
