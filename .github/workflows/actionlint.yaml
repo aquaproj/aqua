@@ -16,5 +16,5 @@ jobs:
     - uses: actions/checkout@v3
     - uses: aquaproj/aqua-installer@v1.0.0
       with:
-        aqua_version: v1.6.1
+        aqua_version: v1.6.2
     - run: actionlint
