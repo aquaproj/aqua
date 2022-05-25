@@ -63,7 +63,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			}
 		}
 
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false, logE); err != nil {
+		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false, which.EnableChecksum, logE); err != nil {
 			return err //nolint:wrapcheck
 		}
 

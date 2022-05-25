@@ -95,7 +95,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 				return
 			}
 
-			if err := inst.InstallPackage(ctx, pkgInfo, pkg, isTest, logE); err != nil {
+			if err := inst.InstallPackage(ctx, pkgInfo, pkg, isTest, cfg.Checksum, logE); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -109,7 +109,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, 
 	return nil
 }
 
-func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool, logE *logrus.Entry) error {
+func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest, checksumEnabled bool, logE *logrus.Entry) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -130,7 +130,7 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
+	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, checksumEnabled, logE); err != nil {
 		return err
 	}
 
@@ -214,7 +214,7 @@ func getPkgInfoFromRegistries(registries map[string]*config.RegistryContent, pkg
 
 const maxRetryDownload = 1
 
-func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string, logE *logrus.Entry) error {
+func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string, checksumEnabled bool, logE *logrus.Entry) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -226,7 +226,7 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 		finfo, err := inst.fs.Stat(dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := inst.download(ctx, pkg, pkgInfo, dest, assetName, logE); err != nil {
+			if err := inst.download(ctx, pkg, pkgInfo, dest, assetName, checksumEnabled, logE); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err

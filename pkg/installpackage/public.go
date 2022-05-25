@@ -13,7 +13,7 @@ import (
 )
 
 type Installer interface {
-	InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest bool, logE *logrus.Entry) error
+	InstallPackage(ctx context.Context, pkgInfo *config.PackageInfo, pkg *config.Package, isTest, checksumEnabled bool, logE *logrus.Entry) error
 	InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
 	ReadChecksumFile(fs afero.Fs, p string) error
