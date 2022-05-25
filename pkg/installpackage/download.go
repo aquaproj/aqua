@@ -38,6 +38,9 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, pkgInf
 		}
 		defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
 		tempFilePath := filepath.Join(tempDir, assetName)
+		if assetName == "" && pkgInfo.Type == "github_archive" {
+			tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
+		}
 		file, err := inst.fs.Create(tempFilePath)
 		if err != nil {
 			return fmt.Errorf("create a temporal file: %w", logerr.WithFields(err, logrus.Fields{

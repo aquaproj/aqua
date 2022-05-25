@@ -131,7 +131,10 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 	}
 
 	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, checksumEnabled, logE); err != nil {
-		return err
+		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+			"asset_name":   assetName,
+			"package_path": pkgPath,
+		})
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
