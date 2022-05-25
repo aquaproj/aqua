@@ -14,7 +14,6 @@ type Checksums interface {
 	Set(key, value string)
 	ReadFile(fs afero.Fs, p string) error
 	UpdateFile(fs afero.Fs, p string) error
-	Changed() bool
 }
 
 type checksums struct {
@@ -42,10 +41,6 @@ func (chksums *checksums) Set(key, value string) {
 	chksums.m[key] = value
 	chksums.changed = true
 	chksums.rwmutex.Unlock()
-}
-
-func (chksums *checksums) SetMap(m map[string]string) {
-	chksums.m = m
 }
 
 func (chksums *checksums) ReadFile(fs afero.Fs, p string) error {
@@ -80,10 +75,6 @@ func (chksums *checksums) UpdateFile(fs afero.Fs, p string) error {
 		return fmt.Errorf("write a checksum file as JSON: %w", err)
 	}
 	return nil
-}
-
-func (chksums *checksums) Changed() bool {
-	return chksums.changed
 }
 
 func GetChecksumFilePathFromConfigFilePath(cfgFilePath string) string {
