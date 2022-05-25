@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
@@ -14,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 const (
@@ -84,6 +86,13 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return err //nolint:wrapcheck
 	}
 
+	checksumFile := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
+	if err := ctrl.packageInstaller.ReadChecksumFile(ctrl.fs, checksumFile); err != nil {
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
+			"checksum_file": checksumFile,
+		}).Error("read a checksum file")
+	}
+
 	if err := validate.Config(cfg); err != nil {
 		return fmt.Errorf("configuration is invalid: %w", err)
 	}
@@ -93,5 +102,11 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest, logE) //nolint:wrapcheck
+	errInstallPackages := ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest, logE)
+	if err := ctrl.packageInstaller.UpdateChecksumFile(ctrl.fs, checksumFile); err != nil {
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
+			"checksum_file": checksumFile,
+		}).Error("update a checksum file")
+	}
+	return errInstallPackages //nolint:wrapcheck
 }

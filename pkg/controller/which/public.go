@@ -34,8 +34,9 @@ func New(param *config.Param, configFinder finder.ConfigFinder, configReader rea
 }
 
 type Which struct {
-	Package *config.Package
-	PkgInfo *config.PackageInfo
-	File    *config.File
-	ExePath string
+	Package        *config.Package
+	PkgInfo        *config.PackageInfo
+	File           *config.File
+	ConfigFilePath string
+	ExePath        string
 }

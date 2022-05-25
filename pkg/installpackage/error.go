@@ -8,4 +8,5 @@ var (
 	errExePathIsDirectory = errors.New("exe_path is directory")
 	errChmod              = errors.New("add the permission to execute the command")
 	errInstallFailure     = errors.New("it failed to install some packages")
+	errInvalidChecksum    = errors.New("checksum is invalid")
 )

@@ -32,14 +32,19 @@ type controller struct {
 	linker            link.Linker
 }
 
-func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {
+func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) { //nolint:cyclop
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
 		}
 		if pkg != nil {
-			return ctrl.whichFile(pkg, pkgInfo, file)
+			w, err := ctrl.whichFile(pkg, pkgInfo, file)
+			if err != nil {
+				return nil, err
+			}
+			w.ConfigFilePath = cfgFilePath
+			return w, nil
 		}
 	}
 
@@ -52,7 +57,12 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 			return nil, err
 		}
 		if pkg != nil {
-			return ctrl.whichFile(pkg, pkgInfo, file)
+			w, err := ctrl.whichFile(pkg, pkgInfo, file)
+			if err != nil {
+				return nil, err
+			}
+			w.ConfigFilePath = cfgFilePath
+			return w, nil
 		}
 	}
 

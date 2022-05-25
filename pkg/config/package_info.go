@@ -241,6 +241,30 @@ func (pkgInfo *PackageInfo) GetAsset() *string {
 	return pkgInfo.Asset
 }
 
+func (pkgInfo *PackageInfo) GetChecksumID(pkg *Package, rt *runtime.Runtime) (string, error) {
+	assetName, err := pkgInfo.RenderAsset(pkg, rt)
+	if err != nil {
+		return "", fmt.Errorf("render the asset name: %w", err)
+	}
+	switch pkgInfo.Type {
+	case PkgInfoTypeGitHubArchive:
+		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+	case PkgInfoTypeHTTP:
+		uS, err := pkgInfo.RenderURL(pkg, rt)
+		if err != nil {
+			return "", fmt.Errorf("render URL: %w", err)
+		}
+		u, err := url.Parse(uS)
+		if err != nil {
+			return "", fmt.Errorf("parse the URL: %w", err)
+		}
+		return filepath.Join(pkgInfo.GetType(), u.Host, u.Path), nil
+	}
+	return "", nil
+}
+
 func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime.Runtime) (string, error) {
 	assetName, err := pkgInfo.RenderAsset(pkg, rt)
 	if err != nil {

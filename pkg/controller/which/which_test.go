@@ -65,6 +65,7 @@ packages:
 `,
 			},
 			exp: &which.Which{
+				ConfigFilePath: "aqua.yaml",
 				Package: &config.Package{
 					Name:     "aquaproj/aqua-installer",
 					Registry: "standard",
@@ -160,6 +161,7 @@ packages:
 `,
 			},
 			exp: &which.Which{
+				ConfigFilePath: "/etc/aqua/aqua.yaml",
 				Package: &config.Package{
 					Name:     "aquaproj/aqua-installer",
 					Registry: "standard",

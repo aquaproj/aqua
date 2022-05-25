@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/exec"
@@ -17,6 +18,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Controller struct {
@@ -53,8 +55,15 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"exe_path": which.ExePath,
 			"package":  which.Package.Name,
 		})
+		checksumFile := checksum.GetChecksumFilePathFromConfigFilePath(which.ConfigFilePath)
+		if err := ctrl.packageInstaller.ReadChecksumFile(ctrl.fs, checksumFile); err != nil {
+			return fmt.Errorf("read checksum file: %w", err)
+		}
 		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false, logE); err != nil {
 			return err //nolint:wrapcheck
+		}
+		if err := ctrl.packageInstaller.UpdateChecksumFile(ctrl.fs, checksumFile); err != nil {
+			logerr.WithError(logE, err).Debug("check if exec file exists")
 		}
 		for i := 0; i < 10; i++ {
 			logE.Debug("check if exec file exists")

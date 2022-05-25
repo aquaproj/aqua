@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -27,6 +28,7 @@ type installer struct {
 	runtime           *runtime.Runtime
 	fs                afero.Fs
 	linker            link.Linker
+	checksums         checksum.Checksums
 }
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop
