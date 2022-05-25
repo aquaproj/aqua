@@ -45,7 +45,7 @@ func New(pkgInstaller installpackage.Installer, which which.Controller, executor
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error { //nolint:cyclop
 	which, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -55,16 +55,24 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"exe_path": which.ExePath,
 			"package":  which.Package.Name,
 		})
+
 		checksumFile := checksum.GetChecksumFilePathFromConfigFilePath(which.ConfigFilePath)
-		if err := ctrl.packageInstaller.ReadChecksumFile(ctrl.fs, checksumFile); err != nil {
-			return fmt.Errorf("read checksum file: %w", err)
+		if which.EnableChecksum {
+			if err := ctrl.packageInstaller.ReadChecksumFile(ctrl.fs, checksumFile); err != nil {
+				return fmt.Errorf("read checksum file: %w", err)
+			}
 		}
+
 		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false, logE); err != nil {
 			return err //nolint:wrapcheck
 		}
-		if err := ctrl.packageInstaller.UpdateChecksumFile(ctrl.fs, checksumFile); err != nil {
-			logerr.WithError(logE, err).Debug("check if exec file exists")
+
+		if which.EnableChecksum {
+			if err := ctrl.packageInstaller.UpdateChecksumFile(ctrl.fs, checksumFile); err != nil {
+				logerr.WithError(logE, err).Debug("check if exec file exists")
+			}
 		}
+
 		for i := 0; i < 10; i++ {
 			logE.Debug("check if exec file exists")
 			if fi, err := ctrl.fs.Stat(which.ExePath); err == nil {

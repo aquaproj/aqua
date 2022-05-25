@@ -39,4 +39,5 @@ type Which struct {
 	File           *config.File
 	ConfigFilePath string
 	ExePath        string
+	EnableChecksum bool
 }

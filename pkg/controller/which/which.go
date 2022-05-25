@@ -34,17 +34,16 @@ type controller struct {
 
 func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) { //nolint:cyclop
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		which, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
 		}
-		if pkg != nil {
-			w, err := ctrl.whichFile(pkg, pkgInfo, file)
-			if err != nil {
+		if which != nil && which.Package != nil {
+			if err := ctrl.whichFile(which); err != nil {
 				return nil, err
 			}
-			w.ConfigFilePath = cfgFilePath
-			return w, nil
+			which.ConfigFilePath = cfgFilePath
+			return which, nil
 		}
 	}
 
@@ -52,17 +51,16 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		which, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
 		}
-		if pkg != nil {
-			w, err := ctrl.whichFile(pkg, pkgInfo, file)
-			if err != nil {
+		if which != nil && which.Package != nil {
+			if err := ctrl.whichFile(which); err != nil {
 				return nil, err
 			}
-			w.ConfigFilePath = cfgFilePath
-			return w, nil
+			which.ConfigFilePath = cfgFilePath
+			return which, nil
 		}
 	}
 
@@ -76,42 +74,43 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	})
 }
 
-func (ctrl *controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
-	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, ctrl.runtime)
+func (ctrl *controller) whichFile(which *Which) error {
+	fileSrc, err := which.PkgInfo.GetFileSrc(which.Package, which.File, ctrl.runtime)
 	if err != nil {
-		return nil, fmt.Errorf("get file_src: %w", err)
+		return fmt.Errorf("get file_src: %w", err)
 	}
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.rootDir, pkg, ctrl.runtime)
+	pkgPath, err := which.PkgInfo.GetPkgPath(ctrl.rootDir, which.Package, ctrl.runtime)
 	if err != nil {
-		return nil, fmt.Errorf("get pkg install path: %w", err)
+		return fmt.Errorf("get pkg install path: %w", err)
 	}
-	return &Which{
-		Package: pkg,
-		PkgInfo: pkgInfo,
-		File:    file,
-		ExePath: filepath.Join(pkgPath, fileSrc),
-	}, nil
+	which.ExePath = filepath.Join(pkgPath, fileSrc)
+	return nil
 }
 
-func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*config.Package, *config.PackageInfo, *config.File, error) {
+func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*Which, error) {
 	cfg := &config.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
-		return nil, nil, nil, err //nolint:wrapcheck
+		return nil, err //nolint:wrapcheck
 	}
 	if err := validate.Config(cfg); err != nil {
-		return nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)
+		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
 
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
-		return nil, nil, nil, err //nolint:wrapcheck
+		return nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
 		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); pkgInfo != nil {
-			return pkg, pkgInfo, file, nil
+			return &Which{
+				Package:        pkg,
+				PkgInfo:        pkgInfo,
+				File:           file,
+				EnableChecksum: cfg.Checksum,
+			}, nil
 		}
 	}
-	return nil, nil, nil, nil
+	return nil, nil //nolint:nilnil
 }
 
 func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.RegistryContent, exeName string, pkg *config.Package, logE *logrus.Entry) (*config.PackageInfo, *config.File) {

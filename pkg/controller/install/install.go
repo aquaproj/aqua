@@ -87,10 +87,12 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 	}
 
 	checksumFile := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
-	if err := ctrl.packageInstaller.ReadChecksumFile(ctrl.fs, checksumFile); err != nil {
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"checksum_file": checksumFile,
-		}).Error("read a checksum file")
+	if cfg.Checksum {
+		if err := ctrl.packageInstaller.ReadChecksumFile(ctrl.fs, checksumFile); err != nil {
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
+				"checksum_file": checksumFile,
+			}).Error("read a checksum file")
+		}
 	}
 
 	if err := validate.Config(cfg); err != nil {
@@ -103,10 +105,12 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 	}
 
 	errInstallPackages := ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest, logE)
-	if err := ctrl.packageInstaller.UpdateChecksumFile(ctrl.fs, checksumFile); err != nil {
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"checksum_file": checksumFile,
-		}).Error("update a checksum file")
+	if cfg.Checksum {
+		if err := ctrl.packageInstaller.UpdateChecksumFile(ctrl.fs, checksumFile); err != nil {
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
+				"checksum_file": checksumFile,
+			}).Error("update a checksum file")
+		}
 	}
 	return errInstallPackages //nolint:wrapcheck
 }
