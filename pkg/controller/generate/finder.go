@@ -38,6 +38,9 @@ func (finder *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
 		return find(pkgs[i])
 	},
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+			if i < 0 {
+				return "No package matches"
+			}
 			return getPreview(pkgs[i], i, w)
 		}))
 }
