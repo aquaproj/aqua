@@ -10,6 +10,7 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/exec"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -86,7 +87,8 @@ packages:
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker)
+			executor := exec.NewMock(0, nil)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor)
 			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, registryDownloader, fs), pkgInstaller, fs)
 			if err := ctrl.Install(ctx, d.param, logE); err != nil {
 				if d.isErr {

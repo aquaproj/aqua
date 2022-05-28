@@ -66,7 +66,19 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	})
 }
 
+func (ctrl *controller) whichFileGo(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
+	return &Which{
+		Package: pkg,
+		PkgInfo: pkgInfo,
+		File:    file,
+		ExePath: filepath.Join(ctrl.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "bin", file.Name),
+	}, nil
+}
+
 func (ctrl *controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
+	if pkgInfo.Type == "go" {
+		return ctrl.whichFileGo(pkg, pkgInfo, file)
+	}
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, ctrl.runtime)
 	if err != nil {
 		return nil, fmt.Errorf("get file_src: %w", err)

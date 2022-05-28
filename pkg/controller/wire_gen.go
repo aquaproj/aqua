@@ -11,14 +11,14 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/exec"
+	exec2 "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
-	exec2 "github.com/aquaproj/aqua/pkg/exec"
+	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
@@ -74,7 +74,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	runtimeRuntime := runtime.New()
 	packageDownloader := download.NewPackageDownloader(repositoryService, runtimeRuntime, httpDownloader)
 	linker := link.New()
-	installpackageInstaller := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker)
+	executor := exec.New()
+	installpackageInstaller := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker, executor)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs)
 	return controller
 }
@@ -94,21 +95,21 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return controller
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *exec.Controller {
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *exec2.Controller {
 	repositoryService := github.New(ctx)
 	runtimeRuntime := runtime.New()
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	packageDownloader := download.NewPackageDownloader(repositoryService, runtimeRuntime, httpDownloader)
 	fs := afero.NewOsFs()
 	linker := link.New()
-	installer := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker)
+	executor := exec.New()
+	installer := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker, executor)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, httpDownloader)
 	registryInstaller := registry.New(param, registryDownloader, fs)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, runtimeRuntime, osEnv, fs, linker)
-	executor := exec2.New()
-	execController := exec.New(installer, controller, executor, osEnv, fs)
+	execController := exec2.New(installer, controller, executor, osEnv, fs)
 	return execController
 }

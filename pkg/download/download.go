@@ -24,7 +24,7 @@ func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.
 		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, pkgInfo, assetName, logE)
 	case config.PkgInfoTypeGitHubContent:
 		return downloader.getReadCloserFromGitHubContent(ctx, pkg, pkgInfo, assetName)
-	case config.PkgInfoTypeGitHubArchive:
+	case config.PkgInfoTypeGitHubArchive, config.PkgInfoTypeGo:
 		return downloader.getReadCloserFromGitHubArchive(ctx, pkg, pkgInfo)
 	case config.PkgInfoTypeHTTP:
 		return downloader.getReadCloserFromHTTP(ctx, pkg, pkgInfo)

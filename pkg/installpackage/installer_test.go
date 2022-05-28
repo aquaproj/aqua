@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -28,6 +29,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		rt         *runtime.Runtime
 		cfg        *config.Config
 		registries map[string]*config.RegistryContent
+		executor   exec.Executor
 		binDir     string
 		onlyLink   bool
 		isTest     bool
@@ -200,7 +202,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
 			if err := ctrl.InstallPackages(ctx, d.cfg, d.registries, d.binDir, d.onlyLink, d.isTest, logE); err != nil {
 				if d.isErr {
 					return
@@ -217,14 +219,15 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		name    string
-		files   map[string]string
-		param   *config.Param
-		rt      *runtime.Runtime
-		pkgInfo *config.PackageInfo
-		pkg     *config.Package
-		isTest  bool
-		isErr   bool
+		name     string
+		files    map[string]string
+		param    *config.Param
+		rt       *runtime.Runtime
+		pkgInfo  *config.PackageInfo
+		pkg      *config.Package
+		executor exec.Executor
+		isTest   bool
+		isErr    bool
 	}{
 		{
 			name: "file already exists",
@@ -264,7 +267,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
 			if err := ctrl.InstallPackage(ctx, d.pkgInfo, d.pkg, d.isTest, logE); err != nil {
 				if d.isErr {
 					return

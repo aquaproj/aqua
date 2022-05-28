@@ -44,7 +44,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 }
 
 func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, runtime.New, afero.NewOsFs, link.New, download.NewHTTPDownloader)
+	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, runtime.New, afero.NewOsFs, link.New, download.NewHTTPDownloader, exec.New)
 	return &install.Controller{}
 }
 
