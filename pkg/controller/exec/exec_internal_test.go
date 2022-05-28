@@ -9,19 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type mockExecutor struct {
-	exitCode int
-	err      error
-}
-
-func (exe *mockExecutor) Exec(ctx context.Context, exePath string, args []string) (int, error) {
-	return exe.exitCode, exe.err
-}
-
-func (exe *mockExecutor) ExecXSys(exePath string, args []string) error {
-	return exe.err
-}
-
 func TestController_execCommand(t *testing.T) {
 	t.Parallel()
 	data := []struct {
@@ -34,7 +21,7 @@ func TestController_execCommand(t *testing.T) {
 			title:    "normal",
 			exePath:  "/bin/date",
 			args:     []string{},
-			executor: &mockExecutor{},
+			executor: exec.NewMock(0, nil),
 		},
 	}
 	ctx := context.Background()
