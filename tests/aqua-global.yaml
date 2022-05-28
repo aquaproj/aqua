@@ -50,7 +50,7 @@ packages:
   # supported_if
   registry: local
 
-- name: aristocratos/btop@v1.2.6
+- name: aristocratos/btop@v1.2.7
   # replacements_overrides
   registry: local
 
