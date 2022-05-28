@@ -27,11 +27,6 @@ type File struct {
 func Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs) error {
 	arc, err := getUnarchiver(src, dest)
 	if err != nil {
-		logE.WithFields(logrus.Fields{
-			"format":                 src.Type,
-			"filename":               src.Filename,
-			"filepath.Ext(filename)": filepath.Ext(src.Filename),
-		}).Error("get the unarchiver or decompressor")
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
