@@ -16,11 +16,20 @@ type RepositoryService interface {
 	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
 	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
 	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
-	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(ctx context.Context) RepositoryService {
-	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
+func New(httpClient *http.Client) RepositoryService {
+	return github.NewClient(httpClient).Repositories
+}
+
+type AccessToken struct {
+	token string
+}
+
+func NewAccessToken() *AccessToken {
+	return &AccessToken{
+		token: getGitHubToken(),
+	}
 }
 
 func getGitHubToken() string {
@@ -30,11 +39,11 @@ func getGitHubToken() string {
 	return os.Getenv("GITHUB_TOKEN")
 }
 
-func getHTTPClientForGitHub(ctx context.Context, token string) *http.Client {
-	if token == "" {
+func NewHTTPClient(ctx context.Context, token *AccessToken) *http.Client {
+	if token == nil || token.token == "" {
 		return http.DefaultClient
 	}
 	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
+		&oauth2.Token{AccessToken: token.token},
 	))
 }

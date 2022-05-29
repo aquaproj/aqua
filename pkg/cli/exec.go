@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -41,7 +40,7 @@ func (runner *Runner) execAction(c *cli.Context) error {
 	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
+	ctrl := controller.InitializeExecCommandController(c.Context, param, runner.Runtime)
 	exeName, args, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err

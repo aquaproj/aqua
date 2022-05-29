@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
@@ -106,6 +105,6 @@ func (runner *Runner) generateAction(c *cli.Context) error {
 	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient)
+	ctrl := controller.InitializeGenerateCommandController(c.Context, param)
 	return ctrl.Generate(c.Context, runner.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
 }

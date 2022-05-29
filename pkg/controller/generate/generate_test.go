@@ -37,6 +37,7 @@ func Test_controller_Generate(t *testing.T) { //nolint:funlen
 		idxs           []int
 		fuzzyFinderErr error
 		releases       []*github.RepositoryRelease
+		tags           []string
 	}{
 		{
 			name: "normal",
@@ -234,11 +235,12 @@ packages:
 			}
 			configFinder := finder.NewConfigFinder(fs)
 			gh := githubSvc.NewMock(d.releases, nil, "")
+			v4Client := githubSvc.NewMockGraphQL(d.tags, nil)
 			downloader := download.NewRegistryDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs)
 			configReader := reader.New(fs)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder)
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, v4Client)
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return
