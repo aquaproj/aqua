@@ -63,7 +63,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	return controller
 }
 
-func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *install.Controller {
+func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *install.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
@@ -71,16 +71,15 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, httpDownloader)
 	installer := registry.New(param, registryDownloader, fs)
-	runtimeRuntime := runtime.New()
-	packageDownloader := download.NewPackageDownloader(repositoryService, runtimeRuntime, httpDownloader)
+	packageDownloader := download.NewPackageDownloader(repositoryService, rt, httpDownloader)
 	linker := link.New()
 	executor := exec.New()
-	installpackageInstaller := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker, executor)
+	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs)
 	return controller
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) which.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
@@ -88,28 +87,26 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, httpDownloader)
 	installer := registry.New(param, registryDownloader, fs)
-	runtimeRuntime := runtime.New()
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, runtimeRuntime, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	return controller
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *exec2.Controller {
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *exec2.Controller {
 	repositoryService := github.New(ctx)
-	runtimeRuntime := runtime.New()
 	httpDownloader := download.NewHTTPDownloader(httpClient)
-	packageDownloader := download.NewPackageDownloader(repositoryService, runtimeRuntime, httpDownloader)
+	packageDownloader := download.NewPackageDownloader(repositoryService, rt, httpDownloader)
 	fs := afero.NewOsFs()
 	linker := link.New()
 	executor := exec.New()
-	installer := installpackage.New(param, packageDownloader, runtimeRuntime, fs, linker, executor)
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	registryDownloader := download.NewRegistryDownloader(repositoryService, httpDownloader)
 	registryInstaller := registry.New(param, registryDownloader, fs)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, runtimeRuntime, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	execController := exec2.New(installer, controller, executor, osEnv, fs)
 	return execController
 }

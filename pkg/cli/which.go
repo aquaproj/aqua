@@ -36,16 +36,15 @@ FATA[0000] aqua failed                                   aqua_version=0.8.6 erro
 
 func (runner *Runner) whichAction(c *cli.Context) error {
 	param := &config.Param{}
-	logE, err := runner.setParam(c, param)
-	if err != nil {
+	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient)
+	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
 	exeName, _, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
-	which, err := ctrl.Which(c.Context, param, exeName, logE)
+	which, err := ctrl.Which(c.Context, param, exeName, runner.LogE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

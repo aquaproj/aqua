@@ -23,10 +23,9 @@ $ aqua init foo.yaml # create foo.yaml`,
 
 func (runner *Runner) initAction(c *cli.Context) error {
 	param := &config.Param{}
-	logE, err := runner.setParam(c, param)
-	if err != nil {
+	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(c.Context, param)
-	return ctrl.Init(c.Context, c.Args().First(), logE) //nolint:wrapcheck
+	return ctrl.Init(c.Context, c.Args().First(), runner.LogE) //nolint:wrapcheck
 }

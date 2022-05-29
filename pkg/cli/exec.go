@@ -38,14 +38,13 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 
 func (runner *Runner) execAction(c *cli.Context) error {
 	param := &config.Param{}
-	logE, err := runner.setParam(c, param)
-	if err != nil {
+	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient)
+	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
 	exeName, args, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
-	return ctrl.Exec(c.Context, param, exeName, args, logE) //nolint:wrapcheck
+	return ctrl.Exec(c.Context, param, exeName, args, runner.LogE) //nolint:wrapcheck
 }
