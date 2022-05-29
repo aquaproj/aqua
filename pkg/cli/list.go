@@ -29,10 +29,9 @@ standard,abs-lang/abs
 
 func (runner *Runner) listAction(c *cli.Context) error {
 	param := &config.Param{}
-	logE, err := runner.setParam(c, param)
-	if err != nil {
+	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient)
-	return ctrl.List(c.Context, param, logE) //nolint:wrapcheck
+	return ctrl.List(c.Context, param, runner.LogE) //nolint:wrapcheck
 }

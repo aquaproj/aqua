@@ -9,6 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/cli"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -24,21 +25,20 @@ type HasExitCode interface {
 }
 
 func main() {
-	fields := logrus.Fields{
-		"aqua_version": version,
-	}
-	if err := core(); err != nil {
+	rt := runtime.New()
+	logE := log.New(rt, version)
+	if err := core(logE, rt); err != nil {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
 			code := hasExitCode.ExitCode()
-			logerr.WithError(log.New(version).WithField("exit_code", code).WithFields(fields), err).Debug("command failed")
+			logerr.WithError(logE.WithField("exit_code", code), err).Debug("command failed")
 			os.Exit(code)
 		}
-		logerr.WithError(log.New(version), err).WithFields(fields).Fatal("aqua failed")
+		logerr.WithError(logE, err).Fatal("aqua failed")
 	}
 }
 
-func core() error {
+func core(logE *logrus.Entry, rt *runtime.Runtime) error {
 	runner := cli.Runner{
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
@@ -48,6 +48,8 @@ func core() error {
 			Commit:  commit,
 			Date:    date,
 		},
+		LogE:    logE,
+		Runtime: rt,
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

@@ -103,10 +103,9 @@ func (runner *Runner) newGenerateCommand() *cli.Command {
 
 func (runner *Runner) generateAction(c *cli.Context) error {
 	param := &config.Param{}
-	logE, err := runner.setParam(c, param)
-	if err != nil {
+	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient)
-	return ctrl.Generate(c.Context, logE, param, c.Args().Slice()...) //nolint:wrapcheck
+	return ctrl.Generate(c.Context, runner.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
 }

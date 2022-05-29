@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/urfave/cli/v2"
@@ -20,6 +21,8 @@ type Runner struct {
 	Stdout  io.Writer
 	Stderr  io.Writer
 	LDFlags *LDFlags
+	LogE    *logrus.Entry
+	Runtime *runtime.Runtime
 }
 
 type LDFlags struct {
@@ -28,7 +31,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Entry, error) {
+func (runner *Runner) setParam(c *cli.Context, param *config.Param) error {
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
@@ -40,16 +43,16 @@ func (runner *Runner) setParam(c *cli.Context, param *config.Param) (*logrus.Ent
 	param.File = c.String("f")
 	param.AQUAVersion = runner.LDFlags.Version
 	param.RootDir = config.GetRootDir(osenv.New())
-	logE := log.New(param.AQUAVersion)
+	logE := runner.LogE
 	log.SetLevel(param.LogLevel, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
 	wd, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("get the current directory: %w", err)
+		return fmt.Errorf("get the current directory: %w", err)
 	}
 	param.PWD = wd
-	return logE, nil
+	return nil
 }
 
 func (runner *Runner) Run(ctx context.Context, args ...string) error {

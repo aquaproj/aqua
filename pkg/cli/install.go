@@ -51,10 +51,9 @@ $ aqua i -a
 
 func (runner *Runner) installAction(c *cli.Context) error {
 	param := &config.Param{}
-	logE, err := runner.setParam(c, param)
-	if err != nil {
+	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient)
-	return ctrl.Install(c.Context, param, logE) //nolint:wrapcheck
+	ctrl := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
+	return ctrl.Install(c.Context, param, runner.LogE) //nolint:wrapcheck
 }
