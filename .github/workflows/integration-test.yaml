@@ -58,6 +58,10 @@ jobs:
     - run: git diff aqua.yaml
       working-directory: tests
 
+    - name: "test version_source: github_tag"
+      run: aqua -c aqua-global.yaml g local,mitchellh/gox
+      working-directory: tests
+
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
       working-directory: /tmp
