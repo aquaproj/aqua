@@ -32,6 +32,7 @@ type PackageInfo struct {
 	VersionFilter      *string            `yaml:"version_filter" json:"version_filter,omitempty"`
 	Rosetta2           *bool              `json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `json:"aliases,omitempty"`
+	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source"`
 }
 
 func (pkgInfo *PackageInfo) copy() *PackageInfo {
@@ -56,6 +57,7 @@ func (pkgInfo *PackageInfo) copy() *PackageInfo {
 		VersionFilter:      pkgInfo.VersionFilter,
 		Rosetta2:           pkgInfo.Rosetta2,
 		Aliases:            pkgInfo.Aliases,
+		VersionSource:      pkgInfo.VersionSource,
 	}
 	return pkg
 }
@@ -103,6 +105,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.Rosetta2 != nil {
 		pkg.Rosetta2 = child.Rosetta2
+	}
+	if child.VersionSource != "" {
+		pkg.VersionSource = child.VersionSource
 	}
 	return pkg
 }
@@ -165,6 +170,7 @@ type VersionOverride struct {
 	SupportedIf        *string           `yaml:"supported_if" json:"supported_if,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter" json:"version_filter,omitempty"`
+	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
 	Rosetta2           *bool             `json:"rosetta2,omitempty"`
 }
 

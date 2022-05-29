@@ -232,7 +232,75 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 	}
 }
 
+func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *config.PackageInfo, logE *logrus.Entry) string {
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
+	opt := &github.ListOptions{
+		PerPage: 30, //nolint:gomnd
+	}
+	versionFilter, err := constraint.CompileVersionFilter(*pkgInfo.VersionFilter)
+	if err != nil {
+		return ""
+	}
+	for {
+		tags, _, err := ctrl.gitHubRepositoryService.ListTags(ctx, repoOwner, repoName, opt)
+		if err != nil {
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
+				"repo_owner": repoOwner,
+				"repo_name":  repoName,
+			}).Warn("list releases")
+			return ""
+		}
+		for _, tag := range tags {
+			tagName := tag.GetName()
+			f, err := constraint.EvaluateVersionFilter(versionFilter, tagName)
+			if err != nil || !f {
+				continue
+			}
+			return tagName
+		}
+		if len(tags) != opt.PerPage {
+			return ""
+		}
+		opt.Page++
+	}
+}
+
+func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo, logE *logrus.Entry) {
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
+	var tagName string
+	if pkgInfo.VersionFilter != nil {
+		tagName = ctrl.listAndGetTagNameFromTag(ctx, pkgInfo, logE)
+	} else {
+		tags, _, err := ctrl.gitHubRepositoryService.ListTags(ctx, repoOwner, repoName, nil)
+		if err != nil {
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
+				"repo_owner": repoOwner,
+				"repo_name":  repoName,
+			}).Warn("list GitHub tags")
+			return
+		}
+		if len(tags) == 0 {
+			return
+		}
+		tag := tags[0]
+		tagName = tag.GetName()
+	}
+
+	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
+		outputPkg.Name += "@" + tagName
+		outputPkg.Version = ""
+	} else {
+		outputPkg.Version = tagName
+	}
+}
+
 func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo, logE *logrus.Entry) {
+	if pkgInfo.VersionSource == "github_tag" {
+		ctrl.getOutputtedGitHubPkgFromTag(ctx, outputPkg, pkgInfo, logE)
+		return
+	}
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	var tagName string

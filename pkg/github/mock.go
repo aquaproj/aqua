@@ -12,6 +12,7 @@ import (
 
 var (
 	errReleaseNotFound = errors.New("release isn't found")
+	errTagNotFound     = errors.New("tag isn't found")
 	errAssetNotFound   = errors.New("asset isn't found")
 	errContentNotFound = errors.New("content isn't found")
 )
@@ -19,6 +20,7 @@ var (
 type mockRepositoryService struct {
 	releases []*github.RepositoryRelease
 	content  *github.RepositoryContent
+	tags     []*github.RepositoryTag
 	asset    string
 }
 
@@ -63,4 +65,11 @@ func (svc *mockRepositoryService) ListReleases(ctx context.Context, owner, repo 
 		return nil, nil, errReleaseNotFound
 	}
 	return svc.releases, nil, nil
+}
+
+func (svc *mockRepositoryService) ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
+	if svc.tags == nil {
+		return nil, nil, errTagNotFound
+	}
+	return svc.tags, nil, nil
 }

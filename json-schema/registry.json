@@ -228,6 +228,9 @@
             "$ref": "#/$defs/Alias"
           },
           "type": "array"
+        },
+        "version_source": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -317,6 +320,9 @@
           "type": "string"
         },
         "version_filter": {
+          "type": "string"
+        },
+        "version_source": {
           "type": "string"
         },
         "rosetta2": {
