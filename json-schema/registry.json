@@ -21,7 +21,10 @@
           "type": "string"
         },
         "src": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
+        },
+        "dir": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -118,7 +121,7 @@
           ]
         },
         "asset": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         },
         "files": {
           "items": {
@@ -127,15 +130,11 @@
           "type": "array"
         },
         "url": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         }
       },
       "additionalProperties": false,
       "type": "object"
-    },
-    "PackageCondition": {
-      "type": "string",
-      "description": "expr's expression. The evaluation result must be a boolean. If the evaluation result is false, aqua skips installing the package and outputs the debug log. If supported_if isn't set, the package is always installed."
     },
     "PackageInfo": {
       "properties": {
@@ -158,10 +157,10 @@
           "type": "string"
         },
         "asset": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         },
         "path": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         },
         "format": {
           "type": "string",
@@ -177,7 +176,7 @@
           "type": "array"
         },
         "url": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         },
         "description": {
           "type": "string"
@@ -206,7 +205,7 @@
           "type": "array"
         },
         "version_constraint": {
-          "$ref": "#/$defs/VersionConstraints"
+          "type": "string"
         },
         "version_overrides": {
           "items": {
@@ -215,10 +214,10 @@
           "type": "array"
         },
         "supported_if": {
-          "$ref": "#/$defs/PackageCondition"
+          "type": "string"
         },
         "version_filter": {
-          "$ref": "#/$defs/VersionFilter"
+          "type": "string"
         },
         "rosetta2": {
           "type": "boolean"
@@ -251,18 +250,6 @@
         "packages"
       ]
     },
-    "Template": {
-      "type": "string",
-      "description": "Go's text/template"
-    },
-    "VersionConstraints": {
-      "type": "string",
-      "description": "expr's expression. The evaluation result must be a boolean"
-    },
-    "VersionFilter": {
-      "type": "string",
-      "description": "expr's expression. The evaluation result must be a boolean"
-    },
     "VersionOverride": {
       "properties": {
         "type": {
@@ -281,10 +268,10 @@
           "type": "string"
         },
         "asset": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         },
         "path": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         },
         "format": {
           "type": "string",
@@ -300,7 +287,7 @@
           "type": "array"
         },
         "url": {
-          "$ref": "#/$defs/Template"
+          "type": "string"
         },
         "replacements": {
           "patternProperties": {
@@ -323,13 +310,13 @@
           "type": "array"
         },
         "supported_if": {
-          "$ref": "#/$defs/PackageCondition"
+          "type": "string"
         },
         "version_constraint": {
-          "$ref": "#/$defs/VersionConstraints"
+          "type": "string"
         },
         "version_filter": {
-          "$ref": "#/$defs/VersionFilter"
+          "type": "string"
         },
         "rosetta2": {
           "type": "boolean"
