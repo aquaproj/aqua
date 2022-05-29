@@ -13,7 +13,7 @@ import (
 
 type PackageInfo struct {
 	Name               string             `json:"name,omitempty"`
-	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go"`
 	RepoOwner          string             `yaml:"repo_owner" json:"repo_owner,omitempty"`
 	RepoName           string             `yaml:"repo_name" json:"repo_name,omitempty"`
 	Asset              *string            `json:"asset,omitempty"`
