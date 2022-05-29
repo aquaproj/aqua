@@ -85,3 +85,13 @@ packages:
   format_overrides:
   - goos: windows
     format: zip
+
+# Go
+- type: go
+  repo_owner: google
+  repo_name: wire
+  description: Compile-time Dependency Injection for Go
+  files:
+  - name: wire
+    src: ./cmd/wire
+    dir: "wire-{{trimV .Version}}"

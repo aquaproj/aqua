@@ -5,6 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -17,7 +18,7 @@ type Installer interface {
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
 }
 
-func New(param *config.Param, downloader download.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker link.Linker) Installer {
+func New(param *config.Param, downloader download.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker link.Linker, executor exec.Executor) Installer {
 	return &installer{
 		rootDir:           param.RootDir,
 		maxParallelism:    param.MaxParallelism,
@@ -25,5 +26,6 @@ func New(param *config.Param, downloader download.PackageDownloader, rt *runtime
 		runtime:           rt,
 		fs:                fs,
 		linker:            linker,
+		executor:          executor,
 	}
 }

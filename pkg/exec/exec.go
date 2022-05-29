@@ -19,6 +19,7 @@ type executor struct {
 
 type Executor interface {
 	Exec(ctx context.Context, exePath string, args []string) (int, error)
+	ExecWithDir(ctx context.Context, exePath string, args []string, dir string) (int, error)
 	ExecXSys(exePath string, args []string) error
 }
 
@@ -46,6 +47,10 @@ func (exe *mockExecutor) Exec(ctx context.Context, exePath string, args []string
 	return exe.exitCode, exe.err
 }
 
+func (exe *mockExecutor) ExecWithDir(ctx context.Context, exePath string, args []string, dir string) (int, error) {
+	return exe.exitCode, exe.err
+}
+
 func (exe *mockExecutor) ExecXSys(exePath string, args []string) error {
 	return exe.err
 }
@@ -63,6 +68,19 @@ func (exe *executor) Exec(ctx context.Context, exePath string, args []string) (i
 	cmd.Stdin = exe.stdin
 	cmd.Stdout = exe.stdout
 	cmd.Stderr = exe.stderr
+	runner := timeout.NewRunner(0)
+	if err := runner.Run(ctx, cmd); err != nil {
+		return cmd.ProcessState.ExitCode(), err
+	}
+	return 0, nil
+}
+
+func (exe *executor) ExecWithDir(ctx context.Context, exePath string, args []string, dir string) (int, error) {
+	cmd := exec.Command(exePath, args...)
+	cmd.Stdin = exe.stdin
+	cmd.Stdout = exe.stdout
+	cmd.Stderr = exe.stderr
+	cmd.Dir = dir
 	runner := timeout.NewRunner(0)
 	if err := runner.Run(ctx, cmd); err != nil {
 		return cmd.ProcessState.ExitCode(), err

@@ -69,6 +69,7 @@ const (
 	PkgInfoTypeGitHubContent = "github_content"
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
+	PkgInfoTypeGo            = "go"
 )
 
 func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -115,6 +116,7 @@ type FormatOverride struct {
 type File struct {
 	Name string `validate:"required" json:"name,omitempty"`
 	Src  string `json:"src,omitempty"`
+	Dir  string `json:"dir,omitempty"`
 }
 
 func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime) string {
@@ -127,6 +129,18 @@ func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime)
 
 func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runtime) (string, error) {
 	return template.Execute(file.Src, map[string]interface{}{ //nolint:wrapcheck
+		"Version":  pkg.Version,
+		"GOOS":     rt.GOOS,
+		"GOARCH":   rt.GOARCH,
+		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"Format":   pkgInfo.GetFormat(),
+		"FileName": file.Name,
+	})
+}
+
+func (file *File) RenderDir(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runtime) (string, error) {
+	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
 		"Version":  pkg.Version,
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,

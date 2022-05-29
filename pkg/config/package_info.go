@@ -201,7 +201,7 @@ func (pkgInfo *PackageInfo) GetLink() string {
 }
 
 func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == PkgInfoTypeGitHubArchive {
+	if pkgInfo.Type == PkgInfoTypeGitHubArchive || pkgInfo.Type == PkgInfoTypeGo {
 		return "tar.gz"
 	}
 	return pkgInfo.Format
@@ -249,6 +249,8 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+	case PkgInfoTypeGo:
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
@@ -270,7 +272,7 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 		return errPkgNameIsRequired
 	}
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
 		}
@@ -302,7 +304,7 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 
 func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (string, error) {
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
 		return "", nil
 	case PkgInfoTypeGitHubContent:
 		s, err := pkgInfo.renderTemplateString(*pkgInfo.Path, pkg, rt)

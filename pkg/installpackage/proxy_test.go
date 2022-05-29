@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -17,12 +18,13 @@ import (
 func Test_installer_InstallProxy(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		name  string
-		files map[string]string
-		param *config.Param
-		rt    *runtime.Runtime
-		links map[string]string
-		isErr bool
+		name     string
+		files    map[string]string
+		param    *config.Param
+		rt       *runtime.Runtime
+		executor exec.Executor
+		links    map[string]string
+		isErr    bool
 	}{
 		{
 			name: "file already exists",
@@ -60,7 +62,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
 			if err := ctrl.InstallProxy(ctx, logE); err != nil {
 				if d.isErr {
 					return

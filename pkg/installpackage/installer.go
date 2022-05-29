@@ -9,6 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -27,6 +28,7 @@ type installer struct {
 	runtime           *runtime.Runtime
 	fs                afero.Fs
 	linker            link.Linker
+	executor          exec.Executor
 }
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop
@@ -133,7 +135,7 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
-		if err := inst.checkFileSrc(pkg, pkgInfo, file, logE); err != nil {
+		if err := inst.checkFileSrc(ctx, pkg, pkgInfo, file, logE); err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -246,11 +248,40 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 	}
 }
 
-func (inst *installer) checkFileSrc(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, logE *logrus.Entry) error {
+func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, logE *logrus.Entry) error {
+	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "bin", file.Name)
+	dir, err := file.RenderDir(pkg, pkgInfo, inst.runtime)
+	if err != nil {
+		return fmt.Errorf("render file dir: %w", err)
+	}
+	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src", dir)
+	if _, err := inst.fs.Stat(exePath); err == nil {
+		return nil
+	}
+	src := file.Src
+	if src == "" {
+		src = "."
+	}
+	logE.WithFields(logrus.Fields{
+		"exe_path":     exePath,
+		"go_src":       src,
+		"go_build_dir": exeDir,
+	}).Info("building Go tool")
+	if _, err := inst.executor.ExecWithDir(ctx, "go", []string{"build", "-o", exePath, src}, exeDir); err != nil {
+		return fmt.Errorf("build Go tool: %w", err)
+	}
+	return nil
+}
+
+func (inst *installer) checkFileSrc(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, logE *logrus.Entry) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}
 	logE = logE.WithFields(fields)
+
+	if pkgInfo.Type == "go" {
+		return inst.checkFileSrcGo(ctx, pkg, pkgInfo, file, logE)
+	}
 
 	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, inst.runtime)
 	if err != nil {

@@ -123,8 +123,8 @@ packages:
 			osEnv := osenv.NewMock(d.env)
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker)
 			executor := exec.NewMock(0, nil)
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor)
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
 			if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
 				if d.isErr {
