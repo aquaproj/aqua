@@ -58,3 +58,7 @@ packages:
   # alias
   registry: local
   version: v0.9.4 # renovate: depName=ahmetb/kubectx
+
+- name: google/wire@v0.5.0
+  # type: go
+  registry: local
