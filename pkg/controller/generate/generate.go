@@ -28,6 +28,7 @@ type Controller struct {
 	stdin                   io.Reader
 	stdout                  io.Writer
 	gitHubRepositoryService githubSvc.RepositoryService
+	githubV4                githubSvc.GraphQL
 	registryInstaller       registry.Installer
 	configFinder            finder.ConfigFinder
 	configReader            reader.ConfigReader
@@ -35,7 +36,7 @@ type Controller struct {
 	fs                      afero.Fs
 }
 
-func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
+func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder, githubV4 githubSvc.GraphQL) *Controller {
 	return &Controller{
 		stdin:                   os.Stdin,
 		stdout:                  os.Stdout,
@@ -43,6 +44,7 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, reg
 		configReader:            configReader,
 		registryInstaller:       registInstaller,
 		gitHubRepositoryService: gh,
+		githubV4:                githubV4,
 		fs:                      fs,
 		fuzzyFinder:             fuzzyFinder,
 	}
@@ -235,35 +237,26 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *config.PackageInfo, logE *logrus.Entry) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
-	}
 	versionFilter, err := constraint.CompileVersionFilter(*pkgInfo.VersionFilter)
 	if err != nil {
 		return ""
 	}
-	for {
-		tags, _, err := ctrl.gitHubRepositoryService.ListTags(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return ""
-		}
-		for _, tag := range tags {
-			tagName := tag.GetName()
-			f, err := constraint.EvaluateVersionFilter(versionFilter, tagName)
-			if err != nil || !f {
-				continue
-			}
-			return tagName
-		}
-		if len(tags) != opt.PerPage {
-			return ""
-		}
-		opt.Page++
+	tags, err := ctrl.githubV4.ListTags(ctx, repoOwner, repoName)
+	if err != nil {
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
+			"repo_owner": repoOwner,
+			"repo_name":  repoName,
+		}).Warn("list releases")
+		return ""
 	}
+	for _, tag := range tags {
+		f, err := constraint.EvaluateVersionFilter(versionFilter, tag)
+		if err != nil || !f {
+			continue
+		}
+		return tag
+	}
+	return ""
 }
 
 func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo, logE *logrus.Entry) {
@@ -273,7 +266,7 @@ func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, output
 	if pkgInfo.VersionFilter != nil {
 		tagName = ctrl.listAndGetTagNameFromTag(ctx, pkgInfo, logE)
 	} else {
-		tags, _, err := ctrl.gitHubRepositoryService.ListTags(ctx, repoOwner, repoName, nil)
+		tags, err := ctrl.githubV4.ListTags(ctx, repoOwner, repoName)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -284,8 +277,7 @@ func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, output
 		if len(tags) == 0 {
 			return
 		}
-		tag := tags[0]
-		tagName = tag.GetName()
+		tagName = tags[0]
 	}
 
 	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {

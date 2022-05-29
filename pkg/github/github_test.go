@@ -9,7 +9,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	if client := github.New(context.Background()); client == nil {
+	if client := github.New(github.NewHTTPClient(context.Background(), github.NewAccessToken())); client == nil {
 		t.Fatal("client must not be nil")
 	}
 }

@@ -14,6 +14,8 @@ require (
 	github.com/invopop/jsonschema v0.4.0
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mholt/archiver/v3 v3.5.1
+	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00
+	github.com/shurcooL/graphql v0.0.0-20220520033453-bdb1221e171e // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.8.2
 	github.com/suzuki-shunsuke/flute v1.0.1

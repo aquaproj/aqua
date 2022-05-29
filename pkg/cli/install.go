@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
@@ -54,6 +53,6 @@ func (runner *Runner) installAction(c *cli.Context) error {
 	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
+	ctrl := controller.InitializeInstallCommandController(c.Context, param, runner.Runtime)
 	return ctrl.Install(c.Context, param, runner.LogE) //nolint:wrapcheck
 }
