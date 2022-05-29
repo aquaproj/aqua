@@ -95,3 +95,7 @@ packages:
   - name: wire
     src: ./cmd/wire
     dir: "wire-{{trimV .Version}}"
+
+# unknown package type
+- type: foo
+  name: foo
