@@ -147,7 +147,8 @@
             "github_release",
             "github_content",
             "github_archive",
-            "http"
+            "http",
+            "go"
           ]
         },
         "repo_owner": {
