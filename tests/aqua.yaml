@@ -1,6 +1,6 @@
 registries:
 - type: standard
-  ref: v2.18.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v2.19.0 # renovate: depName=aquaproj/aqua-registry
 
 packages:
 - name: kubernetes-sigs/kind # http package, raw format
