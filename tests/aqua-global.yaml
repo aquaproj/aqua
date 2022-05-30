@@ -62,3 +62,12 @@ packages:
 - name: google/wire@v0.5.0
   # type: go
   registry: local
+
+- name: mitchellh/gox
+  registry: local
+  # specify revision
+  version: 8c3b2b9e647dc52457d6ee7b5adcf97e2bafe131
+
+- name: bats-core/bats-core
+  # specify revision
+  version: 9695e7c589a07756c999893764ccd9a506a47f89
