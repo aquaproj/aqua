@@ -8,6 +8,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	gh "github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -40,8 +41,20 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Cont
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
-	url := fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)
-	return downloader.http.Download(ctx, url) //nolint:wrapcheck
+	if rc, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)); err == nil {
+		return rc, nil
+	}
+	// e.g. https://github.com/anqiansong/github-compare/archive/3972625c74bf6a5da00beb0e17e30e3e8d0c0950.zip
+	if rc, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)); err == nil {
+		return rc, nil
+	}
+	u, _, err := downloader.github.GetArchiveLink(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, gh.Tarball, &gh.RepositoryContentGetOptions{
+		Ref: pkg.Version,
+	}, true)
+	if err != nil {
+		return nil, fmt.Errorf("git an archive link with GitHub API: %w", err)
+	}
+	return downloader.http.Download(ctx, u.String()) //nolint:wrapcheck
 }
 
 func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
