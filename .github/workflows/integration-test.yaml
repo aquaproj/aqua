@@ -52,6 +52,8 @@ jobs:
       env:
         AQUA_EXPERIMENTAL_X_SYS_EXEC: "true"
     - run: wire --help
+    - run: gox --help
+    - run: bats -v
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests

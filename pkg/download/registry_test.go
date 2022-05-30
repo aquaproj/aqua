@@ -69,7 +69,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 			exp:       "foo",
 			github: githubSvc.NewMock(nil, &github.RepositoryContent{
 				Content: stringP("foo"),
-			}, ""),
+			}, "", nil),
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
