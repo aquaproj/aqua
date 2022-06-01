@@ -1,6 +1,6 @@
 package config
 
-import constraint "github.com/aquaproj/aqua/pkg/version-constraint"
+import constraint "github.com/aquaproj/aqua/pkg/expr"
 
 func (pkgInfo *PackageInfo) setVersion(v string) (*PackageInfo, error) {
 	if pkgInfo.VersionConstraints == "" {

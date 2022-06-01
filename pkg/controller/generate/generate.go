@@ -15,7 +15,7 @@ import (
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
+	constraint "github.com/aquaproj/aqua/pkg/expr"
 	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
