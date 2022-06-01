@@ -22,6 +22,11 @@ $ aqua init foo.yaml # create foo.yaml`,
 }
 
 func (runner *Runner) initAction(c *cli.Context) error {
+	tracer, err := startTrace(c.String("trace"))
+	if err != nil {
+		return err
+	}
+	defer tracer.Stop()
 	param := &config.Param{}
 	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)

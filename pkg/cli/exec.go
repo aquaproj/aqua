@@ -37,6 +37,11 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 }
 
 func (runner *Runner) execAction(c *cli.Context) error {
+	tracer, err := startTrace(c.String("trace"))
+	if err != nil {
+		return err
+	}
+	defer tracer.Stop()
 	param := &config.Param{}
 	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)

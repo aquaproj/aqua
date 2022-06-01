@@ -35,6 +35,11 @@ FATA[0000] aqua failed                                   aqua_version=0.8.6 erro
 }
 
 func (runner *Runner) whichAction(c *cli.Context) error {
+	tracer, err := startTrace(c.String("trace"))
+	if err != nil {
+		return err
+	}
+	defer tracer.Stop()
 	param := &config.Param{}
 	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
