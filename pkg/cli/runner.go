@@ -78,6 +78,14 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 				Usage:   "configuration file path",
 				EnvVars: []string{"AQUA_CONFIG"},
 			},
+			&cli.StringFlag{
+				Name:  "trace",
+				Usage: "trace output file path",
+			},
+			&cli.StringFlag{
+				Name:  "cpu-profile",
+				Usage: "cpu profile output file path",
+			},
 		},
 		Commands: []*cli.Command{
 			runner.newInstallCommand(),
