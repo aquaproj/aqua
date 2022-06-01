@@ -107,6 +107,13 @@ func (runner *Runner) generateAction(c *cli.Context) error {
 		return err
 	}
 	defer tracer.Stop()
+
+	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	if err != nil {
+		return err
+	}
+	defer cpuProfiler.Stop()
+
 	param := &config.Param{}
 	if err := runner.setParam(c, param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
