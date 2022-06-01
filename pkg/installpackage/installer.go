@@ -120,6 +120,11 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 	if err := pkgInfo.Validate(); err != nil {
 		return fmt.Errorf("invalid package: %w", err)
 	}
+
+	if pkgInfo.Type == "go_install" && pkg.Version == "latest" {
+		return errGoInstallForbidLatest
+	}
+
 	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
@@ -267,7 +272,7 @@ func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, 
 		"go_src":       src,
 		"go_build_dir": exeDir,
 	}).Info("building Go tool")
-	if _, err := inst.executor.ExecWithDir(ctx, "go", []string{"build", "-o", exePath, src}, exeDir); err != nil {
+	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
 		return fmt.Errorf("build Go tool: %w", err)
 	}
 	return nil

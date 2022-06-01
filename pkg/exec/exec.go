@@ -19,8 +19,9 @@ type executor struct {
 
 type Executor interface {
 	Exec(ctx context.Context, exePath string, args []string) (int, error)
-	ExecWithDir(ctx context.Context, exePath string, args []string, dir string) (int, error)
 	ExecXSys(exePath string, args []string) error
+	GoBuild(ctx context.Context, exePath, src, exeDir string) (int, error)
+	GoInstall(ctx context.Context, path, gobin string) (int, error)
 }
 
 func New() Executor {
@@ -31,59 +32,37 @@ func New() Executor {
 	}
 }
 
-type mockExecutor struct {
-	exitCode int
-	err      error
-}
-
-func NewMock(exitCode int, err error) Executor {
-	return &mockExecutor{
-		exitCode: exitCode,
-		err:      err,
-	}
-}
-
-func (exe *mockExecutor) Exec(ctx context.Context, exePath string, args []string) (int, error) {
-	return exe.exitCode, exe.err
-}
-
-func (exe *mockExecutor) ExecWithDir(ctx context.Context, exePath string, args []string, dir string) (int, error) {
-	return exe.exitCode, exe.err
-}
-
-func (exe *mockExecutor) ExecXSys(exePath string, args []string) error {
-	return exe.err
-}
-
 func (exe *executor) ExecXSys(exePath string, args []string) error {
 	return unix.Exec(exePath, append([]string{filepath.Base(exePath)}, args...), os.Environ()) //nolint:wrapcheck
 }
 
-type Result struct {
-	ExitCode int
+func (exe *executor) command(cmd *exec.Cmd) *exec.Cmd {
+	cmd.Stdin = exe.stdin
+	cmd.Stdout = exe.stdout
+	cmd.Stderr = exe.stderr
+	return cmd
+}
+
+func (exe *executor) exec(ctx context.Context, cmd *exec.Cmd) (int, error) {
+	runner := timeout.NewRunner(0)
+	if err := runner.Run(ctx, cmd); err != nil {
+		return cmd.ProcessState.ExitCode(), err
+	}
+	return 0, nil
 }
 
 func (exe *executor) Exec(ctx context.Context, exePath string, args []string) (int, error) {
-	cmd := exec.Command(exePath, args...)
-	cmd.Stdin = exe.stdin
-	cmd.Stdout = exe.stdout
-	cmd.Stderr = exe.stderr
-	runner := timeout.NewRunner(0)
-	if err := runner.Run(ctx, cmd); err != nil {
-		return cmd.ProcessState.ExitCode(), err
-	}
-	return 0, nil
+	return exe.exec(ctx, exe.command(exec.Command(exePath, args...)))
 }
 
-func (exe *executor) ExecWithDir(ctx context.Context, exePath string, args []string, dir string) (int, error) {
-	cmd := exec.Command(exePath, args...)
-	cmd.Stdin = exe.stdin
-	cmd.Stdout = exe.stdout
-	cmd.Stderr = exe.stderr
-	cmd.Dir = dir
-	runner := timeout.NewRunner(0)
-	if err := runner.Run(ctx, cmd); err != nil {
-		return cmd.ProcessState.ExitCode(), err
-	}
-	return 0, nil
+func (exe *executor) GoBuild(ctx context.Context, exePath, src, exeDir string) (int, error) {
+	cmd := exe.command(exec.Command("go", "build", "-o", exePath, src))
+	cmd.Dir = exeDir
+	return exe.exec(ctx, cmd)
+}
+
+func (exe *executor) GoInstall(ctx context.Context, path, gobin string) (int, error) {
+	cmd := exe.command(exec.Command("go", "install", path))
+	cmd.Env = append(os.Environ(), "GOBIN="+gobin)
+	return exe.exec(ctx, cmd)
 }
