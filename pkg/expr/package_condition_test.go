@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
-	constraint "github.com/aquaproj/aqua/pkg/expr"
+	"github.com/aquaproj/aqua/pkg/expr"
 )
 
 func TestEvaluateSupportedIf(t *testing.T) {

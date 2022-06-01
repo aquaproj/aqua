@@ -13,7 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/validate"
-	constraint "github.com/aquaproj/aqua/pkg/expr"
+	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"

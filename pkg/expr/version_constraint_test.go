@@ -3,7 +3,7 @@ package constraint_test
 import (
 	"testing"
 
-	constraint "github.com/aquaproj/aqua/pkg/expr"
+	"github.com/aquaproj/aqua/pkg/expr"
 )
 
 func TestVersionConstraints_Check(t *testing.T) {
