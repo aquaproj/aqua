@@ -13,7 +13,7 @@ import (
 
 type PackageInfo struct {
 	Name               string             `json:"name,omitempty"`
-	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go"`
+	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 	RepoOwner          string             `yaml:"repo_owner" json:"repo_owner,omitempty"`
 	RepoName           string             `yaml:"repo_name" json:"repo_name,omitempty"`
 	Asset              *string            `json:"asset,omitempty"`
@@ -193,6 +193,9 @@ func (pkgInfo *PackageInfo) GetName() string {
 	if pkgInfo.HasRepo() {
 		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
+	if pkgInfo.Type == PkgInfoTypeGoInstall {
+		return *pkgInfo.Path
+	}
 	return ""
 }
 
@@ -257,6 +260,8 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGo:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
+	case PkgInfoTypeGoInstall:
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), *pkgInfo.Path, pkg.Version, "bin"), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
@@ -281,6 +286,11 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
+		}
+		return nil
+	case PkgInfoTypeGoInstall:
+		if pkgInfo.Path == nil {
+			return errGoInstallRequirePath
 		}
 		return nil
 	case PkgInfoTypeGitHubContent:
@@ -312,6 +322,11 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (stri
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
 		return "", nil
+	case PkgInfoTypeGoInstall:
+		if pkgInfo.Asset != nil {
+			return *pkgInfo.Asset, nil
+		}
+		return filepath.Base(*pkgInfo.Path), nil
 	case PkgInfoTypeGitHubContent:
 		s, err := pkgInfo.renderTemplateString(*pkgInfo.Path, pkg, rt)
 		if err != nil {
@@ -369,6 +384,20 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 		return []*File{
 			{
 				Name: pkgInfo.RepoName,
+			},
+		}
+	}
+	if pkgInfo.Type == PkgInfoTypeGoInstall {
+		if pkgInfo.Asset != nil {
+			return []*File{
+				{
+					Name: *pkgInfo.Asset,
+				},
+			}
+		}
+		return []*File{
+			{
+				Name: filepath.Base(*pkgInfo.Path),
 			},
 		}
 	}

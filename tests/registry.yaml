@@ -106,6 +106,10 @@ packages:
     - name: gox
       dir: "gox-{{trimV .Version}}"
 
+- type: go_install
+  path: github.com/anqiansong/github-compare
+  description: A GitHub repositories statistics command-line tool for the terminal
+
 # unknown package type
 - type: foo
   name: foo
