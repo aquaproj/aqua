@@ -55,6 +55,7 @@ jobs:
     - run: gox --help
     - run: bats -v
     - run: github-compare -v
+    - run: terrafmt version
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests

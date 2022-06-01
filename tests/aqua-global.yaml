@@ -68,6 +68,10 @@ packages:
   # specify revision
   version: 8c3b2b9e647dc52457d6ee7b5adcf97e2bafe131
 
+- name: katbyte/terrafmt@v0.4.0
+  # type: go_install
+  registry: local
+
 - name: bats-core/bats-core
   # specify revision
   version: 9695e7c589a07756c999893764ccd9a506a47f89

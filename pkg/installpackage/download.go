@@ -38,7 +38,7 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, pkgInf
 }
 
 func (inst *installer) downloadGoInstall(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest string, logE *logrus.Entry) error {
-	goPkgPath := *pkgInfo.Path + "@" + pkg.Version
+	goPkgPath := pkgInfo.GetPath() + "@" + pkg.Version
 	logE.WithFields(logrus.Fields{
 		"gobin":           dest,
 		"go_package_path": goPkgPath,

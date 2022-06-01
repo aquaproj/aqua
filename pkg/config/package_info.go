@@ -199,6 +199,16 @@ func (pkgInfo *PackageInfo) GetName() string {
 	return ""
 }
 
+func (pkgInfo *PackageInfo) GetPath() string {
+	if pkgInfo.Path != nil {
+		return *pkgInfo.Path
+	}
+	if pkgInfo.HasRepo() {
+		return "github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
+	}
+	return ""
+}
+
 func (pkgInfo *PackageInfo) GetLink() string {
 	if pkgInfo.Link != "" {
 		return pkgInfo.Link
@@ -261,7 +271,7 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime
 	case PkgInfoTypeGo:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), *pkgInfo.Path, pkg.Version, "bin"), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), pkgInfo.GetPath(), pkg.Version, "bin"), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
@@ -279,7 +289,7 @@ func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime
 }
 
 func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
-	if name := pkgInfo.GetName(); name == "" {
+	if pkgInfo.GetName() == "" {
 		return errPkgNameIsRequired
 	}
 	switch pkgInfo.Type {
@@ -289,7 +299,7 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 		}
 		return nil
 	case PkgInfoTypeGoInstall:
-		if pkgInfo.Path == nil {
+		if pkgInfo.GetPath() == "" {
 			return errGoInstallRequirePath
 		}
 		return nil
@@ -326,7 +336,7 @@ func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (stri
 		if pkgInfo.Asset != nil {
 			return *pkgInfo.Asset, nil
 		}
-		return filepath.Base(*pkgInfo.Path), nil
+		return filepath.Base(pkgInfo.GetPath()), nil
 	case PkgInfoTypeGitHubContent:
 		s, err := pkgInfo.renderTemplateString(*pkgInfo.Path, pkg, rt)
 		if err != nil {
@@ -397,7 +407,7 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 		}
 		return []*File{
 			{
-				Name: filepath.Base(*pkgInfo.Path),
+				Name: filepath.Base(pkgInfo.GetPath()),
 			},
 		}
 	}

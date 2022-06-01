@@ -110,6 +110,11 @@ packages:
   path: github.com/anqiansong/github-compare
   description: A GitHub repositories statistics command-line tool for the terminal
 
+- type: go_install
+  repo_owner: katbyte
+  repo_name: terrafmt
+  description: Format terraform blocks embedded in files
+
 # unknown package type
 - type: foo
   name: foo
