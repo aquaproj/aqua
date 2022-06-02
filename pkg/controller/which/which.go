@@ -9,11 +9,11 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/expr"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/validate"
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -146,7 +146,7 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.Regist
 	}
 
 	if pkgInfo.SupportedIf != nil {
-		supported, err := constraint.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
+		supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
 			return nil, nil

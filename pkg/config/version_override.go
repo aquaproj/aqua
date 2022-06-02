@@ -1,12 +1,12 @@
 package config
 
-import constraint "github.com/aquaproj/aqua/pkg/version-constraint"
+import "github.com/aquaproj/aqua/pkg/expr"
 
 func (pkgInfo *PackageInfo) setVersion(v string) (*PackageInfo, error) {
 	if pkgInfo.VersionConstraints == "" {
 		return pkgInfo, nil
 	}
-	a, err := constraint.EvaluateVersionConstraints(pkgInfo.VersionConstraints, v)
+	a, err := expr.EvaluateVersionConstraints(pkgInfo.VersionConstraints, v)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -14,7 +14,7 @@ func (pkgInfo *PackageInfo) setVersion(v string) (*PackageInfo, error) {
 		return pkgInfo.copy(), nil
 	}
 	for _, vo := range pkgInfo.VersionOverrides {
-		a, err := constraint.EvaluateVersionConstraints(vo.VersionConstraints, v)
+		a, err := expr.EvaluateVersionConstraints(vo.VersionConstraints, v)
 		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}

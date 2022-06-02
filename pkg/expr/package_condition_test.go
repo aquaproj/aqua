@@ -1,10 +1,10 @@
-package constraint_test
+package expr_test
 
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 )
 
 func TestEvaluateSupportedIf(t *testing.T) {
@@ -31,7 +31,7 @@ func TestEvaluateSupportedIf(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			b, err := constraint.EvaluateSupportedIf(&d.supportedIf, d.rt)
+			b, err := expr.EvaluateSupportedIf(&d.supportedIf, d.rt)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")

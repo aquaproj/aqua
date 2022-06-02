@@ -1,9 +1,9 @@
-package constraint_test
+package expr_test
 
 import (
 	"testing"
 
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
+	"github.com/aquaproj/aqua/pkg/expr"
 )
 
 func TestCompileVersionFilter(t *testing.T) {
@@ -28,7 +28,7 @@ func TestCompileVersionFilter(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			prog, err := constraint.CompileVersionFilter(d.versionFilter)
+			prog, err := expr.CompileVersionFilter(d.versionFilter)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")

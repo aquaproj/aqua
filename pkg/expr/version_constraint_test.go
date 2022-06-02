@@ -1,9 +1,9 @@
-package constraint_test
+package expr_test
 
 import (
 	"testing"
 
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
+	"github.com/aquaproj/aqua/pkg/expr"
 )
 
 func TestVersionConstraints_Check(t *testing.T) {
@@ -51,7 +51,7 @@ func TestVersionConstraints_Check(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			b, err := constraint.EvaluateVersionConstraints(d.constraints, d.version)
+			b, err := expr.EvaluateVersionConstraints(d.constraints, d.version)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")

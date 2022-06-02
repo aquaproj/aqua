@@ -12,10 +12,10 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/expr"
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
-	constraint "github.com/aquaproj/aqua/pkg/version-constraint"
 	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -202,7 +202,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
 	}
-	versionFilter, err := constraint.CompileVersionFilter(*pkgInfo.VersionFilter)
+	versionFilter, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
 	if err != nil {
 		return ""
 	}
@@ -219,7 +219,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 			if release.GetPrerelease() {
 				continue
 			}
-			f, err := constraint.EvaluateVersionFilter(versionFilter, release.GetTagName())
+			f, err := expr.EvaluateVersionFilter(versionFilter, release.GetTagName())
 			if err != nil || !f {
 				continue
 			}
@@ -238,7 +238,7 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *c
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
 	}
-	versionFilter, err := constraint.CompileVersionFilter(*pkgInfo.VersionFilter)
+	versionFilter, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
 	if err != nil {
 		return ""
 	}
@@ -253,7 +253,7 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *c
 		}
 		for _, tag := range tags {
 			tagName := tag.GetName()
-			f, err := constraint.EvaluateVersionFilter(versionFilter, tagName)
+			f, err := expr.EvaluateVersionFilter(versionFilter, tagName)
 			if err != nil || !f {
 				continue
 			}
