@@ -1,4 +1,4 @@
-package constraint_test
+package expr_test
 
 import (
 	"testing"
