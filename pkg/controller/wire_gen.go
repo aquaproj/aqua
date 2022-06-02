@@ -8,6 +8,8 @@ package controller
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
@@ -26,7 +28,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
-	"net/http"
 )
 
 // Injectors from wire.go:
