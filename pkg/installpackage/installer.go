@@ -177,7 +177,7 @@ func (inst *installer) createLinks(cfg *config.Config, registries map[string]*co
 			return nil, false, fmt.Errorf("evaluate version constraints: %w", err)
 		}
 		if pkgInfo.SupportedIf != nil {
-			supported, err := constraint.EvaluateSupportedIf(pkgInfo.SupportedIf, inst.runtime)
+			supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, inst.runtime)
 			if err != nil {
 				logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
 				continue

@@ -146,7 +146,7 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.Regist
 	}
 
 	if pkgInfo.SupportedIf != nil {
-		supported, err := constraint.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
+		supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
 			return nil, nil
