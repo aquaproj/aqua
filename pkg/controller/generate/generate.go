@@ -12,9 +12,11 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/expr"
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	instregst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
@@ -28,14 +30,14 @@ type Controller struct {
 	stdin                   io.Reader
 	stdout                  io.Writer
 	gitHubRepositoryService githubSvc.RepositoryService
-	registryInstaller       registry.Installer
+	registryInstaller       instregst.Installer
 	configFinder            finder.ConfigFinder
 	configReader            reader.ConfigReader
 	fuzzyFinder             FuzzyFinder
 	fs                      afero.Fs
 }
 
-func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, gh githubSvc.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
+func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh githubSvc.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
 	return &Controller{
 		stdin:                   os.Stdin,
 		stdout:                  os.Stdout,
@@ -75,12 +77,12 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 }
 
 type FindingPackage struct {
-	PackageInfo  *config.PackageInfo
+	PackageInfo  *registry.PackageInfo
 	RegistryName string
 }
 
 func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
-	cfg := &config.Config{}
+	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -130,7 +132,7 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*config.RegistryContent, pkgNames ...string) (interface{}, error) {
+func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) (interface{}, error) {
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
@@ -147,7 +149,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 		}
 	}
 
-	outputPkgs := []*config.Package{}
+	outputPkgs := []*aqua.Package{}
 	for _, pkgName := range pkgNames {
 		pkgName = getGeneratePkg(pkgName)
 		findingPkg, ok := m[pkgName]
@@ -168,7 +170,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*config.Package, m map[string]*FindingPackage, logE *logrus.Entry) ([]*config.Package, error) {
+func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*aqua.Package, m map[string]*FindingPackage, logE *logrus.Entry) ([]*aqua.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
 		file = ctrl.stdin
@@ -196,7 +198,7 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *co
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.PackageInfo, logE *logrus.Entry) string {
+func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *registry.PackageInfo, logE *logrus.Entry) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -232,7 +234,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *config.P
 	}
 }
 
-func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *config.PackageInfo, logE *logrus.Entry) string {
+func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *registry.PackageInfo, logE *logrus.Entry) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -266,7 +268,7 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *c
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo, logE *logrus.Entry) {
+func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	var tagName string
@@ -296,7 +298,7 @@ func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, output
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *config.Package, pkgInfo *config.PackageInfo, logE *logrus.Entry) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
 	if pkgInfo.VersionSource == "github_tag" {
 		ctrl.getOutputtedGitHubPkgFromTag(ctx, outputPkg, pkgInfo, logE)
 		return
@@ -325,8 +327,8 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *co
 	}
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage, logE *logrus.Entry) *config.Package {
-	outputPkg := &config.Package{
+func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage, logE *logrus.Entry) *aqua.Package {
+	outputPkg := &aqua.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
 		Version:  "[SET PACKAGE VERSION]",

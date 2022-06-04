@@ -8,6 +8,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
@@ -66,17 +68,19 @@ packages:
 			},
 			exp: &which.Which{
 				Package: &config.Package{
-					Name:     "aquaproj/aqua-installer",
-					Registry: "standard",
-					Version:  "v1.0.0",
+					Package: &aqua.Package{
+						Name:     "aquaproj/aqua-installer",
+						Registry: "standard",
+						Version:  "v1.0.0",
+					},
+					PackageInfo: &cfgRegistry.PackageInfo{
+						Type:      "github_content",
+						RepoOwner: "aquaproj",
+						RepoName:  "aqua-installer",
+						Path:      stringP("aqua-installer"),
+					},
 				},
-				PkgInfo: &config.PackageInfo{
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-installer",
-					Path:      stringP("aqua-installer"),
-				},
-				File: &config.File{
+				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
 				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
@@ -161,17 +165,19 @@ packages:
 			},
 			exp: &which.Which{
 				Package: &config.Package{
-					Name:     "aquaproj/aqua-installer",
-					Registry: "standard",
-					Version:  "v1.0.0",
+					Package: &aqua.Package{
+						Name:     "aquaproj/aqua-installer",
+						Registry: "standard",
+						Version:  "v1.0.0",
+					},
+					PackageInfo: &cfgRegistry.PackageInfo{
+						Type:      "github_content",
+						RepoOwner: "aquaproj",
+						RepoName:  "aqua-installer",
+						Path:      stringP("aqua-installer"),
+					},
 				},
-				PkgInfo: &config.PackageInfo{
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-installer",
-					Path:      stringP("aqua-installer"),
-				},
-				File: &config.File{
+				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
 				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",

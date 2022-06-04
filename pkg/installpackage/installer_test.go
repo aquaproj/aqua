@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
@@ -27,8 +29,8 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		links      map[string]string
 		param      *config.Param
 		rt         *runtime.Runtime
-		cfg        *config.Config
-		registries map[string]*config.RegistryContent
+		cfg        *aqua.Config
+		registries map[string]*registry.Config
 		executor   exec.Executor
 		binDir     string
 		onlyLink   bool
@@ -47,8 +49,8 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
 			},
-			cfg: &config.Config{
-				Registries: config.Registries{
+			cfg: &aqua.Config{
+				Registries: aqua.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
@@ -58,7 +60,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*config.Package{
+				Packages: []*aqua.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -71,9 +73,9 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registries: map[string]*config.RegistryContent{
+			registries: map[string]*registry.Config{
 				"standard": {
-					PackageInfos: config.PackageInfos{
+					PackageInfos: registry.PackageInfos{
 						{
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
@@ -111,8 +113,8 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
 			},
-			cfg: &config.Config{
-				Registries: config.Registries{
+			cfg: &aqua.Config{
+				Registries: aqua.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
@@ -122,7 +124,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*config.Package{
+				Packages: []*aqua.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -130,9 +132,9 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registries: map[string]*config.RegistryContent{
+			registries: map[string]*registry.Config{
 				"standard": {
-					PackageInfos: config.PackageInfos{
+					PackageInfos: registry.PackageInfos{
 						{
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
@@ -162,8 +164,8 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
 			},
-			cfg: &config.Config{
-				Registries: config.Registries{
+			cfg: &aqua.Config{
+				Registries: aqua.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
@@ -173,11 +175,11 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*config.Package{},
+				Packages: []*aqua.Package{},
 			},
-			registries: map[string]*config.RegistryContent{
+			registries: map[string]*registry.Config{
 				"standard": {
-					PackageInfos: config.PackageInfos{},
+					PackageInfos: registry.PackageInfos{},
 				},
 			},
 			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
@@ -223,7 +225,6 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 		files    map[string]string
 		param    *config.Param
 		rt       *runtime.Runtime
-		pkgInfo  *config.PackageInfo
 		pkg      *config.Package
 		executor exec.Executor
 		isTest   bool
@@ -235,16 +236,18 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				GOOS:   "linux",
 				GOARCH: "amd64",
 			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-				Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
-			},
 			pkg: &config.Package{
-				Name:     "suzuki-shunsuke/ci-info",
-				Registry: "standard",
-				Version:  "v2.0.3",
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "suzuki-shunsuke",
+					RepoName:  "ci-info",
+					Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+				},
+				Package: &aqua.Package{
+					Name:     "suzuki-shunsuke/ci-info",
+					Registry: "standard",
+					Version:  "v2.0.3",
+				},
 			},
 			param: &config.Param{
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
@@ -268,7 +271,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
-			if err := ctrl.InstallPackage(ctx, d.pkgInfo, d.pkg, d.isTest, logE); err != nil {
+			if err := ctrl.InstallPackage(ctx, d.pkg, d.isTest, logE); err != nil {
 				if d.isErr {
 					return
 				}

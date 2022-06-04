@@ -1,9 +1,9 @@
-package config_test
+package registry_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 )
 
@@ -12,12 +12,12 @@ func TestOverride_Match(t *testing.T) {
 	data := []struct {
 		title    string
 		exp      bool
-		override *config.Override
+		override *registry.Override
 		rt       *runtime.Runtime
 	}{
 		{
 			title: "goos doesn't match",
-			override: &config.Override{
+			override: &registry.Override{
 				GOOS: "linux",
 			},
 			rt: &runtime.Runtime{
@@ -27,7 +27,7 @@ func TestOverride_Match(t *testing.T) {
 		},
 		{
 			title: "goarch doesn't match",
-			override: &config.Override{
+			override: &registry.Override{
 				GOArch: "arm64",
 			},
 			rt: &runtime.Runtime{
@@ -38,7 +38,7 @@ func TestOverride_Match(t *testing.T) {
 		{
 			title: "match",
 			exp:   true,
-			override: &config.Override{
+			override: &registry.Override{
 				GOOS: "darwin",
 			},
 			rt: &runtime.Runtime{

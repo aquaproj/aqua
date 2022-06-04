@@ -51,9 +51,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 	if which.Package != nil { //nolint:nestif
 		logE = logE.WithFields(logrus.Fields{
 			"exe_path": which.ExePath,
-			"package":  which.Package.Name,
+			"package":  which.Package.Package.Name,
 		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.PkgInfo, which.Package, false, logE); err != nil {
+		if err := ctrl.packageInstaller.InstallPackage(ctx, which.Package, false, logE); err != nil {
 			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {

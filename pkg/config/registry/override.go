@@ -1,4 +1,4 @@
-package config
+package registry
 
 import "github.com/aquaproj/aqua/pkg/runtime"
 

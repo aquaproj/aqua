@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -35,7 +36,6 @@ func New(param *config.Param, configFinder finder.ConfigFinder, configReader rea
 
 type Which struct {
 	Package *config.Package
-	PkgInfo *config.PackageInfo
-	File    *config.File
+	File    *cfgRegistry.File
 	ExePath string
 }

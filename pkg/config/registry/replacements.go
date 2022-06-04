@@ -1,4 +1,4 @@
-package config
+package registry
 
 import (
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -22,12 +22,4 @@ func (ov *Override) Match(rt *runtime.Runtime) bool {
 		return false
 	}
 	return true
-}
-
-func replace(key string, replacements map[string]string) string {
-	a := replacements[key]
-	if a == "" {
-		return key
-	}
-	return a
 }

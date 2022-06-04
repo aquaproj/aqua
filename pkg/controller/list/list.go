@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
@@ -31,7 +32,7 @@ func NewController(configFinder finder.ConfigFinder, configReader reader.ConfigR
 }
 
 func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
-	cfg := &config.Config{}
+	cfg := &aqua.Config{}
 	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck

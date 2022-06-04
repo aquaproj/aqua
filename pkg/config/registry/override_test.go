@@ -1,9 +1,9 @@
-package config_test
+package registry_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 )
@@ -12,15 +12,15 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
-		exp     *config.PackageInfo
+		exp     *registry.PackageInfo
 		isErr   bool
-		pkgInfo *config.PackageInfo
+		pkgInfo *registry.PackageInfo
 		version string
 		rt      *runtime.Runtime
 	}{
 		{
 			title: "not override",
-			pkgInfo: &config.PackageInfo{
+			pkgInfo: &registry.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
@@ -28,7 +28,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Replacements: map[string]string{
 					"linux": "unknown-linux-musl",
 				},
-				Overrides: []*config.Override{
+				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",
@@ -38,7 +38,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			exp: &config.PackageInfo{
+			exp: &registry.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
@@ -46,7 +46,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Replacements: map[string]string{
 					"linux": "unknown-linux-musl",
 				},
-				Overrides: []*config.Override{
+				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",
@@ -64,7 +64,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "override",
-			pkgInfo: &config.PackageInfo{
+			pkgInfo: &registry.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
@@ -72,7 +72,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Replacements: map[string]string{
 					"linux": "unknown-linux-musl",
 				},
-				Overrides: []*config.Override{
+				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",
@@ -82,7 +82,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			exp: &config.PackageInfo{
+			exp: &registry.PackageInfo{
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
@@ -90,7 +90,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Replacements: map[string]string{
 					"linux": "unknown-linux-gnu",
 				},
-				Overrides: []*config.Override{
+				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",

@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
 
 type ConfigReader interface {
-	Read(configFilePath string, cfg *config.Config) error
+	Read(configFilePath string, cfg *aqua.Config) error
 }
 
 func New(fs afero.Fs) ConfigReader {
@@ -24,7 +24,7 @@ type configReader struct {
 	fs afero.Fs
 }
 
-func (reader *configReader) Read(configFilePath string, cfg *config.Config) error {
+func (reader *configReader) Read(configFilePath string, cfg *aqua.Config) error {
 	file, err := reader.fs.Open(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -39,8 +39,8 @@ func (reader *configReader) Read(configFilePath string, cfg *config.Config) erro
 	return nil
 }
 
-func (reader *configReader) readImports(configFilePath string, cfg *config.Config) error {
-	pkgs := []*config.Package{}
+func (reader *configReader) readImports(configFilePath string, cfg *aqua.Config) error {
+	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg.Import == "" {
 			pkgs = append(pkgs, pkg)
@@ -53,7 +53,7 @@ func (reader *configReader) readImports(configFilePath string, cfg *config.Confi
 		}
 		sort.Strings(filePaths)
 		for _, filePath := range filePaths {
-			subCfg := &config.Config{}
+			subCfg := &aqua.Config{}
 			if err := reader.Read(filePath, subCfg); err != nil {
 				return err
 			}
