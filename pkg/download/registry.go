@@ -36,10 +36,6 @@ func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, 
 		"path":       path,
 	}).Debug("failed to download a content from GitHub without GitHub API. Try again with GitHub API")
 
-	if downloader.github == nil {
-		return nil, errGitHubTokenIsRequired
-	}
-
 	file, _, _, err := downloader.github.GetContents(ctx, repoOwner, repoName, path, &github.RepositoryContentGetOptions{
 		Ref: ref,
 	})

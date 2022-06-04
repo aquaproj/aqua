@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
@@ -32,6 +31,7 @@ type controller struct {
 	osenv             osenv.OSEnv
 	fs                afero.Fs
 	linker            link.Linker
+	installers        config.PackageTypes
 }
 
 func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {
@@ -68,31 +68,15 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	})
 }
 
-func (ctrl *controller) whichFileGo(pkg *config.Package, file *cfgRegistry.File) (*Which, error) {
-	pkgInfo := pkg.PackageInfo
-	return &Which{
-		Package: pkg,
-		File:    file,
-		ExePath: filepath.Join(ctrl.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name),
-	}, nil
-}
-
 func (ctrl *controller) whichFile(pkg *config.Package, file *cfgRegistry.File) (*Which, error) {
-	if pkg.PackageInfo.Type == "go" {
-		return ctrl.whichFileGo(pkg, file)
-	}
-	fileSrc, err := pkg.GetFileSrc(file, ctrl.runtime)
+	filePath, err := pkg.Type.GetFilePath(pkg, file)
 	if err != nil {
 		return nil, fmt.Errorf("get file_src: %w", err)
 	}
-	pkgPath, err := pkg.GetPkgPath(ctrl.rootDir, ctrl.runtime)
-	if err != nil {
-		return nil, fmt.Errorf("get pkg install path: %w", err)
-	}
 	return &Which{
 		Package: pkg,
 		File:    file,
-		ExePath: filepath.Join(pkgPath, fileSrc),
+		ExePath: filePath,
 	}, nil
 }
 
@@ -110,17 +94,14 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 		return nil, nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
-		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); pkgInfo != nil {
-			return &config.Package{
-				Package:     pkg,
-				PackageInfo: pkgInfo,
-			}, file, nil
+		if pkg, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); pkg != nil {
+			return pkg, file, nil
 		}
 	}
 	return nil, nil, nil
 }
 
-func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*cfgRegistry.PackageInfo, *cfgRegistry.File) {
+func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*config.Package, *cfgRegistry.File) { //nolint:cyclop
 	logE = logE.WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
@@ -161,9 +142,19 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 		}
 	}
 
-	for _, file := range pkgInfo.GetFiles() {
+	pkgType, ok := ctrl.installers[pkgInfo.Type]
+	if !ok {
+		logE.WithField("package_type", pkgInfo.Type).Warn("the package type is unsupported")
+		return nil, nil
+	}
+
+	for _, file := range pkgType.GetFiles(pkgInfo) {
 		if file.Name == exeName {
-			return pkgInfo, file
+			return &config.Package{
+				Package:     pkg,
+				PackageInfo: pkgInfo,
+				Type:        pkgType,
+			}, file
 		}
 	}
 	return nil, nil

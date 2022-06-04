@@ -1,22 +1,31 @@
 package config
 
 import (
-	"fmt"
-	"net/url"
-	"path/filepath"
-	texttemplate "text/template"
+	"context"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/sirupsen/logrus"
 )
 
 type Package struct {
 	Package     *aqua.Package
 	PackageInfo *registry.PackageInfo
+	Type        PackageType
 }
+
+type PackageType interface {
+	Install(ctx context.Context, pkg *Package, logE *logrus.Entry) error
+	CheckInstalled(pkg *Package) (bool, error)
+	GetFiles(pkgInfo *registry.PackageInfo) []*registry.File
+	Find(pkg *Package, exeName string, logE *logrus.Entry) (string, error)
+	GetFilePath(pkg *Package, file *registry.File) (string, error)
+	GetFormat(pkgInfo *registry.PackageInfo) string
+}
+
+type PackageTypes = map[string]PackageType
 
 func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := cpkg.Package
@@ -25,9 +34,9 @@ func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string
 		"Version":  pkg.Version,
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":   pkgInfo.GetFormat(),
+		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
+		"Format":   cpkg.Type.GetFormat(pkgInfo),
 		"FileName": file.Name,
 	})
 }
@@ -46,39 +55,6 @@ func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime)
 		return replace("amd64", replacements)
 	}
 	return replace(rt.GOARCH, replacements)
-}
-
-func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
-		"Version":  pkg.Version,
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
-	})
-}
-
-func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	assetName, err := cpkg.RenderAsset(rt)
-	if err != nil {
-		return "", fmt.Errorf("render the asset name: %w", err)
-	}
-	if unarchive.IsUnarchived(pkgInfo.GetFormat(), assetName) {
-		return filepath.Base(assetName), nil
-	}
-	if file.Src == "" {
-		return file.Name, nil
-	}
-	src, err := cpkg.RenderSrc(file, rt)
-	if err != nil {
-		return "", fmt.Errorf("render the template file.src: %w", err)
-	}
-	return src, nil
 }
 
 const (
@@ -103,96 +79,4 @@ type Param struct {
 	RootDir               string
 	MaxParallelism        int
 	PWD                   string
-}
-
-func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
-		return "", nil
-	case PkgInfoTypeGoInstall:
-		if pkgInfo.Asset != nil {
-			return *pkgInfo.Asset, nil
-		}
-		return filepath.Base(pkgInfo.GetPath()), nil
-	case PkgInfoTypeGitHubContent:
-		s, err := cpkg.renderTemplateString(*pkgInfo.Path, rt)
-		if err != nil {
-			return "", fmt.Errorf("render a package path: %w", err)
-		}
-		return s, nil
-	case PkgInfoTypeGitHubRelease:
-		return cpkg.renderTemplateString(*pkgInfo.Asset, rt)
-	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderURL(rt)
-		if err != nil {
-			return "", fmt.Errorf("render URL: %w", err)
-		}
-		u, err := url.Parse(uS)
-		if err != nil {
-			return "", fmt.Errorf("parse the URL: %w", err)
-		}
-		return filepath.Base(u.Path), nil
-	}
-	return "", nil
-}
-
-func (cpkg *Package) renderTemplateString(s string, rt *runtime.Runtime) (string, error) {
-	tpl, err := template.Compile(s)
-	if err != nil {
-		return "", fmt.Errorf("parse a template: %w", err)
-	}
-	return cpkg.renderTemplate(tpl, rt)
-}
-
-func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
-		"Version": pkg.Version,
-		"GOOS":    rt.GOOS,
-		"GOARCH":  rt.GOARCH,
-		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":  pkgInfo.GetFormat(),
-	})
-	if err != nil {
-		return "", fmt.Errorf("render a template: %w", err)
-	}
-	return uS, nil
-}
-
-func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	return cpkg.renderTemplateString(*pkgInfo.URL, rt)
-}
-
-func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	assetName, err := cpkg.RenderAsset(rt)
-	if err != nil {
-		return "", fmt.Errorf("render the asset name: %w", err)
-	}
-	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
-	case PkgInfoTypeGo:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
-	case PkgInfoTypeGoInstall:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), pkgInfo.GetPath(), pkg.Version, "bin"), nil
-	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderURL(rt)
-		if err != nil {
-			return "", fmt.Errorf("render URL: %w", err)
-		}
-		u, err := url.Parse(uS)
-		if err != nil {
-			return "", fmt.Errorf("parse the URL: %w", err)
-		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), u.Host, u.Path), nil
-	}
-	return "", nil
 }

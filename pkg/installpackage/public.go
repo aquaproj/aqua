@@ -6,7 +6,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -20,14 +19,14 @@ type Installer interface {
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
 }
 
-func New(param *config.Param, downloader download.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker link.Linker, executor exec.Executor) Installer {
+func New(param *config.Param, rt *runtime.Runtime, fs afero.Fs, linker link.Linker, executor exec.Executor, installers config.PackageTypes) Installer {
 	return &installer{
-		rootDir:           param.RootDir,
-		maxParallelism:    param.MaxParallelism,
-		packageDownloader: downloader,
-		runtime:           rt,
-		fs:                fs,
-		linker:            linker,
-		executor:          executor,
+		rootDir:        param.RootDir,
+		maxParallelism: param.MaxParallelism,
+		runtime:        rt,
+		fs:             fs,
+		linker:         linker,
+		executor:       executor,
+		installers:     installers,
 	}
 }

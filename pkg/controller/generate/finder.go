@@ -75,7 +75,7 @@ func getPreview(pkg *FindingPackage, i, w int) string {
 	return fmt.Sprintf("%s\n\n%s\n%s",
 		pkg.PackageInfo.GetName(),
 		pkg.PackageInfo.GetLink(),
-		formatDescription(pkg.PackageInfo.GetDescription(), w/2-8)) //nolint:gomnd
+		formatDescription(pkg.PackageInfo.Description, w/2-8)) //nolint:gomnd
 }
 
 func formatDescription(desc string, w int) string {

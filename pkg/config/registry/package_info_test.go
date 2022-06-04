@@ -47,32 +47,6 @@ func TestPackageInfo_GetName(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_GetType(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *registry.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "github_release",
-			pkgInfo: &registry.PackageInfo{
-				Type: "github_release",
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if typ := d.pkgInfo.GetType(); typ != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, typ)
-			}
-		})
-	}
-}
-
 func TestPackageInfo_GetLink(t *testing.T) {
 	t.Parallel()
 	data := []struct {
@@ -104,104 +78,6 @@ func TestPackageInfo_GetLink(t *testing.T) {
 			t.Parallel()
 			if link := d.pkgInfo.GetLink(); link != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, link)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetDescription(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *registry.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "hello world",
-			pkgInfo: &registry.PackageInfo{
-				Description: "hello world",
-			},
-		},
-		{
-			title:   "empty",
-			exp:     "",
-			pkgInfo: &registry.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if desc := d.pkgInfo.GetDescription(); desc != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, desc)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetFormat(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *registry.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "tar.gz",
-			pkgInfo: &registry.PackageInfo{
-				Format: "tar.gz",
-			},
-		},
-		{
-			title:   "empty",
-			exp:     "",
-			pkgInfo: &registry.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if format := d.pkgInfo.GetFormat(); format != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, format)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetReplacements(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     map[string]string
-		pkgInfo *registry.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp: map[string]string{
-				"amd64": "x86_64",
-			},
-			pkgInfo: &registry.PackageInfo{
-				Replacements: map[string]string{
-					"amd64": "x86_64",
-				},
-			},
-		},
-		{
-			title:   "empty",
-			exp:     nil,
-			pkgInfo: &registry.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			replacements := d.pkgInfo.GetReplacements()
-			if diff := cmp.Diff(d.exp, replacements); diff != "" {
-				t.Fatal(diff)
 			}
 		})
 	}
