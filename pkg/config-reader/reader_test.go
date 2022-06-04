@@ -3,8 +3,8 @@ package reader_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )
@@ -13,7 +13,7 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name           string
-		exp            *config.Config
+		exp            *aqua.Config
 		isErr          bool
 		files          map[string]string
 		configFilePath string
@@ -31,8 +31,8 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 packages:`,
 			},
 			configFilePath: "aqua.yaml",
-			exp: &config.Config{
-				Registries: config.Registries{
+			exp: &aqua.Config{
+				Registries: aqua.Registries{
 					"standard": {
 						Type:      "github_content",
 						Name:      "standard",
@@ -42,7 +42,7 @@ packages:`,
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*config.Package{},
+				Packages: []*aqua.Package{},
 			},
 		},
 		{
@@ -60,8 +60,8 @@ packages:
 `,
 			},
 			configFilePath: "aqua.yaml",
-			exp: &config.Config{
-				Registries: config.Registries{
+			exp: &aqua.Config{
+				Registries: aqua.Registries{
 					"standard": {
 						Type:      "github_content",
 						Name:      "standard",
@@ -71,7 +71,7 @@ packages:
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*config.Package{
+				Packages: []*aqua.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -97,7 +97,7 @@ packages:
 				}
 			}
 			reader := reader.New(fs)
-			cfg := &config.Config{}
+			cfg := &aqua.Config{}
 			if err := reader.Read(d.configFilePath, cfg); err != nil {
 				if d.isErr {
 					return

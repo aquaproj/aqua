@@ -4,312 +4,70 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/google/go-cmp/cmp"
 )
 
 func stringP(s string) *string {
 	return &s
 }
 
-func TestPackageInfo_GetName(t *testing.T) {
+func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "foo",
-			pkgInfo: &config.PackageInfo{
-				Type: "github_release",
-				Name: "foo",
-			},
-		},
-		{
-			title: "default",
-			exp:   "suzuki-shunsuke/ci-info",
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if name := d.pkgInfo.GetName(); name != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, name)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetType(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "github_release",
-			pkgInfo: &config.PackageInfo{
-				Type: "github_release",
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if typ := d.pkgInfo.GetType(); typ != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, typ)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetLink(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "http://example.com",
-			pkgInfo: &config.PackageInfo{
-				Type: "github_release",
-				Link: "http://example.com",
-			},
-		},
-		{
-			title: "default",
-			exp:   "https://github.com/suzuki-shunsuke/ci-info",
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if link := d.pkgInfo.GetLink(); link != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, link)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetDescription(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "hello world",
-			pkgInfo: &config.PackageInfo{
-				Description: "hello world",
-			},
-		},
-		{
-			title:   "empty",
-			exp:     "",
-			pkgInfo: &config.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if desc := d.pkgInfo.GetDescription(); desc != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, desc)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetFormat(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "tar.gz",
-			pkgInfo: &config.PackageInfo{
-				Format: "tar.gz",
-			},
-		},
-		{
-			title:   "empty",
-			exp:     "",
-			pkgInfo: &config.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if format := d.pkgInfo.GetFormat(); format != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, format)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetReplacements(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     map[string]string
-		pkgInfo *config.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp: map[string]string{
-				"amd64": "x86_64",
-			},
-			pkgInfo: &config.PackageInfo{
-				Replacements: map[string]string{
-					"amd64": "x86_64",
-				},
-			},
-		},
-		{
-			title:   "empty",
-			exp:     nil,
-			pkgInfo: &config.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			replacements := d.pkgInfo.GetReplacements()
-			if diff := cmp.Diff(d.exp, replacements); diff != "" {
-				t.Fatal(diff)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetFiles(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     []*config.File
-		pkgInfo *config.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp: []*config.File{
-				{
-					Name: "go",
-				},
-				{
-					Name: "gofmt",
-				},
-			},
-			pkgInfo: &config.PackageInfo{
-				Files: []*config.File{
-					{
-						Name: "go",
-					},
-					{
-						Name: "gofmt",
-					},
-				},
-			},
-		},
-		{
-			title: "empty",
-			exp: []*config.File{
-				{
-					Name: "ci-info",
-				},
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			files := d.pkgInfo.GetFiles()
-			if diff := cmp.Diff(d.exp, files); diff != "" {
-				t.Fatal(diff)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-		pkg     *config.Package
+		title string
+		exp   string
+		pkg   *config.Package
 	}{
 		{
 			title: "github_archive",
 			exp:   "",
-			pkgInfo: &config.PackageInfo{
-				Type: "github_archive",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type: "github_archive",
+				},
 			},
 		},
 		{
 			title: "github_content",
 			exp:   "foo",
-			pkgInfo: &config.PackageInfo{
-				Type: "github_content",
-				Path: stringP("foo"),
-			},
 			pkg: &config.Package{
-				Version: "v1.0.0",
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type: "github_content",
+					Path: stringP("foo"),
+				},
 			},
 		},
 		{
 			title: "github_release",
 			exp:   "foo-1.0.0.zip",
-			pkgInfo: &config.PackageInfo{
-				Type:   "github_release",
-				Asset:  stringP("foo-{{trimV .Version}}.{{.Format}}"),
-				Format: "zip",
-			},
 			pkg: &config.Package{
-				Version: "v1.0.0",
+				PackageInfo: &registry.PackageInfo{
+					Type:   "github_release",
+					Asset:  stringP("foo-{{trimV .Version}}.{{.Format}}"),
+					Format: "zip",
+				},
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
 			},
 		},
 		{
 			title: "http",
 			exp:   "foo-1.0.0.zip",
-			pkgInfo: &config.PackageInfo{
-				Type:   "http",
-				URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
-				Format: "zip",
-			},
 			pkg: &config.Package{
-				Version: "v1.0.0",
+				PackageInfo: &registry.PackageInfo{
+					Type:   "http",
+					URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+					Format: "zip",
+				},
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
 			},
 		},
 	}
@@ -318,7 +76,7 @@ func TestPackageInfo_RenderAsset(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			asset, err := d.pkgInfo.RenderAsset(d.pkg, rt)
+			asset, err := d.pkg.RenderAsset(rt)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -333,60 +91,67 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	rootDir := "/tmp/aqua"
 	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-		pkg     *config.Package
+		title string
+		exp   string
+		pkg   *config.Package
 	}{
 		{
 			title: "github_archive",
 			exp:   "/tmp/aqua/pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_archive",
-				RepoOwner: "tfutils",
-				RepoName:  "tfenv",
-			},
 			pkg: &config.Package{
-				Version: "v2.2.2",
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_archive",
+					RepoOwner: "tfutils",
+					RepoName:  "tfenv",
+				},
+				Package: &aqua.Package{
+					Version: "v2.2.2",
+				},
 			},
 		},
 		{
 			title: "github_content",
 			exp:   "/tmp/aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_content",
-				Path:      stringP("aqua-installer"),
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-installer",
-			},
 			pkg: &config.Package{
-				Version: "v0.2.0",
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_content",
+					Path:      stringP("aqua-installer"),
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua-installer",
+				},
+				Package: &aqua.Package{
+					Version: "v0.2.0",
+				},
 			},
 		},
 		{
 			title: "github_release",
 			exp:   "/tmp/aqua/pkgs/github_release/github.com/aquaproj/aqua/v0.7.7/aqua.tar.gz",
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua",
-				Asset:     stringP("aqua.{{.Format}}"),
-				Format:    "tar.gz",
-			},
 			pkg: &config.Package{
-				Version: "v0.7.7",
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua",
+					Asset:     stringP("aqua.{{.Format}}"),
+					Format:    "tar.gz",
+				},
+				Package: &aqua.Package{
+					Version: "v0.7.7",
+				},
 			},
 		},
 		{
 			title: "http",
 			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
-			pkgInfo: &config.PackageInfo{
-				Type:   "http",
-				URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
-				Format: "zip",
-			},
 			pkg: &config.Package{
-				Version: "v1.0.0",
+				PackageInfo: &registry.PackageInfo{
+					Type:   "http",
+					URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+					Format: "zip",
+				},
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
 			},
 		},
 	}
@@ -395,7 +160,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgPath, err := d.pkgInfo.GetPkgPath(rootDir, d.pkg, rt)
+			pkgPath, err := d.pkg.GetPkgPath(rootDir, rt)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -409,54 +174,59 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *config.PackageInfo
-		pkg     *config.Package
-		file    *config.File
+		title string
+		exp   string
+		pkg   *config.Package
+		file  *registry.File
 	}{
 		{
 			title: "unarchived",
 			exp:   "foo",
-			pkgInfo: &config.PackageInfo{
-				Type: "github_content",
-				Path: stringP("foo"),
-			},
 			pkg: &config.Package{
-				Version: "v1.0.0",
+				PackageInfo: &registry.PackageInfo{
+					Type: "github_content",
+					Path: stringP("foo"),
+				},
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
 			},
 		},
 		{
 			title: "github_release",
 			exp:   "aqua",
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua",
-				Asset:     stringP("aqua.{{.Format}}"),
-				Format:    "tar.gz",
-			},
 			pkg: &config.Package{
-				Version: "v0.7.7",
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua",
+					Asset:     stringP("aqua.{{.Format}}"),
+					Format:    "tar.gz",
+				},
+				Package: &aqua.Package{
+					Version: "v0.7.7",
+				},
 			},
-			file: &config.File{
+			file: &registry.File{
 				Name: "aqua",
 			},
 		},
 		{
 			title: "github_release",
 			exp:   "bin/aqua",
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua",
-				Asset:     stringP("aqua.{{.Format}}"),
-				Format:    "tar.gz",
-			},
 			pkg: &config.Package{
-				Version: "v0.7.7",
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua",
+					Asset:     stringP("aqua.{{.Format}}"),
+					Format:    "tar.gz",
+				},
+				Package: &aqua.Package{
+					Version: "v0.7.7",
+				},
 			},
-			file: &config.File{
+			file: &registry.File{
 				Name: "aqua",
 				Src:  "bin/aqua",
 			},
@@ -467,122 +237,12 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			asset, err := d.pkgInfo.GetFileSrc(d.pkg, d.file, rt)
+			asset, err := d.pkg.GetFileSrc(d.file, rt)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if asset != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, asset)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
-	t.Parallel()
-	data := []struct {
-		title   string
-		pkgInfo *config.PackageInfo
-		isErr   bool
-	}{
-		{
-			title:   "package name is required",
-			pkgInfo: &config.PackageInfo{},
-			isErr:   true,
-		},
-		{
-			title: "repo is required",
-			pkgInfo: &config.PackageInfo{
-				Type: config.PkgInfoTypeGitHubArchive,
-			},
-			isErr: true,
-		},
-		{
-			title: "github_archive",
-			pkgInfo: &config.PackageInfo{
-				Type:      config.PkgInfoTypeGitHubArchive,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-		},
-		{
-			title: "github_content repo is required",
-			pkgInfo: &config.PackageInfo{
-				Type: config.PkgInfoTypeGitHubContent,
-			},
-			isErr: true,
-		},
-		{
-			title: "github_content path is required",
-			pkgInfo: &config.PackageInfo{
-				Type:      config.PkgInfoTypeGitHubContent,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-			isErr: true,
-		},
-		{
-			title: "github_content",
-			pkgInfo: &config.PackageInfo{
-				Type:      config.PkgInfoTypeGitHubContent,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-				Path:      stringP("bin/ci-info"),
-			},
-		},
-		{
-			title: "github_release repo is required",
-			pkgInfo: &config.PackageInfo{
-				Type: config.PkgInfoTypeGitHubRelease,
-			},
-			isErr: true,
-		},
-		{
-			title: "github_release asset is required",
-			pkgInfo: &config.PackageInfo{
-				Type:      config.PkgInfoTypeGitHubRelease,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-			isErr: true,
-		},
-		{
-			title: "github_release",
-			pkgInfo: &config.PackageInfo{
-				Type:      config.PkgInfoTypeGitHubRelease,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-				Asset:     stringP("ci-info.tar.gz"),
-			},
-		},
-		{
-			title: "http url is required",
-			pkgInfo: &config.PackageInfo{
-				Type: config.PkgInfoTypeHTTP,
-			},
-			isErr: true,
-		},
-		{
-			title: "http",
-			pkgInfo: &config.PackageInfo{
-				Type: config.PkgInfoTypeHTTP,
-				Name: "suzuki-shunsuke/ci-info",
-				URL:  stringP("http://example.com"),
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if err := d.pkgInfo.Validate(); err != nil {
-				if d.isErr {
-					return
-				}
-				t.Fatal(err)
-			}
-			if d.isErr {
-				t.Fatal("error must be returned")
 			}
 		})
 	}

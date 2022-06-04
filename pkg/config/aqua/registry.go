@@ -1,4 +1,4 @@
-package config
+package aqua
 
 import (
 	"path/filepath"
@@ -6,10 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-type RegistryContent struct {
-	PackageInfos PackageInfos `yaml:"packages" validate:"dive" json:"packages"`
-}
 
 type Registry struct {
 	Name      string `validate:"required" json:"name,omitempty"`

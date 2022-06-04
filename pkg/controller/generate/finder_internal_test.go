@@ -3,7 +3,7 @@ package generate
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 )
 
 func Test_find(t *testing.T) {
@@ -16,7 +16,7 @@ func Test_find(t *testing.T) {
 		{
 			name: "normal",
 			pkg: &FindingPackage{
-				PackageInfo: &config.PackageInfo{
+				PackageInfo: &registry.PackageInfo{
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
 				},
@@ -49,7 +49,7 @@ func Test_getPreview(t *testing.T) {
 		{
 			name: "normal",
 			pkg: &FindingPackage{
-				PackageInfo: &config.PackageInfo{
+				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
 					Description: "CLI tool to get CI related information",

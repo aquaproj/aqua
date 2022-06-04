@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/validate"
@@ -76,7 +77,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 }
 
 func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *config.Param, logE *logrus.Entry) error {
-	cfg := &config.Config{}
+	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}

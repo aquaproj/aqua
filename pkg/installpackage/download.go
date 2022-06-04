@@ -9,20 +9,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *installer) download(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string, logE *logrus.Entry) error {
+func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, assetName string, logE *logrus.Entry) error {
 	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Name,
-		"package_version": pkg.Version,
-		"registry":        pkg.Registry,
+		"package_name":    pkg.Package.Name,
+		"package_version": pkg.Package.Version,
+		"registry":        pkg.Package.Registry,
 	})
+	pkgInfo := pkg.PackageInfo
 
 	if pkgInfo.Type == "go_install" {
-		return inst.downloadGoInstall(ctx, pkg, pkgInfo, dest, logE)
+		return inst.downloadGoInstall(ctx, pkg, dest, logE)
 	}
 
 	logE.Info("download and unarchive the package")
 
-	body, err := inst.packageDownloader.GetReadCloser(ctx, pkg, pkgInfo, assetName, logE)
+	body, err := inst.packageDownloader.GetReadCloser(ctx, pkg, assetName, logE)
 	if body != nil {
 		defer body.Close()
 	}
@@ -37,8 +38,9 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, pkgInf
 	}, dest, logE, inst.fs)
 }
 
-func (inst *installer) downloadGoInstall(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest string, logE *logrus.Entry) error {
-	goPkgPath := pkgInfo.GetPath() + "@" + pkg.Version
+func (inst *installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
+	pkgInfo := pkg.PackageInfo
+	goPkgPath := pkgInfo.GetPath() + "@" + pkg.Package.Version
 	logE.WithFields(logrus.Fields{
 		"gobin":           dest,
 		"go_package_path": goPkgPath,

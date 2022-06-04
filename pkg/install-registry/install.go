@@ -10,6 +10,8 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
@@ -26,7 +28,7 @@ type installer struct {
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
 
-func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*config.RegistryContent, error) {
+func (inst *installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Registries))
 	var flagMutex sync.Mutex
@@ -36,10 +38,10 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config
 		return nil, errMaxParallelismMustBeGreaterThanZero
 	}
 	maxInstallChan := make(chan struct{}, inst.param.MaxParallelism)
-	registryContents := make(map[string]*config.RegistryContent, len(cfg.Registries)+1)
+	registryContents := make(map[string]*registry.Config, len(cfg.Registries)+1)
 
 	for _, registry := range cfg.Registries {
-		go func(registry *config.Registry) {
+		go func(registry *aqua.Registry) {
 			defer wg.Done()
 			maxInstallChan <- struct{}{}
 			registryContent, err := inst.installRegistry(ctx, registry, cfgFilePath, logE)
@@ -65,7 +67,7 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config
 	}
 
 	for registryName, registryContent := range registryContents {
-		if err := validate.RegistryContent(registryContent); err != nil {
+		if err := validate.RegistryConfig(registryContent); err != nil {
 			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"registry_name": registryName,
 			})
@@ -75,7 +77,7 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *config.Config
 	return registryContents, nil
 }
 
-func (inst *installer) readRegistry(p string, registry *config.RegistryContent) error {
+func (inst *installer) readRegistry(p string, registry *registry.Config) error {
 	f, err := inst.fs.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
@@ -97,10 +99,10 @@ const dirPermission os.FileMode = 0o775
 
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (inst *installer) installRegistry(ctx context.Context, registry *config.Registry, cfgFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
-	registryFilePath := registry.GetFilePath(inst.param.RootDir, cfgFilePath)
+func (inst *installer) installRegistry(ctx context.Context, regist *aqua.Registry, cfgFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+	registryFilePath := regist.GetFilePath(inst.param.RootDir, cfgFilePath)
 	if _, err := inst.fs.Stat(registryFilePath); err == nil {
-		registryContent := &config.RegistryContent{}
+		registryContent := &registry.Config{}
 		if err := inst.readRegistry(registryFilePath, registryContent); err != nil {
 			return nil, err
 		}
@@ -109,15 +111,15 @@ func (inst *installer) installRegistry(ctx context.Context, registry *config.Reg
 	if err := inst.fs.MkdirAll(filepath.Dir(registryFilePath), dirPermission); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
-	return inst.getRegistry(ctx, registry, registryFilePath, logE)
+	return inst.getRegistry(ctx, regist, registryFilePath, logE)
 }
 
 // getRegistry downloads and installs the registry file.
-func (inst *installer) getRegistry(ctx context.Context, registry *config.Registry, registryFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
+func (inst *installer) getRegistry(ctx context.Context, registry *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
 	switch registry.Type {
-	case config.RegistryTypeGitHubContent:
+	case aqua.RegistryTypeGitHubContent:
 		return inst.getGitHubContentRegistry(ctx, registry, registryFilePath, logE)
-	case config.RegistryTypeLocal:
+	case aqua.RegistryTypeLocal:
 		return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
 			"local_registry_file_path": registryFilePath,
 		})
@@ -125,8 +127,8 @@ func (inst *installer) getRegistry(ctx context.Context, registry *config.Registr
 	return nil, errUnsupportedRegistryType
 }
 
-func (inst *installer) getGitHubContentRegistry(ctx context.Context, registry *config.Registry, registryFilePath string, logE *logrus.Entry) (*config.RegistryContent, error) {
-	b, err := inst.registryDownloader.GetGitHubContentFile(ctx, registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path, logE)
+func (inst *installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+	b, err := inst.registryDownloader.GetGitHubContentFile(ctx, regist.RepoOwner, regist.RepoName, regist.Ref, regist.Path, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -134,7 +136,7 @@ func (inst *installer) getGitHubContentRegistry(ctx context.Context, registry *c
 	if err := afero.WriteFile(inst.fs, registryFilePath, b, 0o600); err != nil { //nolint:gomnd
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
-	registryContent := &config.RegistryContent{}
+	registryContent := &registry.Config{}
 	if filepath.Ext(registryFilePath) == ".json" {
 		if err := json.Unmarshal(b, registryContent); err != nil {
 			return nil, fmt.Errorf("parse the registry configuration file as JSON: %w", err)

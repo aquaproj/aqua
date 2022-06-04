@@ -19,16 +19,17 @@ type pkgDownloader struct {
 	http    HTTPDownloader
 }
 
-func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
+	pkgInfo := pkg.PackageInfo
 	switch pkgInfo.GetType() {
 	case config.PkgInfoTypeGitHubRelease:
-		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, pkgInfo, assetName, logE)
+		return downloader.getReadCloserFromGitHubRelease(ctx, pkg, assetName, logE)
 	case config.PkgInfoTypeGitHubContent:
-		return downloader.getReadCloserFromGitHubContent(ctx, pkg, pkgInfo, assetName)
+		return downloader.getReadCloserFromGitHubContent(ctx, pkg, assetName)
 	case config.PkgInfoTypeGitHubArchive, config.PkgInfoTypeGo:
-		return downloader.getReadCloserFromGitHubArchive(ctx, pkg, pkgInfo)
+		return downloader.getReadCloserFromGitHubArchive(ctx, pkg)
 	case config.PkgInfoTypeHTTP:
-		return downloader.getReadCloserFromHTTP(ctx, pkg, pkgInfo)
+		return downloader.getReadCloserFromHTTP(ctx, pkg)
 	default:
 		return nil, logerr.WithFields(errInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),
@@ -36,20 +37,22 @@ func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.
 	}
 }
 
-func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
-	return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName, logE)
+func (downloader *pkgDownloader) getReadCloserFromGitHubRelease(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
+	pkgInfo := pkg.PackageInfo
+	return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, assetName, logE)
 }
 
-func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
-	if rc, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)); err == nil {
+func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package) (io.ReadCloser, error) {
+	pkgInfo := pkg.PackageInfo
+	if rc, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version)); err == nil {
 		return rc, nil
 	}
 	// e.g. https://github.com/anqiansong/github-compare/archive/3972625c74bf6a5da00beb0e17e30e3e8d0c0950.zip
-	if rc, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version)); err == nil {
+	if rc, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version)); err == nil {
 		return rc, nil
 	}
 	u, _, err := downloader.github.GetArchiveLink(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, gh.Tarball, &gh.RepositoryContentGetOptions{
-		Ref: pkg.Version,
+		Ref: pkg.Package.Version,
 	}, true)
 	if err != nil {
 		return nil, fmt.Errorf("git an archive link with GitHub API: %w", err)
@@ -57,12 +60,13 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Cont
 	return downloader.http.Download(ctx, u.String()) //nolint:wrapcheck
 }
 
-func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, assetName string) (io.ReadCloser, error) {
-	return downloader.downloadGitHubContent(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName)
+func (downloader *pkgDownloader) getReadCloserFromGitHubContent(ctx context.Context, pkg *config.Package, assetName string) (io.ReadCloser, error) {
+	pkgInfo := pkg.PackageInfo
+	return downloader.downloadGitHubContent(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, assetName)
 }
 
-func (downloader *pkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo) (io.ReadCloser, error) {
-	uS, err := pkgInfo.RenderURL(pkg, downloader.runtime)
+func (downloader *pkgDownloader) getReadCloserFromHTTP(ctx context.Context, pkg *config.Package) (io.ReadCloser, error) {
+	uS, err := pkg.RenderURL(downloader.runtime)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

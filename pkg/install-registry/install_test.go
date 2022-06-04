@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/google/go-cmp/cmp"
@@ -25,10 +27,10 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 		files       map[string]string
 		param       *config.Param
 		downloader  download.RegistryDownloader
-		cfg         *config.Config
+		cfg         *aqua.Config
 		cfgFilePath string
 		isErr       bool
-		exp         map[string]*config.RegistryContent
+		exp         map[string]*cfgRegistry.Config
 	}{
 		{
 			name: "local",
@@ -44,8 +46,8 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
   path: aqua-installer
 `,
 			},
-			cfg: &config.Config{
-				Registries: config.Registries{
+			cfg: &aqua.Config{
+				Registries: aqua.Registries{
 					"local": {
 						Type: "local",
 						Name: "local",
@@ -69,9 +71,9 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			exp: map[string]*config.RegistryContent{
+			exp: map[string]*cfgRegistry.Config{
 				"local": {
-					PackageInfos: config.PackageInfos{
+					PackageInfos: cfgRegistry.PackageInfos{
 						{
 							Type:      "github_content",
 							RepoOwner: "aquaproj",
@@ -81,7 +83,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 				"standard": {
-					PackageInfos: config.PackageInfos{
+					PackageInfos: cfgRegistry.PackageInfos{
 						{
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
@@ -91,7 +93,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 				"standard-json": {
-					PackageInfos: config.PackageInfos{
+					PackageInfos: cfgRegistry.PackageInfos{
 						{
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",

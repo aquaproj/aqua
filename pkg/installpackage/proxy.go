@@ -6,39 +6,43 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/sirupsen/logrus"
 )
 
 func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
-	pkg := &config.Package{
-		Name:    proxyName,
-		Version: "v1.1.0", // renovate: depName=aquaproj/aqua-proxy
-	}
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Name,
-		"package_version": pkg.Version,
-		"registry":        pkg.Registry,
-	})
-
 	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
-	logE.Debug("install the proxy")
-	pkgInfo := &config.PackageInfo{
-		Type:      "github_release",
-		RepoOwner: "aquaproj",
-		RepoName:  proxyName,
-		Asset:     &proxyAssetTemplate,
-		Files: []*config.File{
-			{
-				Name: proxyName,
+	pkg := &config.Package{
+		Package: &aqua.Package{
+			Name:    proxyName,
+			Version: "v1.1.0", // renovate: depName=aquaproj/aqua-proxy
+		},
+		PackageInfo: &registry.PackageInfo{
+			Type:      "github_release",
+			RepoOwner: "aquaproj",
+			RepoName:  proxyName,
+			Asset:     &proxyAssetTemplate,
+			Files: []*registry.File{
+				{
+					Name: proxyName,
+				},
 			},
 		},
 	}
-	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
+	logE = logE.WithFields(logrus.Fields{
+		"package_name":    pkg.Package.Name,
+		"package_version": pkg.Package.Version,
+		"registry":        pkg.Package.Registry,
+	})
+
+	logE.Debug("install the proxy")
+	assetName, err := pkg.RenderAsset(inst.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
+	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -46,7 +50,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	finfo, err := inst.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
+		if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, logE); err != nil {
 			return err
 		}
 	} else {

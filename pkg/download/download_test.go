@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -31,13 +33,12 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 		rt         *runtime.Runtime
 		isErr      bool
 		pkg        *config.Package
-		pkgInfo    *config.PackageInfo
 		assetName  string
 		exp        string
 		github     githubSvc.RepositoryService
 		httpClient *http.Client
 	}{
-		{
+		{ //nolint:dupl
 			name: "github_release http",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
@@ -47,15 +48,17 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			pkg: &config.Package{
-				Name:     "suzuki-shunsuke/ci-info",
-				Registry: "standard",
-				Version:  "v2.0.3",
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-				Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+				Package: &aqua.Package{
+					Name:     "suzuki-shunsuke/ci-info",
+					Registry: "standard",
+					Version:  "v2.0.3",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "suzuki-shunsuke",
+					RepoName:  "ci-info",
+					Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+				},
 			},
 			assetName: "ci-info-2.0.3_linux_amd64.tar.gz",
 			exp:       "foo",
@@ -95,15 +98,17 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			pkg: &config.Package{
-				Name:     "suzuki-shunsuke/ci-info",
-				Registry: "standard",
-				Version:  "v2.0.3",
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_release",
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-				Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+				Package: &aqua.Package{
+					Name:     "suzuki-shunsuke/ci-info",
+					Registry: "standard",
+					Version:  "v2.0.3",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "suzuki-shunsuke",
+					RepoName:  "ci-info",
+					Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+				},
 			},
 			assetName: "ci-info-2.0.3_linux_amd64.tar.gz",
 			exp:       "foo",
@@ -142,7 +147,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				},
 			},
 		},
-		{
+		{ //nolint:dupl
 			name: "github_content http",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
@@ -152,15 +157,17 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			pkg: &config.Package{
-				Name:     "aquaproj/aqua-installer",
-				Registry: "standard",
-				Version:  "v1.1.0",
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_content",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-installer",
-				Path:      stringP("aqua-installer"),
+				Package: &aqua.Package{
+					Name:     "aquaproj/aqua-installer",
+					Registry: "standard",
+					Version:  "v1.1.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_content",
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua-installer",
+					Path:      stringP("aqua-installer"),
+				},
 			},
 			assetName: "aqua-installer",
 			exp:       "foo",
@@ -200,15 +207,17 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			pkg: &config.Package{
-				Name:     "aquaproj/aqua-installer",
-				Registry: "standard",
-				Version:  "v1.1.0",
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_content",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-installer",
-				Path:      stringP("aqua-installer"),
+				Package: &aqua.Package{
+					Name:     "aquaproj/aqua-installer",
+					Registry: "standard",
+					Version:  "v1.1.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_content",
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua-installer",
+					Path:      stringP("aqua-installer"),
+				},
 			},
 			assetName: "aqua-installer",
 			exp:       "github-content",
@@ -250,14 +259,16 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			pkg: &config.Package{
-				Name:     "tfutils/tfenv",
-				Registry: "standard",
-				Version:  "v2.2.3",
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "github_archive",
-				RepoOwner: "tfutils",
-				RepoName:  "tfenv",
+				Package: &aqua.Package{
+					Name:     "tfutils/tfenv",
+					Registry: "standard",
+					Version:  "v2.2.3",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_archive",
+					RepoOwner: "tfutils",
+					RepoName:  "tfenv",
+				},
 			},
 			exp:    "foo",
 			github: githubSvc.NewMock(nil, nil, "foo", nil),
@@ -296,15 +307,17 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			pkg: &config.Package{
-				Name:     "GoogleContainerTools/container-diff",
-				Registry: "standard",
-				Version:  "v0.17.0",
-			},
-			pkgInfo: &config.PackageInfo{
-				Type:      "http",
-				RepoOwner: "GoogleContainerTools",
-				RepoName:  "container-diff",
-				URL:       stringP("https://storage.googleapis.com/container-diff/{{.Version}}/container-diff-{{.OS}}-amd64"),
+				Package: &aqua.Package{
+					Name:     "GoogleContainerTools/container-diff",
+					Registry: "standard",
+					Version:  "v0.17.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "http",
+					RepoOwner: "GoogleContainerTools",
+					RepoName:  "container-diff",
+					URL:       stringP("https://storage.googleapis.com/container-diff/{{.Version}}/container-diff-{{.OS}}-amd64"),
+				},
 			},
 			assetName: "container-diff-linux-amd64",
 			exp:       "yoo",
@@ -336,8 +349,10 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 		},
 		{
 			name: "invalid type",
-			pkgInfo: &config.PackageInfo{
-				Type: "invalid-type",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type: "invalid-type",
+				},
 			},
 			isErr: true,
 		},
@@ -349,7 +364,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			downloader := download.NewPackageDownloader(d.github, d.rt, download.NewHTTPDownloader(d.httpClient))
-			file, err := downloader.GetReadCloser(ctx, d.pkg, d.pkgInfo, d.assetName, logE)
+			file, err := downloader.GetReadCloser(ctx, d.pkg, d.assetName, logE)
 			if err != nil {
 				if d.isErr {
 					return

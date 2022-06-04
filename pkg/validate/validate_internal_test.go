@@ -4,27 +4,28 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 )
 
 func TestConfig(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
-		cfg   *config.Config
+		cfg   *aqua.Config
 	}{
 		{
 			title: "normal",
-			cfg: &config.Config{
-				Packages: []*config.Package{
+			cfg: &aqua.Config{
+				Packages: []*aqua.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
 				},
-				Registries: config.Registries{
-					"standard": &config.Registry{
+				Registries: aqua.Registries{
+					"standard": &aqua.Registry{
 						Name:      "standard",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-registry",
@@ -51,13 +52,13 @@ func Test_validateRegistries(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title      string
-		registries config.Registries
+		registries aqua.Registries
 		isErr      bool
 	}{
 		{
 			title: "normal",
-			registries: config.Registries{
-				"ci-info": &config.Registry{
+			registries: aqua.Registries{
+				"ci-info": &aqua.Registry{
 					Name:      "ci-info",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
@@ -65,7 +66,7 @@ func Test_validateRegistries(t *testing.T) {
 					Path:      "registry.yaml",
 					Type:      "github_content",
 				},
-				"standard": &config.Registry{
+				"standard": &aqua.Registry{
 					Name:      "standard",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-registry",
@@ -98,12 +99,12 @@ func Test_validatePackages(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
-		pkgs  []*config.Package
+		pkgs  []*aqua.Package
 		isErr bool
 	}{
 		{
 			title: "normal",
-			pkgs: []*config.Package{
+			pkgs: []*aqua.Package{
 				{
 					Name:     "suzuki-shunsuke/cmdx",
 					Registry: "standard",
@@ -112,7 +113,7 @@ func Test_validatePackages(t *testing.T) {
 		},
 		{
 			title: "duplicated",
-			pkgs: []*config.Package{
+			pkgs: []*aqua.Package{
 				{
 					Name:     "suzuki-shunsuke/cmdx",
 					Registry: "standard",
@@ -145,23 +146,23 @@ func TestPackageInfos(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title    string
-		pkgInfos config.PackageInfos
+		pkgInfos registry.PackageInfos
 		isErr    bool
 	}{
 		{
 			title: "normal",
-			pkgInfos: config.PackageInfos{
-				&config.PackageInfo{
+			pkgInfos: registry.PackageInfos{
+				&registry.PackageInfo{
 					Name: "foo",
-					Files: []*config.File{
+					Files: []*registry.File{
 						{
 							Name: "foo",
 						},
 					},
 				},
-				&config.PackageInfo{
+				&registry.PackageInfo{
 					Name: "bar",
-					Files: []*config.File{
+					Files: []*registry.File{
 						{
 							Name: "bar",
 						},
@@ -172,18 +173,18 @@ func TestPackageInfos(t *testing.T) { //nolint:funlen
 		{
 			title: "duplicated",
 			isErr: true,
-			pkgInfos: config.PackageInfos{
-				&config.PackageInfo{
+			pkgInfos: registry.PackageInfos{
+				&registry.PackageInfo{
 					Name: "foo",
-					Files: []*config.File{
+					Files: []*registry.File{
 						{
 							Name: "foo",
 						},
 					},
 				},
-				&config.PackageInfo{
+				&registry.PackageInfo{
 					Name: "foo",
-					Files: []*config.File{
+					Files: []*registry.File{
 						{
 							Name: "foo",
 						},
