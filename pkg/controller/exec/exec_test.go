@@ -19,6 +19,8 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/pkgtype"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubcontent"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -125,10 +127,12 @@ packages:
 			}
 			downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
-			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
+			pkgTypes := pkgtype.Packages{
+				githubcontent.PkgType: githubcontent.New(d.param, fs, nil),
+			}
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker, pkgTypes)
 			executor := exec.NewMock(0, nil)
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor)
+			pkgInstaller := installpackage.New(d.param, d.rt, fs, linker, executor, pkgTypes)
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
 			if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
 				if d.isErr {
@@ -222,10 +226,10 @@ packages:
 			}
 			downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, afero.NewOsFs()), d.rt, osEnv, fs, linker)
-			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
+			pkgTypes := pkgtype.Packages{}
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, afero.NewOsFs()), d.rt, osEnv, fs, linker, pkgTypes)
 			executor := exec.NewMock(0, nil)
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor)
+			pkgInstaller := installpackage.New(d.param, d.rt, fs, linker, executor, pkgTypes)
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
@@ -12,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/expr"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/pkgtype"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
@@ -30,16 +30,17 @@ type controller struct {
 	osenv             osenv.OSEnv
 	fs                afero.Fs
 	linker            link.Linker
+	pkgTypes          pkgtype.Packages
 }
 
 func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		pkg, pkgInfo, file, pkgType, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
 		}
 		if pkg != nil {
-			return ctrl.whichFile(pkg, pkgInfo, file)
+			return ctrl.whichFile(pkg, pkgInfo, file, pkgType)
 		}
 	}
 
@@ -47,12 +48,12 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		pkg, pkgInfo, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		pkg, pkgInfo, file, pkgType, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
 		}
 		if pkg != nil {
-			return ctrl.whichFile(pkg, pkgInfo, file)
+			return ctrl.whichFile(pkg, pkgInfo, file, pkgType)
 		}
 	}
 
@@ -66,57 +67,41 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	})
 }
 
-func (ctrl *controller) whichFileGo(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
-	return &Which{
-		Package: pkg,
-		PkgInfo: pkgInfo,
-		File:    file,
-		ExePath: filepath.Join(ctrl.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "bin", file.Name),
-	}, nil
-}
-
-func (ctrl *controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File) (*Which, error) {
-	if pkgInfo.Type == "go" {
-		return ctrl.whichFileGo(pkg, pkgInfo, file)
-	}
-	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, ctrl.runtime)
+func (ctrl *controller) whichFile(pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, pkgType pkgtype.Package) (*Which, error) {
+	filePath, err := pkgType.GetFilePath(pkg, pkgInfo, file)
 	if err != nil {
-		return nil, fmt.Errorf("get file_src: %w", err)
-	}
-	pkgPath, err := pkgInfo.GetPkgPath(ctrl.rootDir, pkg, ctrl.runtime)
-	if err != nil {
-		return nil, fmt.Errorf("get pkg install path: %w", err)
+		return nil, err //nolint:wrapcheck
 	}
 	return &Which{
 		Package: pkg,
 		PkgInfo: pkgInfo,
 		File:    file,
-		ExePath: filepath.Join(pkgPath, fileSrc),
+		ExePath: filePath,
 	}, nil
 }
 
-func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*config.Package, *config.PackageInfo, *config.File, error) {
+func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*config.Package, *config.PackageInfo, *config.File, pkgtype.Package, error) {
 	cfg := &config.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
-		return nil, nil, nil, err //nolint:wrapcheck
+		return nil, nil, nil, nil, err //nolint:wrapcheck
 	}
 	if err := validate.Config(cfg); err != nil {
-		return nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
 
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
-		return nil, nil, nil, err //nolint:wrapcheck
+		return nil, nil, nil, nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
-		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); pkgInfo != nil {
-			return pkg, pkgInfo, file, nil
+		if pkgInfo, file, pkgType := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); pkgInfo != nil {
+			return pkg, pkgInfo, file, pkgType, nil
 		}
 	}
-	return nil, nil, nil, nil
+	return nil, nil, nil, nil, nil
 }
 
-func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.RegistryContent, exeName string, pkg *config.Package, logE *logrus.Entry) (*config.PackageInfo, *config.File) {
+func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.RegistryContent, exeName string, pkg *config.Package, logE *logrus.Entry) (*config.PackageInfo, *config.File, pkgtype.Package) { //nolint:cyclop
 	logE = logE.WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
@@ -124,43 +109,49 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*config.Regist
 	registry, ok := registries[pkg.Registry]
 	if !ok {
 		logE.Warn("registry isn't found")
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	m, err := registry.PackageInfos.ToMap()
 	if err != nil {
 		logerr.WithError(logE, err).Warn("registry is invalid")
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	pkgInfo, ok := m[pkg.Name]
 	if !ok {
 		logE.Warn("package isn't found")
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	pkgInfo, err = pkgInfo.Override(pkg.Version, ctrl.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	if pkgInfo.SupportedIf != nil {
 		supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
-			return nil, nil
+			return nil, nil, nil
 		}
 		if !supported {
 			logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
-			return nil, nil
+			return nil, nil, nil
 		}
 	}
 
-	for _, file := range pkgInfo.GetFiles() {
+	pkgType, ok := ctrl.pkgTypes[pkgInfo.Type]
+	if !ok {
+		logE.WithField("package_type", pkgInfo.Type).Debug("the package type is unsupported")
+		return nil, nil, nil
+	}
+
+	for _, file := range pkgType.GetFiles(pkgInfo) {
 		if file.Name == exeName {
-			return pkgInfo, file
+			return pkgInfo, file, pkgType
 		}
 	}
-	return nil, nil
+	return nil, nil, nil
 }

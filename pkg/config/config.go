@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/render"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/invopop/jsonschema"
@@ -120,33 +121,16 @@ type File struct {
 	Dir  string `json:"dir,omitempty"`
 }
 
-func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime) string {
-	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
-		// Rosetta 2
-		return replace("amd64", replacements)
+func (file *File) GetSrc(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runtime) (string, error) {
+	if file.Src == "" {
+		return file.Name, nil
 	}
-	return replace(rt.GOARCH, replacements)
-}
-
-func (file *File) RenderSrc(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runtime) (string, error) {
 	return template.Execute(file.Src, map[string]interface{}{ //nolint:wrapcheck
 		"Version":  pkg.Version,
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
-	})
-}
-
-func (file *File) RenderDir(pkg *Package, pkgInfo *PackageInfo, rt *runtime.Runtime) (string, error) {
-	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
-		"Version":  pkg.Version,
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":     render.GetArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})

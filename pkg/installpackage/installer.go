@@ -8,10 +8,10 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/pkgtype"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -22,13 +22,13 @@ import (
 const proxyName = "aqua-proxy"
 
 type installer struct {
-	rootDir           string
-	maxParallelism    int
-	packageDownloader download.PackageDownloader
-	runtime           *runtime.Runtime
-	fs                afero.Fs
-	linker            link.Linker
-	executor          exec.Executor
+	rootDir        string
+	maxParallelism int
+	runtime        *runtime.Runtime
+	fs             afero.Fs
+	linker         link.Linker
+	executor       exec.Executor
+	installers     pkgtype.Packages
 }
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *config.Config, registries map[string]*config.RegistryContent, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error { //nolint:funlen,cyclop
@@ -117,37 +117,42 @@ func (inst *installer) InstallPackage(ctx context.Context, pkgInfo *config.Packa
 	})
 	logE.Debug("install the package")
 
-	if err := pkgInfo.Validate(); err != nil {
-		return fmt.Errorf("invalid package: %w", err)
+	pkgType, ok := inst.installers[pkgInfo.Type]
+	if !ok {
+		return errUnknownPackageType
 	}
-
-	if pkgInfo.Type == "go_install" && pkg.Version == "latest" {
-		return errGoInstallForbidLatest
-	}
-
-	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("render the asset name: %w", err)
-	}
-
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get the package install path: %w", err)
-	}
-
-	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
+	if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgType, logE); err != nil {
 		return err
 	}
-
-	for _, file := range pkgInfo.GetFiles() {
-		if err := inst.checkFileSrc(ctx, pkg, pkgInfo, file, logE); err != nil {
+	for _, file := range pkgType.GetFiles(pkgInfo) {
+		filePath, err := pkgType.GetFilePath(pkg, pkgInfo, file)
+		if err != nil {
+			if isTest {
+				return fmt.Errorf("get file path: %w", err)
+			}
+			logerr.WithError(logE, err).Warn("get file path")
+			continue
+		}
+		fields := logrus.Fields{
+			"file_path": filePath,
+		}
+		logE := logE.WithFields(fields)
+		finfo, err := inst.fs.Stat(filePath)
+		if err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
 			logerr.WithError(logE, err).Warn("check file_src is correct")
+			continue
+		}
+		logE.Debug("check the permission")
+		if mode := finfo.Mode().Perm(); !util.IsOwnerExecutable(mode) {
+			logE.Debug("add the permission to execute the command")
+			if err := inst.fs.Chmod(filePath, util.AllowOwnerExec(mode)); err != nil {
+				return logerr.WithFields(errChmod, fields) //nolint:wrapcheck
+			}
 		}
 	}
-
 	return nil
 }
 
@@ -188,7 +193,15 @@ func (inst *installer) createLinks(cfg *config.Config, registries map[string]*co
 			}
 		}
 		pkgs = append(pkgs, pkg)
-		for _, file := range pkgInfo.GetFiles() {
+		pkgType, ok := inst.installers[pkgInfo.Type]
+		if !ok {
+			logE.WithFields(logrus.Fields{
+				"package_type": pkgType,
+			}).Error("unknown package type")
+			failed = true
+			continue
+		}
+		for _, file := range pkgType.GetFiles(pkgInfo) {
 			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
@@ -219,7 +232,7 @@ func getPkgInfoFromRegistries(registries map[string]*config.RegistryContent, pkg
 
 const maxRetryDownload = 1
 
-func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, dest, assetName string, logE *logrus.Entry) error {
+func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, pkgType pkgtype.Package, logE *logrus.Entry) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Name,
 		"package_version": pkg.Version,
@@ -228,13 +241,16 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 	retryCount := 0
 	for {
 		logE.Debug("check if the package is already installed")
-		finfo, err := inst.fs.Stat(dest)
-		if err != nil { //nolint:nestif
+		f, err := pkgType.CheckInstalled(pkg, pkgInfo)
+		if err != nil {
+			return fmt.Errorf("check if the package is already installed: %w", err)
+		}
+		if !f { //nolint:nestif
 			// file doesn't exist
-			if err := inst.download(ctx, pkg, pkgInfo, dest, assetName, logE); err != nil {
+			if err := pkgType.Install(ctx, pkg, pkgInfo, logE); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
-						return err
+						return fmt.Errorf("install the package: %w", err)
 					}
 					retryCount++
 					logerr.WithError(logE, err).WithFields(logrus.Fields{
@@ -242,77 +258,10 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 					}).Info("retry installing the package")
 					continue
 				}
-				return err
+				return fmt.Errorf("install the package: %w", err)
 			}
 			return nil
 		}
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", dest)
-		}
 		return nil
 	}
-}
-
-func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, logE *logrus.Entry) error {
-	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "bin", file.Name)
-	dir, err := file.RenderDir(pkg, pkgInfo, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("render file dir: %w", err)
-	}
-	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src", dir)
-	if _, err := inst.fs.Stat(exePath); err == nil {
-		return nil
-	}
-	src := file.Src
-	if src == "" {
-		src = "."
-	}
-	logE.WithFields(logrus.Fields{
-		"exe_path":     exePath,
-		"go_src":       src,
-		"go_build_dir": exeDir,
-	}).Info("building Go tool")
-	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
-		return fmt.Errorf("build Go tool: %w", err)
-	}
-	return nil
-}
-
-func (inst *installer) checkFileSrc(ctx context.Context, pkg *config.Package, pkgInfo *config.PackageInfo, file *config.File, logE *logrus.Entry) error {
-	fields := logrus.Fields{
-		"file_name": file.Name,
-	}
-	logE = logE.WithFields(fields)
-
-	if pkgInfo.Type == "go" {
-		return inst.checkFileSrcGo(ctx, pkg, pkgInfo, file, logE)
-	}
-
-	fileSrc, err := pkgInfo.GetFileSrc(pkg, file, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get file_src: %w", err)
-	}
-
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get the package install path: %w", err)
-	}
-	exePath := filepath.Join(pkgPath, fileSrc)
-
-	finfo, err := inst.fs.Stat(exePath)
-	if err != nil {
-		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))
-	}
-	if finfo.IsDir() {
-		return logerr.WithFields(errExePathIsDirectory, fields) //nolint:wrapcheck
-	}
-
-	logE.Debug("check the permission")
-	if mode := finfo.Mode().Perm(); !util.IsOwnerExecutable(mode) {
-		logE.Debug("add the permission to execute the command")
-		if err := inst.fs.Chmod(exePath, util.AllowOwnerExec(mode)); err != nil {
-			return logerr.WithFields(errChmod, fields) //nolint:wrapcheck
-		}
-	}
-	return nil
 }

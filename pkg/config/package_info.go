@@ -2,13 +2,11 @@ package config
 
 import (
 	"fmt"
-	"net/url"
-	"path/filepath"
 	texttemplate "text/template"
 
+	"github.com/aquaproj/aqua/pkg/render"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
-	"github.com/aquaproj/aqua/pkg/unarchive"
 )
 
 type PackageInfo struct {
@@ -193,19 +191,6 @@ func (pkgInfo *PackageInfo) GetName() string {
 	if pkgInfo.HasRepo() {
 		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		return *pkgInfo.Path
-	}
-	return ""
-}
-
-func (pkgInfo *PackageInfo) GetPath() string {
-	if pkgInfo.Path != nil {
-		return *pkgInfo.Path
-	}
-	if pkgInfo.HasRepo() {
-		return "github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
-	}
 	return ""
 }
 
@@ -226,139 +211,6 @@ func (pkgInfo *PackageInfo) GetFormat() string {
 	return pkgInfo.Format
 }
 
-func (pkgInfo *PackageInfo) GetFileSrc(pkg *Package, file *File, rt *runtime.Runtime) (string, error) {
-	assetName, err := pkgInfo.RenderAsset(pkg, rt)
-	if err != nil {
-		return "", fmt.Errorf("render the asset name: %w", err)
-	}
-	if unarchive.IsUnarchived(pkgInfo.GetFormat(), assetName) {
-		return filepath.Base(assetName), nil
-	}
-	if file.Src == "" {
-		return file.Name, nil
-	}
-	src, err := file.RenderSrc(pkg, pkgInfo, rt)
-	if err != nil {
-		return "", fmt.Errorf("render the template file.src: %w", err)
-	}
-	return src, nil
-}
-
-func (pkgInfo *PackageInfo) GetDescription() string {
-	return pkgInfo.Description
-}
-
-func (pkgInfo *PackageInfo) GetType() string {
-	return pkgInfo.Type
-}
-
-func (pkgInfo *PackageInfo) GetReplacements() map[string]string {
-	return pkgInfo.Replacements
-}
-
-func (pkgInfo *PackageInfo) GetAsset() *string {
-	return pkgInfo.Asset
-}
-
-func (pkgInfo *PackageInfo) GetPkgPath(rootDir string, pkg *Package, rt *runtime.Runtime) (string, error) {
-	assetName, err := pkgInfo.RenderAsset(pkg, rt)
-	if err != nil {
-		return "", fmt.Errorf("render the asset name: %w", err)
-	}
-	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
-	case PkgInfoTypeGo:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
-	case PkgInfoTypeGoInstall:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), pkgInfo.GetPath(), pkg.Version, "bin"), nil
-	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-	case PkgInfoTypeHTTP:
-		uS, err := pkgInfo.RenderURL(pkg, rt)
-		if err != nil {
-			return "", fmt.Errorf("render URL: %w", err)
-		}
-		u, err := url.Parse(uS)
-		if err != nil {
-			return "", fmt.Errorf("parse the URL: %w", err)
-		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), u.Host, u.Path), nil
-	}
-	return "", nil
-}
-
-func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
-	if pkgInfo.GetName() == "" {
-		return errPkgNameIsRequired
-	}
-	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
-		if !pkgInfo.HasRepo() {
-			return errRepoRequired
-		}
-		return nil
-	case PkgInfoTypeGoInstall:
-		if pkgInfo.GetPath() == "" {
-			return errGoInstallRequirePath
-		}
-		return nil
-	case PkgInfoTypeGitHubContent:
-		if !pkgInfo.HasRepo() {
-			return errRepoRequired
-		}
-		if pkgInfo.Path == nil {
-			return errGitHubContentRequirePath
-		}
-		return nil
-	case PkgInfoTypeGitHubRelease:
-		if !pkgInfo.HasRepo() {
-			return errRepoRequired
-		}
-		if pkgInfo.Asset == nil {
-			return errAssetRequired
-		}
-		return nil
-	case PkgInfoTypeHTTP:
-		if pkgInfo.URL == nil {
-			return errURLRequired
-		}
-		return nil
-	}
-	return errInvalidPackageType
-}
-
-func (pkgInfo *PackageInfo) RenderAsset(pkg *Package, rt *runtime.Runtime) (string, error) {
-	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
-		return "", nil
-	case PkgInfoTypeGoInstall:
-		if pkgInfo.Asset != nil {
-			return *pkgInfo.Asset, nil
-		}
-		return filepath.Base(pkgInfo.GetPath()), nil
-	case PkgInfoTypeGitHubContent:
-		s, err := pkgInfo.renderTemplateString(*pkgInfo.Path, pkg, rt)
-		if err != nil {
-			return "", fmt.Errorf("render a package path: %w", err)
-		}
-		return s, nil
-	case PkgInfoTypeGitHubRelease:
-		return pkgInfo.renderTemplateString(*pkgInfo.Asset, pkg, rt)
-	case PkgInfoTypeHTTP:
-		uS, err := pkgInfo.RenderURL(pkg, rt)
-		if err != nil {
-			return "", fmt.Errorf("render URL: %w", err)
-		}
-		u, err := url.Parse(uS)
-		if err != nil {
-			return "", fmt.Errorf("parse the URL: %w", err)
-		}
-		return filepath.Base(u.Path), nil
-	}
-	return "", nil
-}
-
 func (pkgInfo *PackageInfo) renderTemplateString(s string, pkg *Package, rt *runtime.Runtime) (string, error) {
 	tpl, err := template.Compile(s)
 	if err != nil {
@@ -372,8 +224,8 @@ func (pkgInfo *PackageInfo) renderTemplate(tpl *texttemplate.Template, pkg *Pack
 		"Version": pkg.Version,
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
-		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"OS":      replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":    render.GetArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
@@ -394,20 +246,6 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 		return []*File{
 			{
 				Name: pkgInfo.RepoName,
-			},
-		}
-	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		if pkgInfo.Asset != nil {
-			return []*File{
-				{
-					Name: *pkgInfo.Asset,
-				},
-			}
-		}
-		return []*File{
-			{
-				Name: filepath.Base(pkgInfo.GetPath()),
 			},
 		}
 	}

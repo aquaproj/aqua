@@ -2,14 +2,15 @@ package installpackage_test
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/pkgtype"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubcontent"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubrelease"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -201,8 +202,11 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
+			pkgTypes := pkgtype.Packages{
+				githubrelease.PkgType: githubrelease.New(d.param, fs, d.rt, nil),
+				githubcontent.PkgType: githubcontent.New(d.param, fs, nil),
+			}
+			ctrl := installpackage.New(d.param, d.rt, fs, linker, d.executor, pkgTypes)
 			if err := ctrl.InstallPackages(ctx, d.cfg, d.registries, d.binDir, d.onlyLink, d.isTest, logE); err != nil {
 				if d.isErr {
 					return
@@ -266,8 +270,10 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
+			pkgTypes := pkgtype.Packages{
+				githubrelease.PkgType: githubrelease.New(d.param, fs, d.rt, nil),
+			}
+			ctrl := installpackage.New(d.param, d.rt, fs, nil, d.executor, pkgTypes)
 			if err := ctrl.InstallPackage(ctx, d.pkgInfo, d.pkg, d.isTest, logE); err != nil {
 				if d.isErr {
 					return

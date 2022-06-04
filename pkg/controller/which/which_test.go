@@ -12,6 +12,9 @@ import (
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/pkgtype"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubcontent"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubrelease"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
@@ -196,8 +199,12 @@ packages:
 					t.Fatal(err)
 				}
 			}
+			pkgTypes := pkgtype.Packages{
+				githubrelease.PkgType: githubrelease.New(d.param, fs, d.rt, nil),
+				githubcontent.PkgType: githubcontent.New(d.param, fs, nil),
+			}
 			downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker)
+			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker, pkgTypes)
 			which, err := ctrl.Which(ctx, d.param, d.exeName, logE)
 			if err != nil {
 				if d.isErr {

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubrelease"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,41 +23,38 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 
 	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	logE.Debug("install the proxy")
+	file := &config.File{
+		Name: proxyName,
+	}
 	pkgInfo := &config.PackageInfo{
 		Type:      "github_release",
 		RepoOwner: "aquaproj",
 		RepoName:  proxyName,
 		Asset:     &proxyAssetTemplate,
-		Files: []*config.File{
-			{
-				Name: proxyName,
-			},
-		},
-	}
-	assetName, err := pkgInfo.RenderAsset(pkg, inst.runtime)
-	if err != nil {
-		return err //nolint:wrapcheck
+		Files:     []*config.File{file},
 	}
 
-	pkgPath, err := pkgInfo.GetPkgPath(inst.rootDir, pkg, inst.runtime)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
+	pkgType := inst.installers[githubrelease.PkgType]
+
 	logE.Debug("check if aqua-proxy is already installed")
-	finfo, err := inst.fs.Stat(pkgPath)
+	f, err := pkgType.CheckInstalled(pkg, pkgInfo)
 	if err != nil {
+		return fmt.Errorf("check if aqua-proxy is already installed: %w", err)
+	}
+	if !f {
 		// file doesn't exist
-		if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgPath, assetName, logE); err != nil {
+		if err := inst.downloadWithRetry(ctx, pkg, pkgInfo, pkgType, logE); err != nil {
 			return err
 		}
-	} else {
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", pkgPath)
-		}
+	}
+
+	filePath, err := pkgType.GetFilePath(pkg, pkgInfo, file)
+	if err != nil {
+		return fmt.Errorf("get a file path to aqua-proxy: %w", err)
 	}
 
 	// create a symbolic link
-	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filepath.Join(pkgPath, proxyName))
+	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filePath)
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
