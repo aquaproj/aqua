@@ -62,3 +62,7 @@ func (inst *Installer) GetFilePath(pkg *config.Package, file *registry.File) (st
 func (inst *Installer) GetFormat(pkg *registry.PackageInfo) string {
 	return "tar.gz"
 }
+
+func (inst *Installer) GetName(pkg *registry.PackageInfo) string {
+	return pkg.GetName()
+}

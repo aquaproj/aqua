@@ -197,9 +197,6 @@ func (pkgInfo *PackageInfo) GetName() string {
 	if pkgInfo.HasRepo() {
 		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		return *pkgInfo.Path
-	}
 	return ""
 }
 

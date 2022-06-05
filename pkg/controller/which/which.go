@@ -14,7 +14,6 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -84,9 +83,6 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, nil, err //nolint:wrapcheck
-	}
-	if err := validate.Config(cfg); err != nil {
-		return nil, nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
 
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)

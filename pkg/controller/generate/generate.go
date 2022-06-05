@@ -17,7 +17,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/expr"
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	instregst "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -81,13 +80,10 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
+func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) {
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
-	}
-	if err := validate.Config(cfg); err != nil {
-		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {

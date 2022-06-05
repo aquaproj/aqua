@@ -40,8 +40,12 @@ func (inst *Installer) getFileSrc(file *registry.File) string {
 	return file.Name
 }
 
-func (inst *Installer) GetFormat(pkg *registry.PackageInfo) string {
+func (inst *Installer) GetFormat(pkgInfo *registry.PackageInfo) string {
 	return "tar.gz"
+}
+
+func (inst *Installer) GetName(pkgInfo *registry.PackageInfo) string {
+	return pkgInfo.GetName()
 }
 
 func (inst *Installer) GetFilePath(pkg *config.Package, file *registry.File) (string, error) {

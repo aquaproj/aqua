@@ -23,6 +23,7 @@ type PackageType interface {
 	Find(pkg *Package, exeName string, logE *logrus.Entry) (string, error)
 	GetFilePath(pkg *Package, file *registry.File) (string, error)
 	GetFormat(pkgInfo *registry.PackageInfo) string
+	GetName(pkgInfo *registry.PackageInfo) string
 }
 
 type PackageTypes = map[string]PackageType

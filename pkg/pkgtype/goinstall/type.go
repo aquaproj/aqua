@@ -97,3 +97,13 @@ func (inst *Installer) GetFilePath(pkg *config.Package, file *registry.File) (st
 func (inst *Installer) GetFormat(pkg *registry.PackageInfo) string {
 	return "raw"
 }
+
+func (inst *Installer) GetName(pkg *registry.PackageInfo) string {
+	if name := pkg.GetName(); name != "" {
+		return name
+	}
+	if pkg.Path != nil {
+		return *pkg.Path
+	}
+	return ""
+}

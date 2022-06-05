@@ -11,7 +11,6 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,10 +39,6 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *log
 
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
-	}
-
-	if err := validate.Config(cfg); err != nil {
-		return fmt.Errorf("configuration is invalid: %w", err)
 	}
 
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
