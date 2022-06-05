@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -24,13 +23,13 @@ import (
 const proxyName = "aqua-proxy"
 
 type installer struct {
-	rootDir           string
-	maxParallelism    int
-	packageDownloader download.PackageDownloader
-	runtime           *runtime.Runtime
-	fs                afero.Fs
-	linker            link.Linker
-	executor          exec.Executor
+	rootDir        string
+	maxParallelism int
+	runtime        *runtime.Runtime
+	fs             afero.Fs
+	linker         link.Linker
+	executor       exec.Executor
+	installers     config.PackageTypes
 }
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error {
@@ -100,31 +99,12 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 		"registry":        pkg.Package.Registry,
 	})
 	logE.Debug("install the package")
-
-	if err := pkgInfo.Validate(); err != nil {
-		return fmt.Errorf("invalid package: %w", err)
-	}
-
-	if pkgInfo.Type == "go_install" && pkg.Package.Version == "latest" {
-		return errGoInstallForbidLatest
-	}
-
-	assetName, err := pkg.RenderAsset(inst.runtime)
-	if err != nil {
-		return fmt.Errorf("render the asset name: %w", err)
-	}
-
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get the package install path: %w", err)
-	}
-
-	if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, logE); err != nil {
+	if err := inst.downloadWithRetry(ctx, pkg, logE); err != nil {
 		return err
 	}
 
-	for _, file := range pkgInfo.GetFiles() {
-		if err := inst.checkFileSrc(ctx, pkg, file, logE); err != nil {
+	for _, file := range pkg.Type.GetFiles(pkgInfo) {
+		if err := inst.checkFileSrc(pkg, file, logE); err != nil {
 			if isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -171,9 +151,16 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 				continue
 			}
 		}
+		pkgType, ok := inst.installers[pkgInfo.Type]
+		if !ok {
+			logE.WithField("package_type", pkgInfo.Type).Error("unsupported package type")
+			failed = true
+			continue
+		}
 		pkgs = append(pkgs, &config.Package{
 			Package:     pkg,
 			PackageInfo: pkgInfo,
+			Type:        pkgType,
 		})
 		for _, file := range pkgInfo.GetFiles() {
 			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
@@ -206,7 +193,7 @@ func getPkgInfoFromRegistries(registries map[string]*registry.Config, pkg *aqua.
 
 const maxRetryDownload = 1
 
-func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, dest, assetName string, logE *logrus.Entry) error {
+func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
 		"package_version": pkg.Package.Version,
@@ -215,13 +202,16 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 	retryCount := 0
 	for {
 		logE.Debug("check if the package is already installed")
-		finfo, err := inst.fs.Stat(dest)
-		if err != nil { //nolint:nestif
+		f, err := pkg.Type.CheckInstalled(pkg)
+		if err != nil {
+			return fmt.Errorf("check if the package is already installed: %w", err)
+		}
+		if !f { //nolint:nestif
 			// file doesn't exist
-			if err := inst.download(ctx, pkg, dest, assetName, logE); err != nil {
+			if err := pkg.Type.Install(ctx, pkg, logE); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
-						return err
+						return fmt.Errorf("install a package: %w", err)
 					}
 					retryCount++
 					logerr.WithError(logE, err).WithFields(logrus.Fields{
@@ -229,76 +219,31 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 					}).Info("retry installing the package")
 					continue
 				}
-				return err
+				return fmt.Errorf("install a package: %w", err)
 			}
 			return nil
 		}
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", dest)
-		}
 		return nil
 	}
 }
 
-func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	pkgInfo := pkg.PackageInfo
-	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
-	dir, err := pkg.RenderDir(file, inst.runtime)
+func (inst *installer) checkFileSrc(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+	filePath, err := pkg.Type.GetFilePath(pkg, file)
 	if err != nil {
-		return fmt.Errorf("render file dir: %w", err)
+		return fmt.Errorf("get file path: %w", err)
 	}
-	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
-	if _, err := inst.fs.Stat(exePath); err == nil {
-		return nil
-	}
-	src := file.Src
-	if src == "" {
-		src = "."
-	}
-	logE.WithFields(logrus.Fields{
-		"exe_path":     exePath,
-		"go_src":       src,
-		"go_build_dir": exeDir,
-	}).Info("building Go tool")
-	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
-		return fmt.Errorf("build Go tool: %w", err)
-	}
-	return nil
-}
-
-func (inst *installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	fields := logrus.Fields{
-		"file_name": file.Name,
+		"file_path": filePath,
 	}
 	logE = logE.WithFields(fields)
-
-	if pkg.PackageInfo.Type == "go" {
-		return inst.checkFileSrcGo(ctx, pkg, file, logE)
-	}
-
-	fileSrc, err := pkg.GetFileSrc(file, inst.runtime)
+	finfo, err := inst.fs.Stat(filePath)
 	if err != nil {
-		return fmt.Errorf("get file_src: %w", err)
+		return fmt.Errorf("check file_src is correct: %w", err)
 	}
-
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get the package install path: %w", err)
-	}
-	exePath := filepath.Join(pkgPath, fileSrc)
-
-	finfo, err := inst.fs.Stat(exePath)
-	if err != nil {
-		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))
-	}
-	if finfo.IsDir() {
-		return logerr.WithFields(errExePathIsDirectory, fields) //nolint:wrapcheck
-	}
-
 	logE.Debug("check the permission")
 	if mode := finfo.Mode().Perm(); !util.IsOwnerExecutable(mode) {
 		logE.Debug("add the permission to execute the command")
-		if err := inst.fs.Chmod(exePath, util.AllowOwnerExec(mode)); err != nil {
+		if err := inst.fs.Chmod(filePath, util.AllowOwnerExec(mode)); err != nil {
 			return logerr.WithFields(errChmod, fields) //nolint:wrapcheck
 		}
 	}

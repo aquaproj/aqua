@@ -1,15 +1,31 @@
-package download
+package release
 
 import (
 	"context"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
-	"github.com/google/go-github/v44/github"
+	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/sirupsen/logrus"
 )
+
+type pkgDownloader struct {
+	github github.RepositoryService
+	http   download.HTTPDownloader
+}
+
+type Client interface {
+	Download(ctx context.Context, owner, repoName, version, assetName string, logE *logrus.Entry) (io.ReadCloser, error)
+}
+
+func New(gh github.RepositoryService, http download.HTTPDownloader) Client {
+	return &pkgDownloader{
+		github: gh,
+		http:   http,
+	}
+}
 
 func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int64, error) {
 	for _, asset := range assets {
@@ -20,7 +36,7 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
 }
 
-func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
+func (downloader *pkgDownloader) Download(ctx context.Context, owner, repoName, version, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
 	// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
 	// As a result of test, it seems not to be limited.
 	// So at first aqua tries to download assets without GitHub API.
@@ -39,10 +55,6 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 		"asset_version": version,
 		"asset_name":    assetName,
 	}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
-
-	if downloader.github == nil {
-		return nil, errGitHubTokenIsRequired
-	}
 
 	release, _, err := downloader.github.GetReleaseByTag(ctx, owner, repoName, version)
 	if err != nil {
@@ -67,34 +79,4 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 		return nil, fmt.Errorf("download asset from redirect URL: %w", err)
 	}
 	return b, nil
-}
-
-func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
-	// https://github.com/aquaproj/aqua/issues/391
-	body, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName)
-	if err == nil {
-		return body, nil
-	}
-	if body != nil {
-		body.Close()
-	}
-
-	if downloader.github == nil {
-		return nil, errGitHubTokenIsRequired
-	}
-
-	file, _, _, err := downloader.github.GetContents(ctx, owner, repoName, assetName, &github.RepositoryContentGetOptions{
-		Ref: version,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
-	}
-	if file == nil {
-		return nil, errGitHubContentMustBeFile
-	}
-	content, err := file.GetContent()
-	if err != nil {
-		return nil, fmt.Errorf("get the registry configuration content: %w", err)
-	}
-	return io.NopCloser(strings.NewReader(content)), nil
 }

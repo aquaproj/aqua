@@ -29,6 +29,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 				},
 			},
 		},
+		Type: inst.installers["github_release"],
 	}
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -36,31 +37,27 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 		"registry":        pkg.Package.Registry,
 	})
 
-	logE.Debug("install the proxy")
-	assetName, err := pkg.RenderAsset(inst.runtime)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
 	logE.Debug("check if aqua-proxy is already installed")
-	finfo, err := inst.fs.Stat(pkgPath)
+	f, err := pkg.Type.CheckInstalled(pkg)
 	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	if !f {
 		// file doesn't exist
-		if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, logE); err != nil {
+		logE.Debug("installing the proxy")
+		if err := inst.downloadWithRetry(ctx, pkg, logE); err != nil {
 			return err
 		}
-	} else {
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", pkgPath)
-		}
+	}
+	filePath, err := pkg.Type.GetFilePath(pkg, &registry.File{
+		Name: proxyName,
+	})
+	if err != nil {
+		return fmt.Errorf("get an install path of aqua-proxy: %w", err)
 	}
 
 	// create a symbolic link
-	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filepath.Join(pkgPath, proxyName))
+	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filePath)
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}

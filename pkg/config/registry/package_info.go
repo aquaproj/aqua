@@ -197,9 +197,6 @@ func (pkgInfo *PackageInfo) GetName() string {
 	if pkgInfo.HasRepo() {
 		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		return *pkgInfo.Path
-	}
 	return ""
 }
 
@@ -221,29 +218,6 @@ func (pkgInfo *PackageInfo) GetLink() string {
 		return "https://github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
 	return ""
-}
-
-func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == PkgInfoTypeGitHubArchive || pkgInfo.Type == PkgInfoTypeGo {
-		return "tar.gz"
-	}
-	return pkgInfo.Format
-}
-
-func (pkgInfo *PackageInfo) GetDescription() string {
-	return pkgInfo.Description
-}
-
-func (pkgInfo *PackageInfo) GetType() string {
-	return pkgInfo.Type
-}
-
-func (pkgInfo *PackageInfo) GetReplacements() map[string]string {
-	return pkgInfo.Replacements
-}
-
-func (pkgInfo *PackageInfo) GetAsset() *string {
-	return pkgInfo.Asset
 }
 
 func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop

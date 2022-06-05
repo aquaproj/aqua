@@ -14,8 +14,11 @@ import (
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubcontent"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubrelease"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -79,6 +82,7 @@ packages:
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
 					},
+					Type: &githubcontent.Installer{},
 				},
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
@@ -176,6 +180,7 @@ packages:
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
 					},
+					Type: &githubcontent.Installer{},
 				},
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
@@ -203,7 +208,11 @@ packages:
 				}
 			}
 			downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker)
+			pkgTypes := config.PackageTypes{
+				githubrelease.PkgType: githubrelease.New(d.param, fs, d.rt, nil),
+				githubcontent.PkgType: githubcontent.New(d.param, fs, nil),
+			}
+			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker, pkgTypes)
 			which, err := ctrl.Which(ctx, d.param, d.exeName, logE)
 			if err != nil {
 				if d.isErr {
@@ -214,7 +223,7 @@ packages:
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if diff := cmp.Diff(d.exp, which); diff != "" {
+			if diff := cmp.Diff(d.exp, which, cmpopts.IgnoreUnexported(githubcontent.Installer{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})

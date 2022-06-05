@@ -14,6 +14,8 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubcontent"
+	"github.com/aquaproj/aqua/pkg/pkgtype/githubrelease"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -86,9 +88,12 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := exec.NewMock(0, nil)
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor)
+			pkgTypes := config.PackageTypes{
+				githubrelease.PkgType: githubrelease.New(d.param, fs, d.rt, nil),
+				githubcontent.PkgType: githubcontent.New(d.param, fs, nil),
+			}
+			pkgInstaller := installpackage.New(d.param, d.rt, fs, linker, executor, pkgTypes)
 			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, registryDownloader, fs), pkgInstaller, fs)
 			if err := ctrl.Install(ctx, d.param, logE); err != nil {
 				if d.isErr {
