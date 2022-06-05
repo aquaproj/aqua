@@ -138,6 +138,8 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) ([]*config.Package, bool, error) { //nolint:cyclop
 	pkgs := make([]*config.Package, 0, len(cfg.Packages))
 	failed := false
+	// registry -> package name -> pkgInfo
+	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
 	for _, pkg := range cfg.Packages {
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":    pkg.Name,
@@ -149,7 +151,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 				logE = logE.WithField("registry_ref", registry.Ref)
 			}
 		}
-		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg)
+		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg, m)
 		if err != nil {
 			logerr.WithError(logE, err).Error("install the package")
 			failed = true
@@ -186,18 +188,22 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 	return pkgs, failed, nil
 }
 
-func getPkgInfoFromRegistries(registries map[string]*registry.Config, pkg *aqua.Package) (*registry.PackageInfo, error) {
-	registry, ok := registries[pkg.Registry]
+func getPkgInfoFromRegistries(registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
+	pkgInfoMap, ok := m[pkg.Registry]
 	if !ok {
-		return nil, errRegistryNotFound
+		registry, ok := registries[pkg.Registry]
+		if !ok {
+			return nil, errRegistryNotFound
+		}
+		pkgInfos, err := registry.PackageInfos.ToMap()
+		if err != nil {
+			return nil, fmt.Errorf("convert package infos to map: %w", err)
+		}
+		m[pkg.Registry] = pkgInfos
+		pkgInfoMap = pkgInfos
 	}
 
-	pkgInfos, err := registry.PackageInfos.ToMap()
-	if err != nil {
-		return nil, fmt.Errorf("convert package infos to map: %w", err)
-	}
-
-	pkgInfo, ok := pkgInfos[pkg.Name]
+	pkgInfo, ok := pkgInfoMap[pkg.Name]
 	if !ok {
 		return nil, errPkgNotFound
 	}
