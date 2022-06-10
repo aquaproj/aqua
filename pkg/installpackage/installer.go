@@ -34,10 +34,7 @@ type installer struct {
 }
 
 func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error {
-	pkgs, failed, err := inst.createLinks(cfg, registries, binDir, logE)
-	if err != nil {
-		return err
-	}
+	pkgs, failed := inst.createLinks(cfg, registries, binDir, logE)
 	if onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
@@ -135,12 +132,22 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) ([]*config.Package, bool, error) { //nolint:cyclop
+func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
 	pkgs := make([]*config.Package, 0, len(cfg.Packages))
 	failed := false
 	// registry -> package name -> pkgInfo
 	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
 	for _, pkg := range cfg.Packages {
+		if pkg.Name == "" {
+			logE.Error("ignore a package because the package name is empty")
+			failed = true
+			continue
+		}
+		if pkg.Version == "" {
+			logE.Error("ignore a package because the package version is empty")
+			failed = true
+			continue
+		}
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":    pkg.Name,
 			"package_version": pkg.Version,
@@ -160,12 +167,15 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 
 		pkgInfo, err = pkgInfo.Override(pkg.Version, inst.runtime)
 		if err != nil {
-			return nil, false, fmt.Errorf("evaluate version constraints: %w", err)
+			logerr.WithError(logE, err).Error("evaluate version constraints")
+			failed = true
+			continue
 		}
 		if pkgInfo.SupportedIf != nil {
 			supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, inst.runtime)
 			if err != nil {
 				logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
+				failed = true
 				continue
 			}
 			if !supported {
@@ -185,7 +195,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 			}
 		}
 	}
-	return pkgs, failed, nil
+	return pkgs, failed
 }
 
 func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
