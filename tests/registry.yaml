@@ -111,9 +111,16 @@ packages:
   description: A GitHub repositories statistics command-line tool for the terminal
 
 - type: go_install
+  # ignore duplicate package
+  path: github.com/anqiansong/github-compare
+
+- type: go_install
   repo_owner: katbyte
   repo_name: terrafmt
   description: Format terraform blocks embedded in files
+
+- type: go_install
+  description: invalid package
 
 # unknown package type
 - type: foo
