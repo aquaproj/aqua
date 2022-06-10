@@ -11,7 +11,6 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 )
 
@@ -42,17 +41,18 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *log
 		return err //nolint:wrapcheck
 	}
 
-	if err := validate.Config(cfg); err != nil {
-		return fmt.Errorf("configuration is invalid: %w", err)
-	}
-
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 	for registryName, registryContent := range registryContents {
 		for _, pkgInfo := range registryContent.PackageInfos {
-			fmt.Fprintln(ctrl.stdout, registryName+","+pkgInfo.GetName())
+			pkgName := pkgInfo.GetName()
+			if pkgName == "" {
+				logE.Debug("ignore a package because the package name is empty")
+				continue
+			}
+			fmt.Fprintln(ctrl.stdout, registryName+","+pkgName)
 		}
 	}
 

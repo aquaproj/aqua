@@ -17,7 +17,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/expr"
 	githubSvc "github.com/aquaproj/aqua/pkg/github"
 	instregst "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -86,9 +85,6 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	if err := validate.Config(cfg); err != nil {
-		return nil, fmt.Errorf("configuration is invalid: %w", err)
-	}
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
@@ -102,6 +98,10 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	var pkgs []*FindingPackage
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
+			pkgName := pkg.GetName()
+			if pkgName == "" {
+				continue
+			}
 			pkgs = append(pkgs, &FindingPackage{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
@@ -136,11 +136,20 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
-			m[registryName+","+pkg.GetName()] = &FindingPackage{
+			pkgName := pkg.GetName()
+			if pkgName == "" {
+				logE.Debug("ignore a package because the package name is empty")
+				continue
+			}
+			m[registryName+","+pkgName] = &FindingPackage{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
 			}
 			for _, alias := range pkg.Aliases {
+				if alias.Name == "" {
+					logE.Debug("ignore a package alias because the alias is empty")
+					continue
+				}
 				m[registryName+","+alias.Name] = &FindingPackage{
 					PackageInfo:  pkg,
 					RegistryName: registryName,
