@@ -5,6 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 func TestPackageInfos_ToMap(t *testing.T) {
@@ -32,11 +33,12 @@ func TestPackageInfos_ToMap(t *testing.T) {
 		},
 	}
 
+	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			m, err := d.pkgInfos.ToMap()
+			m, err := d.pkgInfos.ToMap(logE)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("error should be returned")

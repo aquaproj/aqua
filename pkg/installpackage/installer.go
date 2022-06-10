@@ -151,7 +151,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 				logE = logE.WithField("registry_ref", registry.Ref)
 			}
 		}
-		pkgInfo, err := getPkgInfoFromRegistries(registries, pkg, m)
+		pkgInfo, err := getPkgInfoFromRegistries(logE, registries, pkg, m)
 		if err != nil {
 			logerr.WithError(logE, err).Error("install the package")
 			failed = true
@@ -188,14 +188,14 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 	return pkgs, failed, nil
 }
 
-func getPkgInfoFromRegistries(registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
+func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
 	pkgInfoMap, ok := m[pkg.Registry]
 	if !ok {
 		registry, ok := registries[pkg.Registry]
 		if !ok {
 			return nil, errRegistryNotFound
 		}
-		pkgInfos, err := registry.PackageInfos.ToMap()
+		pkgInfos, err := registry.PackageInfos.ToMap(logE)
 		if err != nil {
 			return nil, fmt.Errorf("convert package infos to map: %w", err)
 		}
