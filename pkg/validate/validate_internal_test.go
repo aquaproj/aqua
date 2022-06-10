@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
 )
 
 func TestConfig(t *testing.T) {
@@ -133,75 +132,6 @@ func Test_validatePackages(t *testing.T) {
 			err := validatePackages(d.pkgs)
 			if d.isErr {
 				t.Fatal(err)
-				return
-			}
-			if err != nil {
-				t.Fatal(err)
-			}
-		})
-	}
-}
-
-func TestPackageInfos(t *testing.T) { //nolint:funlen
-	t.Parallel()
-	data := []struct {
-		title    string
-		pkgInfos registry.PackageInfos
-		isErr    bool
-	}{
-		{
-			title: "normal",
-			pkgInfos: registry.PackageInfos{
-				&registry.PackageInfo{
-					Name: "foo",
-					Files: []*registry.File{
-						{
-							Name: "foo",
-						},
-					},
-				},
-				&registry.PackageInfo{
-					Name: "bar",
-					Files: []*registry.File{
-						{
-							Name: "bar",
-						},
-					},
-				},
-			},
-		},
-		{
-			title: "duplicated",
-			isErr: true,
-			pkgInfos: registry.PackageInfos{
-				&registry.PackageInfo{
-					Name: "foo",
-					Files: []*registry.File{
-						{
-							Name: "foo",
-						},
-					},
-				},
-				&registry.PackageInfo{
-					Name: "foo",
-					Files: []*registry.File{
-						{
-							Name: "foo",
-						},
-					},
-				},
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			err := validatePackageInfos(d.pkgInfos)
-			if d.isErr {
-				if !errors.Is(err, errPkgNameMustBeUniqueInRegistry) {
-					t.Fatal(err)
-				}
 				return
 			}
 			if err != nil {

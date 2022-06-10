@@ -13,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -64,14 +63,6 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, 
 	wg.Wait()
 	if failed {
 		return nil, errInstallFailure
-	}
-
-	for registryName, registryContent := range registryContents {
-		if err := validate.RegistryConfig(registryContent); err != nil {
-			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"registry_name": registryName,
-			})
-		}
 	}
 
 	return registryContents, nil

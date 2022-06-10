@@ -2,7 +2,6 @@ package registry
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type PackageInfos []*PackageInfo
@@ -18,22 +17,35 @@ type File struct {
 	Dir  string `json:"dir,omitempty"`
 }
 
-func (pkgInfos *PackageInfos) ToMap() (map[string]*PackageInfo, error) {
+func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) (map[string]*PackageInfo, error) {
 	m := make(map[string]*PackageInfo, len(*pkgInfos))
+	logE = logE.WithField("package_name", "")
 	for _, pkgInfo := range *pkgInfos {
+		logE := logE
 		pkgInfo := pkgInfo
 		name := pkgInfo.GetName()
+		if name == "" {
+			logE.Debug("ignore a package in the registry because the name is empty")
+			continue
+		}
 		if _, ok := m[name]; ok {
-			return nil, logerr.WithFields(errPkgNameMustBeUniqueInRegistry, logrus.Fields{ //nolint:wrapcheck
-				"package_name": name,
-			})
+			logE.WithField("registry_package_name", name).Debug("ignore a package in the registry because the package name is duplicate")
+			continue
 		}
 		m[name] = pkgInfo
 		for _, alias := range pkgInfo.Aliases {
+			if alias.Name == "" {
+				logE.WithFields(logrus.Fields{
+					"registry_package_name": name,
+				}).Debug("ignore an empty package alias in the registry")
+				continue
+			}
 			if _, ok := m[alias.Name]; ok {
-				return nil, logerr.WithFields(errPkgNameMustBeUniqueInRegistry, logrus.Fields{ //nolint:wrapcheck
-					"package_name": alias.Name,
-				})
+				logE.WithFields(logrus.Fields{
+					"registry_package_name":  name,
+					"registry_package_alias": alias,
+				}).Debug("ignore a package alias in the registry because the alias is duplicate")
+				continue
 			}
 			m[alias.Name] = pkgInfo
 		}

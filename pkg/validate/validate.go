@@ -4,17 +4,10 @@ import (
 	"fmt"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 var validate = validator.New() //nolint:gochecknoglobals
-
-func RegistryConfig(registryContent *registry.Config) error {
-	return validatePackageInfos(registryContent.PackageInfos)
-}
 
 func Config(cfg *aqua.Config) error {
 	if err := validate.Struct(cfg); err != nil {
@@ -39,19 +32,5 @@ func validateRegistries(registries aqua.Registries) error {
 }
 
 func validatePackages(pkgs []*aqua.Package) error {
-	return nil
-}
-
-func validatePackageInfos(pkgInfos registry.PackageInfos) error {
-	names := make(map[string]struct{}, len(pkgInfos))
-	for _, pkgInfo := range pkgInfos {
-		name := pkgInfo.GetName()
-		if _, ok := names[name]; ok {
-			return logerr.WithFields(errPkgNameMustBeUniqueInRegistry, logrus.Fields{ //nolint:wrapcheck
-				"package_name": name,
-			})
-		}
-		names[name] = struct{}{}
-	}
 	return nil
 }

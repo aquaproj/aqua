@@ -197,7 +197,7 @@ func (pkgInfo *PackageInfo) GetName() string {
 	if pkgInfo.HasRepo() {
 		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
+	if pkgInfo.Type == PkgInfoTypeGoInstall && pkgInfo.Path != nil {
 		return *pkgInfo.Path
 	}
 	return ""
@@ -207,7 +207,7 @@ func (pkgInfo *PackageInfo) GetPath() string {
 	if pkgInfo.Path != nil {
 		return *pkgInfo.Path
 	}
-	if pkgInfo.HasRepo() {
+	if pkgInfo.Type == PkgInfoTypeGoInstall && pkgInfo.HasRepo() {
 		return "github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
 	return ""
