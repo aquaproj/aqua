@@ -42,6 +42,10 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, 
 	for _, registry := range cfg.Registries {
 		go func(registry *aqua.Registry) {
 			defer wg.Done()
+			if registry.Name == "" {
+				logE.Debug("ignore a registry because the registry name is empty")
+				return
+			}
 			maxInstallChan <- struct{}{}
 			registryContent, err := inst.installRegistry(ctx, registry, cfgFilePath, logE)
 			if err != nil {

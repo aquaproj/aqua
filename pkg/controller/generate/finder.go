@@ -47,16 +47,22 @@ func (finder *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
 
 func find(pkg *FindingPackage) string {
 	files := pkg.PackageInfo.GetFiles()
-	fileNames := make([]string, len(files))
-	for i, file := range files {
-		fileNames[i] = file.Name
+	fileNames := make([]string, 0, len(files))
+	for _, file := range files {
+		if file.Name == "" {
+			continue
+		}
+		fileNames = append(fileNames, file.Name)
 	}
 	fileNamesStr := strings.Join(fileNames, ", ")
-	pkgName := pkg.PackageInfo.GetName()
-	aliases := make([]string, len(pkg.PackageInfo.Aliases))
-	for i, alias := range pkg.PackageInfo.Aliases {
-		aliases[i] = alias.Name
+	aliases := make([]string, 0, len(pkg.PackageInfo.Aliases))
+	for _, alias := range pkg.PackageInfo.Aliases {
+		if alias.Name == "" {
+			continue
+		}
+		aliases = append(aliases, alias.Name)
 	}
+	pkgName := pkg.PackageInfo.GetName()
 	item := pkgName
 	if len(aliases) != 0 {
 		item += " (" + strings.Join(aliases, ", ") + ")"

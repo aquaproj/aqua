@@ -15,7 +15,6 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/validate"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -78,6 +77,9 @@ func (ctrl *controller) whichFileGo(pkg *config.Package, file *cfgRegistry.File)
 }
 
 func (ctrl *controller) whichFile(pkg *config.Package, file *cfgRegistry.File) (*Which, error) {
+	if pkg.Package.Version == "" {
+		return nil, errVersionIsRequired
+	}
 	if pkg.PackageInfo.Type == "go" {
 		return ctrl.whichFileGo(pkg, file)
 	}
@@ -101,9 +103,6 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, nil, err //nolint:wrapcheck
 	}
-	if err := validate.Config(cfg); err != nil {
-		return nil, nil, fmt.Errorf("configuration is invalid: %w", err)
-	}
 
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
@@ -120,7 +119,11 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	return nil, nil, nil
 }
 
-func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*cfgRegistry.PackageInfo, *cfgRegistry.File) {
+func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*cfgRegistry.PackageInfo, *cfgRegistry.File) { //nolint:cyclop
+	if pkg.Registry == "" || pkg.Name == "" {
+		logE.Debug("ignore a package because the package name or package registry name is empty")
+		return nil, nil
+	}
 	logE = logE.WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
