@@ -195,10 +195,7 @@ func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registr
 		if !ok {
 			return nil, errRegistryNotFound
 		}
-		pkgInfos, err := registry.PackageInfos.ToMap(logE)
-		if err != nil {
-			return nil, fmt.Errorf("convert package infos to map: %w", err)
-		}
+		pkgInfos := registry.PackageInfos.ToMap(logE)
 		m[pkg.Registry] = pkgInfos
 		pkgInfoMap = pkgInfos
 	}

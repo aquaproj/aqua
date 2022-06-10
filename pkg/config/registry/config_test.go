@@ -14,7 +14,6 @@ func TestPackageInfos_ToMap(t *testing.T) {
 		title    string
 		pkgInfos *registry.PackageInfos
 		exp      map[string]*registry.PackageInfo
-		isErr    bool
 	}{
 		{
 			title: "normal",
@@ -38,13 +37,7 @@ func TestPackageInfos_ToMap(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			m, err := d.pkgInfos.ToMap(logE)
-			if d.isErr {
-				if err == nil {
-					t.Fatal("error should be returned")
-				}
-				return
-			}
+			m := d.pkgInfos.ToMap(logE)
 			if diff := cmp.Diff(d.exp, m); diff != "" {
 				t.Fatal(diff)
 			}

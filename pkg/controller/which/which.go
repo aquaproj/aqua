@@ -134,11 +134,7 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 		return nil, nil
 	}
 
-	m, err := registry.PackageInfos.ToMap(logE)
-	if err != nil {
-		logerr.WithError(logE, err).Warn("registry is invalid")
-		return nil, nil
-	}
+	m := registry.PackageInfos.ToMap(logE)
 
 	pkgInfo, ok := m[pkg.Name]
 	if !ok {
@@ -146,7 +142,7 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 		return nil, nil
 	}
 
-	pkgInfo, err = pkgInfo.Override(pkg.Version, ctrl.runtime)
+	pkgInfo, err := pkgInfo.Override(pkg.Version, ctrl.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil, nil

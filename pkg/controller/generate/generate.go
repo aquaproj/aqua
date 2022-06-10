@@ -80,7 +80,7 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) { //nolint:cyclop
+func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) {
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
@@ -97,11 +97,7 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	// maps the package and the registry
 	var pkgs []*FindingPackage
 	for registryName, registryContent := range registryContents {
-		for _, pkg := range registryContent.PackageInfos {
-			pkgName := pkg.GetName()
-			if pkgName == "" {
-				continue
-			}
+		for _, pkg := range registryContent.PackageInfos.ToMapWarn(logE) {
 			pkgs = append(pkgs, &FindingPackage{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
@@ -135,19 +131,16 @@ func getGeneratePkg(s string) string {
 func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) (interface{}, error) {
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
-		for _, pkg := range registryContent.PackageInfos {
-			pkgName := pkg.GetName()
-			if pkgName == "" {
-				logE.Debug("ignore a package because the package name is empty")
-				continue
-			}
+		logE := logE.WithField("registry_name", registryName)
+		for pkgName, pkg := range registryContent.PackageInfos.ToMapWarn(logE) {
+			logE := logE.WithField("package_name", pkgName)
 			m[registryName+","+pkgName] = &FindingPackage{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
 			}
 			for _, alias := range pkg.Aliases {
 				if alias.Name == "" {
-					logE.Debug("ignore a package alias because the alias is empty")
+					logE.Warn("ignore a package alias because the alias is empty")
 					continue
 				}
 				m[registryName+","+alias.Name] = &FindingPackage{
