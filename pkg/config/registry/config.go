@@ -17,7 +17,15 @@ type File struct {
 	Dir  string `json:"dir,omitempty"`
 }
 
-func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) (map[string]*PackageInfo, error) {
+func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {
+	return pkgInfos.toMap(logE, logrus.DebugLevel)
+}
+
+func (pkgInfos *PackageInfos) ToMapWarn(logE *logrus.Entry) map[string]*PackageInfo {
+	return pkgInfos.toMap(logE, logrus.WarnLevel)
+}
+
+func (pkgInfos *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[string]*PackageInfo {
 	m := make(map[string]*PackageInfo, len(*pkgInfos))
 	logE = logE.WithField("package_name", "")
 	for _, pkgInfo := range *pkgInfos {
@@ -25,11 +33,11 @@ func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) (map[string]*PackageInfo
 		pkgInfo := pkgInfo
 		name := pkgInfo.GetName()
 		if name == "" {
-			logE.Debug("ignore a package in the registry because the name is empty")
+			logE.Log(logLevel, "ignore a package in the registry because the name is empty")
 			continue
 		}
 		if _, ok := m[name]; ok {
-			logE.WithField("registry_package_name", name).Debug("ignore a package in the registry because the package name is duplicate")
+			logE.WithField("registry_package_name", name).Log(logLevel, "ignore a package in the registry because the package name is duplicate")
 			continue
 		}
 		m[name] = pkgInfo
@@ -37,18 +45,18 @@ func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) (map[string]*PackageInfo
 			if alias.Name == "" {
 				logE.WithFields(logrus.Fields{
 					"registry_package_name": name,
-				}).Debug("ignore an empty package alias in the registry")
+				}).Log(logLevel, "ignore an empty package alias in the registry")
 				continue
 			}
 			if _, ok := m[alias.Name]; ok {
 				logE.WithFields(logrus.Fields{
 					"registry_package_name":  name,
 					"registry_package_alias": alias,
-				}).Debug("ignore a package alias in the registry because the alias is duplicate")
+				}).Log(logLevel, "ignore a package alias in the registry because the alias is duplicate")
 				continue
 			}
 			m[alias.Name] = pkgInfo
 		}
 	}
-	return m, nil
+	return m
 }

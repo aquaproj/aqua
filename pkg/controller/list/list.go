@@ -46,8 +46,7 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *log
 		return err //nolint:wrapcheck
 	}
 	for registryName, registryContent := range registryContents {
-		for _, pkgInfo := range registryContent.PackageInfos {
-			pkgName := pkgInfo.GetName()
+		for pkgName := range registryContent.PackageInfos.ToMapWarn(logE) {
 			if pkgName == "" {
 				logE.Debug("ignore a package because the package name is empty")
 				continue
