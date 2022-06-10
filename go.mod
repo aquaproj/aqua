@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/antonmedv/expr v1.9.0
-	github.com/go-playground/validator/v10 v10.11.0
+	github.com/go-playground/validator/v10 v10.11.0 // indirect
 	github.com/goccy/go-yaml v1.9.5
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-github/v44 v44.1.0
@@ -24,6 +24,6 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/urfave/cli/v2 v2.8.1
 	golang.org/x/oauth2 v0.0.0-20220608161450-d0670ef3b1eb
-	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68
+	golang.org/x/sys v0.0.0-20220610221304-9f5ed59c137d
 	gopkg.in/yaml.v2 v2.4.0
 )
