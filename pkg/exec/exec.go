@@ -5,10 +5,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
-	"golang.org/x/sys/unix"
 )
 
 type executor struct {
@@ -30,10 +28,6 @@ func New() Executor {
 		stdout: os.Stdout,
 		stderr: os.Stderr,
 	}
-}
-
-func (exe *executor) ExecXSys(exePath string, args []string) error {
-	return unix.Exec(exePath, append([]string{filepath.Base(exePath)}, args...), os.Environ()) //nolint:wrapcheck
 }
 
 func (exe *executor) command(cmd *exec.Cmd) *exec.Cmd {
