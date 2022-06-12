@@ -5,13 +5,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 const proxyName = "aqua-proxy"
 
 func (ctrl *controller) lookPath(envPath, exeName string) string {
-	for _, p := range strings.Split(envPath, ":") {
+	for _, p := range filepath.SplitList(envPath) {
 		bin := filepath.Join(p, exeName)
 		finfo, err := ctrl.readLink(bin)
 		if err != nil {
