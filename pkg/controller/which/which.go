@@ -34,7 +34,13 @@ type controller struct {
 }
 
 func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {
+	logE = logE.WithFields(logrus.Fields{
+		"exe_name": exeName,
+	})
+	logE.Debug("which")
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+		logE := logE.WithField("config_file", cfgFilePath)
+		logE.Debug("findExecFile")
 		pkg, file, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
@@ -104,11 +110,14 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 		return nil, nil, err //nolint:wrapcheck
 	}
 
+	logE.Debug("installing registries")
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return nil, nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
+		logE := logE.WithField("package_name", pkg.Name)
+		logE.Debug("findExecFileFromPkg")
 		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); pkgInfo != nil {
 			return &config.Package{
 				Package:     pkg,
@@ -142,12 +151,14 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 		return nil, nil
 	}
 
+	logE.Debug("override")
 	pkgInfo, err := pkgInfo.Override(pkg.Version, ctrl.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil, nil
 	}
 
+	logE.Debug("check supported_if")
 	if pkgInfo.SupportedIf != nil {
 		supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
 		if err != nil {
@@ -160,6 +171,7 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 		}
 	}
 
+	logE.Debug("check files")
 	for _, file := range pkgInfo.GetFiles() {
 		if file.Name == exeName {
 			return pkgInfo, file
