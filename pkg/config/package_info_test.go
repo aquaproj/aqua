@@ -178,6 +178,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 		exp   string
 		pkg   *config.Package
 		file  *registry.File
+		rt    *runtime.Runtime
 	}{
 		{
 			title: "unarchived",
@@ -231,13 +232,87 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 				Src:  "bin/aqua",
 			},
 		},
+		{
+			title: "set .exe in windows",
+			exp:   "gh.exe",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "cli",
+					RepoName:  "cli",
+					Asset:     stringP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Format:    "zip",
+				},
+				Package: &aqua.Package{
+					Version: "v0.7.7",
+				},
+			},
+			file: &registry.File{
+				Name: "gh",
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "windows",
+				GOARCH: "amd64",
+			},
+		},
+		{
+			title: "set .exe in windows (with src)",
+			exp:   "bin/gh.exe",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "cli",
+					RepoName:  "cli",
+					Asset:     stringP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Format:    "zip",
+				},
+				Package: &aqua.Package{
+					Version: "v0.7.7",
+				},
+			},
+			file: &registry.File{
+				Name: "gh",
+				Src:  "bin/gh",
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "windows",
+				GOARCH: "amd64",
+			},
+		},
+		{
+			title: "set .exe in windows (src already has .exe)",
+			exp:   "bin/gh.exe",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      "github_release",
+					RepoOwner: "cli",
+					RepoName:  "cli",
+					Asset:     stringP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Format:    "zip",
+				},
+				Package: &aqua.Package{
+					Version: "v0.7.7",
+				},
+			},
+			file: &registry.File{
+				Name: "gh",
+				Src:  "bin/gh.exe",
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "windows",
+				GOARCH: "amd64",
+			},
+		},
 	}
 	rt := runtime.New()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			asset, err := d.pkg.GetFileSrc(d.file, rt)
+			if d.rt == nil {
+				d.rt = rt
+			}
+			asset, err := d.pkg.GetFileSrc(d.file, d.rt)
 			if err != nil {
 				t.Fatal(err)
 			}

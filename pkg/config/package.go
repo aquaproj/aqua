@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"strings"
 	texttemplate "text/template"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
@@ -62,7 +63,22 @@ func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string
 	})
 }
 
+func setWindowsExeExt(src string, rt *runtime.Runtime) string {
+	if rt.GOOS != "windows" || strings.HasSuffix(src, ".exe") {
+		return src
+	}
+	return src + ".exe"
+}
+
 func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+	s, err := cpkg.getFileSrc(file, rt)
+	if err != nil {
+		return "", err
+	}
+	return setWindowsExeExt(s, rt), nil
+}
+
+func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	assetName, err := cpkg.RenderAsset(rt)
 	if err != nil {
