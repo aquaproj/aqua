@@ -2,7 +2,7 @@ package finder
 
 import (
 	"errors"
-	"strings"
+	"path/filepath"
 
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
@@ -26,7 +26,7 @@ func NewConfigFinder(fs afero.Fs) ConfigFinder {
 }
 
 func ParseGlobalConfigFilePaths(env string) []string {
-	src := strings.Split(env, ":")
+	src := filepath.SplitList(env)
 	paths := make([]string, 0, len(src))
 	m := make(map[string]struct{}, len(src))
 	for _, s := range src {
