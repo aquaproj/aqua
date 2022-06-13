@@ -278,6 +278,8 @@ github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0 h1:oVXrrYNGBq4POyITQNW
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0/go.mod h1:kDFtLeftDiIUUHXGI3xq5eJ+uAOi50FPrxPENTHktJ0=
 github.com/suzuki-shunsuke/go-findconfig v1.1.0 h1:kWZHF93LPZPLrvA/GToPZPKEFzgky3tNTrYEfMpr7f8=
 github.com/suzuki-shunsuke/go-findconfig v1.1.0/go.mod h1:u/0Zz6/GDE6G0gofzVhR9UPOIKLSUoDMjUoFWqOoVlg=
+github.com/suzuki-shunsuke/go-findconfig v1.1.1-0.20220613004735-09feb0c9f81f h1:T13uISO/NBh6adkw8/k/NZJidnhUVF9qE3crBvmD3vU=
+github.com/suzuki-shunsuke/go-findconfig v1.1.1-0.20220613004735-09feb0c9f81f/go.mod h1:u/0Zz6/GDE6G0gofzVhR9UPOIKLSUoDMjUoFWqOoVlg=
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2 h1:A4czEbmFqSELTbrEtXVo4dSgfz2e2Z0y6G3OpExUML8=
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2/go.mod h1:ETXAwfruZTqMMKDxc9CYoS34CNSsnzcdcVIAW3+RujI=
 github.com/suzuki-shunsuke/go-osenv v0.1.0 h1:hBQ7yaeO1WBZsEWuDj1wrOWF+N7HSWSOpEiEZqfCjjk=
