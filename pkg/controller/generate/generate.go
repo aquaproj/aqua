@@ -53,11 +53,14 @@ func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, reg
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
 func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
+	logE.Debug("Generate")
 	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+	logE = logE.WithField("config_file_path", cfgFilePath)
 
+	logE.Debug("generate")
 	list, err := ctrl.generate(ctx, logE, param, cfgFilePath, args...)
 	if err != nil {
 		return err
@@ -66,12 +69,14 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 		return nil
 	}
 	if !param.Insert {
+		logE.Debug("output list")
 		if err := yaml.NewEncoder(ctrl.stdout).Encode(list); err != nil {
 			return fmt.Errorf("output generated package configuration: %w", err)
 		}
 		return nil
 	}
 
+	logE.Debug("insert list")
 	return ctrl.generateInsert(cfgFilePath, list)
 }
 
@@ -81,16 +86,19 @@ type FindingPackage struct {
 }
 
 func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) {
+	logE.Debug("read config")
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
+	logE.Debug("installing registries")
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
 	if param.File != "" || len(args) != 0 {
+		logE.Debug("outputListedPkgs")
 		return ctrl.outputListedPkgs(ctx, logE, param, registryContents, args...)
 	}
 
@@ -105,6 +113,7 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 		}
 	}
 
+	logE.Debug("launch fuzzy finder")
 	// Launch the fuzzy finder
 	idxes, err := ctrl.fuzzyFinder.Find(pkgs)
 	if err != nil {
