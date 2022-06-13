@@ -37,7 +37,9 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	logE = logE.WithFields(logrus.Fields{
 		"exe_name": exeName,
 	})
-	logE.Debug("which")
+	logE.WithFields(logrus.Fields{
+		"pwd": param.PWD,
+	}).Debug("which")
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		logE := logE.WithField("config_file", cfgFilePath)
 		logE.Debug("findExecFile")
@@ -50,6 +52,7 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 		}
 	}
 
+	logE.Debug("check global config files")
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
@@ -63,11 +66,13 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 		}
 	}
 
+	logE.Debug("check PATH")
 	if exePath := ctrl.lookPath(ctrl.osenv.Getenv("PATH"), exeName); exePath != "" {
 		return &Which{
 			ExePath: exePath,
 		}, nil
 	}
+	logE.Debug("not found")
 	return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
 		"exe_name": exeName,
 	})
