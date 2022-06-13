@@ -19,6 +19,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 		title string
 		exp   string
 		pkg   *config.Package
+		rt    *runtime.Runtime
 	}{
 		{
 			title: "github_archive",
@@ -70,13 +71,51 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 				},
 			},
 		},
+		{
+			title: "windows add .exe",
+			exp:   "foo-windows-amd64.exe",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:   "github_release",
+					Asset:  stringP("foo-{{.OS}}-{{.Arch}}"),
+					Format: "raw",
+				},
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "windows",
+				GOARCH: "amd64",
+			},
+		},
+		{
+			title: "windows",
+			exp:   "foo-windows-amd64.tar.gz",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:  "github_release",
+					Asset: stringP("foo-{{.OS}}-{{.Arch}}.tar.gz"),
+				},
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "windows",
+				GOARCH: "amd64",
+			},
+		},
 	}
 	rt := runtime.New()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			asset, err := d.pkg.RenderAsset(rt)
+			if d.rt == nil {
+				d.rt = rt
+			}
+			asset, err := d.pkg.RenderAsset(d.rt)
 			if err != nil {
 				t.Fatal(err)
 			}

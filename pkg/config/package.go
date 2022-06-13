@@ -122,6 +122,17 @@ type Param struct {
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
+	asset, err := cpkg.renderAsset(rt)
+	if err != nil {
+		return "", err
+	}
+	if rt.GOOS == "windows" && cpkg.PackageInfo.Format == "raw" && !strings.HasSuffix(asset, ".exe") {
+		return asset + ".exe", nil
+	}
+	return asset, nil
+}
+
+func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
