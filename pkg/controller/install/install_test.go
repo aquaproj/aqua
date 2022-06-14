@@ -2,6 +2,7 @@ package install_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -56,14 +57,14 @@ packages:
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer":        ``,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/v1.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy": ``,
-				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer":                                                                                 ``,
-				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy":                                                                                     ``,
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer":                                              ``,
+				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): ``,
+				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer": ``,
+				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy":     ``,
 			},
 			links: map[string]string{
 				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer",
-				"../pkgs/github_release/github.com/aquaproj/aqua-proxy/v1.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
+				fmt.Sprintf("../pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
 			},
 		},
 	}
