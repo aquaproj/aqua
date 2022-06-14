@@ -7,6 +7,8 @@ import (
 )
 
 func (runner *Runner) newCompletionCommand() *cli.Command {
+	// https://github.com/aquaproj/aqua/pull/859
+	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
 		Name:  "completion",
 		Usage: "Output shell completion script for bash or zsh",
@@ -26,6 +28,8 @@ func (runner *Runner) newCompletionCommand() *cli.Command {
 }
 
 func (runner *Runner) bashCompletionAction(c *cli.Context) error {
+	// https://github.com/urfave/cli/blob/main/autocomplete/bash_autocomplete
+	// https://github.com/urfave/cli/blob/c3f51bed6fffdf84227c5b59bd3f2e90683314df/autocomplete/bash_autocomplete#L5-L20
 	fmt.Fprintln(runner.Stdout, `
 _cli_bash_autocomplete() {
   if [[ "${COMP_WORDS[0]}" != "source" ]]; then
@@ -47,6 +51,8 @@ complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
 }
 
 func (runner *Runner) zshCompletionAction(c *cli.Context) error {
+	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
+	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
 	fmt.Fprintln(runner.Stdout, `
 #compdef aqua
 
