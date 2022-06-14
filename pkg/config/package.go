@@ -126,8 +126,16 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if rt.GOOS == "windows" && cpkg.PackageInfo.Format == "raw" && !strings.HasSuffix(asset, ".exe") {
-		return asset + ".exe", nil
+	if rt.GOOS == "windows" && !strings.HasSuffix(asset, ".exe") {
+		if cpkg.PackageInfo.Format == "raw" {
+			return asset + ".exe", nil
+		}
+		if cpkg.PackageInfo.Format != "" {
+			return asset, nil
+		}
+		if filepath.Ext(asset) == "" {
+			return asset + ".exe", nil
+		}
 	}
 	return asset, nil
 }
