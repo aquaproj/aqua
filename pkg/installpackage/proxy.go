@@ -11,12 +11,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const ProxyVersion = "v1.1.2" // renovate: depName=aquaproj/aqua-proxy
+
 func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
 	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    proxyName,
-			Version: "v1.1.2", // renovate: depName=aquaproj/aqua-proxy
+			Version: ProxyVersion,
 		},
 		PackageInfo: &registry.PackageInfo{
 			Type:      "github_release",
