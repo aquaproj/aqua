@@ -43,6 +43,11 @@ func TestIsUnarchived(t *testing.T) {
 			archiveType: "tar.gz",
 			exp:         false,
 		},
+		{
+			title:     ".exe is raw",
+			assetName: "foo.exe",
+			exp:       true,
+		},
 	}
 	for _, d := range data {
 		d := d
