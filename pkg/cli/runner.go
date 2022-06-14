@@ -87,6 +87,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 				Usage: "cpu profile output file path",
 			},
 		},
+		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			runner.newInstallCommand(),
 			runner.newExecCommand(),
@@ -94,6 +95,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newListCommand(),
 			runner.newWhichCommand(),
 			runner.newGenerateCommand(),
+			runner.newCompletionCommand(),
 			runner.newVersionCommand(),
 		},
 	}
