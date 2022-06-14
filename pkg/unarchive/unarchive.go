@@ -34,7 +34,14 @@ func Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs) error {
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
-	return archiveType == "raw" || (archiveType == "" && filepath.Ext(assetName) == "")
+	if archiveType == "raw" {
+		return true
+	}
+	if archiveType != "" {
+		return false
+	}
+	ext := filepath.Ext(assetName)
+	return ext == "" || ext == ".exe"
 }
 
 func getUnarchiver(src *File, dest string) (Unarchiver, error) {

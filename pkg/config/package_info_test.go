@@ -90,6 +90,23 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			title: "windows add .exe without Format",
+			exp:   "foo-windows-amd64.exe",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:  "github_release",
+					Asset: stringP("foo-{{.OS}}-{{.Arch}}"),
+				},
+				Package: &aqua.Package{
+					Version: "v1.0.0",
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "windows",
+				GOARCH: "amd64",
+			},
+		},
+		{
 			title: "windows",
 			exp:   "foo-windows-amd64.tar.gz",
 			pkg: &config.Package{
