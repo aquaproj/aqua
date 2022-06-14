@@ -26,7 +26,7 @@ func (runner *Runner) newCompletionCommand() *cli.Command {
 }
 
 func (runner *Runner) bashCompletionAction(c *cli.Context) error {
-	fmt.Println(`
+	fmt.Fprintln(runner.Stdout, `
 _cli_bash_autocomplete() {
   if [[ "${COMP_WORDS[0]}" != "source" ]]; then
     local cur opts base
@@ -47,7 +47,7 @@ complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
 }
 
 func (runner *Runner) zshCompletionAction(c *cli.Context) error {
-	fmt.Println(`
+	fmt.Fprintln(runner.Stdout, `
 #compdef aqua
 
 _cli_zsh_autocomplete() {
