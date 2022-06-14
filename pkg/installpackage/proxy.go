@@ -16,7 +16,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    proxyName,
-			Version: "v1.1.0", // renovate: depName=aquaproj/aqua-proxy
+			Version: "v1.1.2", // renovate: depName=aquaproj/aqua-proxy
 		},
 		PackageInfo: &registry.PackageInfo{
 			Type:      "github_release",
