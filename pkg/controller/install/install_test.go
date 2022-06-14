@@ -57,13 +57,13 @@ packages:
   path: aqua-installer
 `,
 				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer":        ``,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/v1.1.0/aqua-proxy_linux_amd64.tar.gz/aqua-proxy": ``,
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/v1.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy": ``,
 				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer":                                                                                 ``,
 				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy":                                                                                     ``,
 			},
 			links: map[string]string{
 				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer",
-				"../pkgs/github_release/github.com/aquaproj/aqua-proxy/v1.1.0/aqua-proxy_linux_amd64.tar.gz/aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
+				"../pkgs/github_release/github.com/aquaproj/aqua-proxy/v1.1.2/aqua-proxy_linux_amd64.tar.gz/aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
 			},
 		},
 	}
