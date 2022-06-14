@@ -57,6 +57,11 @@ jobs:
     - run: github-compare -v
     - run: terrafmt version
 
+    - name: output bash completion
+      run: aqua completion bash
+    - name: output zsh completion
+      run: aqua completion zsh
+
     - run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests
     - run: git diff aqua.yaml
