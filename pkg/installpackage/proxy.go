@@ -60,7 +60,11 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	}
 
 	// create a symbolic link
-	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filepath.Join(pkgPath, proxyName))
+	binName := proxyName
+	if inst.runtime.GOOS == "windows" {
+		binName += ".exe"
+	}
+	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filepath.Join(pkgPath, binName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
