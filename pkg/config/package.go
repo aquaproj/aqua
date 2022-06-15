@@ -74,7 +74,7 @@ func (cpkg *Package) CompleteWindowsExe(s string) string {
 		}
 		return s
 	}
-	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent {
+	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
 		return s
 	}
 	return s + ".exe"
