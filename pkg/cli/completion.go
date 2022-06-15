@@ -12,6 +12,17 @@ func (runner *Runner) newCompletionCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "completion",
 		Usage: "Output shell completion script for bash or zsh",
+		Description: `Output shell completion script for bash or zsh
+Run these commands in .bash_profile or .zprofile
+e.g.
+.bash_profile
+
+if command -v aqua &> /dev/null; then source <(aqua completion bash); fi
+
+.zprofile
+
+if command -v aqua &> /dev/null; then source <(aqua completion zsh); fi
+`,
 		Subcommands: []*cli.Command{
 			{
 				Name:   "bash",
