@@ -63,6 +63,7 @@ func (pkgInfo *PackageInfo) copy() *PackageInfo {
 		Rosetta2:           pkgInfo.Rosetta2,
 		Aliases:            pkgInfo.Aliases,
 		VersionSource:      pkgInfo.VersionSource,
+		CompleteWindowsExe: pkgInfo.CompleteWindowsExe,
 	}
 	return pkg
 }
@@ -114,6 +115,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.VersionSource != "" {
 		pkg.VersionSource = child.VersionSource
 	}
+	if child.CompleteWindowsExe != nil {
+		pkg.CompleteWindowsExe = child.CompleteWindowsExe
+	}
 	return pkg
 }
 
@@ -158,6 +162,10 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 	if ov.URL != nil {
 		pkgInfo.URL = ov.URL
 	}
+
+	if ov.CompleteWindowsExe != nil {
+		pkgInfo.CompleteWindowsExe = ov.CompleteWindowsExe
+	}
 }
 
 type VersionOverride struct {
@@ -177,6 +185,7 @@ type VersionOverride struct {
 	VersionFilter      *string           `yaml:"version_filter" json:"version_filter,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
 	Rosetta2           *bool             `json:"rosetta2,omitempty"`
+	CompleteWindowsExe *bool             `json:"complete_windows_exe,omitempty" yaml:"complete_windows_exe"`
 }
 
 type Alias struct {
