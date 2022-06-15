@@ -359,6 +359,29 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 				GOARCH: "amd64",
 			},
 		},
+		{
+			title: ".exe isn't added in case of github_content",
+			exp:   "dcgoss",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Name:      "aelsabbahy/goss/dcgoss",
+					Type:      "github_content",
+					RepoOwner: "aelsabbahy",
+					RepoName:  "goss",
+					Path:      stringP("extras/dcgoss/dcgoss"),
+				},
+				Package: &aqua.Package{
+					Version: "v0.7.7",
+				},
+			},
+			file: &registry.File{
+				Name: "dcgoss",
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "windows",
+				GOARCH: "amd64",
+			},
+		},
 	}
 	rt := runtime.New()
 	for _, d := range data {

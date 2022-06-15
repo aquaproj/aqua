@@ -37,6 +37,7 @@ type PackageInfo struct {
 	Rosetta2           *bool              `json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `json:"aliases,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source"`
+	CompleteWindowsExe *bool              `json:"complete_windows_exe,omitempty" yaml:"complete_windows_exe"`
 }
 
 func (pkgInfo *PackageInfo) copy() *PackageInfo {
