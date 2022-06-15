@@ -14,6 +14,10 @@ import (
 	"github.com/aquaproj/aqua/pkg/unarchive"
 )
 
+func isWindows(goos string) bool {
+	return goos == "windows"
+}
+
 type Package struct {
 	Package     *aqua.Package
 	PackageInfo *registry.PackageInfo
@@ -81,7 +85,7 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if err != nil {
 		return "", err
 	}
-	if rt.GOOS != "windows" || strings.HasSuffix(s, ".exe") {
+	if !isWindows(rt.GOOS) || strings.HasSuffix(s, ".exe") {
 		return s, nil
 	}
 	return cpkg.CompleteWindowsExe(s), nil
@@ -138,7 +142,7 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if asset == "" {
 		return "", nil
 	}
-	if rt.GOOS == "windows" && !strings.HasSuffix(asset, ".exe") {
+	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
 		if cpkg.PackageInfo.Format == "raw" {
 			return cpkg.CompleteWindowsExe(asset), nil
 		}
@@ -211,7 +215,22 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 
 func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
-	return cpkg.renderTemplateString(*pkgInfo.URL, rt)
+	s, err := cpkg.renderTemplateString(*pkgInfo.URL, rt)
+	if err != nil {
+		return "", err
+	}
+	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
+		if cpkg.PackageInfo.Format == "raw" {
+			return cpkg.CompleteWindowsExe(s), nil
+		}
+		if cpkg.PackageInfo.Format != "" {
+			return s, nil
+		}
+		if filepath.Ext(s) == "" {
+			return cpkg.CompleteWindowsExe(s), nil
+		}
+	}
+	return s, nil
 }
 
 func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
