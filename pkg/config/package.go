@@ -63,11 +63,17 @@ func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string
 	})
 }
 
-func setWindowsExeExt(src string, rt *runtime.Runtime) string {
-	if rt.GOOS != "windows" || strings.HasSuffix(src, ".exe") {
-		return src
+func (cpkg *Package) CompleteWindowsExe(s string) string {
+	if cpkg.PackageInfo.CompleteWindowsExe != nil {
+		if *cpkg.PackageInfo.CompleteWindowsExe {
+			return s + ".exe"
+		}
+		return s
 	}
-	return src + ".exe"
+	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent {
+		return s
+	}
+	return s + ".exe"
 }
 
 func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -75,7 +81,10 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if err != nil {
 		return "", err
 	}
-	return setWindowsExeExt(s, rt), nil
+	if rt.GOOS != "windows" || strings.HasSuffix(s, ".exe") {
+		return s, nil
+	}
+	return cpkg.CompleteWindowsExe(s), nil
 }
 
 func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -126,15 +135,18 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if asset == "" {
+		return "", nil
+	}
 	if rt.GOOS == "windows" && !strings.HasSuffix(asset, ".exe") {
 		if cpkg.PackageInfo.Format == "raw" {
-			return asset + ".exe", nil
+			return cpkg.CompleteWindowsExe(asset), nil
 		}
 		if cpkg.PackageInfo.Format != "" {
 			return asset, nil
 		}
 		if filepath.Ext(asset) == "" {
-			return asset + ".exe", nil
+			return cpkg.CompleteWindowsExe(asset), nil
 		}
 	}
 	return asset, nil

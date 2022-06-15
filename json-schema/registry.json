@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/aquaproj/aqua/pkg/config/registry-content",
-  "$ref": "#/$defs/RegistryContent",
+  "$id": "https://github.com/aquaproj/aqua/pkg/config/registry/config",
+  "$ref": "#/$defs/Config",
   "$defs": {
     "Alias": {
       "properties": {
@@ -13,6 +13,21 @@
       "type": "object",
       "required": [
         "name"
+      ]
+    },
+    "Config": {
+      "properties": {
+        "packages": {
+          "items": {
+            "$ref": "#/$defs/PackageInfo"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "packages"
       ]
     },
     "File": {
@@ -232,27 +247,15 @@
         },
         "version_source": {
           "type": "string"
+        },
+        "complete_windows_exe": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "type"
-      ]
-    },
-    "RegistryContent": {
-      "properties": {
-        "packages": {
-          "items": {
-            "$ref": "#/$defs/PackageInfo"
-          },
-          "type": "array"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "packages"
       ]
     },
     "VersionOverride": {
