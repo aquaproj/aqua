@@ -146,6 +146,9 @@
         },
         "url": {
           "type": "string"
+        },
+        "complete_windows_exe": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -330,6 +333,9 @@
           "type": "string"
         },
         "rosetta2": {
+          "type": "boolean"
+        },
+        "complete_windows_exe": {
           "type": "boolean"
         }
       },
