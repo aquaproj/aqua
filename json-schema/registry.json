@@ -236,6 +236,12 @@
         "supported_if": {
           "type": "string"
         },
+        "supported_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "version_filter": {
           "type": "string"
         },
@@ -322,6 +328,12 @@
         },
         "supported_if": {
           "type": "string"
+        },
+        "supported_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "version_constraint": {
           "type": "string"
