@@ -14,6 +14,9 @@ import (
 const ProxyVersion = "v1.1.2" // renovate: depName=aquaproj/aqua-proxy
 
 func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
+	if isWindows(inst.runtime.GOOS) {
+		return nil
+	}
 	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
 		Package: &aqua.Package{
@@ -63,9 +66,6 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 
 	// create a symbolic link
 	binName := proxyName
-	if inst.runtime.GOOS == "windows" {
-		binName += ".exe"
-	}
 	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filepath.Join(pkgPath, binName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)

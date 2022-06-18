@@ -32,6 +32,10 @@ type installer struct {
 	executor          exec.Executor
 }
 
+func isWindows(goos string) bool {
+	return goos == "windows"
+}
+
 func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error {
 	pkgs, failed := inst.createLinks(cfg, registries, binDir, logE)
 	if onlyLink {
@@ -186,6 +190,13 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 			PackageInfo: pkgInfo,
 		})
 		for _, file := range pkgInfo.GetFiles() {
+			if isWindows(inst.runtime.GOOS) {
+				if err := inst.createLinkWindows(filepath.Join(binDir, file.Name+".bat"), file.Name, logE); err != nil {
+					logerr.WithError(logE, err).Error("create the proxy file")
+					failed = true
+				}
+				continue
+			}
 			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
