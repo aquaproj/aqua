@@ -33,6 +33,7 @@ type PackageInfo struct {
 	VersionConstraints string             `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides" json:"version_overrides,omitempty"`
 	SupportedIf        *string            `yaml:"supported_if" json:"supported_if,omitempty"`
+	SupportedEnvs      []string           `yaml:"supported_envs" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter" json:"version_filter,omitempty"`
 	Rosetta2           *bool              `json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `json:"aliases,omitempty"`
@@ -59,6 +60,7 @@ func (pkgInfo *PackageInfo) copy() *PackageInfo {
 		VersionConstraints: pkgInfo.VersionConstraints,
 		VersionOverrides:   pkgInfo.VersionOverrides,
 		SupportedIf:        pkgInfo.SupportedIf,
+		SupportedEnvs:      pkgInfo.SupportedEnvs,
 		VersionFilter:      pkgInfo.VersionFilter,
 		Rosetta2:           pkgInfo.Rosetta2,
 		Aliases:            pkgInfo.Aliases,
@@ -105,6 +107,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.SupportedIf != nil {
 		pkg.SupportedIf = child.SupportedIf
+	}
+	if child.SupportedEnvs != nil {
+		pkg.SupportedEnvs = child.SupportedEnvs
 	}
 	if child.VersionFilter != nil {
 		pkg.VersionFilter = child.VersionFilter
@@ -181,6 +186,7 @@ type VersionOverride struct {
 	Overrides          []*Override       `json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride `yaml:"format_overrides" json:"format_overrides,omitempty"`
 	SupportedIf        *string           `yaml:"supported_if" json:"supported_if,omitempty"`
+	SupportedEnvs      []string          `yaml:"supported_envs" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter" json:"version_filter,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`

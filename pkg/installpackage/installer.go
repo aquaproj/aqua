@@ -12,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
-	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -137,6 +136,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 	failed := false
 	// registry -> package name -> pkgInfo
 	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
+	env := inst.runtime.GOOS + "/" + inst.runtime.GOARCH
 	for _, pkg := range cfg.Packages {
 		if pkg.Name == "" {
 			logE.Error("ignore a package because the package name is empty")
@@ -171,17 +171,15 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 			failed = true
 			continue
 		}
-		if pkgInfo.SupportedIf != nil {
-			supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, inst.runtime)
-			if err != nil {
-				logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
-				failed = true
-				continue
-			}
-			if !supported {
-				logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
-				continue
-			}
+		supported, err := pkgInfo.CheckSupported(inst.runtime, env)
+		if err != nil {
+			logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
+			failed = true
+			continue
+		}
+		if !supported {
+			logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
+			continue
 		}
 		pkgs = append(pkgs, &config.Package{
 			Package:     pkg,
