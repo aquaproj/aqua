@@ -11,7 +11,6 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/expr"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -119,7 +118,7 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	return nil, nil, nil
 }
 
-func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*cfgRegistry.PackageInfo, *cfgRegistry.File) { //nolint:cyclop
+func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*cfgRegistry.PackageInfo, *cfgRegistry.File) {
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil, nil
@@ -148,16 +147,14 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 		return nil, nil
 	}
 
-	if pkgInfo.SupportedIf != nil {
-		supported, err := expr.EvaluateSupportedIf(pkgInfo.SupportedIf, ctrl.runtime)
-		if err != nil {
-			logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
-			return nil, nil
-		}
-		if !supported {
-			logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
-			return nil, nil
-		}
+	supported, err := pkgInfo.CheckSupported(ctrl.runtime, ctrl.runtime.GOOS+"/"+ctrl.runtime.GOARCH)
+	if err != nil {
+		logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
+		return nil, nil
+	}
+	if !supported {
+		logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
+		return nil, nil
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
