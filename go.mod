@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
+	github.com/adrg/xdg v0.4.0 // indirect
 	github.com/antonmedv/expr v1.9.0
 	github.com/go-playground/validator/v10 v10.11.0 // indirect
 	github.com/goccy/go-yaml v1.9.5
