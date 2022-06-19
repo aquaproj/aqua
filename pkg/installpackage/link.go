@@ -3,6 +3,7 @@ package installpackage
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -61,41 +62,56 @@ func (inst *installer) recreateLink(linkPath, linkDest string, logE *logrus.Entr
 	return nil
 }
 
-const proxyTemplate = `@echo off
+const (
+	batTemplate = `@echo off
 aqua exec -- <COMMAND> %*
 `
-const proxyPermission os.FileMode = 0o755
+	scrTemplate = `#!/usr/bin/env bash
+aqua exec -- $0 $@
+`
+	proxyPermission os.FileMode = 0o755
+)
 
-func (inst *installer) createLinkWindows(proxyPath, binName string, logE *logrus.Entry) error {
-	if fileInfo, err := inst.linker.Lstat(proxyPath); err == nil {
+func (inst *installer) createProxyWindows(binName string, logE *logrus.Entry) error {
+	if err := inst.createBinWindows(filepath.Join(inst.rootDir, "bin", binName), scrTemplate, logE); err != nil {
+		return err
+	}
+	if err := inst.createBinWindows(filepath.Join(inst.rootDir, "bat", binName+".bat"), strings.Replace(batTemplate, "<COMMAND>", binName, 1), logE); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (inst *installer) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
+	if fileInfo, err := inst.linker.Lstat(binPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
 			// if file is a directory, raise error
-			return fmt.Errorf("%s has already existed and is a directory", proxyPath)
+			return fmt.Errorf("%s has already existed and is a directory", binPath)
 		case mode&os.ModeNamedPipe != 0:
 			// if file is a pipe, raise error
-			return fmt.Errorf("%s has already existed and is a named pipe", proxyPath)
+			return fmt.Errorf("%s has already existed and is a named pipe", binPath)
 		case mode.IsRegular():
 			// TODO check content
 			return nil
 		case mode&os.ModeSymlink != 0:
-			if err := inst.fs.Remove(proxyPath); err != nil {
-				return fmt.Errorf("remove a symbolic link (%s): %w", proxyPath, err)
+			if err := inst.fs.Remove(binPath); err != nil {
+				return fmt.Errorf("remove a symbolic link (%s): %w", binPath, err)
 			}
-			return inst.createProxyWindows(proxyPath, binName, logE)
+			return inst.writeBinWindows(binPath, binTxt, logE)
 		default:
-			return fmt.Errorf("unexpected file mode %s: %s", proxyPath, mode.String())
+			return fmt.Errorf("unexpected file mode %s: %s", binPath, mode.String())
 		}
 	}
 
-	return inst.createProxyWindows(proxyPath, binName, logE)
+	return inst.writeBinWindows(binPath, binTxt, logE)
 }
 
-func (inst *installer) createProxyWindows(proxyPath, binName string, logE *logrus.Entry) error {
+func (inst *installer) writeBinWindows(proxyPath, binTxt string, logE *logrus.Entry) error {
 	logE.WithFields(logrus.Fields{
 		"proxy_path": proxyPath,
 	}).Info("create a proxy file")
-	if err := afero.WriteFile(inst.fs, proxyPath, []byte(strings.Replace(proxyTemplate, "<COMMAND>", binName, 1)), proxyPermission); err != nil {
+	if err := afero.WriteFile(inst.fs, proxyPath, []byte(binTxt), proxyPermission); err != nil {
 		return fmt.Errorf("create a proxy file (%s): %w", proxyPath, err)
 	}
 	return nil

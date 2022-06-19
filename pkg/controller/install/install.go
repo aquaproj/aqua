@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -27,9 +28,10 @@ type Controller struct {
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 	fs                afero.Fs
+	runtime           *runtime.Runtime
 }
 
-func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs) *Controller {
+func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -37,6 +39,7 @@ func New(param *config.Param, configFinder finder.ConfigFinder, configReader rea
 		registryInstaller: registInstaller,
 		packageInstaller:  pkgInstaller,
 		fs:                fs,
+		runtime:           rt,
 	}
 }
 
@@ -45,6 +48,11 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *
 
 	if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
+	}
+	if ctrl.runtime.GOOS == "windows" {
+		if err := ctrl.fs.MkdirAll(filepath.Join(ctrl.rootDir, "bat"), dirPermission); err != nil {
+			return fmt.Errorf("create the directory: %w", err)
+		}
 	}
 
 	if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {

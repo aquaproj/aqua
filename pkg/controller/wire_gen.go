@@ -75,7 +75,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	linker := link.New()
 	executor := exec.New()
 	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor)
-	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs)
+	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt)
 	return controller
 }
 

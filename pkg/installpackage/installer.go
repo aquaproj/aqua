@@ -191,7 +191,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 		})
 		for _, file := range pkgInfo.GetFiles() {
 			if isWindows(inst.runtime.GOOS) {
-				if err := inst.createLinkWindows(filepath.Join(binDir, file.Name+".bat"), file.Name, logE); err != nil {
+				if err := inst.createProxyWindows(file.Name, logE); err != nil {
 					logerr.WithError(logE, err).Error("create the proxy file")
 					failed = true
 				}
