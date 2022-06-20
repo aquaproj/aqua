@@ -265,6 +265,9 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
+	if isWindows(inst.runtime.GOOS) {
+		exePath += ".exe"
+	}
 	dir, err := pkg.RenderDir(file, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("render file dir: %w", err)
@@ -298,17 +301,17 @@ func (inst *installer) checkFileSrc(ctx context.Context, pkg *config.Package, fi
 		return inst.checkFileSrcGo(ctx, pkg, file, logE)
 	}
 
-	fileSrc, err := pkg.GetFileSrc(file, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get file_src: %w", err)
-	}
-
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
-	exePath := filepath.Join(pkgPath, fileSrc)
 
+	fileSrc, err := pkg.RenameFile(logE, inst.fs, pkgPath, file, inst.runtime)
+	if err != nil {
+		return fmt.Errorf("get file_src: %w", err)
+	}
+
+	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
 		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))

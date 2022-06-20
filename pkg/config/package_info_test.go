@@ -360,8 +360,8 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title: ".exe isn't added in case of github_content",
-			exp:   "dcgoss",
+			title: "add .sh in case of github_content",
+			exp:   "dcgoss.sh",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Name:      "aelsabbahy/goss/dcgoss",
