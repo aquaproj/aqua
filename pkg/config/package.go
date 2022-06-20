@@ -71,6 +71,9 @@ func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string
 
 func (cpkg *Package) WindowsExt() string {
 	if cpkg.PackageInfo.WindowsExt == "" {
+		if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
+			return ".sh"
+		}
 		return ".exe"
 	}
 	return cpkg.PackageInfo.WindowsExt
@@ -95,7 +98,7 @@ func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string,
 		return "", err
 	}
 	if isWindows(rt.GOOS) && filepath.Ext(s) == "" {
-		newName := cpkg.CompleteWindowsExt(s)
+		newName := s + cpkg.WindowsExt()
 		newPath := filepath.Join(pkgPath, newName)
 		if s != newName {
 			old := filepath.Join(pkgPath, s)
@@ -118,7 +121,7 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 		return "", err
 	}
 	if isWindows(rt.GOOS) && filepath.Ext(s) == "" {
-		return cpkg.CompleteWindowsExt(s), nil
+		return s + cpkg.WindowsExt(), nil
 	}
 	return s, nil
 }
