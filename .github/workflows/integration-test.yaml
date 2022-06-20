@@ -90,9 +90,11 @@ jobs:
       with:
         go-version: '1.18.3'
 
-    - run: go build -o /usr/local/bin/aqua ./cmd/aqua
+    - run: go install ./cmd/aqua
       shell: bash
-    - run: echo "${XDG_DATA_HOME:-$HOME/AppData/Local}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+    - run: echo "$HOME/AppData/Local/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      shell: bash
+    - run: echo "$HOME/go/bin" >> "$GITHUB_PATH"
       shell: bash
     - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
       shell: bash
@@ -101,45 +103,72 @@ jobs:
     - run: echo "x-motemen/ghq" | aqua g -f -
       shell: bash
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
+      shell: bash
     - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
+      shell: bash
 
     - run: aqua list
+      shell: bash
     - run: aqua i -l -a
+      shell: bash
       working-directory: tests
     - run: cmdx -v
+      shell: bash
       working-directory: tests
     - run: aqua i --test
+      shell: bash
       working-directory: tests
     - run: aqua which golangci-lint
+      shell: bash
       working-directory: tests
     - run: aqua which go
+      shell: bash
     - run: golangci-lint version
+      shell: bash
     - run: kind version
+      shell: bash
       working-directory: tests
     - run: kind version
+      shell: bash
     - run: restic version
+      shell: bash
     - run: migrate -version
+      shell: bash
     - run: ghq -version
+      shell: bash
     - run: gh version
+      shell: bash
     - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
+      shell: bash
     - run: btop -v
+      shell: bash
     - run: wire --help
+      shell: bash
     - run: gox --help
+      shell: bash
     - run: bats -v
+      shell: bash
     - run: github-compare -v
+      shell: bash
     - run: terrafmt version
+      shell: bash
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
+      shell: bash
       working-directory: tests
     - run: git diff aqua.yaml
+      shell: bash
       working-directory: tests
 
     - name: "test version_source: github_tag"
+      shell: bash
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
       working-directory: tests
 
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
+      shell: bash
       working-directory: /tmp
     - run: aqua list
+      shell: bash
       working-directory: /tmp
