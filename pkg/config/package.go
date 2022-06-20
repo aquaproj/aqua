@@ -67,9 +67,9 @@ func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string
 	})
 }
 
-func (cpkg *Package) CompleteWindowsExe(s string) string {
-	if cpkg.PackageInfo.CompleteWindowsExe != nil {
-		if *cpkg.PackageInfo.CompleteWindowsExe {
+func (cpkg *Package) CompleteWindowsExt(s string) string {
+	if cpkg.PackageInfo.CompleteWindowsExt != nil {
+		if *cpkg.PackageInfo.CompleteWindowsExt {
 			return s + ".exe"
 		}
 		return s
@@ -88,7 +88,7 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if !isWindows(rt.GOOS) || strings.HasSuffix(s, ".exe") {
 		return s, nil
 	}
-	return cpkg.CompleteWindowsExe(s), nil
+	return cpkg.CompleteWindowsExt(s), nil
 }
 
 func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -144,13 +144,13 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	}
 	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
 		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.CompleteWindowsExe(asset), nil
+			return cpkg.CompleteWindowsExt(asset), nil
 		}
 		if cpkg.PackageInfo.Format != "" {
 			return asset, nil
 		}
 		if filepath.Ext(asset) == "" {
-			return cpkg.CompleteWindowsExe(asset), nil
+			return cpkg.CompleteWindowsExt(asset), nil
 		}
 	}
 	return asset, nil
@@ -221,13 +221,13 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	}
 	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
 		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.CompleteWindowsExe(s), nil
+			return cpkg.CompleteWindowsExt(s), nil
 		}
 		if cpkg.PackageInfo.Format != "" {
 			return s, nil
 		}
 		if filepath.Ext(s) == "" {
-			return cpkg.CompleteWindowsExe(s), nil
+			return cpkg.CompleteWindowsExt(s), nil
 		}
 	}
 	return s, nil

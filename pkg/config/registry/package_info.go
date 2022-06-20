@@ -38,7 +38,7 @@ type PackageInfo struct {
 	Rosetta2           *bool              `json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `json:"aliases,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source"`
-	CompleteWindowsExe *bool              `json:"complete_windows_exe,omitempty" yaml:"complete_windows_exe"`
+	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext"`
 }
 
 func (pkgInfo *PackageInfo) copy() *PackageInfo {
@@ -65,7 +65,7 @@ func (pkgInfo *PackageInfo) copy() *PackageInfo {
 		Rosetta2:           pkgInfo.Rosetta2,
 		Aliases:            pkgInfo.Aliases,
 		VersionSource:      pkgInfo.VersionSource,
-		CompleteWindowsExe: pkgInfo.CompleteWindowsExe,
+		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
 	}
 	return pkg
 }
@@ -120,8 +120,8 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.VersionSource != "" {
 		pkg.VersionSource = child.VersionSource
 	}
-	if child.CompleteWindowsExe != nil {
-		pkg.CompleteWindowsExe = child.CompleteWindowsExe
+	if child.CompleteWindowsExt != nil {
+		pkg.CompleteWindowsExt = child.CompleteWindowsExt
 	}
 	return pkg
 }
@@ -168,8 +168,8 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 		pkgInfo.URL = ov.URL
 	}
 
-	if ov.CompleteWindowsExe != nil {
-		pkgInfo.CompleteWindowsExe = ov.CompleteWindowsExe
+	if ov.CompleteWindowsExt != nil {
+		pkgInfo.CompleteWindowsExt = ov.CompleteWindowsExt
 	}
 }
 
@@ -191,7 +191,7 @@ type VersionOverride struct {
 	VersionFilter      *string           `yaml:"version_filter" json:"version_filter,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
 	Rosetta2           *bool             `json:"rosetta2,omitempty"`
-	CompleteWindowsExe *bool             `json:"complete_windows_exe,omitempty" yaml:"complete_windows_exe"`
+	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext"`
 }
 
 type Alias struct {
