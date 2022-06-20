@@ -78,3 +78,68 @@ jobs:
       working-directory: /tmp
 
     - run: aqua-installer -v v0.8.1 -i /tmp/aqua
+
+  build-windows:
+    runs-on: windows-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AQUA_LOG_LEVEL: debug
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '1.18.3'
+
+    - run: go build -o /usr/local/bin/aqua ./cmd/aqua
+      shell: bash
+    - run: echo "${XDG_DATA_HOME:-$HOME/AppData/Local}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      shell: bash
+    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
+      shell: bash
+    - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
+      shell: bash
+    - run: echo "x-motemen/ghq" | aqua g -f -
+      shell: bash
+    - run: aqua g x-motemen/ghq aquaproj/aqua-installer
+    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
+
+    - run: aqua list
+    - run: aqua i -l -a
+      working-directory: tests
+    - run: cmdx -v
+      working-directory: tests
+    - run: aqua i --test
+      working-directory: tests
+    - run: aqua which golangci-lint
+      working-directory: tests
+    - run: aqua which go
+    - run: golangci-lint version
+    - run: kind version
+      working-directory: tests
+    - run: kind version
+    - run: restic version
+    - run: migrate -version
+    - run: ghq -version
+    - run: gh version
+    - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
+    - run: btop -v
+    - run: wire --help
+    - run: gox --help
+    - run: bats -v
+    - run: github-compare -v
+    - run: terrafmt version
+
+    - run: aqua g -i suzuki-shunsuke/tfcmt
+      working-directory: tests
+    - run: git diff aqua.yaml
+      working-directory: tests
+
+    - name: "test version_source: github_tag"
+      run: aqua -c aqua-global.yaml g local,mitchellh/gox
+      working-directory: tests
+
+    # Test if global configuration files are read in `aqua list` and `aqua g`
+    - run: aqua g suzuki-shunsuke/cmdx
+      working-directory: /tmp
+    - run: aqua list
+      working-directory: /tmp
