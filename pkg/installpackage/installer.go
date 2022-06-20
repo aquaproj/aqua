@@ -265,6 +265,9 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
+	if isWindows(inst.runtime.GOOS) {
+		exePath += ".exe"
+	}
 	dir, err := pkg.RenderDir(file, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("render file dir: %w", err)
