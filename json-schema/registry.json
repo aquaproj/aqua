@@ -147,8 +147,11 @@
         "url": {
           "type": "string"
         },
-        "complete_windows_exe": {
+        "complete_windows_ext": {
           "type": "boolean"
+        },
+        "windows_ext": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -257,8 +260,11 @@
         "version_source": {
           "type": "string"
         },
-        "complete_windows_exe": {
+        "complete_windows_ext": {
           "type": "boolean"
+        },
+        "windows_ext": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -347,8 +353,11 @@
         "rosetta2": {
           "type": "boolean"
         },
-        "complete_windows_exe": {
+        "complete_windows_ext": {
           "type": "boolean"
+        },
+        "windows_ext": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
