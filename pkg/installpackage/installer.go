@@ -298,17 +298,17 @@ func (inst *installer) checkFileSrc(ctx context.Context, pkg *config.Package, fi
 		return inst.checkFileSrcGo(ctx, pkg, file, logE)
 	}
 
-	fileSrc, err := pkg.GetFileSrc(file, inst.runtime)
-	if err != nil {
-		return fmt.Errorf("get file_src: %w", err)
-	}
-
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
-	exePath := filepath.Join(pkgPath, fileSrc)
 
+	fileSrc, err := pkg.RenameFile(inst.fs, pkgPath, file, inst.runtime)
+	if err != nil {
+		return fmt.Errorf("get file_src: %w", err)
+	}
+
+	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
 		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))

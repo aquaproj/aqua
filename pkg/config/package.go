@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/spf13/afero"
 )
 
 func isWindows(goos string) bool {
@@ -67,17 +68,42 @@ func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string
 	})
 }
 
+func (cpkg *Package) WindowsExt() string {
+	if cpkg.PackageInfo.WindowsExt == "" {
+		return ".exe"
+	}
+	return cpkg.PackageInfo.WindowsExt
+}
+
 func (cpkg *Package) CompleteWindowsExt(s string) string {
 	if cpkg.PackageInfo.CompleteWindowsExt != nil {
 		if *cpkg.PackageInfo.CompleteWindowsExt {
-			return s + ".exe"
+			return s + cpkg.WindowsExt()
 		}
 		return s
 	}
 	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
 		return s
 	}
-	return s + ".exe"
+	return s + cpkg.WindowsExt()
+}
+
+func (cpkg *Package) RenameFile(fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
+	s, err := cpkg.getFileSrc(file, rt)
+	if err != nil {
+		return "", err
+	}
+	if isWindows(rt.GOOS) && filepath.Ext(s) == "" {
+		newName := cpkg.CompleteWindowsExt(s)
+		newPath := filepath.Join(pkgPath, newName)
+		if s != newName {
+			if err := fs.Rename(filepath.Join(pkgPath, s), newPath); err != nil {
+				return "", fmt.Errorf("rename a file: %w", err)
+			}
+		}
+		return newName, nil
+	}
+	return s, nil
 }
 
 func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -85,10 +111,10 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if err != nil {
 		return "", err
 	}
-	if !isWindows(rt.GOOS) || strings.HasSuffix(s, ".exe") {
-		return s, nil
+	if isWindows(rt.GOOS) && filepath.Ext(s) == "" {
+		return cpkg.CompleteWindowsExt(s), nil
 	}
-	return cpkg.CompleteWindowsExt(s), nil
+	return s, nil
 }
 
 func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {

@@ -39,6 +39,7 @@ type PackageInfo struct {
 	Aliases            []*Alias           `json:"aliases,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext"`
+	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext"`
 }
 
 func (pkgInfo *PackageInfo) copy() *PackageInfo {
@@ -66,6 +67,7 @@ func (pkgInfo *PackageInfo) copy() *PackageInfo {
 		Aliases:            pkgInfo.Aliases,
 		VersionSource:      pkgInfo.VersionSource,
 		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
+		WindowsExt:         pkgInfo.WindowsExt,
 	}
 	return pkg
 }
@@ -123,6 +125,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.CompleteWindowsExt != nil {
 		pkg.CompleteWindowsExt = child.CompleteWindowsExt
 	}
+	if child.WindowsExt != "" {
+		pkg.WindowsExt = child.WindowsExt
+	}
 	return pkg
 }
 
@@ -171,6 +176,9 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 	if ov.CompleteWindowsExt != nil {
 		pkgInfo.CompleteWindowsExt = ov.CompleteWindowsExt
 	}
+	if ov.WindowsExt != "" {
+		pkgInfo.WindowsExt = ov.WindowsExt
+	}
 }
 
 type VersionOverride struct {
@@ -192,6 +200,7 @@ type VersionOverride struct {
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
 	Rosetta2           *bool             `json:"rosetta2,omitempty"`
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext"`
+	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext"`
 }
 
 type Alias struct {

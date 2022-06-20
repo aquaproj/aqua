@@ -13,6 +13,7 @@ type Override struct {
 	Files              []*File           `json:"files,omitempty"`
 	URL                *string           `json:"url,omitempty"`
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext"`
+	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext"`
 }
 
 func (ov *Override) Match(rt *runtime.Runtime) bool {
