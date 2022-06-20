@@ -97,22 +97,26 @@ func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string,
 	if err != nil {
 		return "", err
 	}
-	if isWindows(rt.GOOS) && filepath.Ext(s) == "" {
-		newName := s + cpkg.WindowsExt()
-		newPath := filepath.Join(pkgPath, newName)
-		if s != newName {
-			old := filepath.Join(pkgPath, s)
-			logE.WithFields(logrus.Fields{
-				"new": newPath,
-				"old": old,
-			}).Info("rename a file")
-			if err := fs.Rename(old, newPath); err != nil {
-				return "", fmt.Errorf("rename a file: %w", err)
-			}
-		}
+	if !(isWindows(rt.GOOS) && filepath.Ext(s) == "") {
+		return s, nil
+	}
+	newName := s + cpkg.WindowsExt()
+	newPath := filepath.Join(pkgPath, newName)
+	if s == newName {
 		return newName, nil
 	}
-	return s, nil
+	if _, err := fs.Stat(newPath); err == nil {
+		return newName, nil
+	}
+	old := filepath.Join(pkgPath, s)
+	logE.WithFields(logrus.Fields{
+		"new": newPath,
+		"old": old,
+	}).Info("rename a file")
+	if err := fs.Rename(old, newPath); err != nil {
+		return "", fmt.Errorf("rename a file: %w", err)
+	}
+	return newName, nil
 }
 
 func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
