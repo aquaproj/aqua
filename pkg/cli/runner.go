@@ -52,6 +52,8 @@ func (runner *Runner) setParam(c *cli.Context, param *config.Param) error {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 	param.PWD = wd
+	homeDir, _ := os.UserHomeDir() // TODO error handling
+	param.HomeDir = homeDir
 	return nil
 }
 

@@ -92,13 +92,14 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestLocalRegistry_GetFilePath(t *testing.T) {
+func TestRegistry_GetFilePath(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
 		exp         string
 		registry    *aqua.Registry
 		rootDir     string
+		homeDir     string
 		cfgFilePath string
 	}{
 		{
@@ -111,27 +112,17 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 				Type: "local",
 			},
 		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if p := d.registry.GetFilePath(d.rootDir, d.cfgFilePath); p != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, p)
-			}
-		})
-	}
-}
-
-func TestRegistry_GetFilePath(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title       string
-		exp         string
-		registry    *aqua.Registry
-		rootDir     string
-		cfgFilePath string
-	}{
+		{
+			title:       "home dir",
+			exp:         "/home/foo/registry.yaml",
+			rootDir:     "/root/.aqua",
+			cfgFilePath: "ci/aqua.yaml",
+			homeDir:     "/home/foo",
+			registry: &aqua.Registry{
+				Path: "~/registry.yaml",
+				Type: "local",
+			},
+		},
 		{
 			title:   "github_content",
 			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
@@ -149,7 +140,7 @@ func TestRegistry_GetFilePath(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if p := d.registry.GetFilePath(d.rootDir, d.cfgFilePath); p != d.exp {
+			if p := d.registry.GetFilePath(d.rootDir, d.homeDir, d.cfgFilePath); p != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, p)
 			}
 		})
