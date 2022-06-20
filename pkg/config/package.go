@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -88,7 +89,7 @@ func (cpkg *Package) CompleteWindowsExt(s string) string {
 	return s + cpkg.WindowsExt()
 }
 
-func (cpkg *Package) RenameFile(fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	s, err := cpkg.getFileSrc(file, rt)
 	if err != nil {
 		return "", err
@@ -97,7 +98,12 @@ func (cpkg *Package) RenameFile(fs afero.Fs, pkgPath string, file *registry.File
 		newName := cpkg.CompleteWindowsExt(s)
 		newPath := filepath.Join(pkgPath, newName)
 		if s != newName {
-			if err := fs.Rename(filepath.Join(pkgPath, s), newPath); err != nil {
+			old := filepath.Join(pkgPath, s)
+			logE.WithFields(logrus.Fields{
+				"new": newPath,
+				"old": old,
+			}).Info("rename a file")
+			if err := fs.Rename(old, newPath); err != nil {
 				return "", fmt.Errorf("rename a file: %w", err)
 			}
 		}

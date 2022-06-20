@@ -303,7 +303,7 @@ func (inst *installer) checkFileSrc(ctx context.Context, pkg *config.Package, fi
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	fileSrc, err := pkg.RenameFile(inst.fs, pkgPath, file, inst.runtime)
+	fileSrc, err := pkg.RenameFile(logE, inst.fs, pkgPath, file, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("get file_src: %w", err)
 	}
