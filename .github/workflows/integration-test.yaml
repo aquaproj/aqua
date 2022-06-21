@@ -140,13 +140,9 @@ jobs:
       shell: bash
     - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
       shell: bash
-    - run: btop -v
-      shell: bash
     - run: wire --help
       shell: bash
     - run: gox --help
-      shell: bash
-    - run: bats -v
       shell: bash
     - run: github-compare -v
       shell: bash
