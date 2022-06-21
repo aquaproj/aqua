@@ -85,9 +85,14 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       AQUA_LOG_LEVEL: debug
+    strategy:
+      matrix:
+        shell:
+          - bash
+          - pwsh
     defaults:
       run:
-        shell: bash
+        shell: ${{ matrix.shell }}
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3.2.0
