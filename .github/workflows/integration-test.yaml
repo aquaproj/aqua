@@ -155,8 +155,8 @@ jobs:
         cache: true
 
     - run: go install ./cmd/aqua
-    - run: echo "${{env.HOME}}/AppData/Local/aquaproj-aqua/bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-    - run: echo "AQUA_GLOBAL_CONFIG=${{github.workspace}}/tests/aqua-global.yaml:${{github.workspace}}/tests/aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - run: echo "$HOME\\AppData\\Local\\aquaproj-aqua\\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    - run: echo "AQUA_GLOBAL_CONFIG=$PWD\\tests\\aqua-global.yaml:$PWD\\tests\\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
