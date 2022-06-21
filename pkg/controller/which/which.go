@@ -44,6 +44,8 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	}
 
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
+		logE := logE.WithField("config_file_path", cfgFilePath)
+		logE.Debug("checking a global configuration file")
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
