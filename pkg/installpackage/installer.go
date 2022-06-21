@@ -182,7 +182,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 			continue
 		}
 		if !supported {
-			logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
+			logE.Debug("the package isn't supported on this environment")
 			continue
 		}
 		pkgs = append(pkgs, &config.Package{
