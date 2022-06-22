@@ -151,11 +151,11 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 
 	supported, err := pkgInfo.CheckSupported(ctrl.runtime, ctrl.runtime.GOOS+"/"+ctrl.runtime.GOARCH)
 	if err != nil {
-		logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
+		logerr.WithError(logE, err).Error("check if the package is supported")
 		return nil, nil
 	}
 	if !supported {
-		logE.WithField("supported_if", *pkgInfo.SupportedIf).Debug("the package isn't supported on this environment")
+		logE.Debug("the package isn't supported on this environment")
 		return nil, nil
 	}
 

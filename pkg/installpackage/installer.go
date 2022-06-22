@@ -177,7 +177,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 		}
 		supported, err := pkgInfo.CheckSupported(inst.runtime, env)
 		if err != nil {
-			logerr.WithError(logE, err).WithField("supported_if", *pkgInfo.SupportedIf).Error("check if the package is supported")
+			logerr.WithError(logE, err).Error("check if the package is supported")
 			failed = true
 			continue
 		}
