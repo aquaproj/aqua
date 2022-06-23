@@ -14,9 +14,7 @@ $ aqua -v
 
 ## Environment
 
-:warning: aqua doesn't support Windows.
-
-* OS (Linux, macOS, etc):
+* OS (Windows, Linux, macOS, etc):
 * CPU Architecture (amd64, arm64, etc):
 
 ## Overview
