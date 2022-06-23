@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/go-version v1.5.0
 	github.com/invopop/jsonschema v0.4.0
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
+	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.8.2
