@@ -58,7 +58,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		// configuration file already exists, then do nothing.
 		return nil
 	}
-	registryVersion := "v2.28.1" // renovate: depName=aquaproj/aqua-registry
+	registryVersion := "v3.0.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
