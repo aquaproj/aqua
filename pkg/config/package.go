@@ -39,7 +39,7 @@ func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string
 	})
 }
 
-func replace(key string, replacements map[string]string) string {
+func replace(key string, replacements registry.Replacements) string {
 	a := replacements[key]
 	if a == "" {
 		return key
@@ -47,7 +47,7 @@ func replace(key string, replacements map[string]string) string {
 	return a
 }
 
-func getArch(rosetta2 bool, replacements map[string]string, rt *runtime.Runtime) string {
+func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runtime) string {
 	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
 		// Rosetta 2
 		return replace("amd64", replacements)

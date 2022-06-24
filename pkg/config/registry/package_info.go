@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/iancoleman/orderedmap"
+	"github.com/invopop/jsonschema"
 )
 
 const (
@@ -27,7 +29,7 @@ type PackageInfo struct {
 	URL                *string            `json:"url,omitempty"`
 	Description        string             `json:"description,omitempty"`
 	Link               string             `json:"link,omitempty"`
-	Replacements       map[string]string  `json:"replacements,omitempty"`
+	Replacements       Replacements       `json:"replacements,omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides" json:"format_overrides,omitempty"`
 	VersionConstraints string             `yaml:"version_constraint" json:"version_constraint,omitempty"`
@@ -147,7 +149,7 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 	if pkgInfo.Replacements == nil {
 		pkgInfo.Replacements = ov.Replacements
 	} else {
-		replacements := make(map[string]string, len(pkgInfo.Replacements))
+		replacements := make(Replacements, len(pkgInfo.Replacements))
 		for k, v := range pkgInfo.Replacements {
 			replacements[k] = v
 		}
@@ -190,7 +192,7 @@ type VersionOverride struct {
 	Format             string            `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
 	Files              []*File           `json:"files,omitempty"`
 	URL                *string           `json:"url,omitempty"`
-	Replacements       map[string]string `json:"replacements,omitempty"`
+	Replacements       Replacements      `json:"replacements,omitempty"`
 	Overrides          []*Override       `json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride `yaml:"format_overrides" json:"format_overrides,omitempty"`
 	SupportedIf        *string           `yaml:"supported_if" json:"supported_if,omitempty"`
@@ -205,6 +207,24 @@ type VersionOverride struct {
 
 type Alias struct {
 	Name string `json:"name"`
+}
+
+type Replacements map[string]string
+
+func (Replacements) JSONSchema() *jsonschema.Schema {
+	Map := orderedmap.New()
+	os := []string{"aix", "android", "darwin", "dragonfly", "freebsd", "illumos", "ios", "js", "linux", "netbsd", "openbsd", "plan9", "solaris", "windows"}
+	arch := []string{"386", "amd64", "arm", "arm64", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm"}
+	for _, value := range append(os, arch...) {
+		Map.Set(value, &jsonschema.Schema{
+			Type: "string",
+		})
+	}
+	return &jsonschema.Schema{
+		Type:                 "object",
+		AdditionalProperties: jsonschema.TrueSchema,
+		Properties:           Map,
+	}
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
@@ -263,7 +283,7 @@ func (pkgInfo *PackageInfo) GetType() string {
 	return pkgInfo.Type
 }
 
-func (pkgInfo *PackageInfo) GetReplacements() map[string]string {
+func (pkgInfo *PackageInfo) GetReplacements() Replacements {
 	return pkgInfo.Replacements
 }
 

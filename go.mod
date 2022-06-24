@@ -12,6 +12,7 @@ require (
 	github.com/google/go-github/v44 v44.1.0
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.5.0
+	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/invopop/jsonschema v0.4.0
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mattn/go-colorable v0.1.12
