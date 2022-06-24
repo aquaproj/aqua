@@ -125,3 +125,4 @@ packages:
 # unknown package type
 - type: foo
   name: foo
+  name: foo # duplicated key
