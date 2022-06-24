@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 func downloadTestFile(uri, tempDir string) (string, error) {
