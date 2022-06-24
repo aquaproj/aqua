@@ -5,7 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/google/go-cmp/cmp"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func TestConfig_UnmarshalYAML(t *testing.T) { //nolint:funlen

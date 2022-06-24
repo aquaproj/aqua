@@ -7,7 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type ConfigReader interface {
