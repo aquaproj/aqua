@@ -16,6 +16,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/scaffold"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
@@ -40,6 +41,13 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	registryDownloader := download.NewRegistryDownloader(repositoryService, httpDownloader)
 	installer := registry.New(param, registryDownloader, fs)
 	controller := list.NewController(configFinder, configReader, installer)
+	return controller
+}
+
+func InitializeScaffoldCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *scaffold.Controller {
+	fs := afero.NewOsFs()
+	repositoryService := github.New(ctx)
+	controller := scaffold.NewController(fs, repositoryService)
 	return controller
 }
 

@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/scaffold"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
@@ -31,6 +32,11 @@ import (
 func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *list.Controller {
 	wire.Build(list.NewController, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs, download.NewHTTPDownloader)
 	return &list.Controller{}
+}
+
+func InitializeScaffoldCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *scaffold.Controller {
+	wire.Build(scaffold.NewController, github.New, afero.NewOsFs)
+	return &scaffold.Controller{}
 }
 
 func InitializeInitCommandController(ctx context.Context, param *config.Param) *initcmd.Controller {

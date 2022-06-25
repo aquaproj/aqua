@@ -17,21 +17,26 @@ var (
 	errAssetNotFound   = errors.New("asset isn't found")
 	errContentNotFound = errors.New("content isn't found")
 	errGetTar          = errors.New("failed to get tar")
+	errGetRepo         = errors.New("failed to get repo")
+	errListAssets      = errors.New("failed to list assets")
 )
 
 type mockRepositoryService struct {
 	releases []*github.RepositoryRelease
 	content  *github.RepositoryContent
+	repo     *github.Repository
 	tags     []*github.RepositoryTag
 	asset    string
+	assets   []*github.ReleaseAsset
 	url      *url.URL
 }
 
-func NewMock(releases []*github.RepositoryRelease, content *github.RepositoryContent, asset string, url *url.URL) RepositoryService {
+func NewMock(releases []*github.RepositoryRelease, content *github.RepositoryContent, asset string, assets []*github.ReleaseAsset, url *url.URL) RepositoryService {
 	return &mockRepositoryService{
 		releases: releases,
 		content:  content,
 		asset:    asset,
+		assets:   assets,
 		url:      url,
 	}
 }
@@ -83,4 +88,18 @@ func (svc *mockRepositoryService) GetArchiveLink(ctx context.Context, owner, rep
 		return nil, nil, errGetTar
 	}
 	return svc.url, nil, nil
+}
+
+func (svc *mockRepositoryService) Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error) {
+	if svc.repo == nil {
+		return nil, nil, errGetRepo
+	}
+	return svc.repo, nil, nil
+}
+
+func (svc *mockRepositoryService) ListReleaseAssets(ctx context.Context, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error) {
+	if svc.assets == nil {
+		return nil, nil, errListAssets
+	}
+	return svc.assets, nil, nil
 }

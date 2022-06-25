@@ -39,6 +39,7 @@ func (runner *Runner) setParam(c *cli.Context, param *config.Param) error {
 	param.OnlyLink = c.Bool("only-link")
 	param.IsTest = c.Bool("test")
 	param.Insert = c.Bool("i")
+	param.InsertFile = c.String("o")
 	param.All = c.Bool("all")
 	param.File = c.String("f")
 	param.AQUAVersion = runner.LDFlags.Version
@@ -91,6 +92,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		Commands: []*cli.Command{
 			runner.newInstallCommand(),
 			runner.newExecCommand(),
+			runner.newScaffoldCommand(),
 			runner.newInitCommand(),
 			runner.newListCommand(),
 			runner.newWhichCommand(),

@@ -66,7 +66,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			gh := githubSvc.NewMock(d.releases, nil, "", nil)
+			gh := githubSvc.NewMock(d.releases, nil, "", nil, nil)
 			ctrl := initcmd.New(gh, fs)
 			if err := ctrl.Init(ctx, "", logE); err != nil {
 				if d.isErr {
