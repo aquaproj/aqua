@@ -21,85 +21,75 @@ var (
 	errListAssets      = errors.New("failed to list assets")
 )
 
-type mockRepositoryService struct {
-	releases []*github.RepositoryRelease
-	content  *github.RepositoryContent
-	repo     *github.Repository
-	tags     []*github.RepositoryTag
-	asset    string
-	assets   []*github.ReleaseAsset
-	url      *url.URL
+type MockRepositoryService struct {
+	Releases []*github.RepositoryRelease
+	Content  *github.RepositoryContent
+	Repo     *github.Repository
+	Tags     []*github.RepositoryTag
+	Asset    string
+	Assets   []*github.ReleaseAsset
+	URL      *url.URL
 }
 
-func NewMock(releases []*github.RepositoryRelease, content *github.RepositoryContent, asset string, assets []*github.ReleaseAsset, url *url.URL) RepositoryService {
-	return &mockRepositoryService{
-		releases: releases,
-		content:  content,
-		asset:    asset,
-		assets:   assets,
-		url:      url,
-	}
-}
-
-func (svc *mockRepositoryService) GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
-	if len(svc.releases) == 0 {
+func (svc *MockRepositoryService) GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
+	if len(svc.Releases) == 0 {
 		return nil, nil, errReleaseNotFound
 	}
-	return svc.releases[0], nil, nil
+	return svc.Releases[0], nil, nil
 }
 
-func (svc *mockRepositoryService) GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error) {
-	if svc.content == nil {
-		return svc.content, nil, nil, errContentNotFound
+func (svc *MockRepositoryService) GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error) {
+	if svc.Content == nil {
+		return svc.Content, nil, nil, errContentNotFound
 	}
-	return svc.content, nil, nil, nil
+	return svc.Content, nil, nil, nil
 }
 
-func (svc *mockRepositoryService) GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error) {
-	if len(svc.releases) == 0 {
+func (svc *MockRepositoryService) GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error) {
+	if len(svc.Releases) == 0 {
 		return nil, nil, errReleaseNotFound
 	}
-	return svc.releases[0], nil, nil
+	return svc.Releases[0], nil, nil
 }
 
-func (svc *mockRepositoryService) DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error) {
-	if svc.asset == "" {
+func (svc *MockRepositoryService) DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error) {
+	if svc.Asset == "" {
 		return nil, "", errAssetNotFound
 	}
-	return io.NopCloser(strings.NewReader(svc.asset)), "", nil
+	return io.NopCloser(strings.NewReader(svc.Asset)), "", nil
 }
 
-func (svc *mockRepositoryService) ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
-	if svc.releases == nil {
+func (svc *MockRepositoryService) ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
+	if svc.Releases == nil {
 		return nil, nil, errReleaseNotFound
 	}
-	return svc.releases, nil, nil
+	return svc.Releases, nil, nil
 }
 
-func (svc *mockRepositoryService) ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
-	if svc.tags == nil {
+func (svc *MockRepositoryService) ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
+	if svc.Tags == nil {
 		return nil, nil, errTagNotFound
 	}
-	return svc.tags, nil, nil
+	return svc.Tags, nil, nil
 }
 
-func (svc *mockRepositoryService) GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, followRedirects bool) (*url.URL, *github.Response, error) {
-	if svc.url == nil {
+func (svc *MockRepositoryService) GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, followRedirects bool) (*url.URL, *github.Response, error) {
+	if svc.URL == nil {
 		return nil, nil, errGetTar
 	}
-	return svc.url, nil, nil
+	return svc.URL, nil, nil
 }
 
-func (svc *mockRepositoryService) Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error) {
-	if svc.repo == nil {
+func (svc *MockRepositoryService) Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error) {
+	if svc.Repo == nil {
 		return nil, nil, errGetRepo
 	}
-	return svc.repo, nil, nil
+	return svc.Repo, nil, nil
 }
 
-func (svc *mockRepositoryService) ListReleaseAssets(ctx context.Context, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error) {
-	if svc.assets == nil {
+func (svc *MockRepositoryService) ListReleaseAssets(ctx context.Context, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error) {
+	if svc.Assets == nil {
 		return nil, nil, errListAssets
 	}
-	return svc.assets, nil, nil
+	return svc.Assets, nil, nil
 }

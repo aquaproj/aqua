@@ -12,8 +12,10 @@ import (
 )
 
 type (
-	ReleaseAsset = github.ReleaseAsset
-	ListOptions  = github.ListOptions
+	ReleaseAsset      = github.ReleaseAsset
+	ListOptions       = github.ListOptions
+	RepositoryRelease = github.RepositoryRelease
+	Repository        = github.Repository
 )
 
 type RepositoryService interface {
