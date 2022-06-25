@@ -404,6 +404,11 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 		}
 	}
 	pkgInfo.Overrides = overrides
+	if len(pkgInfo.Overrides) == 0 && pkgInfo.Format != "" && pkgInfo.Format != formatRaw {
+		asset := strings.Replace(*pkgInfo.Asset, "{{.Format}}", pkgInfo.Format, 1)
+		pkgInfo.Asset = &asset
+		pkgInfo.Format = ""
+	}
 }
 
 const formatRaw = "raw"
