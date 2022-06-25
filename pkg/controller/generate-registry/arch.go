@@ -41,4 +41,7 @@ func (ctrl *Controller) setArch(assetName, lowAssetName string, assetInfo *Asset
 			break
 		}
 	}
+	if assetInfo.Arch == "" {
+		assetInfo.Arch = "amd64"
+	}
 }
