@@ -9,20 +9,20 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const generateRegistryDescription = `Scaffold a Registry's package configuration.
+const generateRegistryDescription = `Generate a Registry's package configuration.
 
-$ aqua generate-registry cli/cli > registry.yaml
+$ aqua gr cli/cli > registry.yaml
 
 You can also insert a package configuration into the existing configuration file with -i option.
 
-$ aqua generate-registry -i registry.yaml cli/cli
+$ aqua gr -i registry.yaml cli/cli
 `
 
 func (runner *Runner) newScaffoldCommand() *cli.Command {
 	return &cli.Command{
 		Name:        "generate-registry",
-		Aliases:     []string{"sr"},
-		Usage:       "Scaffold a registry's package configuration",
+		Aliases:     []string{"gr"},
+		Usage:       "Generate a registry's package configuration",
 		ArgsUsage:   `<package name>`,
 		Description: generateRegistryDescription,
 		Action:      runner.generateRegistryAction,
