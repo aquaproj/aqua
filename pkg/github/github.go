@@ -11,8 +11,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type ReleaseAsset = github.ReleaseAsset
-type ListOptions = github.ListOptions
+type (
+	ReleaseAsset = github.ReleaseAsset
+	ListOptions  = github.ListOptions
+)
 
 type RepositoryService interface {
 	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)

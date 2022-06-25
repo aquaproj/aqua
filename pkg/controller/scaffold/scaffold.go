@@ -2,6 +2,7 @@ package scaffold
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"reflect"
@@ -43,10 +44,7 @@ func (ctrl *Controller) Scaffold(ctx context.Context, param *config.Param, logE 
 }
 
 func (ctrl *Controller) scaffold(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
-	pkgInfo, err := ctrl.getPackageInfo(ctx, logE, pkgName)
-	if err != nil {
-		return err
-	}
+	pkgInfo := ctrl.getPackageInfo(ctx, logE, pkgName)
 	if param.InsertFile == "" {
 		cfg := &registry.Config{
 			PackageInfos: registry.PackageInfos{
@@ -54,9 +52,9 @@ func (ctrl *Controller) scaffold(ctx context.Context, param *config.Param, logE 
 			},
 		}
 		encoder := yaml.NewEncoder(ctrl.stdout)
-		encoder.SetIndent(2)
+		encoder.SetIndent(2) //nolint:gomnd
 		if err := encoder.Encode(cfg); err != nil {
-			return err
+			return fmt.Errorf("encode YAML: %w", err)
 		}
 		return nil
 	}
@@ -87,12 +85,12 @@ func (ctrl *Controller) excludeAsset(assetName string) bool {
 	return false
 }
 
-func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) (*registry.PackageInfo, error) {
+func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) *registry.PackageInfo {
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
 		Type: "github_release",
 	}
-	if len(splitPkgNames) > 1 {
+	if len(splitPkgNames) > 1 { //nolint:nestif
 		pkgInfo.RepoOwner = splitPkgNames[0]
 		pkgInfo.RepoName = splitPkgNames[1]
 		repo, _, err := ctrl.github.Get(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName)
@@ -119,30 +117,17 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 					if ctrl.excludeAsset(assetName) {
 						continue
 					}
-					assetInfo, err := ctrl.parseAssetName(asset.GetName(), release.GetTagName())
-					if err != nil {
-						logE.WithFields(logrus.Fields{
-							"repo_owner": pkgInfo.RepoOwner,
-							"repo_name":  pkgInfo.RepoName,
-							"asset_name": asset.GetName(),
-						}).WithError(err).Warn("parse the asset name")
-					} else {
-						assetInfos = append(assetInfos, assetInfo)
-					}
+					assetInfo := ctrl.parseAssetName(asset.GetName(), release.GetTagName())
+					assetInfos = append(assetInfos, assetInfo)
 				}
-				if err := ctrl.parseAssetInfos(pkgInfo, assetInfos); err != nil {
-					logE.WithFields(logrus.Fields{
-						"repo_owner": pkgInfo.RepoOwner,
-						"repo_name":  pkgInfo.RepoName,
-					}).WithError(err).Warn("parse the asset names")
-				}
+				ctrl.parseAssetInfos(pkgInfo, assetInfos)
 			}
 		}
 	}
 	if len(splitPkgNames) != 2 { //nolint:gomnd
 		pkgInfo.Name = pkgName
 	}
-	return pkgInfo, nil
+	return pkgInfo
 }
 
 type OS struct {
@@ -200,7 +185,7 @@ func (ctrl *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entr
 	return arr
 }
 
-func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) error { //nolint:funlen
+func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop
 	envs := map[string]struct{}{}
 	formats := map[string]int{}
 	for _, assetInfo := range assetInfos {
@@ -235,20 +220,20 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 		}
 		envs[assetInfo.OS+"/"+assetInfo.Arch] = struct{}{}
 		if pkgInfo.Asset == nil && assetInfo.OS != "windows" {
-			if assetInfo.Format == "" || assetInfo.Format == "raw" || len(formats) < 2 {
+			if assetInfo.Format == "" || assetInfo.Format == formatRaw || len(formats) < 2 {
 				pkgInfo.Asset = strP(assetInfo.Template)
 			} else {
 				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{Format}}", 1))
 			}
 		}
 		if assetInfo.OS == "linux" && assetInfo.Arch == "amd64" {
-			if assetInfo.Format == "" || assetInfo.Format == "raw" || len(formats) < 2 {
+			if assetInfo.Format == "" || assetInfo.Format == formatRaw || len(formats) < 2 {
 				pkgInfo.Asset = strP(assetInfo.Template)
 			} else {
 				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{Format}}", 1))
 			}
 		}
-		if pkgInfo.Format != "" {
+		if pkgInfo.Format != "" { //nolint:nestif
 			if pkgInfo.Format != assetInfo.Format {
 				included := false
 				for _, override := range pkgInfo.Overrides {
@@ -266,6 +251,10 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 			}
 		}
 	}
+	ctrl.setSupportedEnvs(envs, pkgInfo)
+}
+
+func (ctrl *Controller) setSupportedEnvs(envs map[string]struct{}, pkgInfo *registry.PackageInfo) { //nolint:cyclop
 	if has(envs, "darwin") || has(envs, "darwin/amd64") {
 		pkgInfo.SupportedEnvs = append(pkgInfo.SupportedEnvs, "darwin")
 	} else if has(envs, "darwin/arm64") {
@@ -301,16 +290,9 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 	if reflect.DeepEqual(pkgInfo.SupportedEnvs, []string{"darwin", "linux/amd64", "windows/amd64"}) {
 		pkgInfo.SupportedEnvs = []string{"darwin", "amd64"}
 	}
-	return nil
 }
 
-func (ctrl *Controller) parseAssetName(assetName, version string) (*AssetInfo, error) { //nolint:funlen
-	assetInfo := &AssetInfo{
-		Template: strings.Replace(assetName, version, "{{.Version}}", 1),
-	}
-	if assetInfo.Template == assetName {
-		assetInfo.Template = strings.Replace(assetName, strings.TrimPrefix(version, "v"), "{{trimV .Version}}", 1)
-	}
+func (ctrl *Controller) setOS(assetName, lowAssetName string, assetInfo *AssetInfo) {
 	osList := []*OS{
 		{
 			Name: "darwin",
@@ -349,7 +331,6 @@ func (ctrl *Controller) parseAssetName(assetName, version string) (*AssetInfo, e
 			OS:   "windows",
 		},
 	}
-	lowAssetName := strings.ToLower(assetName)
 	for _, o := range osList {
 		if idx := strings.Index(lowAssetName, o.Name); idx != -1 {
 			osName := assetName[idx : idx+len(o.Name)]
@@ -367,6 +348,9 @@ func (ctrl *Controller) parseAssetName(assetName, version string) (*AssetInfo, e
 	if assetInfo.OS == "" && strings.Contains(lowAssetName, ".exe") {
 		assetInfo.OS = "windows"
 	}
+}
+
+func (ctrl *Controller) setArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 	archList := []*Arch{
 		{
 			Name: "amd64",
@@ -403,75 +387,86 @@ func (ctrl *Controller) parseAssetName(assetName, version string) (*AssetInfo, e
 			break
 		}
 	}
+}
+
+const formatRaw = "raw"
+
+func (ctrl *Controller) parseAssetName(assetName, version string) *AssetInfo {
+	assetInfo := &AssetInfo{
+		Template: strings.Replace(assetName, version, "{{.Version}}", 1),
+	}
+	if assetInfo.Template == assetName {
+		assetInfo.Template = strings.Replace(assetName, strings.TrimPrefix(version, "v"), "{{trimV .Version}}", 1)
+	}
+	lowAssetName := strings.ToLower(assetName)
+	ctrl.setOS(assetName, lowAssetName, assetInfo)
+	ctrl.setArch(assetName, lowAssetName, assetInfo)
 	if assetInfo.Arch == "" && assetInfo.OS == "darwin" {
 		if strings.Contains(lowAssetName, "_all") || strings.Contains(lowAssetName, "-all") || strings.Contains(lowAssetName, ".all") {
 			assetInfo.DarwinAll = true
 		}
 	}
+	assetInfo.Format = ctrl.getFormat(assetName)
+	return assetInfo
+}
+
+func (ctrl *Controller) getFormat(assetName string) string { //nolint:funlen,cyclop
 	a, err := archiver.ByExtension(assetName)
 	if err != nil {
-		assetInfo.Format = "raw"
-	} else {
-		switch a.(type) {
-		case *archiver.Rar:
-			assetInfo.Format = "rar"
-		case *archiver.Tar:
-			assetInfo.Format = "tar"
-		case *archiver.TarBrotli:
-			if strings.HasSuffix(assetName, ".tbr") {
-				assetInfo.Format = "tbr"
-			} else {
-				assetInfo.Format = "tar.br"
-			}
-		case *archiver.TarBz2:
-			if strings.HasSuffix(assetName, ".tbz2") {
-				assetInfo.Format = "btz2"
-			} else {
-				assetInfo.Format = "tar.bz2"
-			}
-		case *archiver.TarGz:
-			if strings.HasSuffix(assetName, ".tgz") {
-				assetInfo.Format = "tgz"
-			} else {
-				assetInfo.Format = "tar.gz"
-			}
-		case *archiver.TarLz4:
-			if strings.HasSuffix(assetName, ".tlz4") {
-				assetInfo.Format = "tlz4"
-			} else {
-				assetInfo.Format = "tar.lz4"
-			}
-		case *archiver.TarSz:
-			if strings.HasSuffix(assetName, ".tsz") {
-				assetInfo.Format = "tsz"
-			} else {
-				assetInfo.Format = "tar.sz"
-			}
-		case *archiver.TarXz:
-			if strings.HasSuffix(assetName, ".txz") {
-				assetInfo.Format = "txz"
-			} else {
-				assetInfo.Format = "tar.xz"
-			}
-		case *archiver.TarZstd:
-			assetInfo.Format = "tar.zsd"
-		case *archiver.Zip:
-			assetInfo.Format = "zip"
-		case *archiver.Gz:
-			assetInfo.Format = "gz"
-		case *archiver.Bz2:
-			assetInfo.Format = "bz2"
-		case *archiver.Lz4:
-			assetInfo.Format = "lz4"
-		case *archiver.Snappy:
-			assetInfo.Format = "sz"
-		case *archiver.Xz:
-			assetInfo.Format = "xz"
-		case *archiver.Zstd:
-			assetInfo.Format = "zst"
-		default:
-			assetInfo.Format = "raw"
-		}
+		return formatRaw
 	}
-	return assetInfo, nil
+	switch a.(type) {
+	case *archiver.Rar:
+		return "rar"
+	case *archiver.Tar:
+		return "tar"
+	case *archiver.TarBrotli:
+		if strings.HasSuffix(assetName, ".tbr") {
+			return "tbr"
+		}
+		return "tar.br"
+	case *archiver.TarBz2:
+		if strings.HasSuffix(assetName, ".tbz2") {
+			return "btz2"
+		}
+		return "tar.bz2"
+	case *archiver.TarGz:
+		if strings.HasSuffix(assetName, ".tgz") {
+			return "tgz"
+		}
+		return "tar.gz"
+	case *archiver.TarLz4:
+		if strings.HasSuffix(assetName, ".tlz4") {
+			return "tlz4"
+		}
+		return "tar.lz4"
+	case *archiver.TarSz:
+		if strings.HasSuffix(assetName, ".tsz") {
+			return "tsz"
+		}
+		return "tar.sz"
+	case *archiver.TarXz:
+		if strings.HasSuffix(assetName, ".txz") {
+			return "txz"
+		}
+		return "tar.xz"
+	case *archiver.TarZstd:
+		return "tar.zsd"
+	case *archiver.Zip:
+		return "zip"
+	case *archiver.Gz:
+		return "gz"
+	case *archiver.Bz2:
+		return "bz2"
+	case *archiver.Lz4:
+		return "lz4"
+	case *archiver.Snappy:
+		return "sz"
+	case *archiver.Xz:
+		return "xz"
+	case *archiver.Zstd:
+		return "zst"
+	default:
+		return formatRaw
+	}
 }
