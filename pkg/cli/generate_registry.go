@@ -9,13 +9,32 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const generateRegistryDescription = `Generate a Registry's package configuration.
+const generateRegistryDescription = `Generate a template of Registry package configuration.
 
-$ aqua gr cli/cli > registry.yaml
+Note that you probably fix the generate code manually.
+The generate code is not perfect and may include the wrong configuration.
+It is just a template.
 
-You can also insert a package configuration into the existing configuration file with -i option.
+e.g.
 
-$ aqua gr -i registry.yaml cli/cli
+$ aqua gr cli/cli # Outputs the configuration.
+packages:
+  - type: github_release
+    repo_owner: cli
+    repo_name: cli
+    asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{Format}}
+    format: tar.gz
+    description: GitHub’s official command line tool
+    replacements:
+      darwin: macOS
+    overrides:
+      - goos: windows
+        format: zip
+    supported_envs:
+      - darwin
+      - linux
+      - amd64
+    rosetta2: true
 `
 
 func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
@@ -26,12 +45,13 @@ func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
 		ArgsUsage:   `<package name>`,
 		Description: generateRegistryDescription,
 		Action:      runner.generateRegistryAction,
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "i",
-				Usage: "Insert a registry to configuration file",
-			},
-		},
+		// TODO support "i" option
+		// Flags: []cli.Flag{
+		// 	&cli.StringFlag{
+		// 		Name:  "i",
+		// 		Usage: "Insert a registry to configuration file",
+		// 	},
+		// },
 	}
 }
 
