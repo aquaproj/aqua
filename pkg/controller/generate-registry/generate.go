@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -63,8 +65,15 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 }
 
 func (ctrl *Controller) excludeAsset(assetName string) bool {
+	format := ctrl.getFormat(assetName)
+	if format == formatRaw {
+		ext := filepath.Ext(assetName)
+		if len(ext) < 6 { //nolint:gomnd
+			return true
+		}
+	}
 	suffixes := []string{
-		"txt", "msi", "deb", "rpm", "md", "sig", "pem", "sbom", "apk", "dmg", "sha256",
+		"sha256",
 	}
 	asset := strings.ToLower(assetName)
 	for _, s := range suffixes {
@@ -74,6 +83,8 @@ func (ctrl *Controller) excludeAsset(assetName string) bool {
 	}
 	words := []string{
 		"readme", "license", "openbsd", "freebsd", "netbsd", "android", "386", "i386", "armv6", "armv7", "32bit",
+		"netbsd", "plan9", "solaris", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm",
+		"checksum",
 	}
 	for _, s := range words {
 		if strings.Contains(asset, s) {
@@ -145,11 +156,7 @@ type AssetInfo struct {
 	DarwinAll    bool
 	Format       string
 	Replacements map[string]string
-}
-
-func has(m map[string]struct{}, key string) bool {
-	_, ok := m[key]
-	return ok
+	Score        int
 }
 
 func boolP(b bool) *bool {
@@ -183,116 +190,230 @@ func (ctrl *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entr
 	return arr
 }
 
-func (ctrl *Controller) getOSFormat(assetInfos []*AssetInfo, goos string) string {
-	format := ""
+func (ctrl *Controller) getOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
+	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
-		if assetInfo.OS != goos {
+		assetInfo := assetInfo
+		if (assetInfo.OS != goos || assetInfo.Arch != goarch) && !assetInfo.DarwinAll {
 			continue
 		}
-		if assetInfo.Format != "" && assetInfo.Format != formatRaw {
-			return assetInfo.Format
+		if assetInfo.Format == "" || assetInfo.Format == formatRaw { //nolint:nestif
+			if rawA == nil {
+				rawA = assetInfo
+				continue
+			}
+			if assetInfo.Score > rawA.Score {
+				rawA = assetInfo
+				continue
+			}
+			rawAIdx := strings.Index(rawA.Template, "{")
+			assetIdx := strings.Index(assetInfo.Template, "{")
+			if rawAIdx != -1 && assetIdx != -1 {
+				if rawAIdx > assetIdx {
+					rawA = assetInfo
+				}
+				continue
+			}
+			if len(rawA.Template) > len(assetInfo.Template) {
+				rawA = assetInfo
+			}
+			continue
 		}
-		format = formatRaw
+		if a == nil {
+			a = assetInfo
+			continue
+		}
+		if assetInfo.Score > a.Score {
+			a = assetInfo
+			continue
+		}
+		aIdx := strings.Index(a.Template, "{")
+		assetIdx := strings.Index(assetInfo.Template, "{")
+		if aIdx != -1 && assetIdx != -1 {
+			if aIdx > assetIdx {
+				a = assetInfo
+			}
+			continue
+		}
+		if len(a.Template) > len(assetInfo.Template) {
+			a = assetInfo
+		}
 	}
-	return format
+	if a != nil {
+		return a
+	}
+	return rawA
+}
+
+func mergeReplacements(m1, m2 map[string]string) (map[string]string, bool) {
+	if len(m1) == 0 {
+		return m2, true
+	}
+	if len(m2) == 0 {
+		return m1, true
+	}
+	m := map[string]string{}
+	for k, v1 := range m1 {
+		m[k] = v1
+		if v2, ok := m2[k]; ok && v1 != v2 {
+			return nil, false
+		}
+	}
+	for k, v2 := range m2 {
+		if _, ok := m[k]; !ok {
+			m[k] = v2
+		}
+	}
+	return m, true
 }
 
 func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop,gocyclo
-	envs := map[string]struct{}{}
-	formats := map[string]int{}
+	for _, goos := range []string{"linux", "darwin", "windows"} {
+		var overrides []*registry.Override
+		var supportedEnvs []string
+		for _, goarch := range []string{"amd64", "arm64"} {
+			if assetInfo := ctrl.getOSArch(goos, goarch, assetInfos); assetInfo != nil {
+				overrides = append(overrides, &registry.Override{
+					GOOS:         assetInfo.OS,
+					GOArch:       assetInfo.Arch,
+					Format:       assetInfo.Format,
+					Replacements: assetInfo.Replacements,
+					Asset:        strP(assetInfo.Template),
+				})
+				if goos == "darwin" && goarch == "amd64" {
+					supportedEnvs = append(supportedEnvs, "darwin")
+				} else {
+					supportedEnvs = append(supportedEnvs, goos+"/"+goarch)
+				}
+			}
+		}
+		if len(overrides) == 2 { //nolint:gomnd
+			supportedEnvs = []string{goos}
+			asset1 := overrides[0]
+			asset2 := overrides[1]
+			if asset1.Format == asset2.Format && *asset1.Asset == *asset2.Asset {
+				replacements, ok := mergeReplacements(overrides[0].Replacements, overrides[1].Replacements)
+				if ok {
+					overrides = []*registry.Override{
+						{
+							GOOS:         asset1.GOOS,
+							Format:       asset1.Format,
+							Replacements: replacements,
+							Asset:        asset1.Asset,
+						},
+					}
+				}
+			}
+		}
+		if len(overrides) == 1 {
+			overrides[0].GOArch = ""
+		}
+		pkgInfo.Overrides = append(pkgInfo.Overrides, overrides...)
+		pkgInfo.SupportedEnvs = append(pkgInfo.SupportedEnvs, supportedEnvs...)
+	}
 
-	osFormats := map[string]string{}
-	for _, goos := range []string{"windows", "darwin", "linux"} {
-		if f := ctrl.getOSFormat(assetInfos, goos); f != "" {
-			osFormats[goos] = f
+	darwinAmd64 := ctrl.getOSArch("darwin", "amd64", assetInfos)
+	darwinArm64 := ctrl.getOSArch("darwin", "arm64", assetInfos)
+	if darwinAmd64 != nil && darwinArm64 == nil {
+		pkgInfo.Rosetta2 = boolP(true)
+	}
+
+	if reflect.DeepEqual(pkgInfo.SupportedEnvs, []string{"linux", "darwin", "windows"}) {
+		pkgInfo.SupportedEnvs = nil
+	}
+	if reflect.DeepEqual(pkgInfo.SupportedEnvs, []string{"linux", "darwin", "windows/amd64"}) {
+		pkgInfo.SupportedEnvs = []string{"darwin", "linux", "amd64"}
+	}
+	if reflect.DeepEqual(pkgInfo.SupportedEnvs, []string{"linux/amd64", "darwin", "windows/amd64"}) {
+		pkgInfo.SupportedEnvs = []string{"darwin", "amd64"}
+	}
+
+	formatCounts := map[string]int{}
+	for _, override := range pkgInfo.Overrides {
+		formatCounts[override.Format]++
+	}
+	maxCnt := 0
+	for f, cnt := range formatCounts {
+		if cnt > maxCnt {
+			pkgInfo.Format = f
+			maxCnt = cnt
+			continue
+		}
+		if cnt == maxCnt && f != formatRaw {
+			pkgInfo.Format = f
+			maxCnt = cnt
+			continue
 		}
 	}
-	for _, f := range osFormats {
-		formats[f]++
+	assetCounts := map[string]int{}
+	for _, override := range pkgInfo.Overrides {
+		override := override
+		if override.Format != pkgInfo.Format {
+			continue
+		}
+		override.Format = ""
+		assetCounts[*override.Asset]++
 	}
-	maxFormatCnt := 0
-	if len(formats) > 1 {
-		for format, cnt := range formats {
-			if cnt > maxFormatCnt {
-				pkgInfo.Format = format
-				maxFormatCnt = cnt
+	maxCnt = 0
+	for asset, cnt := range assetCounts {
+		asset := asset
+		if cnt > maxCnt {
+			pkgInfo.Asset = &asset
+			maxCnt = cnt
+			continue
+		}
+	}
+	overrides := []*registry.Override{}
+	for _, override := range pkgInfo.Overrides {
+		override := override
+		if *override.Asset != *pkgInfo.Asset {
+			overrides = append(overrides, override)
+			continue
+		}
+		override.Asset = nil
+		if override.Format != "" || len(override.Replacements) != 0 {
+			overrides = append(overrides, override)
+		}
+	}
+	pkgInfo.Overrides = overrides
+
+	overrides = []*registry.Override{}
+	for _, override := range pkgInfo.Overrides {
+		override := override
+		if len(override.Replacements) == 0 {
+			overrides = append(overrides, override)
+			continue
+		}
+		if pkgInfo.Replacements == nil {
+			pkgInfo.Replacements = map[string]string{}
+		}
+		for k, v := range override.Replacements {
+			vp, ok := pkgInfo.Replacements[k]
+			if !ok {
+				pkgInfo.Replacements[k] = v
+				delete(override.Replacements, k)
 				continue
 			}
-			if cnt == maxFormatCnt && pkgInfo.Format == formatRaw {
-				pkgInfo.Format = format
-				maxFormatCnt = cnt
+			if v == vp {
+				delete(override.Replacements, k)
+				continue
 			}
+		}
+		if len(override.Replacements) != 0 || override.Format != "" || override.Asset != nil {
+			overrides = append(overrides, override)
 		}
 	}
-	for _, assetInfo := range assetInfos {
-		if len(assetInfo.Replacements) != 0 {
-			if pkgInfo.Replacements == nil {
-				pkgInfo.Replacements = map[string]string{}
-			}
-			for k, v := range assetInfo.Replacements {
-				if v == "pc-windows-gnu" && pkgInfo.Replacements["windows"] == "pc-windows-msvc" {
-					continue
-				}
-				if v == "unknown-linux-gnu" && pkgInfo.Replacements["linux"] == "unknown-linux-musl" {
-					continue
-				}
-				pkgInfo.Replacements[k] = v
-			}
-		}
-		if assetInfo.DarwinAll {
-			envs["darwin"] = struct{}{}
-			continue
-		}
-		if assetInfo.OS == "" || assetInfo.Arch == "" {
-			continue
-		}
-		envs[assetInfo.OS+"/"+assetInfo.Arch] = struct{}{}
-		if pkgInfo.Asset == nil && assetInfo.OS != "windows" {
-			if assetInfo.Format == "" || assetInfo.Format == formatRaw || len(formats) < 2 {
-				pkgInfo.Asset = strP(assetInfo.Template)
-			} else {
-				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{.Format}}", 1))
-			}
-		}
-		if assetInfo.OS == "linux" && assetInfo.Arch == "amd64" {
-			if assetInfo.Format == "" || assetInfo.Format == formatRaw || len(formats) < 2 {
-				pkgInfo.Asset = strP(assetInfo.Template)
-			} else {
-				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{.Format}}", 1))
-			}
-		}
-		if pkgInfo.Format != "" { //nolint:nestif
-			if pkgInfo.Format != assetInfo.Format {
-				included := false
-				for _, override := range pkgInfo.Overrides {
-					if override.GOOS == assetInfo.OS {
-						included = true
-						break
-					}
-				}
-				if !included {
-					if assetInfo.Format == "raw" || pkgInfo.Format == "raw" {
-						pkgInfo.Overrides = append(pkgInfo.Overrides, &registry.Override{
-							GOOS:   assetInfo.OS,
-							Format: assetInfo.Format,
-							Asset:  strP(assetInfo.Template),
-						})
-					} else {
-						pkgInfo.Overrides = append(pkgInfo.Overrides, &registry.Override{
-							GOOS:   assetInfo.OS,
-							Format: assetInfo.Format,
-						})
-					}
-				}
-			}
-		}
+	pkgInfo.Overrides = overrides
+	if len(pkgInfo.Overrides) == 0 && pkgInfo.Format != "" && pkgInfo.Format != formatRaw {
+		asset := strings.Replace(*pkgInfo.Asset, "{{.Format}}", pkgInfo.Format, 1)
+		pkgInfo.Asset = &asset
+		pkgInfo.Format = ""
 	}
-	ctrl.setSupportedEnvs(envs, pkgInfo)
 }
 
 const formatRaw = "raw"
 
-func (ctrl *Controller) parseAssetName(assetName, version string) *AssetInfo {
+func (ctrl *Controller) parseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 	assetInfo := &AssetInfo{
 		Template: strings.Replace(assetName, version, "{{.Version}}", 1),
 	}
@@ -306,7 +427,16 @@ func (ctrl *Controller) parseAssetName(assetName, version string) *AssetInfo {
 		if strings.Contains(lowAssetName, "_all") || strings.Contains(lowAssetName, "-all") || strings.Contains(lowAssetName, ".all") {
 			assetInfo.DarwinAll = true
 		}
+		if strings.Contains(lowAssetName, "_universal") || strings.Contains(lowAssetName, "-universal") || strings.Contains(lowAssetName, ".universal") {
+			assetInfo.DarwinAll = true
+		}
 	}
 	assetInfo.Format = ctrl.getFormat(assetName)
+	if assetInfo.Format != formatRaw {
+		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
+	}
+	if assetInfo.OS == "windows" && assetInfo.Format == formatRaw {
+		assetInfo.Template = strings.TrimSuffix(assetInfo.Template, ".exe")
+	}
 	return assetInfo
 }
