@@ -171,6 +171,7 @@ type Param struct {
 	RootDir               string
 	MaxParallelism        int
 	PWD                   string
+	HomeDir               string
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
