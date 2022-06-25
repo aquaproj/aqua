@@ -38,7 +38,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.ConfigFilePath = c.String("config")
 	param.OnlyLink = c.Bool("only-link")
 	param.IsTest = c.Bool("test")
-	if commandName == "scaffold-registry" {
+	if commandName == "generate-registry" {
 		param.InsertFile = c.String("i")
 	} else {
 		param.Insert = c.Bool("i")

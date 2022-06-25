@@ -9,23 +9,23 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const scaffoldDescription = `Scaffold a Registry's package configuration.
+const generateRegistryDescription = `Scaffold a Registry's package configuration.
 
-$ aqua scaffold cli/cli > registry.yaml
+$ aqua generate-registry cli/cli > registry.yaml
 
 You can also insert a package configuration into the existing configuration file with -i option.
 
-$ aqua scaffold -i registry.yaml cli/cli
+$ aqua generate-registry -i registry.yaml cli/cli
 `
 
 func (runner *Runner) newScaffoldCommand() *cli.Command {
 	return &cli.Command{
-		Name:        "scaffold-registry",
+		Name:        "generate-registry",
 		Aliases:     []string{"sr"},
 		Usage:       "Scaffold a registry's package configuration",
 		ArgsUsage:   `<package name>`,
-		Description: scaffoldDescription,
-		Action:      runner.scaffoldAction,
+		Description: generateRegistryDescription,
+		Action:      runner.generateRegistryAction,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "i",
@@ -35,7 +35,7 @@ func (runner *Runner) newScaffoldCommand() *cli.Command {
 	}
 }
 
-func (runner *Runner) scaffoldAction(c *cli.Context) error {
+func (runner *Runner) generateRegistryAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (runner *Runner) scaffoldAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "scaffold-registry", param); err != nil {
+	if err := runner.setParam(c, "generate-registry", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeScaffoldCommandController(c.Context, param, http.DefaultClient)

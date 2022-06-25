@@ -1,4 +1,4 @@
-package scaffold
+package genrgst
 
 import (
 	"context"

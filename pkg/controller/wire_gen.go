@@ -13,10 +13,10 @@ import (
 	"github.com/aquaproj/aqua/pkg/config-reader"
 	exec2 "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
+	"github.com/aquaproj/aqua/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
-	"github.com/aquaproj/aqua/pkg/controller/scaffold"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
@@ -44,10 +44,10 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	return controller
 }
 
-func InitializeScaffoldCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *scaffold.Controller {
+func InitializeScaffoldCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
 	fs := afero.NewOsFs()
 	repositoryService := github.New(ctx)
-	controller := scaffold.NewController(fs, repositoryService)
+	controller := genrgst.NewController(fs, repositoryService)
 	return controller
 }
 
