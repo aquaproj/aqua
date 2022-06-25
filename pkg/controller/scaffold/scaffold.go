@@ -75,7 +75,7 @@ func (ctrl *Controller) excludeAsset(assetName string) bool {
 		}
 	}
 	words := []string{
-		"readme", "license", "openbsd", "freebsd", "386", "i386", "armv6", "armv7", "32bit",
+		"readme", "license", "openbsd", "freebsd", "netbsd", "android", "386", "i386", "armv6", "armv7", "32bit",
 	}
 	for _, s := range words {
 		if strings.Contains(asset, s) {
@@ -292,8 +292,28 @@ func (ctrl *Controller) setSupportedEnvs(envs map[string]struct{}, pkgInfo *regi
 	}
 }
 
-func (ctrl *Controller) setOS(assetName, lowAssetName string, assetInfo *AssetInfo) {
+func (ctrl *Controller) setOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen
 	osList := []*OS{
+		{
+			Name: "apple-darwin",
+			OS:   "darwin",
+		},
+		{
+			Name: "unknown-linux-gnu",
+			OS:   "linux",
+		},
+		{
+			Name: "unknown-linux-musl",
+			OS:   "linux",
+		},
+		{
+			Name: "pc-windows-msvc",
+			OS:   "windows",
+		},
+		{
+			Name: "pc-windows-gnu",
+			OS:   "windows",
+		},
 		{
 			Name: "darwin",
 			OS:   "darwin",
