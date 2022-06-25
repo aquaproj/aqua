@@ -190,28 +190,14 @@ func (ctrl *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entr
 	return arr
 }
 
-func (ctrl *Controller) getOSFormat(assetInfos []*AssetInfo, goos string) string {
-	format := ""
-	for _, assetInfo := range assetInfos {
-		if assetInfo.OS != goos {
-			continue
-		}
-		if assetInfo.Format != "" && assetInfo.Format != formatRaw {
-			return assetInfo.Format
-		}
-		format = formatRaw
-	}
-	return format
-}
-
-func (ctrl *Controller) getOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo {
+func (ctrl *Controller) getOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
 		assetInfo := assetInfo
 		if (assetInfo.OS != goos || assetInfo.Arch != goarch) && !assetInfo.DarwinAll {
 			continue
 		}
-		if assetInfo.Format == "" || assetInfo.Format == formatRaw {
+		if assetInfo.Format == "" || assetInfo.Format == formatRaw { //nolint:nestif
 			if rawA == nil {
 				rawA = assetInfo
 				continue
