@@ -26,6 +26,12 @@ func (runner *Runner) newScaffoldCommand() *cli.Command {
 		ArgsUsage:   `<package name>`,
 		Description: scaffoldDescription,
 		Action:      runner.scaffoldAction,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "i",
+				Usage: "Insert a registry to configuration file",
+			},
+		},
 	}
 }
 
