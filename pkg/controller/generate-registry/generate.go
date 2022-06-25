@@ -227,14 +227,14 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 			if assetInfo.Format == "" || assetInfo.Format == formatRaw || len(formats) < 2 {
 				pkgInfo.Asset = strP(assetInfo.Template)
 			} else {
-				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{Format}}", 1))
+				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{.Format}}", 1))
 			}
 		}
 		if assetInfo.OS == "linux" && assetInfo.Arch == "amd64" {
 			if assetInfo.Format == "" || assetInfo.Format == formatRaw || len(formats) < 2 {
 				pkgInfo.Asset = strP(assetInfo.Template)
 			} else {
-				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{Format}}", 1))
+				pkgInfo.Asset = strP(strings.Replace(assetInfo.Template, "."+assetInfo.Format, ".{{.Format}}", 1))
 			}
 		}
 		if pkgInfo.Format != "" { //nolint:nestif
