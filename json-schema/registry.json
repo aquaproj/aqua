@@ -57,7 +57,6 @@
             "freebsd",
             "illumos",
             "ios",
-            "js",
             "linux",
             "netbsd",
             "openbsd",
@@ -93,7 +92,6 @@
             "freebsd",
             "illumos",
             "ios",
-            "js",
             "linux",
             "netbsd",
             "openbsd",
@@ -116,8 +114,7 @@
             "ppc64",
             "ppc64le",
             "riscv64",
-            "s390x",
-            "wasm"
+            "s390x"
           ]
         },
         "replacements": {
@@ -283,9 +280,6 @@
         "ios": {
           "type": "string"
         },
-        "js": {
-          "type": "string"
-        },
         "linux": {
           "type": "string"
         },
@@ -339,9 +333,6 @@
         },
         "s390x": {
           "type": "string"
-        },
-        "wasm": {
-          "type": "string"
         }
       },
       "type": "object"
@@ -357,7 +348,6 @@
           "freebsd",
           "illumos",
           "ios",
-          "js",
           "linux",
           "netbsd",
           "openbsd",
@@ -376,7 +366,6 @@
           "ppc64le",
           "riscv64",
           "s390x",
-          "wasm",
           "all",
           "aix/386",
           "aix/amd64",
@@ -390,7 +379,6 @@
           "aix/ppc64le",
           "aix/riscv64",
           "aix/s390x",
-          "aix/wasm",
           "android/386",
           "android/amd64",
           "android/arm",
@@ -403,7 +391,6 @@
           "android/ppc64le",
           "android/riscv64",
           "android/s390x",
-          "android/wasm",
           "darwin/386",
           "darwin/amd64",
           "darwin/arm",
@@ -416,7 +403,6 @@
           "darwin/ppc64le",
           "darwin/riscv64",
           "darwin/s390x",
-          "darwin/wasm",
           "dragonfly/386",
           "dragonfly/amd64",
           "dragonfly/arm",
@@ -429,7 +415,6 @@
           "dragonfly/ppc64le",
           "dragonfly/riscv64",
           "dragonfly/s390x",
-          "dragonfly/wasm",
           "freebsd/386",
           "freebsd/amd64",
           "freebsd/arm",
@@ -442,7 +427,6 @@
           "freebsd/ppc64le",
           "freebsd/riscv64",
           "freebsd/s390x",
-          "freebsd/wasm",
           "illumos/386",
           "illumos/amd64",
           "illumos/arm",
@@ -455,7 +439,6 @@
           "illumos/ppc64le",
           "illumos/riscv64",
           "illumos/s390x",
-          "illumos/wasm",
           "ios/386",
           "ios/amd64",
           "ios/arm",
@@ -468,20 +451,6 @@
           "ios/ppc64le",
           "ios/riscv64",
           "ios/s390x",
-          "ios/wasm",
-          "js/386",
-          "js/amd64",
-          "js/arm",
-          "js/arm64",
-          "js/mips",
-          "js/mips64",
-          "js/mips64le",
-          "js/mipsle",
-          "js/ppc64",
-          "js/ppc64le",
-          "js/riscv64",
-          "js/s390x",
-          "js/wasm",
           "linux/386",
           "linux/amd64",
           "linux/arm",
@@ -494,7 +463,6 @@
           "linux/ppc64le",
           "linux/riscv64",
           "linux/s390x",
-          "linux/wasm",
           "netbsd/386",
           "netbsd/amd64",
           "netbsd/arm",
@@ -507,7 +475,6 @@
           "netbsd/ppc64le",
           "netbsd/riscv64",
           "netbsd/s390x",
-          "netbsd/wasm",
           "openbsd/386",
           "openbsd/amd64",
           "openbsd/arm",
@@ -520,7 +487,6 @@
           "openbsd/ppc64le",
           "openbsd/riscv64",
           "openbsd/s390x",
-          "openbsd/wasm",
           "plan9/386",
           "plan9/amd64",
           "plan9/arm",
@@ -533,7 +499,6 @@
           "plan9/ppc64le",
           "plan9/riscv64",
           "plan9/s390x",
-          "plan9/wasm",
           "solaris/386",
           "solaris/amd64",
           "solaris/arm",
@@ -546,7 +511,6 @@
           "solaris/ppc64le",
           "solaris/riscv64",
           "solaris/s390x",
-          "solaris/wasm",
           "windows/386",
           "windows/amd64",
           "windows/arm",
@@ -558,8 +522,7 @@
           "windows/ppc64",
           "windows/ppc64le",
           "windows/riscv64",
-          "windows/s390x",
-          "windows/wasm"
+          "windows/s390x"
         ]
       },
       "type": "array"

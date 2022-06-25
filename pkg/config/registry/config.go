@@ -7,7 +7,7 @@ import (
 type PackageInfos []*PackageInfo
 
 type FormatOverride struct {
-	GOOS   string `yaml:",omitempty" json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=js,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
+	GOOS   string `yaml:",omitempty" json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
 	Format string `yaml:",omitempty" json:"format" jsonschema:"example=tar.gz,example=raw"`
 }
 
