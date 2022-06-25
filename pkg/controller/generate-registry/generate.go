@@ -408,7 +408,7 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 
 const formatRaw = "raw"
 
-func (ctrl *Controller) parseAssetName(assetName, version string) *AssetInfo {
+func (ctrl *Controller) parseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 	assetInfo := &AssetInfo{
 		Template: strings.Replace(assetName, version, "{{.Version}}", 1),
 	}
@@ -422,10 +422,16 @@ func (ctrl *Controller) parseAssetName(assetName, version string) *AssetInfo {
 		if strings.Contains(lowAssetName, "_all") || strings.Contains(lowAssetName, "-all") || strings.Contains(lowAssetName, ".all") {
 			assetInfo.DarwinAll = true
 		}
+		if strings.Contains(lowAssetName, "_universal") || strings.Contains(lowAssetName, "-universal") || strings.Contains(lowAssetName, ".universal") {
+			assetInfo.DarwinAll = true
+		}
 	}
 	assetInfo.Format = ctrl.getFormat(assetName)
 	if assetInfo.Format != formatRaw {
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
+	}
+	if assetInfo.OS == "windows" && assetInfo.Format == formatRaw {
+		assetInfo.Template = strings.TrimSuffix(assetInfo.Template, ".exe")
 	}
 	return assetInfo
 }
