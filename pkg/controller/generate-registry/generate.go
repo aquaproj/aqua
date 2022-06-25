@@ -31,19 +31,19 @@ func NewController(fs afero.Fs, gh github.RepositoryService) *Controller {
 	}
 }
 
-func (ctrl *Controller) Scaffold(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
+func (ctrl *Controller) GenerateRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
 	if len(args) == 0 {
 		return nil
 	}
 	for _, arg := range args {
-		if err := ctrl.scaffold(ctx, param, logE, arg); err != nil {
+		if err := ctrl.genRegistry(ctx, param, logE, arg); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) scaffold(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
+func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
 	pkgInfo := ctrl.getPackageInfo(ctx, logE, pkgName)
 	if param.InsertFile == "" {
 		cfg := &registry.Config{

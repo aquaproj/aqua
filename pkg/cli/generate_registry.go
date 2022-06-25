@@ -18,7 +18,7 @@ You can also insert a package configuration into the existing configuration file
 $ aqua gr -i registry.yaml cli/cli
 `
 
-func (runner *Runner) newScaffoldCommand() *cli.Command {
+func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
 	return &cli.Command{
 		Name:        "generate-registry",
 		Aliases:     []string{"gr"},
@@ -52,6 +52,6 @@ func (runner *Runner) generateRegistryAction(c *cli.Context) error {
 	if err := runner.setParam(c, "generate-registry", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeScaffoldCommandController(c.Context, param, http.DefaultClient)
-	return ctrl.Scaffold(c.Context, param, runner.LogE, c.Args().Slice()...) //nolint:wrapcheck
+	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient)
+	return ctrl.GenerateRegistry(c.Context, param, runner.LogE, c.Args().Slice()...) //nolint:wrapcheck
 }

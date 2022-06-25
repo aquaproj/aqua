@@ -34,7 +34,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	return &list.Controller{}
 }
 
-func InitializeScaffoldCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
 	wire.Build(genrgst.NewController, github.New, afero.NewOsFs)
 	return &genrgst.Controller{}
 }

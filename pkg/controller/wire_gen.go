@@ -44,7 +44,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	return controller
 }
 
-func InitializeScaffoldCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
 	fs := afero.NewOsFs()
 	repositoryService := github.New(ctx)
 	controller := genrgst.NewController(fs, repositoryService)
