@@ -32,7 +32,8 @@
           "description": "Registry name",
           "default": "standard",
           "examples": [
-            "foo"
+            "foo",
+            "local"
           ]
         },
         "version": {

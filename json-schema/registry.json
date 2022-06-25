@@ -69,7 +69,8 @@
           "type": "string",
           "examples": [
             "tar.gz",
-            "raw"
+            "raw",
+            "zip"
           ]
         }
       },
@@ -124,7 +125,8 @@
           "type": "string",
           "examples": [
             "tar.gz",
-            "raw"
+            "raw",
+            "zip"
           ]
         },
         "asset": {
@@ -181,7 +183,8 @@
           "type": "string",
           "examples": [
             "tar.gz",
-            "raw"
+            "raw",
+            "zip"
           ]
         },
         "files": {
@@ -242,7 +245,10 @@
           "type": "array"
         },
         "version_source": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "github_tag"
+          ]
         },
         "complete_windows_ext": {
           "type": "boolean"
@@ -554,7 +560,8 @@
           "type": "string",
           "examples": [
             "tar.gz",
-            "raw"
+            "raw",
+            "zip"
           ]
         },
         "files": {

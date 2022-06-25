@@ -24,7 +24,7 @@ type PackageInfo struct {
 	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
 	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
-	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw" yaml:",omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
 	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
 	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
@@ -39,7 +39,7 @@ type PackageInfo struct {
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
-	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty"`
+	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 }
@@ -189,7 +189,7 @@ type VersionOverride struct {
 	RepoName           string            `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string           `yaml:",omitempty" json:"asset,omitempty"`
 	Path               *string           `yaml:",omitempty" json:"path,omitempty"`
-	Format             string            `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Format             string            `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Files              []*File           `yaml:",omitempty" json:"files,omitempty"`
 	URL                *string           `yaml:",omitempty" json:"url,omitempty"`
 	Replacements       Replacements      `yaml:",omitempty" json:"replacements,omitempty"`
