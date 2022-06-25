@@ -183,18 +183,42 @@ func (ctrl *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entr
 	return arr
 }
 
+func (ctrl *Controller) getOSFormat(assetInfos []*AssetInfo, goos string) string {
+	format := ""
+	for _, assetInfo := range assetInfos {
+		if assetInfo.OS != goos {
+			continue
+		}
+		if assetInfo.Format != "" && assetInfo.Format != formatRaw {
+			return assetInfo.Format
+		}
+		format = formatRaw
+	}
+	return format
+}
+
 func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop,gocyclo
 	envs := map[string]struct{}{}
 	formats := map[string]int{}
-	for _, assetInfo := range assetInfos {
-		if assetInfo.Format != "" {
-			formats[assetInfo.Format]++
+
+	osFormats := map[string]string{}
+	for _, goos := range []string{"windows", "darwin", "linux"} {
+		if f := ctrl.getOSFormat(assetInfos, goos); f != "" {
+			osFormats[goos] = f
 		}
+	}
+	for _, f := range osFormats {
+		formats[f]++
 	}
 	maxFormatCnt := 0
 	if len(formats) > 1 {
 		for format, cnt := range formats {
 			if cnt > maxFormatCnt {
+				pkgInfo.Format = format
+				maxFormatCnt = cnt
+				continue
+			}
+			if cnt == maxFormatCnt && pkgInfo.Format == formatRaw {
 				pkgInfo.Format = format
 				maxFormatCnt = cnt
 			}
@@ -247,10 +271,18 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 					}
 				}
 				if !included {
-					pkgInfo.Overrides = append(pkgInfo.Overrides, &registry.Override{
-						GOOS:   assetInfo.OS,
-						Format: assetInfo.Format,
-					})
+					if assetInfo.Format == "raw" || pkgInfo.Format == "raw" {
+						pkgInfo.Overrides = append(pkgInfo.Overrides, &registry.Override{
+							GOOS:   assetInfo.OS,
+							Format: assetInfo.Format,
+							Asset:  strP(assetInfo.Template),
+						})
+					} else {
+						pkgInfo.Overrides = append(pkgInfo.Overrides, &registry.Override{
+							GOOS:   assetInfo.OS,
+							Format: assetInfo.Format,
+						})
+					}
 				}
 			}
 		}
