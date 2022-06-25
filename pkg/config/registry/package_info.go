@@ -35,7 +35,7 @@ type PackageInfo struct {
 	VersionConstraints string             `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides" json:"version_overrides,omitempty"`
 	SupportedIf        *string            `yaml:"supported_if" json:"supported_if,omitempty"`
-	SupportedEnvs      []string           `yaml:"supported_envs" json:"supported_envs,omitempty"`
+	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter" json:"version_filter,omitempty"`
 	Rosetta2           *bool              `json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `json:"aliases,omitempty"`
@@ -196,7 +196,7 @@ type VersionOverride struct {
 	Overrides          []*Override       `json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride `yaml:"format_overrides" json:"format_overrides,omitempty"`
 	SupportedIf        *string           `yaml:"supported_if" json:"supported_if,omitempty"`
-	SupportedEnvs      []string          `yaml:"supported_envs" json:"supported_envs,omitempty"`
+	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter" json:"version_filter,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
@@ -224,6 +224,31 @@ func (Replacements) JSONSchema() *jsonschema.Schema {
 		Type:                 "object",
 		AdditionalProperties: jsonschema.TrueSchema,
 		Properties:           Map,
+	}
+}
+
+type SupportedEnvs []string
+
+func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
+	os := []string{"aix", "android", "darwin", "dragonfly", "freebsd", "illumos", "ios", "js", "linux", "netbsd", "openbsd", "plan9", "solaris", "windows"}
+	arch := []string{"386", "amd64", "arm", "arm64", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm"}
+	envs := append(os, arch...)
+	envs = append(envs, "all")
+	for _, osValue := range os {
+		for _, archValue := range arch {
+			envs = append(envs, osValue+"/"+archValue)
+		}
+	}
+	s := make([]interface{}, len(envs))
+	for index, value := range envs {
+		s[index] = value
+	}
+	return &jsonschema.Schema{
+		Type: "array",
+		Items: &jsonschema.Schema{
+			Type: "string",
+			Enum: s,
+		},
 	}
 }
 
