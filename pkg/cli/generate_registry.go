@@ -22,7 +22,7 @@ packages:
   - type: github_release
     repo_owner: cli
     repo_name: cli
-    asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{Format}}
+    asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
     format: tar.gz
     description: GitHub’s official command line tool
     replacements:
