@@ -7,14 +7,14 @@ import (
 type PackageInfos []*PackageInfo
 
 type FormatOverride struct {
-	GOOS   string `json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=js,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
-	Format string `yaml:"format" json:"format" jsonschema:"example=tar.gz,example=raw"`
+	GOOS   string `yaml:",omitempty" json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=js,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
+	Format string `yaml:",omitempty" json:"format" jsonschema:"example=tar.gz,example=raw"`
 }
 
 type File struct {
-	Name string `validate:"required" json:"name,omitempty"`
-	Src  string `json:"src,omitempty"`
-	Dir  string `json:"dir,omitempty"`
+	Name string `validate:"required" json:"name,omitempty" yaml:",omitempty"`
+	Src  string `json:"src,omitempty" yaml:",omitempty"`
+	Dir  string `json:"dir,omitempty" yaml:",omitempty"`
 }
 
 func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {

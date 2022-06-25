@@ -18,30 +18,30 @@ const (
 )
 
 type PackageInfo struct {
-	Name               string             `json:"name,omitempty"`
+	Name               string             `json:"name,omitempty" yaml:",omitempty"`
 	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
-	RepoOwner          string             `yaml:"repo_owner" json:"repo_owner,omitempty"`
-	RepoName           string             `yaml:"repo_name" json:"repo_name,omitempty"`
-	Asset              *string            `json:"asset,omitempty"`
-	Path               *string            `json:"path,omitempty"`
-	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
-	Files              []*File            `json:"files,omitempty"`
-	URL                *string            `json:"url,omitempty"`
-	Description        string             `json:"description,omitempty"`
-	Link               string             `json:"link,omitempty"`
-	Replacements       Replacements       `json:"replacements,omitempty"`
-	Overrides          []*Override        `json:"overrides,omitempty"`
-	FormatOverrides    []*FormatOverride  `yaml:"format_overrides" json:"format_overrides,omitempty"`
-	VersionConstraints string             `yaml:"version_constraint" json:"version_constraint,omitempty"`
-	VersionOverrides   []*VersionOverride `yaml:"version_overrides" json:"version_overrides,omitempty"`
-	SupportedIf        *string            `yaml:"supported_if" json:"supported_if,omitempty"`
-	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs" json:"supported_envs,omitempty"`
-	VersionFilter      *string            `yaml:"version_filter" json:"version_filter,omitempty"`
-	Rosetta2           *bool              `json:"rosetta2,omitempty"`
-	Aliases            []*Alias           `json:"aliases,omitempty"`
-	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source"`
-	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext"`
-	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext"`
+	RepoOwner          string             `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
+	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw" yaml:",omitempty"`
+	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
+	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
+	Description        string             `json:"description,omitempty" yaml:",omitempty"`
+	Link               string             `json:"link,omitempty" yaml:",omitempty"`
+	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
+	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
+	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
+	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
+	SupportedEnvs      []string           `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
+	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
+	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty"`
+	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) copy() *PackageInfo {
@@ -184,25 +184,25 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 }
 
 type VersionOverride struct {
-	Type               string            `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
-	RepoOwner          string            `yaml:"repo_owner" json:"repo_owner,omitempty"`
-	RepoName           string            `yaml:"repo_name" json:"repo_name,omitempty"`
-	Asset              *string           `json:"asset,omitempty"`
-	Path               *string           `json:"path,omitempty"`
-	Format             string            `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
-	Files              []*File           `json:"files,omitempty"`
-	URL                *string           `json:"url,omitempty"`
-	Replacements       Replacements      `json:"replacements,omitempty"`
-	Overrides          []*Override       `json:"overrides,omitempty"`
-	FormatOverrides    []*FormatOverride `yaml:"format_overrides" json:"format_overrides,omitempty"`
-	SupportedIf        *string           `yaml:"supported_if" json:"supported_if,omitempty"`
-	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs" json:"supported_envs,omitempty"`
-	VersionConstraints string            `yaml:"version_constraint" json:"version_constraint,omitempty"`
-	VersionFilter      *string           `yaml:"version_filter" json:"version_filter,omitempty"`
+	Type               string            `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	RepoOwner          string            `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName           string            `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Asset              *string           `yaml:",omitempty" json:"asset,omitempty"`
+	Path               *string           `yaml:",omitempty" json:"path,omitempty"`
+	Format             string            `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Files              []*File           `yaml:",omitempty" json:"files,omitempty"`
+	URL                *string           `yaml:",omitempty" json:"url,omitempty"`
+	Replacements       Replacements      `yaml:",omitempty" json:"replacements,omitempty"`
+	Overrides          []*Override       `yaml:",omitempty" json:"overrides,omitempty"`
+	FormatOverrides    []*FormatOverride `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
+	SupportedIf        *string           `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
+	SupportedEnvs      []string          `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
-	Rosetta2           *bool             `json:"rosetta2,omitempty"`
-	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext"`
-	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext"`
+	Rosetta2           *bool             `yaml:",omitempty" json:"rosetta2,omitempty"`
+	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 }
 
 type Alias struct {

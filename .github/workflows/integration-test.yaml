@@ -68,6 +68,11 @@ jobs:
     - run: git diff aqua.yaml
       working-directory: tests
 
+    - name: "Test generate-registry"
+      run: aqua gr cli/cli
+    - name: "Test generate-registry (rust)"
+      run: aqua gr XAMPPRocky/tokei
+
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
       working-directory: tests
@@ -132,6 +137,11 @@ jobs:
     - run: git diff aqua.yaml
       working-directory: tests
 
+    - name: "Test generate-registry"
+      run: aqua gr cli/cli
+    - name: "Test generate-registry (rust)"
+      run: aqua gr XAMPPRocky/tokei
+
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
       working-directory: tests
@@ -190,6 +200,11 @@ jobs:
       working-directory: tests
     - run: git diff aqua.yaml
       working-directory: tests
+
+    - name: "Test generate-registry"
+      run: aqua gr cli/cli
+    - name: "Test generate-registry (rust)"
+      run: aqua gr XAMPPRocky/tokei
 
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
