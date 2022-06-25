@@ -58,7 +58,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				RepoName:    "cli",
 				Type:        "github_release",
 				Description: "GitHub’s official command line tool",
-				Asset:       strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{Format}}"),
+				Asset:       strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 				Format:      "tar.gz",
 				Replacements: map[string]string{
 					"darwin": "macOS",
