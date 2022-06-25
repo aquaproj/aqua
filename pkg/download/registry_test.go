@@ -67,9 +67,11 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 			ref:       "v2.16.0",
 			path:      "registry.yaml",
 			exp:       "foo",
-			github: githubSvc.NewMock(nil, &github.RepositoryContent{
-				Content: stringP("foo"),
-			}, "", nil),
+			github: &githubSvc.MockRepositoryService{
+				Content: &github.RepositoryContent{
+					Content: stringP("foo"),
+				},
+			},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{

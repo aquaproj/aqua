@@ -233,7 +233,9 @@ packages:
 				}
 			}
 			configFinder := finder.NewConfigFinder(fs)
-			gh := githubSvc.NewMock(d.releases, nil, "", nil)
+			gh := &githubSvc.MockRepositoryService{
+				Releases: d.releases,
+			}
 			downloader := download.NewRegistryDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs)
 			configReader := reader.New(fs)

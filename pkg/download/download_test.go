@@ -62,7 +62,9 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "ci-info-2.0.3_linux_amd64.tar.gz",
 			exp:       "foo",
-			github:    githubSvc.NewMock(nil, nil, "foo", nil),
+			github: &githubSvc.MockRepositoryService{
+				Asset: "foo",
+			},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
@@ -112,16 +114,19 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "ci-info-2.0.3_linux_amd64.tar.gz",
 			exp:       "foo",
-			github: githubSvc.NewMock([]*github.RepositoryRelease{
-				{
-					Assets: []*github.ReleaseAsset{
-						{
-							Name: stringP("ci-info-2.0.3_linux_amd64.tar.gz"),
-							ID:   int64P(5),
+			github: &githubSvc.MockRepositoryService{
+				Releases: []*github.RepositoryRelease{
+					{
+						Assets: []*github.ReleaseAsset{
+							{
+								Name: stringP("ci-info-2.0.3_linux_amd64.tar.gz"),
+								ID:   int64P(5),
+							},
 						},
 					},
 				},
-			}, nil, "foo", nil),
+				Asset: "foo",
+			},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
@@ -171,7 +176,9 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "aqua-installer",
 			exp:       "foo",
-			github:    githubSvc.NewMock(nil, nil, "foo", nil),
+			github: &githubSvc.MockRepositoryService{
+				Asset: "foo",
+			},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
@@ -221,9 +228,12 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "aqua-installer",
 			exp:       "github-content",
-			github: githubSvc.NewMock(nil, &github.RepositoryContent{
-				Content: stringP("github-content"),
-			}, "foo", nil),
+			github: &githubSvc.MockRepositoryService{
+				Content: &github.RepositoryContent{
+					Content: stringP("github-content"),
+				},
+				Asset: "foo",
+			},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
@@ -270,8 +280,10 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 					RepoName:  "tfenv",
 				},
 			},
-			exp:    "foo",
-			github: githubSvc.NewMock(nil, nil, "foo", nil),
+			exp: "foo",
+			github: &githubSvc.MockRepositoryService{
+				Asset: "foo",
+			},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{

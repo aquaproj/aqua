@@ -6,8 +6,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	"github.com/google/go-github/v44/github"
+	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -66,7 +65,9 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			gh := githubSvc.NewMock(d.releases, nil, "", nil)
+			gh := &github.MockRepositoryService{
+				Releases: d.releases,
+			}
 			ctrl := initcmd.New(gh, fs)
 			if err := ctrl.Init(ctx, "", logE); err != nil {
 				if d.isErr {

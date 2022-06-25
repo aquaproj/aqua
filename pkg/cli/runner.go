@@ -31,14 +31,18 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, param *config.Param) error {
+func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error {
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
 	param.ConfigFilePath = c.String("config")
 	param.OnlyLink = c.Bool("only-link")
 	param.IsTest = c.Bool("test")
-	param.Insert = c.Bool("i")
+	if commandName == "generate-registry" {
+		param.InsertFile = c.String("i")
+	} else {
+		param.Insert = c.Bool("i")
+	}
 	param.All = c.Bool("all")
 	param.File = c.String("f")
 	param.AQUAVersion = runner.LDFlags.Version
@@ -89,12 +93,13 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		},
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
-			runner.newInstallCommand(),
-			runner.newExecCommand(),
 			runner.newInitCommand(),
-			runner.newListCommand(),
-			runner.newWhichCommand(),
+			runner.newInstallCommand(),
 			runner.newGenerateCommand(),
+			runner.newWhichCommand(),
+			runner.newExecCommand(),
+			runner.newListCommand(),
+			runner.newGenerateRegistryCommand(),
 			runner.newCompletionCommand(),
 			runner.newVersionCommand(),
 		},

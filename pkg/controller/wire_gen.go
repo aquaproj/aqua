@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config-reader"
 	exec2 "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
+	"github.com/aquaproj/aqua/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
@@ -40,6 +41,13 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	registryDownloader := download.NewRegistryDownloader(repositoryService, httpDownloader)
 	installer := registry.New(param, registryDownloader, fs)
 	controller := list.NewController(configFinder, configReader, installer)
+	return controller
+}
+
+func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
+	fs := afero.NewOsFs()
+	repositoryService := github.New(ctx)
+	controller := genrgst.NewController(fs, repositoryService)
 	return controller
 }
 
