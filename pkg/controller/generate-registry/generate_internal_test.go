@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestController_getPackageInfo(t *testing.T) {
+func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string
