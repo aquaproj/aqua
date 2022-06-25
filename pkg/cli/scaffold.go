@@ -20,7 +20,8 @@ $ aqua scaffold -i registry.yaml cli/cli
 
 func (runner *Runner) newScaffoldCommand() *cli.Command {
 	return &cli.Command{
-		Name:        "scaffold",
+		Name:        "scaffold-registry",
+		Aliases:     []string{"sr"},
 		Usage:       "Scaffold a registry's package configuration",
 		ArgsUsage:   `<package name>`,
 		Description: scaffoldDescription,
@@ -42,7 +43,7 @@ func (runner *Runner) scaffoldAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, param); err != nil {
+	if err := runner.setParam(c, "scaffold-registry", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeScaffoldCommandController(c.Context, param, http.DefaultClient)

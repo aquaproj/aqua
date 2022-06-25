@@ -31,15 +31,18 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, param *config.Param) error {
+func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error {
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
 	param.ConfigFilePath = c.String("config")
 	param.OnlyLink = c.Bool("only-link")
 	param.IsTest = c.Bool("test")
-	param.Insert = c.Bool("i")
-	param.InsertFile = c.String("o")
+	if commandName == "scaffold-registry" {
+		param.InsertFile = c.String("i")
+	} else {
+		param.Insert = c.Bool("i")
+	}
 	param.All = c.Bool("all")
 	param.File = c.String("f")
 	param.AQUAVersion = runner.LDFlags.Version

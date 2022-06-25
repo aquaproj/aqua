@@ -115,7 +115,7 @@ func (runner *Runner) generateAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, param); err != nil {
+	if err := runner.setParam(c, "generate", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient)

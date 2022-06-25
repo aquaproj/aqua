@@ -50,7 +50,7 @@ func (runner *Runner) execAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, param); err != nil {
+	if err := runner.setParam(c, "exec", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, runner.Runtime)

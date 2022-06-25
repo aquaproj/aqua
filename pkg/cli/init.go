@@ -35,7 +35,7 @@ func (runner *Runner) initAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, param); err != nil {
+	if err := runner.setParam(c, "init", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(c.Context, param)

@@ -48,7 +48,7 @@ func (runner *Runner) whichAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, param); err != nil {
+	if err := runner.setParam(c, "which", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
