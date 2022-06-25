@@ -64,7 +64,7 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 
 func (ctrl *Controller) excludeAsset(assetName string) bool {
 	suffixes := []string{
-		"txt", "msi", "deb", "rpm", "md", "sig", "pem", "sbom", "apk", "dmg",
+		"txt", "msi", "deb", "rpm", "md", "sig", "pem", "sbom", "apk", "dmg", "sha256",
 	}
 	asset := strings.ToLower(assetName)
 	for _, s := range suffixes {
