@@ -35,7 +35,7 @@ type PackageInfo struct {
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
-	SupportedEnvs      []string           `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
@@ -196,7 +196,7 @@ type VersionOverride struct {
 	Overrides          []*Override       `yaml:",omitempty" json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	SupportedIf        *string           `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
-	SupportedEnvs      []string          `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
@@ -213,24 +213,22 @@ type Replacements map[string]string
 
 func (Replacements) JSONSchema() *jsonschema.Schema {
 	Map := orderedmap.New()
-	os := []string{"aix", "android", "darwin", "dragonfly", "freebsd", "illumos", "ios", "js", "linux", "netbsd", "openbsd", "plan9", "solaris", "windows"}
-	arch := []string{"386", "amd64", "arm", "arm64", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm"}
+	os, arch := runtime.GOOSList[:], runtime.GOARCHList[:]
 	for _, value := range append(os, arch...) {
 		Map.Set(value, &jsonschema.Schema{
 			Type: "string",
 		})
 	}
 	return &jsonschema.Schema{
-		Type:                 "object",
-		Properties:           Map,
+		Type:       "object",
+		Properties: Map,
 	}
 }
 
 type SupportedEnvs []string
 
 func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
-	os := []string{"aix", "android", "darwin", "dragonfly", "freebsd", "illumos", "ios", "js", "linux", "netbsd", "openbsd", "plan9", "solaris", "windows"}
-	arch := []string{"386", "amd64", "arm", "arm64", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm"}
+	os, arch := runtime.GOOSList[:], runtime.GOARCHList[:]
 	envs := append(os, arch...)
 	envs = append(envs, "all")
 	for _, osValue := range os {
