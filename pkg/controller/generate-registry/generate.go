@@ -183,7 +183,7 @@ func (ctrl *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entr
 	return arr
 }
 
-func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop
+func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop,gocyclo
 	envs := map[string]struct{}{}
 	formats := map[string]int{}
 	for _, assetInfo := range assetInfos {
@@ -206,6 +206,12 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 				pkgInfo.Replacements = map[string]string{}
 			}
 			for k, v := range assetInfo.Replacements {
+				if v == "pc-windows-gnu" && pkgInfo.Replacements["windows"] == "pc-windows-msvc" {
+					continue
+				}
+				if v == "unknown-linux-gnu" && pkgInfo.Replacements["linux"] == "unknown-linux-musl" {
+					continue
+				}
 				pkgInfo.Replacements[k] = v
 			}
 		}
