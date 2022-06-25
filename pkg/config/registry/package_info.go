@@ -222,7 +222,6 @@ func (Replacements) JSONSchema() *jsonschema.Schema {
 	}
 	return &jsonschema.Schema{
 		Type:                 "object",
-		AdditionalProperties: jsonschema.TrueSchema,
 		Properties:           Map,
 	}
 }
