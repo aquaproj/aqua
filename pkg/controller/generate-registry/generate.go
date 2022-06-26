@@ -64,7 +64,7 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 	return nil
 }
 
-func (ctrl *Controller) excludeAsset(assetName string) bool {
+func (ctrl *Controller) excludeAsset(pkgName, assetName string) bool {
 	format := ctrl.getFormat(assetName)
 	allowedExts := map[string]struct{}{
 		".exe": {},
@@ -96,7 +96,7 @@ func (ctrl *Controller) excludeAsset(assetName string) bool {
 		"checksum",
 	}
 	for _, s := range words {
-		if strings.Contains(asset, s) {
+		if strings.Contains(asset, s) && !strings.Contains(pkgName, s) {
 			return true
 		}
 	}
@@ -134,7 +134,7 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 				assetInfos := make([]*AssetInfo, 0, len(assets))
 				for _, asset := range assets {
 					assetName := asset.GetName()
-					if ctrl.excludeAsset(assetName) {
+					if ctrl.excludeAsset(pkgName, assetName) {
 						logE.WithField("asset_name", assetName).Debug("exclude an asset")
 						continue
 					}
