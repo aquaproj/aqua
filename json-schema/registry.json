@@ -347,6 +347,7 @@
       "items": {
         "type": "string",
         "enum": [
+          "all",
           "aix",
           "android",
           "darwin",
@@ -372,7 +373,6 @@
           "ppc64le",
           "riscv64",
           "s390x",
-          "all",
           "aix/386",
           "aix/amd64",
           "aix/arm",

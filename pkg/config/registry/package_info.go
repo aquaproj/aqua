@@ -213,8 +213,7 @@ type Replacements map[string]string
 
 func (Replacements) JSONSchema() *jsonschema.Schema {
 	Map := orderedmap.New()
-	os, arch := runtime.GOOSList[:], runtime.GOARCHList[:]
-	for _, value := range append(os, arch...) {
+	for _, value := range append(runtime.GOOSList(), runtime.GOARCHList()...) {
 		Map.Set(value, &jsonschema.Schema{
 			Type: "string",
 		})
@@ -228,17 +227,18 @@ func (Replacements) JSONSchema() *jsonschema.Schema {
 type SupportedEnvs []string
 
 func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
-	os, arch := runtime.GOOSList[:], runtime.GOARCHList[:]
-	envs := append(os, arch...)
-	envs = append(envs, "all")
-	for _, osValue := range os {
-		for _, archValue := range arch {
+	osList := runtime.GOOSList()
+	archList := runtime.GOARCHList()
+	envs := make([]string, 0, len(osList)*len(archList)+len(osList)+len(archList)+1)
+	envs = append(append(append(envs, "all"), osList...), archList...)
+	for _, osValue := range runtime.GOOSList() {
+		for _, archValue := range runtime.GOARCHList() {
 			envs = append(envs, osValue+"/"+archValue)
 		}
 	}
 	s := make([]interface{}, len(envs))
-	for index, value := range envs {
-		s[index] = value
+	for i, value := range envs {
+		s[i] = value
 	}
 	return &jsonschema.Schema{
 		Type: "array",
