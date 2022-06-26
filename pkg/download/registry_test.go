@@ -30,7 +30,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 		{
 			name:      "github_content http",
 			repoOwner: "clivm",
-			repoName:  "aqua-registry",
+			repoName:  "clivm-registry",
 			ref:       "v2.16.0",
 			path:      "registry.yaml",
 			exp:       "foo",
@@ -63,7 +63,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 		{
 			name:      "github_content github api",
 			repoOwner: "clivm",
-			repoName:  "aqua-registry",
+			repoName:  "clivm-registry",
 			ref:       "v2.16.0",
 			path:      "registry.yaml",
 			exp:       "foo",

@@ -24,7 +24,7 @@ func (runner *Runner) newExecCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "exec",
 		Usage: "Execute tool",
-		Description: `Basically you don't have to use this command, because this is used by aqua internally. aqua-proxy invokes this command.
+		Description: `Basically you don't have to use this command, because this is used by aqua internally. clivm-proxy invokes this command.
 When you execute the command installed by aqua, "aqua exec" is executed internally.
 
 e.g.

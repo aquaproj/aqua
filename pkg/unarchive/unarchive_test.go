@@ -80,7 +80,7 @@ func TestUnarchive(t *testing.T) {
 		{
 			title: "raw",
 			src: &unarchive.File{
-				Filename: "aqua-installer",
+				Filename: "clivm-installer",
 			},
 			body: `foo`,
 		},

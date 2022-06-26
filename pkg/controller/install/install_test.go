@@ -54,17 +54,17 @@ packages:
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
-				"/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/aqua-installer/aqua-installer":                                              ``,
-				fmt.Sprintf("/home/foo/.local/share/clivm/pkgs/github_release/github.com/clivm/clivm-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): ``,
-				"/home/foo/.local/share/clivm/bin/aqua-installer": ``,
-				"/home/foo/.local/share/clivm/bin/aqua-proxy":     ``,
+				"/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/clivm-installer/clivm-installer":                                              ``,
+				fmt.Sprintf("/home/foo/.local/share/clivm/pkgs/github_release/github.com/clivm/clivm-proxy/%s/clivm-proxy_linux_amd64.tar.gz/clivm-proxy", installpackage.ProxyVersion): ``,
+				"/home/foo/.local/share/clivm/bin/clivm-installer": ``,
+				"/home/foo/.local/share/clivm/bin/clivm-proxy":     ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/clivm/bin/aqua-installer",
-				fmt.Sprintf("../pkgs/github_release/github.com/clivm/clivm-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/clivm/bin/aqua-proxy",
+				"clivm-proxy": "/home/foo/.local/share/clivm/bin/clivm-installer",
+				fmt.Sprintf("../pkgs/github_release/github.com/clivm/clivm-proxy/%s/clivm-proxy_linux_amd64.tar.gz/clivm-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/clivm/bin/clivm-proxy",
 			},
 		},
 	}

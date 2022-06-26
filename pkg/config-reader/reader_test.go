@@ -38,7 +38,7 @@ packages:`,
 						Name:      "standard",
 						Ref:       "v2.5.0",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 					},
 				},
@@ -53,9 +53,9 @@ packages:`,
   ref: v2.5.0
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
-- import: aqua-installer.yaml
+- import: clivm-installer.yaml
 `,
-				"aqua-installer.yaml": `packages:
+				"clivm-installer.yaml": `packages:
 - name: clivm/clivm-installer@v1.0.0
 `,
 			},
@@ -67,7 +67,7 @@ packages:
 						Name:      "standard",
 						Ref:       "v2.5.0",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 					},
 				},

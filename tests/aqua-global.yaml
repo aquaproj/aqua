@@ -6,11 +6,11 @@ registries:
   type: local
   path: registry.yaml
 
-- name: aqua-registry
+- name: clivm-registry
   type: github_content # github_content registry
   ref: v3.3.0 # renovate: depName=clivm/clivm-registry
   repo_owner: clivm
-  repo_name: aqua-registry
+  repo_name: clivm-registry
   path: registry.yaml
 
 packages:
@@ -29,10 +29,10 @@ packages:
 
 - name: restic/restic@v0.13.1
   # decompressor, package name with version
-  registry: aqua-registry # github content registry
+  registry: clivm-registry # github content registry
 
 - name: golang-migrate/migrate # version_constraint
-  registry: aqua-registry # github content registry
+  registry: clivm-registry # github content registry
   version: v4.14.1
 
 - name: golang-migrate/migrate # version_constraint, omit "registry"

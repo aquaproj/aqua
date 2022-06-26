@@ -20,7 +20,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-const proxyName = "aqua-proxy"
+const proxyName = "clivm-proxy"
 
 type installer struct {
 	rootDir           string

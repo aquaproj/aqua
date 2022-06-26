@@ -170,11 +170,11 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
 					RepoOwner: "clivm",
-					RepoName:  "aqua-installer",
-					Path:      stringP("aqua-installer"),
+					RepoName:  "clivm-installer",
+					Path:      stringP("clivm-installer"),
 				},
 			},
-			assetName: "aqua-installer",
+			assetName: "clivm-installer",
 			exp:       "foo",
 			github: &githubSvc.MockRepositoryService{
 				Asset: "foo",
@@ -189,7 +189,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 									Name: "download an asset",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/clivm/clivm-installer/v1.1.0/aqua-installer",
+										Path:   "/clivm/clivm-installer/v1.1.0/clivm-installer",
 									},
 									Response: &flute.Response{
 										Base: http.Response{
@@ -222,11 +222,11 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
 					RepoOwner: "clivm",
-					RepoName:  "aqua-installer",
-					Path:      stringP("aqua-installer"),
+					RepoName:  "clivm-installer",
+					Path:      stringP("clivm-installer"),
 				},
 			},
-			assetName: "aqua-installer",
+			assetName: "clivm-installer",
 			exp:       "github-content",
 			github: &githubSvc.MockRepositoryService{
 				Content: &github.RepositoryContent{
@@ -244,7 +244,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 									Name: "download an asset",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/clivm/clivm-installer/v1.1.0/aqua-installer",
+										Path:   "/clivm/clivm-installer/v1.1.0/clivm-installer",
 									},
 									Response: &flute.Response{
 										Base: http.Response{

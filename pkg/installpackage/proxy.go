@@ -17,7 +17,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	if isWindows(inst.runtime.GOOS) {
 		return nil
 	}
-	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
+	proxyAssetTemplate := `clivm-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    proxyName,
@@ -51,7 +51,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	logE.Debug("check if aqua-proxy is already installed")
+	logE.Debug("check if clivm-proxy is already installed")
 	finfo, err := inst.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist

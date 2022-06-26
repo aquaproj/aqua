@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-const proxyName = "aqua-proxy"
+const proxyName = "clivm-proxy"
 
 func stringP(s string) *string {
 	return &s

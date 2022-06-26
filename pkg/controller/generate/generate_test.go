@@ -60,8 +60,8 @@ packages:
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			idxs: []int{0},
@@ -93,8 +93,8 @@ packages:
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			args: []string{
@@ -129,8 +129,8 @@ packages:
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 				"list.txt": "clivm/clivm-installer\n",
 			},
@@ -200,8 +200,8 @@ packages:
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			args: []string{

@@ -45,17 +45,17 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 	}
 
 	registryVersion := "v3.3.0" // renovate: depName=clivm/clivm-registry
-	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "clivm", "aqua-registry")
+	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "clivm", "clivm-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
 			"repo_owner": "clivm",
-			"repo_name":  "aqua-registry",
+			"repo_name":  "clivm-registry",
 		}).Warn("get the latest release")
 	} else {
 		if release == nil {
 			logE.WithFields(logrus.Fields{
 				"repo_owner": "clivm",
-				"repo_name":  "aqua-registry",
+				"repo_name":  "clivm-registry",
 			}).Warn("failed to get the latest release")
 		} else {
 			registryVersion = release.GetTagName()

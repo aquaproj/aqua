@@ -31,7 +31,7 @@ packages:
 					"standard": &aqua.Registry{
 						Name:      "standard",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 						Type:      "github_content",
 						Ref:       "v0.2.0",
@@ -62,7 +62,7 @@ packages:
 						Name:      "standard",
 						Type:      "github_content",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 						Ref:       "v0.2.0",
 					},

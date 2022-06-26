@@ -31,8 +31,8 @@ packages:
 
 - type: github_content # github_content package
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 
 - type: github_archive # github_archive package
   repo_owner: tfutils

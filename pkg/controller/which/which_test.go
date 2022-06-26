@@ -50,7 +50,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			exeName: "aqua-installer",
+			exeName: "clivm-installer",
 			files: map[string]string{
 				"aqua.yaml": `registries:
 - type: local
@@ -62,8 +62,8 @@ packages:
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			exp: &which.Which{
@@ -76,14 +76,14 @@ packages:
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-installer",
-						Path:      stringP("aqua-installer"),
+						RepoName:  "clivm-installer",
+						Path:      stringP("clivm-installer"),
 					},
 				},
 				File: &cfgRegistry.File{
-					Name: "aqua-installer",
+					Name: "clivm-installer",
 				},
-				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/clivm-installer/clivm-installer",
 			},
 		},
 		{
@@ -113,8 +113,8 @@ packages:
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 				"/usr/local/foo/gh": "",
 			},
@@ -137,7 +137,7 @@ packages:
 				MaxParallelism:        5,
 				GlobalConfigFilePaths: []string{"/etc/aqua/aqua.yaml"},
 			},
-			exeName: "aqua-installer",
+			exeName: "clivm-installer",
 			files: map[string]string{
 				"/etc/aqua/aqua.yaml": `registries:
 - type: local
@@ -159,8 +159,8 @@ packages:
   asset: "github-comment_{{.Arch}}-{{.OS}}.tar.gz"
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			exp: &which.Which{
@@ -173,14 +173,14 @@ packages:
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-installer",
-						Path:      stringP("aqua-installer"),
+						RepoName:  "clivm-installer",
+						Path:      stringP("clivm-installer"),
 					},
 				},
 				File: &cfgRegistry.File{
-					Name: "aqua-installer",
+					Name: "clivm-installer",
 				},
-				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/clivm-installer/clivm-installer",
 			},
 		},
 	}

@@ -40,7 +40,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				fmt.Sprintf("/home/foo/.local/share/clivm/pkgs/github_release/github.com/clivm/clivm-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "",
+				fmt.Sprintf("/home/foo/.local/share/clivm/pkgs/github_release/github.com/clivm/clivm-proxy/%s/clivm-proxy_linux_amd64.tar.gz/clivm-proxy", installpackage.ProxyVersion): "",
 			},
 		},
 	}

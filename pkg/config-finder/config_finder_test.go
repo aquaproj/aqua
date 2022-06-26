@@ -126,8 +126,8 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 		{
 			name:           "configFilePath",
 			wd:             "/home/foo",
-			configFilePath: "/home/foo/aqua-2.yaml",
-			exp:            []string{"/home/foo/aqua-2.yaml"},
+			configFilePath: "/home/foo/clivm-2.yaml",
+			exp:            []string{"/home/foo/clivm-2.yaml"},
 		},
 		{
 			name: "find",
@@ -144,12 +144,12 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 		{
 			name:           "find and configFilePath",
 			wd:             "/home/foo",
-			configFilePath: "aqua-2.yaml",
+			configFilePath: "clivm-2.yaml",
 			files: map[string]string{
 				"/home/.aqua.yaml": "",
 			},
 			exp: []string{
-				"aqua-2.yaml",
+				"clivm-2.yaml",
 				"/home/.aqua.yaml",
 			},
 		},

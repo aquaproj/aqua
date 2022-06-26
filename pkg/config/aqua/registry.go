@@ -70,7 +70,7 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 			a.RepoOwner = "clivm"
 		}
 		if a.RepoName == "" {
-			a.RepoName = "aqua-registry"
+			a.RepoName = "clivm-registry"
 		}
 		if a.Path == "" {
 			a.Path = "registry.yaml"

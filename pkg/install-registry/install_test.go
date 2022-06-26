@@ -42,8 +42,8 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 				"registry.yaml": `packages:
 - type: github_content
   repo_owner: clivm
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			cfg: &aqua.Config{
@@ -57,7 +57,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 						Type:      "github_content",
 						Name:      "standard",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.16.0",
 						Path:      "registry.yaml",
 					},
@@ -65,7 +65,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 						Type:      "github_content",
 						Name:      "standard-json",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.16.0",
 						Path:      "registry.json",
 					},
@@ -77,8 +77,8 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 						{
 							Type:      "github_content",
 							RepoOwner: "clivm",
-							RepoName:  "aqua-installer",
-							Path:      stringP("aqua-installer"),
+							RepoName:  "clivm-installer",
+							Path:      stringP("clivm-installer"),
 						},
 					},
 				},

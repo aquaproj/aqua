@@ -167,13 +167,13 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content",
-			exp:   "/tmp/aqua/pkgs/github_content/github.com/clivm/clivm-installer/v0.2.0/aqua-installer",
+			exp:   "/tmp/aqua/pkgs/github_content/github.com/clivm/clivm-installer/v0.2.0/clivm-installer",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
-					Path:      stringP("aqua-installer"),
+					Path:      stringP("clivm-installer"),
 					RepoOwner: "clivm",
-					RepoName:  "aqua-installer",
+					RepoName:  "clivm-installer",
 				},
 				Package: &aqua.Package{
 					Version: "v0.2.0",

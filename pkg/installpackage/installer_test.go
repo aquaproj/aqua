@@ -55,7 +55,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Name:      "standard",
 						Type:      "github_content",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
 					},
@@ -97,7 +97,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
+				"clivm-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
 			},
 		},
 		{
@@ -119,7 +119,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Name:      "standard",
 						Type:      "github_content",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
 					},
@@ -149,7 +149,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
+				"clivm-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
 			},
 		},
 		{
@@ -170,7 +170,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Name:      "standard",
 						Type:      "github_content",
 						RepoOwner: "clivm",
-						RepoName:  "aqua-registry",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
 					},
