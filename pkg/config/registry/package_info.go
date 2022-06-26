@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/iancoleman/orderedmap"
+	"github.com/invopop/jsonschema"
 )
 
 const (
@@ -22,22 +24,22 @@ type PackageInfo struct {
 	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
 	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
-	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw" yaml:",omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
 	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
 	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
 	Link               string             `json:"link,omitempty" yaml:",omitempty"`
-	Replacements       map[string]string  `json:"replacements,omitempty" yaml:",omitempty"`
+	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
-	SupportedEnvs      []string           `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
-	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty"`
+	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 }
@@ -147,7 +149,7 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 	if pkgInfo.Replacements == nil {
 		pkgInfo.Replacements = ov.Replacements
 	} else {
-		replacements := make(map[string]string, len(pkgInfo.Replacements))
+		replacements := make(Replacements, len(pkgInfo.Replacements))
 		for k, v := range pkgInfo.Replacements {
 			replacements[k] = v
 		}
@@ -187,14 +189,14 @@ type VersionOverride struct {
 	RepoName           string            `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string           `yaml:",omitempty" json:"asset,omitempty"`
 	Path               *string           `yaml:",omitempty" json:"path,omitempty"`
-	Format             string            `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw"`
+	Format             string            `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Files              []*File           `yaml:",omitempty" json:"files,omitempty"`
 	URL                *string           `yaml:",omitempty" json:"url,omitempty"`
-	Replacements       map[string]string `yaml:",omitempty" json:"replacements,omitempty"`
+	Replacements       Replacements      `yaml:",omitempty" json:"replacements,omitempty"`
 	Overrides          []*Override       `yaml:",omitempty" json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	SupportedIf        *string           `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
-	SupportedEnvs      []string          `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
@@ -205,6 +207,46 @@ type VersionOverride struct {
 
 type Alias struct {
 	Name string `json:"name"`
+}
+
+type Replacements map[string]string
+
+func (Replacements) JSONSchema() *jsonschema.Schema {
+	Map := orderedmap.New()
+	for _, value := range append(runtime.GOOSList(), runtime.GOARCHList()...) {
+		Map.Set(value, &jsonschema.Schema{
+			Type: "string",
+		})
+	}
+	return &jsonschema.Schema{
+		Type:       "object",
+		Properties: Map,
+	}
+}
+
+type SupportedEnvs []string
+
+func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
+	osList := runtime.GOOSList()
+	archList := runtime.GOARCHList()
+	envs := make([]string, 0, len(osList)*len(archList)+len(osList)+len(archList)+1)
+	envs = append(append(append(envs, "all"), osList...), archList...)
+	for _, osValue := range runtime.GOOSList() {
+		for _, archValue := range runtime.GOARCHList() {
+			envs = append(envs, osValue+"/"+archValue)
+		}
+	}
+	s := make([]interface{}, len(envs))
+	for i, value := range envs {
+		s[i] = value
+	}
+	return &jsonschema.Schema{
+		Type: "array",
+		Items: &jsonschema.Schema{
+			Type: "string",
+			Enum: s,
+		},
+	}
 }
 
 func (pkgInfo *PackageInfo) GetRosetta2() bool {
@@ -263,7 +305,7 @@ func (pkgInfo *PackageInfo) GetType() string {
 	return pkgInfo.Type
 }
 
-func (pkgInfo *PackageInfo) GetReplacements() map[string]string {
+func (pkgInfo *PackageInfo) GetReplacements() Replacements {
 	return pkgInfo.Replacements
 }
 

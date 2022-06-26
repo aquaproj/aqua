@@ -175,16 +175,16 @@ func TestPackageInfo_GetReplacements(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
-		exp     map[string]string
+		exp     registry.Replacements
 		pkgInfo *registry.PackageInfo
 	}{
 		{
 			title: "normal",
-			exp: map[string]string{
+			exp: registry.Replacements{
 				"amd64": "x86_64",
 			},
 			pkgInfo: &registry.PackageInfo{
-				Replacements: map[string]string{
+				Replacements: registry.Replacements{
 					"amd64": "x86_64",
 				},
 			},

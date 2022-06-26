@@ -60,7 +60,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				Description: "GitHub’s official command line tool",
 				Asset:       strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 				Format:      "tar.gz",
-				Replacements: map[string]string{
+				Replacements: registry.Replacements{
 					"darwin": "macOS",
 				},
 				Overrides: []*registry.Override{
@@ -69,7 +69,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 						Format: "zip",
 					},
 				},
-				SupportedEnvs: []string{
+				SupportedEnvs: registry.SupportedEnvs{
 					"darwin",
 					"linux",
 					"amd64",

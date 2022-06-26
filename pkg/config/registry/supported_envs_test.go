@@ -28,7 +28,7 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 		{
 			name: "supported_envs os true",
 			pkgInfo: &registry.PackageInfo{
-				SupportedEnvs: []string{
+				SupportedEnvs: registry.SupportedEnvs{
 					"linux",
 				},
 			},
@@ -41,7 +41,7 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 		{
 			name: "supported_envs arch true",
 			pkgInfo: &registry.PackageInfo{
-				SupportedEnvs: []string{
+				SupportedEnvs: registry.SupportedEnvs{
 					"darwin",
 					"amd64",
 				},
@@ -55,7 +55,7 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 		{
 			name: "supported_envs os/arch true",
 			pkgInfo: &registry.PackageInfo{
-				SupportedEnvs: []string{
+				SupportedEnvs: registry.SupportedEnvs{
 					"darwin",
 					"arm64",
 					"linux/amd64",
@@ -70,7 +70,7 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 		{
 			name: "supported_envs os false",
 			pkgInfo: &registry.PackageInfo{
-				SupportedEnvs: []string{
+				SupportedEnvs: registry.SupportedEnvs{
 					"darwin",
 				},
 			},
@@ -83,7 +83,7 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 		{
 			name: "supported_envs all",
 			pkgInfo: &registry.PackageInfo{
-				SupportedEnvs: []string{
+				SupportedEnvs: registry.SupportedEnvs{
 					"all",
 				},
 			},
