@@ -25,14 +25,14 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
-				Replacements: map[string]string{
+				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
 				},
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",
-						Replacements: map[string]string{
+						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
 					},
@@ -43,14 +43,14 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
-				Replacements: map[string]string{
+				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
 				},
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",
-						Replacements: map[string]string{
+						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
 					},
@@ -69,14 +69,14 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
-				Replacements: map[string]string{
+				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
 				},
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",
-						Replacements: map[string]string{
+						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
 					},
@@ -87,14 +87,14 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
-				Replacements: map[string]string{
+				Replacements: registry.Replacements{
 					"linux": "unknown-linux-gnu",
 				},
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
 						GOArch: "arm64",
-						Replacements: map[string]string{
+						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
 					},

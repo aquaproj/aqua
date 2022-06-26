@@ -330,14 +330,14 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 		pkgInfo.Rosetta2 = boolP(true)
 	}
 
-	if reflect.DeepEqual(pkgInfo.SupportedEnvs, []string{"linux", "darwin", "windows"}) {
+	if reflect.DeepEqual(pkgInfo.SupportedEnvs, registry.SupportedEnvs{"linux", "darwin", "windows"}) {
 		pkgInfo.SupportedEnvs = nil
 	}
-	if reflect.DeepEqual(pkgInfo.SupportedEnvs, []string{"linux", "darwin", "windows/amd64"}) {
-		pkgInfo.SupportedEnvs = []string{"darwin", "linux", "amd64"}
+	if reflect.DeepEqual(pkgInfo.SupportedEnvs, registry.SupportedEnvs{"linux", "darwin", "windows/amd64"}) {
+		pkgInfo.SupportedEnvs = registry.SupportedEnvs{"darwin", "linux", "amd64"}
 	}
-	if reflect.DeepEqual(pkgInfo.SupportedEnvs, []string{"linux/amd64", "darwin", "windows/amd64"}) {
-		pkgInfo.SupportedEnvs = []string{"darwin", "amd64"}
+	if reflect.DeepEqual(pkgInfo.SupportedEnvs, registry.SupportedEnvs{"linux/amd64", "darwin", "windows/amd64"}) {
+		pkgInfo.SupportedEnvs = registry.SupportedEnvs{"darwin", "amd64"}
 	}
 
 	formatCounts := map[string]int{}
@@ -397,7 +397,7 @@ func (ctrl *Controller) parseAssetInfos(pkgInfo *registry.PackageInfo, assetInfo
 			continue
 		}
 		if pkgInfo.Replacements == nil {
-			pkgInfo.Replacements = map[string]string{}
+			pkgInfo.Replacements = registry.Replacements{}
 		}
 		for k, v := range override.Replacements {
 			vp, ok := pkgInfo.Replacements[k]
