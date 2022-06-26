@@ -3,8 +3,8 @@
     "config:base",
     "github>suzuki-shunsuke/renovate-config",
     "github>clivm/clivm-renovate-config#1.1.0",
-    "github>clivm/clivm-renovate-config:file#1.1.0(tests/aqua.*\\.yaml)",
-    "github>clivm/clivm-renovate-config:file#1.1.0(aqua/.*\\.ya?ml)",
+    "github>clivm/clivm-renovate-config:file#1.1.0(tests/clivm.*\\.yaml)",
+    "github>clivm/clivm-renovate-config:file#1.1.0(clivm/.*\\.ya?ml)",
   ],
   ignorePaths: [],
   regexManagers: [
