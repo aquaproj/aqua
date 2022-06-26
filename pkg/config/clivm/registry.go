@@ -1,4 +1,4 @@
-package aqua
+package clivm
 
 import (
 	"path/filepath"

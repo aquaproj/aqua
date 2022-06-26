@@ -1,4 +1,4 @@
-package aqua_test
+package clivm_test
 
 import (
 	"testing"
