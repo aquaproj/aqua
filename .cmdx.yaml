@@ -32,7 +32,7 @@ tasks:
 - name: build
   description: go build
   usage: go build
-  script: go build -o dist/aqua ./cmd/aqua
+  script: go build -o dist/clivm ./cmd/aqua
 - name: coverage
   short: c
   description: coverage test

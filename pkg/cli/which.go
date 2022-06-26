@@ -17,18 +17,18 @@ func (runner *Runner) newWhichCommand() *cli.Command {
 		ArgsUsage: `<command name>`,
 		Description: `Output the absolute file path of the given command
 e.g.
-$ aqua which gh
+$ clivm which gh
 /home/foo/.aqua/pkgs/github_release/github.com/cli/cli/v2.4.0/gh_2.4.0_macOS_amd64.tar.gz/gh_2.4.0_macOS_amd64/bin/gh
 
-If the command isn't found in the configuration files, aqua searches the command in the environment variable PATH
+If the command isn't found in the configuration files, clivm searches the command in the environment variable PATH
 
-$ aqua which ls
+$ clivm which ls
 /bin/ls
 
 If the command isn't found, exits with non zero exit code.
 
-$ aqua which foo
-FATA[0000] aqua failed                                   aqua_version=0.8.6 error="command is not found" exe_name=foo program=aqua
+$ clivm which foo
+FATA[0000] clivm failed                                   aqua_version=0.8.6 error="command is not found" exe_name=foo program=aqua
 `,
 		Action: runner.whichAction,
 	}

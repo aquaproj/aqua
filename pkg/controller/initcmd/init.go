@@ -12,7 +12,7 @@ import (
 )
 
 const configTemplate = `---
-# aqua - Declarative CLI Version Manager
+# clivm - Declarative CLI Version Manager
 # https://clivm.github.io/
 registries:
 - type: standard

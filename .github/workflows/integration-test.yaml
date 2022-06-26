@@ -22,22 +22,22 @@ jobs:
     - run: go install ./cmd/aqua
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/clivm/bin" >> "$GITHUB_PATH"
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/clivm-global.yaml:$PWD/tests/clivm-global-2.yaml" >> "$GITHUB_ENV"
-    - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
-    - run: echo "x-motemen/ghq" | aqua g -f -
-    - run: echo "local,clivm/clivm-installer" | aqua -c tests/clivm-global.yaml g -f -
-    - run: aqua g x-motemen/ghq clivm/clivm-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq clivm/clivm-installer
+    - run: echo "standard,kubernetes-sigs/kind" | clivm g -f -
+    - run: echo "x-motemen/ghq" | clivm g -f -
+    - run: echo "local,clivm/clivm-installer" | clivm -c tests/clivm-global.yaml g -f -
+    - run: clivm g x-motemen/ghq clivm/clivm-installer
+    - run: echo cli/cli | clivm g -f - x-motemen/ghq clivm/clivm-installer
 
-    - run: aqua list
-    - run: aqua i -l -a
+    - run: clivm list
+    - run: clivm i -l -a
       working-directory: tests
     - run: cmdx -v
       working-directory: tests
-    - run: aqua i --test
+    - run: clivm i --test
       working-directory: tests
-    - run: aqua which golangci-lint
+    - run: clivm which golangci-lint
       working-directory: tests
-    - run: aqua which go
+    - run: clivm which go
     - run: golangci-lint version
     - run: kind version
       working-directory: tests
@@ -47,7 +47,7 @@ jobs:
     - run: ghq -version
     - run: gh version
     - run: tfenv --version
-    - run: aqua -c tests/clivm-global.yaml g local,kubernetes-sigs/kustomize
+    - run: clivm -c tests/clivm-global.yaml g local,kubernetes-sigs/kustomize
     - run: btop -v
     - run: btop -v
       env:
@@ -59,28 +59,28 @@ jobs:
     - run: terrafmt version
 
     - name: output bash completion
-      run: aqua completion bash
+      run: clivm completion bash
     - name: output zsh completion
-      run: aqua completion zsh
+      run: clivm completion zsh
 
-    - run: aqua g -i suzuki-shunsuke/tfcmt
+    - run: clivm g -i suzuki-shunsuke/tfcmt
       working-directory: tests
     - run: git diff aqua.yaml
       working-directory: tests
 
     - name: "Test generate-registry"
-      run: aqua gr cli/cli
+      run: clivm gr cli/cli
     - name: "Test generate-registry (rust)"
-      run: aqua gr XAMPPRocky/tokei
+      run: clivm gr XAMPPRocky/tokei
 
     - name: "test version_source: github_tag"
-      run: aqua -c clivm-global.yaml g local,mitchellh/gox
+      run: clivm -c clivm-global.yaml g local,mitchellh/gox
       working-directory: tests
 
-    # Test if global configuration files are read in `aqua list` and `aqua g`
-    - run: aqua g suzuki-shunsuke/cmdx
+    # Test if global configuration files are read in `clivm list` and `clivm g`
+    - run: clivm g suzuki-shunsuke/cmdx
       working-directory: /tmp
-    - run: aqua list
+    - run: clivm list
       working-directory: /tmp
 
     - run: clivm-installer -v v0.8.1 -i /tmp/aqua
@@ -103,21 +103,21 @@ jobs:
     - run: go install ./cmd/aqua
     - run: echo "$HOME/AppData/Local/clivm/bin" >> "$GITHUB_PATH"
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/clivm-global.yaml:$PWD/tests/clivm-global-2.yaml" >> "$GITHUB_ENV"
-    - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
-    - run: echo "x-motemen/ghq" | aqua g -f -
-    - run: aqua g x-motemen/ghq clivm/clivm-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq clivm/clivm-installer
+    - run: echo "standard,kubernetes-sigs/kind" | clivm g -f -
+    - run: echo "x-motemen/ghq" | clivm g -f -
+    - run: clivm g x-motemen/ghq clivm/clivm-installer
+    - run: echo cli/cli | clivm g -f - x-motemen/ghq clivm/clivm-installer
 
-    - run: aqua list
-    - run: aqua i -l -a
+    - run: clivm list
+    - run: clivm i -l -a
       working-directory: tests
     - run: cmdx -v
       working-directory: tests
-    - run: aqua i --test
+    - run: clivm i --test
       working-directory: tests
-    - run: aqua which golangci-lint
+    - run: clivm which golangci-lint
       working-directory: tests
-    - run: aqua which go
+    - run: clivm which go
     - run: golangci-lint version
     - run: kind version
       working-directory: tests
@@ -126,30 +126,30 @@ jobs:
     - run: migrate -version
     - run: ghq -version
     - run: gh version
-    - run: aqua -c tests/clivm-global.yaml g local,kubernetes-sigs/kustomize
+    - run: clivm -c tests/clivm-global.yaml g local,kubernetes-sigs/kustomize
     - run: wire --help
     - run: gox --help
     - run: github-compare -v
     - run: terrafmt version
 
-    - run: aqua g -i suzuki-shunsuke/tfcmt
+    - run: clivm g -i suzuki-shunsuke/tfcmt
       working-directory: tests
     - run: git diff aqua.yaml
       working-directory: tests
 
     - name: "Test generate-registry"
-      run: aqua gr cli/cli
+      run: clivm gr cli/cli
     - name: "Test generate-registry (rust)"
-      run: aqua gr XAMPPRocky/tokei
+      run: clivm gr XAMPPRocky/tokei
 
     - name: "test version_source: github_tag"
-      run: aqua -c clivm-global.yaml g local,mitchellh/gox
+      run: clivm -c clivm-global.yaml g local,mitchellh/gox
       working-directory: tests
 
-    # Test if global configuration files are read in `aqua list` and `aqua g`
-    - run: aqua g suzuki-shunsuke/cmdx
+    # Test if global configuration files are read in `clivm list` and `clivm g`
+    - run: clivm g suzuki-shunsuke/cmdx
       working-directory: ${{ env.HOME }}
-    - run: aqua list
+    - run: clivm list
       working-directory: ${{ env.HOME }}
 
   build-windows-pwsh:
@@ -167,21 +167,21 @@ jobs:
     - run: go install ./cmd/aqua
     - run: echo "$HOME\AppData\Local\clivm\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD\tests\clivm-global.yaml;$PWD\tests\clivm-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-    - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
-    - run: echo "x-motemen/ghq" | aqua g -f -
-    - run: aqua g x-motemen/ghq clivm/clivm-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq clivm/clivm-installer
+    - run: echo "standard,kubernetes-sigs/kind" | clivm g -f -
+    - run: echo "x-motemen/ghq" | clivm g -f -
+    - run: clivm g x-motemen/ghq clivm/clivm-installer
+    - run: echo cli/cli | clivm g -f - x-motemen/ghq clivm/clivm-installer
 
-    - run: aqua list
-    - run: aqua i -l -a
+    - run: clivm list
+    - run: clivm i -l -a
       working-directory: tests
     - run: cmdx -v
       working-directory: tests
-    - run: aqua i --test
+    - run: clivm i --test
       working-directory: tests
-    - run: aqua which golangci-lint
+    - run: clivm which golangci-lint
       working-directory: tests
-    - run: aqua which go
+    - run: clivm which go
     - run: golangci-lint version
     - run: kind version
       working-directory: tests
@@ -190,28 +190,28 @@ jobs:
     - run: migrate -version
     - run: ghq -version
     - run: gh version
-    - run: aqua -c tests/clivm-global.yaml g local,kubernetes-sigs/kustomize
+    - run: clivm -c tests/clivm-global.yaml g local,kubernetes-sigs/kustomize
     - run: wire --help
     - run: gox --help
     - run: github-compare -v
     - run: terrafmt version
 
-    - run: aqua g -i suzuki-shunsuke/tfcmt
+    - run: clivm g -i suzuki-shunsuke/tfcmt
       working-directory: tests
     - run: git diff aqua.yaml
       working-directory: tests
 
     - name: "Test generate-registry"
-      run: aqua gr cli/cli
+      run: clivm gr cli/cli
     - name: "Test generate-registry (rust)"
-      run: aqua gr XAMPPRocky/tokei
+      run: clivm gr XAMPPRocky/tokei
 
     - name: "test version_source: github_tag"
-      run: aqua -c clivm-global.yaml g local,mitchellh/gox
+      run: clivm -c clivm-global.yaml g local,mitchellh/gox
       working-directory: tests
 
-    # Test if global configuration files are read in `aqua list` and `aqua g`
-    - run: aqua g suzuki-shunsuke/cmdx
+    # Test if global configuration files are read in `clivm list` and `clivm g`
+    - run: clivm g suzuki-shunsuke/cmdx
       working-directory: ${{ env.HOME }}
-    - run: aqua list
+    - run: clivm list
       working-directory: ${{ env.HOME }}

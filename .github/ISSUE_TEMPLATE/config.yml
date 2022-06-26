@@ -2,4 +2,4 @@ blank_issues_enabled: true
 contact_links:
 - name: Issue of Standard Registry
   url: https://github.com/clivm/clivm-registry/issues
-  about: Please report issues about aqua Standard Registry
+  about: Please report issues about clivm Standard Registry

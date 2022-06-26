@@ -15,8 +15,8 @@ func (runner *Runner) newInitCommand() *cli.Command {
 		ArgsUsage: `[<created file path. The default value is "aqua.yaml">]`,
 		Description: `Create a configuration file if it doesn't exist
 e.g.
-$ aqua init # create "aqua.yaml"
-$ aqua init foo.yaml # create foo.yaml`,
+$ clivm init # create "aqua.yaml"
+$ clivm init foo.yaml # create foo.yaml`,
 		Action: runner.initAction,
 	}
 }

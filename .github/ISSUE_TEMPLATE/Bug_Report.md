@@ -3,12 +3,12 @@ name: Bug Report
 about: If something isn't working as expected.
 ---
 
-## aqua version
+## clivm version
 
 Please use the latest version.
 
 ```console
-$ aqua -v
+$ clivm -v
 
 ```
 
@@ -38,7 +38,7 @@ $
 
 ## Debug Output
 
-Please set the environment variable `CLIVM_LOG_LEVEL=debug` and run aqua and tell us the debug output.
+Please set the environment variable `CLIVM_LOG_LEVEL=debug` and run clivm and tell us the debug output.
 
 ```console
 $ 

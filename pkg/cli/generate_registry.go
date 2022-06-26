@@ -17,7 +17,7 @@ It is just a template.
 
 e.g.
 
-$ aqua gr cli/cli # Outputs the configuration.
+$ clivm gr cli/cli # Outputs the configuration.
 packages:
   - type: github_release
     repo_owner: cli

@@ -17,11 +17,11 @@ Run these commands in .bash_profile or .zprofile
 e.g.
 .bash_profile
 
-if command -v aqua &> /dev/null; then source <(aqua completion bash); fi
+if command -v clivm &> /dev/null; then source <(clivm completion bash); fi
 
 .zprofile
 
-if command -v aqua &> /dev/null; then source <(aqua completion zsh); fi
+if command -v clivm &> /dev/null; then source <(clivm completion zsh); fi
 `,
 		Subcommands: []*cli.Command{
 			{

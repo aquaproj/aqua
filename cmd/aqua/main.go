@@ -34,7 +34,7 @@ func main() {
 			logerr.WithError(logE.WithField("exit_code", code), err).Debug("command failed")
 			os.Exit(code)
 		}
-		logerr.WithError(logE, err).Fatal("aqua failed")
+		logerr.WithError(logE, err).Fatal("clivm failed")
 	}
 }
 

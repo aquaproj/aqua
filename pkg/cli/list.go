@@ -18,7 +18,7 @@ func (runner *Runner) newListCommand() *cli.Command {
 The output format is <registry name>,<package name>
 
 e.g.
-$ aqua list
+$ clivm list
 standard,99designs/aws-vault
 standard,abiosoft/colima
 standard,abs-lang/abs

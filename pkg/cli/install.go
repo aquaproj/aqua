@@ -17,17 +17,17 @@ func (runner *Runner) newInstallCommand() *cli.Command {
 		Description: `Install tools according to the configuration files.
 
 e.g.
-$ aqua i
+$ clivm i
 
 If you want to create only symbolic links and want to skip downloading package, please set "-l" option.
 
-$ aqua i -l
+$ clivm i -l
 
-By default aqua doesn't install packages in the global configuration.
+By default clivm doesn't install packages in the global configuration.
 If you want to install packages in the global configuration too,
 please set "-a" option.
 
-$ aqua i -a
+$ clivm i -a
 `,
 		Action: runner.installAction,
 		Flags: []cli.Flag{
@@ -43,7 +43,7 @@ $ aqua i -a
 			&cli.BoolFlag{
 				Name:    "all",
 				Aliases: []string{"a"},
-				Usage:   "install all aqua configuration packages",
+				Usage:   "install all clivm configuration packages",
 			},
 		},
 	}
