@@ -1,9 +1,9 @@
 ---
-project_name: aqua
+project_name: clivm
 archives:
 - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
 builds:
-- binary: aqua
+- binary: clivm
   main: cmd/clivm/main.go
   env:
   - CGO_ENABLED=0
@@ -26,7 +26,7 @@ brews:
   # GitHub/GitLab repository to push the formula to
   tap:
     owner: clivm
-    name: homebrew-aqua
+    name: homebrew-clivm
     token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
   # The project name and current git tag are used in the format string.
   commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
