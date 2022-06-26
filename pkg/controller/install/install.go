@@ -84,7 +84,7 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 }
 
 func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *config.Param, logE *logrus.Entry) error {
-	cfg := &aqua.Config{}
+	cfg := &clivm.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}

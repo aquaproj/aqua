@@ -68,7 +68,7 @@ packages:
 			},
 			exp: &which.Which{
 				Package: &config.Package{
-					Package: &aqua.Package{
+					Package: &clivm.Package{
 						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
@@ -165,7 +165,7 @@ packages:
 			},
 			exp: &which.Which{
 				Package: &config.Package{
-					Package: &aqua.Package{
+					Package: &clivm.Package{
 						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",

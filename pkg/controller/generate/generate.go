@@ -81,7 +81,7 @@ type FindingPackage struct {
 }
 
 func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) {
-	cfg := &aqua.Config{}
+	cfg := &clivm.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -151,7 +151,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 		}
 	}
 
-	outputPkgs := []*aqua.Package{}
+	outputPkgs := []*clivm.Package{}
 	for _, pkgName := range pkgNames {
 		pkgName = getGeneratePkg(pkgName)
 		findingPkg, ok := m[pkgName]
@@ -172,7 +172,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*aqua.Package, m map[string]*FindingPackage, logE *logrus.Entry) ([]*aqua.Package, error) {
+func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *config.Param, outputPkgs []*clivm.Package, m map[string]*FindingPackage, logE *logrus.Entry) ([]*clivm.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
 		file = ctrl.stdin
@@ -270,7 +270,7 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *r
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
+func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, outputPkg *clivm.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	var tagName string
@@ -300,7 +300,7 @@ func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, output
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *clivm.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
 	if pkgInfo.VersionSource == "github_tag" {
 		ctrl.getOutputtedGitHubPkgFromTag(ctx, outputPkg, pkgInfo, logE)
 		return
@@ -329,8 +329,8 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *aq
 	}
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage, logE *logrus.Entry) *aqua.Package {
-	outputPkg := &aqua.Package{
+func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage, logE *logrus.Entry) *clivm.Package {
+	outputPkg := &clivm.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
 		Version:  "[SET PACKAGE VERSION]",

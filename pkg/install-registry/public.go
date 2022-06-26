@@ -12,7 +12,7 @@ import (
 )
 
 type Installer interface {
-	InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error)
+	InstallRegistries(ctx context.Context, cfg *clivm.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error)
 }
 
 func New(param *config.Param, downloader download.RegistryDownloader, fs afero.Fs) Installer {

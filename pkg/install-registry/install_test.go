@@ -27,7 +27,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 		files       map[string]string
 		param       *config.Param
 		downloader  download.RegistryDownloader
-		cfg         *aqua.Config
+		cfg         *clivm.Config
 		cfgFilePath string
 		isErr       bool
 		exp         map[string]*cfgRegistry.Config
@@ -46,8 +46,8 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
   path: clivm-installer
 `,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"local": {
 						Type: "local",
 						Name: "local",

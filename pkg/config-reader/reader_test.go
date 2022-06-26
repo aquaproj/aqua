@@ -13,7 +13,7 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name           string
-		exp            *aqua.Config
+		exp            *clivm.Config
 		isErr          bool
 		files          map[string]string
 		configFilePath string
@@ -31,8 +31,8 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 packages:`,
 			},
 			configFilePath: "clivm.yaml",
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
+			exp: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Type:      "github_content",
 						Name:      "standard",
@@ -42,7 +42,7 @@ packages:`,
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{},
+				Packages: []*clivm.Package{},
 			},
 		},
 		{
@@ -60,8 +60,8 @@ packages:
 `,
 			},
 			configFilePath: "clivm.yaml",
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
+			exp: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Type:      "github_content",
 						Name:      "standard",
@@ -71,7 +71,7 @@ packages:
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -97,7 +97,7 @@ packages:
 				}
 			}
 			reader := reader.New(fs)
-			cfg := &aqua.Config{}
+			cfg := &clivm.Config{}
 			if err := reader.Read(d.configFilePath, cfg); err != nil {
 				if d.isErr {
 					return

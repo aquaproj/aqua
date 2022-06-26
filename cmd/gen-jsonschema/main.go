@@ -19,7 +19,7 @@ func main() {
 }
 
 func core() error {
-	if err := gen(&aqua.Config{}, "json-schema/clivm-yaml.json"); err != nil {
+	if err := gen(&clivm.Config{}, "json-schema/clivm-yaml.json"); err != nil {
 		return err
 	}
 	if err := gen(&registry.Config{}, "json-schema/registry.json"); err != nil {

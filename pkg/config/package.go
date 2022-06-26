@@ -21,7 +21,7 @@ func isWindows(goos string) bool {
 }
 
 type Package struct {
-	Package     *aqua.Package
+	Package     *clivm.Package
 	PackageInfo *registry.PackageInfo
 }
 

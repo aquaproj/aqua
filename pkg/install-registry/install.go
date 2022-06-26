@@ -27,7 +27,7 @@ type installer struct {
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
 
-func (inst *installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
+func (inst *installer) InstallRegistries(ctx context.Context, cfg *clivm.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Registries))
 	var flagMutex sync.Mutex
@@ -40,7 +40,7 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, 
 	registryContents := make(map[string]*registry.Config, len(cfg.Registries)+1)
 
 	for _, registry := range cfg.Registries {
-		go func(registry *aqua.Registry) {
+		go func(registry *clivm.Registry) {
 			defer wg.Done()
 			if registry.Name == "" {
 				logE.Debug("ignore a registry because the registry name is empty")
@@ -94,7 +94,7 @@ const dirPermission os.FileMode = 0o775
 
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (inst *installer) installRegistry(ctx context.Context, regist *aqua.Registry, cfgFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *installer) installRegistry(ctx context.Context, regist *clivm.Registry, cfgFilePath string, logE *logrus.Entry) (*registry.Config, error) {
 	registryFilePath := regist.GetFilePath(inst.param.RootDir, cfgFilePath)
 	if _, err := inst.fs.Stat(registryFilePath); err == nil {
 		registryContent := &registry.Config{}
@@ -110,11 +110,11 @@ func (inst *installer) installRegistry(ctx context.Context, regist *aqua.Registr
 }
 
 // getRegistry downloads and installs the registry file.
-func (inst *installer) getRegistry(ctx context.Context, registry *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *installer) getRegistry(ctx context.Context, registry *clivm.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
 	switch registry.Type {
-	case aqua.RegistryTypeGitHubContent:
+	case clivm.RegistryTypeGitHubContent:
 		return inst.getGitHubContentRegistry(ctx, registry, registryFilePath, logE)
-	case aqua.RegistryTypeLocal:
+	case clivm.RegistryTypeLocal:
 		return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
 			"local_registry_file_path": registryFilePath,
 		})
@@ -122,7 +122,7 @@ func (inst *installer) getRegistry(ctx context.Context, registry *aqua.Registry,
 	return nil, errUnsupportedRegistryType
 }
 
-func (inst *installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *installer) getGitHubContentRegistry(ctx context.Context, regist *clivm.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
 	b, err := inst.registryDownloader.GetGitHubContentFile(ctx, regist.RepoOwner, regist.RepoName, regist.Ref, regist.Path, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck

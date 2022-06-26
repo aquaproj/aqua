@@ -48,7 +48,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "suzuki-shunsuke/ci-info",
 					Registry: "standard",
 					Version:  "v2.0.3",
@@ -100,7 +100,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "suzuki-shunsuke/ci-info",
 					Registry: "standard",
 					Version:  "v2.0.3",
@@ -162,7 +162,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "clivm/clivm-installer",
 					Registry: "standard",
 					Version:  "v1.1.0",
@@ -214,7 +214,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "clivm/clivm-installer",
 					Registry: "standard",
 					Version:  "v1.1.0",
@@ -269,7 +269,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "tfutils/tfenv",
 					Registry: "standard",
 					Version:  "v2.2.3",
@@ -319,7 +319,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "GoogleContainerTools/container-diff",
 					Registry: "standard",
 					Version:  "v0.17.0",

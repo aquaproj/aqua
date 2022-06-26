@@ -19,7 +19,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	}
 	proxyAssetTemplate := `clivm-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
-		Package: &aqua.Package{
+		Package: &clivm.Package{
 			Name:    proxyName,
 			Version: ProxyVersion,
 		},

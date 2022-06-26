@@ -34,7 +34,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			title: "github_content",
 			exp:   "foo",
 			pkg: &config.Package{
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 				PackageInfo: &registry.PackageInfo{
@@ -52,7 +52,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 					Asset:  stringP("foo-{{trimV .Version}}.{{.Format}}"),
 					Format: "zip",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 			},
@@ -66,7 +66,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 					URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 					Format: "zip",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 			},
@@ -80,7 +80,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 					Asset:  stringP("foo-{{.OS}}-{{.Arch}}"),
 					Format: "raw",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 			},
@@ -97,7 +97,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 					Type:  "github_release",
 					Asset: stringP("foo-{{.OS}}-{{.Arch}}"),
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 			},
@@ -114,7 +114,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 					Type:  "github_release",
 					Asset: stringP("foo-{{.OS}}-{{.Arch}}.tar.gz"),
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 			},
@@ -160,7 +160,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 					RepoOwner: "tfutils",
 					RepoName:  "tfenv",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v2.2.2",
 				},
 			},
@@ -175,23 +175,23 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 					RepoOwner: "clivm",
 					RepoName:  "clivm-installer",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.2.0",
 				},
 			},
 		},
 		{
 			title: "github_release",
-			exp:   "/tmp/aqua/pkgs/github_release/github.com/clivm/clivm/v0.7.7/aqua.tar.gz",
+			exp:   "/tmp/aqua/pkgs/github_release/github.com/clivm/clivm/v0.7.7/clivm.tar.gz",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
 					RepoOwner: "clivm",
 					RepoName:  "aqua",
-					Asset:     stringP("aqua.{{.Format}}"),
+					Asset:     stringP("clivm.{{.Format}}"),
 					Format:    "tar.gz",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.7.7",
 				},
 			},
@@ -205,7 +205,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 					URL:    stringP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 					Format: "zip",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 			},
@@ -244,7 +244,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 					Type: "github_content",
 					Path: stringP("foo"),
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v1.0.0",
 				},
 			},
@@ -257,10 +257,10 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "clivm",
 					RepoName:  "aqua",
-					Asset:     stringP("aqua.{{.Format}}"),
+					Asset:     stringP("clivm.{{.Format}}"),
 					Format:    "tar.gz",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.7.7",
 				},
 			},
@@ -276,10 +276,10 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "clivm",
 					RepoName:  "aqua",
-					Asset:     stringP("aqua.{{.Format}}"),
+					Asset:     stringP("clivm.{{.Format}}"),
 					Format:    "tar.gz",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.7.7",
 				},
 			},
@@ -299,7 +299,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 					Asset:     stringP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Format:    "zip",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.7.7",
 				},
 			},
@@ -322,7 +322,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 					Asset:     stringP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Format:    "zip",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.7.7",
 				},
 			},
@@ -346,7 +346,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 					Asset:     stringP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Format:    "zip",
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.7.7",
 				},
 			},
@@ -370,7 +370,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 					RepoName:  "goss",
 					Path:      stringP("extras/dcgoss/dcgoss"),
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Version: "v0.7.7",
 				},
 			},

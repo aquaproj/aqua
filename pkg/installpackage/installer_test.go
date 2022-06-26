@@ -29,7 +29,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		links      map[string]string
 		param      *config.Param
 		rt         *runtime.Runtime
-		cfg        *aqua.Config
+		cfg        *clivm.Config
 		registries map[string]*registry.Config
 		executor   exec.Executor
 		binDir     string
@@ -49,8 +49,8 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
@@ -60,7 +60,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -113,8 +113,8 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
@@ -124,7 +124,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -164,8 +164,8 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
@@ -175,7 +175,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{},
+				Packages: []*clivm.Package{},
 			},
 			registries: map[string]*registry.Config{
 				"standard": {
@@ -243,7 +243,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 					RepoName:  "ci-info",
 					Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "suzuki-shunsuke/ci-info",
 					Registry: "standard",
 					Version:  "v2.0.3",

@@ -31,7 +31,7 @@ func NewController(configFinder finder.ConfigFinder, configReader reader.ConfigR
 }
 
 func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
-	cfg := &aqua.Config{}
+	cfg := &clivm.Config{}
 	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck

@@ -11,7 +11,7 @@ import (
 )
 
 type ConfigReader interface {
-	Read(configFilePath string, cfg *aqua.Config) error
+	Read(configFilePath string, cfg *clivm.Config) error
 }
 
 func New(fs afero.Fs) ConfigReader {
@@ -24,7 +24,7 @@ type configReader struct {
 	fs afero.Fs
 }
 
-func (reader *configReader) Read(configFilePath string, cfg *aqua.Config) error {
+func (reader *configReader) Read(configFilePath string, cfg *clivm.Config) error {
 	file, err := reader.fs.Open(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -39,8 +39,8 @@ func (reader *configReader) Read(configFilePath string, cfg *aqua.Config) error 
 	return nil
 }
 
-func (reader *configReader) readImports(configFilePath string, cfg *aqua.Config) error {
-	pkgs := []*aqua.Package{}
+func (reader *configReader) readImports(configFilePath string, cfg *clivm.Config) error {
+	pkgs := []*clivm.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg.Import == "" {
 			pkgs = append(pkgs, pkg)
@@ -53,7 +53,7 @@ func (reader *configReader) readImports(configFilePath string, cfg *aqua.Config)
 		}
 		sort.Strings(filePaths)
 		for _, filePath := range filePaths {
-			subCfg := &aqua.Config{}
+			subCfg := &clivm.Config{}
 			if err := reader.Read(filePath, subCfg); err != nil {
 				return err
 			}
