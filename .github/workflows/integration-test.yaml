@@ -19,7 +19,7 @@ jobs:
         go-version: '1.18.3'
         cache: true
 
-    - run: go install ./cmd/aqua
+    - run: go install ./cmd/clivm
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/clivm/bin" >> "$GITHUB_PATH"
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/clivm-global.yaml:$PWD/tests/clivm-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | clivm g -f -
@@ -100,7 +100,7 @@ jobs:
         go-version: '1.18.3'
         cache: true
 
-    - run: go install ./cmd/aqua
+    - run: go install ./cmd/clivm
     - run: echo "$HOME/AppData/Local/clivm/bin" >> "$GITHUB_PATH"
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/clivm-global.yaml:$PWD/tests/clivm-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | clivm g -f -
@@ -164,7 +164,7 @@ jobs:
         go-version: '1.18.3'
         cache: true
 
-    - run: go install ./cmd/aqua
+    - run: go install ./cmd/clivm
     - run: echo "$HOME\AppData\Local\clivm\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD\tests\clivm-global.yaml;$PWD\tests\clivm-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - run: echo "standard,kubernetes-sigs/kind" | clivm g -f -

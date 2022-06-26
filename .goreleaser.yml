@@ -4,7 +4,7 @@ archives:
 - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
 builds:
 - binary: aqua
-  main: cmd/aqua/main.go
+  main: cmd/clivm/main.go
   env:
   - CGO_ENABLED=0
   goos:

@@ -16,7 +16,7 @@ jobs:
         go-version: '1.18.3'
         cache: true
 
-    - run: go build -o /usr/local/bin/clivm ./cmd/aqua
+    - run: go build -o /usr/local/bin/clivm ./cmd/clivm
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/clivm/bin" >> "$GITHUB_PATH"
     - run: clivm i
 
