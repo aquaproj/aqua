@@ -8,4 +8,4 @@ packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
 - name: golangci/golangci-lint@v1.46.2
 - name: rhysd/actionlint@v1.6.14
-- import: aqua/*.yaml
+- import: clivm/*.yaml
