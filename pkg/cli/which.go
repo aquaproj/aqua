@@ -28,7 +28,7 @@ $ clivm which ls
 If the command isn't found, exits with non zero exit code.
 
 $ clivm which foo
-FATA[0000] clivm failed                                   aqua_version=0.8.6 error="command is not found" exe_name=foo program=aqua
+FATA[0000] clivm failed                                   clivm_version=0.8.6 error="command is not found" exe_name=foo program=aqua
 `,
 		Action: runner.whichAction,
 	}

@@ -7,7 +7,7 @@ import (
 
 func New(rt *runtime.Runtime, version string) *logrus.Entry {
 	return logrus.WithFields(logrus.Fields{
-		"aqua_version": version,
+		"clivm_version": version,
 		"program":      "aqua",
 		"env":          rt.GOOS + "/" + rt.GOARCH,
 	})
