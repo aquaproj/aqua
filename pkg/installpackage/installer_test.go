@@ -54,7 +54,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
+						RepoOwner: "clivm",
 						RepoName:  "aqua-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
@@ -118,7 +118,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
+						RepoOwner: "clivm",
 						RepoName:  "aqua-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
@@ -169,7 +169,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
+						RepoOwner: "clivm",
 						RepoName:  "aqua-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",

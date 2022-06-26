@@ -61,7 +61,7 @@ packages:
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 `,
@@ -75,7 +75,7 @@ packages:
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
+						RepoOwner: "clivm",
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
 					},
@@ -112,7 +112,7 @@ packages:
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 `,
@@ -158,7 +158,7 @@ packages:
   repo_name: github-comment
   asset: "github-comment_{{.Arch}}-{{.OS}}.tar.gz"
 - type: github_content
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 `,
@@ -172,7 +172,7 @@ packages:
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
+						RepoOwner: "clivm",
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
 					},

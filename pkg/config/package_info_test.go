@@ -172,7 +172,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
 					Path:      stringP("aqua-installer"),
-					RepoOwner: "aquaproj",
+					RepoOwner: "clivm",
 					RepoName:  "aqua-installer",
 				},
 				Package: &aqua.Package{
@@ -186,7 +186,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
-					RepoOwner: "aquaproj",
+					RepoOwner: "clivm",
 					RepoName:  "aqua",
 					Asset:     stringP("aqua.{{.Format}}"),
 					Format:    "tar.gz",
@@ -255,7 +255,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
-					RepoOwner: "aquaproj",
+					RepoOwner: "clivm",
 					RepoName:  "aqua",
 					Asset:     stringP("aqua.{{.Format}}"),
 					Format:    "tar.gz",
@@ -274,7 +274,7 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
-					RepoOwner: "aquaproj",
+					RepoOwner: "clivm",
 					RepoName:  "aqua",
 					Asset:     stringP("aqua.{{.Format}}"),
 					Format:    "tar.gz",

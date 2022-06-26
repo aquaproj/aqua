@@ -169,7 +169,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				},
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
-					RepoOwner: "aquaproj",
+					RepoOwner: "clivm",
 					RepoName:  "aqua-installer",
 					Path:      stringP("aqua-installer"),
 				},
@@ -221,7 +221,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				},
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
-					RepoOwner: "aquaproj",
+					RepoOwner: "clivm",
 					RepoName:  "aqua-installer",
 					Path:      stringP("aqua-installer"),
 				},

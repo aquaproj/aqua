@@ -30,7 +30,7 @@ packages:
 				Registries: aqua.Registries{
 					"standard": &aqua.Registry{
 						Name:      "standard",
-						RepoOwner: "aquaproj",
+						RepoOwner: "clivm",
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 						Type:      "github_content",
@@ -61,7 +61,7 @@ packages:
 					"standard": &aqua.Registry{
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
+						RepoOwner: "clivm",
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 						Ref:       "v0.2.0",

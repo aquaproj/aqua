@@ -25,7 +25,7 @@ brews:
 
   # GitHub/GitLab repository to push the formula to
   tap:
-    owner: aquaproj
+    owner: clivm
     name: homebrew-aqua
     token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
   # The project name and current git tag are used in the format string.

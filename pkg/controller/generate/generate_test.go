@@ -59,7 +59,7 @@ packages:
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 `,
@@ -92,7 +92,7 @@ packages:
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 `,
@@ -128,7 +128,7 @@ packages:
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 `,
@@ -199,7 +199,7 @@ packages:
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 `,

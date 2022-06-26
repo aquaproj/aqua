@@ -30,7 +30,7 @@ packages:
     asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
 
 - type: github_content # github_content package
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-installer
   path: aqua-installer
 

@@ -67,7 +67,7 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 			a.Name = RegistryTypeStandard
 		}
 		if a.RepoOwner == "" {
-			a.RepoOwner = "aquaproj"
+			a.RepoOwner = "clivm"
 		}
 		if a.RepoName == "" {
 			a.RepoName = "aqua-registry"

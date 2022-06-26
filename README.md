@@ -12,7 +12,7 @@ Declarative CLI Version manager. Support `Lazy Install` and shareable configurat
 
 ## Document
 
-https://aquaproj.github.io/
+https://clivm.github.io/
 
 ## Contributing
 

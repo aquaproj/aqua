@@ -9,7 +9,7 @@ registries:
 - name: aqua-registry
   type: github_content # github_content registry
   ref: v3.3.0 # renovate: depName=clivm/clivm-registry
-  repo_owner: aquaproj
+  repo_owner: clivm
   repo_name: aqua-registry
   path: registry.yaml
 

@@ -16,7 +16,7 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		{
 			title: "github_content",
 			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
+				RepoOwner: "clivm",
 				RepoName:  "aqua-registry",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",
@@ -36,7 +36,7 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		{
 			title: "github_content repo_name is required",
 			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
+				RepoOwner: "clivm",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",
 				Type:      "github_content",
@@ -46,7 +46,7 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		{
 			title: "github_content ref is required",
 			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
+				RepoOwner: "clivm",
 				RepoName:  "aqua-registry",
 				Path:      "foo.yaml",
 				Type:      "github_content",
@@ -137,7 +137,7 @@ func TestRegistry_GetFilePath(t *testing.T) {
 			exp:     "/root/.aqua/registries/github_content/github.com/clivm/clivm-registry/v0.8.0/foo.yaml",
 			rootDir: "/root/.aqua",
 			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
+				RepoOwner: "clivm",
 				RepoName:  "aqua-registry",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",

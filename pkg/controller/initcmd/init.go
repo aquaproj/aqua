@@ -13,7 +13,7 @@ import (
 
 const configTemplate = `---
 # aqua - Declarative CLI Version Manager
-# https://aquaproj.github.io/
+# https://clivm.github.io/
 registries:
 - type: standard
   ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=clivm/clivm-registry
@@ -45,16 +45,16 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 	}
 
 	registryVersion := "v3.3.0" // renovate: depName=clivm/clivm-registry
-	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
+	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "clivm", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"repo_owner": "aquaproj",
+			"repo_owner": "clivm",
 			"repo_name":  "aqua-registry",
 		}).Warn("get the latest release")
 	} else {
 		if release == nil {
 			logE.WithFields(logrus.Fields{
-				"repo_owner": "aquaproj",
+				"repo_owner": "clivm",
 				"repo_name":  "aqua-registry",
 			}).Warn("failed to get the latest release")
 		} else {

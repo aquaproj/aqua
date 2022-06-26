@@ -25,7 +25,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 		},
 		PackageInfo: &registry.PackageInfo{
 			Type:      "github_release",
-			RepoOwner: "aquaproj",
+			RepoOwner: "clivm",
 			RepoName:  proxyName,
 			Asset:     &proxyAssetTemplate,
 			Files: []*registry.File{

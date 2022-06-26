@@ -1,6 +1,6 @@
 ---
 # aqua - Declarative CLI Version Manager
-# https://aquaproj.github.io/
+# https://clivm.github.io/
 registries:
 - type: standard
   ref: v3.3.0 # renovate: depName=clivm/clivm-registry
