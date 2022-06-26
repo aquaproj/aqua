@@ -34,7 +34,7 @@ func New(gh githubSvc.RepositoryService, fs afero.Fs) *Controller {
 
 func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
 	if cfgFilePath == "" {
-		cfgFilePath = "aqua.yaml"
+		cfgFilePath = "clivm.yaml"
 	}
 	if _, err := ctrl.fs.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.

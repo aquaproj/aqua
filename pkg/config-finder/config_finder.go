@@ -43,7 +43,7 @@ func ParseGlobalConfigFilePaths(env string) []string {
 }
 
 func configFileNames() []string {
-	return []string{"aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml"}
+	return []string{"clivm.yaml", "clivm.yml", ".clivm.yaml", ".clivm.yml"}
 }
 
 func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
