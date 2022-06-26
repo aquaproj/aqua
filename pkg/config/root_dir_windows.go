@@ -18,5 +18,5 @@ func GetRootDir(osEnv osenv.OSEnv) string {
 	if xdgDataHome == "" {
 		xdgDataHome = filepath.Join(osEnv.Getenv("HOME"), ".local", "share")
 	}
-	return filepath.Join(xdg.DataHome, "aquaproj-aqua")
+	return filepath.Join(xdg.DataHome, "clivm")
 }

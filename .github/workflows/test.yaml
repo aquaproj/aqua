@@ -17,7 +17,7 @@ jobs:
         cache: true
 
     - run: go build -o /usr/local/bin/aqua ./cmd/aqua
-    - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+    - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/clivm/bin" >> "$GITHUB_PATH"
     - run: aqua i
 
     - uses: suzuki-shunsuke/github-action-golangci-lint@v0.1.3

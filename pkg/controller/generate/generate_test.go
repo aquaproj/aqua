@@ -47,7 +47,7 @@ func Test_controller_Generate(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
@@ -80,7 +80,7 @@ packages:
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
@@ -115,7 +115,7 @@ packages:
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 				File:           "list.txt",
 			},
@@ -149,7 +149,7 @@ packages:
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
@@ -186,7 +186,7 @@ packages:
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 				Insert:         true,
 			},

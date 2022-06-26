@@ -47,7 +47,7 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "aqua-installer",
@@ -65,7 +65,7 @@ packages:
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/.local/share/clivm/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
 			},
 		},
 		{
@@ -77,12 +77,12 @@ packages:
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "gh",
 			env: map[string]string{
-				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
+				"PATH": "/home/foo/.local/share/clivm/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
 				"aqua.yaml": `registries:
@@ -184,7 +184,7 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit,cyclop
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "aqua-installer",

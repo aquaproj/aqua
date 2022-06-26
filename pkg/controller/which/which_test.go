@@ -47,7 +47,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "aqua-installer",
@@ -83,7 +83,7 @@ packages:
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
-				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 			},
 		},
 		{
@@ -95,12 +95,12 @@ packages:
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "gh",
 			env: map[string]string{
-				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
+				"PATH": "/home/foo/.local/share/clivm/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
 				"aqua.yaml": `registries:
@@ -133,7 +133,7 @@ packages:
 			},
 			param: &config.Param{
 				PWD:                   "/home/foo/workspace",
-				RootDir:               "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:               "/home/foo/.local/share/clivm",
 				MaxParallelism:        5,
 				GlobalConfigFilePaths: []string{"/etc/aqua/aqua.yaml"},
 			},
@@ -180,7 +180,7 @@ packages:
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
-				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 			},
 		},
 	}

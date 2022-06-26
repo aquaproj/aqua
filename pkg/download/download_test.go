@@ -45,7 +45,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{
@@ -97,7 +97,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{
@@ -159,7 +159,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{
@@ -211,7 +211,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{
@@ -266,7 +266,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{
@@ -316,7 +316,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{

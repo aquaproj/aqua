@@ -26,14 +26,14 @@ func TestGetRootDir(t *testing.T) {
 			env: map[string]string{
 				"XDG_DATA_HOME": "/home/foo/.xdg",
 			},
-			exp: "/home/foo/.xdg/aquaproj-aqua",
+			exp: "/home/foo/.xdg/clivm",
 		},
 		{
 			name: "HOME",
 			env: map[string]string{
 				"HOME": "/home/foo",
 			},
-			exp: "/home/foo/.local/share/aquaproj-aqua",
+			exp: "/home/foo/.local/share/clivm",
 		},
 	}
 	for _, d := range data {

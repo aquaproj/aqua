@@ -46,7 +46,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			cfg: &aqua.Config{
@@ -92,12 +92,12 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: "/home/foo/.local/share/clivm/bin",
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"aqua-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
 			},
 		},
 		{
@@ -110,7 +110,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			cfg: &aqua.Config{
@@ -144,12 +144,12 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: "/home/foo/.local/share/clivm/bin",
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"aqua-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
 			},
 		},
 		{
@@ -161,7 +161,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			cfg: &aqua.Config{
@@ -182,7 +182,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					PackageInfos: registry.PackageInfos{},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: "/home/foo/.local/share/clivm/bin",
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
@@ -250,10 +250,10 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				},
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 		},
 	}

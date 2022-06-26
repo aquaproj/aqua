@@ -34,13 +34,13 @@ func Test_installer_InstallProxy(t *testing.T) {
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				PWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "",
+				fmt.Sprintf("/home/foo/.local/share/clivm/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "",
 			},
 		},
 	}

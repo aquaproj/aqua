@@ -20,7 +20,7 @@ jobs:
         cache: true
 
     - run: go install ./cmd/aqua
-    - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+    - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/clivm/bin" >> "$GITHUB_PATH"
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
@@ -101,7 +101,7 @@ jobs:
         cache: true
 
     - run: go install ./cmd/aqua
-    - run: echo "$HOME/AppData/Local/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+    - run: echo "$HOME/AppData/Local/clivm/bin" >> "$GITHUB_PATH"
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
@@ -165,7 +165,7 @@ jobs:
         cache: true
 
     - run: go install ./cmd/aqua
-    - run: echo "$HOME\AppData\Local\aquaproj-aqua\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    - run: echo "$HOME\AppData\Local\clivm\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD\tests\aqua-global.yaml;$PWD\tests\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
