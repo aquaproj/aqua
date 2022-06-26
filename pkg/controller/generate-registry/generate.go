@@ -66,10 +66,19 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 
 func (ctrl *Controller) excludeAsset(assetName string) bool {
 	format := ctrl.getFormat(assetName)
+	allowedExts := map[string]struct{}{
+		".exe": {},
+		".sh":  {},
+		".js":  {},
+		".jar": {},
+		".py":  {},
+	}
 	if format == formatRaw {
 		ext := filepath.Ext(assetName)
-		if len(ext) < 6 { //nolint:gomnd
-			return true
+		if len(ext) > 0 && len(ext) < 6 {
+			if _, ok := allowedExts[ext]; !ok {
+				return true
+			}
 		}
 	}
 	suffixes := []string{
@@ -82,7 +91,7 @@ func (ctrl *Controller) excludeAsset(assetName string) bool {
 		}
 	}
 	words := []string{
-		"readme", "license", "openbsd", "freebsd", "netbsd", "android", "386", "i386", "armv6", "armv7", "32bit",
+		"changelog", "readme", "license", "openbsd", "freebsd", "netbsd", "android", "386", "i386", "armv6", "armv7", "32bit",
 		"netbsd", "plan9", "solaris", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm",
 		"checksum",
 	}
@@ -118,12 +127,15 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 				"repo_name":  pkgInfo.RepoName,
 			}).WithError(err).Warn("get the latest release")
 		} else {
+			logE.WithField("version", len(release.GetTagName())).Debug("got the latest release")
 			assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
 			if len(assets) != 0 {
+				logE.WithField("num_of_assets", len(assets)).Debug("got assets")
 				assetInfos := make([]*AssetInfo, 0, len(assets))
 				for _, asset := range assets {
 					assetName := asset.GetName()
 					if ctrl.excludeAsset(assetName) {
+						logE.WithField("asset_name", assetName).Debug("exclude an asset")
 						continue
 					}
 					assetInfo := ctrl.parseAssetName(asset.GetName(), release.GetTagName())
