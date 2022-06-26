@@ -37,7 +37,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				MaxParallelism: 5,
 			},
-			cfgFilePath: "aqua.yaml",
+			cfgFilePath: "clivm.yaml",
 			files: map[string]string{
 				"registry.yaml": `packages:
 - type: github_content

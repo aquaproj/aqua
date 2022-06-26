@@ -46,13 +46,13 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "clivm-installer",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
@@ -76,7 +76,7 @@ packages:
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
@@ -85,7 +85,7 @@ packages:
 				"PATH": "/home/foo/.local/share/clivm/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
@@ -197,7 +197,7 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit,cyclop
 		d := d
 		b.Run("normal", func(b *testing.B) {
 			tempDir := b.TempDir()
-			d.param.ConfigFilePath = filepath.Join(tempDir, "aqua.yaml")
+			d.param.ConfigFilePath = filepath.Join(tempDir, "clivm.yaml")
 			d.files[d.param.ConfigFilePath] = `registries:
 - type: local
   name: standard

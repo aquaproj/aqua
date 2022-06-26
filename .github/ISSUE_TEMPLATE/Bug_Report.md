@@ -21,14 +21,14 @@ $ clivm -v
 
 ## How to reproduce
 
-* aqua.yaml
+* clivm.yaml
 * executed command and output
 
-> aqua.yaml should be not partial but complete configuration.
+> clivm.yaml should be not partial but complete configuration.
 > Please remove unneeded configuration to reproduce the issue.
 
 ```yaml
-# aqua.yaml
+# clivm.yaml
 
 ```
 

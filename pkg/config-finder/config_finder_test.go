@@ -57,28 +57,28 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 		{
 			name:           "configFilePath",
 			wd:             "/home/foo",
-			configFilePath: "/home/foo/aqua.yaml",
-			exp:            "/home/foo/aqua.yaml",
+			configFilePath: "/home/foo/clivm.yaml",
+			exp:            "/home/foo/clivm.yaml",
 		},
 		{
 			name: "find",
 			wd:   "/home/foo",
 			files: map[string]string{
-				"/home/foo/.aqua.yaml": "",
+				"/home/foo/.clivm.yaml": "",
 			},
-			exp: "/home/foo/.aqua.yaml",
+			exp: "/home/foo/.clivm.yaml",
 		},
 		{
 			name: "global config",
 			wd:   "/home/foo",
 			globalConfigFilePaths: []string{
-				"/home/.config/aqua.yaml",
-				"/etc/aqua/aqua.yaml",
+				"/home/.config/clivm.yaml",
+				"/etc/aqua/clivm.yaml",
 			},
 			files: map[string]string{
-				"/etc/aqua/aqua.yaml": "",
+				"/etc/aqua/clivm.yaml": "",
 			},
-			exp: "/etc/aqua/aqua.yaml",
+			exp: "/etc/aqua/clivm.yaml",
 		},
 	}
 	for _, d := range data {
@@ -133,12 +133,12 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 			name: "find",
 			wd:   "/home/foo",
 			files: map[string]string{
-				"/home/foo/.aqua.yaml": "",
-				"/home/aqua.yaml":      "",
+				"/home/foo/.clivm.yaml": "",
+				"/home/clivm.yaml":      "",
 			},
 			exp: []string{
-				"/home/foo/.aqua.yaml",
-				"/home/aqua.yaml",
+				"/home/foo/.clivm.yaml",
+				"/home/clivm.yaml",
 			},
 		},
 		{
@@ -146,11 +146,11 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 			wd:             "/home/foo",
 			configFilePath: "clivm-2.yaml",
 			files: map[string]string{
-				"/home/.aqua.yaml": "",
+				"/home/.clivm.yaml": "",
 			},
 			exp: []string{
 				"clivm-2.yaml",
-				"/home/.aqua.yaml",
+				"/home/.clivm.yaml",
 			},
 		},
 	}

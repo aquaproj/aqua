@@ -45,7 +45,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
@@ -109,7 +109,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
@@ -160,7 +160,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},

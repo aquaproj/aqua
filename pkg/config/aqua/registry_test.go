@@ -105,7 +105,7 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 			title:       "normal",
 			exp:         "ci/foo.yaml",
 			rootDir:     "/root/.aqua",
-			cfgFilePath: "ci/aqua.yaml",
+			cfgFilePath: "ci/clivm.yaml",
 			registry: &aqua.Registry{
 				Path: "foo.yaml",
 				Type: "local",

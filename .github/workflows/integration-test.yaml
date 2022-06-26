@@ -65,7 +65,7 @@ jobs:
 
     - run: clivm g -i suzuki-shunsuke/tfcmt
       working-directory: tests
-    - run: git diff aqua.yaml
+    - run: git diff clivm.yaml
       working-directory: tests
 
     - name: "Test generate-registry"
@@ -134,7 +134,7 @@ jobs:
 
     - run: clivm g -i suzuki-shunsuke/tfcmt
       working-directory: tests
-    - run: git diff aqua.yaml
+    - run: git diff clivm.yaml
       working-directory: tests
 
     - name: "Test generate-registry"
@@ -198,7 +198,7 @@ jobs:
 
     - run: clivm g -i suzuki-shunsuke/tfcmt
       working-directory: tests
-    - run: git diff aqua.yaml
+    - run: git diff clivm.yaml
       working-directory: tests
 
     - name: "Test generate-registry"

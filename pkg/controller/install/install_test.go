@@ -39,12 +39,12 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml

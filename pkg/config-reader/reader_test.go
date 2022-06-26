@@ -25,12 +25,12 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: standard
   ref: v2.5.0
 packages:`,
 			},
-			configFilePath: "aqua.yaml",
+			configFilePath: "clivm.yaml",
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {
@@ -48,7 +48,7 @@ packages:`,
 		{
 			name: "import package",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: standard
   ref: v2.5.0
 packages:
@@ -59,7 +59,7 @@ packages:
 - name: clivm/clivm-installer@v1.0.0
 `,
 			},
-			configFilePath: "aqua.yaml",
+			configFilePath: "clivm.yaml",
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {

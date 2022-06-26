@@ -28,11 +28,11 @@ func TestController_Init(t *testing.T) { //nolint:funlen
 			name: "file already exists",
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: standard
   ref: v2.15.0
 packages:

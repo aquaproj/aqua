@@ -36,7 +36,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 			param: &config.Param{
 				RootDir:        "/home/foo/.local/share/clivm",
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{

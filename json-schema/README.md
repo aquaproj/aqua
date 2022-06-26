@@ -16,5 +16,5 @@ If you find a CLI tool to validate configuration with JSON Schema,
 e.g.
 
 ```console
-$ ajv --spec=draft2020 -s json-schema/clivm-yaml.json -d aqua.yaml
+$ ajv --spec=draft2020 -s json-schema/clivm-yaml.json -d clivm.yaml
 ```

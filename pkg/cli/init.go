@@ -12,10 +12,10 @@ func (runner *Runner) newInitCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "init",
 		Usage:     "Create a configuration file if it doesn't exist",
-		ArgsUsage: `[<created file path. The default value is "aqua.yaml">]`,
+		ArgsUsage: `[<created file path. The default value is "clivm.yaml">]`,
 		Description: `Create a configuration file if it doesn't exist
 e.g.
-$ clivm init # create "aqua.yaml"
+$ clivm init # create "clivm.yaml"
 $ clivm init foo.yaml # create foo.yaml`,
 		Action: runner.initAction,
 	}

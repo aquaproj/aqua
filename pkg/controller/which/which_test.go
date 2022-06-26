@@ -46,13 +46,13 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "clivm-installer",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
@@ -94,7 +94,7 @@ packages:
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
@@ -103,7 +103,7 @@ packages:
 				"PATH": "/home/foo/.local/share/clivm/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
@@ -135,11 +135,11 @@ packages:
 				PWD:                   "/home/foo/workspace",
 				RootDir:               "/home/foo/.local/share/clivm",
 				MaxParallelism:        5,
-				GlobalConfigFilePaths: []string{"/etc/aqua/aqua.yaml"},
+				GlobalConfigFilePaths: []string{"/etc/aqua/clivm.yaml"},
 			},
 			exeName: "clivm-installer",
 			files: map[string]string{
-				"/etc/aqua/aqua.yaml": `registries:
+				"/etc/aqua/clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
