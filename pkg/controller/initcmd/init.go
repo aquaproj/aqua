@@ -20,13 +20,6 @@ registries:
 packages:
 `
 
-var globalVarCfgFileNameMap = map[string]struct{}{ //nolint:gochecknoglobals
-	"aqua.yaml":  {},
-	"aqua.yml":   {},
-	".aqua.yaml": {},
-	".aqua.yml":  {},
-}
-
 type Controller struct {
 	gitHubRepositoryService githubSvc.RepositoryService
 	fs                      afero.Fs
@@ -43,21 +36,14 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua.yaml"
 	}
-	if _, ok := globalVarCfgFileNameMap[cfgFilePath]; ok {
-		for fileName := range globalVarCfgFileNameMap {
-			if _, err := ctrl.fs.Stat(fileName); err == nil {
-				// configuration file already exists, then do nothing.
-				logE.WithFields(logrus.Fields{
-					"configuration_file_path": fileName,
-				}).Info("configuration file already exists")
-				return nil
-			}
-		}
-	}
 	if _, err := ctrl.fs.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.
+		logE.WithFields(logrus.Fields{
+			"configuration_file_path": cfgFilePath,
+		}).Info("configuration file already exists")
 		return nil
 	}
+
 	registryVersion := "v3.3.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
