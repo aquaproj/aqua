@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
+      CLIVM_LOG_LEVEL: debug
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3.2.0
@@ -21,7 +21,7 @@ jobs:
 
     - run: go install ./cmd/aqua
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
+    - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/aqua-global.yaml g -f -
@@ -51,7 +51,7 @@ jobs:
     - run: btop -v
     - run: btop -v
       env:
-        AQUA_EXPERIMENTAL_X_SYS_EXEC: "true"
+        CLIVM_EXPERIMENTAL_X_SYS_EXEC: "true"
     - run: wire --help
     - run: gox --help
     - run: bats -v
@@ -89,7 +89,7 @@ jobs:
     runs-on: windows-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
+      CLIVM_LOG_LEVEL: debug
     defaults:
       run:
         shell: bash
@@ -102,7 +102,7 @@ jobs:
 
     - run: go install ./cmd/aqua
     - run: echo "$HOME/AppData/Local/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
+    - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
@@ -156,7 +156,7 @@ jobs:
     runs-on: windows-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
+      CLIVM_LOG_LEVEL: debug
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3.2.0
@@ -166,7 +166,7 @@ jobs:
 
     - run: go install ./cmd/aqua
     - run: echo "$HOME\AppData\Local\aquaproj-aqua\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD\tests\aqua-global.yaml;$PWD\tests\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - run: echo "CLIVM_GLOBAL_CONFIG=$PWD\tests\aqua-global.yaml;$PWD\tests\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer

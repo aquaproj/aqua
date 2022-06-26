@@ -49,8 +49,8 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.RootDir = config.GetRootDir(osenv.New())
 	logE := runner.LogE
 	log.SetLevel(param.LogLevel, logE)
-	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
-	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
+	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("CLIVM_MAX_PARALLELISM"), logE)
+	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("CLIVM_GLOBAL_CONFIG"))
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -74,13 +74,13 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			&cli.StringFlag{
 				Name:    "log-level",
 				Usage:   "log level",
-				EnvVars: []string{"AQUA_LOG_LEVEL"},
+				EnvVars: []string{"CLIVM_LOG_LEVEL"},
 			},
 			&cli.StringFlag{
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "configuration file path",
-				EnvVars: []string{"AQUA_CONFIG"},
+				EnvVars: []string{"CLIVM_CONFIG"},
 			},
 			&cli.StringFlag{
 				Name:  "trace",

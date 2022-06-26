@@ -38,7 +38,7 @@ func New(pkgInstaller installpackage.Installer, which which.Controller, executor
 		packageInstaller: pkgInstaller,
 		which:            which,
 		executor:         executor,
-		enabledXSysExec:  osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		enabledXSysExec:  osEnv.Getenv("CLIVM_EXPERIMENTAL_X_SYS_EXEC") == "true",
 		fs:               fs,
 	}
 }

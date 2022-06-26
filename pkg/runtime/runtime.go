@@ -18,14 +18,14 @@ func New() *Runtime {
 }
 
 func goos() string {
-	if s := os.Getenv("AQUA_GOOS"); s != "" {
+	if s := os.Getenv("CLIVM_GOOS"); s != "" {
 		return s
 	}
 	return runtime.GOOS
 }
 
 func goarch() string {
-	if s := os.Getenv("AQUA_GOARCH"); s != "" {
+	if s := os.Getenv("CLIVM_GOARCH"); s != "" {
 		return s
 	}
 	return runtime.GOARCH
