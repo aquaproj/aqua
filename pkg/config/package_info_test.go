@@ -145,7 +145,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 
 func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 	t.Parallel()
-	rootDir := "/tmp/aqua"
+	rootDir := "/tmp/clivm"
 	data := []struct {
 		title string
 		exp   string
@@ -153,7 +153,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 	}{
 		{
 			title: "github_archive",
-			exp:   "/tmp/aqua/pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
+			exp:   "/tmp/clivm/pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_archive",
@@ -167,7 +167,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content",
-			exp:   "/tmp/aqua/pkgs/github_content/github.com/clivm/clivm-installer/v0.2.0/clivm-installer",
+			exp:   "/tmp/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v0.2.0/clivm-installer",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
@@ -182,7 +182,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_release",
-			exp:   "/tmp/aqua/pkgs/github_release/github.com/clivm/clivm/v0.7.7/clivm.tar.gz",
+			exp:   "/tmp/clivm/pkgs/github_release/github.com/clivm/clivm/v0.7.7/clivm.tar.gz",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
@@ -198,7 +198,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "http",
-			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
+			exp:   "/tmp/clivm/pkgs/http/example.com/foo-1.0.0.zip",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "http",

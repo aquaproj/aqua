@@ -83,7 +83,7 @@ jobs:
     - run: clivm list
       working-directory: /tmp
 
-    - run: clivm-installer -v v0.8.1 -i /tmp/aqua
+    - run: clivm-installer -v v0.8.1 -i /tmp/clivm
 
   build-windows:
     runs-on: windows-latest
