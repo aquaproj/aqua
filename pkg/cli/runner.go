@@ -45,7 +45,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.All = c.Bool("all")
 	param.File = c.String("f")
-	param.AQUAVersion = runner.LDFlags.Version
+	param.CLIVMVersion = runner.LDFlags.Version
 	param.RootDir = config.GetRootDir(osenv.New())
 	logE := runner.LogE
 	log.SetLevel(param.LogLevel, logE)

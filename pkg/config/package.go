@@ -167,7 +167,7 @@ type Param struct {
 	Insert                bool
 	File                  string
 	GlobalConfigFilePaths []string
-	AQUAVersion           string
+	CLIVMVersion          string
 	RootDir               string
 	MaxParallelism        int
 	PWD                   string
