@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/config/registry"
 	"gopkg.in/yaml.v2"
 )
 
@@ -40,7 +40,7 @@ func downloadTestFile(uri, tempDir string) (string, error) {
 
 func BenchmarkReadRegistry(b *testing.B) {
 	b.Run("yaml", func(b *testing.B) {
-		registryYAML, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.11.1/registry.yaml", b.TempDir())
+		registryYAML, err := downloadTestFile("https://raw.githubusercontent.com/clivm/clivm-registry/v2.11.1/registry.yaml", b.TempDir())
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -60,7 +60,7 @@ func BenchmarkReadRegistry(b *testing.B) {
 		}
 	})
 	b.Run("json", func(b *testing.B) {
-		registryJSON, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.11.1/registry.json", b.TempDir())
+		registryJSON, err := downloadTestFile("https://raw.githubusercontent.com/clivm/clivm-registry/v2.11.1/registry.json", b.TempDir())
 		if err != nil {
 			b.Fatal(err)
 		}

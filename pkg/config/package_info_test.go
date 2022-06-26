@@ -3,10 +3,10 @@ package config_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/runtime"
 )
 
 func stringP(s string) *string {
@@ -167,7 +167,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content",
-			exp:   "/tmp/aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
+			exp:   "/tmp/aqua/pkgs/github_content/github.com/clivm/clivm-installer/v0.2.0/aqua-installer",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
@@ -182,7 +182,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_release",
-			exp:   "/tmp/aqua/pkgs/github_release/github.com/aquaproj/aqua/v0.7.7/aqua.tar.gz",
+			exp:   "/tmp/aqua/pkgs/github_release/github.com/clivm/clivm/v0.7.7/aqua.tar.gz",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",

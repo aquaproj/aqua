@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 

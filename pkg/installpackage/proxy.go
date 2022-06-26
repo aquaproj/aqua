@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/sirupsen/logrus"
 )
 
-const ProxyVersion = "v1.1.2" // renovate: depName=aquaproj/aqua-proxy
+const ProxyVersion = "v1.1.2" // renovate: depName=clivm/clivm-proxy
 
 func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
 	if isWindows(inst.runtime.GOOS) {

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/aquaproj/aqua/pkg/config/aqua/config",
+  "$id": "https://github.com/clivm/clivm/pkg/config/aqua/config",
   "$ref": "#/$defs/Config",
   "$defs": {
     "Config": {

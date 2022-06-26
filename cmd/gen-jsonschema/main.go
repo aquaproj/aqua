@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/invopop/jsonschema"
 )
 

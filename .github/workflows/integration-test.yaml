@@ -24,9 +24,9 @@ jobs:
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
-    - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/aqua-global.yaml g -f -
-    - run: aqua g x-motemen/ghq aquaproj/aqua-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
+    - run: echo "local,clivm/clivm-installer" | aqua -c tests/aqua-global.yaml g -f -
+    - run: aqua g x-motemen/ghq clivm/clivm-installer
+    - run: echo cli/cli | aqua g -f - x-motemen/ghq clivm/clivm-installer
 
     - run: aqua list
     - run: aqua i -l -a
@@ -105,8 +105,8 @@ jobs:
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
-    - run: aqua g x-motemen/ghq aquaproj/aqua-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
+    - run: aqua g x-motemen/ghq clivm/clivm-installer
+    - run: echo cli/cli | aqua g -f - x-motemen/ghq clivm/clivm-installer
 
     - run: aqua list
     - run: aqua i -l -a
@@ -169,8 +169,8 @@ jobs:
     - run: echo "CLIVM_GLOBAL_CONFIG=$PWD\tests\aqua-global.yaml;$PWD\tests\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
-    - run: aqua g x-motemen/ghq aquaproj/aqua-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
+    - run: aqua g x-motemen/ghq clivm/clivm-installer
+    - run: echo cli/cli | aqua g -f - x-motemen/ghq clivm/clivm-installer
 
     - run: aqua list
     - run: aqua i -l -a

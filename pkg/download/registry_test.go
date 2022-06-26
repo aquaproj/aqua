@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/download"
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/download"
+	githubSvc "github.com/clivm/clivm/pkg/github"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
@@ -45,7 +45,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 									Name: "download an asset",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.yaml",
+										Path:   "/clivm/clivm-registry/v2.16.0/registry.yaml",
 									},
 									Response: &flute.Response{
 										Base: http.Response{
@@ -82,7 +82,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 									Name: "download an asset",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.yaml",
+										Path:   "/clivm/clivm-registry/v2.16.0/registry.yaml",
 									},
 									Response: &flute.Response{
 										Base: http.Response{

@@ -7,7 +7,7 @@ import (
 )
 
 func (runner *Runner) newCompletionCommand() *cli.Command {
-	// https://github.com/aquaproj/aqua/pull/859
+	// https://github.com/clivm/clivm/pull/859
 	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
 		Name:  "completion",

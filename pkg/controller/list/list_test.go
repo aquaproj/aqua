@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/list"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/controller/list"
+	"github.com/clivm/clivm/pkg/download"
+	registry "github.com/clivm/clivm/pkg/install-registry"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -37,7 +37,7 @@ func TestController_List(t *testing.T) {
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content

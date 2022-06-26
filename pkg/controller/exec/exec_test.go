@@ -9,17 +9,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	execCtrl "github.com/aquaproj/aqua/pkg/controller/exec"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	execCtrl "github.com/clivm/clivm/pkg/controller/exec"
+	"github.com/clivm/clivm/pkg/controller/which"
+	"github.com/clivm/clivm/pkg/download"
+	"github.com/clivm/clivm/pkg/exec"
+	registry "github.com/clivm/clivm/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/installpackage"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -57,7 +57,7 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
@@ -65,7 +65,7 @@ packages:
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"/home/foo/.local/share/clivm/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/aqua-installer/aqua-installer": "",
 			},
 		},
 		{
@@ -90,7 +90,7 @@ packages:
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
@@ -203,9 +203,9 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit,cyclop
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `
-			if _, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.19.0/registry.yaml", tempDir); err != nil {
+			if _, err := downloadTestFile("https://raw.githubusercontent.com/clivm/clivm-registry/v2.19.0/registry.yaml", tempDir); err != nil {
 				b.Fatal(err)
 			}
 			fs := afero.NewMemMapFs()

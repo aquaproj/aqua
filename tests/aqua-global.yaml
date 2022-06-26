@@ -1,6 +1,6 @@
 registries:
 - type: standard # standard registry
-  ref: v3.3.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.3.0 # renovate: depName=clivm/clivm-registry
 
 - name: local # local registry
   type: local
@@ -8,7 +8,7 @@ registries:
 
 - name: aqua-registry
   type: github_content # github_content registry
-  ref: v3.3.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.3.0 # renovate: depName=clivm/clivm-registry
   repo_owner: aquaproj
   repo_name: aqua-registry
   path: registry.yaml
@@ -38,7 +38,7 @@ packages:
 - name: golang-migrate/migrate # version_constraint, omit "registry"
   version: v4.15.2 # renovate: depName=golang-migrate/migrate
 
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
   # github_content package
   registry: local
 

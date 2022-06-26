@@ -1,7 +1,7 @@
 package log
 
 import (
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 )
 

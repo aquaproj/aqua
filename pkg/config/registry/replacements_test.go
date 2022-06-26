@@ -3,8 +3,8 @@ package registry_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/runtime"
 )
 
 func TestOverride_Match(t *testing.T) {

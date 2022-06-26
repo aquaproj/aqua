@@ -3,7 +3,7 @@ package link_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/clivm/clivm/pkg/link"
 	"github.com/spf13/afero"
 )
 

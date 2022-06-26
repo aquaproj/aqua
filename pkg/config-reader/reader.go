@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/aqua"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )

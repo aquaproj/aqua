@@ -17,7 +17,7 @@ builds:
 release:
   prerelease: true
   header: |
-    [Pull Requests](https://github.com/aquaproj/aqua/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/aquaproj/aqua/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/aquaproj/aqua/compare/{{.PreviousTag}}...{{.Tag}}
+    [Pull Requests](https://github.com/clivm/clivm/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/clivm/clivm/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/clivm/clivm/compare/{{.PreviousTag}}...{{.Tag}}
 brews:
 -
   # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
@@ -32,7 +32,7 @@ brews:
   commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
   # Your app's homepage.
   # Default is empty.
-  homepage: https://github.com/aquaproj/aqua
+  homepage: https://github.com/clivm/clivm
 
   # Template of your app's description.
   # Default is empty.

@@ -3,8 +3,8 @@ package expr_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/expr"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/expr"
+	"github.com/clivm/clivm/pkg/runtime"
 )
 
 func TestEvaluateSupportedIf(t *testing.T) {

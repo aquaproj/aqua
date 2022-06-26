@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 )
 

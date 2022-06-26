@@ -7,11 +7,11 @@ import (
 	"strings"
 	texttemplate "text/template"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/template"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/runtime"
+	"github.com/clivm/clivm/pkg/template"
+	"github.com/clivm/clivm/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )

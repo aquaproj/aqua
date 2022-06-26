@@ -3,7 +3,7 @@ package aqua_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/aqua"
 )
 
 func TestRegistry_Validate(t *testing.T) { //nolint:funlen
@@ -134,7 +134,7 @@ func TestRegistry_GetFilePath(t *testing.T) {
 	}{
 		{
 			title:   "github_content",
-			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
+			exp:     "/root/.aqua/registries/github_content/github.com/clivm/clivm-registry/v0.8.0/foo.yaml",
 			rootDir: "/root/.aqua",
 			registry: &aqua.Registry{
 				RepoOwner: "aquaproj",

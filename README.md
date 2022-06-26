@@ -4,9 +4,9 @@
 
 #
 
-[![Build Status](https://github.com/aquaproj/aqua/workflows/test/badge.svg)](https://github.com/aquaproj/aqua/actions)
-[![GitHub last commit](https://img.shields.io/github/last-commit/aquaproj/aqua.svg)](https://github.com/aquaproj/aqua)
-[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/aquaproj/aqua/main/LICENSE)
+[![Build Status](https://github.com/clivm/clivm/workflows/test/badge.svg)](https://github.com/clivm/clivm/actions)
+[![GitHub last commit](https://img.shields.io/github/last-commit/clivm/clivm.svg)](https://github.com/clivm/clivm)
+[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/clivm/clivm/main/LICENSE)
 
 Declarative CLI Version manager. Support `Lazy Install` and shareable configuration mechanism named `Registry`. Switch versions seamlessly.
 

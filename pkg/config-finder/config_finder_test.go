@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	finder "github.com/clivm/clivm/pkg/config-finder"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )

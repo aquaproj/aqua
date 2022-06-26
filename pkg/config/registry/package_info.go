@@ -3,7 +3,7 @@ package registry
 import (
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/iancoleman/orderedmap"
 	"github.com/invopop/jsonschema"
 )

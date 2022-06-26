@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/aqua"
+	cfgRegistry "github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/download"
+	registry "github.com/clivm/clivm/pkg/install-registry"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -113,7 +113,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 									Name: "download a registry",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.yaml",
+										Path:   "/clivm/clivm-registry/v2.16.0/registry.yaml",
 									},
 									Response: &flute.Response{
 										Base: http.Response{
@@ -131,7 +131,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 									Name: "download a registry.json",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.json",
+										Path:   "/clivm/clivm-registry/v2.16.0/registry.json",
 									},
 									Response: &flute.Response{
 										Base: http.Response{

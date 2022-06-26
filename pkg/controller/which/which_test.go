@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/config/aqua"
+	cfgRegistry "github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/controller/which"
+	"github.com/clivm/clivm/pkg/download"
+	registry "github.com/clivm/clivm/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -57,7 +57,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
@@ -69,7 +69,7 @@ packages:
 			exp: &which.Which{
 				Package: &config.Package{
 					Package: &aqua.Package{
-						Name:     "aquaproj/aqua-installer",
+						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
@@ -83,7 +83,7 @@ packages:
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
-				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/aqua-installer/aqua-installer",
 			},
 		},
 		{
@@ -108,7 +108,7 @@ packages:
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
@@ -145,7 +145,7 @@ packages:
   path: registry.yaml
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"/etc/aqua/registry.yaml": `packages:
 - type: github_release
@@ -166,7 +166,7 @@ packages:
 			exp: &which.Which{
 				Package: &config.Package{
 					Package: &aqua.Package{
-						Name:     "aquaproj/aqua-installer",
+						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
@@ -180,7 +180,7 @@ packages:
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
-				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/aqua-installer/aqua-installer",
 			},
 		},
 	}

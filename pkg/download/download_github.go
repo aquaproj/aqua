@@ -70,7 +70,7 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 }
 
 func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
-	// https://github.com/aquaproj/aqua/issues/391
+	// https://github.com/clivm/clivm/issues/391
 	body, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName)
 	if err == nil {
 		return body, nil

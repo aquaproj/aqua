@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	githubSvc "github.com/clivm/clivm/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -16,7 +16,7 @@ const configTemplate = `---
 # https://aquaproj.github.io/
 registries:
 - type: standard
-  ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
+  ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=clivm/clivm-registry
 packages:
 `
 
@@ -44,7 +44,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		return nil
 	}
 
-	registryVersion := "v3.3.0" // renovate: depName=aquaproj/aqua-registry
+	registryVersion := "v3.3.0" // renovate: depName=clivm/clivm-registry
 	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{

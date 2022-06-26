@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/download"
+	githubSvc "github.com/clivm/clivm/pkg/github"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
@@ -163,7 +163,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{
-					Name:     "aquaproj/aqua-installer",
+					Name:     "clivm/clivm-installer",
 					Registry: "standard",
 					Version:  "v1.1.0",
 				},
@@ -189,7 +189,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 									Name: "download an asset",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-installer/v1.1.0/aqua-installer",
+										Path:   "/clivm/clivm-installer/v1.1.0/aqua-installer",
 									},
 									Response: &flute.Response{
 										Base: http.Response{
@@ -215,7 +215,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			pkg: &config.Package{
 				Package: &aqua.Package{
-					Name:     "aquaproj/aqua-installer",
+					Name:     "clivm/clivm-installer",
 					Registry: "standard",
 					Version:  "v1.1.0",
 				},
@@ -244,7 +244,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 									Name: "download an asset",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-installer/v1.1.0/aqua-installer",
+										Path:   "/clivm/clivm-installer/v1.1.0/aqua-installer",
 									},
 									Response: &flute.Response{
 										Base: http.Response{

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/github"
+	"github.com/clivm/clivm/pkg/runtime"
 	gh "github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"

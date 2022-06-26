@@ -2,26 +2,26 @@
   extends: [
     "config:base",
     "github>suzuki-shunsuke/renovate-config",
-    "github>aquaproj/aqua-renovate-config#1.1.0",
-    "github>aquaproj/aqua-renovate-config:file#1.1.0(tests/aqua.*\\.yaml)",
-    "github>aquaproj/aqua-renovate-config:file#1.1.0(aqua/.*\\.ya?ml)",
+    "github>clivm/clivm-renovate-config#1.1.0",
+    "github>clivm/clivm-renovate-config:file#1.1.0(tests/aqua.*\\.yaml)",
+    "github>clivm/clivm-renovate-config:file#1.1.0(aqua/.*\\.ya?ml)",
   ],
   ignorePaths: [],
   regexManagers: [
     {
       fileMatch: [".*\\.go"],
-      depNameTemplate: "aquaproj/aqua-proxy",
+      depNameTemplate: "clivm/clivm-proxy",
       datasourceTemplate: "github-releases",
       matchStrings: [
-        '"(?<currentValue>.*)", // renovate: depName=aquaproj/aqua-proxy',
+        '"(?<currentValue>.*)", // renovate: depName=clivm/clivm-proxy',
       ],
     },
     {
       fileMatch: [".*\\.go"],
-      depNameTemplate: "aquaproj/aqua-registry",
+      depNameTemplate: "clivm/clivm-registry",
       datasourceTemplate: "github-releases",
       matchStrings: [
-        '"(?<currentValue>.*)",? // renovate: depName=aquaproj/aqua-registry',
+        '"(?<currentValue>.*)",? // renovate: depName=clivm/clivm-registry',
       ],
     },
   ],

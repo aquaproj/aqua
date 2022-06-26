@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/generate"
-	"github.com/aquaproj/aqua/pkg/download"
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/controller/generate"
+	"github.com/clivm/clivm/pkg/download"
+	githubSvc "github.com/clivm/clivm/pkg/github"
+	registry "github.com/clivm/clivm/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -98,7 +98,7 @@ packages:
 `,
 			},
 			args: []string{
-				"aquaproj/aqua-installer",
+				"clivm/clivm-installer",
 			},
 			releases: []*github.RepositoryRelease{
 				{
@@ -132,7 +132,7 @@ packages:
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"list.txt": "aquaproj/aqua-installer\n",
+				"list.txt": "clivm/clivm-installer\n",
 			},
 			releases: []*github.RepositoryRelease{
 				{
@@ -205,7 +205,7 @@ packages:
 `,
 			},
 			args: []string{
-				"aquaproj/aqua-installer",
+				"clivm/clivm-installer",
 			},
 			releases: []*github.RepositoryRelease{
 				{

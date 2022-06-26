@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/initcmd"
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller/initcmd"
+	"github.com/clivm/clivm/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )

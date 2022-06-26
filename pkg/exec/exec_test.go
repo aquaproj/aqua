@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/exec"
+	"github.com/clivm/clivm/pkg/exec"
 )
 
 func TestExecutorExec(t *testing.T) {

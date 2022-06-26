@@ -4,7 +4,7 @@
 <img src="./aqua_horizontal.svg" width="400">
 </p>
 
-[#403](https://github.com/aquaproj/aqua/pull/403)
+[#403](https://github.com/clivm/clivm/pull/403)
 
 The logo has been created by [@vadasambar](https://github.com/vadasambar).
 

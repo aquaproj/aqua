@@ -3,8 +3,8 @@ package reader_test
 import (
 	"testing"
 
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/config/aqua"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )
@@ -56,7 +56,7 @@ packages:
 - import: aqua-installer.yaml
 `,
 				"aqua-installer.yaml": `packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 			},
 			configFilePath: "aqua.yaml",
@@ -78,7 +78,7 @@ packages:
 						Version:  "v1.0.0",
 					},
 					{
-						Name:     "aquaproj/aqua-installer",
+						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
