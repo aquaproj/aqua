@@ -9,7 +9,7 @@ import (
 	"github.com/clivm/clivm/pkg/config"
 	finder "github.com/clivm/clivm/pkg/config-finder"
 	reader "github.com/clivm/clivm/pkg/config-reader"
-	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	cfgRegistry "github.com/clivm/clivm/pkg/config/registry"
 	registry "github.com/clivm/clivm/pkg/install-registry"
 	"github.com/clivm/clivm/pkg/link"

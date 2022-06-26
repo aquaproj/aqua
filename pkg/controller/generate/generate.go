@@ -12,7 +12,7 @@ import (
 	"github.com/clivm/clivm/pkg/config"
 	finder "github.com/clivm/clivm/pkg/config-finder"
 	reader "github.com/clivm/clivm/pkg/config-reader"
-	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/clivm/clivm/pkg/expr"
 	githubSvc "github.com/clivm/clivm/pkg/github"

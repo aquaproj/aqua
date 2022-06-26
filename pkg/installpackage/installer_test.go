@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/clivm/clivm/pkg/config"
-	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/clivm/clivm/pkg/download"
 	"github.com/clivm/clivm/pkg/exec"

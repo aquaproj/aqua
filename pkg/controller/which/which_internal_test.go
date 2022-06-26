@@ -3,7 +3,7 @@ package which
 import (
 	"testing"
 
-	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/google/go-cmp/cmp"

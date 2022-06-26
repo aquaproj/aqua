@@ -3,7 +3,7 @@ package aqua_test
 import (
 	"testing"
 
-	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 )
 
 func TestRegistry_Validate(t *testing.T) { //nolint:funlen

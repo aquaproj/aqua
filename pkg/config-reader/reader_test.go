@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	reader "github.com/clivm/clivm/pkg/config-reader"
-	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )

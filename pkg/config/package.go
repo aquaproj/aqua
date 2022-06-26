@@ -7,7 +7,7 @@ import (
 	"strings"
 	texttemplate "text/template"
 
-	"github.com/clivm/clivm/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/clivm/clivm/pkg/template"
