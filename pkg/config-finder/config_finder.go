@@ -42,11 +42,15 @@ func ParseGlobalConfigFilePaths(env string) []string {
 	return paths
 }
 
+func configFileNames() []string {
+	return []string{"aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml"}
+}
+
 func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
-	configFilePath = findconfig.Find(wd, finder.exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+	configFilePath = findconfig.Find(wd, finder.exist, configFileNames()...)
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
@@ -61,9 +65,9 @@ func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePath
 
 func (finder *configFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
-		return findconfig.Finds(wd, finder.exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")
+		return findconfig.Finds(wd, finder.exist, configFileNames()...)
 	}
-	return append([]string{configFilePath}, findconfig.Finds(wd, finder.exist, "aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml")...)
+	return append([]string{configFilePath}, findconfig.Finds(wd, finder.exist, configFileNames()...)...)
 }
 
 func (finder *configFinder) exist(p string) bool {
