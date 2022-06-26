@@ -187,7 +187,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
 					RepoOwner: "clivm",
-					RepoName:  "aqua",
+					RepoName:  "clivm",
 					Asset:     stringP("clivm.{{.Format}}"),
 					Format:    "tar.gz",
 				},
@@ -251,12 +251,12 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_release",
-			exp:   "aqua",
+			exp:   "clivm",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
 					RepoOwner: "clivm",
-					RepoName:  "aqua",
+					RepoName:  "clivm",
 					Asset:     stringP("clivm.{{.Format}}"),
 					Format:    "tar.gz",
 				},
@@ -265,17 +265,17 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 				},
 			},
 			file: &registry.File{
-				Name: "aqua",
+				Name: "clivm",
 			},
 		},
 		{
 			title: "github_release",
-			exp:   "bin/aqua",
+			exp:   "bin/clivm",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
 					RepoOwner: "clivm",
-					RepoName:  "aqua",
+					RepoName:  "clivm",
 					Asset:     stringP("clivm.{{.Format}}"),
 					Format:    "tar.gz",
 				},
@@ -284,8 +284,8 @@ func TestPackageInfo_GetFileSrc(t *testing.T) { //nolint:funlen
 				},
 			},
 			file: &registry.File{
-				Name: "aqua",
-				Src:  "bin/aqua",
+				Name: "clivm",
+				Src:  "bin/clivm",
 			},
 		},
 		{

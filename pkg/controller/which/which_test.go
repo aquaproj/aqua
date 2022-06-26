@@ -87,7 +87,7 @@ packages:
 			},
 		},
 		{
-			name: "outside aqua",
+			name: "outside clivm",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",
@@ -135,11 +135,11 @@ packages:
 				PWD:                   "/home/foo/workspace",
 				RootDir:               "/home/foo/.local/share/clivm",
 				MaxParallelism:        5,
-				GlobalConfigFilePaths: []string{"/etc/aqua/clivm.yaml"},
+				GlobalConfigFilePaths: []string{"/etc/clivm/clivm.yaml"},
 			},
 			exeName: "clivm-installer",
 			files: map[string]string{
-				"/etc/aqua/clivm.yaml": `registries:
+				"/etc/clivm/clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
@@ -147,7 +147,7 @@ packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
 - name: clivm/clivm-installer@v1.0.0
 `,
-				"/etc/aqua/registry.yaml": `packages:
+				"/etc/clivm/registry.yaml": `packages:
 - type: github_release
   repo_owner: suzuki-shunsuke
   repo_name: ci-info

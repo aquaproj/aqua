@@ -17,9 +17,9 @@ func TestGetRootDir(t *testing.T) {
 		{
 			name: "CLIVM_ROOT_DIR",
 			env: map[string]string{
-				"CLIVM_ROOT_DIR": "/home/foo/.aqua",
+				"CLIVM_ROOT_DIR": "/home/foo/.clivm",
 			},
-			exp: "/home/foo/.aqua",
+			exp: "/home/foo/.clivm",
 		},
 		{
 			name: "XDG_DATA_HOME",

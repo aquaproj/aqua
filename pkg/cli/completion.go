@@ -57,7 +57,7 @@ _cli_bash_autocomplete() {
   fi
 }
 
-complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
+complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete clivm`)
 	return nil
 }
 
@@ -65,7 +65,7 @@ func (runner *Runner) zshCompletionAction(c *cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
 	fmt.Fprintln(runner.Stdout, `
-#compdef aqua
+#compdef clivm
 
 _cli_zsh_autocomplete() {
   local -a opts
@@ -84,6 +84,6 @@ _cli_zsh_autocomplete() {
   fi
 }
 
-compdef _cli_zsh_autocomplete aqua`)
+compdef _cli_zsh_autocomplete clivm`)
 	return nil
 }

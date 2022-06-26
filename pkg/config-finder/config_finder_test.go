@@ -73,12 +73,12 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 			wd:   "/home/foo",
 			globalConfigFilePaths: []string{
 				"/home/.config/clivm.yaml",
-				"/etc/aqua/clivm.yaml",
+				"/etc/clivm/clivm.yaml",
 			},
 			files: map[string]string{
-				"/etc/aqua/clivm.yaml": "",
+				"/etc/clivm/clivm.yaml": "",
 			},
-			exp: "/etc/aqua/clivm.yaml",
+			exp: "/etc/clivm/clivm.yaml",
 		},
 	}
 	for _, d := range data {

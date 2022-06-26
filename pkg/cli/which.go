@@ -18,7 +18,7 @@ func (runner *Runner) newWhichCommand() *cli.Command {
 		Description: `Output the absolute file path of the given command
 e.g.
 $ clivm which gh
-/home/foo/.aqua/pkgs/github_release/github.com/cli/cli/v2.4.0/gh_2.4.0_macOS_amd64.tar.gz/gh_2.4.0_macOS_amd64/bin/gh
+/home/foo/.clivm/pkgs/github_release/github.com/cli/cli/v2.4.0/gh_2.4.0_macOS_amd64.tar.gz/gh_2.4.0_macOS_amd64/bin/gh
 
 If the command isn't found in the configuration files, clivm searches the command in the environment variable PATH
 
@@ -28,7 +28,7 @@ $ clivm which ls
 If the command isn't found, exits with non zero exit code.
 
 $ clivm which foo
-FATA[0000] clivm failed                                   clivm_version=0.8.6 error="command is not found" exe_name=foo program=aqua
+FATA[0000] clivm failed                                   clivm_version=0.8.6 error="command is not found" exe_name=foo program=clivm
 `,
 		Action: runner.whichAction,
 	}

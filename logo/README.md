@@ -1,7 +1,7 @@
 # About Logo
 
 <p align="center" width="100%">
-<img src="./aqua_horizontal.svg" width="400">
+<img src="./clivm_horizontal.svg" width="400">
 </p>
 
 [#403](https://github.com/clivm/clivm/pull/403)
@@ -15,7 +15,7 @@ It has been built with open source:
 
 ## Design Consideration
 
-* Something that incorporates the image of water (aqua) and package
+* Something that incorporates the image of water (clivm) and package
 * Minimalistic: should express the idea with less design components
 * Scalable: should look good irrespective of the scale (favicon, t-shirts, print-outs and everything else)
 

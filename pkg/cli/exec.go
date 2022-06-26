@@ -25,7 +25,7 @@ func (runner *Runner) newExecCommand() *cli.Command {
 		Name:  "exec",
 		Usage: "Execute tool",
 		Description: `Basically you don't have to use this command, because this is used by clivm internally. clivm-proxy invokes this command.
-When you execute the command installed by aqua, "clivm exec" is executed internally.
+When you execute the command installed by clivm, "clivm exec" is executed internally.
 
 e.g.
 $ clivm exec -- gh version

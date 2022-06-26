@@ -3,7 +3,7 @@
 * https://raw.githubusercontent.com/clivm/clivm/main/json-schema/clivm-yaml.json
 * https://raw.githubusercontent.com/clivm/clivm/main/json-schema/registry.json
 
-These JSON Schema files are generated from aqua's source code powered by [invopop/jsonschema](https://github.com/invopop/jsonschema).
+These JSON Schema files are generated from clivm's source code powered by [invopop/jsonschema](https://github.com/invopop/jsonschema).
 Don't edit these files manually.
 
 ```console

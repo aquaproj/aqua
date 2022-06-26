@@ -69,7 +69,7 @@ packages:
 			},
 		},
 		{
-			name: "outside aqua",
+			name: "outside clivm",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",

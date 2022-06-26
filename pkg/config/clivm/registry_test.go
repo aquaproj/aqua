@@ -104,7 +104,7 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 		{
 			title:       "normal",
 			exp:         "ci/foo.yaml",
-			rootDir:     "/root/.aqua",
+			rootDir:     "/root/.clivm",
 			cfgFilePath: "ci/clivm.yaml",
 			registry: &clivm.Registry{
 				Path: "foo.yaml",
@@ -134,8 +134,8 @@ func TestRegistry_GetFilePath(t *testing.T) {
 	}{
 		{
 			title:   "github_content",
-			exp:     "/root/.aqua/registries/github_content/github.com/clivm/clivm-registry/v0.8.0/foo.yaml",
-			rootDir: "/root/.aqua",
+			exp:     "/root/.clivm/registries/github_content/github.com/clivm/clivm-registry/v0.8.0/foo.yaml",
+			rootDir: "/root/.clivm",
 			registry: &clivm.Registry{
 				RepoOwner: "clivm",
 				RepoName:  "clivm-registry",

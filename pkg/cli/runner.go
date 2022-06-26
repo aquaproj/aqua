@@ -65,7 +65,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		compiledDate = time.Now()
 	}
 	app := cli.App{
-		Name:           "aqua",
+		Name:           "clivm",
 		Usage:          "Version Manager of CLI. https://clivm.github.io/",
 		Version:        runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
 		Compiled:       compiledDate,

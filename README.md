@@ -1,5 +1,5 @@
 <p align="center" width="100%">
-<img src="./logo/aqua_horizontal.svg" width="400">
+<img src="./logo/clivm_horizontal.svg" width="400">
 </p>
 
 #

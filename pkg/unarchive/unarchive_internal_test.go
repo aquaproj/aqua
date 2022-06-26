@@ -24,9 +24,9 @@ func Test_getUnarchiver(t *testing.T) {
 				Type:     "raw",
 				Filename: "foo",
 			},
-			dest: "/home/foo/.aqua/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
+			dest: "/home/foo/.clivm/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
 			exp: &rawUnarchiver{
-				dest: "/home/foo/.aqua/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo/foo",
+				dest: "/home/foo/.clivm/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo/foo",
 			},
 		},
 		{
@@ -34,9 +34,9 @@ func Test_getUnarchiver(t *testing.T) {
 			src: &File{
 				Filename: "foo.tar.gz",
 			},
-			dest: "/home/foo/.aqua/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
+			dest: "/home/foo/.clivm/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
 			exp: &unarchiverWithUnarchiver{
-				dest:       "/home/foo/.aqua/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
+				dest:       "/home/foo/.clivm/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
 				unarchiver: archiver.NewTarGz(),
 			},
 		},
@@ -45,9 +45,9 @@ func Test_getUnarchiver(t *testing.T) {
 			src: &File{
 				Filename: "yoo.bz2",
 			},
-			dest: "/home/foo/.aqua/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
+			dest: "/home/foo/.clivm/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo",
 			exp: &Decompressor{
-				dest:         "/home/foo/.aqua/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo/yoo",
+				dest:         "/home/foo/.clivm/pkgs/github_release/github.com/clivm/foo/v1.0.0/foo/yoo",
 				decompressor: archiver.NewBz2(),
 			},
 		},
