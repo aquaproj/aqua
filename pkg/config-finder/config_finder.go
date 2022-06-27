@@ -10,17 +10,12 @@ import (
 
 var ErrConfigFileNotFound = errors.New("configuration file isn't found")
 
-type ConfigFinder interface {
-	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
-	Finds(wd, configFilePath string) []string
-}
-
-type configFinder struct {
+type ConfigFinder struct {
 	fs afero.Fs
 }
 
-func NewConfigFinder(fs afero.Fs) ConfigFinder {
-	return &configFinder{
+func NewConfigFinder(fs afero.Fs) *ConfigFinder {
+	return &ConfigFinder{
 		fs: fs,
 	}
 }
@@ -46,7 +41,7 @@ func configFileNames() []string {
 	return []string{"aqua.yaml", "aqua.yml", ".aqua.yaml", ".aqua.yml"}
 }
 
-func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
+func (finder *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
@@ -63,14 +58,14 @@ func (finder *configFinder) Find(wd, configFilePath string, globalConfigFilePath
 	return "", ErrConfigFileNotFound
 }
 
-func (finder *configFinder) Finds(wd, configFilePath string) []string {
+func (finder *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
 		return findconfig.Finds(wd, finder.exist, configFileNames()...)
 	}
 	return append([]string{configFilePath}, findconfig.Finds(wd, finder.exist, configFileNames()...)...)
 }
 
-func (finder *configFinder) exist(p string) bool {
+func (finder *ConfigFinder) exist(p string) bool {
 	b, err := afero.Exists(finder.fs, p)
 	if err != nil {
 		return false

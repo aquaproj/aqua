@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
@@ -23,13 +22,17 @@ import (
 type controller struct {
 	stdout            io.Writer
 	rootDir           string
-	configFinder      finder.ConfigFinder
+	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	fs                afero.Fs
 	linker            link.Linker
+}
+
+type ConfigFinder interface {
+	Finds(wd, configFilePath string) []string
 }
 
 func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {

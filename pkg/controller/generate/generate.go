@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -29,13 +28,17 @@ type Controller struct {
 	stdout                  io.Writer
 	gitHubRepositoryService github.RepositoryService
 	registryInstaller       instregst.Installer
-	configFinder            finder.ConfigFinder
+	configFinder            ConfigFinder
 	configReader            reader.ConfigReader
 	fuzzyFinder             FuzzyFinder
 	fs                      afero.Fs
 }
 
-func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh github.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
+type ConfigFinder interface {
+	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
+}
+
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh github.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
 	return &Controller{
 		stdin:                   os.Stdin,
 		stdout:                  os.Stdout,
