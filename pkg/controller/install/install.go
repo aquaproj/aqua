@@ -24,14 +24,18 @@ const (
 type Controller struct {
 	packageInstaller  installpackage.Installer
 	rootDir           string
-	configFinder      finder.ConfigFinder
+	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 	fs                afero.Fs
 	runtime           *runtime.Runtime
 }
 
-func New(param *config.Param, configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime) *Controller {
+type ConfigFinder interface {
+	Finds(wd, configFilePath string) []string
+}
+
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,

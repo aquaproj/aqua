@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
@@ -16,12 +15,16 @@ import (
 
 type Controller struct {
 	stdout            io.Writer
-	configFinder      finder.ConfigFinder
+	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
 }
 
-func NewController(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer) *Controller {
+type ConfigFinder interface {
+	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
+}
+
+func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
