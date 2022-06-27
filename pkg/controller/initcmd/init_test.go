@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/initcmd"
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller/initcmd"
+	"github.com/clivm/clivm/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -28,11 +28,11 @@ func TestController_Init(t *testing.T) { //nolint:funlen
 			name: "file already exists",
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: standard
   ref: v2.15.0
 packages:

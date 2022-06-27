@@ -1,23 +1,23 @@
-package aqua_test
+package clivm_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 )
 
 func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title    string
-		registry *aqua.Registry
+		registry *clivm.Registry
 		isErr    bool
 	}{
 		{
 			title: "github_content",
-			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-registry",
+			registry: &clivm.Registry{
+				RepoOwner: "clivm",
+				RepoName:  "clivm-registry",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",
 				Type:      "github_content",
@@ -25,8 +25,8 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content repo_owner is required",
-			registry: &aqua.Registry{
-				RepoName: "aqua-registry",
+			registry: &clivm.Registry{
+				RepoName: "clivm-registry",
 				Ref:      "v0.8.0",
 				Path:     "foo.yaml",
 				Type:     "github_content",
@@ -35,8 +35,8 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content repo_name is required",
-			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
+			registry: &clivm.Registry{
+				RepoOwner: "clivm",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",
 				Type:      "github_content",
@@ -45,9 +45,9 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content ref is required",
-			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-registry",
+			registry: &clivm.Registry{
+				RepoOwner: "clivm",
+				RepoName:  "clivm-registry",
 				Path:      "foo.yaml",
 				Type:      "github_content",
 			},
@@ -55,21 +55,21 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "local",
-			registry: &aqua.Registry{
+			registry: &clivm.Registry{
 				Path: "foo.yaml",
 				Type: "local",
 			},
 		},
 		{
 			title: "local path is required",
-			registry: &aqua.Registry{
+			registry: &clivm.Registry{
 				Type: "local",
 			},
 			isErr: true,
 		},
 		{
 			title: "invalid type",
-			registry: &aqua.Registry{
+			registry: &clivm.Registry{
 				Type: "invalid-type",
 			},
 			isErr: true,
@@ -97,16 +97,16 @@ func TestLocalRegistry_GetFilePath(t *testing.T) {
 	data := []struct {
 		title       string
 		exp         string
-		registry    *aqua.Registry
+		registry    *clivm.Registry
 		rootDir     string
 		cfgFilePath string
 	}{
 		{
 			title:       "normal",
 			exp:         "ci/foo.yaml",
-			rootDir:     "/root/.aqua",
-			cfgFilePath: "ci/aqua.yaml",
-			registry: &aqua.Registry{
+			rootDir:     "/root/.clivm",
+			cfgFilePath: "ci/clivm.yaml",
+			registry: &clivm.Registry{
 				Path: "foo.yaml",
 				Type: "local",
 			},
@@ -128,17 +128,17 @@ func TestRegistry_GetFilePath(t *testing.T) {
 	data := []struct {
 		title       string
 		exp         string
-		registry    *aqua.Registry
+		registry    *clivm.Registry
 		rootDir     string
 		cfgFilePath string
 	}{
 		{
 			title:   "github_content",
-			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
-			rootDir: "/root/.aqua",
-			registry: &aqua.Registry{
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-registry",
+			exp:     "/root/.clivm/registries/github_content/github.com/clivm/clivm-registry/v0.8.0/foo.yaml",
+			rootDir: "/root/.clivm",
+			registry: &clivm.Registry{
+				RepoOwner: "clivm",
+				RepoName:  "clivm-registry",
 				Ref:       "v0.8.0",
 				Path:      "foo.yaml",
 				Type:      "github_content",

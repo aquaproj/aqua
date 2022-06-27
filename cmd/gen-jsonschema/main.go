@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/invopop/jsonschema"
 )
 
@@ -19,7 +19,7 @@ func main() {
 }
 
 func core() error {
-	if err := gen(&aqua.Config{}, "json-schema/aqua-yaml.json"); err != nil {
+	if err := gen(&clivm.Config{}, "json-schema/clivm-yaml.json"); err != nil {
 		return err
 	}
 	if err := gen(&registry.Config{}, "json-schema/registry.json"); err != nil {

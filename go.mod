@@ -1,4 +1,4 @@
-module github.com/aquaproj/aqua
+module github.com/clivm/clivm
 
 go 1.16
 

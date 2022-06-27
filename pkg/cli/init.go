@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
@@ -12,11 +12,11 @@ func (runner *Runner) newInitCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "init",
 		Usage:     "Create a configuration file if it doesn't exist",
-		ArgsUsage: `[<created file path. The default value is "aqua.yaml">]`,
+		ArgsUsage: `[<created file path. The default value is "clivm.yaml">]`,
 		Description: `Create a configuration file if it doesn't exist
 e.g.
-$ aqua init # create "aqua.yaml"
-$ aqua init foo.yaml # create foo.yaml`,
+$ clivm init # create "clivm.yaml"
+$ clivm init foo.yaml # create foo.yaml`,
 		Action: runner.initAction,
 	}
 }

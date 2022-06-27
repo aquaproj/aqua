@@ -15,8 +15,8 @@ func GetMaxParallelism(envMaxParallelism string, logE *logrus.Entry) int {
 	num, err := strconv.Atoi(envMaxParallelism)
 	if err != nil {
 		logE.WithFields(logrus.Fields{
-			"AQUA_MAX_PARALLELISM": envMaxParallelism,
-		}).Warn("the environment variable AQUA_MAX_PARALLELISM must be a number")
+			"CLIVM_MAX_PARALLELISM": envMaxParallelism,
+		}).Warn("the environment variable CLIVM_MAX_PARALLELISM must be a number")
 		return defaultMaxParallelism
 	}
 	if num <= 0 {

@@ -3,9 +3,9 @@ package which
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	"github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 )
@@ -16,14 +16,14 @@ func Test_controller_findExecFileFromPkg(t *testing.T) {
 		title          string
 		registries     map[string]*registry.Config
 		exeName        string
-		pkg            *aqua.Package
+		pkg            *clivm.Package
 		expPackageInfo *registry.PackageInfo
 		expFile        *registry.File
 	}{
 		{
 			title:   "normal",
 			exeName: "kubectl",
-			pkg: &aqua.Package{
+			pkg: &clivm.Package{
 				Registry: "standard",
 				Name:     "kubernetes/kubectl",
 			},

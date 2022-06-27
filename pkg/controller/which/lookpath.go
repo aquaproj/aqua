@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const proxyName = "aqua-proxy"
+const proxyName = "clivm-proxy"
 
 func (ctrl *controller) lookPath(envPath, exeName string) string {
 	for _, p := range filepath.SplitList(envPath) {

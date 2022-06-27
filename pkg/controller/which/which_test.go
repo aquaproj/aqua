@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	cfgRegistry "github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/controller/which"
+	"github.com/clivm/clivm/pkg/download"
+	registry "github.com/clivm/clivm/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -46,75 +46,75 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			exeName: "aqua-installer",
+			exeName: "clivm-installer",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			exp: &which.Which{
 				Package: &config.Package{
-					Package: &aqua.Package{
-						Name:     "aquaproj/aqua-installer",
+					Package: &clivm.Package{
+						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-installer",
-						Path:      stringP("aqua-installer"),
+						RepoOwner: "clivm",
+						RepoName:  "clivm-installer",
+						Path:      stringP("clivm-installer"),
 					},
 				},
 				File: &cfgRegistry.File{
-					Name: "aqua-installer",
+					Name: "clivm-installer",
 				},
-				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/clivm-installer/clivm-installer",
 			},
 		},
 		{
-			name: "outside aqua",
+			name: "outside clivm",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "gh",
 			env: map[string]string{
-				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
+				"PATH": "/home/foo/.local/share/clivm/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 				"/usr/local/foo/gh": "",
 			},
@@ -133,21 +133,21 @@ packages:
 			},
 			param: &config.Param{
 				PWD:                   "/home/foo/workspace",
-				RootDir:               "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:               "/home/foo/.local/share/clivm",
 				MaxParallelism:        5,
-				GlobalConfigFilePaths: []string{"/etc/aqua/aqua.yaml"},
+				GlobalConfigFilePaths: []string{"/etc/clivm/clivm.yaml"},
 			},
-			exeName: "aqua-installer",
+			exeName: "clivm-installer",
 			files: map[string]string{
-				"/etc/aqua/aqua.yaml": `registries:
+				"/etc/clivm/clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
-				"/etc/aqua/registry.yaml": `packages:
+				"/etc/clivm/registry.yaml": `packages:
 - type: github_release
   repo_owner: suzuki-shunsuke
   repo_name: ci-info
@@ -158,29 +158,29 @@ packages:
   repo_name: github-comment
   asset: "github-comment_{{.Arch}}-{{.OS}}.tar.gz"
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 			exp: &which.Which{
 				Package: &config.Package{
-					Package: &aqua.Package{
-						Name:     "aquaproj/aqua-installer",
+					Package: &clivm.Package{
+						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-installer",
-						Path:      stringP("aqua-installer"),
+						RepoOwner: "clivm",
+						RepoName:  "clivm-installer",
+						Path:      stringP("clivm-installer"),
 					},
 				},
 				File: &cfgRegistry.File{
-					Name: "aqua-installer",
+					Name: "clivm-installer",
 				},
-				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath: "/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/clivm-installer/clivm-installer",
 			},
 		},
 	}

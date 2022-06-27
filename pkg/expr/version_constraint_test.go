@@ -3,7 +3,7 @@ package expr_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/expr"
+	"github.com/clivm/clivm/pkg/expr"
 )
 
 func TestVersionConstraints_Check(t *testing.T) {

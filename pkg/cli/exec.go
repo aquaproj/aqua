@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
@@ -24,11 +24,11 @@ func (runner *Runner) newExecCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "exec",
 		Usage: "Execute tool",
-		Description: `Basically you don't have to use this command, because this is used by aqua internally. aqua-proxy invokes this command.
-When you execute the command installed by aqua, "aqua exec" is executed internally.
+		Description: `Basically you don't have to use this command, because this is used by clivm internally. clivm-proxy invokes this command.
+When you execute the command installed by clivm, "clivm exec" is executed internally.
 
 e.g.
-$ aqua exec -- gh version
+$ clivm exec -- gh version
 gh version 2.4.0 (2021-12-21)
 https://github.com/cli/cli/releases/tag/v2.4.0`,
 		Action:    runner.execAction,

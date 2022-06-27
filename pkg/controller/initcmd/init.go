@@ -5,27 +5,20 @@ import (
 	"fmt"
 	"strings"
 
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	githubSvc "github.com/clivm/clivm/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 const configTemplate = `---
-# aqua - Declarative CLI Version Manager
-# https://aquaproj.github.io/
+# clivm - Declarative CLI Version Manager
+# https://clivm.github.io/
 registries:
 - type: standard
-  ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
+  ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=clivm/clivm-registry
 packages:
 `
-
-var globalVarCfgFileNameMap = map[string]struct{}{ //nolint:gochecknoglobals
-	"aqua.yaml":  {},
-	"aqua.yml":   {},
-	".aqua.yaml": {},
-	".aqua.yml":  {},
-}
 
 type Controller struct {
 	gitHubRepositoryService githubSvc.RepositoryService
@@ -41,35 +34,28 @@ func New(gh githubSvc.RepositoryService, fs afero.Fs) *Controller {
 
 func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
 	if cfgFilePath == "" {
-		cfgFilePath = "aqua.yaml"
-	}
-	if _, ok := globalVarCfgFileNameMap[cfgFilePath]; ok {
-		for fileName := range globalVarCfgFileNameMap {
-			if _, err := ctrl.fs.Stat(fileName); err == nil {
-				// configuration file already exists, then do nothing.
-				logE.WithFields(logrus.Fields{
-					"configuration_file_path": fileName,
-				}).Info("configuration file already exists")
-				return nil
-			}
-		}
+		cfgFilePath = "clivm.yaml"
 	}
 	if _, err := ctrl.fs.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.
+		logE.WithFields(logrus.Fields{
+			"configuration_file_path": cfgFilePath,
+		}).Info("configuration file already exists")
 		return nil
 	}
-	registryVersion := "v3.3.0" // renovate: depName=aquaproj/aqua-registry
-	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
+
+	registryVersion := "v3.3.0" // renovate: depName=clivm/clivm-registry
+	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "clivm", "clivm-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"repo_owner": "aquaproj",
-			"repo_name":  "aqua-registry",
+			"repo_owner": "clivm",
+			"repo_name":  "clivm-registry",
 		}).Warn("get the latest release")
 	} else {
 		if release == nil {
 			logE.WithFields(logrus.Fields{
-				"repo_owner": "aquaproj",
-				"repo_name":  "aqua-registry",
+				"repo_owner": "clivm",
+				"repo_name":  "clivm-registry",
 			}).Warn("failed to get the latest release")
 		} else {
 			registryVersion = release.GetTagName()

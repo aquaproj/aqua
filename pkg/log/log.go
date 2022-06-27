@@ -1,15 +1,15 @@
 package log
 
 import (
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 )
 
 func New(rt *runtime.Runtime, version string) *logrus.Entry {
 	return logrus.WithFields(logrus.Fields{
-		"aqua_version": version,
-		"program":      "aqua",
-		"env":          rt.GOOS + "/" + rt.GOARCH,
+		"clivm_version": version,
+		"program":       "clivm",
+		"env":           rt.GOOS + "/" + rt.GOARCH,
 	})
 }
 

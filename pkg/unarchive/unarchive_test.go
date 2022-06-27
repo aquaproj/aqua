@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/clivm/clivm/pkg/download"
+	"github.com/clivm/clivm/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -80,7 +80,7 @@ func TestUnarchive(t *testing.T) {
 		{
 			title: "raw",
 			src: &unarchive.File{
-				Filename: "aqua-installer",
+				Filename: "clivm-installer",
 			},
 			body: `foo`,
 		},

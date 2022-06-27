@@ -2,11 +2,11 @@
 name: actionlint
 on:
   push:
-    branches: [main]
+    branches: [dummy] # TODO enable
     paths:
     - .github/**
   pull_request:
-    branches: [main]
+    branches: [dummy] # TODO enable
     paths:
     - .github/**
 jobs:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: aquaproj/aqua-installer@v1.0.0
+    - uses: clivm/clivm-installer@v1.0.0
       with:
-        aqua_version: v1.14.0
+        clivm_version: v1.14.0
     - run: actionlint

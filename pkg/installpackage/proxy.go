@@ -5,27 +5,27 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	"github.com/clivm/clivm/pkg/config/registry"
 	"github.com/sirupsen/logrus"
 )
 
-const ProxyVersion = "v1.1.2" // renovate: depName=aquaproj/aqua-proxy
+const ProxyVersion = "v1.1.2" // renovate: depName=clivm/clivm-proxy
 
 func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
 	if isWindows(inst.runtime.GOOS) {
 		return nil
 	}
-	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
+	proxyAssetTemplate := `clivm-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
-		Package: &aqua.Package{
+		Package: &clivm.Package{
 			Name:    proxyName,
 			Version: ProxyVersion,
 		},
 		PackageInfo: &registry.PackageInfo{
 			Type:      "github_release",
-			RepoOwner: "aquaproj",
+			RepoOwner: "clivm",
 			RepoName:  proxyName,
 			Asset:     &proxyAssetTemplate,
 			Files: []*registry.File{
@@ -51,7 +51,7 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	logE.Debug("check if aqua-proxy is already installed")
+	logE.Debug("check if clivm-proxy is already installed")
 	finfo, err := inst.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist

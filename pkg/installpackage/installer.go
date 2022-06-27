@@ -7,20 +7,20 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	"github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/download"
+	"github.com/clivm/clivm/pkg/exec"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
+	"github.com/clivm/clivm/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-const proxyName = "aqua-proxy"
+const proxyName = "clivm-proxy"
 
 type installer struct {
 	rootDir           string
@@ -36,7 +36,7 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error {
+func (inst *installer) InstallPackages(ctx context.Context, cfg *clivm.Config, registries map[string]*registry.Config, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error {
 	pkgs, failed := inst.createLinks(cfg, registries, binDir, logE)
 	if onlyLink {
 		logE.WithFields(logrus.Fields{
@@ -135,7 +135,7 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
+func (inst *installer) createLinks(cfg *clivm.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
 	pkgs := make([]*config.Package, 0, len(cfg.Packages))
 	failed := false
 	// registry -> package name -> pkgInfo
@@ -207,7 +207,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 	return pkgs, failed
 }
 
-func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
+func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registry.Config, pkg *clivm.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
 	pkgInfoMap, ok := m[pkg.Registry]
 	if !ok {
 		registry, ok := registries[pkg.Registry]

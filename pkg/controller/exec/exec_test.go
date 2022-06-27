@@ -9,17 +9,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	execCtrl "github.com/aquaproj/aqua/pkg/controller/exec"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	execCtrl "github.com/clivm/clivm/pkg/controller/exec"
+	"github.com/clivm/clivm/pkg/controller/which"
+	"github.com/clivm/clivm/pkg/download"
+	"github.com/clivm/clivm/pkg/exec"
+	registry "github.com/clivm/clivm/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/installpackage"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -46,57 +46,57 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			exeName: "aqua-installer",
+			exeName: "clivm-installer",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/clivm-installer/clivm-installer": "",
 			},
 		},
 		{
-			name: "outside aqua",
+			name: "outside clivm",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			exeName: "gh",
 			env: map[string]string{
-				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
+				"PATH": "/home/foo/.local/share/clivm/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 				"/usr/local/foo/gh": "",
 			},
@@ -184,10 +184,10 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit,cyclop
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			exeName: "aqua-installer",
+			exeName: "clivm-installer",
 			files:   map[string]string{},
 		},
 	}
@@ -197,15 +197,15 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit,cyclop
 		d := d
 		b.Run("normal", func(b *testing.B) {
 			tempDir := b.TempDir()
-			d.param.ConfigFilePath = filepath.Join(tempDir, "aqua.yaml")
+			d.param.ConfigFilePath = filepath.Join(tempDir, "clivm.yaml")
 			d.files[d.param.ConfigFilePath] = `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `
-			if _, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.19.0/registry.yaml", tempDir); err != nil {
+			if _, err := downloadTestFile("https://raw.githubusercontent.com/clivm/clivm-registry/v2.19.0/registry.yaml", tempDir); err != nil {
 				b.Fatal(err)
 			}
 			fs := afero.NewMemMapFs()

@@ -7,7 +7,7 @@ import (
 )
 
 func (runner *Runner) newCompletionCommand() *cli.Command {
-	// https://github.com/aquaproj/aqua/pull/859
+	// https://github.com/clivm/clivm/pull/859
 	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
 		Name:  "completion",
@@ -17,11 +17,11 @@ Run these commands in .bash_profile or .zprofile
 e.g.
 .bash_profile
 
-if command -v aqua &> /dev/null; then source <(aqua completion bash); fi
+if command -v clivm &> /dev/null; then source <(clivm completion bash); fi
 
 .zprofile
 
-if command -v aqua &> /dev/null; then source <(aqua completion zsh); fi
+if command -v clivm &> /dev/null; then source <(clivm completion zsh); fi
 `,
 		Subcommands: []*cli.Command{
 			{
@@ -57,7 +57,7 @@ _cli_bash_autocomplete() {
   fi
 }
 
-complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
+complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete clivm`)
 	return nil
 }
 
@@ -65,7 +65,7 @@ func (runner *Runner) zshCompletionAction(c *cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
 	fmt.Fprintln(runner.Stdout, `
-#compdef aqua
+#compdef clivm
 
 _cli_zsh_autocomplete() {
   local -a opts
@@ -84,6 +84,6 @@ _cli_zsh_autocomplete() {
   fi
 }
 
-compdef _cli_zsh_autocomplete aqua`)
+compdef _cli_zsh_autocomplete clivm`)
 	return nil
 }

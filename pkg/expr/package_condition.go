@@ -1,7 +1,7 @@
 package expr
 
 import (
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/runtime"
 )
 
 func EvaluateSupportedIf(supportedIf *string, rt *runtime.Runtime) (bool, error) {

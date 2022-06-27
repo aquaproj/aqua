@@ -1,4 +1,4 @@
-package aqua
+package clivm
 
 import (
 	"path/filepath"
@@ -67,10 +67,10 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 			a.Name = RegistryTypeStandard
 		}
 		if a.RepoOwner == "" {
-			a.RepoOwner = "aquaproj"
+			a.RepoOwner = "clivm"
 		}
 		if a.RepoName == "" {
-			a.RepoName = "aqua-registry"
+			a.RepoName = "clivm-registry"
 		}
 		if a.Path == "" {
 			a.Path = "registry.yaml"

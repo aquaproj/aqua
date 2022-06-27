@@ -3,7 +3,7 @@ package template_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/template"
+	"github.com/clivm/clivm/pkg/template"
 )
 
 func TestExecute(t *testing.T) {

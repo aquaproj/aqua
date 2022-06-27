@@ -64,10 +64,10 @@ func (inst *installer) recreateLink(linkPath, linkDest string, logE *logrus.Entr
 
 const (
 	batTemplate = `@echo off
-aqua exec -- <COMMAND> %*
+clivm exec -- <COMMAND> %*
 `
 	scrTemplate = `#!/usr/bin/env bash
-exec aqua exec -- $0 $@
+exec clivm exec -- $0 $@
 `
 	proxyPermission os.FileMode = 0o755
 )

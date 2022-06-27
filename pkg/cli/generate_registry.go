@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,7 +17,7 @@ It is just a template.
 
 e.g.
 
-$ aqua gr cli/cli # Outputs the configuration.
+$ clivm gr cli/cli # Outputs the configuration.
 packages:
   - type: github_release
     repo_owner: cli

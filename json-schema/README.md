@@ -1,9 +1,9 @@
 # JSON Schema
 
-* https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
-* https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/registry.json
+* https://raw.githubusercontent.com/clivm/clivm/main/json-schema/clivm-yaml.json
+* https://raw.githubusercontent.com/clivm/clivm/main/json-schema/registry.json
 
-These JSON Schema files are generated from aqua's source code powered by [invopop/jsonschema](https://github.com/invopop/jsonschema).
+These JSON Schema files are generated from clivm's source code powered by [invopop/jsonschema](https://github.com/invopop/jsonschema).
 Don't edit these files manually.
 
 ```console
@@ -16,5 +16,5 @@ If you find a CLI tool to validate configuration with JSON Schema,
 e.g.
 
 ```console
-$ ajv --spec=draft2020 -s json-schema/aqua-yaml.json -d aqua.yaml
+$ ajv --spec=draft2020 -s json-schema/clivm-yaml.json -d clivm.yaml
 ```

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	finder "github.com/clivm/clivm/pkg/config-finder"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )
@@ -57,28 +57,28 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 		{
 			name:           "configFilePath",
 			wd:             "/home/foo",
-			configFilePath: "/home/foo/aqua.yaml",
-			exp:            "/home/foo/aqua.yaml",
+			configFilePath: "/home/foo/clivm.yaml",
+			exp:            "/home/foo/clivm.yaml",
 		},
 		{
 			name: "find",
 			wd:   "/home/foo",
 			files: map[string]string{
-				"/home/foo/.aqua.yaml": "",
+				"/home/foo/.clivm.yaml": "",
 			},
-			exp: "/home/foo/.aqua.yaml",
+			exp: "/home/foo/.clivm.yaml",
 		},
 		{
 			name: "global config",
 			wd:   "/home/foo",
 			globalConfigFilePaths: []string{
-				"/home/.config/aqua.yaml",
-				"/etc/aqua/aqua.yaml",
+				"/home/.config/clivm.yaml",
+				"/etc/clivm/clivm.yaml",
 			},
 			files: map[string]string{
-				"/etc/aqua/aqua.yaml": "",
+				"/etc/clivm/clivm.yaml": "",
 			},
-			exp: "/etc/aqua/aqua.yaml",
+			exp: "/etc/clivm/clivm.yaml",
 		},
 	}
 	for _, d := range data {
@@ -126,31 +126,31 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 		{
 			name:           "configFilePath",
 			wd:             "/home/foo",
-			configFilePath: "/home/foo/aqua-2.yaml",
-			exp:            []string{"/home/foo/aqua-2.yaml"},
+			configFilePath: "/home/foo/clivm-2.yaml",
+			exp:            []string{"/home/foo/clivm-2.yaml"},
 		},
 		{
 			name: "find",
 			wd:   "/home/foo",
 			files: map[string]string{
-				"/home/foo/.aqua.yaml": "",
-				"/home/aqua.yaml":      "",
+				"/home/foo/.clivm.yaml": "",
+				"/home/clivm.yaml":      "",
 			},
 			exp: []string{
-				"/home/foo/.aqua.yaml",
-				"/home/aqua.yaml",
+				"/home/foo/.clivm.yaml",
+				"/home/clivm.yaml",
 			},
 		},
 		{
 			name:           "find and configFilePath",
 			wd:             "/home/foo",
-			configFilePath: "aqua-2.yaml",
+			configFilePath: "clivm-2.yaml",
 			files: map[string]string{
-				"/home/.aqua.yaml": "",
+				"/home/.clivm.yaml": "",
 			},
 			exp: []string{
-				"aqua-2.yaml",
-				"/home/.aqua.yaml",
+				"clivm-2.yaml",
+				"/home/.clivm.yaml",
 			},
 		},
 	}

@@ -1,8 +1,8 @@
 package registry
 
 import (
-	"github.com/aquaproj/aqua/pkg/expr"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/expr"
+	"github.com/clivm/clivm/pkg/runtime"
 )
 
 func (pkgInfo *PackageInfo) CheckSupported(rt *runtime.Runtime, env string) (bool, error) {

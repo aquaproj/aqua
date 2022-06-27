@@ -3,8 +3,8 @@ package reader_test
 import (
 	"testing"
 
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )
@@ -13,7 +13,7 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name           string
-		exp            *aqua.Config
+		exp            *clivm.Config
 		isErr          bool
 		files          map[string]string
 		configFilePath string
@@ -25,60 +25,60 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: standard
   ref: v2.5.0
 packages:`,
 			},
-			configFilePath: "aqua.yaml",
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
+			configFilePath: "clivm.yaml",
+			exp: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Type:      "github_content",
 						Name:      "standard",
 						Ref:       "v2.5.0",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{},
+				Packages: []*clivm.Package{},
 			},
 		},
 		{
 			name: "import package",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: standard
   ref: v2.5.0
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
-- import: aqua-installer.yaml
+- import: clivm-installer.yaml
 `,
-				"aqua-installer.yaml": `packages:
-- name: aquaproj/aqua-installer@v1.0.0
+				"clivm-installer.yaml": `packages:
+- name: clivm/clivm-installer@v1.0.0
 `,
 			},
-			configFilePath: "aqua.yaml",
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
+			configFilePath: "clivm.yaml",
+			exp: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Type:      "github_content",
 						Name:      "standard",
 						Ref:       "v2.5.0",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
 					{
-						Name:     "aquaproj/aqua-installer",
+						Name:     "clivm/clivm-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
@@ -97,7 +97,7 @@ packages:
 				}
 			}
 			reader := reader.New(fs)
-			cfg := &aqua.Config{}
+			cfg := &clivm.Config{}
 			if err := reader.Read(d.configFilePath, cfg); err != nil {
 				if d.isErr {
 					return

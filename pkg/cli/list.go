@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,7 +18,7 @@ func (runner *Runner) newListCommand() *cli.Command {
 The output format is <registry name>,<package name>
 
 e.g.
-$ aqua list
+$ clivm list
 standard,99designs/aws-vault
 standard,abiosoft/colima
 standard,abs-lang/abs

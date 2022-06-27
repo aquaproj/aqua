@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	"github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/download"
+	"github.com/clivm/clivm/pkg/exec"
+	"github.com/clivm/clivm/pkg/installpackage"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -29,7 +29,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		links      map[string]string
 		param      *config.Param
 		rt         *runtime.Runtime
-		cfg        *aqua.Config
+		cfg        *clivm.Config
 		registries map[string]*registry.Config
 		executor   exec.Executor
 		binDir     string
@@ -45,22 +45,22 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -92,12 +92,12 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: "/home/foo/.local/share/clivm/bin",
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"clivm-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
 			},
 		},
 		{
@@ -109,22 +109,22 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
@@ -144,12 +144,12 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: "/home/foo/.local/share/clivm/bin",
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"clivm-proxy": "/home/foo/.local/share/clivm/bin/ci-info",
 			},
 		},
 		{
@@ -160,29 +160,29 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"standard": {
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.15.0",
 						Path:      "registry.yaml",
 					},
 				},
-				Packages: []*aqua.Package{},
+				Packages: []*clivm.Package{},
 			},
 			registries: map[string]*registry.Config{
 				"standard": {
 					PackageInfos: registry.PackageInfos{},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: "/home/foo/.local/share/clivm/bin",
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
@@ -243,17 +243,17 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 					RepoName:  "ci-info",
 					Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
 				},
-				Package: &aqua.Package{
+				Package: &clivm.Package{
 					Name:     "suzuki-shunsuke/ci-info",
 					Registry: "standard",
 					Version:  "v2.0.3",
 				},
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: "/home/foo/.local/share/clivm",
 			},
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				"/home/foo/.local/share/clivm/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 		},
 	}

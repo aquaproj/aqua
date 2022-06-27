@@ -1,9 +1,9 @@
-package aqua_test
+package clivm_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/clivm/clivm/pkg/config/clivm"
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 )
@@ -13,7 +13,7 @@ func TestConfig_UnmarshalYAML(t *testing.T) { //nolint:funlen
 	data := []struct {
 		title string
 		yaml  string
-		exp   *aqua.Config
+		exp   *clivm.Config
 	}{
 		{
 			title: "standard registry",
@@ -26,18 +26,18 @@ packages:
   registry: standard
   version: v1.6.0
 `,
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
-					"standard": &aqua.Registry{
+			exp: &clivm.Config{
+				Registries: clivm.Registries{
+					"standard": &clivm.Registry{
 						Name:      "standard",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 						Type:      "github_content",
 						Ref:       "v0.2.0",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "cmdx",
 						Registry: "standard",
@@ -56,18 +56,18 @@ packages:
 - name: suzuki-shunsuke/cmdx@v1.6.0
   registry: standard
 `,
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
-					"standard": &aqua.Registry{
+			exp: &clivm.Config{
+				Registries: clivm.Registries{
+					"standard": &clivm.Registry{
 						Name:      "standard",
 						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Path:      "registry.yaml",
 						Ref:       "v0.2.0",
 					},
 				},
-				Packages: []*aqua.Package{
+				Packages: []*clivm.Package{
 					{
 						Name:     "suzuki-shunsuke/cmdx",
 						Registry: "standard",
@@ -82,7 +82,7 @@ packages:
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			cfg := &aqua.Config{}
+			cfg := &clivm.Config{}
 			if err := yaml.Unmarshal([]byte(d.yaml), cfg); err != nil {
 				t.Fatal(err)
 			}

@@ -6,14 +6,14 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	cfgRegistry "github.com/clivm/clivm/pkg/config/registry"
+	registry "github.com/clivm/clivm/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -100,7 +100,7 @@ func (ctrl *controller) whichFile(pkg *config.Package, file *cfgRegistry.File) (
 }
 
 func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*config.Package, *cfgRegistry.File, error) {
-	cfg := &aqua.Config{}
+	cfg := &clivm.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, nil, err //nolint:wrapcheck
 	}
@@ -120,7 +120,7 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	return nil, nil, nil
 }
 
-func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*cfgRegistry.PackageInfo, *cfgRegistry.File) {
+func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *clivm.Package, logE *logrus.Entry) (*cfgRegistry.PackageInfo, *cfgRegistry.File) {
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil, nil

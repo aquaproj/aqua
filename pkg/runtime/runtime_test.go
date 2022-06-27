@@ -3,7 +3,7 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/runtime"
 )
 
 func TestNew(t *testing.T) {

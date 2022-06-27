@@ -6,16 +6,16 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/install"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/controller/install"
+	"github.com/clivm/clivm/pkg/download"
+	"github.com/clivm/clivm/pkg/exec"
+	registry "github.com/clivm/clivm/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/installpackage"
+	"github.com/clivm/clivm/pkg/link"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -39,32 +39,32 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				ConfigFilePath: "clivm.yaml",
+				RootDir:        "/home/foo/.local/share/clivm",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer":                                              ``,
-				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): ``,
-				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer": ``,
-				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy":     ``,
+				"/home/foo/.local/share/clivm/pkgs/github_content/github.com/clivm/clivm-installer/v1.0.0/clivm-installer/clivm-installer":                                              ``,
+				fmt.Sprintf("/home/foo/.local/share/clivm/pkgs/github_release/github.com/clivm/clivm-proxy/%s/clivm-proxy_linux_amd64.tar.gz/clivm-proxy", installpackage.ProxyVersion): ``,
+				"/home/foo/.local/share/clivm/bin/clivm-installer": ``,
+				"/home/foo/.local/share/clivm/bin/clivm-proxy":     ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer",
-				fmt.Sprintf("../pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
+				"clivm-proxy": "/home/foo/.local/share/clivm/bin/clivm-installer",
+				fmt.Sprintf("../pkgs/github_release/github.com/clivm/clivm-proxy/%s/clivm-proxy_linux_amd64.tar.gz/clivm-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/clivm/bin/clivm-proxy",
 			},
 		},
 	}

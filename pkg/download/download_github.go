@@ -23,8 +23,8 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, owner, repoName, version, assetName string, logE *logrus.Entry) (io.ReadCloser, error) {
 	// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
 	// As a result of test, it seems not to be limited.
-	// So at first aqua tries to download assets without GitHub API.
-	// And if it failed, aqua tries again with GitHub API.
+	// So at first clivm tries to download assets without GitHub API.
+	// And if it failed, clivm tries again with GitHub API.
 	// It avoids the rate limit of the access token.
 	b, err := downloader.http.Download(ctx, "https://github.com/"+owner+"/"+repoName+"/releases/download/"+version+"/"+assetName)
 	if err == nil {
@@ -70,7 +70,7 @@ func (downloader *pkgDownloader) downloadFromGitHubRelease(ctx context.Context, 
 }
 
 func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
-	// https://github.com/aquaproj/aqua/issues/391
+	// https://github.com/clivm/clivm/issues/391
 	body, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName)
 	if err == nil {
 		return body, nil

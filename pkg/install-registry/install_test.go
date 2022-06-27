@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/config/clivm"
+	cfgRegistry "github.com/clivm/clivm/pkg/config/registry"
+	"github.com/clivm/clivm/pkg/download"
+	registry "github.com/clivm/clivm/pkg/install-registry"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -27,7 +27,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 		files       map[string]string
 		param       *config.Param
 		downloader  download.RegistryDownloader
-		cfg         *aqua.Config
+		cfg         *clivm.Config
 		cfgFilePath string
 		isErr       bool
 		exp         map[string]*cfgRegistry.Config
@@ -37,17 +37,17 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				MaxParallelism: 5,
 			},
-			cfgFilePath: "aqua.yaml",
+			cfgFilePath: "clivm.yaml",
 			files: map[string]string{
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
-			cfg: &aqua.Config{
-				Registries: aqua.Registries{
+			cfg: &clivm.Config{
+				Registries: clivm.Registries{
 					"local": {
 						Type: "local",
 						Name: "local",
@@ -56,16 +56,16 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 					"standard": {
 						Type:      "github_content",
 						Name:      "standard",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.16.0",
 						Path:      "registry.yaml",
 					},
 					"standard-json": {
 						Type:      "github_content",
 						Name:      "standard-json",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+						RepoOwner: "clivm",
+						RepoName:  "clivm-registry",
 						Ref:       "v2.16.0",
 						Path:      "registry.json",
 					},
@@ -76,9 +76,9 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 					PackageInfos: cfgRegistry.PackageInfos{
 						{
 							Type:      "github_content",
-							RepoOwner: "aquaproj",
-							RepoName:  "aqua-installer",
-							Path:      stringP("aqua-installer"),
+							RepoOwner: "clivm",
+							RepoName:  "clivm-installer",
+							Path:      stringP("clivm-installer"),
 						},
 					},
 				},
@@ -113,7 +113,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 									Name: "download a registry",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.yaml",
+										Path:   "/clivm/clivm-registry/v2.16.0/registry.yaml",
 									},
 									Response: &flute.Response{
 										Base: http.Response{
@@ -131,7 +131,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 									Name: "download a registry.json",
 									Matcher: &flute.Matcher{
 										Method: "GET",
-										Path:   "/aquaproj/aqua-registry/v2.16.0/registry.json",
+										Path:   "/clivm/clivm-registry/v2.16.0/registry.json",
 									},
 									Response: &flute.Response{
 										Base: http.Response{

@@ -8,11 +8,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/exec"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/clivm/clivm/pkg/config"
+	"github.com/clivm/clivm/pkg/controller/which"
+	"github.com/clivm/clivm/pkg/exec"
+	"github.com/clivm/clivm/pkg/installpackage"
+	"github.com/clivm/clivm/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
@@ -38,7 +38,7 @@ func New(pkgInstaller installpackage.Installer, which which.Controller, executor
 		packageInstaller: pkgInstaller,
 		which:            which,
 		executor:         executor,
-		enabledXSysExec:  osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		enabledXSysExec:  osEnv.Getenv("CLIVM_EXPERIMENTAL_X_SYS_EXEC") == "true",
 		fs:               fs,
 	}
 }

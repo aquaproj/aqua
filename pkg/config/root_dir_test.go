@@ -3,7 +3,7 @@ package config_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/clivm/clivm/pkg/config"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -15,25 +15,25 @@ func TestGetRootDir(t *testing.T) {
 		exp  string
 	}{
 		{
-			name: "AQUA_ROOT_DIR",
+			name: "CLIVM_ROOT_DIR",
 			env: map[string]string{
-				"AQUA_ROOT_DIR": "/home/foo/.aqua",
+				"CLIVM_ROOT_DIR": "/home/foo/.clivm",
 			},
-			exp: "/home/foo/.aqua",
+			exp: "/home/foo/.clivm",
 		},
 		{
 			name: "XDG_DATA_HOME",
 			env: map[string]string{
 				"XDG_DATA_HOME": "/home/foo/.xdg",
 			},
-			exp: "/home/foo/.xdg/aquaproj-aqua",
+			exp: "/home/foo/.xdg/clivm",
 		},
 		{
 			name: "HOME",
 			env: map[string]string{
 				"HOME": "/home/foo",
 			},
-			exp: "/home/foo/.local/share/aquaproj-aqua",
+			exp: "/home/foo/.local/share/clivm",
 		},
 	}
 	for _, d := range data {

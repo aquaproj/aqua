@@ -35,7 +35,7 @@ func New(ctx context.Context) RepositoryService {
 }
 
 func getGitHubToken() string {
-	if token := os.Getenv("AQUA_GITHUB_TOKEN"); token != "" {
+	if token := os.Getenv("CLIVM_GITHUB_TOKEN"); token != "" {
 		return token
 	}
 	return os.Getenv("GITHUB_TOKEN")

@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/list"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	reader "github.com/clivm/clivm/pkg/config-reader"
+	"github.com/clivm/clivm/pkg/controller/list"
+	"github.com/clivm/clivm/pkg/download"
+	registry "github.com/clivm/clivm/pkg/install-registry"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -28,22 +28,22 @@ func TestController_List(t *testing.T) {
 			name: "normal",
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "clivm.yaml",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"clivm.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
-- name: aquaproj/aqua-installer@v1.0.0
+- name: clivm/clivm-installer@v1.0.0
 `,
 				"registry.yaml": `packages:
 - type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  repo_owner: clivm
+  repo_name: clivm-installer
+  path: clivm-installer
 `,
 			},
 		},

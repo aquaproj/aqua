@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	"github.com/aquaproj/aqua/pkg/log"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/clivm/clivm/pkg/config"
+	finder "github.com/clivm/clivm/pkg/config-finder"
+	"github.com/clivm/clivm/pkg/log"
+	"github.com/clivm/clivm/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/urfave/cli/v2"
@@ -45,12 +45,12 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.All = c.Bool("all")
 	param.File = c.String("f")
-	param.AQUAVersion = runner.LDFlags.Version
+	param.CLIVMVersion = runner.LDFlags.Version
 	param.RootDir = config.GetRootDir(osenv.New())
 	logE := runner.LogE
 	log.SetLevel(param.LogLevel, logE)
-	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
-	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
+	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("CLIVM_MAX_PARALLELISM"), logE)
+	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("CLIVM_GLOBAL_CONFIG"))
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -65,8 +65,8 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		compiledDate = time.Now()
 	}
 	app := cli.App{
-		Name:           "aqua",
-		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
+		Name:           "clivm",
+		Usage:          "Version Manager of CLI. https://clivm.github.io/",
 		Version:        runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
 		Compiled:       compiledDate,
 		ExitErrHandler: exitErrHandlerFunc,
@@ -74,13 +74,13 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			&cli.StringFlag{
 				Name:    "log-level",
 				Usage:   "log level",
-				EnvVars: []string{"AQUA_LOG_LEVEL"},
+				EnvVars: []string{"CLIVM_LOG_LEVEL"},
 			},
 			&cli.StringFlag{
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "configuration file path",
-				EnvVars: []string{"AQUA_CONFIG"},
+				EnvVars: []string{"CLIVM_CONFIG"},
 			},
 			&cli.StringFlag{
 				Name:  "trace",

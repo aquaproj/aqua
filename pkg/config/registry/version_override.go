@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/aquaproj/aqua/pkg/expr"
+import "github.com/clivm/clivm/pkg/expr"
 
 func (pkgInfo *PackageInfo) setVersion(v string) (*PackageInfo, error) {
 	if pkgInfo.VersionConstraints == "" {
