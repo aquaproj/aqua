@@ -3,7 +3,7 @@ package download
 import (
 	"testing"
 
-	"github.com/google/go-github/v44/github"
+	"github.com/google/go-github/v45/github"
 )
 
 func Test_getAssetIDFromAssets(t *testing.T) {
