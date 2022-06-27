@@ -15,9 +15,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/expr"
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/pkg/github"
 	instregst "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/google/go-github/v44/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -28,7 +27,7 @@ import (
 type Controller struct {
 	stdin                   io.Reader
 	stdout                  io.Writer
-	gitHubRepositoryService githubSvc.RepositoryService
+	gitHubRepositoryService github.RepositoryService
 	registryInstaller       instregst.Installer
 	configFinder            finder.ConfigFinder
 	configReader            reader.ConfigReader
@@ -36,7 +35,7 @@ type Controller struct {
 	fs                      afero.Fs
 }
 
-func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh githubSvc.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
+func New(configFinder finder.ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh github.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
 	return &Controller{
 		stdin:                   os.Stdin,
 		stdout:                  os.Stdout,

@@ -12,11 +12,15 @@ import (
 )
 
 type (
-	ReleaseAsset      = github.ReleaseAsset
-	ListOptions       = github.ListOptions
-	RepositoryRelease = github.RepositoryRelease
-	Repository        = github.Repository
+	ReleaseAsset                = github.ReleaseAsset
+	ListOptions                 = github.ListOptions
+	RepositoryRelease           = github.RepositoryRelease
+	Repository                  = github.Repository
+	RepositoryContentGetOptions = github.RepositoryContentGetOptions
+	RepositoryContent           = github.RepositoryContent
 )
+
+const Tarball = github.Tarball
 
 type RepositoryService interface {
 	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)

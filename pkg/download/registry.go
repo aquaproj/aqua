@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"io"
 
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
-	"github.com/google/go-github/v44/github"
+	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type registryDownloader struct {
-	github githubSvc.RepositoryService
+	github github.RepositoryService
 	http   HTTPDownloader
 }
 

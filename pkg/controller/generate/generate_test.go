@@ -10,11 +10,10 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/download"
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -233,7 +232,7 @@ packages:
 				}
 			}
 			configFinder := finder.NewConfigFinder(fs)
-			gh := &githubSvc.MockRepositoryService{
+			gh := &github.MockRepositoryService{
 				Releases: d.releases,
 			}
 			downloader := download.NewRegistryDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
