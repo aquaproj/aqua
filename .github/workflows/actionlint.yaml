@@ -2,11 +2,11 @@
 name: actionlint
 on:
   push:
-    branches: [main]
+    branches: [dummy] # TODO enable
     paths:
     - .github/**
   pull_request:
-    branches: [main]
+    branches: [dummy] # TODO enable
     paths:
     - .github/**
 jobs:
