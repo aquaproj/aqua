@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"path/filepath"
+	"path"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/iancoleman/orderedmap"
@@ -374,7 +374,7 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 		}
 		return []*File{
 			{
-				Name: filepath.Base(pkgInfo.GetPath()),
+				Name: path.Base(pkgInfo.GetPath()),
 			},
 		}
 	}

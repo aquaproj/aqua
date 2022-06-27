@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 	texttemplate "text/template"
@@ -205,7 +206,7 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 		if pkgInfo.Asset != nil {
 			return *pkgInfo.Asset, nil
 		}
-		return filepath.Base(pkgInfo.GetPath()), nil
+		return path.Base(pkgInfo.GetPath()), nil
 	case PkgInfoTypeGitHubContent:
 		s, err := cpkg.renderTemplateString(*pkgInfo.Path, rt)
 		if err != nil {
@@ -223,7 +224,7 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("parse the URL: %w", err)
 		}
-		return filepath.Base(u.Path), nil
+		return path.Base(u.Path), nil
 	}
 	return "", nil
 }
