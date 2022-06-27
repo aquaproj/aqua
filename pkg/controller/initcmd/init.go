@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -21,11 +21,11 @@ packages:
 `
 
 type Controller struct {
-	gitHubRepositoryService githubSvc.RepositoryService
+	gitHubRepositoryService github.RepositoryService
 	fs                      afero.Fs
 }
 
-func New(gh githubSvc.RepositoryService, fs afero.Fs) *Controller {
+func New(gh github.RepositoryService, fs afero.Fs) *Controller {
 	return &Controller{
 		gitHubRepositoryService: gh,
 		fs:                      fs,

@@ -8,7 +8,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	gh "github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -51,7 +50,7 @@ func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Cont
 	if rc, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version)); err == nil {
 		return rc, nil
 	}
-	u, _, err := downloader.github.GetArchiveLink(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, gh.Tarball, &gh.RepositoryContentGetOptions{
+	u, _, err := downloader.github.GetArchiveLink(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, github.Tarball, &github.RepositoryContentGetOptions{
 		Ref: pkg.Package.Version,
 	}, true)
 	if err != nil {

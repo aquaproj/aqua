@@ -6,9 +6,8 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/download"
-	githubSvc "github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/google/go-github/v44/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
@@ -24,7 +23,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 		rt         *runtime.Runtime
 		isErr      bool
 		exp        string
-		github     githubSvc.RepositoryService
+		github     github.RepositoryService
 		httpClient *http.Client
 	}{
 		{
@@ -67,7 +66,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 			ref:       "v2.16.0",
 			path:      "registry.yaml",
 			exp:       "foo",
-			github: &githubSvc.MockRepositoryService{
+			github: &github.MockRepositoryService{
 				Content: &github.RepositoryContent{
 					Content: stringP("foo"),
 				},
