@@ -15,13 +15,6 @@ type Executor struct {
 	stderr io.Writer
 }
 
-// type Executor interface {
-// 	Exec(ctx context.Context, exePath string, args []string) (int, error)
-// 	ExecXSys(exePath string, args []string) error
-// 	GoBuild(ctx context.Context, exePath, src, exeDir string) (int, error)
-// 	GoInstall(ctx context.Context, path, gobin string) (int, error)
-// }
-
 func New() *Executor {
 	return &Executor{
 		stdin:  os.Stdin,
