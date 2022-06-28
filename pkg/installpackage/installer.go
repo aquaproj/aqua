@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -29,7 +28,7 @@ type installer struct {
 	runtime           *runtime.Runtime
 	fs                afero.Fs
 	linker            link.Linker
-	executor          exec.Executor
+	executor          Executor
 }
 
 func isWindows(goos string) bool {

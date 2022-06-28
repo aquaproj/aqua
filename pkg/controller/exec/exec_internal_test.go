@@ -15,13 +15,13 @@ func TestController_execCommand(t *testing.T) {
 		title    string
 		exePath  string
 		args     []string
-		executor exec.Executor
+		executor Executor
 	}{
 		{
 			title:    "normal",
 			exePath:  "/bin/date",
 			args:     []string{},
-			executor: exec.NewMock(0, nil),
+			executor: &exec.MockExecutor{},
 		},
 	}
 	ctx := context.Background()
