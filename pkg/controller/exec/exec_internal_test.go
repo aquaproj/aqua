@@ -21,7 +21,7 @@ func TestController_execCommand(t *testing.T) {
 			title:    "normal",
 			exePath:  "/bin/date",
 			args:     []string{},
-			executor: &exec.MockExecutor{},
+			executor: &exec.Mock{},
 		},
 	}
 	ctx := context.Background()
