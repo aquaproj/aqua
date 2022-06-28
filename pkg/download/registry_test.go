@@ -23,7 +23,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 		rt         *runtime.Runtime
 		isErr      bool
 		exp        string
-		github     github.RepositoryService
+		github     download.RepositoryService
 		httpClient *http.Client
 	}{
 		{
