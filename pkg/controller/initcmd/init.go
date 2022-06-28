@@ -21,14 +21,18 @@ packages:
 `
 
 type Controller struct {
-	gitHubRepositoryService github.RepositoryService
-	fs                      afero.Fs
+	github RepositoryService
+	fs     afero.Fs
 }
 
-func New(gh github.RepositoryService, fs afero.Fs) *Controller {
+type RepositoryService interface {
+	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
+}
+
+func New(gh RepositoryService, fs afero.Fs) *Controller {
 	return &Controller{
-		gitHubRepositoryService: gh,
-		fs:                      fs,
+		github: gh,
+		fs:     fs,
 	}
 }
 
@@ -45,7 +49,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 	}
 
 	registryVersion := "v3.4.0" // renovate: depName=aquaproj/aqua-registry
-	release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
+	release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
 			"repo_owner": "aquaproj",

@@ -2,9 +2,7 @@ package github
 
 import (
 	"context"
-	"io"
 	"net/http"
-	"net/url"
 	"os"
 
 	"github.com/google/go-github/v45/github"
@@ -18,23 +16,14 @@ type (
 	Repository                  = github.Repository
 	RepositoryContentGetOptions = github.RepositoryContentGetOptions
 	RepositoryContent           = github.RepositoryContent
+	Response                    = github.Response
+	RepositoryTag               = github.RepositoryTag
+	ArchiveFormat               = github.ArchiveFormat
 )
 
 const Tarball = github.Tarball
 
-type RepositoryService interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
-	GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
-	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
-	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
-	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
-	ListReleaseAssets(ctx context.Context, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error)
-	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
-	GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, followRedirects bool) (*url.URL, *github.Response, error)
-	Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error)
-}
-
-func New(ctx context.Context) RepositoryService {
+func New(ctx context.Context) *github.RepositoriesService {
 	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
 }
 

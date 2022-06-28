@@ -34,7 +34,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 		pkg        *config.Package
 		assetName  string
 		exp        string
-		github     github.RepositoryService
+		github     download.RepositoryService
 		httpClient *http.Client
 	}{
 		{ //nolint:dupl

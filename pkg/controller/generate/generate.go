@@ -24,30 +24,36 @@ import (
 )
 
 type Controller struct {
-	stdin                   io.Reader
-	stdout                  io.Writer
-	gitHubRepositoryService github.RepositoryService
-	registryInstaller       instregst.Installer
-	configFinder            ConfigFinder
-	configReader            reader.ConfigReader
-	fuzzyFinder             FuzzyFinder
-	fs                      afero.Fs
+	stdin             io.Reader
+	stdout            io.Writer
+	github            RepositoryService
+	registryInstaller instregst.Installer
+	configFinder      ConfigFinder
+	configReader      reader.ConfigReader
+	fuzzyFinder       FuzzyFinder
+	fs                afero.Fs
+}
+
+type RepositoryService interface {
+	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
+	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
+	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
 type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh github.RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
 	return &Controller{
-		stdin:                   os.Stdin,
-		stdout:                  os.Stdout,
-		configFinder:            configFinder,
-		configReader:            configReader,
-		registryInstaller:       registInstaller,
-		gitHubRepositoryService: gh,
-		fs:                      fs,
-		fuzzyFinder:             fuzzyFinder,
+		stdin:             os.Stdin,
+		stdout:            os.Stdout,
+		configFinder:      configFinder,
+		configReader:      configReader,
+		registryInstaller: registInstaller,
+		github:            gh,
+		fs:                fs,
+		fuzzyFinder:       fuzzyFinder,
 	}
 }
 
@@ -213,7 +219,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *registry
 		return ""
 	}
 	for {
-		releases, _, err := ctrl.gitHubRepositoryService.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -249,7 +255,7 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *r
 		return ""
 	}
 	for {
-		tags, _, err := ctrl.gitHubRepositoryService.ListTags(ctx, repoOwner, repoName, opt)
+		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -279,7 +285,7 @@ func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, output
 	if pkgInfo.VersionFilter != nil {
 		tagName = ctrl.listAndGetTagNameFromTag(ctx, pkgInfo, logE)
 	} else {
-		tags, _, err := ctrl.gitHubRepositoryService.ListTags(ctx, repoOwner, repoName, nil)
+		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, nil)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -313,7 +319,7 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *aq
 	if pkgInfo.VersionFilter != nil {
 		tagName = ctrl.listAndGetTagName(ctx, pkgInfo, logE)
 	} else {
-		release, _, err := ctrl.gitHubRepositoryService.GetLatestRelease(ctx, repoOwner, repoName)
+		release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -340,7 +346,7 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 	if outputPkg.Registry == "standard" {
 		outputPkg.Registry = ""
 	}
-	if ctrl.gitHubRepositoryService == nil {
+	if ctrl.github == nil {
 		return outputPkg
 	}
 	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {
