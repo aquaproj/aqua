@@ -10,7 +10,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -25,12 +24,17 @@ type Controller struct {
 	stderr           io.Writer
 	which            which.Controller
 	packageInstaller installpackage.Installer
-	executor         exec.Executor
+	executor         Executor
 	enabledXSysExec  bool
 	fs               afero.Fs
 }
 
-func New(pkgInstaller installpackage.Installer, which which.Controller, executor exec.Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
+type Executor interface {
+	Exec(ctx context.Context, exePath string, args []string) (int, error)
+	ExecXSys(exePath string, args []string) error
+}
+
+func New(pkgInstaller installpackage.Installer, which which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,

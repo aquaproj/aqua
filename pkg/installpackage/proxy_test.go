@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -23,7 +22,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 		files    map[string]string
 		param    *config.Param
 		rt       *runtime.Runtime
-		executor exec.Executor
+		executor installpackage.Executor
 		links    map[string]string
 		isErr    bool
 	}{

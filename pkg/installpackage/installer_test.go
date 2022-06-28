@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -31,7 +30,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		rt         *runtime.Runtime
 		cfg        *aqua.Config
 		registries map[string]*registry.Config
-		executor   exec.Executor
+		executor   installpackage.Executor
 		binDir     string
 		onlyLink   bool
 		isTest     bool
@@ -226,7 +225,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 		param    *config.Param
 		rt       *runtime.Runtime
 		pkg      *config.Package
-		executor exec.Executor
+		executor installpackage.Executor
 		isTest   bool
 		isErr    bool
 	}{
