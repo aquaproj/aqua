@@ -38,7 +38,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		download.NewRegistryDownloader,
@@ -54,7 +54,7 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 		genrgst.NewController,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(genrgst.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		afero.NewOsFs,
 	)
@@ -66,7 +66,7 @@ func InitializeInitCommandController(ctx context.Context, param *config.Param) *
 		initcmd.New,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(initcmd.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(initcmd.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		afero.NewOsFs,
 	)
@@ -82,8 +82,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(generate.RepositoryService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		download.NewRegistryDownloader,
@@ -105,7 +105,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		download.NewRegistryDownloader,
@@ -132,7 +132,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		download.NewRegistryDownloader,
@@ -156,7 +156,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		installpackage.New,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		download.NewRegistryDownloader,

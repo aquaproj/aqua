@@ -34,7 +34,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 		pkg        *config.Package
 		assetName  string
 		exp        string
-		github     download.RepositoryService
+		github     download.RepositoriesService
 		httpClient *http.Client
 	}{
 		{ //nolint:dupl
@@ -61,7 +61,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "ci-info-2.0.3_linux_amd64.tar.gz",
 			exp:       "foo",
-			github: &github.MockRepositoryService{
+			github: &github.MockRepositoriesService{
 				Asset: "foo",
 			},
 			httpClient: &http.Client{
@@ -113,7 +113,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "ci-info-2.0.3_linux_amd64.tar.gz",
 			exp:       "foo",
-			github: &github.MockRepositoryService{
+			github: &github.MockRepositoriesService{
 				Releases: []*github.RepositoryRelease{
 					{
 						Assets: []*github.ReleaseAsset{
@@ -175,7 +175,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "aqua-installer",
 			exp:       "foo",
-			github: &github.MockRepositoryService{
+			github: &github.MockRepositoriesService{
 				Asset: "foo",
 			},
 			httpClient: &http.Client{
@@ -227,7 +227,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 			},
 			assetName: "aqua-installer",
 			exp:       "github-content",
-			github: &github.MockRepositoryService{
+			github: &github.MockRepositoriesService{
 				Content: &github.RepositoryContent{
 					Content: stringP("github-content"),
 				},
@@ -280,7 +280,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 				},
 			},
 			exp: "foo",
-			github: &github.MockRepositoryService{
+			github: &github.MockRepositoriesService{
 				Asset: "foo",
 			},
 			httpClient: &http.Client{

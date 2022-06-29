@@ -21,15 +21,15 @@ packages:
 `
 
 type Controller struct {
-	github RepositoryService
+	github RepositoriesService
 	fs     afero.Fs
 }
 
-type RepositoryService interface {
+type RepositoriesService interface {
 	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
 }
 
-func New(gh RepositoryService, fs afero.Fs) *Controller {
+func New(gh RepositoriesService, fs afero.Fs) *Controller {
 	return &Controller{
 		github: gh,
 		fs:     fs,

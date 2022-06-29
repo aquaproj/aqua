@@ -11,7 +11,7 @@ import (
 )
 
 type registryDownloader struct {
-	github RepositoryService
+	github RepositoriesService
 	http   HTTPDownloader
 }
 

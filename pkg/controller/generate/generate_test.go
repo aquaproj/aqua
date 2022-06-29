@@ -395,7 +395,7 @@ packages:
 				}
 			}
 			configFinder := finder.NewConfigFinder(fs)
-			gh := &github.MockRepositoryService{
+			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Tags:     d.tags,
 			}

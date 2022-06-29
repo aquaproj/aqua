@@ -27,7 +27,7 @@ import (
 type Controller struct {
 	stdin             io.Reader
 	stdout            io.Writer
-	github            RepositoryService
+	github            RepositoriesService
 	registryInstaller instregst.Installer
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
@@ -36,7 +36,7 @@ type Controller struct {
 	fs                afero.Fs
 }
 
-type RepositoryService interface {
+type RepositoriesService interface {
 	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
 	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
@@ -46,7 +46,7 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		stdout:            os.Stdout,
