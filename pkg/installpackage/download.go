@@ -23,7 +23,7 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, 
 
 	logE.Info("download and unarchive the package")
 
-	body, err := inst.packageDownloader.GetReadCloser(ctx, pkg, assetName, logE)
+	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, pkg, assetName, logE)
 	if body != nil {
 		defer body.Close()
 	}
@@ -35,7 +35,10 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, 
 		Body:     body,
 		Filename: assetName,
 		Type:     pkgInfo.GetFormat(),
-	}, dest, logE, inst.fs)
+	}, dest, logE, inst.fs, &unarchive.ProgressBarOpts{
+		ContentLength: cl,
+		Description:   fmt.Sprintf("Downloading %s %s", pkg.Package.Name, pkg.Package.Version),
+	})
 }
 
 func (inst *installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {

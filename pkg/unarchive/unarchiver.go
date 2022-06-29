@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/mholt/archiver/v3"
+	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/afero"
 )
 
@@ -13,7 +14,7 @@ type unarchiverWithUnarchiver struct {
 	dest       string
 }
 
-func (unarchiver *unarchiverWithUnarchiver) Unarchive(fs afero.Fs, body io.Reader) error {
+func (unarchiver *unarchiverWithUnarchiver) Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
 	f, err := afero.TempFile(fs, "", "")
 	if err != nil {
@@ -23,7 +24,17 @@ func (unarchiver *unarchiverWithUnarchiver) Unarchive(fs afero.Fs, body io.Reade
 		f.Close()
 		fs.Remove(f.Name()) //nolint:errcheck
 	}()
-	if _, err := io.Copy(f, body); err != nil {
+
+	var m io.Writer = f
+	if prgOpts != nil {
+		bar := progressbar.DefaultBytes(
+			prgOpts.ContentLength,
+			prgOpts.Description,
+		)
+		m = io.MultiWriter(f, bar)
+	}
+
+	if _, err := io.Copy(m, body); err != nil {
 		return fmt.Errorf("copy the file to the temporal file: %w", err)
 	}
 	return unarchiver.unarchiver.Unarchive(f.Name(), dest) //nolint:wrapcheck

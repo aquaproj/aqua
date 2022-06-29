@@ -61,9 +61,9 @@ func TestIsUnarchived(t *testing.T) {
 	}
 }
 
-func getReadCloser(ctx context.Context, downloader download.HTTPDownloader, body, url string) (io.ReadCloser, error) {
+func getReadCloser(ctx context.Context, downloader download.HTTPDownloader, body, url string) (io.ReadCloser, int64, error) {
 	if body != "" {
-		return io.NopCloser(strings.NewReader(body)), nil
+		return io.NopCloser(strings.NewReader(body)), 0, nil
 	}
 	return downloader.Download(ctx, url) //nolint:wrapcheck
 }
@@ -107,7 +107,7 @@ func TestUnarchive(t *testing.T) {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewOsFs()
-			body, err := getReadCloser(ctx, httpDownloader, d.body, d.url)
+			body, _, err := getReadCloser(ctx, httpDownloader, d.body, d.url)
 			if body != nil {
 				defer body.Close()
 			}
@@ -115,7 +115,7 @@ func TestUnarchive(t *testing.T) {
 				t.Fatal(err)
 			}
 			d.src.Body = body
-			if err := unarchive.Unarchive(d.src, t.TempDir(), logE, fs); err != nil {
+			if err := unarchive.Unarchive(d.src, t.TempDir(), logE, fs, nil); err != nil {
 				if d.isErr {
 					return
 				}

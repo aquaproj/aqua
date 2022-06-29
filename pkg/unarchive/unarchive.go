@@ -14,8 +14,13 @@ import (
 
 var errUnsupportedFileFormat = errors.New("unsupported file format")
 
+type ProgressBarOpts struct {
+	ContentLength int64
+	Description   string
+}
+
 type Unarchiver interface {
-	Unarchive(fs afero.Fs, body io.Reader) error
+	Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
 }
 
 type File struct {
@@ -24,13 +29,13 @@ type File struct {
 	Type     string
 }
 
-func Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs) error {
+func Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *ProgressBarOpts) error {
 	arc, err := getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	return arc.Unarchive(fs, src.Body) //nolint:wrapcheck
+	return arc.Unarchive(fs, src.Body, prgOpts) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
