@@ -10,7 +10,7 @@ import (
 )
 
 type PackageDownloader interface {
-	GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, error)
+	GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, int64, error)
 }
 
 func NewPackageDownloader(gh RepositoriesService, rt *runtime.Runtime, httpDownloader HTTPDownloader) PackageDownloader {

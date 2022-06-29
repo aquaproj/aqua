@@ -54,7 +54,7 @@ func Test_fromURL(t *testing.T) { //nolint:funlen
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			httpDownloader := NewHTTPDownloader(d.httpClient)
-			readCloser, err := httpDownloader.Download(ctx, d.url)
+			readCloser, _, err := httpDownloader.Download(ctx, d.url)
 			if readCloser != nil {
 				defer readCloser.Close()
 			}

@@ -17,7 +17,7 @@ type registryDownloader struct {
 
 func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string, logE *logrus.Entry) ([]byte, error) {
 	// https://github.com/aquaproj/aqua/issues/391
-	body, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path)
+	body, _, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path)
 	if body != nil {
 		defer body.Close()
 	}
