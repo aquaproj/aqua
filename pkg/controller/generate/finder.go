@@ -84,8 +84,8 @@ func getPreview(pkg *FindingPackage, i, w int) string {
 		formatDescription(pkg.PackageInfo.GetDescription(), w/2-8)) //nolint:gomnd
 }
 
-func formatDescription(desc string, w int) string {
-	descRune := []rune(desc)
+func formatLine(line string, w int) string {
+	descRune := []rune(line)
 	lenDescRune := len(descRune)
 	lineWidth := w - len([]rune("\n"))
 	numOfLines := (lenDescRune / lineWidth) + 1
@@ -99,4 +99,13 @@ func formatDescription(desc string, w int) string {
 		descArr[i] = string(descRune[start:end])
 	}
 	return strings.Join(descArr, "\n")
+}
+
+func formatDescription(desc string, w int) string {
+	lines := strings.Split(desc, "\n")
+	arr := make([]string, len(lines))
+	for i, line := range lines {
+		arr[i] = formatLine(line, w)
+	}
+	return strings.Join(arr, "\n")
 }
