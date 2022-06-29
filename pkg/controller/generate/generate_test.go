@@ -25,17 +25,19 @@ func stringP(s string) *string {
 func Test_controller_Generate(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		name           string
-		files          map[string]string
-		links          map[string]string
-		args           []string
-		env            map[string]string
-		param          *config.Param
-		rt             *runtime.Runtime
-		isErr          bool
-		idxs           []int
-		fuzzyFinderErr error
-		releases       []*github.RepositoryRelease
+		name               string
+		files              map[string]string
+		links              map[string]string
+		args               []string
+		env                map[string]string
+		param              *config.Param
+		rt                 *runtime.Runtime
+		isErr              bool
+		idxs               []int
+		idx                int
+		fuzzyFinderErr     error
+		versionSelectorErr error
+		releases           []*github.RepositoryRelease
 	}{
 		{
 			name: "normal",
@@ -239,7 +241,8 @@ packages:
 			registryInstaller := registry.New(d.param, downloader, fs)
 			configReader := reader.New(fs)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder)
+			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector)
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

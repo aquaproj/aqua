@@ -97,6 +97,11 @@ func (runner *Runner) newGenerateCommand() *cli.Command {
 				Name:  "i",
 				Usage: `Insert packages to configuration file`,
 			},
+			&cli.BoolFlag{
+				Name:    "select-version",
+				Aliases: []string{"s"},
+				Usage:   `Select the installed version interactively`,
+			},
 		},
 	}
 }
