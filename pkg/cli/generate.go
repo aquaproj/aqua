@@ -78,7 +78,12 @@ $ aqua list | aqua g -f - # Generate configuration to install all packages
 You can omit the registry name if it is "standard".
 
 echo "cli/cli" | aqua g -f -
-- name: cli/cli@v2.2.0`
+- name: cli/cli@v2.2.0
+
+You can select a version interactively with "-s" option.
+
+$ aqua g -s
+`
 
 func (runner *Runner) newGenerateCommand() *cli.Command {
 	return &cli.Command{

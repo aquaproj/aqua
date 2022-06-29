@@ -59,9 +59,18 @@ func getVersionPreview(version *Version, i, w int) string {
 	if i < 0 {
 		return ""
 	}
-	return fmt.Sprintf("%s (%s)\n\n%s\n%s",
-		version.Version,
-		version.Name,
-		version.URL,
-		formatDescription(version.Description, w/2-8)) //nolint:gomnd
+	s := version.Version
+	if version.Name != version.Version {
+		s += fmt.Sprintf(" (%s)", version.Name)
+	}
+	if version.URL != "" || version.Description != "" {
+		s += "\n"
+	}
+	if version.URL != "" {
+		s += fmt.Sprintf("\n%s", version.URL)
+	}
+	if version.URL != "" {
+		s += fmt.Sprintf("\n%s", formatDescription(version.Description, w/2-8)) //nolint:gomnd
+	}
+	return s
 }
