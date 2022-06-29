@@ -22,7 +22,7 @@ func stringP(s string) *string {
 	return &s
 }
 
-func Test_controller_Generate(t *testing.T) { //nolint:funlen
+func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name               string
@@ -38,6 +38,7 @@ func Test_controller_Generate(t *testing.T) { //nolint:funlen
 		fuzzyFinderErr     error
 		versionSelectorErr error
 		releases           []*github.RepositoryRelease
+		tags               []*github.RepositoryTag
 	}{
 		{
 			name: "normal",
@@ -214,6 +215,166 @@ packages:
 				},
 			},
 		},
+		{
+			name: "select-version (release)",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+				SelectVersion:  true,
+			},
+			idx: 1,
+			files: map[string]string{
+				"aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+`,
+				"registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+			},
+			args: []string{
+				"aquaproj/aqua-installer",
+			},
+			releases: []*github.RepositoryRelease{
+				{
+					TagName: stringP("v1.1.0"),
+				},
+				{
+					TagName: stringP("v1.0.0"),
+				},
+			},
+		},
+		{
+			name: "select-version (tag)",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+				SelectVersion:  true,
+			},
+			idx: 1,
+			files: map[string]string{
+				"aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+`,
+				"registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+  version_source: github_tag
+`,
+			},
+			args: []string{
+				"aquaproj/aqua-installer",
+			},
+			tags: []*github.RepositoryTag{
+				{
+					Name: stringP("v1.1.0"),
+				},
+				{
+					Name: stringP("v1.0.0"),
+				},
+			},
+		},
+		{
+			name: "github_tag",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+			},
+			files: map[string]string{
+				"aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+`,
+				"registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+  version_source: github_tag
+`,
+			},
+			args: []string{
+				"aquaproj/aqua-installer",
+			},
+			tags: []*github.RepositoryTag{
+				{
+					Name: stringP("v1.1.0"),
+				},
+				{
+					Name: stringP("go1.0.0"),
+				},
+			},
+		},
+		{
+			name: "github_tag with version_filter",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+			},
+			files: map[string]string{
+				"aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+`,
+				"registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+  version_source: github_tag
+  version_filter: 'Version startsWith "go"'
+`,
+			},
+			args: []string{
+				"aquaproj/aqua-installer",
+			},
+			tags: []*github.RepositoryTag{
+				{
+					Name: stringP("v1.1.0"),
+				},
+				{
+					Name: stringP("go1.0.0"),
+				},
+			},
+		},
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
@@ -236,6 +397,7 @@ packages:
 			configFinder := finder.NewConfigFinder(fs)
 			gh := &github.MockRepositoryService{
 				Releases: d.releases,
+				Tags:     d.tags,
 			}
 			downloader := download.NewRegistryDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs)
