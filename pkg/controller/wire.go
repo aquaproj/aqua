@@ -30,36 +30,147 @@ import (
 )
 
 func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *list.Controller {
-	wire.Build(list.NewController, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs, download.NewHTTPDownloader)
+	wire.Build(
+		list.NewController,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(list.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+		),
+		registry.New,
+		download.NewRegistryDownloader,
+		reader.New,
+		afero.NewOsFs,
+		download.NewHTTPDownloader,
+	)
 	return &list.Controller{}
 }
 
 func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
-	wire.Build(genrgst.NewController, github.New, afero.NewOsFs)
+	wire.Build(
+		genrgst.NewController,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(genrgst.RepositoryService), new(*github.RepositoriesService)),
+		),
+		afero.NewOsFs,
+	)
 	return &genrgst.Controller{}
 }
 
 func InitializeInitCommandController(ctx context.Context, param *config.Param) *initcmd.Controller {
-	wire.Build(initcmd.New, github.New, afero.NewOsFs)
+	wire.Build(
+		initcmd.New,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(initcmd.RepositoryService), new(*github.RepositoriesService)),
+		),
+		afero.NewOsFs,
+	)
 	return &initcmd.Controller{}
 }
 
 func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *generate.Controller {
-	wire.Build(generate.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, afero.NewOsFs, generate.NewFuzzyFinder, download.NewHTTPDownloader)
+	wire.Build(
+		generate.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(generate.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(generate.RepositoryService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+		),
+		registry.New,
+		download.NewRegistryDownloader,
+		reader.New,
+		afero.NewOsFs,
+		generate.NewFuzzyFinder,
+		generate.NewVersionSelector,
+		download.NewHTTPDownloader,
+	)
 	return &generate.Controller{}
 }
 
 func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *install.Controller {
-	wire.Build(install.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, installpackage.New, download.NewPackageDownloader, afero.NewOsFs, link.New, download.NewHTTPDownloader, exec.New)
+	wire.Build(
+		install.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(install.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+		),
+		registry.New,
+		download.NewRegistryDownloader,
+		reader.New,
+		installpackage.New,
+		download.NewPackageDownloader,
+		afero.NewOsFs,
+		link.New,
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+		),
+	)
 	return &install.Controller{}
 }
 
 func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) which.Controller {
-	wire.Build(which.New, finder.NewConfigFinder, github.New, registry.New, download.NewRegistryDownloader, reader.New, osenv.New, afero.NewOsFs, download.NewHTTPDownloader, link.New)
+	wire.Build(
+		which.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+		),
+		registry.New,
+		download.NewRegistryDownloader,
+		reader.New,
+		osenv.New,
+		afero.NewOsFs,
+		download.NewHTTPDownloader,
+		link.New,
+	)
 	return nil
 }
 
 func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cexec.Controller {
-	wire.Build(cexec.New, finder.NewConfigFinder, download.NewPackageDownloader, installpackage.New, github.New, registry.New, download.NewRegistryDownloader, reader.New, which.New, exec.New, osenv.New, afero.NewOsFs, link.New, download.NewHTTPDownloader)
+	wire.Build(
+		cexec.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		download.NewPackageDownloader,
+		installpackage.New,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(download.RepositoryService), new(*github.RepositoriesService)),
+		),
+		registry.New,
+		download.NewRegistryDownloader,
+		reader.New,
+		which.New,
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
+		),
+		osenv.New,
+		afero.NewOsFs,
+		link.New,
+		download.NewHTTPDownloader,
+	)
 	return &cexec.Controller{}
 }

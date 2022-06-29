@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/pkg/config"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
@@ -31,6 +32,7 @@ type Controller struct {
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
 	fuzzyFinder       FuzzyFinder
+	versionSelector   VersionSelector
 	fs                afero.Fs
 }
 
@@ -44,7 +46,7 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh RepositoryService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		stdout:            os.Stdout,
@@ -54,6 +56,7 @@ func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInst
 		github:            gh,
 		fs:                fs,
 		fuzzyFinder:       fuzzyFinder,
+		versionSelector:   versionSelector,
 	}
 }
 
@@ -123,7 +126,7 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	}
 	arr := make([]interface{}, len(idxes))
 	for i, idx := range idxes {
-		arr[i] = ctrl.getOutputtedPkg(ctx, pkgs[idx], logE)
+		arr[i] = ctrl.getOutputtedPkg(ctx, param, pkgs[idx], logE)
 	}
 
 	return arr, nil
@@ -141,6 +144,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
 		for pkgName, pkg := range registryContent.PackageInfos.ToMapWarn(logE) {
+			pkg := pkg
 			logE := logE.WithField("package_name", pkgName)
 			m[registryName+","+pkgName] = &FindingPackage{
 				PackageInfo:  pkg,
@@ -166,7 +170,7 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": pkgName}) //nolint:wrapcheck
 		}
-		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg, logE)
+		outputPkg := ctrl.getOutputtedPkg(ctx, param, findingPkg, logE)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 
@@ -199,13 +203,98 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, param *co
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
 		}
-		outputPkg := ctrl.getOutputtedPkg(ctx, findingPkg, logE)
+		outputPkg := ctrl.getOutputtedPkg(ctx, param, findingPkg, logE)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("failed to read the file: %w", err)
 	}
 	return outputPkgs, nil
+}
+
+func (ctrl *Controller) listTags(ctx context.Context, pkgInfo *registry.PackageInfo, logE *logrus.Entry) []*github.RepositoryTag {
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
+	opt := &github.ListOptions{
+		PerPage: 100, //nolint:gomnd
+	}
+	var versionFilter *vm.Program
+	if pkgInfo.VersionFilter != nil {
+		var err error
+		versionFilter, err = expr.CompileVersionFilter(*pkgInfo.VersionFilter)
+		if err != nil {
+			return nil
+		}
+	}
+	var arr []*github.RepositoryTag
+	for i := 0; i < 10; i++ {
+		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
+		if err != nil {
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
+				"repo_owner": repoOwner,
+				"repo_name":  repoName,
+			}).Warn("list releases")
+			return arr
+		}
+		for _, tag := range tags {
+			if versionFilter != nil {
+				f, err := expr.EvaluateVersionFilter(versionFilter, tag.GetName())
+				if err != nil || !f {
+					continue
+				}
+			}
+			arr = append(arr, tag)
+		}
+		if len(tags) != opt.PerPage {
+			return arr
+		}
+		opt.Page++
+	}
+	return arr
+}
+
+func (ctrl *Controller) listReleases(ctx context.Context, pkgInfo *registry.PackageInfo, logE *logrus.Entry) []*github.RepositoryRelease { //nolint:cyclop
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
+	opt := &github.ListOptions{
+		PerPage: 100, //nolint:gomnd
+	}
+	var versionFilter *vm.Program
+	if pkgInfo.VersionFilter != nil {
+		var err error
+		versionFilter, err = expr.CompileVersionFilter(*pkgInfo.VersionFilter)
+		if err != nil {
+			return nil
+		}
+	}
+	var arr []*github.RepositoryRelease
+	for i := 0; i < 10; i++ {
+		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
+		if err != nil {
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
+				"repo_owner": repoOwner,
+				"repo_name":  repoName,
+			}).Warn("list releases")
+			return arr
+		}
+		for _, release := range releases {
+			if release.GetPrerelease() {
+				continue
+			}
+			if versionFilter != nil {
+				f, err := expr.EvaluateVersionFilter(versionFilter, release.GetTagName())
+				if err != nil || !f {
+					continue
+				}
+			}
+			arr = append(arr, release)
+		}
+		if len(releases) != opt.PerPage {
+			return arr
+		}
+		opt.Page++
+	}
+	return arr
 }
 
 func (ctrl *Controller) listAndGetTagName(ctx context.Context, pkgInfo *registry.PackageInfo, logE *logrus.Entry) string {
@@ -278,26 +367,43 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, pkgInfo *r
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
+func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, param *config.Param, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	var tagName string
-	if pkgInfo.VersionFilter != nil {
-		tagName = ctrl.listAndGetTagNameFromTag(ctx, pkgInfo, logE)
-	} else {
-		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, nil)
+
+	if param.SelectVersion { //nolint:nestif
+		tags := ctrl.listTags(ctx, pkgInfo, logE)
+		versions := make([]*Version, len(tags))
+		for i, tag := range tags {
+			versions[i] = &Version{
+				Name:    tag.GetName(),
+				Version: tag.GetName(),
+			}
+		}
+		idx, err := ctrl.versionSelector.Find(versions)
 		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list GitHub tags")
 			return
 		}
-		if len(tags) == 0 {
-			return
+		tagName = versions[idx].Version
+	} else {
+		if pkgInfo.VersionFilter != nil {
+			tagName = ctrl.listAndGetTagNameFromTag(ctx, pkgInfo, logE)
+		} else {
+			tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, nil)
+			if err != nil {
+				logerr.WithError(logE, err).WithFields(logrus.Fields{
+					"repo_owner": repoOwner,
+					"repo_name":  repoName,
+				}).Warn("list GitHub tags")
+				return
+			}
+			if len(tags) == 0 {
+				return
+			}
+			tag := tags[0]
+			tagName = tag.GetName()
 		}
-		tag := tags[0]
-		tagName = tag.GetName()
 	}
 
 	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
@@ -308,27 +414,47 @@ func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, output
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, param *config.Param, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo, logE *logrus.Entry) {
 	if pkgInfo.VersionSource == "github_tag" {
-		ctrl.getOutputtedGitHubPkgFromTag(ctx, outputPkg, pkgInfo, logE)
+		ctrl.getOutputtedGitHubPkgFromTag(ctx, param, outputPkg, pkgInfo, logE)
 		return
 	}
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	var tagName string
-	if pkgInfo.VersionFilter != nil {
-		tagName = ctrl.listAndGetTagName(ctx, pkgInfo, logE)
-	} else {
-		release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
+
+	if param.SelectVersion { //nolint:nestif
+		releases := ctrl.listReleases(ctx, pkgInfo, logE)
+		versions := make([]*Version, len(releases))
+		for i, release := range releases {
+			versions[i] = &Version{
+				Name:        release.GetName(),
+				Version:     release.GetTagName(),
+				Description: release.GetBody(),
+				URL:         release.GetHTMLURL(),
+			}
+		}
+		idx, err := ctrl.versionSelector.Find(versions)
 		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("get the latest release")
 			return
 		}
-		tagName = release.GetTagName()
+		tagName = versions[idx].Version
+	} else {
+		if pkgInfo.VersionFilter != nil {
+			tagName = ctrl.listAndGetTagName(ctx, pkgInfo, logE)
+		} else {
+			release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
+			if err != nil {
+				logerr.WithError(logE, err).WithFields(logrus.Fields{
+					"repo_owner": repoOwner,
+					"repo_name":  repoName,
+				}).Warn("get the latest release")
+				return
+			}
+			tagName = release.GetTagName()
+		}
 	}
+
 	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
 		outputPkg.Name += "@" + tagName
 		outputPkg.Version = ""
@@ -337,7 +463,7 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, outputPkg *aq
 	}
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage, logE *logrus.Entry) *aqua.Package {
+func (ctrl *Controller) getOutputtedPkg(ctx context.Context, param *config.Param, pkg *FindingPackage, logE *logrus.Entry) *aqua.Package {
 	outputPkg := &aqua.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
@@ -350,7 +476,7 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, pkg *FindingPackage
 		return outputPkg
 	}
 	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {
-		ctrl.getOutputtedGitHubPkg(ctx, outputPkg, pkgInfo, logE)
+		ctrl.getOutputtedGitHubPkg(ctx, param, outputPkg, pkgInfo, logE)
 		return outputPkg
 	}
 	return outputPkg

@@ -199,7 +199,7 @@ type VersionOverride struct {
 	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
-	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source"`
+	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source,omitempty"`
 	Rosetta2           *bool             `yaml:",omitempty" json:"rosetta2,omitempty"`
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`

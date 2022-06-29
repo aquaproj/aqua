@@ -160,19 +160,20 @@ const (
 )
 
 type Param struct {
+	GlobalConfigFilePaths []string
 	ConfigFilePath        string
 	LogLevel              string
+	File                  string
+	AQUAVersion           string
+	RootDir               string
+	PWD                   string
+	InsertFile            string
+	MaxParallelism        int
 	OnlyLink              bool
 	IsTest                bool
 	All                   bool
 	Insert                bool
-	File                  string
-	GlobalConfigFilePaths []string
-	AQUAVersion           string
-	RootDir               string
-	MaxParallelism        int
-	PWD                   string
-	InsertFile            string
+	SelectVersion         bool
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {

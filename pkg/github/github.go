@@ -13,6 +13,7 @@ type (
 	ReleaseAsset                = github.ReleaseAsset
 	ListOptions                 = github.ListOptions
 	RepositoryRelease           = github.RepositoryRelease
+	RepositoriesService         = github.RepositoriesService
 	Repository                  = github.Repository
 	RepositoryContentGetOptions = github.RepositoryContentGetOptions
 	RepositoryContent           = github.RepositoryContent

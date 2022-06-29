@@ -44,6 +44,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 		param.Insert = c.Bool("i")
 	}
 	param.All = c.Bool("all")
+	param.SelectVersion = c.Bool("select-version")
 	param.File = c.String("f")
 	param.AQUAVersion = runner.LDFlags.Version
 	param.RootDir = config.GetRootDir(osenv.New())
