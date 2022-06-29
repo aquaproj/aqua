@@ -15,12 +15,12 @@ import (
 )
 
 type pkgDownloader struct {
-	github  RepositoryService
+	github  RepositoriesService
 	runtime *runtime.Runtime
 	http    HTTPDownloader
 }
 
-type RepositoryService interface {
+type RepositoriesService interface {
 	GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, followRedirects bool) (*url.URL, *github.Response, error)
 	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
 	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)

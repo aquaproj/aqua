@@ -23,7 +23,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 		rt         *runtime.Runtime
 		isErr      bool
 		exp        string
-		github     download.RepositoryService
+		github     download.RepositoriesService
 		httpClient *http.Client
 	}{
 		{
@@ -66,7 +66,7 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 			ref:       "v2.16.0",
 			path:      "registry.yaml",
 			exp:       "foo",
-			github: &github.MockRepositoryService{
+			github: &github.MockRepositoriesService{
 				Content: &github.RepositoryContent{
 					Content: stringP("foo"),
 				},

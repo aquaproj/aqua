@@ -106,7 +106,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			gh := &github.MockRepositoryService{
+			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Assets:   d.assets,
 				Repo:     d.repo,

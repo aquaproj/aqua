@@ -20,16 +20,16 @@ import (
 type Controller struct {
 	stdout io.Writer
 	fs     afero.Fs
-	github RepositoryService
+	github RepositoriesService
 }
 
-type RepositoryService interface {
+type RepositoriesService interface {
 	Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error)
 	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
 	ListReleaseAssets(ctx context.Context, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error)
 }
 
-func NewController(fs afero.Fs, gh RepositoryService) *Controller {
+func NewController(fs afero.Fs, gh RepositoriesService) *Controller {
 	return &Controller{
 		stdout: os.Stdout,
 		fs:     fs,

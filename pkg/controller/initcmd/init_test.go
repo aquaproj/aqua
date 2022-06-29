@@ -65,7 +65,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			gh := &github.MockRepositoryService{
+			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 			}
 			ctrl := initcmd.New(gh, fs)
