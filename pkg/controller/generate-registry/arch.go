@@ -51,6 +51,6 @@ func (ctrl *Controller) setArch(assetName, lowAssetName string, assetInfo *Asset
 	}
 	if assetInfo.Arch == "" {
 		assetInfo.Arch = "amd64"
-		assetInfo.Score = -1
+		assetInfo.Score = -2 //nolint:gomnd
 	}
 }
