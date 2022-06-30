@@ -97,7 +97,7 @@ func (ctrl *Controller) excludeAsset(pkgName, assetName string) bool {
 		}
 	}
 	words := []string{
-		"changelog", "readme", "license", "openbsd", "freebsd", "netbsd", "android", "386", "i386", "armv6", "armv7", "32bit",
+		"changelog", "readme", "license", "openbsd", "freebsd", "netbsd", "android", "386", "i386", "armv6", "armv7", "32bit", "32-bit",
 		"netbsd", "plan9", "solaris", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm",
 		"checksum",
 	}
