@@ -27,6 +27,10 @@ func (ctrl *Controller) setArch(assetName, lowAssetName string, assetInfo *Asset
 			Arch: "amd64",
 		},
 		{
+			Name: "64-bit",
+			Arch: "amd64",
+		},
+		{
 			Name: "aarch64",
 			Arch: "arm64",
 		},
