@@ -74,6 +74,10 @@ func (ctrl *Controller) setOS(assetName, lowAssetName string, assetInfo *AssetIn
 				assetInfo.Replacements[o.OS] = osName
 			}
 			assetInfo.Template = strings.Replace(assetInfo.Template, osName, "{{.OS}}", 1)
+			if osName == "unknown-linux-gnu" || osName == "pc-windows-gnu" {
+				// "unknown-linux-musl" and "pc-windows-msvc" take precedence over "unknown-linux-gnu" and "pc-windows-gnu".
+				assetInfo.Score = -1
+			}
 			break
 		}
 	}
