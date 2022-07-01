@@ -255,6 +255,12 @@
         },
         "windows_ext": {
           "type": "string"
+        },
+        "search_words": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
