@@ -108,7 +108,7 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	// maps the package and the registry
 	var pkgs []*FindingPackage
 	for registryName, registryContent := range registryContents {
-		for _, pkg := range registryContent.PackageInfos.ToMapWarn(logE) {
+		for _, pkg := range registryContent.PackageInfos {
 			pkgs = append(pkgs, &FindingPackage{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
