@@ -24,6 +24,7 @@ const proxyName = "aqua-proxy"
 type installer struct {
 	rootDir           string
 	maxParallelism    int
+	noProgressBar     bool
 	packageDownloader download.PackageDownloader
 	runtime           *runtime.Runtime
 	fs                afero.Fs

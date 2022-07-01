@@ -57,6 +57,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 	param.PWD = wd
+	param.NoProgressBar = os.Getenv("AQUA_NO_PROGRESS_BAR") == "true"
 	return nil
 }
 
