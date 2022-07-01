@@ -67,11 +67,16 @@ func find(pkg *FindingPackage) string {
 	if len(aliases) != 0 {
 		item += " (" + strings.Join(aliases, ", ") + ")"
 	}
-	item += " (" + pkg.RegistryName + ")"
-	if strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {
-		return item
+	if pkg.RegistryName != "standard" {
+		item += " (" + pkg.RegistryName + ")"
 	}
-	return item + " (" + fileNamesStr + ")"
+	if !strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {
+		item += " [" + fileNamesStr + "]"
+	}
+	if len(pkg.PackageInfo.SearchWords) > 0 {
+		item += ": " + strings.Join(pkg.PackageInfo.SearchWords, " ")
+	}
+	return item
 }
 
 func getPreview(pkg *FindingPackage, i, w int) string {

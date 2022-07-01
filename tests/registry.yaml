@@ -76,6 +76,9 @@ packages:
   repo_name: kubectx
   asset: "kubens_{{.Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"
   description: Faster way to switch between clusters and namespaces in kubectl
+  search_words:
+    # search_words
+    - namespace
   files:
   - name: kubens
   replacements:

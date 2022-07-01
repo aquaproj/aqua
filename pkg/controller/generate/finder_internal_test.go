@@ -6,7 +6,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/registry"
 )
 
-func Test_find(t *testing.T) {
+func Test_find(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name string
@@ -22,7 +22,73 @@ func Test_find(t *testing.T) {
 				},
 				RegistryName: "standard",
 			},
-			exp: "suzuki-shunsuke/ci-info (standard)",
+			exp: "suzuki-shunsuke/ci-info",
+		},
+		{
+			name: "search words",
+			pkg: &FindingPackage{
+				PackageInfo: &registry.PackageInfo{
+					RepoOwner:   "suzuki-shunsuke",
+					RepoName:    "ci-info",
+					SearchWords: []string{"pull request"},
+				},
+				RegistryName: "standard",
+			},
+			exp: "suzuki-shunsuke/ci-info: pull request",
+		},
+		{
+			name: "search words, registry",
+			pkg: &FindingPackage{
+				PackageInfo: &registry.PackageInfo{
+					RepoOwner:   "suzuki-shunsuke",
+					RepoName:    "ci-info",
+					SearchWords: []string{"pull request"},
+				},
+				RegistryName: "foo",
+			},
+			exp: "suzuki-shunsuke/ci-info (foo): pull request",
+		},
+		{
+			name: "search words, alias, registry",
+			pkg: &FindingPackage{
+				PackageInfo: &registry.PackageInfo{
+					RepoOwner:   "suzuki-shunsuke",
+					RepoName:    "ci-info",
+					SearchWords: []string{"pull request"},
+					Aliases: []*registry.Alias{
+						{
+							Name: "ci-info",
+						},
+					},
+				},
+				RegistryName: "foo",
+			},
+			exp: "suzuki-shunsuke/ci-info (ci-info) (foo): pull request",
+		},
+		{
+			name: "search words, alias, command, registry",
+			pkg: &FindingPackage{
+				PackageInfo: &registry.PackageInfo{
+					RepoOwner:   "suzuki-shunsuke",
+					RepoName:    "ci-info",
+					SearchWords: []string{"pull request"},
+					Aliases: []*registry.Alias{
+						{
+							Name: "ci-info",
+						},
+					},
+					Files: []*registry.File{
+						{
+							Name: "ci-info",
+						},
+						{
+							Name: "ci",
+						},
+					},
+				},
+				RegistryName: "foo",
+			},
+			exp: "suzuki-shunsuke/ci-info (ci-info) (foo) [ci-info, ci]: pull request",
 		},
 	}
 	for _, d := range data {
