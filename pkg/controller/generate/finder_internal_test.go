@@ -22,7 +22,7 @@ func Test_find(t *testing.T) {
 				},
 				RegistryName: "standard",
 			},
-			exp: "suzuki-shunsuke/ci-info (standard)",
+			exp: "suzuki-shunsuke/ci-info",
 		},
 	}
 	for _, d := range data {
