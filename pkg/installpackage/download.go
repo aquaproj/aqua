@@ -32,7 +32,7 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, 
 	}
 
 	var pOpts *unarchive.ProgressBarOpts
-	if !inst.noProgressBar {
+	if inst.progressBar {
 		pOpts = &unarchive.ProgressBarOpts{
 			ContentLength: cl,
 			Description:   fmt.Sprintf("Downloading %s %s", pkg.Package.Name, pkg.Package.Version),

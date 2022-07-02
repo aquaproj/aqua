@@ -33,6 +33,6 @@ func New(param *config.Param, downloader download.PackageDownloader, rt *runtime
 		fs:                fs,
 		linker:            linker,
 		executor:          executor,
-		noProgressBar:     param.NoProgressBar,
+		progressBar:       param.ProgressBar,
 	}
 }
