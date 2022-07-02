@@ -24,3 +24,21 @@ func SetLevel(level string, logE *logrus.Entry) {
 	}
 	logrus.SetLevel(lvl)
 }
+
+func SetColor(color string, logE *logrus.Entry) {
+	switch color {
+	case "", "auto":
+		return
+	case "always":
+		logrus.SetFormatter(&logrus.TextFormatter{
+			ForceColors: true,
+		})
+	case "never":
+		logrus.SetFormatter(&logrus.TextFormatter{
+			DisableColors: true,
+		})
+	default:
+		logE.WithField("log_color", color).Error("log_color is invalid")
+		return
+	}
+}
