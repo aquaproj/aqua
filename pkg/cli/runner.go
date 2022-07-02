@@ -46,10 +46,12 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.All = c.Bool("all")
 	param.SelectVersion = c.Bool("select-version")
 	param.File = c.String("f")
+	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = runner.LDFlags.Version
 	param.RootDir = config.GetRootDir(osenv.New())
 	logE := runner.LogE
 	log.SetLevel(param.LogLevel, logE)
+	log.SetColor(param.LogColor, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
 	wd, err := os.Getwd()

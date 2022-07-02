@@ -35,6 +35,8 @@ jobs:
       working-directory: tests
     - run: aqua i --test
       working-directory: tests
+      env:
+        AQUA_LOG_COLOR: always
     - run: aqua which golangci-lint
       working-directory: tests
     - run: aqua which go

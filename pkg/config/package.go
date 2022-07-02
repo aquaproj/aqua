@@ -168,6 +168,7 @@ type Param struct {
 	RootDir               string
 	PWD                   string
 	InsertFile            string
+	LogColor              string
 	MaxParallelism        int
 	OnlyLink              bool
 	IsTest                bool
