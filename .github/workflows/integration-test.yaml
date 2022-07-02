@@ -43,6 +43,8 @@ jobs:
       working-directory: tests
     - run: kind version
     - run: restic version
+      env:
+        AQUA_PROGRESS_BAR: "true"
     - run: migrate -version
     - run: ghq -version
     - run: gh version
@@ -123,6 +125,8 @@ jobs:
       working-directory: tests
     - run: kind version
     - run: restic version
+      env:
+        AQUA_PROGRESS_BAR: "true"
     - run: migrate -version
     - run: ghq -version
     - run: gh version
@@ -187,6 +191,8 @@ jobs:
       working-directory: tests
     - run: kind version
     - run: restic version
+      env:
+        AQUA_PROGRESS_BAR: "true"
     - run: migrate -version
     - run: ghq -version
     - run: gh version
