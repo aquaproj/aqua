@@ -31,14 +31,19 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, 
 		return err //nolint:wrapcheck
 	}
 
+	var pOpts *unarchive.ProgressBarOpts
+	if inst.progressBar {
+		pOpts = &unarchive.ProgressBarOpts{
+			ContentLength: cl,
+			Description:   fmt.Sprintf("Downloading %s %s", pkg.Package.Name, pkg.Package.Version),
+		}
+	}
+
 	return unarchive.Unarchive(&unarchive.File{ //nolint:wrapcheck
 		Body:     body,
 		Filename: assetName,
 		Type:     pkgInfo.GetFormat(),
-	}, dest, logE, inst.fs, &unarchive.ProgressBarOpts{
-		ContentLength: cl,
-		Description:   fmt.Sprintf("Downloading %s %s", pkg.Package.Name, pkg.Package.Version),
-	})
+	}, dest, logE, inst.fs, pOpts)
 }
 
 func (inst *installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
