@@ -14,7 +14,7 @@ jobs:
       AQUA_LOG_LEVEL: debug
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.2.0
+    - uses: actions/setup-go@v3.2.1
       with:
         go-version: '1.18.3'
         cache: true
@@ -99,7 +99,7 @@ jobs:
         shell: bash
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.2.0
+    - uses: actions/setup-go@v3.2.1
       with:
         go-version: '1.18.3'
         cache: true
@@ -165,7 +165,7 @@ jobs:
       AQUA_LOG_LEVEL: debug
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.2.0
+    - uses: actions/setup-go@v3.2.1
       with:
         go-version: '1.18.3'
         cache: true
