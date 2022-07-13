@@ -74,6 +74,8 @@ jobs:
 
     - name: "Test generate-registry"
       run: aqua gr cli/cli
+    - name: "Test generate-registry (emoji)"
+      run: aqua gr hmarr/codeowners
     - name: "Test generate-registry (rust)"
       run: aqua gr XAMPPRocky/tokei
 

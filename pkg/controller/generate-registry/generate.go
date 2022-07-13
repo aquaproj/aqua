@@ -12,9 +12,9 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v3"
 )
 
 type Controller struct {
@@ -57,8 +57,7 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 				pkgInfo,
 			},
 		}
-		encoder := yaml.NewEncoder(ctrl.stdout)
-		encoder.SetIndent(2) //nolint:gomnd
+		encoder := yaml.NewEncoder(ctrl.stdout, yaml.IndentSequence(true))
 		if err := encoder.Encode(cfg); err != nil {
 			return fmt.Errorf("encode YAML: %w", err)
 		}
