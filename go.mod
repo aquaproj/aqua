@@ -30,5 +30,4 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0
 	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.1
 )
