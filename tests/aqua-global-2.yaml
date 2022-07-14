@@ -3,4 +3,4 @@ registries:
   ref: v3.11.0 # renovate: depName=aquaproj/aqua-registry
 
 packages:
-- name: cli/cli@v2.14.1
+- name: cli/cli@v2.14.2
