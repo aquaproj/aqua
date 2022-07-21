@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -30,6 +31,7 @@ type installer struct {
 	fs                afero.Fs
 	linker            link.Linker
 	executor          Executor
+	checksums         checksum.Checksums
 }
 
 func isWindows(goos string) bool {
@@ -78,7 +80,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
-			if err := inst.InstallPackage(ctx, pkg, isTest, logE); err != nil {
+			if err := inst.InstallPackage(ctx, pkg, isTest, cfg.Checksum, logE); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -92,7 +94,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 	return nil
 }
 
-func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, isTest bool, logE *logrus.Entry) error {
+func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, isTest, checksumEnabled bool, logE *logrus.Entry) error {
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -119,8 +121,11 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, logE); err != nil {
-		return err
+	if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, checksumEnabled, logE); err != nil {
+		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+			"asset_name":   assetName,
+			"package_path": pkgPath,
+		})
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
@@ -228,7 +233,7 @@ func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registr
 
 const maxRetryDownload = 1
 
-func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, dest, assetName string, logE *logrus.Entry) error {
+func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, dest, assetName string, checksumEnabled bool, logE *logrus.Entry) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
 		"package_version": pkg.Package.Version,
@@ -240,7 +245,7 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 		finfo, err := inst.fs.Stat(dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := inst.download(ctx, pkg, dest, assetName, logE); err != nil {
+			if err := inst.download(ctx, pkg, dest, assetName, checksumEnabled, logE); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err

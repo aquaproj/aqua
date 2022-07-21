@@ -220,14 +220,15 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		name     string
-		files    map[string]string
-		param    *config.Param
-		rt       *runtime.Runtime
-		pkg      *config.Package
-		executor installpackage.Executor
-		isTest   bool
-		isErr    bool
+		name            string
+		files           map[string]string
+		param           *config.Param
+		rt              *runtime.Runtime
+		pkg             *config.Package
+		executor        installpackage.Executor
+		isTest          bool
+		isErr           bool
+		checksumEnabled bool
 	}{
 		{
 			name: "file already exists",
@@ -270,7 +271,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
-			if err := ctrl.InstallPackage(ctx, d.pkg, d.isTest, logE); err != nil {
+			if err := ctrl.InstallPackage(ctx, d.pkg, d.isTest, d.checksumEnabled, logE); err != nil {
 				if d.isErr {
 					return
 				}

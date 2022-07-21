@@ -3,6 +3,7 @@ package installpackage
 import (
 	"context"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -14,9 +15,11 @@ import (
 )
 
 type Installer interface {
-	InstallPackage(ctx context.Context, pkg *config.Package, isTest bool, logE *logrus.Entry) error
+	InstallPackage(ctx context.Context, pkg *config.Package, isTest, checksumEnabled bool, logE *logrus.Entry) error
 	InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
+	ReadChecksumFile(fs afero.Fs, p string) error
+	UpdateChecksumFile(fs afero.Fs, p string) error
 }
 
 type Executor interface {
@@ -34,5 +37,6 @@ func New(param *config.Param, downloader download.PackageDownloader, rt *runtime
 		linker:            linker,
 		executor:          executor,
 		progressBar:       param.ProgressBar,
+		checksums:         checksum.New(),
 	}
 }

@@ -55,7 +55,8 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	finfo, err := inst.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, logE); err != nil {
+		// TODO check checksum
+		if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, false, logE); err != nil {
 			return err
 		}
 	} else {
