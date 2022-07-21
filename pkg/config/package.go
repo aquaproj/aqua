@@ -315,7 +315,7 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
 		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
