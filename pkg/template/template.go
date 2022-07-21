@@ -10,7 +10,12 @@ import (
 )
 
 func Compile(s string) (*template.Template, error) {
-	return template.New("_").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{ //nolint:wrapcheck
+	// delete some functions for security reason
+	fncs := sprig.TxtFuncMap()
+	delete(fncs, "env")
+	delete(fncs, "expandenv")
+	delete(fncs, "getHostByName")
+	return template.New("_").Funcs(fncs).Funcs(template.FuncMap{ //nolint:wrapcheck
 		"trimV": func(s string) string {
 			return strings.TrimPrefix(s, "v")
 		},
