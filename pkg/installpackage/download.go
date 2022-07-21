@@ -45,7 +45,7 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, 
 		}
 		defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
 		tempFilePath := filepath.Join(tempDir, assetName)
-		if assetName == "" && pkgInfo.Type == "github_archive" {
+		if assetName == "" && (pkgInfo.Type == "github_archive" || pkgInfo.Type == "go") {
 			tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
 		}
 		file, err := inst.fs.Create(tempFilePath)
