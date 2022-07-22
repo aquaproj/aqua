@@ -83,7 +83,8 @@ packages:
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
-				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ConfigFilePath: "aqua.yaml",
 			},
 		},
 		{
@@ -180,7 +181,8 @@ packages:
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
-				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				ConfigFilePath: "/etc/aqua/aqua.yaml",
 			},
 		},
 	}
