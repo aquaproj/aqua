@@ -118,6 +118,7 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
+	checksumEnabled := cfg.ChecksumEnabled()
 	for _, pkg := range cfg.Packages {
 		if pkgInfo, file := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); pkgInfo != nil {
 			return &Which{
@@ -126,7 +127,7 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 					PackageInfo: pkgInfo,
 				},
 				File:           file,
-				EnableChecksum: cfg.Checksum,
+				EnableChecksum: checksumEnabled,
 			}, nil
 		}
 	}

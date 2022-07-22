@@ -99,7 +99,8 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 	}
 
 	checksumFile := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
-	if cfg.Checksum {
+	checksumEnabled := cfg.ChecksumEnabled()
+	if checksumEnabled {
 		if err := ctrl.packageInstaller.ReadChecksumFile(ctrl.fs, checksumFile); err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"checksum_file": checksumFile,
@@ -113,7 +114,7 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 	}
 
 	errInstallPackages := ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest, logE)
-	if cfg.Checksum {
+	if checksumEnabled {
 		if err := ctrl.packageInstaller.UpdateChecksumFile(ctrl.fs, checksumFile); err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"checksum_file": checksumFile,

@@ -45,7 +45,21 @@ func parseNameWithVersion(name string) (string, string) {
 type Config struct {
 	Packages   []*Package `validate:"dive" json:"packages"`
 	Registries Registries `validate:"dive" json:"registries"`
-	Checksum   bool       `json:"checksum"`
+	Checksum   *Checksum  `json:"checksum"`
+}
+
+func (cfg *Config) ChecksumEnabled() bool {
+	if cfg == nil {
+		return false
+	}
+	if cfg.Checksum == nil {
+		return false
+	}
+	return cfg.Checksum.Enabled
+}
+
+type Checksum struct {
+	Enabled bool `json:"enabled"`
 }
 
 type Registries map[string]*Registry

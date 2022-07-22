@@ -68,6 +68,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 		flagMutex.Unlock()
 	}
 
+	checksumEnabled := cfg.ChecksumEnabled()
 	for _, pkg := range pkgs {
 		go func(pkg *config.Package) {
 			defer wg.Done()
@@ -80,7 +81,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
-			if err := inst.InstallPackage(ctx, pkg, isTest, cfg.Checksum, logE); err != nil {
+			if err := inst.InstallPackage(ctx, pkg, isTest, checksumEnabled, logE); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return

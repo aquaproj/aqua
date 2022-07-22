@@ -1,4 +1,5 @@
-checksum: true
+checksum:
+  enabled: true
 registries:
 - type: standard # standard registry
   ref: v3.15.0 # renovate: depName=aquaproj/aqua-registry
