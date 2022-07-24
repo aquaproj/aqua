@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -98,7 +99,7 @@ func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string,
 	if err != nil {
 		return "", err
 	}
-	if !(isWindows(rt.GOOS) && filepath.Ext(s) == "") {
+	if !(isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "") {
 		return s, nil
 	}
 	newName := s + cpkg.WindowsExt()
@@ -125,7 +126,7 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if err != nil {
 		return "", err
 	}
-	if isWindows(rt.GOOS) && filepath.Ext(s) == "" {
+	if isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "" {
 		return s + cpkg.WindowsExt(), nil
 	}
 	return s, nil
@@ -193,7 +194,7 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 		if cpkg.PackageInfo.Format != "" {
 			return asset, nil
 		}
-		if filepath.Ext(asset) == "" {
+		if util.Ext(asset, cpkg.Package.Version) == "" {
 			return cpkg.CompleteWindowsExt(asset), nil
 		}
 	}
@@ -270,7 +271,7 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 		if cpkg.PackageInfo.Format != "" {
 			return s, nil
 		}
-		if filepath.Ext(s) == "" {
+		if util.Ext(s, cpkg.Package.Version) == "" {
 			return cpkg.CompleteWindowsExt(s), nil
 		}
 	}

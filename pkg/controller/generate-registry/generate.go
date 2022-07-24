@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -69,7 +69,7 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 	return nil
 }
 
-func (ctrl *Controller) excludeAsset(pkgName, assetName string) bool {
+func (ctrl *Controller) excludeAsset(pkgName, assetName, version string) bool {
 	format := ctrl.getFormat(assetName)
 	allowedExts := map[string]struct{}{
 		".exe": {},
@@ -79,7 +79,7 @@ func (ctrl *Controller) excludeAsset(pkgName, assetName string) bool {
 		".py":  {},
 	}
 	if format == formatRaw {
-		ext := filepath.Ext(assetName)
+		ext := util.Ext(assetName, version)
 		if len(ext) > 0 && len(ext) < 6 {
 			if _, ok := allowedExts[ext]; !ok {
 				return true
@@ -132,14 +132,14 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 				"repo_name":  pkgInfo.RepoName,
 			}).WithError(err).Warn("get the latest release")
 		} else {
-			logE.WithField("version", len(release.GetTagName())).Debug("got the latest release")
+			logE.WithField("version", release.GetTagName()).Debug("got the latest release")
 			assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
 			if len(assets) != 0 {
 				logE.WithField("num_of_assets", len(assets)).Debug("got assets")
 				assetInfos := make([]*AssetInfo, 0, len(assets))
 				for _, asset := range assets {
 					assetName := asset.GetName()
-					if ctrl.excludeAsset(pkgName, assetName) {
+					if ctrl.excludeAsset(pkgName, assetName, release.GetTagName()) {
 						logE.WithField("asset_name", assetName).Debug("exclude an asset")
 						continue
 					}
