@@ -64,7 +64,7 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		if err := ctrl.install(ctx, rootBin, cfgFilePath, param, logE); err != nil {
+		if err := ctrl.install(ctx, rootBin, cfgFilePath, logE); err != nil {
 			return err
 		}
 	}
@@ -80,14 +80,14 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := ctrl.install(ctx, rootBin, cfgFilePath, param, logE); err != nil {
+		if err := ctrl.install(ctx, rootBin, cfgFilePath, logE); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, param *config.Param, logE *logrus.Entry) error {
+func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, logE *logrus.Entry) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -101,5 +101,5 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, param.OnlyLink, param.IsTest, logE) //nolint:wrapcheck
+	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, logE) //nolint:wrapcheck
 }

@@ -24,21 +24,23 @@ const proxyName = "aqua-proxy"
 type installer struct {
 	rootDir           string
 	maxParallelism    int
-	progressBar       bool
 	packageDownloader download.PackageDownloader
 	runtime           *runtime.Runtime
 	fs                afero.Fs
 	linker            link.Linker
 	executor          Executor
+	progressBar       bool
+	onlyLink          bool
+	isTest            bool
 }
 
 func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, onlyLink, isTest bool, logE *logrus.Entry) error {
+func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) error {
 	pkgs, failed := inst.createLinks(cfg, registries, binDir, logE)
-	if onlyLink {
+	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
 		}).Debug("skip downloading the package")
@@ -78,7 +80,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
-			if err := inst.InstallPackage(ctx, pkg, isTest, logE); err != nil {
+			if err := inst.InstallPackage(ctx, pkg, logE); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -92,7 +94,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 	return nil
 }
 
-func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, isTest bool, logE *logrus.Entry) error {
+func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error {
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -125,7 +127,7 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 
 	for _, file := range pkgInfo.GetFiles() {
 		if err := inst.checkFileSrc(ctx, pkg, file, logE); err != nil {
-			if isTest {
+			if inst.isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
 			logerr.WithError(logE, err).Warn("check file_src is correct")
