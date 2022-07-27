@@ -10,11 +10,15 @@ import (
 )
 
 type GitHubContentFileDownloader struct {
-	github domain.RepositoriesService
+	github GitHubContentAPI
 	http   HTTPDownloader
 }
 
-func NewGitHubContentFileDownloader(gh domain.RepositoriesService, httpDL HTTPDownloader) *GitHubContentFileDownloader {
+type GitHubContentAPI interface {
+	GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
+}
+
+func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) *GitHubContentFileDownloader {
 	return &GitHubContentFileDownloader{
 		github: gh,
 		http:   httpDL,
