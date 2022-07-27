@@ -13,7 +13,7 @@ import (
 
 const ProxyVersion = "v1.1.2" // renovate: depName=aquaproj/aqua-proxy
 
-func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
+func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
 	if isWindows(inst.runtime.GOOS) {
 		return nil
 	}
@@ -55,7 +55,11 @@ func (inst *installer) InstallProxy(ctx context.Context, logE *logrus.Entry) err
 	finfo, err := inst.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, logE); err != nil {
+		if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
+			Package: pkg,
+			Dest:    pkgPath,
+			Asset:   assetName,
+		}); err != nil {
 			return err
 		}
 	} else {
