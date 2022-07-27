@@ -1,8 +1,10 @@
 package which
 
 import (
+	"path/filepath"
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -10,15 +12,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Test_controller_findExecFileFromPkg(t *testing.T) {
+func strP(s string) *string {
+	return &s
+}
+
+func Test_controller_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		title          string
-		registries     map[string]*registry.Config
-		exeName        string
-		pkg            *aqua.Package
-		expPackageInfo *registry.PackageInfo
-		expFile        *registry.File
+		title      string
+		registries map[string]*registry.Config
+		exeName    string
+		pkg        *aqua.Package
+		expWhich   *Which
 	}{
 		{
 			title:   "normal",
@@ -26,23 +31,38 @@ func Test_controller_findExecFileFromPkg(t *testing.T) {
 			pkg: &aqua.Package{
 				Registry: "standard",
 				Name:     "kubernetes/kubectl",
+				Version:  "v1.21.0",
 			},
-			expPackageInfo: &registry.PackageInfo{
-				Name: "kubernetes/kubectl",
-				Files: []*registry.File{
-					{
-						Name: "kubectl",
+			expWhich: &Which{
+				Package: &config.Package{
+					Package: &aqua.Package{
+						Registry: "standard",
+						Name:     "kubernetes/kubectl",
+						Version:  "v1.21.0",
+					},
+					PackageInfo: &registry.PackageInfo{
+						Type: "http",
+						Name: "kubernetes/kubectl",
+						URL:  strP("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
+						Files: []*registry.File{
+							{
+								Name: "kubectl",
+							},
+						},
 					},
 				},
-			},
-			expFile: &registry.File{
-				Name: "kubectl",
+				File: &registry.File{
+					Name: "kubectl",
+				},
+				ExePath: filepath.Join("/home", "foo", ".local", "share", "aquaproj-aqua", "pkgs", "http", "storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl/kubectl"),
 			},
 			registries: map[string]*registry.Config{
 				"standard": {
 					PackageInfos: registry.PackageInfos{
 						&registry.PackageInfo{
+							Type: "http",
 							Name: "kubernetes/kubectl",
+							URL:  strP("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
 							Files: []*registry.File{
 								{
 									Name: "kubectl",
@@ -55,18 +75,19 @@ func Test_controller_findExecFileFromPkg(t *testing.T) {
 		},
 	}
 	ctrl := &controller{
-		runtime: runtime.New(),
+		runtime: &runtime.Runtime{
+			GOOS:   "linux",
+			GOARCH: "amd64",
+		},
+		rootDir: filepath.Join("/home", "foo", ".local", "share", "aquaproj-aqua"),
 	}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgInfo, file := ctrl.findExecFileFromPkg(d.registries, d.exeName, d.pkg, logE)
-			if diff := cmp.Diff(d.expPackageInfo, pkgInfo); diff != "" {
-				t.Fatal(diff)
-			}
-			if diff := cmp.Diff(d.expFile, file); diff != "" {
+			which := ctrl.findExecFileFromPkg(d.registries, d.exeName, d.pkg, logE)
+			if diff := cmp.Diff(d.expWhich, which); diff != "" {
 				t.Fatal(diff)
 			}
 		})
