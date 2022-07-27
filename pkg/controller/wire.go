@@ -17,6 +17,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -41,7 +42,10 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
-		download.NewRegistryDownloader,
+		wire.NewSet(
+			download.NewRegistryDownloader,
+			wire.Bind(new(domain.RegistryDownloader), new(*download.RegistryDownloader)),
+		),
 		reader.New,
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
@@ -86,7 +90,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
-		download.NewRegistryDownloader,
+		wire.NewSet(
+			download.NewRegistryDownloader,
+			wire.Bind(new(domain.RegistryDownloader), new(*download.RegistryDownloader)),
+		),
 		reader.New,
 		afero.NewOsFs,
 		generate.NewFuzzyFinder,
@@ -108,10 +115,16 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
-		download.NewRegistryDownloader,
+		wire.NewSet(
+			download.NewRegistryDownloader,
+			wire.Bind(new(domain.RegistryDownloader), new(*download.RegistryDownloader)),
+		),
 		reader.New,
 		installpackage.New,
-		download.NewPackageDownloader,
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
 		afero.NewOsFs,
 		link.New,
 		download.NewHTTPDownloader,
@@ -135,7 +148,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
-		download.NewRegistryDownloader,
+		wire.NewSet(
+			download.NewRegistryDownloader,
+			wire.Bind(new(domain.RegistryDownloader), new(*download.RegistryDownloader)),
+		),
 		reader.New,
 		osenv.New,
 		afero.NewOsFs,
@@ -152,14 +168,20 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			finder.NewConfigFinder,
 			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
 		),
-		download.NewPackageDownloader,
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
 		installpackage.New,
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(download.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		registry.New,
-		download.NewRegistryDownloader,
+		wire.NewSet(
+			download.NewRegistryDownloader,
+			wire.Bind(new(domain.RegistryDownloader), new(*download.RegistryDownloader)),
+		),
 		reader.New,
 		which.New,
 		wire.NewSet(

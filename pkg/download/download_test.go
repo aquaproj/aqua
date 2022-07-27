@@ -24,7 +24,7 @@ func int64P(i int64) *int64 {
 	return &i
 }
 
-func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
+func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name       string

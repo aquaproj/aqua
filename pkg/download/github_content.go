@@ -9,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/github"
 )
 
-func (downloader *pkgDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+func (downloader *PackageDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
 	// https://github.com/aquaproj/aqua/issues/391
 	body, _, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName)
 	if err == nil {

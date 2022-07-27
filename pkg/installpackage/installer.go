@@ -10,7 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -24,7 +24,7 @@ const proxyName = "aqua-proxy"
 type installer struct {
 	rootDir           string
 	maxParallelism    int
-	packageDownloader download.PackageDownloader
+	packageDownloader domain.PackageDownloader
 	runtime           *runtime.Runtime
 	fs                afero.Fs
 	linker            link.Linker

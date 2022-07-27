@@ -10,12 +10,19 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type registryDownloader struct {
+func NewRegistryDownloader(gh RepositoriesService, httpDownloader HTTPDownloader) *RegistryDownloader {
+	return &RegistryDownloader{
+		github: gh,
+		http:   httpDownloader,
+	}
+}
+
+type RegistryDownloader struct {
 	github RepositoriesService
 	http   HTTPDownloader
 }
 
-func (downloader *registryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string, logE *logrus.Entry) ([]byte, error) {
+func (downloader *RegistryDownloader) GetGitHubContentFile(ctx context.Context, repoOwner, repoName, ref, path string, logE *logrus.Entry) ([]byte, error) {
 	// https://github.com/aquaproj/aqua/issues/391
 	body, _, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+repoOwner+"/"+repoName+"/"+ref+"/"+path)
 	if body != nil {

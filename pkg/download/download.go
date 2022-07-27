@@ -8,16 +8,9 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-type pkgDownloader struct {
-	github  RepositoriesService
-	runtime *runtime.Runtime
-	http    HTTPDownloader
-}
 
 type RepositoriesService interface {
 	GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, followRedirects bool) (*url.URL, *github.Response, error)
@@ -26,7 +19,7 @@ type RepositoriesService interface {
 	GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
 }
 
-func (downloader *pkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, int64, error) {
+func (downloader *PackageDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
 	switch pkgInfo.GetType() {
 	case config.PkgInfoTypeGitHubRelease:

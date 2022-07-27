@@ -12,7 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -20,7 +20,7 @@ import (
 )
 
 type installer struct {
-	registryDownloader download.RegistryDownloader
+	registryDownloader domain.RegistryDownloader
 	param              *config.Param
 	fs                 afero.Fs
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/github"
 )
 
-func (downloader *pkgDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package) (io.ReadCloser, int64, error) {
+func (downloader *PackageDownloader) getReadCloserFromGitHubArchive(ctx context.Context, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
 	if rc, length, err := downloader.http.Download(ctx, fmt.Sprintf("https://github.com/%s/%s/archive/refs/tags/%s.tar.gz", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version)); err == nil {
 		return rc, length, nil
