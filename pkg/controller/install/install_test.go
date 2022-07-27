@@ -70,7 +70,7 @@ packages:
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
-	registryDownloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+	registryDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {

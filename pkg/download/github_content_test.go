@@ -2,38 +2,37 @@ package download_test
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
-	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
-func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funlen
+func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name       string
-		repoOwner  string
-		repoName   string
-		ref        string
-		path       string
-		rt         *runtime.Runtime
+		param      *domain.GitHubContentFileParam
+		github     domain.RepositoriesService
+		httpClient *http.Client
 		isErr      bool
 		exp        string
-		github     download.RepositoriesService
-		httpClient *http.Client
 	}{
 		{
-			name:      "github_content http",
-			repoOwner: "aquaproj",
-			repoName:  "aqua-registry",
-			ref:       "v2.16.0",
-			path:      "registry.yaml",
-			exp:       "foo",
-			github:    nil,
+			name: "github_content http",
+			param: &domain.GitHubContentFileParam{
+				RepoOwner: "aquaproj",
+				RepoName:  "aqua-registry",
+				Ref:       "v2.16.0",
+				Path:      "registry.yaml",
+			},
+			exp:    "foo",
+			github: nil,
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
@@ -60,12 +59,14 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 			},
 		},
 		{
-			name:      "github_content github api",
-			repoOwner: "aquaproj",
-			repoName:  "aqua-registry",
-			ref:       "v2.16.0",
-			path:      "registry.yaml",
-			exp:       "foo",
+			name: "github_content github api",
+			param: &domain.GitHubContentFileParam{
+				RepoOwner: "aquaproj",
+				RepoName:  "aqua-registry",
+				Ref:       "v2.16.0",
+				Path:      "registry.yaml",
+			},
+			exp: "foo",
 			github: &github.MockRepositoriesService{
 				Content: &github.RepositoryContent{
 					Content: stringP("foo"),
@@ -103,19 +104,31 @@ func Test_registryDownloader_GetGitHubContentFile(t *testing.T) { //nolint:funle
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			downloader := download.NewRegistryDownloader(d.github, download.NewHTTPDownloader(d.httpClient))
-			file, err := downloader.GetGitHubContentFile(ctx, d.repoOwner, d.repoName, d.ref, d.path, logE)
+			downloader := download.NewGitHubContentFileDownloader(d.github, download.NewHTTPDownloader(d.httpClient))
+			file, err := downloader.DownloadGitHubContentFile(ctx, logE, d.param)
 			if err != nil {
 				if d.isErr {
 					return
 				}
 				t.Fatal(err)
 			}
+			if file.String != "" {
+				if file.String != d.exp {
+					t.Fatalf("wanted %s, got %s", d.exp, file.String)
+				}
+				return
+			}
+			defer file.ReadCloser.Close()
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if string(file) != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, string(file))
+			b, err := io.ReadAll(file.ReadCloser)
+			if err != nil {
+				t.Fatal(err)
+			}
+			s := string(b)
+			if s != d.exp {
+				t.Fatalf("wanted %s, got %s", d.exp, s)
 			}
 		})
 	}

@@ -399,7 +399,7 @@ packages:
 				Releases: d.releases,
 				Tags:     d.tags,
 			}
-			downloader := download.NewRegistryDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
+			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs)
 			configReader := reader.New(fs)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)

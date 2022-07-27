@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -12,7 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -20,7 +21,7 @@ import (
 )
 
 type installer struct {
-	registryDownloader download.RegistryDownloader
+	registryDownloader domain.GitHubContentFileDownloader
 	param              *config.Param
 	fs                 afero.Fs
 }
@@ -122,23 +123,48 @@ func (inst *installer) getRegistry(ctx context.Context, registry *aqua.Registry,
 	return nil, errUnsupportedRegistryType
 }
 
+const registryFilePermission = 0o600
+
 func (inst *installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
-	b, err := inst.registryDownloader.GetGitHubContentFile(ctx, regist.RepoOwner, regist.RepoName, regist.Ref, regist.Path, logE)
+	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
+		RepoOwner: regist.RepoOwner,
+		RepoName:  regist.RepoName,
+		Ref:       regist.Ref,
+		Path:      regist.Path,
+	})
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	if err := afero.WriteFile(inst.fs, registryFilePath, b, 0o600); err != nil { //nolint:gomnd
+	file, err := inst.fs.Create(registryFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("create a registry file: %w", err)
+	}
+	defer file.Close()
+
+	var content []byte
+
+	if ghContentFile.String != "" {
+		content = []byte(ghContentFile.String)
+	} else {
+		defer ghContentFile.ReadCloser.Close()
+		cnt, err := io.ReadAll(ghContentFile.ReadCloser)
+		if err != nil {
+			return nil, fmt.Errorf("read the registry configuration file: %w", err)
+		}
+		content = cnt
+	}
+	if err := afero.WriteFile(inst.fs, registryFilePath, content, registryFilePermission); err != nil {
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
 	registryContent := &registry.Config{}
 	if filepath.Ext(registryFilePath) == ".json" {
-		if err := json.Unmarshal(b, registryContent); err != nil {
+		if err := json.Unmarshal(content, registryContent); err != nil {
 			return nil, fmt.Errorf("parse the registry configuration file as JSON: %w", err)
 		}
 		return registryContent, nil
 	}
-	if err := yaml.Unmarshal(b, registryContent); err != nil {
+	if err := yaml.Unmarshal(content, registryContent); err != nil {
 		return nil, fmt.Errorf("parse the registry configuration file as YAML: %w", err)
 	}
 	return registryContent, nil

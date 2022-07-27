@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -24,7 +25,7 @@ func int64P(i int64) *int64 {
 	return &i
 }
 
-func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
+func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name       string
@@ -34,7 +35,7 @@ func Test_pkgDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,maintidx
 		pkg        *config.Package
 		assetName  string
 		exp        string
-		github     download.RepositoriesService
+		github     domain.RepositoriesService
 		httpClient *http.Client
 	}{
 		{ //nolint:dupl

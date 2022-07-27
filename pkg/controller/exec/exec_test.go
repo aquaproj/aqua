@@ -123,7 +123,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
@@ -220,7 +220,7 @@ packages:
 					b.Fatal(err)
 				}
 			}
-			downloader := download.NewRegistryDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, afero.NewOsFs()), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
