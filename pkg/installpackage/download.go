@@ -9,21 +9,23 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, assetName string, logE *logrus.Entry) error {
+func (inst *installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+	ppkg := param.Package
+	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Package.Name,
-		"package_version": pkg.Package.Version,
-		"registry":        pkg.Package.Registry,
+		"package_name":    pkg.Name,
+		"package_version": pkg.Version,
+		"registry":        pkg.Registry,
 	})
-	pkgInfo := pkg.PackageInfo
+	pkgInfo := param.Package.PackageInfo
 
 	if pkgInfo.Type == "go_install" {
-		return inst.downloadGoInstall(ctx, pkg, dest, logE)
+		return inst.downloadGoInstall(ctx, ppkg, param.Dest, logE)
 	}
 
 	logE.Info("download and unarchive the package")
 
-	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, pkg, assetName, logE)
+	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, ppkg, param.Asset, logE)
 	if body != nil {
 		defer body.Close()
 	}
@@ -35,15 +37,15 @@ func (inst *installer) download(ctx context.Context, pkg *config.Package, dest, 
 	if inst.progressBar {
 		pOpts = &unarchive.ProgressBarOpts{
 			ContentLength: cl,
-			Description:   fmt.Sprintf("Downloading %s %s", pkg.Package.Name, pkg.Package.Version),
+			Description:   fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
 		}
 	}
 
 	return unarchive.Unarchive(&unarchive.File{ //nolint:wrapcheck
 		Body:     body,
-		Filename: assetName,
+		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),
-	}, dest, logE, inst.fs, pOpts)
+	}, param.Dest, logE, inst.fs, pOpts)
 }
 
 func (inst *installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {

@@ -121,7 +121,11 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := inst.downloadWithRetry(ctx, pkg, pkgPath, assetName, logE); err != nil {
+	if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
+		Package: pkg,
+		Dest:    pkgPath,
+		Asset:   assetName,
+	}); err != nil {
 		return err
 	}
 
@@ -230,19 +234,25 @@ func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registr
 
 const maxRetryDownload = 1
 
-func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Package, dest, assetName string, logE *logrus.Entry) error {
+type DownloadParam struct {
+	Package *config.Package
+	Dest    string
+	Asset   string
+}
+
+func (inst *installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Package.Name,
-		"package_version": pkg.Package.Version,
-		"registry":        pkg.Package.Registry,
+		"package_name":    param.Package.Package.Name,
+		"package_version": param.Package.Package.Version,
+		"registry":        param.Package.Package.Registry,
 	})
 	retryCount := 0
 	for {
 		logE.Debug("check if the package is already installed")
-		finfo, err := inst.fs.Stat(dest)
+		finfo, err := inst.fs.Stat(param.Dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := inst.download(ctx, pkg, dest, assetName, logE); err != nil {
+			if err := inst.download(ctx, logE, param); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err
@@ -258,7 +268,7 @@ func (inst *installer) downloadWithRetry(ctx context.Context, pkg *config.Packag
 			return nil
 		}
 		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", dest)
+			return fmt.Errorf("%s isn't a directory", param.Dest)
 		}
 		return nil
 	}
