@@ -18,6 +18,7 @@ type PackageDownloader struct {
 	runtime   *runtime.Runtime
 	http      HTTPDownloader
 	ghContent domain.GitHubContentFileDownloader
+	ghRelease domain.GitHubReleaseDownloader
 }
 
 func NewPackageDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, httpDownloader HTTPDownloader) *PackageDownloader {
@@ -26,6 +27,7 @@ func NewPackageDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, ht
 		runtime:   rt,
 		http:      httpDownloader,
 		ghContent: NewGitHubContentFileDownloader(gh, httpDownloader),
+		ghRelease: NewGitHubReleaseDownloader(gh, httpDownloader),
 	}
 }
 
@@ -34,7 +36,12 @@ func (downloader *PackageDownloader) GetReadCloser(ctx context.Context, pkg *con
 	switch pkgInfo.GetType() {
 	case config.PkgInfoTypeGitHubRelease:
 		pkgInfo := pkg.PackageInfo
-		return downloader.downloadFromGitHubRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, assetName, logE)
+		return downloader.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
+			RepoOwner: pkgInfo.RepoOwner,
+			RepoName:  pkgInfo.RepoName,
+			Version:   pkg.Package.Version,
+			Asset:     assetName,
+		})
 	case config.PkgInfoTypeGitHubContent:
 		pkgInfo := pkg.PackageInfo
 		file, err := downloader.ghContent.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
