@@ -27,7 +27,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 		name        string
 		files       map[string]string
 		param       *config.Param
-		downloader  domain.RegistryDownloader
+		downloader  domain.GitHubContentFileDownloader
 		cfg         *aqua.Config
 		cfgFilePath string
 		isErr       bool
@@ -104,7 +104,7 @@ func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			downloader: download.NewRegistryDownloader(nil, download.NewHTTPDownloader(&http.Client{
+			downloader: download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(&http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
 						{

@@ -3,38 +3,53 @@ package download
 import (
 	"context"
 	"fmt"
-	"io"
-	"strings"
 
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/sirupsen/logrus"
 )
 
-func (downloader *PackageDownloader) downloadGitHubContent(ctx context.Context, owner, repoName, version, assetName string) (io.ReadCloser, error) {
+type GitHubContentFileDownloader struct {
+	github domain.RepositoriesService
+	http   HTTPDownloader
+}
+
+func NewGitHubContentFileDownloader(gh domain.RepositoriesService, httpDL HTTPDownloader) *GitHubContentFileDownloader {
+	return &GitHubContentFileDownloader{
+		github: gh,
+		http:   httpDL,
+	}
+}
+
+func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
 	// https://github.com/aquaproj/aqua/issues/391
-	body, _, err := downloader.http.Download(ctx, "https://raw.githubusercontent.com/"+owner+"/"+repoName+"/"+version+"/"+assetName)
+	body, _, err := dl.http.Download(ctx, fmt.Sprintf(
+		"https://raw.githubusercontent.com/%s/%s/%s/%s",
+		param.RepoOwner, param.RepoName, param.Ref, param.Path,
+	))
 	if err == nil {
-		return body, nil
+		return &domain.GitHubContentFile{
+			ReadCloser: body,
+		}, nil
 	}
 	if body != nil {
 		body.Close()
 	}
 
-	if downloader.github == nil {
-		return nil, errGitHubTokenIsRequired
-	}
-
-	file, _, _, err := downloader.github.GetContents(ctx, owner, repoName, assetName, &github.RepositoryContentGetOptions{
-		Ref: version,
+	file, _, _, err := dl.github.GetContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
+		Ref: param.Ref,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("get the registry configuration file by Get GitHub Content API: %w", err)
+		return nil, fmt.Errorf("get a file by Get GitHub Content API: %w", err)
 	}
 	if file == nil {
 		return nil, errGitHubContentMustBeFile
 	}
 	content, err := file.GetContent()
 	if err != nil {
-		return nil, fmt.Errorf("get the registry configuration content: %w", err)
+		return nil, fmt.Errorf("get a GitHub Content file content: %w", err)
 	}
-	return io.NopCloser(strings.NewReader(content)), nil
+	return &domain.GitHubContentFile{
+		String: content,
+	}, nil
 }

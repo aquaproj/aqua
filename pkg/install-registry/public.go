@@ -15,7 +15,7 @@ type Installer interface {
 	InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error)
 }
 
-func New(param *config.Param, downloader domain.RegistryDownloader, fs afero.Fs) Installer {
+func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs) Installer {
 	return &installer{
 		param:              param,
 		registryDownloader: downloader,
