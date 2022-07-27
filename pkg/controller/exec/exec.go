@@ -77,9 +77,6 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			}
 		}
 
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.Package, false, false, logE); err != nil {
-			return err //nolint:wrapcheck
-		}
 		for i := 0; i < 10; i++ {
 			logE.Debug("check if exec file exists")
 			if fi, err := ctrl.fs.Stat(which.ExePath); err == nil {
