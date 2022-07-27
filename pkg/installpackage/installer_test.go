@@ -32,8 +32,6 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		registries map[string]*registry.Config
 		executor   installpackage.Executor
 		binDir     string
-		onlyLink   bool
-		isTest     bool
 		isErr      bool
 	}{
 		{
@@ -100,8 +98,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			name:     "only link",
-			onlyLink: true,
+			name: "only link",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",
@@ -111,6 +108,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				ConfigFilePath: "aqua.yaml",
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
+				OnlyLink:       true,
 			},
 			cfg: &aqua.Config{
 				Registries: aqua.Registries{
@@ -204,7 +202,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
-			if err := ctrl.InstallPackages(ctx, d.cfg, d.registries, d.binDir, d.onlyLink, d.isTest, logE); err != nil {
+			if err := ctrl.InstallPackages(ctx, d.cfg, d.registries, d.binDir, logE); err != nil {
 				if d.isErr {
 					return
 				}
@@ -270,7 +268,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
-			if err := ctrl.InstallPackage(ctx, d.pkg, d.isTest, logE); err != nil {
+			if err := ctrl.InstallPackage(ctx, d.pkg, logE); err != nil {
 				if d.isErr {
 					return
 				}
