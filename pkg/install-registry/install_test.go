@@ -21,7 +21,7 @@ func stringP(s string) *string {
 	return &s
 }
 
-func Test_installer_InstallRegistries(t *testing.T) { //nolint:funlen
+func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name        string

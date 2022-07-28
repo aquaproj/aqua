@@ -10,7 +10,7 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -24,7 +24,7 @@ type controller struct {
 	rootDir           string
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
-	registryInstaller registry.Installer
+	registryInstaller domain.RegistryInstaller
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	fs                afero.Fs

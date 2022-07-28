@@ -14,9 +14,9 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/github"
-	instregst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -28,7 +28,7 @@ type Controller struct {
 	stdin             io.Reader
 	stdout            io.Writer
 	github            RepositoriesService
-	registryInstaller instregst.Installer
+	registryInstaller domain.RegistryInstaller
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
 	fuzzyFinder       FuzzyFinder
@@ -46,7 +46,7 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller instregst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		stdout:            os.Stdout,
