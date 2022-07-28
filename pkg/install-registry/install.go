@@ -20,7 +20,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type installer struct {
+type Installer struct {
 	registryDownloader domain.GitHubContentFileDownloader
 	param              *config.Param
 	fs                 afero.Fs
@@ -28,7 +28,7 @@ type installer struct {
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
 
-func (inst *installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
+func (inst *Installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(cfg.Registries))
 	var flagMutex sync.Mutex
@@ -73,7 +73,7 @@ func (inst *installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, 
 	return registryContents, nil
 }
 
-func (inst *installer) readRegistry(p string, registry *registry.Config) error {
+func (inst *Installer) readRegistry(p string, registry *registry.Config) error {
 	f, err := inst.fs.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
@@ -95,7 +95,7 @@ const dirPermission os.FileMode = 0o775
 
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (inst *installer) installRegistry(ctx context.Context, regist *aqua.Registry, cfgFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *Installer) installRegistry(ctx context.Context, regist *aqua.Registry, cfgFilePath string, logE *logrus.Entry) (*registry.Config, error) {
 	registryFilePath := regist.GetFilePath(inst.param.RootDir, cfgFilePath)
 	if _, err := inst.fs.Stat(registryFilePath); err == nil {
 		registryContent := &registry.Config{}
@@ -111,7 +111,7 @@ func (inst *installer) installRegistry(ctx context.Context, regist *aqua.Registr
 }
 
 // getRegistry downloads and installs the registry file.
-func (inst *installer) getRegistry(ctx context.Context, registry *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *Installer) getRegistry(ctx context.Context, registry *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
 	switch registry.Type {
 	case aqua.RegistryTypeGitHubContent:
 		return inst.getGitHubContentRegistry(ctx, registry, registryFilePath, logE)
@@ -125,7 +125,7 @@ func (inst *installer) getRegistry(ctx context.Context, registry *aqua.Registry,
 
 const registryFilePermission = 0o600
 
-func (inst *installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
 	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,

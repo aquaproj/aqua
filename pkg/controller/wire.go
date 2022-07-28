@@ -42,7 +42,10 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
-		registry.New,
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -90,7 +93,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
-		registry.New,
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -116,7 +122,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
-		registry.New,
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -153,7 +162,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
-		registry.New,
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -187,7 +199,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
-		registry.New,
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
