@@ -21,7 +21,7 @@ import (
 
 const proxyName = "aqua-proxy"
 
-type installer struct {
+type Installer struct {
 	rootDir           string
 	maxParallelism    int
 	packageDownloader domain.PackageDownloader
@@ -38,7 +38,7 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) error {
+func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) error {
 	pkgs, failed := inst.createLinks(cfg, registries, logE)
 	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
@@ -94,7 +94,7 @@ func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 	return nil
 }
 
-func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error {
+func (inst *Installer) InstallPackage(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error {
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -141,7 +141,7 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
+func (inst *Installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
 	pkgs := make([]*config.Package, 0, len(cfg.Packages))
 	failed := false
 	// registry -> package name -> pkgInfo
@@ -240,7 +240,7 @@ type DownloadParam struct {
 	Asset   string
 }
 
-func (inst *installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    param.Package.Package.Name,
 		"package_version": param.Package.Package.Version,
@@ -274,7 +274,7 @@ func (inst *installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry
 	}
 }
 
-func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if isWindows(inst.runtime.GOOS) {
@@ -303,7 +303,7 @@ func (inst *installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (inst *installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+func (inst *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	fields := logrus.Fields{
 		"file_name": file.Name,
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	ppkg := param.Package
 	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{
@@ -48,7 +48,7 @@ func (inst *installer) download(ctx context.Context, logE *logrus.Entry, param *
 	}, param.Dest, logE, inst.fs, pOpts)
 }
 
-func (inst *installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
+func (inst *Installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
 	pkgInfo := pkg.PackageInfo
 	goPkgPath := pkgInfo.GetPath() + "@" + pkg.Package.Version
 	logE.WithFields(logrus.Fields{

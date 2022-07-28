@@ -40,6 +40,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		wire.NewSet(
@@ -87,7 +88,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		wire.NewSet(
@@ -113,6 +114,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		wire.NewSet(
@@ -120,7 +122,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		reader.New,
-		installpackage.New,
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+		),
 		wire.NewSet(
 			download.NewPackageDownloader,
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
@@ -146,6 +151,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		wire.NewSet(
@@ -172,10 +178,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			download.NewPackageDownloader,
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
-		installpackage.New,
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+		),
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		registry.New,
 		wire.NewSet(
