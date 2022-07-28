@@ -38,8 +38,8 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) error {
-	pkgs, failed := inst.createLinks(cfg, registries, binDir, logE)
+func (inst *installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) error {
+	pkgs, failed := inst.createLinks(cfg, registries, logE)
 	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
@@ -141,7 +141,7 @@ func (inst *installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
+func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
 	pkgs := make([]*config.Package, 0, len(cfg.Packages))
 	failed := false
 	// registry -> package name -> pkgInfo
@@ -203,7 +203,7 @@ func (inst *installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 				}
 				continue
 			}
-			if err := inst.createLink(filepath.Join(binDir, file.Name), proxyName, logE); err != nil {
+			if err := inst.createLink(filepath.Join(inst.rootDir, "bin", file.Name), proxyName, logE); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue

@@ -15,7 +15,7 @@ import (
 
 type Installer interface {
 	InstallPackage(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error
-	InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, binDir string, logE *logrus.Entry) error
+	InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) error
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
 }
 

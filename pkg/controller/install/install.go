@@ -47,7 +47,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	rootBin := filepath.Join(ctrl.rootDir, "bin")
 
 	if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
@@ -64,15 +64,15 @@ func (ctrl *Controller) Install(ctx context.Context, param *config.Param, logE *
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		if err := ctrl.install(ctx, rootBin, cfgFilePath, logE); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath); err != nil {
 			return err
 		}
 	}
 
-	return ctrl.installAll(ctx, rootBin, param, logE)
+	return ctrl.installAll(ctx, logE, param)
 }
 
-func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *config.Param, logE *logrus.Entry) error {
+func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if !param.All {
 		return nil
 	}
@@ -80,14 +80,14 @@ func (ctrl *Controller) installAll(ctx context.Context, rootBin string, param *c
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := ctrl.install(ctx, rootBin, cfgFilePath, logE); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string, logE *logrus.Entry) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -101,5 +101,5 @@ func (ctrl *Controller) install(ctx context.Context, rootBin, cfgFilePath string
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, rootBin, logE) //nolint:wrapcheck
+	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, logE) //nolint:wrapcheck
 }
