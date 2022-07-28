@@ -67,5 +67,5 @@ func (runner *Runner) installAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
-	return ctrl.Install(c.Context, param, runner.LogE) //nolint:wrapcheck
+	return ctrl.Install(c.Context, runner.LogE, param) //nolint:wrapcheck
 }
