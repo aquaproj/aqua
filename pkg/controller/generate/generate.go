@@ -11,7 +11,6 @@ import (
 
 	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/pkg/config"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
@@ -30,7 +29,7 @@ type Controller struct {
 	github            RepositoriesService
 	registryInstaller domain.RegistryInstaller
 	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
+	configReader      domain.ConfigReader
 	fuzzyFinder       FuzzyFinder
 	versionSelector   VersionSelector
 	fs                afero.Fs
@@ -46,7 +45,7 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
+func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		stdout:            os.Stdout,
