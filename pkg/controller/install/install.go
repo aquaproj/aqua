@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -24,7 +23,7 @@ type Controller struct {
 	packageInstaller  domain.PackageInstaller
 	rootDir           string
 	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
+	configReader      domain.ConfigReader
 	registryInstaller domain.RegistryInstaller
 	fs                afero.Fs
 	runtime           *runtime.Runtime
@@ -34,7 +33,7 @@ type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,

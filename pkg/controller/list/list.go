@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/sirupsen/logrus"
@@ -16,7 +15,7 @@ import (
 type Controller struct {
 	stdout            io.Writer
 	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
+	configReader      domain.ConfigReader
 	registryInstaller domain.RegistryInstaller
 }
 
@@ -24,7 +23,7 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
-func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller) *Controller {
+func NewController(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,

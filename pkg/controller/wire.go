@@ -50,7 +50,10 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
-		reader.New,
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
 	)
@@ -101,7 +104,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
-		reader.New,
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
 		afero.NewOsFs,
 		generate.NewFuzzyFinder,
 		generate.NewVersionSelector,
@@ -130,7 +136,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
-		reader.New,
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
@@ -170,7 +179,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
-		reader.New,
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
 		osenv.New,
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
@@ -207,7 +219,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
-		reader.New,
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
 		which.New,
 		wire.NewSet(
 			exec.New,

@@ -10,21 +10,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type ConfigReader interface {
-	Read(configFilePath string, cfg *aqua.Config) error
-}
-
-func New(fs afero.Fs) ConfigReader {
-	return &configReader{
+func New(fs afero.Fs) *ConfigReader {
+	return &ConfigReader{
 		fs: fs,
 	}
 }
 
-type configReader struct {
+type ConfigReader struct {
 	fs afero.Fs
 }
 
-func (reader *configReader) Read(configFilePath string, cfg *aqua.Config) error {
+func (reader *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
 	file, err := reader.fs.Open(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -39,7 +35,7 @@ func (reader *configReader) Read(configFilePath string, cfg *aqua.Config) error 
 	return nil
 }
 
-func (reader *configReader) readImports(configFilePath string, cfg *aqua.Config) error {
+func (reader *ConfigReader) readImports(configFilePath string, cfg *aqua.Config) error {
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg.Import == "" {
