@@ -43,6 +43,7 @@ type PackageInfo struct {
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
+	Checksum           *Checksum          `json:"checksum,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) copy() *PackageInfo {
