@@ -33,7 +33,9 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 }
 
 type Which struct {
-	Package *config.Package
-	File    *cfgRegistry.File
-	ExePath string
+	Package        *config.Package
+	File           *cfgRegistry.File
+	ExePath        string
+	ConfigFilePath string
+	EnableChecksum bool
 }
