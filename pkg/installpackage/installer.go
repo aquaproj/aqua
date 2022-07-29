@@ -29,17 +29,10 @@ type Installer struct {
 	fs                afero.Fs
 	linker            link.Linker
 	executor          Executor
-	checksums         Checksums
+	checksums         domain.Checksums
 	progressBar       bool
 	onlyLink          bool
 	isTest            bool
-}
-
-type Checksums interface {
-	Get(key string) string
-	Set(key, value string)
-	ReadFile(fs afero.Fs, p string) error
-	UpdateFile(fs afero.Fs, p string) error
 }
 
 func isWindows(goos string) bool {
@@ -149,60 +142,10 @@ func (inst *Installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (inst *Installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) ([]*config.Package, bool) { //nolint:cyclop,funlen
-	pkgs := make([]*config.Package, 0, len(cfg.Packages))
-	failed := false
-	// registry -> package name -> pkgInfo
-	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
-	env := inst.runtime.GOOS + "/" + inst.runtime.GOARCH
-	for _, pkg := range cfg.Packages {
-		if pkg.Name == "" {
-			logE.Error("ignore a package because the package name is empty")
-			failed = true
-			continue
-		}
-		if pkg.Version == "" {
-			logE.Error("ignore a package because the package version is empty")
-			failed = true
-			continue
-		}
-		logE := logE.WithFields(logrus.Fields{
-			"package_name":    pkg.Name,
-			"package_version": pkg.Version,
-			"registry":        pkg.Registry,
-		})
-		if registry, ok := cfg.Registries[pkg.Registry]; ok {
-			if registry.Ref != "" {
-				logE = logE.WithField("registry_ref", registry.Ref)
-			}
-		}
-		pkgInfo, err := getPkgInfoFromRegistries(logE, registries, pkg, m)
-		if err != nil {
-			logerr.WithError(logE, err).Error("install the package")
-			failed = true
-			continue
-		}
-
-		pkgInfo, err = pkgInfo.Override(pkg.Version, inst.runtime)
-		if err != nil {
-			logerr.WithError(logE, err).Error("evaluate version constraints")
-			failed = true
-			continue
-		}
-		supported, err := pkgInfo.CheckSupported(inst.runtime, env)
-		if err != nil {
-			logerr.WithError(logE, err).Error("check if the package is supported")
-			failed = true
-			continue
-		}
-		if !supported {
-			logE.Debug("the package isn't supported on this environment")
-			continue
-		}
-		pkgs = append(pkgs, &config.Package{
-			Package:     pkg,
-			PackageInfo: pkgInfo,
-		})
+func (inst *Installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) ([]*config.Package, bool) {
+	pkgs, failed := config.ListPackages(logE, cfg, inst.runtime, registries)
+	for _, pkg := range pkgs {
+		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
 			if isWindows(inst.runtime.GOOS) {
 				if err := inst.createProxyWindows(file.Name, logE); err != nil {
@@ -219,25 +162,6 @@ func (inst *Installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 		}
 	}
 	return pkgs, failed
-}
-
-func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
-	pkgInfoMap, ok := m[pkg.Registry]
-	if !ok {
-		registry, ok := registries[pkg.Registry]
-		if !ok {
-			return nil, errRegistryNotFound
-		}
-		pkgInfos := registry.PackageInfos.ToMap(logE)
-		m[pkg.Registry] = pkgInfos
-		pkgInfoMap = pkgInfos
-	}
-
-	pkgInfo, ok := pkgInfoMap[pkg.Name]
-	if !ok {
-		return nil, errPkgNotFound
-	}
-	return pkgInfo, nil
 }
 
 const maxRetryDownload = 1
