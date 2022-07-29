@@ -29,9 +29,17 @@ type Installer struct {
 	fs                afero.Fs
 	linker            link.Linker
 	executor          Executor
+	checksums         Checksums
 	progressBar       bool
 	onlyLink          bool
 	isTest            bool
+}
+
+type Checksums interface {
+	Get(key string) string
+	Set(key, value string)
+	ReadFile(fs afero.Fs, p string) error
+	UpdateFile(fs afero.Fs, p string) error
 }
 
 func isWindows(goos string) bool {
