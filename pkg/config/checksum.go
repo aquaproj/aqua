@@ -1,12 +1,15 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
 )
+
+var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
 func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 	assetName, err := cpkg.RenderAsset(rt)
@@ -32,4 +35,13 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 		return filepath.Join(pkgInfo.GetType(), u.Host, u.Path), nil
 	}
 	return "", nil
+}
+
+func (cpkg *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	switch pkgInfo.Checksum.Type { //nolint:gocritic
+	case PkgInfoTypeGitHubRelease:
+		return cpkg.renderTemplateString(pkgInfo.Checksum.Path, rt)
+	}
+	return "", errUnknownChecksumFileType
 }
