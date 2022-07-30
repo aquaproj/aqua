@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/cp"
 	exec2 "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/generate-registry"
@@ -118,4 +119,22 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	execController := exec2.New(installer, controller, executor, osEnv, fs)
 	return execController
+}
+
+func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	fs := afero.NewOsFs()
+	linker := link.New()
+	executor := exec.New()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor)
+	configFinder := finder.NewConfigFinder(fs)
+	configReader := reader.New(fs)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
+	osEnv := osenv.New()
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
+	cpController := cp.New(param, installer, fs, rt, controller)
+	return cpController
 }
