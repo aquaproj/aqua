@@ -17,6 +17,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
@@ -118,4 +119,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	execController := exec2.New(installer, controller, executor, osEnv, fs)
 	return execController
+}
+
+func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
+	fs := afero.NewOsFs()
+	execFinder := updateaqua.NewExecFinder()
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	gitHubReleaseDownloader := download.NewGitHubReleaseDownloader(repositoriesService, httpDownloader)
+	controller := updateaqua.New(param, fs, rt, execFinder, gitHubReleaseDownloader, repositoriesService)
+	return controller
 }

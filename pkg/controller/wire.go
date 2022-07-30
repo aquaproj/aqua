@@ -16,6 +16,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
@@ -235,4 +236,27 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		download.NewHTTPDownloader,
 	)
 	return &cexec.Controller{}
+}
+
+func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
+	wire.Build(
+		updateaqua.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubReleaseAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesService)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			download.NewGitHubReleaseDownloader,
+			wire.Bind(new(domain.GitHubReleaseDownloader), new(*download.GitHubReleaseDownloader)),
+		),
+		wire.NewSet(
+			updateaqua.NewExecFinder,
+			wire.Bind(new(domain.ExecFinder), new(*updateaqua.ExecFinder)),
+		),
+	)
+	return &updateaqua.Controller{}
 }
