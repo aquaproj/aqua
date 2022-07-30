@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/cp"
 	cexec "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/pkg/controller/generate-registry"
@@ -235,4 +236,50 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		download.NewHTTPDownloader,
 	)
 	return &cexec.Controller{}
+}
+
+func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {
+	wire.Build(
+		cp.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
+		which.New,
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
+		),
+		osenv.New,
+		afero.NewOsFs,
+		link.New,
+		download.NewHTTPDownloader,
+	)
+	return &cp.Controller{}
 }

@@ -32,10 +32,12 @@ type LDFlags struct {
 }
 
 func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error {
+	param.Args = c.Args().Slice()
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
 	param.ConfigFilePath = c.String("config")
+	param.Dest = c.String("o")
 	param.OnlyLink = c.Bool("only-link")
 	param.IsTest = c.Bool("test")
 	if commandName == "generate-registry" {
@@ -106,6 +108,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newGenerateRegistryCommand(),
 			runner.newCompletionCommand(),
 			runner.newVersionCommand(),
+			runner.newCpCommand(),
 		},
 	}
 

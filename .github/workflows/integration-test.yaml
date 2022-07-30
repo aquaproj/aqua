@@ -83,6 +83,13 @@ jobs:
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
       working-directory: tests
 
+    - name: test aqua cp
+      run: aqua cp actionlint golangci-lint
+    - name: test aqua cp
+      run: dist/actionlint -version
+    - name: test aqua cp
+      run: dist/golangci-lint version
+
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
       working-directory: /tmp
@@ -160,6 +167,13 @@ jobs:
     - run: aqua list
       working-directory: ${{ env.HOME }}
 
+    - name: test aqua cp
+      run: aqua cp actionlint golangci-lint
+    - name: test aqua cp
+      run: dist/actionlint -version
+    - name: test aqua cp
+      run: dist/golangci-lint version
+
   build-windows-pwsh:
     runs-on: windows-latest
     env:
@@ -225,3 +239,10 @@ jobs:
       working-directory: ${{ env.HOME }}
     - run: aqua list
       working-directory: ${{ env.HOME }}
+
+    - name: test aqua cp
+      run: aqua cp actionlint golangci-lint
+    - name: test aqua cp
+      run: dist/actionlint -version
+    - name: test aqua cp
+      run: dist/golangci-lint version

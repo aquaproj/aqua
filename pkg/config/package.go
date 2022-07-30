@@ -170,7 +170,9 @@ type Param struct {
 	PWD                   string
 	InsertFile            string
 	LogColor              string
+	Dest                  string
 	MaxParallelism        int
+	Args                  []string
 	OnlyLink              bool
 	IsTest                bool
 	All                   bool
