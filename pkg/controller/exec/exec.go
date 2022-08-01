@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
@@ -57,7 +58,11 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"exe_path": which.ExePath,
 			"package":  which.Package.Package.Name,
 		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.Package, logE); err != nil {
+		var checksums *checksum.Checksums
+		if which.Config.ChecksumEnabled() {
+			checksums = checksum.New()
+		}
+		if err := ctrl.packageInstaller.InstallPackage(ctx, logE, which.Package, checksums); err != nil {
 			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {

@@ -84,6 +84,22 @@ packages:
 					Name: "aqua-installer",
 				},
 				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				Config: &aqua.Config{
+					Registries: aqua.Registries{
+						"standard": {
+							Name: "standard",
+							Type: "local",
+							Path: "registry.yaml",
+						},
+					},
+					Packages: []*aqua.Package{
+						{
+							Name:     "aquaproj/aqua-installer",
+							Registry: "standard",
+							Version:  "v1.0.0",
+						},
+					},
+				},
 			},
 		},
 		{
@@ -181,6 +197,27 @@ packages:
 					Name: "aqua-installer",
 				},
 				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
+				Config: &aqua.Config{
+					Registries: aqua.Registries{
+						"standard": {
+							Name: "standard",
+							Type: "local",
+							Path: "registry.yaml",
+						},
+					},
+					Packages: []*aqua.Package{
+						{
+							Name:     "suzuki-shunsuke/ci-info",
+							Registry: "standard",
+							Version:  "v1.0.0",
+						},
+						{
+							Name:     "aquaproj/aqua-installer",
+							Registry: "standard",
+							Version:  "v1.0.0",
+						},
+					},
+				},
 			},
 		},
 	}

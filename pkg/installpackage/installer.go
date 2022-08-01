@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"sync"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -29,7 +29,6 @@ type Installer struct {
 	fs                afero.Fs
 	linker            link.Linker
 	executor          Executor
-	checksums         domain.Checksums
 	progressBar       bool
 	onlyLink          bool
 	isTest            bool
@@ -39,7 +38,7 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) error {
+func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, registries map[string]*registry.Config) error {
 	pkgs, failed := inst.createLinks(cfg, registries, logE)
 	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
@@ -69,6 +68,11 @@ func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 		flagMutex.Unlock()
 	}
 
+	var checksums *checksum.Checksums
+	if cfg.ChecksumEnabled() {
+		checksums = checksum.New()
+	}
+
 	for _, pkg := range pkgs {
 		go func(pkg *config.Package) {
 			defer wg.Done()
@@ -81,7 +85,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
-			if err := inst.InstallPackage(ctx, pkg, logE); err != nil {
+			if err := inst.InstallPackage(ctx, logE, pkg, checksums); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -95,7 +99,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error {
+func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, checksums *checksum.Checksums) error {
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -123,9 +127,10 @@ func (inst *Installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 	}
 
 	if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
-		Package: pkg,
-		Dest:    pkgPath,
-		Asset:   assetName,
+		Package:   pkg,
+		Dest:      pkgPath,
+		Asset:     assetName,
+		Checksums: checksums,
 	}); err != nil {
 		return err
 	}
@@ -167,43 +172,10 @@ func (inst *Installer) createLinks(cfg *aqua.Config, registries map[string]*regi
 const maxRetryDownload = 1
 
 type DownloadParam struct {
-	Package *config.Package
-	Dest    string
-	Asset   string
-}
-
-func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    param.Package.Package.Name,
-		"package_version": param.Package.Package.Version,
-		"registry":        param.Package.Package.Registry,
-	})
-	retryCount := 0
-	for {
-		logE.Debug("check if the package is already installed")
-		finfo, err := inst.fs.Stat(param.Dest)
-		if err != nil { //nolint:nestif
-			// file doesn't exist
-			if err := inst.download(ctx, logE, param); err != nil {
-				if strings.Contains(err.Error(), "file already exists") {
-					if retryCount >= maxRetryDownload {
-						return err
-					}
-					retryCount++
-					logerr.WithError(logE, err).WithFields(logrus.Fields{
-						"retry_count": retryCount,
-					}).Info("retry installing the package")
-					continue
-				}
-				return err
-			}
-			return nil
-		}
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", param.Dest)
-		}
-		return nil
-	}
+	Package   *config.Package
+	Dest      string
+	Asset     string
+	Checksums *checksum.Checksums
 }
 
 func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
