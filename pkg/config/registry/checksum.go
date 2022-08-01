@@ -2,9 +2,9 @@ package registry
 
 type Checksum struct {
 	Type       string           `json:"type"`
-	Path       string           `json:"path"`
+	Path       string           `json:"path,omitempty"`
 	FileFormat string           `yaml:"file_format" json:"file_format"`
-	Pattern    *ChecksumPattern `json:"pattern"`
+	Pattern    *ChecksumPattern `json:"pattern,omitempty"`
 }
 
 type ChecksumPattern struct {

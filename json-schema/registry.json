@@ -15,13 +15,48 @@
         "name"
       ]
     },
+    "Checksum": {
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "file_format": {
+          "type": "string"
+        },
+        "pattern": {
+          "$ref": "#/$defs/ChecksumPattern"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "file_format"
+      ]
+    },
+    "ChecksumPattern": {
+      "properties": {
+        "checksum": {
+          "type": "string"
+        },
+        "file": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "checksum",
+        "file"
+      ]
+    },
     "Config": {
       "properties": {
         "packages": {
-          "items": {
-            "$ref": "#/$defs/PackageInfo"
-          },
-          "type": "array"
+          "$ref": "#/$defs/PackageInfos"
         }
       },
       "additionalProperties": false,
@@ -146,6 +181,9 @@
         },
         "windows_ext": {
           "type": "string"
+        },
+        "checksum": {
+          "$ref": "#/$defs/Checksum"
         }
       },
       "additionalProperties": false,
@@ -261,6 +299,9 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "checksum": {
+          "$ref": "#/$defs/Checksum"
         }
       },
       "additionalProperties": false,
@@ -268,6 +309,12 @@
       "required": [
         "type"
       ]
+    },
+    "PackageInfos": {
+      "items": {
+        "$ref": "#/$defs/PackageInfo"
+      },
+      "type": "array"
     },
     "Replacements": {
       "properties": {
@@ -617,6 +664,9 @@
         },
         "windows_ext": {
           "type": "string"
+        },
+        "checksum": {
+          "$ref": "#/$defs/Checksum"
         }
       },
       "additionalProperties": false,
