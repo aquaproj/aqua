@@ -15,7 +15,7 @@ import (
 )
 
 type Controller interface {
-	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error)
+	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*FindResult, error)
 }
 
 func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker link.Linker) Controller {
@@ -32,7 +32,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 	}
 }
 
-type Which struct {
+type FindResult struct {
 	Package        *config.Package
 	File           *cfgRegistry.File
 	ExePath        string

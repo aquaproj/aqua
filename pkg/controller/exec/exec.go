@@ -34,13 +34,13 @@ type Executor interface {
 	ExecXSys(exePath string, args []string) error
 }
 
-func New(pkgInstaller domain.PackageInstaller, which which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
+func New(pkgInstaller domain.PackageInstaller, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		stderr:           os.Stderr,
 		packageInstaller: pkgInstaller,
-		which:            which,
+		which:            whichCtrl,
 		executor:         executor,
 		enabledXSysExec:  osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
 		fs:               fs,
@@ -48,21 +48,21 @@ func New(pkgInstaller domain.PackageInstaller, which which.Controller, executor 
 }
 
 func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error {
-	which, err := ctrl.which.Which(ctx, param, exeName, logE)
+	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if which.Package != nil { //nolint:nestif
+	if findResult.Package != nil { //nolint:nestif
 		logE = logE.WithFields(logrus.Fields{
-			"exe_path": which.ExePath,
-			"package":  which.Package.Package.Name,
+			"exe_path": findResult.ExePath,
+			"package":  findResult.Package.Package.Name,
 		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.Package, logE); err != nil {
+		if err := ctrl.packageInstaller.InstallPackage(ctx, findResult.Package, logE); err != nil {
 			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {
 			logE.Debug("check if exec file exists")
-			if fi, err := ctrl.fs.Stat(which.ExePath); err == nil {
+			if fi, err := ctrl.fs.Stat(findResult.ExePath); err == nil {
 				if util.IsOwnerExecutable(fi.Mode()) {
 					break
 				}
@@ -75,7 +75,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			}
 		}
 	}
-	return ctrl.execCommandWithRetry(ctx, which.ExePath, args, logE)
+	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
 }
 
 func wait(ctx context.Context, duration time.Duration) error {
