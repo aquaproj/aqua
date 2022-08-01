@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -35,6 +36,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 type FindResult struct {
 	Package        *config.Package
 	File           *cfgRegistry.File
+	Config         *aqua.Config
 	ExePath        string
 	ConfigFilePath string
 	EnableChecksum bool
