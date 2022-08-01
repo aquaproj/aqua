@@ -34,7 +34,7 @@ type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*Which, error) {
+func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*FindResult, error) {
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		which, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
@@ -61,7 +61,7 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	}
 
 	if exePath := ctrl.lookPath(ctrl.osenv.Getenv("PATH"), exeName); exePath != "" {
-		return &Which{
+		return &FindResult{
 			ExePath: exePath,
 		}, nil
 	}
@@ -70,7 +70,7 @@ func (ctrl *controller) Which(ctx context.Context, param *config.Param, exeName 
 	})
 }
 
-func (ctrl *controller) getExePath(which *Which) (string, error) {
+func (ctrl *controller) getExePath(which *FindResult) (string, error) {
 	pkg := which.Package
 	pkgInfo := pkg.PackageInfo
 	file := which.File
@@ -91,7 +91,7 @@ func (ctrl *controller) getExePath(which *Which) (string, error) {
 	return filepath.Join(pkgPath, fileSrc), nil
 }
 
-func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*Which, error) {
+func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*FindResult, error) {
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
@@ -103,13 +103,14 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	}
 	for _, pkg := range cfg.Packages {
 		if which := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); which != nil {
+			which.Config = cfg
 			return which, nil
 		}
 	}
 	return nil, nil //nolint:nilnil
 }
 
-func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *Which { //nolint:cyclop
+func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *FindResult { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil
@@ -150,7 +151,7 @@ func (ctrl *controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 
 	for _, file := range pkgInfo.GetFiles() {
 		if file.Name == exeName {
-			which := &Which{
+			which := &FindResult{
 				Package: &config.Package{
 					Package:     pkg,
 					PackageInfo: pkgInfo,

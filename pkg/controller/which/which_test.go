@@ -36,7 +36,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 		exeName string
 		rt      *runtime.Runtime
 		isErr   bool
-		exp     *which.Which
+		exp     *which.FindResult
 	}{
 		{
 			name: "normal",
@@ -66,7 +66,7 @@ packages:
   path: aqua-installer
 `,
 			},
-			exp: &which.Which{
+			exp: &which.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Name:     "aquaproj/aqua-installer",
@@ -83,6 +83,23 @@ packages:
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
 				},
+				Config: &aqua.Config{
+					Packages: []*aqua.Package{
+						{
+							Name:     "aquaproj/aqua-installer",
+							Registry: "standard",
+							Version:  "v1.0.0",
+						},
+					},
+					Registries: aqua.Registries{
+						"standard": {
+							Name: "standard",
+							Type: "local",
+							Path: "registry.yaml",
+						},
+					},
+				},
+
 				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 			},
 		},
@@ -121,7 +138,7 @@ packages:
 			links: map[string]string{
 				"../foo/gh": "/usr/local/bin/gh",
 			},
-			exp: &which.Which{
+			exp: &which.FindResult{
 				ExePath: "/usr/local/bin/gh",
 			},
 		},
@@ -163,7 +180,7 @@ packages:
   path: aqua-installer
 `,
 			},
-			exp: &which.Which{
+			exp: &which.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Name:     "aquaproj/aqua-installer",
@@ -179,6 +196,27 @@ packages:
 				},
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
+				},
+				Config: &aqua.Config{
+					Packages: []*aqua.Package{
+						{
+							Name:     "suzuki-shunsuke/ci-info",
+							Registry: "standard",
+							Version:  "v1.0.0",
+						},
+						{
+							Name:     "aquaproj/aqua-installer",
+							Registry: "standard",
+							Version:  "v1.0.0",
+						},
+					},
+					Registries: aqua.Registries{
+						"standard": {
+							Name: "standard",
+							Type: "local",
+							Path: "registry.yaml",
+						},
+					},
 				},
 				ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 			},

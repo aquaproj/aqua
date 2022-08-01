@@ -23,7 +23,7 @@ func Test_controller_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 		registries map[string]*registry.Config
 		exeName    string
 		pkg        *aqua.Package
-		expWhich   *Which
+		expWhich   *FindResult
 	}{
 		{
 			title:   "normal",
@@ -33,7 +33,7 @@ func Test_controller_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 				Name:     "kubernetes/kubectl",
 				Version:  "v1.21.0",
 			},
-			expWhich: &Which{
+			expWhich: &FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Registry: "standard",

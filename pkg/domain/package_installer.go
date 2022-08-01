@@ -10,7 +10,13 @@ import (
 )
 
 type PackageInstaller interface {
-	InstallPackage(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error
-	InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) error
+	InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
+}
+
+type ParamInstallPackages struct {
+	ConfigFilePath string
+	Config         *aqua.Config
+	Registries     map[string]*registry.Config
 }
