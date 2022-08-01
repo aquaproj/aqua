@@ -88,6 +88,9 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	pkgs, _ := config.ListPackages(logE, cfg, ctrl.runtime, registryContents)
 	parser := &checksum.FileParser{}
 	for _, pkg := range pkgs {
+		if pkg.PackageInfo.Checksum == nil {
+			continue
+		}
 		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, pkg)
 		if err != nil {
 			return fmt.Errorf("download a checksum file: %w", err)
