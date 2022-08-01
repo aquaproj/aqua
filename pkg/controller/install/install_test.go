@@ -89,7 +89,7 @@ packages:
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil)
 			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, registryDownloader, fs), pkgInstaller, fs, d.rt)
 			if err := ctrl.Install(ctx, logE, d.param); err != nil {
 				if d.isErr {

@@ -8,6 +8,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -201,8 +202,12 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
-			if err := ctrl.InstallPackages(ctx, logE, d.cfg, d.registries); err != nil {
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil)
+			if err := ctrl.InstallPackages(ctx, logE, &domain.ParamInstallPackages{
+				Config:         d.cfg,
+				Registries:     d.registries,
+				ConfigFilePath: d.param.ConfigFilePath,
+			}); err != nil {
 				if d.isErr {
 					return
 				}
@@ -267,7 +272,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil)
 			if err := ctrl.InstallPackage(ctx, logE, d.pkg, nil); err != nil {
 				if d.isErr {
 					return

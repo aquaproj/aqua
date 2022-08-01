@@ -1,6 +1,7 @@
 package installpackage
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -12,7 +13,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (inst *Installer) verifyChecksum(checksums *checksum.Checksums, pkg *config.Package, assetName string, body io.Reader) (io.ReadCloser, error) { //nolint:cyclop
+func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, assetName string, body io.Reader) (io.ReadCloser, error) { //nolint:cyclop,funlen
 	pkgInfo := pkg.PackageInfo
 	tempDir, err := afero.TempDir(inst.fs, "", "")
 	if err != nil {
@@ -45,6 +46,26 @@ func (inst *Installer) verifyChecksum(checksums *checksum.Checksums, pkg *config
 		return nil, err //nolint:wrapcheck
 	}
 	chksum := checksums.Get(checksumID)
+	if chksum == "" && pkgInfo.Checksum != nil {
+		file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, pkg)
+		if err != nil {
+			logE.WithError(err).Error("download a checksum file")
+		}
+		defer file.Close()
+		b, err := io.ReadAll(file)
+		if err != nil {
+			logE.WithError(err).Error("read a checksum file")
+		}
+		m, err := inst.checksumFileParser.ParseChecksumFile(string(b), pkg)
+		if err != nil {
+			logE.WithError(err).Error("parse a checksum file")
+		}
+		c, ok := m[assetName]
+		if ok {
+			checksums.Set(checksumID, c)
+			chksum = c
+		}
+	}
 
 	if chksum != "" && sha256 != chksum {
 		return nil, logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck

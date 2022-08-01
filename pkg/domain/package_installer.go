@@ -12,6 +12,12 @@ import (
 
 type PackageInstaller interface {
 	InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, checksums *checksum.Checksums) error
-	InstallPackages(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, registries map[string]*registry.Config) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
+}
+
+type ParamInstallPackages struct {
+	ConfigFilePath string
+	Config         *aqua.Config
+	Registries     map[string]*registry.Config
 }

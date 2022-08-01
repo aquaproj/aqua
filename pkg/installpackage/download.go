@@ -73,7 +73,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	var readBody io.Reader = body
 
 	if param.Checksums != nil {
-		readFile, err := inst.verifyChecksum(param.Checksums, ppkg, param.Asset, body)
+		readFile, err := inst.verifyChecksum(ctx, logE, param.Checksums, ppkg, param.Asset, body)
 		if err != nil {
 			return err
 		}

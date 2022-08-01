@@ -62,7 +62,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil)
 			if err := ctrl.InstallProxy(ctx, logE); err != nil {
 				if d.isErr {
 					return

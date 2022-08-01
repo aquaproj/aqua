@@ -22,24 +22,32 @@ import (
 const proxyName = "aqua-proxy"
 
 type Installer struct {
-	rootDir           string
-	maxParallelism    int
-	packageDownloader domain.PackageDownloader
-	runtime           *runtime.Runtime
-	fs                afero.Fs
-	linker            link.Linker
-	executor          Executor
-	progressBar       bool
-	onlyLink          bool
-	isTest            bool
+	rootDir            string
+	maxParallelism     int
+	packageDownloader  domain.PackageDownloader
+	checksumDownloader domain.ChecksumDownloader
+	checksumFileParser *checksum.FileParser
+	runtime            *runtime.Runtime
+	fs                 afero.Fs
+	linker             link.Linker
+	executor           Executor
+	progressBar        bool
+	onlyLink           bool
+	isTest             bool
 }
 
 func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, registries map[string]*registry.Config) error {
-	pkgs, failed := inst.createLinks(cfg, registries, logE)
+type ParamInstallPackages struct {
+	ConfigFilePath string
+	Config         *aqua.Config
+	Registries     map[string]*registry.Config
+}
+
+func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error { //nolint:funlen,cyclop
+	pkgs, failed := inst.createLinks(param.Config, param.Registries, logE)
 	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
@@ -69,8 +77,17 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	}
 
 	var checksums *checksum.Checksums
-	if cfg.ChecksumEnabled() {
+	if param.Config.ChecksumEnabled() {
 		checksums = checksum.New()
+		checksumFilePath := checksum.GetChecksumFilePathFromConfigFilePath(param.ConfigFilePath)
+		if err := checksums.ReadFile(inst.fs, checksumFilePath); err != nil {
+			return fmt.Errorf("read a checksum JSON: %w", err)
+		}
+		defer func() {
+			if err := checksums.UpdateFile(inst.fs, checksumFilePath); err != nil {
+				logE.WithError(err).Error("update a checksum file")
+			}
+		}()
 	}
 
 	for _, pkg := range pkgs {
