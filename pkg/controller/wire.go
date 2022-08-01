@@ -17,6 +17,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
@@ -294,4 +295,38 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		download.NewHTTPDownloader,
 	)
 	return &cp.Controller{}
+}
+
+func InitializeUpdateChecksumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
+	wire.Build(
+		updatechecksum.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(updatechecksum.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		download.NewHTTPDownloader,
+		afero.NewOsFs,
+	)
+	return &updatechecksum.Controller{}
 }

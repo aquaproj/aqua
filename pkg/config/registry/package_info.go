@@ -72,6 +72,7 @@ func (pkgInfo *PackageInfo) copy() *PackageInfo {
 		VersionSource:      pkgInfo.VersionSource,
 		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
 		WindowsExt:         pkgInfo.WindowsExt,
+		Checksum:           pkgInfo.Checksum,
 	}
 	return pkg
 }
@@ -132,6 +133,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.WindowsExt != "" {
 		pkg.WindowsExt = child.WindowsExt
 	}
+	if child.Checksum != nil {
+		pkg.Checksum = child.Checksum
+	}
 	return pkg
 }
 
@@ -177,6 +181,10 @@ func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
 		pkgInfo.URL = ov.URL
 	}
 
+	if ov.Checksum != nil {
+		pkgInfo.Checksum = ov.Checksum
+	}
+
 	if ov.CompleteWindowsExt != nil {
 		pkgInfo.CompleteWindowsExt = ov.CompleteWindowsExt
 	}
@@ -205,6 +213,7 @@ type VersionOverride struct {
 	Rosetta2           *bool             `yaml:",omitempty" json:"rosetta2,omitempty"`
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	Checksum           *Checksum         `json:"checksum,omitempty"`
 }
 
 type Alias struct {

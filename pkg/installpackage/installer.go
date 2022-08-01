@@ -31,7 +31,6 @@ type Installer struct {
 	fs                 afero.Fs
 	linker             link.Linker
 	executor           Executor
-	checksums          domain.Checksums
 	progressBar        bool
 	onlyLink           bool
 	isTest             bool

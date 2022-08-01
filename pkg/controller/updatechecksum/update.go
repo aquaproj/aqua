@@ -29,7 +29,7 @@ type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -66,7 +66,7 @@ func (ctrl *Controller) updateChecksumAll(ctx context.Context, logE *logrus.Entr
 	return nil
 }
 
-func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error { //nolint:cyclop
+func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -88,35 +88,53 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	pkgs, _ := config.ListPackages(logE, cfg, ctrl.runtime, registryContents)
 	parser := &checksum.FileParser{}
 	for _, pkg := range pkgs {
-		if pkg.PackageInfo.Checksum == nil {
-			continue
-		}
-		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, pkg)
-		if err != nil {
-			return fmt.Errorf("download a checksum file: %w", err)
-		}
-		if file == nil {
-			continue
-		}
-		defer file.Close()
-		b, err := io.ReadAll(file)
-		if err != nil {
-			return fmt.Errorf("read a checksum file: %w", err)
-		}
-		m, err := parser.ParseChecksumFile(string(b), pkg)
-		if err != nil {
-			return fmt.Errorf("parse a checksum file: %w", err)
-		}
-		for asset, chksum := range m {
-			chkID, err := pkg.GetChecksumIDFromAsset(asset)
-			if err != nil {
-				return fmt.Errorf("get checksum ID from asset: %w", err)
-			}
-			checksums.Set(chkID, chksum)
+		if err := ctrl.updatePackage(ctx, logE, checksums, parser, pkg); err != nil {
+			return err
 		}
 	}
 	if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
 		return fmt.Errorf("update a checksum file: %w", err)
+	}
+	return nil
+}
+
+func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, parser *checksum.FileParser, pkg *config.Package) error {
+	if pkg.PackageInfo.Checksum == nil {
+		logE.WithFields(logrus.Fields{
+			"package_name":    pkg.Package.Name,
+			"package_version": pkg.Package.Version,
+		}).Debug("the package doesn't support getting checksum file")
+		return nil
+	}
+	logE.Info("downloading a checksum file")
+	file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, pkg)
+	if err != nil {
+		return fmt.Errorf("download a checksum file: %w", err)
+	}
+	if file == nil {
+		logE.Info("checksum file isn't found")
+		return nil
+	}
+	defer file.Close()
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("read a checksum file: %w", err)
+	}
+	m, err := parser.ParseChecksumFile(string(b), pkg)
+	if err != nil {
+		return fmt.Errorf("parse a checksum file: %w", err)
+	}
+	for asset, chksum := range m {
+		chkID, err := pkg.GetChecksumIDFromAsset(asset)
+		if err != nil {
+			return fmt.Errorf("get checksum ID from asset: %w", err)
+		}
+		logE.WithFields(logrus.Fields{
+			"checksum_id": chkID,
+			"checksum":    chksum,
+			"asset":       asset,
+		}).Debug("set a checksum")
+		checksums.Set(chkID, chksum)
 	}
 	return nil
 }

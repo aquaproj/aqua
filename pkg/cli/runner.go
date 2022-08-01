@@ -107,6 +107,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newListCommand(),
 			runner.newGenerateRegistryCommand(),
 			runner.newCompletionCommand(),
+			runner.newUpdateChecksumCommand(),
 			runner.newVersionCommand(),
 			runner.newCpCommand(),
 		},

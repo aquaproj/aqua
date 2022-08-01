@@ -45,9 +45,10 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	chksum := inst.checksums.Get(checksumID)
+	chksum := checksums.Get(checksumID)
 
 	if chksum == "" && pkgInfo.Checksum != nil { //nolint:nestif
+		logE.Info("downloading a checksum file")
 		file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, pkg)
 		if err != nil {
 			logE.WithError(err).Error("download a checksum file")
@@ -84,7 +85,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 		})
 	}
 	if chksum == "" {
-		inst.checksums.Set(checksumID, sha256)
+		checksums.Set(checksumID, sha256)
 	}
 	readFile, err := inst.fs.Open(tempFilePath)
 	if err != nil {
