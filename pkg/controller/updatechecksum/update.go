@@ -125,7 +125,7 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 		return fmt.Errorf("parse a checksum file: %w", err)
 	}
 	for asset, chksum := range m {
-		chkID, err := pkg.GetChecksumIDFromAsset(asset)
+		chkID, err := pkg.GetChecksumIDFromAsset(ctrl.runtime, asset)
 		if err != nil {
 			return fmt.Errorf("get checksum ID from asset: %w", err)
 		}

@@ -33,7 +33,7 @@ func NewChecksumDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, h
 
 func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
-	switch pkgInfo.GetType() {
+	switch pkg.PackageInfo.Checksum.Type {
 	case config.PkgInfoTypeGitHubRelease:
 		asset, err := pkg.RenderChecksumFileName(dl.runtime)
 		if err != nil {
@@ -45,6 +45,12 @@ func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus
 			Version:   pkg.Package.Version,
 			Asset:     asset,
 		})
+	case config.PkgInfoTypeHTTP:
+		u, err := pkg.RenderChecksumURL(dl.runtime)
+		if err != nil {
+			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
+		}
+		return dl.http.Download(ctx, u) //nolint:wrapcheck
 	default:
 		return nil, 0, logerr.WithFields(errUnknownChecksumFileType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),

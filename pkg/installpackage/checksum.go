@@ -63,7 +63,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 			logE.WithError(err).Error("parse a checksum file")
 		}
 		for fileName, chksum := range m {
-			chksumID, err := pkg.GetChecksumIDFromAsset(fileName)
+			chksumID, err := pkg.GetChecksumIDFromAsset(inst.runtime, fileName)
 			if err != nil {
 				logE.WithError(err).WithFields(logrus.Fields{
 					"asset": fileName,

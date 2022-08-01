@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"path/filepath"
+	"path"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
 )
@@ -20,11 +20,11 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 	pkg := cpkg.Package
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
-		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderURL(rt)
+		uS, err := cpkg.RenderChecksumURL(rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -32,7 +32,33 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("parse the URL: %w", err)
 		}
-		return filepath.Join(pkgInfo.GetType(), u.Host, u.Path), nil
+		asset, err := cpkg.renderAsset(rt)
+		if err != nil {
+			return "", fmt.Errorf("get the asset name: %w", err)
+		}
+		return path.Join("http", u.Host, u.Path, asset), nil
+	}
+	return "", nil
+}
+
+func (cpkg *Package) GetChecksumIDFromAsset(rt *runtime.Runtime, asset string) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	pkg := cpkg.Package
+	switch pkgInfo.Type {
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
+		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
+	case PkgInfoTypeHTTP:
+		uS, err := cpkg.RenderChecksumURL(rt)
+		if err != nil {
+			return "", fmt.Errorf("render URL: %w", err)
+		}
+		u, err := url.Parse(uS)
+		if err != nil {
+			return "", fmt.Errorf("parse the URL: %w", err)
+		}
+		return path.Join("http", u.Host, u.Path, asset), nil
 	}
 	return "", nil
 }
@@ -46,14 +72,6 @@ func (cpkg *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error)
 	return "", errUnknownChecksumFileType
 }
 
-func (cpkg *Package) GetChecksumIDFromAsset(asset string) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
-		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
-	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return filepath.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
-	}
-	return "", nil
+func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
+	return cpkg.renderTemplateString(cpkg.PackageInfo.Checksum.URL, rt)
 }
