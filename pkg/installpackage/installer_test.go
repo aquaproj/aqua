@@ -202,7 +202,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil)
 			if err := ctrl.InstallPackages(ctx, logE, &domain.ParamInstallPackages{
 				Config:         d.cfg,
 				Registries:     d.registries,
@@ -272,8 +272,8 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
-			if err := ctrl.InstallPackage(ctx, logE, d.pkg); err != nil {
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil)
+			if err := ctrl.InstallPackage(ctx, logE, d.pkg, nil); err != nil {
 				if d.isErr {
 					return
 				}

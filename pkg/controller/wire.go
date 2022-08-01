@@ -156,6 +156,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -230,6 +234,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
 		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
 		osenv.New,
 		afero.NewOsFs,
 		link.New,
@@ -275,6 +283,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
 		),
 		osenv.New,
 		afero.NewOsFs,
