@@ -3,11 +3,47 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
+
+func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+	logE = logE.WithFields(logrus.Fields{
+		"package_name":    param.Package.Package.Name,
+		"package_version": param.Package.Package.Version,
+		"registry":        param.Package.Package.Registry,
+	})
+	retryCount := 0
+	for {
+		logE.Debug("check if the package is already installed")
+		finfo, err := inst.fs.Stat(param.Dest)
+		if err != nil { //nolint:nestif
+			// file doesn't exist
+			if err := inst.download(ctx, logE, param); err != nil {
+				if strings.Contains(err.Error(), "file already exists") {
+					if retryCount >= maxRetryDownload {
+						return err
+					}
+					retryCount++
+					logerr.WithError(logE, err).WithFields(logrus.Fields{
+						"retry_count": retryCount,
+					}).Info("retry installing the package")
+					continue
+				}
+				return err
+			}
+			return nil
+		}
+		if !finfo.IsDir() {
+			return fmt.Errorf("%s isn't a directory", param.Dest)
+		}
+		return nil
+	}
+}
 
 func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	ppkg := param.Package

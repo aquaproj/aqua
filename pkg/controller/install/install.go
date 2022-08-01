@@ -99,5 +99,9 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.packageInstaller.InstallPackages(ctx, cfg, registryContents, logE) //nolint:wrapcheck
+	return ctrl.packageInstaller.InstallPackages(ctx, logE, &domain.ParamInstallPackages{ //nolint:wrapcheck
+		Config:         cfg,
+		Registries:     registryContents,
+		ConfigFilePath: cfgFilePath,
+	})
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -39,8 +38,8 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) error {
-	pkgs, failed := inst.createLinks(cfg, registries, logE)
+func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error {
+	pkgs, failed := inst.createLinks(logE, param.Config, param.Registries)
 	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
@@ -81,7 +80,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
-			if err := inst.InstallPackage(ctx, pkg, logE); err != nil {
+			if err := inst.InstallPackage(ctx, logE, pkg); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -95,7 +94,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, cfg *aqua.Config, re
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, pkg *config.Package, logE *logrus.Entry) error {
+func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package) error {
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -142,7 +141,7 @@ func (inst *Installer) InstallPackage(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (inst *Installer) createLinks(cfg *aqua.Config, registries map[string]*registry.Config, logE *logrus.Entry) ([]*config.Package, bool) {
+func (inst *Installer) createLinks(logE *logrus.Entry, cfg *aqua.Config, registries map[string]*registry.Config) ([]*config.Package, bool) {
 	pkgs, failed := config.ListPackages(logE, cfg, inst.runtime, registries)
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
@@ -170,40 +169,6 @@ type DownloadParam struct {
 	Package *config.Package
 	Dest    string
 	Asset   string
-}
-
-func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    param.Package.Package.Name,
-		"package_version": param.Package.Package.Version,
-		"registry":        param.Package.Package.Registry,
-	})
-	retryCount := 0
-	for {
-		logE.Debug("check if the package is already installed")
-		finfo, err := inst.fs.Stat(param.Dest)
-		if err != nil { //nolint:nestif
-			// file doesn't exist
-			if err := inst.download(ctx, logE, param); err != nil {
-				if strings.Contains(err.Error(), "file already exists") {
-					if retryCount >= maxRetryDownload {
-						return err
-					}
-					retryCount++
-					logerr.WithError(logE, err).WithFields(logrus.Fields{
-						"retry_count": retryCount,
-					}).Info("retry installing the package")
-					continue
-				}
-				return err
-			}
-			return nil
-		}
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", param.Dest)
-		}
-		return nil
-	}
 }
 
 func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {

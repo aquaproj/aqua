@@ -57,7 +57,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"exe_path": findResult.ExePath,
 			"package":  findResult.Package.Package.Name,
 		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, findResult.Package, logE); err != nil {
+		if err := ctrl.packageInstaller.InstallPackage(ctx, logE, findResult.Package); err != nil {
 			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {

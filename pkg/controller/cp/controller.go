@@ -99,7 +99,7 @@ func (ctrl *Controller) copy(ctx context.Context, logE *logrus.Entry, param *con
 			"exe_path": which.ExePath,
 			"package":  which.Package.Package.Name,
 		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.Package, logE); err != nil {
+		if err := ctrl.packageInstaller.InstallPackage(ctx, logE, which.Package); err != nil {
 			return err //nolint:wrapcheck
 		}
 		for i := 0; i < 10; i++ {
