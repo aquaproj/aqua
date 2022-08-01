@@ -52,30 +52,37 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil { //nolint:nestif
-		logE = logE.WithFields(logrus.Fields{
-			"exe_path": findResult.ExePath,
-			"package":  findResult.Package.Package.Name,
-		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, logE, findResult.Package); err != nil {
-			return err //nolint:wrapcheck
-		}
-		for i := 0; i < 10; i++ {
-			logE.Debug("check if exec file exists")
-			if fi, err := ctrl.fs.Stat(findResult.ExePath); err == nil {
-				if util.IsOwnerExecutable(fi.Mode()) {
-					break
-				}
-			}
-			logE.WithFields(logrus.Fields{
-				"retry_count": i + 1,
-			}).Debug("command isn't found. wait for lazy install")
-			if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-				return err
-			}
+	if findResult.Package != nil {
+		if err := ctrl.install(ctx, logE, findResult); err != nil {
+			return err
 		}
 	}
 	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
+}
+
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
+	logE = logE.WithFields(logrus.Fields{
+		"exe_path": findResult.ExePath,
+		"package":  findResult.Package.Package.Name,
+	})
+	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, findResult.Package); err != nil {
+		return err //nolint:wrapcheck
+	}
+	for i := 0; i < 10; i++ {
+		logE.Debug("check if exec file exists")
+		if fi, err := ctrl.fs.Stat(findResult.ExePath); err == nil {
+			if util.IsOwnerExecutable(fi.Mode()) {
+				break
+			}
+		}
+		logE.WithFields(logrus.Fields{
+			"retry_count": i + 1,
+		}).Debug("command isn't found. wait for lazy install")
+		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+			return err
+		}
+	}
+	return nil
 }
 
 func wait(ctx context.Context, duration time.Duration) error {
