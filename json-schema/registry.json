@@ -26,6 +26,9 @@
         "file_format": {
           "type": "string"
         },
+        "algorithm": {
+          "type": "string"
+        },
         "pattern": {
           "$ref": "#/$defs/ChecksumPattern"
         }
