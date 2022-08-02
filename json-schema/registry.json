@@ -23,6 +23,9 @@
         "path": {
           "type": "string"
         },
+        "url": {
+          "type": "string"
+        },
         "file_format": {
           "type": "string"
         },
