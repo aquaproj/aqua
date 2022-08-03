@@ -13,7 +13,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/orderedmap v0.2.0
-	github.com/invopop/jsonschema v0.5.0
+	github.com/invopop/jsonschema v0.6.0
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/mholt/archiver/v3 v3.5.1
