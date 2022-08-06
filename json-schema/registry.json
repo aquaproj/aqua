@@ -18,10 +18,17 @@
     "Config": {
       "properties": {
         "packages": {
-          "items": {
-            "$ref": "#/$defs/PackageInfo"
-          },
-          "type": "array"
+          "oneOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PackageInfo"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false,
