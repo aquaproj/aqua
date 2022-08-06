@@ -34,18 +34,23 @@ func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) err
 	return nil
 }
 
-func (ctrl *Controller) updateASTFile(file *ast.File, pkgs interface{}) error {
+func (ctrl *Controller) updateASTFile(file *ast.File, pkgs interface{}) error { //nolint:cyclop
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)
 	}
 
 	for _, doc := range file.Docs {
-		body, ok := doc.Body.(*ast.MappingNode)
-		if !ok {
+		var values []*ast.MappingValueNode
+		switch body := doc.Body.(type) {
+		case *ast.MappingNode:
+			values = body.Values
+		case *ast.MappingValueNode:
+			values = append(values, body)
+		default:
 			continue
 		}
-		for _, mapValue := range body.Values {
+		for _, mapValue := range values {
 			if mapValue.Key.String() != "packages" {
 				continue
 			}

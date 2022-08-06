@@ -48,6 +48,10 @@ You can update the configuration file directly with "-i" option.
 
 $ aqua g -i
 
+You can update an imported file with "-o" option.
+
+$ aqua g -o aqua/pkgs.yaml
+
 You can pass packages with positional arguments.
 
 $ aqua g [<registry name>,<package name> ...]
@@ -101,6 +105,10 @@ func (runner *Runner) newGenerateCommand() *cli.Command {
 			&cli.BoolFlag{
 				Name:  "i",
 				Usage: `Insert packages to configuration file`,
+			},
+			&cli.StringFlag{
+				Name:  "o",
+				Usage: `inserted file`,
 			},
 			&cli.BoolFlag{
 				Name:    "select-version",
