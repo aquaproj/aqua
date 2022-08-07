@@ -137,8 +137,23 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 			if len(assets) != 0 {
 				logE.WithField("num_of_assets", len(assets)).Debug("got assets")
 				assetInfos := make([]*AssetInfo, 0, len(assets))
+				pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
 				for _, asset := range assets {
 					assetName := asset.GetName()
+					if strings.Contains(strings.ToLower(assetName), "checksum") && !pkgNameContainChecksum {
+						fileName := strings.ReplaceAll(assetName, release.GetTagName(), "{{.Version}}")
+						fileName = strings.ReplaceAll(fileName, strings.TrimPrefix(release.GetTagName(), "v"), "{{trimV .Version}}")
+						pkgInfo.Checksum = &registry.Checksum{
+							Type:       "github_release",
+							Path:       fileName,
+							FileFormat: "regexp",
+							Pattern: &registry.ChecksumPattern{
+								Checksum: "^(.{64})",
+								File:     "^.{64}  (.*)$",
+							},
+						}
+						continue
+					}
 					if ctrl.excludeAsset(pkgName, assetName, release.GetTagName()) {
 						logE.WithField("asset_name", assetName).Debug("exclude an asset")
 						continue
