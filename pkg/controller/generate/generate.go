@@ -75,11 +75,20 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 	if list == nil {
 		return nil
 	}
-	if !param.Insert {
+	if !param.Insert && param.Dest == "" {
 		if err := yaml.NewEncoder(ctrl.stdout).Encode(list); err != nil {
 			return fmt.Errorf("output generated package configuration: %w", err)
 		}
 		return nil
+	}
+
+	if param.Dest != "" {
+		if _, err := ctrl.fs.Stat(param.Dest); err != nil {
+			if err := afero.WriteFile(ctrl.fs, param.Dest, []byte("packages:\n\n"), 0o644); err != nil { //nolint:gomnd
+				return fmt.Errorf("create a file: %w", err)
+			}
+		}
+		return ctrl.generateInsert(param.Dest, list)
 	}
 
 	return ctrl.generateInsert(cfgFilePath, list)
