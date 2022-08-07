@@ -69,6 +69,9 @@ jobs:
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests
+    - name: add duplicated package
+      run: aqua g -i suzuki-shunsuke/tfcmt
+      working-directory: tests
     - run: git diff aqua.yaml
       working-directory: tests
 
