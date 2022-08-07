@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/codingsince1985/checksum"
 	"github.com/spf13/afero"
 )
@@ -30,4 +32,32 @@ func calculateSHA512(fs afero.Fs, filename string) (string, error) {
 	}
 	sum := sha512.Sum512(byt)
 	return hex.EncodeToString(sum[:]), nil
+}
+
+func GetChecksumConfigFromFilename(filename string) *registry.Checksum {
+	s := strings.ToLower(filename)
+	if strings.Contains(s, "sha512") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			FileFormat: "regexp",
+			Algorithm:  "sha512",
+			Pattern: &registry.ChecksumPattern{
+				Checksum: "^(.{128})",
+				File:     `^.{128}\s+(\S+)$`,
+			},
+		}
+	}
+	if strings.Contains(s, "sha256") || strings.Contains(s, "checksum") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			Path:       filename,
+			FileFormat: "regexp",
+			Algorithm:  "sha256",
+			Pattern: &registry.ChecksumPattern{
+				Checksum: "^(.{64})",
+				File:     `^.{64}\s+(\S+)$`,
+			},
+		}
+	}
+	return nil
 }
