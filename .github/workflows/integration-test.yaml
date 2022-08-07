@@ -12,6 +12,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       AQUA_LOG_LEVEL: debug
+      AQUA_LOG_COLOR: always
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3.2.1
