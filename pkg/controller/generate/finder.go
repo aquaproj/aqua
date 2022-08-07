@@ -67,7 +67,7 @@ func find(pkg *FindingPackage) string {
 	if len(aliases) != 0 {
 		item += " (" + strings.Join(aliases, ", ") + ")"
 	}
-	if pkg.RegistryName != "standard" {
+	if pkg.RegistryName != registryStandard {
 		item += " (" + pkg.RegistryName + ")"
 	}
 	if !strings.HasSuffix(pkgName, "/"+fileNamesStr) || pkgName == fileNamesStr {

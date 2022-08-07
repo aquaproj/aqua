@@ -14,7 +14,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/orderedmap v0.2.0
-	github.com/invopop/jsonschema v0.5.0
+	github.com/invopop/jsonschema v0.6.0
 	github.com/ktr0731/go-fuzzyfinder v0.6.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/mholt/archiver/v3 v3.5.1
@@ -29,6 +29,6 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/urfave/cli/v2 v2.11.1
 	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
-	golang.org/x/sys v0.0.0-20220731174439-a90be440212d
+	golang.org/x/sys v0.0.0-20220804214406-8e32c043e418
 	gopkg.in/yaml.v2 v2.4.0
 )

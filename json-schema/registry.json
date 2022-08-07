@@ -62,7 +62,17 @@
     "Config": {
       "properties": {
         "packages": {
-          "$ref": "#/$defs/PackageInfos"
+          "oneOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PackageInfo"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false,
