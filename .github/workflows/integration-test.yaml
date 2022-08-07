@@ -12,6 +12,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       AQUA_LOG_LEVEL: debug
+      AQUA_LOG_COLOR: always
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3.2.1
@@ -68,6 +69,9 @@ jobs:
       run: aqua completion zsh
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
+      working-directory: tests
+    - name: add duplicated package
+      run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests
     - run: git diff aqua.yaml
       working-directory: tests

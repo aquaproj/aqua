@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
 	"github.com/spf13/afero"
 )
 
-func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) error {
+func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
 	b, err := afero.ReadFile(ctrl.fs, cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
@@ -34,7 +35,7 @@ func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) err
 	return nil
 }
 
-func (ctrl *Controller) updateASTFile(file *ast.File, pkgs interface{}) error { //nolint:cyclop
+func (ctrl *Controller) updateASTFile(file *ast.File, pkgs []*aqua.Package) error { //nolint:cyclop
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)
