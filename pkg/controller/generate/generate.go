@@ -99,7 +99,7 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) (interface{}, error) {
+func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
@@ -128,11 +128,11 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	idxes, err := ctrl.fuzzyFinder.Find(pkgs)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
-			return nil, nil //nolint:nilnil
+			return nil, nil
 		}
 		return nil, fmt.Errorf("find the package: %w", err)
 	}
-	arr := make([]interface{}, len(idxes))
+	arr := make([]*aqua.Package, len(idxes))
 	for i, idx := range idxes {
 		arr[i] = ctrl.getOutputtedPkg(ctx, param, pkgs[idx], logE)
 	}
@@ -147,7 +147,7 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) (interface{}, error) {
+func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
 	m := map[string]*FindingPackage{}
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
