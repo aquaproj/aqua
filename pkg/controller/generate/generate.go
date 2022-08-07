@@ -62,16 +62,22 @@ func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInst
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
+func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error { //nolint:cyclop
 	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	list, err := ctrl.generate(ctx, logE, param, cfgFilePath, args...)
+	cfg := &aqua.Config{}
+	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
+		return err //nolint:wrapcheck
+	}
+
+	list, err := ctrl.generate(ctx, logE, param, cfg, cfgFilePath, args...)
 	if err != nil {
 		return err
 	}
+	list = excludeDuplicatedPkgs(logE, cfg, list)
 	if list == nil {
 		return nil
 	}
@@ -94,16 +100,61 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 	return ctrl.generateInsert(cfgFilePath, list)
 }
 
+func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Package) []*aqua.Package {
+	ret := make([]*aqua.Package, 0, len(pkgs))
+	m := make(map[string]*aqua.Package, len(cfg.Packages))
+	for _, pkg := range cfg.Packages {
+		pkg := pkg
+		m[pkg.Registry+","+pkg.Name+"@"+pkg.Version] = pkg
+		m[pkg.Registry+","+pkg.Name] = pkg
+	}
+	for _, pkg := range pkgs {
+		pkg := pkg
+		var keyV string
+		var key string
+		registry := registryStandard
+		if pkg.Registry != "" {
+			registry = pkg.Registry
+		}
+		if pkg.Version == "" {
+			keyV = registry + "," + pkg.Name
+			if idx := strings.Index(pkg.Name, "@"); idx == -1 {
+				key = keyV
+			} else {
+				key = registry + "," + pkg.Name[:idx]
+			}
+		} else {
+			keyV = registry + "," + pkg.Name + "@" + pkg.Version
+			key = registry + "," + pkg.Name
+		}
+		if _, ok := m[keyV]; ok {
+			logE.WithFields(logrus.Fields{
+				"package_name":     pkg.Name,
+				"package_version":  pkg.Version,
+				"package_registry": registry,
+			}).Warn("skip adding a dupliated package")
+			continue
+		}
+		m[keyV] = pkg
+		ret = append(ret, pkg)
+		if _, ok := m[key]; ok {
+			logE.WithFields(logrus.Fields{
+				"package_name":     pkg.Name,
+				"package_registry": registry,
+			}).Warn("same package already exists")
+			continue
+		}
+		m[key] = pkg
+	}
+	return ret
+}
+
 type FindingPackage struct {
 	PackageInfo  *registry.PackageInfo
 	RegistryName string
 }
 
-func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
-	cfg := &aqua.Config{}
-	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
-		return nil, err //nolint:wrapcheck
-	}
+func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
@@ -477,7 +528,7 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, param *config.Param
 		Registry: pkg.RegistryName,
 		Version:  "[SET PACKAGE VERSION]",
 	}
-	if outputPkg.Registry == "standard" {
+	if outputPkg.Registry == registryStandard {
 		outputPkg.Registry = ""
 	}
 	if ctrl.github == nil {
