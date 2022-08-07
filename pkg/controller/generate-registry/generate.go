@@ -140,17 +140,13 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 				pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
 				for _, asset := range assets {
 					assetName := asset.GetName()
-					if strings.Contains(strings.ToLower(assetName), "checksum") && !pkgNameContainChecksum {
-						fileName := strings.ReplaceAll(assetName, release.GetTagName(), "{{.Version}}")
-						fileName = strings.ReplaceAll(fileName, strings.TrimPrefix(release.GetTagName(), "v"), "{{trimV .Version}}")
-						pkgInfo.Checksum = &registry.Checksum{
-							Type:       "github_release",
-							Path:       fileName,
-							FileFormat: "regexp",
-							Pattern: &registry.ChecksumPattern{
-								Checksum: "^(.{64})",
-								File:     "^.{64}  (.*)$",
-							},
+					if pkgNameContainChecksum {
+						chksum := getChecksum(assetName)
+						if chksum != nil {
+							fileName := strings.ReplaceAll(assetName, release.GetTagName(), "{{.Version}}")
+							fileName = strings.ReplaceAll(fileName, strings.TrimPrefix(release.GetTagName(), "v"), "{{trimV .Version}}")
+							chksum.Path = fileName
+							pkgInfo.Checksum = chksum
 						}
 						continue
 					}
@@ -169,6 +165,34 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 		pkgInfo.Name = pkgName
 	}
 	return pkgInfo
+}
+
+func getChecksum(filename string) *registry.Checksum {
+	s := strings.ToLower(filename)
+	if strings.Contains(s, "sha512") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			FileFormat: "regexp",
+			Algorithm:  "sha512",
+			Pattern: &registry.ChecksumPattern{
+				Checksum: "^(.{128})",
+				File:     `^.{128}\s+(\S+)$`,
+			},
+		}
+	}
+	if strings.Contains(s, "sha256") || strings.Contains(s, "checksum") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			Path:       filename,
+			FileFormat: "regexp",
+			Algorithm:  "sha256",
+			Pattern: &registry.ChecksumPattern{
+				Checksum: "^(.{64})",
+				File:     `^.{64}\s+(\S+)$`,
+			},
+		}
+	}
+	return nil
 }
 
 type OS struct {
