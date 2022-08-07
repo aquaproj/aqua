@@ -34,13 +34,20 @@ func calculateSHA512(fs afero.Fs, filename string) (string, error) {
 	return hex.EncodeToString(sum[:]), nil
 }
 
-func GetChecksumConfigFromFilename(filename string) *registry.Checksum {
+func convertChecksumFileName(filename, version string) string {
+	return strings.ReplaceAll(
+		strings.ReplaceAll(filename, version, "{{.Version}}"),
+		strings.TrimPrefix(version, "v"), "{{trimV .Version}}")
+}
+
+func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum {
 	s := strings.ToLower(filename)
 	if strings.Contains(s, "sha512") {
 		return &registry.Checksum{
 			Type:       "github_release",
 			FileFormat: "regexp",
 			Algorithm:  "sha512",
+			Asset:      convertChecksumFileName(filename, version),
 			Pattern: &registry.ChecksumPattern{
 				Checksum: "^(.{128})",
 				File:     `^.{128}\s+(\S+)$`,
@@ -50,9 +57,9 @@ func GetChecksumConfigFromFilename(filename string) *registry.Checksum {
 	if strings.Contains(s, "sha256") || strings.Contains(s, "checksum") {
 		return &registry.Checksum{
 			Type:       "github_release",
-			Path:       filename,
 			FileFormat: "regexp",
 			Algorithm:  "sha256",
+			Asset:      convertChecksumFileName(filename, version),
 			Pattern: &registry.ChecksumPattern{
 				Checksum: "^(.{64})",
 				File:     `^.{64}\s+(\S+)$`,

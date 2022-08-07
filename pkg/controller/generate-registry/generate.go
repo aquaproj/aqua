@@ -142,11 +142,8 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 				for _, asset := range assets {
 					assetName := asset.GetName()
 					if pkgNameContainChecksum {
-						chksum := checksum.GetChecksumConfigFromFilename(assetName)
+						chksum := checksum.GetChecksumConfigFromFilename(assetName, release.GetTagName())
 						if chksum != nil {
-							fileName := strings.ReplaceAll(assetName, release.GetTagName(), "{{.Version}}")
-							fileName = strings.ReplaceAll(fileName, strings.TrimPrefix(release.GetTagName(), "v"), "{{trimV .Version}}")
-							chksum.Path = fileName
 							pkgInfo.Checksum = chksum
 						}
 						continue
