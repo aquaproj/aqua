@@ -7,13 +7,49 @@
       "properties": {
         "enabled": {
           "type": "boolean"
+        },
+        "require_checksum_in_advance": {
+          "type": "boolean"
+        },
+        "create_json": {
+          "type": "boolean"
+        },
+        "require_checksum": {
+          "type": "boolean"
+        },
+        "save_calculated_checksum": {
+          "type": "boolean"
+        },
+        "excludes": {
+          "items": {
+            "$ref": "#/$defs/ChekcsumExclude"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "enabled"
-      ]
+      "type": "object"
+    },
+    "ChekcsumExclude": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "registry": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "Config": {
       "properties": {
