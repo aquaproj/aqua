@@ -51,16 +51,16 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 		logE.Info("downloading a checksum file")
 		file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, pkg)
 		if err != nil {
-			logE.WithError(err).Error("download a checksum file")
+			return nil, fmt.Errorf("download a checksum file: %w", err)
 		}
 		defer file.Close()
 		b, err := io.ReadAll(file)
 		if err != nil {
-			logE.WithError(err).Error("read a checksum file")
+			return nil, fmt.Errorf("read a checksum file: %w", err)
 		}
 		m, err := inst.checksumFileParser.ParseChecksumFile(string(b), pkg)
 		if err != nil {
-			logE.WithError(err).Error("parse a checksum file")
+			return nil, fmt.Errorf("parse a checksum file: %w", err)
 		}
 		for fileName, chksum := range m {
 			chksumID, err := pkg.GetChecksumIDFromAsset(inst.runtime, fileName)
