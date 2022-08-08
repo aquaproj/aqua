@@ -7,9 +7,17 @@ type Checksum struct {
 	FileFormat string           `yaml:"file_format" json:"file_format"`
 	Algorithm  string           `json:"algorithm,omitempty"`
 	Pattern    *ChecksumPattern `json:"pattern,omitempty"`
+	Disabled   bool             `json:"disabled,omitempty"`
 }
 
 type ChecksumPattern struct {
 	Checksum string `json:"checksum"`
 	File     string `json:"file"`
+}
+
+func (chk *Checksum) Enabled() bool {
+	if chk == nil {
+		return false
+	}
+	return !chk.Disabled
 }

@@ -47,7 +47,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 	}
 	chksum := checksums.Get(checksumID)
 
-	if chksum == "" && pkgInfo.Checksum != nil { //nolint:nestif
+	if chksum == "" && pkgInfo.Checksum.Enabled() { //nolint:nestif
 		logE.Info("downloading a checksum file")
 		file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, pkg)
 		if err != nil {

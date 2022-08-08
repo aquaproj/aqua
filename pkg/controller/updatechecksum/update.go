@@ -87,19 +87,29 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	}
 	pkgs, _ := config.ListPackages(logE, cfg, ctrl.runtime, registryContents)
 	parser := &checksum.FileParser{}
+	failed := false
 	for _, pkg := range pkgs {
+		logE := logE.WithFields(logrus.Fields{
+			"package_name":     pkg.PackageInfo.GetName(),
+			"package_version":  pkg.Package.Version,
+			"package_registry": pkg.Package.Registry,
+		})
 		if err := ctrl.updatePackage(ctx, logE, checksums, parser, pkg); err != nil {
-			return err
+			failed = true
+			logE.WithError(err).Error("update checksums")
 		}
 	}
 	if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
 		return fmt.Errorf("update a checksum file: %w", err)
 	}
+	if failed {
+		return errFailedToUpdateChecksum
+	}
 	return nil
 }
 
 func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, parser *checksum.FileParser, pkg *config.Package) error {
-	if pkg.PackageInfo.Checksum == nil {
+	if !pkg.PackageInfo.Checksum.Enabled() {
 		logE.WithFields(logrus.Fields{
 			"package_name":    pkg.Package.Name,
 			"package_version": pkg.Package.Version,
