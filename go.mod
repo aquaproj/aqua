@@ -27,7 +27,7 @@ require (
 	github.com/suzuki-shunsuke/go-timeout v1.0.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/urfave/cli/v2 v2.11.1
-	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
+	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
 	golang.org/x/sys v0.0.0-20220808155132-1c4a2a72c664
 	gopkg.in/yaml.v2 v2.4.0
 )
