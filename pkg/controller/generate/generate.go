@@ -78,7 +78,7 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 		return err
 	}
 	list = excludeDuplicatedPkgs(logE, cfg, list)
-	if list == nil {
+	if len(list) == 0 {
 		return nil
 	}
 	if !param.Insert && param.Dest == "" {
