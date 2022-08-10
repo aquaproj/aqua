@@ -34,7 +34,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 	if _, err := io.Copy(file, body); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	calculatedSum, err := checksum.Calculate(inst.fs, tempFilePath, pkg.PackageInfo.Checksum.Algorithm)
+	calculatedSum, err := checksum.Calculate(inst.fs, tempFilePath, pkg.PackageInfo.Checksum.GetAlgorithm())
 	if err != nil {
 		return nil, fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
 			"temp_file": tempFilePath,
@@ -49,7 +49,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 
 	if chksum == "" && pkgInfo.Checksum.Enabled() { //nolint:nestif
 		logE.Info("downloading a checksum file")
-		file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, pkg)
+		file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, inst.runtime, pkg)
 		if err != nil {
 			return nil, fmt.Errorf("download a checksum file: %w", err)
 		}

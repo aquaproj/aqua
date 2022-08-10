@@ -21,3 +21,10 @@ func (chk *Checksum) Enabled() bool {
 	}
 	return !chk.Disabled
 }
+
+func (chk *Checksum) GetAlgorithm() string {
+	if chk == nil {
+		return "sha256"
+	}
+	return chk.Algorithm
+}

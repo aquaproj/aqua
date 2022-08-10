@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
@@ -116,25 +117,15 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 		}).Debug("the package doesn't support getting checksum file")
 		return nil
 	}
-	logE.Info("downloading a checksum file")
-	file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, pkg)
+	chksums, err := ctrl.getChecksums(ctx, logE, parser, pkg)
 	if err != nil {
-		return fmt.Errorf("download a checksum file: %w", err)
+		return err
 	}
-	if file == nil {
+	if chksums == nil {
 		logE.Info("checksum file isn't found")
 		return nil
 	}
-	defer file.Close()
-	b, err := io.ReadAll(file)
-	if err != nil {
-		return fmt.Errorf("read a checksum file: %w", err)
-	}
-	m, err := parser.ParseChecksumFile(string(b), pkg)
-	if err != nil {
-		return fmt.Errorf("parse a checksum file: %w", err)
-	}
-	for asset, chksum := range m {
+	for asset, chksum := range chksums {
 		chkID, err := pkg.GetChecksumIDFromAsset(ctrl.runtime, asset)
 		if err != nil {
 			return fmt.Errorf("get checksum ID from asset: %w", err)
@@ -147,4 +138,53 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 		checksums.Set(chkID, chksum)
 	}
 	return nil
+}
+
+func (ctrl *Controller) getChecksumsFromGitHubReleaseMultiFile(ctx context.Context, logE *logrus.Entry, pkg *config.Package) (map[string]string, error) {
+	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
+	if err != nil {
+		return nil, err //nolint:wrapcheck
+	}
+	m := make(map[string]string, len(rts))
+	for _, rt := range rts {
+		assetName, err := pkg.RenderAsset(rt)
+		if err != nil {
+			return nil, err //nolint:wrapcheck
+		}
+		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, rt, pkg)
+		if err != nil {
+			return nil, fmt.Errorf("download a checksum file: %w", err)
+		}
+		defer file.Close()
+		body, err := io.ReadAll(file)
+		if err != nil {
+			return nil, fmt.Errorf("read a checksum file: %w", err)
+		}
+		m[assetName] = strings.TrimSpace(string(body))
+	}
+	return m, nil
+}
+
+func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, parser *checksum.FileParser, pkg *config.Package) (map[string]string, error) {
+	if pkg.PackageInfo.Checksum.Type == "github_release_multifile" {
+		return ctrl.getChecksumsFromGitHubReleaseMultiFile(ctx, logE, pkg)
+	}
+	logE.Info("downloading a checksum file")
+	file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, ctrl.runtime, pkg)
+	if err != nil {
+		return nil, fmt.Errorf("download a checksum file: %w", err)
+	}
+	if file == nil {
+		return nil, nil //nolint:nilnil
+	}
+	defer file.Close()
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("read a checksum file: %w", err)
+	}
+	m, err := parser.ParseChecksumFile(string(b), pkg)
+	if err != nil {
+		return nil, fmt.Errorf("parse a checksum file: %w", err)
+	}
+	return m, nil
 }
