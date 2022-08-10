@@ -96,9 +96,33 @@ func (ctrl *Controller) excludeAsset(pkgName, assetName, version string) bool {
 		}
 	}
 	words := []string{
-		"changelog", "readme", "license", "openbsd", "freebsd", "netbsd", "android", "386", "i386", "armv6", "armv7", "32bit", "32-bit",
-		"netbsd", "plan9", "solaris", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm",
+		"32-bit",
+		"32bit",
+		"386",
+		"android",
+		"armv6",
+		"armv7",
+		"changelog",
 		"checksum",
+		"freebsd",
+		"i386",
+		"license",
+		"mips",
+		"mips64",
+		"mips64le",
+		"mipsle",
+		"netbsd",
+		"netbsd",
+		"openbsd",
+		"plan9",
+		"ppc64",
+		"ppc64le",
+		"readme",
+		"riscv64",
+		"s390x",
+		"solaris",
+		"wasm",
+		"win32",
 	}
 	for _, s := range words {
 		if strings.Contains(asset, s) && !strings.Contains(pkgName, s) {
