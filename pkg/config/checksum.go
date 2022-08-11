@@ -24,7 +24,7 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderChecksumURL(rt)
+		uS, err := cpkg.RenderURL(rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -32,16 +32,29 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("parse the URL: %w", err)
 		}
-		asset, err := cpkg.renderAsset(rt)
-		if err != nil {
-			return "", fmt.Errorf("get the asset name: %w", err)
-		}
-		return path.Join("http", u.Host, u.Path, asset), nil
+		return path.Join(pkgInfo.GetType(), u.Host, u.Path), nil
 	}
 	return "", nil
 }
 
-func (cpkg *Package) GetChecksumIDFromAsset(rt *runtime.Runtime, asset string) (string, error) {
+func (cpkg *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error) {
+	rts, err := runtime.GetRuntimesFromEnvs(cpkg.PackageInfo.SupportedEnvs)
+	if err != nil {
+		return nil, fmt.Errorf("get supported runtimes from supported_envs: %w", err)
+	}
+	for _, rt := range rts {
+		a, err := cpkg.RenderAsset(rt)
+		if err != nil {
+			return nil, err
+		}
+		if a == asset {
+			return rt, nil
+		}
+	}
+	return nil, nil //nolint:nilnil
+}
+
+func (cpkg *Package) GetChecksumIDFromAsset(asset string) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
 	switch pkgInfo.Type {
@@ -50,15 +63,14 @@ func (cpkg *Package) GetChecksumIDFromAsset(rt *runtime.Runtime, asset string) (
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
 	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderChecksumURL(rt)
+		rt, err := cpkg.getRuntimeFromAsset(asset)
 		if err != nil {
-			return "", fmt.Errorf("render URL: %w", err)
+			return "", fmt.Errorf("get a runtime from an asset: %w", err)
 		}
-		u, err := url.Parse(uS)
-		if err != nil {
-			return "", fmt.Errorf("parse the URL: %w", err)
+		if rt == nil {
+			return "", nil
 		}
-		return path.Join("http", u.Host, u.Path, asset), nil
+		return cpkg.GetChecksumID(rt)
 	}
 	return "", nil
 }

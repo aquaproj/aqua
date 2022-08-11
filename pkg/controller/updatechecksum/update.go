@@ -126,7 +126,7 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 		return nil
 	}
 	for asset, chksum := range chksums {
-		chkID, err := pkg.GetChecksumIDFromAsset(ctrl.runtime, asset)
+		chkID, err := pkg.GetChecksumIDFromAsset(asset)
 		if err != nil {
 			return fmt.Errorf("get checksum ID from asset: %w", err)
 		}
