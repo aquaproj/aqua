@@ -132,7 +132,7 @@ func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Pa
 				"package_name":     pkg.Name,
 				"package_version":  pkg.Version,
 				"package_registry": registry,
-			}).Warn("skip adding a dupliated package")
+			}).Warn("skip adding a duplicate package")
 			continue
 		}
 		m[keyV] = pkg
