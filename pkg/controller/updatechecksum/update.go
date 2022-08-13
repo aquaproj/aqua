@@ -24,6 +24,7 @@ type Controller struct {
 	fs                afero.Fs
 	runtime           *runtime.Runtime
 	chkDL             domain.ChecksumDownloader
+	parser            *checksum.FileParser
 }
 
 type ConfigFinder interface {
@@ -39,6 +40,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		fs:                fs,
 		runtime:           rt,
 		chkDL:             chkDL,
+		parser:            &checksum.FileParser{},
 	}
 }
 
@@ -86,16 +88,16 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
-	pkgs, _ := config.ListPackages(logE, cfg, ctrl.runtime, registryContents)
-	parser := &checksum.FileParser{}
+	pkgs, _ := config.ListPackagesNotOverride(logE, cfg, registryContents)
 	failed := false
 	for _, pkg := range pkgs {
 		logE := logE.WithFields(logrus.Fields{
-			"package_name":     pkg.PackageInfo.GetName(),
+			"package_name":     pkg.Package.Name,
 			"package_version":  pkg.Package.Version,
 			"package_registry": pkg.Package.Registry,
 		})
-		if err := ctrl.updatePackage(ctx, logE, checksums, parser, pkg); err != nil {
+		logE.Info("updating a package checksum")
+		if err := ctrl.updatePackage(ctx, logE, checksums, pkg); err != nil {
 			failed = true
 			logE.WithError(err).Error("update checksums")
 		}
@@ -109,82 +111,93 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, parser *checksum.FileParser, pkg *config.Package) error {
-	if !pkg.PackageInfo.Checksum.Enabled() {
-		logE.WithFields(logrus.Fields{
-			"package_name":    pkg.Package.Name,
-			"package_version": pkg.Package.Version,
-		}).Debug("the package doesn't support getting checksum file")
-		return nil
-	}
-	chksums, err := ctrl.getChecksums(ctx, logE, parser, pkg)
-	if err != nil {
+func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
+	if err := ctrl.getChecksums(ctx, logE, checksums, pkg); err != nil {
 		return err
-	}
-	if chksums == nil {
-		logE.Info("checksum file isn't found")
-		return nil
-	}
-	for asset, chksum := range chksums {
-		chkID, err := pkg.GetChecksumIDFromAsset(asset)
-		if err != nil {
-			return fmt.Errorf("get checksum ID from asset: %w", err)
-		}
-		logE.WithFields(logrus.Fields{
-			"checksum_id": chkID,
-			"checksum":    chksum,
-			"asset":       asset,
-		}).Debug("set a checksum")
-		checksums.Set(chkID, chksum)
 	}
 	return nil
 }
 
-func (ctrl *Controller) getChecksumsFromGitHubReleaseMultiFile(ctx context.Context, logE *logrus.Entry, pkg *config.Package) (map[string]string, error) {
+func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error { //nolint:funlen,cyclop
 	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
-		return nil, err //nolint:wrapcheck
+		return fmt.Errorf("get supported platforms: %w", err)
 	}
-	m := make(map[string]string, len(rts))
+	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
-		assetName, err := pkg.RenderAsset(rt)
-		if err != nil {
-			return nil, err //nolint:wrapcheck
+		rt := rt
+		logE := logE.WithFields(logrus.Fields{
+			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
+		})
+		pkgInfo := pkg.PackageInfo
+		pkgInfo = pkgInfo.Copy()
+		pkgInfo.OverrideByRuntime(rt)
+		pkg := &config.Package{
+			Package:     pkg.Package,
+			PackageInfo: pkgInfo,
 		}
+
+		if !pkg.PackageInfo.Checksum.Enabled() {
+			logE.Debug("chekcsum isn't supported")
+			continue
+		}
+
+		checksumID, err := pkg.GetChecksumID(rt)
+		if err != nil {
+			return fmt.Errorf("get a checksum id: %w", err)
+		}
+
+		if a := checksums.Get(checksumID); a != "" {
+			continue
+		}
+
+		checksumFileID, err := pkg.RenderChecksumFileID(rt)
+		if err != nil {
+			return fmt.Errorf("render a checksum file ID: %w", err)
+		}
+		if _, ok := checksumFiles[checksumFileID]; ok {
+			continue
+		}
+		checksumFiles[checksumFileID] = struct{}{}
+		logE.WithFields(logrus.Fields{
+			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
+		}).Debug("downloading a checksum file")
 		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, rt, pkg)
 		if err != nil {
-			return nil, fmt.Errorf("download a checksum file: %w", err)
+			return fmt.Errorf("download a checksum file: %w", err)
+		}
+		if file == nil {
+			continue
 		}
 		defer file.Close()
-		body, err := io.ReadAll(file)
+		b, err := io.ReadAll(file)
 		if err != nil {
-			return nil, fmt.Errorf("read a checksum file: %w", err)
+			return fmt.Errorf("read a checksum file: %w", err)
 		}
-		m[assetName] = strings.TrimSpace(string(body))
+		checksumFile := strings.TrimSpace(string(b))
+		if pkgInfo.Checksum.FileFormat == "raw" {
+			logE.WithFields(logrus.Fields{
+				"checksum_id": checksumID,
+				"checksum":    checksumFile,
+			}).Debug("set a checksum")
+			checksums.Set(checksumID, checksumFile)
+			continue
+		}
+		m, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
+		if err != nil {
+			return fmt.Errorf("parse a checksum file: %w", err)
+		}
+		for assetName, chksum := range m {
+			checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
+			if err != nil {
+				return fmt.Errorf("get a checksum id from asset: %w", err)
+			}
+			logE.WithFields(logrus.Fields{
+				"checksum_id": checksumID,
+				"checksum":    chksum,
+			}).Debug("set a checksum")
+			checksums.Set(checksumID, chksum)
+		}
 	}
-	return m, nil
-}
-
-func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, parser *checksum.FileParser, pkg *config.Package) (map[string]string, error) {
-	if pkg.PackageInfo.Checksum.Type == "github_release_multifile" {
-		return ctrl.getChecksumsFromGitHubReleaseMultiFile(ctx, logE, pkg)
-	}
-	logE.Info("downloading a checksum file")
-	file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, ctrl.runtime, pkg)
-	if err != nil {
-		return nil, fmt.Errorf("download a checksum file: %w", err)
-	}
-	if file == nil {
-		return nil, nil //nolint:nilnil
-	}
-	defer file.Close()
-	b, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("read a checksum file: %w", err)
-	}
-	m, err := parser.ParseChecksumFile(string(b), pkg)
-	if err != nil {
-		return nil, fmt.Errorf("parse a checksum file: %w", err)
-	}
-	return m, nil
+	return nil
 }

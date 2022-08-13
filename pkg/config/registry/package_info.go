@@ -46,7 +46,7 @@ type PackageInfo struct {
 	Checksum           *Checksum          `json:"checksum,omitempty"`
 }
 
-func (pkgInfo *PackageInfo) copy() *PackageInfo {
+func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 	pkg := &PackageInfo{
 		Name:               pkgInfo.Name,
 		Type:               pkgInfo.Type,
@@ -78,7 +78,7 @@ func (pkgInfo *PackageInfo) copy() *PackageInfo {
 }
 
 func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop
-	pkg := pkgInfo.copy()
+	pkg := pkgInfo.Copy()
 	if child.Type != "" {
 		pkg.Type = child.Type
 	}
@@ -139,7 +139,7 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) override(rt *runtime.Runtime) { //nolint:cyclop
+func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop
 	for _, fo := range pkgInfo.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
 			pkgInfo.Format = fo.Format
@@ -318,6 +318,24 @@ func (pkgInfo *PackageInfo) GetType() string {
 
 func (pkgInfo *PackageInfo) GetReplacements() Replacements {
 	return pkgInfo.Replacements
+}
+
+func (pkgInfo *PackageInfo) GetChecksumReplacements() Replacements {
+	cr := pkgInfo.Checksum.GetReplacements()
+	if cr == nil {
+		return pkgInfo.Replacements
+	}
+	if len(cr) == 0 {
+		return cr
+	}
+	m := Replacements{}
+	for k, v := range pkgInfo.Replacements {
+		m[k] = v
+	}
+	for k, v := range cr {
+		m[k] = v
+	}
+	return m
 }
 
 func (pkgInfo *PackageInfo) GetAsset() *string {

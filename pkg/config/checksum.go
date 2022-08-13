@@ -77,13 +77,28 @@ func (cpkg *Package) GetChecksumIDFromAsset(asset string) (string, error) {
 
 func (cpkg *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
-	switch pkgInfo.Checksum.Type {
-	case PkgInfoTypeGitHubRelease, "github_release_multifile":
-		return cpkg.renderTemplateString(pkgInfo.Checksum.Asset, rt)
+	switch pkgInfo.Checksum.Type { //nolint:gocritic
+	case PkgInfoTypeGitHubRelease:
+		asset, err := cpkg.RenderAsset(rt)
+		if err != nil {
+			return "", err
+		}
+		return cpkg.renderChecksumFile(asset, rt)
 	}
 	return "", errUnknownChecksumFileType
 }
 
 func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 	return cpkg.renderTemplateString(cpkg.PackageInfo.Checksum.URL, rt)
+}
+
+func (cpkg *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	switch pkgInfo.Checksum.Type {
+	case PkgInfoTypeGitHubRelease:
+		return cpkg.RenderChecksumFileName(rt)
+	case PkgInfoTypeHTTP:
+		return cpkg.RenderChecksumURL(rt)
+	}
+	return "", errUnknownChecksumFileType
 }

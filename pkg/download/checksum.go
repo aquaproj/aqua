@@ -34,7 +34,7 @@ func NewChecksumDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, h
 func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
 	switch pkg.PackageInfo.Checksum.Type {
-	case config.PkgInfoTypeGitHubRelease, "github_release_multifile":
+	case config.PkgInfoTypeGitHubRelease:
 		asset, err := pkg.RenderChecksumFileName(rt)
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)

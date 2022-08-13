@@ -129,7 +129,7 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgInfo, err := d.pkgInfo.setVersion(d.version)
+			pkgInfo, err := d.pkgInfo.SetVersion(d.version)
 			if err != nil {
 				t.Fatal(err)
 			}
