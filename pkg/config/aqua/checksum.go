@@ -4,13 +4,7 @@ func (cfg *Config) ChecksumEnabled() bool {
 	if cfg == nil {
 		return false
 	}
-	if cfg.Checksum == nil {
-		return true
-	}
-	if cfg.Checksum.Enabled == nil {
-		return true
-	}
-	return *cfg.Checksum.Enabled
+	return cfg.Checksum.GetEnabled()
 }
 
 type Checksum struct {
@@ -27,4 +21,11 @@ type ChekcsumExclude struct {
 	Registry string   `json:"registry,omitempty"`
 	Version  string   `json:"version,omitempty"`
 	Envs     []string `json:"envs,omitempty"`
+}
+
+func (chk *Checksum) GetEnabled() bool {
+	if chk == nil || chk.Enabled == nil {
+		return false
+	}
+	return *chk.Enabled
 }

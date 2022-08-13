@@ -60,6 +60,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 	}
 	defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
 
+	assetName = filepath.Base(assetName)
 	tempFilePath := filepath.Join(tempDir, assetName)
 	if assetName == "" && (pkgInfo.Type == "github_archive" || pkgInfo.Type == "go") {
 		tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
