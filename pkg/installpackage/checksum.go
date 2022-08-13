@@ -92,7 +92,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 		"checksum_id": checksumID,
 	}).Debug("get a checksum id")
 
-	if chksum == "" && pkgInfo.Checksum.Enabled() {
+	if chksum == "" && pkgInfo.Checksum.GetEnabled() {
 		logE.Info("downloading a checksum file")
 		c, err := inst.dlAndExtractChecksum(ctx, logE, pkg, assetName)
 		if err != nil {

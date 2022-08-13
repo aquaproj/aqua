@@ -7,7 +7,7 @@ type Checksum struct {
 	FileFormat   string           `yaml:"file_format" json:"file_format"`
 	Algorithm    string           `json:"algorithm,omitempty"`
 	Pattern      *ChecksumPattern `json:"pattern,omitempty"`
-	Disabled     bool             `json:"disabled,omitempty"`
+	Enabled      *bool            `json:"enabled,omitempty"`
 	Replacements Replacements     `json:"replacements,omitempty"`
 }
 
@@ -23,11 +23,14 @@ func (chk *Checksum) GetReplacements() Replacements {
 	return chk.Replacements
 }
 
-func (chk *Checksum) Enabled() bool {
+func (chk *Checksum) GetEnabled() bool {
 	if chk == nil {
 		return false
 	}
-	return !chk.Disabled
+	if chk.Enabled == nil {
+		return false
+	}
+	return *chk.Enabled
 }
 
 func (chk *Checksum) GetAlgorithm() string {

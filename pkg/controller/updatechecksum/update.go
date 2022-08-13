@@ -137,7 +137,7 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 			PackageInfo: pkgInfo,
 		}
 
-		if !pkg.PackageInfo.Checksum.Enabled() {
+		if !pkg.PackageInfo.Checksum.GetEnabled() {
 			logE.Debug("chekcsum isn't supported")
 			continue
 		}
