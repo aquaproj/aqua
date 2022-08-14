@@ -73,7 +73,10 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	var checksums *checksum.Checksums
 	if param.Config.ChecksumEnabled() {
 		checksums = checksum.New()
-		checksumFilePath := checksum.GetChecksumFilePathFromConfigFilePath(param.ConfigFilePath)
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(inst.fs, param.ConfigFilePath)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
 		if err := checksums.ReadFile(inst.fs, checksumFilePath); err != nil {
 			return fmt.Errorf("read a checksum JSON: %w", err)
 		}

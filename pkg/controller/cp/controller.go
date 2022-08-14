@@ -104,7 +104,10 @@ func (ctrl *Controller) copy(ctx context.Context, logE *logrus.Entry, param *con
 		var checksums *checksum.Checksums
 		if which.Config.ChecksumEnabled() {
 			checksums = checksum.New()
-			checksumFilePath := checksum.GetChecksumFilePathFromConfigFilePath(which.ConfigFilePath)
+			checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, which.ConfigFilePath)
+			if err != nil {
+				return err //nolint:wrapcheck
+			}
 			if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
 				return fmt.Errorf("read a checksum JSON: %w", err)
 			}

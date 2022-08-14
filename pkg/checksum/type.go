@@ -79,6 +79,24 @@ func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
 	return nil
 }
 
-func GetChecksumFilePathFromConfigFilePath(cfgFilePath string) string {
-	return filepath.Join(filepath.Dir(cfgFilePath), ".aqua-checksums.json")
+func GetChecksumFilePathFromConfigFilePath(fs afero.Fs, cfgFilePath string) (string, error) {
+	p1 := filepath.Join(filepath.Dir(cfgFilePath), "aqua-checksums.json")
+	f, err := afero.Exists(fs, p1)
+	if err != nil {
+		return "", fmt.Errorf("check if checksum file exists: %w", err)
+	}
+	if f {
+		return p1, nil
+	}
+
+	p2 := filepath.Join(filepath.Dir(cfgFilePath), ".aqua-checksums.json")
+	f, err = afero.Exists(fs, p2)
+	if err != nil {
+		return "", fmt.Errorf("check if checksum file exists: %w", err)
+	}
+	if f {
+		return p2, nil
+	}
+
+	return p1, nil
 }

@@ -70,7 +70,10 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
-		checksumFilePath := checksum.GetChecksumFilePathFromConfigFilePath(findResult.ConfigFilePath)
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, findResult.ConfigFilePath)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
 		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
 			return fmt.Errorf("read a checksum JSON: %w", err)
 		}
