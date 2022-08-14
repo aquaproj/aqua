@@ -45,7 +45,7 @@ func parseNameWithVersion(name string) (string, string) {
 type Config struct {
 	Packages   []*Package `validate:"dive" json:"packages"`
 	Registries Registries `validate:"dive" json:"registries"`
-	Checksum   *Checksum  `json:"checksum"`
+	Checksum   *Checksum  `json:"checksum,omitempty"`
 }
 
 type Registries map[string]*Registry
