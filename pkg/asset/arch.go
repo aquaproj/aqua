@@ -1,10 +1,10 @@
-package genrgst
+package asset
 
 import (
 	"strings"
 )
 
-func (ctrl *Controller) setArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
+func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 	archList := []*Arch{
 		{
 			Name: "amd64",
