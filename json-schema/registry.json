@@ -43,11 +43,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "type",
-        "file_format"
-      ]
+      "type": "object"
     },
     "ChecksumPattern": {
       "properties": {

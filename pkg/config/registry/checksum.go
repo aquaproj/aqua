@@ -1,10 +1,10 @@
 package registry
 
 type Checksum struct {
-	Type         string           `json:"type"`
+	Type         string           `json:"type,omitempty"`
 	Asset        string           `json:"asset,omitempty"`
 	URL          string           `json:"url,omitempty"`
-	FileFormat   string           `yaml:"file_format" json:"file_format"`
+	FileFormat   string           `yaml:"file_format" json:"file_format,omitempty"`
 	Algorithm    string           `json:"algorithm,omitempty"`
 	Pattern      *ChecksumPattern `json:"pattern,omitempty"`
 	Enabled      *bool            `json:"enabled,omitempty"`

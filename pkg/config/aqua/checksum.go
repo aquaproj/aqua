@@ -9,11 +9,11 @@ func (cfg *Config) ChecksumEnabled() bool {
 
 type Checksum struct {
 	Enabled                  *bool              `json:"enabled,omitempty"`
-	RequireChecksumInAdvance bool               `yaml:"require_checksum_in_advance" json:"require_checksum_in_advance,omitempty"`
-	CreateJSON               bool               `yaml:"create_json" json:"create_json,omitempty"`
-	RequireChecksum          bool               `yaml:"require_checksum" json:"require_checksum,omitempty"`
-	SaveCalculatedChecksum   bool               `yaml:"save_calculated_checksum" json:"save_calculated_checksum,omitempty"`
-	Excludes                 []*ChekcsumExclude `json:"excludes,omitempty"`
+	RequireChecksumInAdvance bool               `yaml:"require_checksum_in_advance" json:"-"`
+	CreateJSON               bool               `yaml:"create_json" json:"-"`
+	RequireChecksum          bool               `yaml:"require_checksum" json:"-"`
+	SaveCalculatedChecksum   bool               `yaml:"save_calculated_checksum" json:"-"`
+	Excludes                 []*ChekcsumExclude `json:"-"`
 }
 
 type ChekcsumExclude struct {
