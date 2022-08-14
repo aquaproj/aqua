@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
@@ -23,13 +24,14 @@ type Controller struct {
 	fs                afero.Fs
 	runtime           *runtime.Runtime
 	chkDL             domain.ChecksumDownloader
+	parser            *checksum.FileParser
 }
 
 type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -38,6 +40,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		fs:                fs,
 		runtime:           rt,
 		chkDL:             chkDL,
+		parser:            &checksum.FileParser{},
 	}
 }
 
@@ -66,7 +69,7 @@ func (ctrl *Controller) updateChecksumAll(ctx context.Context, logE *logrus.Entr
 	return nil
 }
 
-func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error { //nolint:cyclop
+func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) (namedErr error) {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -81,17 +84,88 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	}
 
 	checksums := checksum.New()
-	checksumFilePath := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
+	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
 	if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
-	pkgs, _ := config.ListPackages(logE, cfg, ctrl.runtime, registryContents)
-	parser := &checksum.FileParser{}
+	pkgs, _ := config.ListPackagesNotOverride(logE, cfg, registryContents)
+	failed := false
+	defer func() {
+		if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+			namedErr = fmt.Errorf("update a checksum file: %w", err)
+		}
+	}()
 	for _, pkg := range pkgs {
-		if pkg.PackageInfo.Checksum == nil {
+		logE := logE.WithFields(logrus.Fields{
+			"package_name":     pkg.Package.Name,
+			"package_version":  pkg.Package.Version,
+			"package_registry": pkg.Package.Registry,
+		})
+		logE.Info("updating a package checksum")
+		if err := ctrl.updatePackage(ctx, logE, checksums, pkg); err != nil {
+			failed = true
+			logE.WithError(err).Error("update checksums")
+		}
+	}
+	if failed {
+		return errFailedToUpdateChecksum
+	}
+	return nil
+}
+
+func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
+	if err := ctrl.getChecksums(ctx, logE, checksums, pkg); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error { //nolint:funlen,cyclop
+	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
+	if err != nil {
+		return fmt.Errorf("get supported platforms: %w", err)
+	}
+	checksumFiles := map[string]struct{}{}
+	for _, rt := range rts {
+		rt := rt
+		logE := logE.WithFields(logrus.Fields{
+			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
+		})
+		pkgInfo := pkg.PackageInfo
+		pkgInfo = pkgInfo.Copy()
+		pkgInfo.OverrideByRuntime(rt)
+		pkg := &config.Package{
+			Package:     pkg.Package,
+			PackageInfo: pkgInfo,
+		}
+
+		if !pkg.PackageInfo.Checksum.GetEnabled() {
+			logE.Debug("chekcsum isn't supported")
 			continue
 		}
-		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, pkg)
+
+		checksumID, err := pkg.GetChecksumID(rt)
+		if err != nil {
+			return fmt.Errorf("get a checksum id: %w", err)
+		}
+
+		if a := checksums.Get(checksumID); a != "" {
+			continue
+		}
+
+		checksumFileID, err := pkg.RenderChecksumFileID(rt)
+		if err != nil {
+			return fmt.Errorf("render a checksum file ID: %w", err)
+		}
+		if _, ok := checksumFiles[checksumFileID]; ok {
+			continue
+		}
+		checksumFiles[checksumFileID] = struct{}{}
+		logE.Debug("downloading a checksum file")
+		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, rt, pkg)
 		if err != nil {
 			return fmt.Errorf("download a checksum file: %w", err)
 		}
@@ -103,20 +177,30 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 		if err != nil {
 			return fmt.Errorf("read a checksum file: %w", err)
 		}
-		m, err := parser.ParseChecksumFile(string(b), pkg)
+		checksumFile := strings.TrimSpace(string(b))
+		if pkgInfo.Checksum.FileFormat == "raw" {
+			logE.WithFields(logrus.Fields{
+				"checksum_id": checksumID,
+				"checksum":    checksumFile,
+			}).Debug("set a checksum")
+			checksums.Set(checksumID, checksumFile)
+			continue
+		}
+		m, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
 		if err != nil {
 			return fmt.Errorf("parse a checksum file: %w", err)
 		}
-		for asset, chksum := range m {
-			chkID, err := pkg.GetChecksumIDFromAsset(asset)
+		for assetName, chksum := range m {
+			checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
 			if err != nil {
-				return fmt.Errorf("get checksum ID from asset: %w", err)
+				return fmt.Errorf("get a checksum id from asset: %w", err)
 			}
-			checksums.Set(chkID, chksum)
+			logE.WithFields(logrus.Fields{
+				"checksum_id": checksumID,
+				"checksum":    chksum,
+			}).Debug("set a checksum")
+			checksums.Set(checksumID, chksum)
 		}
-	}
-	if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
-		return fmt.Errorf("update a checksum file: %w", err)
 	}
 	return nil
 }

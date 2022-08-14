@@ -9,11 +9,25 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 )
 
-var errUnknownChecksumFileFormat = errors.New("checksum file format is unknown")
+var (
+	errUnknownChecksumFileFormat = errors.New("checksum file format is unknown")
+	errNoChecksumExtracted       = errors.New("no checksum is extracted")
+)
 
 type FileParser struct{}
 
 func (parser *FileParser) ParseChecksumFile(content string, pkg *config.Package) (map[string]string, error) {
+	m, err := parser.parseChecksumFile(content, pkg)
+	if err != nil {
+		return nil, err
+	}
+	if len(m) == 0 {
+		return nil, errNoChecksumExtracted
+	}
+	return m, nil
+}
+
+func (parser *FileParser) parseChecksumFile(content string, pkg *config.Package) (map[string]string, error) {
 	switch pkg.PackageInfo.Checksum.FileFormat { //nolint:gocritic
 	case "regexp":
 		return parser.parseRegex(content, pkg)

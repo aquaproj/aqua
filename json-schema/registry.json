@@ -328,6 +328,12 @@
         "type"
       ]
     },
+    "PackageInfos": {
+      "items": {
+        "$ref": "#/$defs/PackageInfo"
+      },
+      "type": "array"
+    },
     "Replacements": {
       "properties": {
         "darwin": {

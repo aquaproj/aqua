@@ -3,6 +3,7 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -69,6 +70,19 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 		return err //nolint:wrapcheck
 	}
 
+	var readBody io.Reader = body
+
+	if param.Checksums != nil {
+		readFile, err := inst.verifyChecksum(ctx, logE, param.Checksums, ppkg, param.Asset, body)
+		if err != nil {
+			return err
+		}
+		if readFile != nil {
+			defer readFile.Close()
+		}
+		readBody = readFile
+	}
+
 	var pOpts *unarchive.ProgressBarOpts
 	if inst.progressBar {
 		pOpts = &unarchive.ProgressBarOpts{
@@ -78,7 +92,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	}
 
 	return unarchive.Unarchive(&unarchive.File{ //nolint:wrapcheck
-		Body:     body,
+		Body:     readBody,
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),
 	}, param.Dest, logE, inst.fs, pOpts)

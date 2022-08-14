@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -21,24 +22,25 @@ import (
 const proxyName = "aqua-proxy"
 
 type Installer struct {
-	rootDir           string
-	maxParallelism    int
-	packageDownloader domain.PackageDownloader
-	runtime           *runtime.Runtime
-	fs                afero.Fs
-	linker            link.Linker
-	executor          Executor
-	checksums         domain.Checksums
-	progressBar       bool
-	onlyLink          bool
-	isTest            bool
+	rootDir            string
+	maxParallelism     int
+	packageDownloader  domain.PackageDownloader
+	checksumDownloader domain.ChecksumDownloader
+	checksumFileParser *checksum.FileParser
+	runtime            *runtime.Runtime
+	fs                 afero.Fs
+	linker             link.Linker
+	executor           Executor
+	progressBar        bool
+	onlyLink           bool
+	isTest             bool
 }
 
 func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error {
+func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := inst.createLinks(logE, param.Config, param.Registries)
 	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
@@ -68,6 +70,23 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 		flagMutex.Unlock()
 	}
 
+	var checksums *checksum.Checksums
+	if param.Config.ChecksumEnabled() {
+		checksums = checksum.New()
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(inst.fs, param.ConfigFilePath)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		if err := checksums.ReadFile(inst.fs, checksumFilePath); err != nil {
+			return fmt.Errorf("read a checksum JSON: %w", err)
+		}
+		defer func() {
+			if err := checksums.UpdateFile(inst.fs, checksumFilePath); err != nil {
+				logE.WithError(err).Error("update a checksum file")
+			}
+		}()
+	}
+
 	for _, pkg := range pkgs {
 		go func(pkg *config.Package) {
 			defer wg.Done()
@@ -80,7 +99,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
-			if err := inst.InstallPackage(ctx, logE, pkg); err != nil {
+			if err := inst.InstallPackage(ctx, logE, pkg, checksums); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -94,7 +113,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package) error {
+func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, checksums *checksum.Checksums) error {
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -122,9 +141,10 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	}
 
 	if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
-		Package: pkg,
-		Dest:    pkgPath,
-		Asset:   assetName,
+		Package:   pkg,
+		Dest:      pkgPath,
+		Asset:     assetName,
+		Checksums: checksums,
 	}); err != nil {
 		return err
 	}
@@ -166,9 +186,10 @@ func (inst *Installer) createLinks(logE *logrus.Entry, cfg *aqua.Config, registr
 const maxRetryDownload = 1
 
 type DownloadParam struct {
-	Package *config.Package
-	Dest    string
-	Asset   string
+	Package   *config.Package
+	Checksums *checksum.Checksums
+	Dest      string
+	Asset     string
 }
 
 func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {

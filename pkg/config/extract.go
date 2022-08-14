@@ -15,6 +15,54 @@ var (
 	errPkgNotFound      = errors.New("package isn't found in the registry")
 )
 
+func ListPackagesNotOverride(logE *logrus.Entry, cfg *aqua.Config, registries map[string]*registry.Config) ([]*Package, bool) {
+	pkgs := make([]*Package, 0, len(cfg.Packages))
+	failed := false
+	// registry -> package name -> pkgInfo
+	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
+	for _, pkg := range cfg.Packages {
+		pkg := pkg
+		if pkg.Name == "" {
+			logE.Error("ignore a package because the package name is empty")
+			failed = true
+			continue
+		}
+		if pkg.Version == "" {
+			logE.Error("ignore a package because the package version is empty")
+			failed = true
+			continue
+		}
+		logE := logE.WithFields(logrus.Fields{
+			"package_name":    pkg.Name,
+			"package_version": pkg.Version,
+			"registry":        pkg.Registry,
+		})
+		if registry, ok := cfg.Registries[pkg.Registry]; ok {
+			if registry.Ref != "" {
+				logE = logE.WithField("registry_ref", registry.Ref)
+			}
+		}
+		pkgInfo, err := getPkgInfoFromRegistries(logE, registries, pkg, m)
+		if err != nil {
+			logerr.WithError(logE, err).Error("get the package config from the registry")
+			failed = true
+			continue
+		}
+
+		pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
+		if err != nil {
+			logerr.WithError(logE, err).Error("evaluate version constraints")
+			failed = true
+			continue
+		}
+		pkgs = append(pkgs, &Package{
+			Package:     pkg,
+			PackageInfo: pkgInfo,
+		})
+	}
+	return pkgs, failed
+}
+
 func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, registries map[string]*registry.Config) ([]*Package, bool) {
 	pkgs := make([]*Package, 0, len(cfg.Packages))
 	failed := false
@@ -22,6 +70,7 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
 	env := rt.GOOS + "/" + rt.GOARCH
 	for _, pkg := range cfg.Packages {
+		pkg := pkg
 		if pkg.Name == "" {
 			logE.Error("ignore a package because the package name is empty")
 			failed = true

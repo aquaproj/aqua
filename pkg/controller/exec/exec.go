@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
@@ -65,7 +66,25 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		"exe_path": findResult.ExePath,
 		"package":  findResult.Package.Package.Name,
 	})
-	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, findResult.Package); err != nil {
+
+	var checksums *checksum.Checksums
+	if findResult.Config.ChecksumEnabled() {
+		checksums = checksum.New()
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, findResult.ConfigFilePath)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+			return fmt.Errorf("read a checksum JSON: %w", err)
+		}
+		defer func() {
+			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+				logE.WithError(err).Error("update a checksum file")
+			}
+		}()
+	}
+
+	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, findResult.Package, checksums); err != nil {
 		return err //nolint:wrapcheck
 	}
 	for i := 0; i < 10; i++ {

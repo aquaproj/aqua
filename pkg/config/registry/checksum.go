@@ -28,7 +28,7 @@ func (chk *Checksum) GetEnabled() bool {
 		return false
 	}
 	if chk.Enabled == nil {
-		return false
+		return true
 	}
 	return *chk.Enabled
 }
