@@ -22,10 +22,3 @@ type ChekcsumExclude struct {
 	Version  string   `json:"version,omitempty"`
 	Envs     []string `json:"envs,omitempty"`
 }
-
-func (chk *Checksum) GetEnabled() bool {
-	if chk == nil || chk.Enabled == nil {
-		return false
-	}
-	return *chk.Enabled
-}
