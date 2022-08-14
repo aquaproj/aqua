@@ -205,6 +205,7 @@ type VersionOverride struct {
 	Rosetta2           *bool             `yaml:",omitempty" json:"rosetta2,omitempty"`
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	Checksum           *Checksum         `json:"checksum,omitempty"`
 }
 
 type Alias struct {

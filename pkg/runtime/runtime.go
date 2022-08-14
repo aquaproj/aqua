@@ -32,9 +32,9 @@ func goarch() string {
 }
 
 func GOOSList() []string {
-	return []string{"aix", "android", "darwin", "dragonfly", "freebsd", "illumos", "ios", "linux", "netbsd", "openbsd", "plan9", "solaris", "windows"}
+	return []string{"darwin", "linux", "windows"}
 }
 
 func GOARCHList() []string {
-	return []string{"386", "amd64", "arm", "arm64", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x"}
+	return []string{"amd64", "arm64"}
 }

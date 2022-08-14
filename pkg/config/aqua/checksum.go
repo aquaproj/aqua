@@ -11,5 +11,5 @@ func (cfg *Config) ChecksumEnabled() bool {
 }
 
 type Checksum struct {
-	Enabled bool `json:"enabled"`
+	Enabled bool `json:"enabled,omitempty"`
 }
