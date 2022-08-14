@@ -69,7 +69,7 @@ func (ctrl *Controller) updateChecksumAll(ctx context.Context, logE *logrus.Entr
 	return nil
 }
 
-func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error {
+func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) (namedErr error) {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -90,6 +90,11 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	}
 	pkgs, _ := config.ListPackagesNotOverride(logE, cfg, registryContents)
 	failed := false
+	defer func() {
+		if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+			namedErr = fmt.Errorf("update a checksum file: %w", err)
+		}
+	}()
 	for _, pkg := range pkgs {
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":     pkg.Package.Name,
@@ -101,9 +106,6 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 			failed = true
 			logE.WithError(err).Error("update checksums")
 		}
-	}
-	if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
-		return fmt.Errorf("update a checksum file: %w", err)
 	}
 	if failed {
 		return errFailedToUpdateChecksum
@@ -159,9 +161,7 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 			continue
 		}
 		checksumFiles[checksumFileID] = struct{}{}
-		logE.WithFields(logrus.Fields{
-			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
-		}).Debug("downloading a checksum file")
+		logE.Debug("downloading a checksum file")
 		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, rt, pkg)
 		if err != nil {
 			return fmt.Errorf("download a checksum file: %w", err)

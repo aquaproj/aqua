@@ -18,3 +18,4 @@ linters:
   - varnamelen
   - exhaustive
   - exhaustruct
+  - nonamedreturns

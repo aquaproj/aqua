@@ -28,7 +28,7 @@ tasks:
   - name: version
     required: true
     validate:
-    - regexp: "^v\\d+\\.\\d+.\\d+(-\\d+)?$"
+    - regexp: "^v\\d+\\.\\d+.\\d+(-.+)?$"
 - name: build
   description: go build
   usage: go build
