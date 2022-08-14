@@ -41,7 +41,7 @@ func (cpkg *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error)
 	pkgInfo := cpkg.PackageInfo
 	switch pkgInfo.Checksum.Type { //nolint:gocritic
 	case PkgInfoTypeGitHubRelease:
-		return cpkg.renderTemplateString(pkgInfo.Checksum.Path, rt)
+		return cpkg.renderTemplateString(pkgInfo.Checksum.Asset, rt)
 	}
 	return "", errUnknownChecksumFileType
 }
