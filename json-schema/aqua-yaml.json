@@ -3,6 +3,15 @@
   "$id": "https://github.com/aquaproj/aqua/pkg/config/aqua/config",
   "$ref": "#/$defs/Config",
   "$defs": {
+    "Checksum": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "Config": {
       "properties": {
         "packages": {
@@ -13,6 +22,9 @@
         },
         "registries": {
           "$ref": "#/$defs/Registries"
+        },
+        "checksum": {
+          "$ref": "#/$defs/Checksum"
         }
       },
       "additionalProperties": false,
