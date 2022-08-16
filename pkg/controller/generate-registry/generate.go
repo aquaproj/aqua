@@ -101,7 +101,7 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 				pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
 				for _, aset := range assets {
 					assetName := aset.GetName()
-					if pkgNameContainChecksum {
+					if !pkgNameContainChecksum {
 						chksum := checksum.GetChecksumConfigFromFilename(assetName, release.GetTagName())
 						if chksum != nil {
 							pkgInfo.Checksum = chksum
