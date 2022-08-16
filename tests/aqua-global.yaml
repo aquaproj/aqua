@@ -68,7 +68,7 @@ packages:
   # specify revision
   version: 8c3b2b9e647dc52457d6ee7b5adcf97e2bafe131
 
-- name: katbyte/terrafmt@v0.5.1
+- name: katbyte/terrafmt@v0.5.2
   # type: go_install
   registry: local
 
