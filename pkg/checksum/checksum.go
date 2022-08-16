@@ -54,8 +54,8 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			Algorithm:  "sha512",
 			Asset:      convertChecksumFileName(filename, version),
 			Pattern: &registry.ChecksumPattern{
-				Checksum: "^(.{128})",
-				File:     `^.{128}\s+(\S+)$`,
+				Checksum: `^(\b[A-Fa-f0-9]{128}\b)`,
+				File:     `^\b[A-Fa-f0-9]{128}\b\s+(\S+)$`,
 			},
 		}
 	}
@@ -66,8 +66,8 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			Algorithm:  "sha256",
 			Asset:      convertChecksumFileName(filename, version),
 			Pattern: &registry.ChecksumPattern{
-				Checksum: "^(.{64})",
-				File:     `^.{64}\s+(\S+)$`,
+				Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+				File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
 			},
 		}
 	}
