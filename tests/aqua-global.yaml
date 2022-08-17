@@ -1,6 +1,6 @@
 registries:
 - type: standard # standard registry
-  ref: v3.29.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.30.0 # renovate: depName=aquaproj/aqua-registry
 
 - name: local # local registry
   type: local
@@ -8,7 +8,7 @@ registries:
 
 - name: aqua-registry
   type: github_content # github_content registry
-  ref: v3.29.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.30.0 # renovate: depName=aquaproj/aqua-registry
   repo_owner: aquaproj
   repo_name: aqua-registry
   path: registry.yaml
@@ -68,7 +68,7 @@ packages:
   # specify revision
   version: 8c3b2b9e647dc52457d6ee7b5adcf97e2bafe131
 
-- name: katbyte/terrafmt@v0.5.1
+- name: katbyte/terrafmt@v0.5.2
   # type: go_install
   registry: local
 
