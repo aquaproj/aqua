@@ -104,6 +104,7 @@ func (ctrl *controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	for _, pkg := range cfg.Packages {
 		if which := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); which != nil {
 			which.Config = cfg
+			which.ConfigFilePath = cfgFilePath
 			return which, nil
 		}
 	}
