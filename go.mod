@@ -29,6 +29,6 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/urfave/cli/v2 v2.11.2
 	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
-	golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2
+	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6
 	gopkg.in/yaml.v2 v2.4.0
 )
