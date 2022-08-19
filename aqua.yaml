@@ -7,5 +7,5 @@ registries:
 packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
 - name: golangci/golangci-lint@v1.46.2
-- name: rhysd/actionlint@v1.6.15
+- name: rhysd/actionlint@v1.6.16
 - import: aqua/*.yaml
