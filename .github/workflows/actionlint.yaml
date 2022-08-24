@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: aquaproj/aqua-installer@v1.1.1
+    - uses: aquaproj/aqua-installer@v1.1.2
       with:
         aqua_version: v1.19.2
     - run: actionlint
