@@ -1,6 +1,6 @@
 registries:
 - type: standard # standard registry
-  ref: v3.43.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.44.0 # renovate: depName=aquaproj/aqua-registry
 
 - name: local # local registry
   type: local
@@ -8,7 +8,7 @@ registries:
 
 - name: aqua-registry
   type: github_content # github_content registry
-  ref: v3.43.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.44.0 # renovate: depName=aquaproj/aqua-registry
   repo_owner: aquaproj
   repo_name: aqua-registry
   path: registry.yaml
