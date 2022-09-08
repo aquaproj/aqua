@@ -9,7 +9,7 @@ require (
 	github.com/codingsince1985/checksum v1.2.4
 	github.com/go-playground/validator/v10 v10.11.0 // indirect
 	github.com/goccy/go-yaml v1.9.5
-	github.com/google/go-cmp v0.5.8
+	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v45 v45.2.0
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.6.0
