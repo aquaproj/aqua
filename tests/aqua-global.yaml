@@ -46,7 +46,7 @@ packages:
   # github_archive package
   registry: local
 
-- name: containerd/nerdctl@v0.22.2
+- name: containerd/nerdctl@v0.23.0
   # supported_if
   registry: local
 
