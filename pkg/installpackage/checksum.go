@@ -103,6 +103,9 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 		checksums.Set(checksumID, chksum)
 	}
 
+	chksum = strings.ToUpper(chksum)
+	calculatedSum = strings.ToUpper(calculatedSum)
+
 	if chksum != "" && calculatedSum != chksum {
 		return nil, logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
 			"actual_checksum":   calculatedSum,
