@@ -99,7 +99,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		},
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
-			runner.newUpdateChecksumCommand(),
+			// runner.newUpdateChecksumCommand(),
 			runner.newInitCommand(),
 			runner.newInstallCommand(),
 			runner.newGenerateCommand(),

@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newUpdateChecksumCommand() *cli.Command {
+func (runner *Runner) NewUpdateChecksumCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "update-checksum",
 		Usage: "Create or Update .aqua-checksums.json",
