@@ -1,5 +1,9 @@
 # Contributing
 
+Please read the following document.
+
+- https://github.com/suzuki-shunsuke/oss-contribution-guide
+
 ## Feature Request
 
 Please create an issue before sending a pull request for Feature Request.
