@@ -1,6 +1,6 @@
 registries:
 - type: standard # standard registry
-  ref: v3.50.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.59.0 # renovate: depName=aquaproj/aqua-registry
 
 - name: local # local registry
   type: local
@@ -8,7 +8,7 @@ registries:
 
 - name: aqua-registry
   type: github_content # github_content registry
-  ref: v3.50.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.59.0 # renovate: depName=aquaproj/aqua-registry
   repo_owner: aquaproj
   repo_name: aqua-registry
   path: registry.yaml
@@ -21,11 +21,11 @@ packages:
 
 - name: golangci-lint # local registry
   registry: local
-  version: v1.46.2 # renovate: depName=golangci/golangci-lint
+  version: v1.49.0 # renovate: depName=golangci/golangci-lint
 
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard # standard registry
-  version: v0.15.0 # renovate: depName=kubernetes-sigs/kind
+  version: v0.16.0 # renovate: depName=kubernetes-sigs/kind
 
 - name: restic/restic@v0.14.0
   # decompressor, package name with version

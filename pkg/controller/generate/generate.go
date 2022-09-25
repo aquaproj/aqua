@@ -94,10 +94,10 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 				return fmt.Errorf("create a file: %w", err)
 			}
 		}
-		return ctrl.generateInsert(param.Dest, list)
+		return ctrl.generateInsert(param.Dest, list) //nolint:contextcheck
 	}
 
-	return ctrl.generateInsert(cfgFilePath, list)
+	return ctrl.generateInsert(cfgFilePath, list) //nolint:contextcheck
 }
 
 func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Package) []*aqua.Package {

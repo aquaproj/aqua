@@ -21,7 +21,7 @@ func (decompressor *Decompressor) Unarchive(fs afero.Fs, body io.Reader, prgOpts
 	if err := fs.MkdirAll(filepath.Dir(dest), dirPermission); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
-	f, err := fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission)
+	f, err := fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("open the file (%s): %w", dest, err)
 	}

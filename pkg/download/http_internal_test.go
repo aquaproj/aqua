@@ -36,7 +36,7 @@ func Test_fromURL(t *testing.T) { //nolint:funlen
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 200,
+											StatusCode: http.StatusOK,
 										},
 										BodyString: "xxxxxx",
 									},
