@@ -47,7 +47,7 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 200,
+											StatusCode: http.StatusOK,
 										},
 										BodyString: "foo",
 									},
@@ -86,7 +86,7 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 400,
+											StatusCode: http.StatusBadRequest,
 										},
 										BodyString: "invalid request",
 									},

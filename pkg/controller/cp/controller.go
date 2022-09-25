@@ -149,7 +149,7 @@ func (ctrl *Controller) copy(ctx context.Context, logE *logrus.Entry, param *con
 		"exe_name": exeName,
 		"dest":     p,
 	}).Info("coping a file")
-	dest, err := ctrl.fs.OpenFile(p, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission)
+	dest, err := ctrl.fs.OpenFile(p, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)
 	}

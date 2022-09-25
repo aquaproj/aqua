@@ -58,12 +58,12 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 			},
 		}
 		encoder := yaml.NewEncoder(ctrl.stdout, yaml.IndentSequence(true))
-		if err := encoder.Encode(cfg); err != nil {
+		if err := encoder.EncodeContext(ctx, cfg); err != nil {
 			return fmt.Errorf("encode YAML: %w", err)
 		}
 		return nil
 	}
-	if err := ctrl.insert(param.InsertFile, registry.PackageInfos{pkgInfo}); err != nil {
+	if err := ctrl.insert(param.InsertFile, registry.PackageInfos{pkgInfo}); err != nil { //nolint:contextcheck
 		return err
 	}
 	return nil
