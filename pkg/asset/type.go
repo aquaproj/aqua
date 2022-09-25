@@ -11,11 +11,12 @@ type Arch struct {
 }
 
 type AssetInfo struct { //nolint:revive
-	Template     string
-	OS           string
-	Arch         string
-	DarwinAll    bool
-	Format       string
-	Replacements map[string]string
-	Score        int
+	Template           string
+	OS                 string
+	Arch               string
+	DarwinAll          bool
+	Format             string
+	Replacements       map[string]string
+	Score              int
+	CompleteWindowsExt *bool
 }
