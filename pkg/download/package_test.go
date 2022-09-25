@@ -79,7 +79,7 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 200,
+											StatusCode: http.StatusOK,
 										},
 										BodyString: "foo",
 									},
@@ -141,7 +141,7 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 400,
+											StatusCode: http.StatusBadRequest,
 										},
 										BodyString: "invalid request",
 									},
@@ -193,7 +193,7 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 200,
+											StatusCode: http.StatusOK,
 										},
 										BodyString: "foo",
 									},
@@ -248,7 +248,7 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 400,
+											StatusCode: http.StatusBadRequest,
 										},
 										BodyString: "invalid request",
 									},
@@ -298,7 +298,7 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 200,
+											StatusCode: http.StatusOK,
 										},
 										BodyString: "foo",
 									},
@@ -348,7 +348,7 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 									},
 									Response: &flute.Response{
 										Base: http.Response{
-											StatusCode: 200,
+											StatusCode: http.StatusOK,
 										},
 										BodyString: "yoo",
 									},
