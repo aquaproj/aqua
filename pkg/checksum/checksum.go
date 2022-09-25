@@ -14,6 +14,8 @@ import (
 
 func Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
 	switch algorithm {
+	case "md5":
+		return checksum.MD5sum(filename) //nolint:wrapcheck
 	case "sha256":
 		return checksum.SHA256sum(filename) //nolint:wrapcheck
 	case "sha512":
