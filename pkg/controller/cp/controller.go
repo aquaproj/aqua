@@ -76,6 +76,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 			defer func() {
 				<-maxInstallChan
 			}()
+			logE := logE.WithField("exe_name", exeName)
 			if err := ctrl.copy(ctx, logE, param, exeName); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
@@ -119,7 +120,7 @@ func (ctrl *Controller) copy(ctx context.Context, logE *logrus.Entry, param *con
 		}
 
 		if err := ctrl.packageInstaller.InstallPackage(ctx, logE, which.Package, checksums); err != nil {
-			return err //nolint:wrapcheck
+			return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 		}
 		for i := 0; i < 10; i++ {
 			logE.Debug("check if exec file exists")
@@ -132,7 +133,7 @@ func (ctrl *Controller) copy(ctx context.Context, logE *logrus.Entry, param *con
 				"retry_count": i + 1,
 			}).Debug("command isn't found. wait for lazy install")
 			if err := util.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-				return fmt.Errorf("wait: %w", err)
+				return fmt.Errorf("wait: %w", logerr.WithFields(err, logE.Data))
 			}
 		}
 	} else {
@@ -151,16 +152,16 @@ func (ctrl *Controller) copy(ctx context.Context, logE *logrus.Entry, param *con
 	}).Info("coping a file")
 	dest, err := ctrl.fs.OpenFile(p, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission) //nolint:nosnakecase
 	if err != nil {
-		return fmt.Errorf("create a file: %w", err)
+		return fmt.Errorf("create a file: %w", logerr.WithFields(err, logE.Data))
 	}
 	defer dest.Close()
 	src, err := ctrl.fs.Open(which.ExePath)
 	if err != nil {
-		return fmt.Errorf("open a file: %w", err)
+		return fmt.Errorf("open a file: %w", logerr.WithFields(err, logE.Data))
 	}
 	defer src.Close()
 	if _, err := io.Copy(dest, src); err != nil {
-		return fmt.Errorf("copy a file: %w", err)
+		return fmt.Errorf("copy a file: %w", logerr.WithFields(err, logE.Data))
 	}
 	return nil
 }
