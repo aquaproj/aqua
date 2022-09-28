@@ -64,7 +64,13 @@ func (downloader *PackageDownloader) GetReadCloser(ctx context.Context, pkg *con
 		if err != nil {
 			return nil, 0, err //nolint:wrapcheck
 		}
-		return downloader.http.Download(ctx, uS) //nolint:wrapcheck
+		rc, code, err := downloader.http.Download(ctx, uS)
+		if err != nil {
+			return rc, code, fmt.Errorf("download a package: %w", logerr.WithFields(err, logrus.Fields{
+				"download_url": uS,
+			}))
+		}
+		return rc, code, nil
 	default:
 		return nil, 0, logerr.WithFields(errInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),

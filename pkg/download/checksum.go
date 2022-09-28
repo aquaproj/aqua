@@ -50,7 +50,13 @@ func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 		}
-		return dl.http.Download(ctx, u) //nolint:wrapcheck
+		rc, code, err := dl.http.Download(ctx, u)
+		if err != nil {
+			return rc, code, fmt.Errorf("download a checksum file: %w", logerr.WithFields(err, logrus.Fields{
+				"download_url": u,
+			}))
+		}
+		return rc, code, nil
 	default:
 		return nil, 0, logerr.WithFields(errUnknownChecksumFileType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),
