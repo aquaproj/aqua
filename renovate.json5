@@ -2,9 +2,9 @@
   extends: [
     "config:base",
     "github>suzuki-shunsuke/renovate-config",
-    "github>aquaproj/aqua-renovate-config#1.2.5",
-    "github>aquaproj/aqua-renovate-config:file#1.2.5(tests/aqua.*\\.yaml)",
-    "github>aquaproj/aqua-renovate-config:file#1.2.5(aqua/.*\\.ya?ml)",
+    "github>aquaproj/aqua-renovate-config#1.2.6",
+    "github>aquaproj/aqua-renovate-config:file#1.2.6(tests/aqua.*\\.yaml)",
+    "github>aquaproj/aqua-renovate-config:file#1.2.6(aqua/.*\\.ya?ml)",
   ],
   ignorePaths: [],
   regexManagers: [
