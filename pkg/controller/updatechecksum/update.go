@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Controller struct {
@@ -107,7 +108,7 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 		logE.Info("updating a package checksum")
 		if err := ctrl.updatePackage(ctx, logE, checksums, pkg); err != nil {
 			failed = true
-			logE.WithError(err).Error("update checksums")
+			logerr.WithError(logE, err).Error("update checksums")
 		}
 	}
 	if failed {

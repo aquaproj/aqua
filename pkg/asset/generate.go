@@ -234,6 +234,12 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 		pkgInfo.Asset = &asset
 		pkgInfo.Format = ""
 	}
+	for _, assetInfo := range assetInfos {
+		if assetInfo.CompleteWindowsExt != nil {
+			pkgInfo.CompleteWindowsExt = assetInfo.CompleteWindowsExt
+			break
+		}
+	}
 }
 
 func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
@@ -259,7 +265,11 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
 	}
 	if assetInfo.OS == "windows" && assetInfo.Format == formatRaw {
-		assetInfo.Template = strings.TrimSuffix(assetInfo.Template, ".exe")
+		if strings.HasSuffix(assetInfo.Template, ".exe") {
+			assetInfo.Template = strings.TrimSuffix(assetInfo.Template, ".exe")
+		} else {
+			assetInfo.CompleteWindowsExt = boolP(false)
+		}
 	}
 	return assetInfo
 }
