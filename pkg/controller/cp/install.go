@@ -38,9 +38,13 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, findResult.Package, checksums); err != nil {
 		return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 	}
+	return ctrl.waitExe(ctx, logE, findResult.ExePath)
+}
+
+func (ctrl *Controller) waitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
 	for i := 0; i < 10; i++ {
 		logE.Debug("check if exec file exists")
-		if fi, err := ctrl.fs.Stat(findResult.ExePath); err == nil {
+		if fi, err := ctrl.fs.Stat(exePath); err == nil {
 			if util.IsOwnerExecutable(fi.Mode()) {
 				break
 			}
