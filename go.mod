@@ -26,7 +26,7 @@ require (
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
 	github.com/suzuki-shunsuke/go-timeout v1.0.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
-	github.com/urfave/cli/v2 v2.16.3
+	github.com/urfave/cli/v2 v2.17.1
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec
 	gopkg.in/yaml.v2 v2.4.0
