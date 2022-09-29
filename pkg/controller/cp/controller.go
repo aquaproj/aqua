@@ -4,18 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"sync"
-	"time"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -77,7 +72,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 				<-maxInstallChan
 			}()
 			logE := logE.WithField("exe_name", exeName)
-			if err := ctrl.copy(ctx, logE, param, exeName); err != nil {
+			if err := ctrl.installAndCopy(ctx, logE, param, exeName); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -91,77 +86,21 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 	return nil
 }
 
-func (ctrl *Controller) copy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) error { //nolint:cyclop,funlen,gocognit
-	which, err := ctrl.which.Which(ctx, param, exeName, logE)
+func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) error {
+	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if which.Package != nil { //nolint:nestif
-		logE = logE.WithFields(logrus.Fields{
-			"exe_path": which.ExePath,
-			"package":  which.Package.Package.Name,
-		})
-
-		var checksums *checksum.Checksums
-		if which.Config.ChecksumEnabled() {
-			checksums = checksum.New()
-			checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, which.ConfigFilePath)
-			if err != nil {
-				return err //nolint:wrapcheck
-			}
-			if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
-				return fmt.Errorf("read a checksum JSON: %w", err)
-			}
-			defer func() {
-				if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
-					logE.WithError(err).Error("update a checksum file")
-				}
-			}()
+	logE = logE.WithField("exe_path", findResult.ExePath)
+	if findResult.Package != nil {
+		logE = logE.WithField("package", findResult.Package.Package.Name)
+		if err := ctrl.install(ctx, logE, findResult); err != nil {
+			return err
 		}
-
-		if err := ctrl.packageInstaller.InstallPackage(ctx, logE, which.Package, checksums); err != nil {
-			return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
-		}
-		for i := 0; i < 10; i++ {
-			logE.Debug("check if exec file exists")
-			if fi, err := ctrl.fs.Stat(which.ExePath); err == nil {
-				if util.IsOwnerExecutable(fi.Mode()) {
-					break
-				}
-			}
-			logE.WithFields(logrus.Fields{
-				"retry_count": i + 1,
-			}).Debug("command isn't found. wait for lazy install")
-			if err := util.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-				return fmt.Errorf("wait: %w", logerr.WithFields(err, logE.Data))
-			}
-		}
-	} else {
-		logE = logE.WithFields(logrus.Fields{
-			"exe_path": which.ExePath,
-		})
 	}
 
-	p := filepath.Join(param.Dest, exeName)
-	if ctrl.runtime.GOOS == "windows" && filepath.Ext(exeName) == "" {
-		p += ".exe"
-	}
-	logE.WithFields(logrus.Fields{
-		"exe_name": exeName,
-		"dest":     p,
-	}).Info("coping a file")
-	dest, err := ctrl.fs.OpenFile(p, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission) //nolint:nosnakecase
-	if err != nil {
-		return fmt.Errorf("create a file: %w", logerr.WithFields(err, logE.Data))
-	}
-	defer dest.Close()
-	src, err := ctrl.fs.Open(which.ExePath)
-	if err != nil {
-		return fmt.Errorf("open a file: %w", logerr.WithFields(err, logE.Data))
-	}
-	defer src.Close()
-	if _, err := io.Copy(dest, src); err != nil {
-		return fmt.Errorf("copy a file: %w", logerr.WithFields(err, logE.Data))
+	if err := ctrl.copy(logE, param, findResult, exeName); err != nil {
+		return err
 	}
 	return nil
 }
