@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -41,7 +40,11 @@ func isWindows(goos string) bool {
 }
 
 func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error { //nolint:funlen,cyclop
-	pkgs, failed := inst.createLinks(logE, param.Config, param.Registries)
+	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
+	if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
+		failed = failedCreateLinks
+	}
+
 	if inst.onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
@@ -161,8 +164,8 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	return nil
 }
 
-func (inst *Installer) createLinks(logE *logrus.Entry, cfg *aqua.Config, registries map[string]*registry.Config) ([]*config.Package, bool) {
-	pkgs, failed := config.ListPackages(logE, cfg, inst.runtime, registries)
+func (inst *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
+	failed := false
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
@@ -180,7 +183,7 @@ func (inst *Installer) createLinks(logE *logrus.Entry, cfg *aqua.Config, registr
 			}
 		}
 	}
-	return pkgs, failed
+	return failed
 }
 
 const maxRetryDownload = 1
