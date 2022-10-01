@@ -109,7 +109,7 @@ func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 		m["URL"] = u
 	}
 
-	return template.Execute(cpkg.PackageInfo.Checksum.URL, m)
+	return template.Execute(cpkg.PackageInfo.Checksum.URL, m) //nolint:wrapcheck
 }
 
 func (cpkg *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
