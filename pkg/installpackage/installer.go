@@ -240,6 +240,7 @@ func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package
 	if inst.copyDir == "" {
 		return nil
 	}
+	logE.Info("copying an executable file")
 	if err := inst.copy(filepath.Join(inst.copyDir, file.Name), exePath); err != nil {
 		return err
 	}
