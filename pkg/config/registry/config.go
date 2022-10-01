@@ -31,6 +31,10 @@ func (pkgInfos *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) m
 	for _, pkgInfo := range *pkgInfos {
 		logE := logE
 		pkgInfo := pkgInfo
+		if pkgInfo == nil {
+			logE.Log(logLevel, "ignore an empty package")
+			continue
+		}
 		name := pkgInfo.GetName()
 		if name == "" {
 			logE.Log(logLevel, "ignore a package in the registry because the name is empty")

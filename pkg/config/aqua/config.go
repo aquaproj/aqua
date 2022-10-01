@@ -74,6 +74,9 @@ func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) e
 	}
 	m := make(map[string]*Registry, len(arr))
 	for _, registry := range arr {
+		if registry == nil {
+			continue
+		}
 		m[registry.Name] = registry
 	}
 	*registries = m
