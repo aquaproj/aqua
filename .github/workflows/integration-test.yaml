@@ -93,6 +93,10 @@ jobs:
       run: dist/actionlint -version
     - name: test aqua cp
       run: dist/golangci-lint version
+    - name: test aqua cp
+      run: aqua cp
+    - name: test aqua cp -a
+      run: aqua cp -a
 
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx

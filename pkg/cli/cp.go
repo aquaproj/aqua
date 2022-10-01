@@ -20,6 +20,11 @@ func (runner *Runner) newCpCommand() *cli.Command {
 				Value: "dist",
 				Usage: "destination directory",
 			},
+			&cli.BoolFlag{
+				Name:    "all",
+				Aliases: []string{"a"},
+				Usage:   "install all aqua configuration packages",
+			},
 		},
 		Description: `Copy executable files in a directory.
 
@@ -31,6 +36,14 @@ gh
 You can specify the target directory by -o option.
 
 $ aqua cp -o ~/bin terraform hugo
+
+If you don't specify commands, all commands are copied.
+
+$ aqua cp
+
+You can also copy global configuration files' commands with "-a" option.
+
+$ aqua cp -a
 `,
 		Action: runner.cpAction,
 	}
@@ -53,6 +66,7 @@ func (runner *Runner) cpAction(c *cli.Context) error {
 	if err := runner.setParam(c, "cp", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+	param.IsTest = true
 	ctrl := controller.InitializeCopyCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
 	if err := ctrl.Copy(c.Context, runner.LogE, param); err != nil {
 		return err //nolint:wrapcheck

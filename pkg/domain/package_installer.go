@@ -20,4 +20,5 @@ type ParamInstallPackages struct {
 	ConfigFilePath string
 	Config         *aqua.Config
 	Registries     map[string]*registry.Config
+	SkipLink       bool
 }

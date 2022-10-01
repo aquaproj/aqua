@@ -3,6 +3,8 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"sync"
 
@@ -33,6 +35,7 @@ type Installer struct {
 	progressBar        bool
 	onlyLink           bool
 	isTest             bool
+	copyDir            string
 }
 
 func isWindows(goos string) bool {
@@ -153,7 +156,9 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
-		if err := inst.checkFileSrc(ctx, pkg, file, logE); err != nil {
+		file := file
+		logE := logE.WithField("file_name", file.Name)
+		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
 			if inst.isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -195,7 +200,7 @@ type DownloadParam struct {
 	Asset     string
 }
 
-func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if isWindows(inst.runtime.GOOS) {
@@ -203,11 +208,11 @@ func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, 
 	}
 	dir, err := pkg.RenderDir(file, inst.runtime)
 	if err != nil {
-		return fmt.Errorf("render file dir: %w", err)
+		return "", fmt.Errorf("render file dir: %w", err)
 	}
 	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
 	if _, err := inst.fs.Stat(exePath); err == nil {
-		return nil
+		return exePath, nil
 	}
 	src := file.Src
 	if src == "" {
@@ -219,46 +224,83 @@ func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, 
 		"go_build_dir": exeDir,
 	}).Info("building Go tool")
 	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
-		return fmt.Errorf("build Go tool: %w", err)
+		return "", fmt.Errorf("build Go tool: %w", err)
 	}
+	return exePath, nil
+}
+
+func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
+	if err != nil {
+		if inst.isTest {
+			return fmt.Errorf("check file_src is correct: %w", err)
+		}
+		logerr.WithError(logE, err).Warn("check file_src is correct")
+	}
+	if inst.copyDir == "" {
+		return nil
+	}
+	logE.Info("copying an executable file")
+	if err := inst.copy(filepath.Join(inst.copyDir, file.Name), exePath); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (inst *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	fields := logrus.Fields{
-		"file_name": file.Name,
-	}
-	logE = logE.WithFields(fields)
-
+func (inst *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	if pkg.PackageInfo.Type == "go" {
 		return inst.checkFileSrcGo(ctx, pkg, file, logE)
 	}
 
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
-		return fmt.Errorf("get the package install path: %w", err)
+		return "", fmt.Errorf("get the package install path: %w", err)
 	}
 
 	fileSrc, err := pkg.RenameFile(logE, inst.fs, pkgPath, file, inst.runtime)
 	if err != nil {
-		return fmt.Errorf("get file_src: %w", err)
+		return "", fmt.Errorf("get file_src: %w", err)
 	}
 
 	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
-		return fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, fields))
+		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, logE.Data))
 	}
 	if finfo.IsDir() {
-		return logerr.WithFields(errExePathIsDirectory, fields) //nolint:wrapcheck
+		return "", logerr.WithFields(errExePathIsDirectory, logE.Data) //nolint:wrapcheck
 	}
 
 	logE.Debug("check the permission")
 	if mode := finfo.Mode().Perm(); !util.IsOwnerExecutable(mode) {
 		logE.Debug("add the permission to execute the command")
 		if err := inst.fs.Chmod(exePath, util.AllowOwnerExec(mode)); err != nil {
-			return logerr.WithFields(errChmod, fields) //nolint:wrapcheck
+			return "", logerr.WithFields(errChmod, logE.Data) //nolint:wrapcheck
 		}
 	}
+
+	return exePath, nil
+}
+
+const (
+	filePermission os.FileMode = 0o755
+)
+
+func (inst *Installer) copy(dest, src string) error {
+	dst, err := inst.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission) //nolint:nosnakecase
+	if err != nil {
+		return fmt.Errorf("create a file: %w", err)
+	}
+	defer dst.Close()
+	srcFile, err := inst.fs.Open(src)
+	if err != nil {
+		return fmt.Errorf("open a file: %w", err)
+	}
+	defer srcFile.Close()
+	if _, err := io.Copy(dst, srcFile); err != nil {
+		return fmt.Errorf("copy a file: %w", err)
+	}
+
 	return nil
 }
