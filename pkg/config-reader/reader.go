@@ -38,6 +38,9 @@ func (reader *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error 
 func (reader *ConfigReader) readImports(configFilePath string, cfg *aqua.Config) error {
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
+		if pkg == nil {
+			continue
+		}
 		if pkg.Import == "" {
 			pkgs = append(pkgs, pkg)
 			continue

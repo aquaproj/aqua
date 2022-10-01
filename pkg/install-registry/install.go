@@ -30,7 +30,6 @@ var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be 
 
 func (inst *Installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
-	wg.Add(len(cfg.Registries))
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
 	var failed bool
@@ -41,6 +40,10 @@ func (inst *Installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, 
 	registryContents := make(map[string]*registry.Config, len(cfg.Registries)+1)
 
 	for _, registry := range cfg.Registries {
+		if registry == nil {
+			continue
+		}
+		wg.Add(1)
 		go func(registry *aqua.Registry) {
 			defer wg.Done()
 			if registry.Name == "" {
