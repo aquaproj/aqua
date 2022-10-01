@@ -99,7 +99,6 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		},
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
-			runner.newUpdateChecksumCommand(),
 			runner.newInitCommand(),
 			runner.newInstallCommand(),
 			runner.newGenerateCommand(),
@@ -111,6 +110,9 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newVersionCommand(),
 			runner.newCpCommand(),
 		},
+	}
+	if os.Getenv("AQUA_EXPERIMENTAL_CHECKSUM_VERIFICATION") == "true" {
+		app.Commands = append(app.Commands, runner.newUpdateChecksumCommand())
 	}
 
 	return app.RunContext(ctx, args) //nolint:wrapcheck
