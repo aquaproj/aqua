@@ -46,7 +46,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 }
 
 func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if param.Dest != "" { //nolint:nestif
+	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
 		if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
 			return fmt.Errorf("create the directory: %w", err)
