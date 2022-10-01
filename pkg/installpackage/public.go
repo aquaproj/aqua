@@ -30,5 +30,6 @@ func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.R
 		progressBar:        param.ProgressBar,
 		isTest:             param.IsTest,
 		onlyLink:           param.OnlyLink,
+		copyDir:            param.Dest,
 	}
 }

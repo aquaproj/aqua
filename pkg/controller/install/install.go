@@ -46,19 +46,20 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 }
 
 func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	rootBin := filepath.Join(ctrl.rootDir, "bin")
-
-	if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
-		return fmt.Errorf("create the directory: %w", err)
-	}
-	if ctrl.runtime.GOOS == "windows" {
-		if err := ctrl.fs.MkdirAll(filepath.Join(ctrl.rootDir, "bat"), dirPermission); err != nil {
+	if param.Dest != "" { //nolint:nestif
+		rootBin := filepath.Join(ctrl.rootDir, "bin")
+		if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
 			return fmt.Errorf("create the directory: %w", err)
 		}
-	}
+		if ctrl.runtime.GOOS == "windows" {
+			if err := ctrl.fs.MkdirAll(filepath.Join(ctrl.rootDir, "bat"), dirPermission); err != nil {
+				return fmt.Errorf("create the directory: %w", err)
+			}
+		}
 
-	if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {
-		return err //nolint:wrapcheck
+		if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {

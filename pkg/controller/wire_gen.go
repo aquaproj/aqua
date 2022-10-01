@@ -139,7 +139,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
-	cpController := cp.New(param, installer, fs, rt, controller)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt)
+	cpController := cp.New(param, installer, fs, rt, controller, installController)
 	return cpController
 }
 

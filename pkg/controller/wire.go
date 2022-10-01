@@ -253,6 +253,11 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			finder.NewConfigFinder,
 			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
+			wire.Bind(new(install.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			install.New,
+			wire.Bind(new(cp.Installer), new(*install.Controller)),
 		),
 		wire.NewSet(
 			download.NewPackageDownloader,

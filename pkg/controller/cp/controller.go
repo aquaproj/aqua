@@ -27,30 +27,36 @@ type Controller struct {
 	fs               afero.Fs
 	runtime          *runtime.Runtime
 	which            which.Controller
+	installer        Installer
+}
+
+type Installer interface {
+	Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error
 }
 
 type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller) *Controller {
+func New(param *config.Param, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer) *Controller {
 	return &Controller{
 		rootDir:          param.RootDir,
 		packageInstaller: pkgInstaller,
 		fs:               fs,
 		runtime:          rt,
 		which:            whichCtrl,
+		installer:        installer,
 	}
 }
 
 var errCopyFailure = errors.New("it failed to copy some tools")
 
 func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if len(param.Args) == 0 {
-		return nil
-	}
 	if err := ctrl.fs.MkdirAll(param.Dest, dirPermission); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
+	}
+	if len(param.Args) == 0 {
+		return ctrl.installer.Install(ctx, logE, param) //nolint:wrapcheck
 	}
 
 	maxInstallChan := make(chan struct{}, param.MaxParallelism)
