@@ -36,6 +36,14 @@ gh
 You can specify the target directory by -o option.
 
 $ aqua cp -o ~/bin terraform hugo
+
+If you don't specify commands, all commands are copied.
+
+$ aqua cp
+
+You can also copy global configuration files' commands with "-a" option.
+
+$ aqua cp -a
 `,
 		Action: runner.cpAction,
 	}
