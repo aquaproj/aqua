@@ -129,3 +129,24 @@ packages:
 - type: foo
   name: foo
   name: foo # duplicated key
+
+- type: http
+  repo_owner: helm
+  repo_name: helm
+  url: https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz
+  description: The Kubernetes Package Manager
+  files:
+    - name: helm
+      src: "{{.OS}}-{{.Arch}}/helm"
+  supported_envs:
+    - darwin
+    - linux
+    - amd64
+  checksum:
+    type: http
+    url: "{{.URL}}.sha256sum"
+    file_format: regexp
+    algorithm: sha256
+    pattern:
+      checksum: ^(\b[A-Fa-f0-9]{64}\b)
+      file: "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$"
