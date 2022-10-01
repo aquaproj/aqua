@@ -20,6 +20,11 @@ func (runner *Runner) newCpCommand() *cli.Command {
 				Value: "dist",
 				Usage: "destination directory",
 			},
+			&cli.BoolFlag{
+				Name:    "all",
+				Aliases: []string{"a"},
+				Usage:   "install all aqua configuration packages",
+			},
 		},
 		Description: `Copy executable files in a directory.
 
