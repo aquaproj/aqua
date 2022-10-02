@@ -46,7 +46,7 @@ func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry
 	}
 }
 
-func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
 	ppkg := param.Package
 	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{
@@ -62,6 +62,15 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 
 	logE.Info("download and unarchive the package")
 
+	checksumID, err := ppkg.GetChecksumID(inst.runtime)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	chksum := param.Checksums.Get(checksumID)
+	if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+		return errChecksumIsRequired
+	}
+
 	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, ppkg, param.Asset, logE)
 	if body != nil {
 		defer body.Close()
@@ -74,11 +83,12 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 
 	if param.Checksums != nil {
 		readFile, err := inst.verifyChecksum(ctx, logE, &ParamVerifyChecksum{
-			Checksums:       param.Checksums,
-			Pkg:             ppkg,
-			AssetName:       param.Asset,
-			Body:            body,
-			RequireChecksum: param.RequireChecksum,
+			ChecksumID: checksumID,
+			Checksum:   chksum,
+			Checksums:  param.Checksums,
+			Pkg:        ppkg,
+			AssetName:  param.Asset,
+			Body:       body,
 		})
 		if err != nil {
 			return err

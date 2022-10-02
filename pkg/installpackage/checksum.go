@@ -52,30 +52,20 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 }
 
 type ParamVerifyChecksum struct {
-	Checksums       *checksum.Checksums
-	Pkg             *config.Package
-	AssetName       string
-	Body            io.Reader
-	RequireChecksum bool
+	ChecksumID string
+	Checksum   *checksum.Checksum
+	Checksums  *checksum.Checksums
+	Pkg        *config.Package
+	AssetName  string
+	Body       io.Reader
 }
 
 func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
-
-	checksumID, err := pkg.GetChecksumID(inst.runtime)
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-	chksum := checksums.Get(checksumID)
-	logE.WithFields(logrus.Fields{
-		"checksum_id": checksumID,
-	}).Debug("get a checksum id")
-
-	if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
-		return nil, errChecksumIsRequired
-	}
+	chksum := param.Checksum
+	checksumID := param.ChecksumID
 
 	tempDir, err := afero.TempDir(inst.fs, "", "")
 	if err != nil {
