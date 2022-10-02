@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
@@ -66,11 +67,14 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	chksum := param.Checksums.Get(checksumID)
-	if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
-		return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
-			"doc": "https://aquaproj.github.io/docs/reference/codes/001",
-		})
+	var chksum *checksum.Checksum
+	if param.Checksums != nil {
+		chksum = param.Checksums.Get(checksumID)
+		if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+			return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
+				"doc": "https://aquaproj.github.io/docs/reference/codes/001",
+			})
+		}
 	}
 
 	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, ppkg, param.Asset, logE)
