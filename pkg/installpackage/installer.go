@@ -105,7 +105,10 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
-			if err := inst.InstallPackage(ctx, logE, pkg, checksums); err != nil {
+			if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+				Pkg:       pkg,
+				Checksums: checksums,
+			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -119,7 +122,9 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, checksums *checksum.Checksums) error {
+func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error {
+	pkg := param.Pkg
+	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -194,10 +199,11 @@ func (inst *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) b
 const maxRetryDownload = 1
 
 type DownloadParam struct {
-	Package   *config.Package
-	Checksums *checksum.Checksums
-	Dest      string
-	Asset     string
+	Package         *config.Package
+	Checksums       *checksum.Checksums
+	Dest            string
+	Asset           string
+	RequireChecksum bool
 }
 
 func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {

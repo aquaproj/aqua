@@ -8,4 +8,5 @@ var (
 	errInstallFailure        = errors.New("it failed to install some packages")
 	errGoInstallForbidLatest = errors.New(`the version "latest" is forbidden. Please specify Git tag or commit sha`)
 	errInvalidChecksum       = errors.New("checksum is invalid")
+	errChecksumIsRequired    = errors.New("checksum is required")
 )

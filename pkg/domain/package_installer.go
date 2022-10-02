@@ -11,7 +11,7 @@ import (
 )
 
 type PackageInstaller interface {
-	InstallPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, checksums *checksum.Checksums) error
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error
 	InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error
 	InstallProxy(ctx context.Context, logE *logrus.Entry) error
 }
@@ -21,4 +21,10 @@ type ParamInstallPackages struct {
 	Config         *aqua.Config
 	Registries     map[string]*registry.Config
 	SkipLink       bool
+}
+
+type ParamInstallPackage struct {
+	Pkg             *config.Package
+	Checksums       *checksum.Checksums
+	RequireChecksum bool
 }
