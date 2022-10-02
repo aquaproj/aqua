@@ -153,10 +153,11 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	}
 
 	if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
-		Package:   pkg,
-		Dest:      pkgPath,
-		Asset:     assetName,
-		Checksums: checksums,
+		Package:         pkg,
+		Dest:            pkgPath,
+		Asset:           assetName,
+		Checksums:       checksums,
+		RequireChecksum: param.RequireChecksum,
 	}); err != nil {
 		return err
 	}
