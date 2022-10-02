@@ -7,6 +7,13 @@ func (cfg *Config) ChecksumEnabled() bool {
 	return cfg.Checksum.GetEnabled()
 }
 
+func (cfg *Config) RequireChecksum() bool {
+	if cfg == nil || cfg.Checksum == nil {
+		return false
+	}
+	return cfg.Checksum.RequireChecksum
+}
+
 type Checksum struct {
 	Enabled *bool `json:"enabled,omitempty"`
 	// RequireChecksumInAdvance bool               `yaml:"require_checksum_in_advance" json:"-"`

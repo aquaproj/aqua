@@ -106,8 +106,9 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				"registry":        pkg.Package.Registry,
 			})
 			if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
-				Pkg:       pkg,
-				Checksums: checksums,
+				Pkg:             pkg,
+				Checksums:       checksums,
+				RequireChecksum: param.Config.RequireChecksum(),
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()

@@ -37,8 +37,9 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 	}
 
 	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
-		Pkg:       findResult.Package,
-		Checksums: checksums,
+		Pkg:             findResult.Package,
+		Checksums:       checksums,
+		RequireChecksum: findResult.Config.RequireChecksum(),
 	}); err != nil {
 		return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 	}
