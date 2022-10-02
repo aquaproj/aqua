@@ -1,3 +1,5 @@
+checksum:
+  enabled: true
 registries:
 - type: standard
   type: standard # duplicated keys
