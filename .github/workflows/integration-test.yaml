@@ -6,13 +6,14 @@ on:
     tags: [v*]
   pull_request:
     branches: [main]
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  AQUA_LOG_LEVEL: debug
+  AQUA_LOG_COLOR: always
+  AQUA_EXPERIMENTAL_CHECKSUM_VERIFICATION: "true"
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
-      AQUA_LOG_COLOR: always
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3.3.0
@@ -60,6 +61,7 @@ jobs:
     - run: wire --help
     - run: gox --help
     - run: bats -v
+    - run: helm version
     - run: github-compare -v
     - run: terrafmt version
 
@@ -108,9 +110,6 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
     defaults:
       run:
         shell: bash
@@ -153,6 +152,7 @@ jobs:
     - run: wire --help
     - run: gox --help
     - run: github-compare -v
+    - run: helm version
     - run: terrafmt version
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
@@ -184,9 +184,6 @@ jobs:
 
   build-windows-pwsh:
     runs-on: windows-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3.3.0
@@ -227,6 +224,7 @@ jobs:
     - run: gox --help
     - run: github-compare -v
     - run: terrafmt version
+    - run: helm version
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests

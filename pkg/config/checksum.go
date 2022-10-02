@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/template"
 )
 
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
@@ -89,7 +90,26 @@ func (cpkg *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error)
 }
 
 func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
-	return cpkg.renderTemplateString(cpkg.PackageInfo.Checksum.URL, rt)
+	pkgInfo := cpkg.PackageInfo
+	pkg := cpkg.Package
+	replacements := pkgInfo.GetChecksumReplacements()
+	m := map[string]interface{}{
+		"Version": pkg.Version,
+		"GOOS":    rt.GOOS,
+		"GOARCH":  rt.GOARCH,
+		"OS":      replace(rt.GOOS, replacements),
+		"Arch":    getArch(pkgInfo.GetRosetta2(), replacements, rt),
+		"Format":  pkgInfo.GetFormat(),
+	}
+	if pkgInfo.Type == "http" {
+		u, err := cpkg.RenderURL(rt)
+		if err != nil {
+			return "", err
+		}
+		m["AssetURL"] = u
+	}
+
+	return template.Execute(cpkg.PackageInfo.Checksum.URL, m) //nolint:wrapcheck
 }
 
 func (cpkg *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
