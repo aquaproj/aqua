@@ -84,7 +84,11 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		}()
 	}
 
-	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, findResult.Package, checksums); err != nil {
+	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+		Pkg:             findResult.Package,
+		Checksums:       checksums,
+		RequireChecksum: findResult.Config.RequireChecksum(),
+	}); err != nil {
 		return err //nolint:wrapcheck
 	}
 	for i := 0; i < 10; i++ {

@@ -273,7 +273,9 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil)
-			if err := ctrl.InstallPackage(ctx, logE, d.pkg, nil); err != nil {
+			if err := ctrl.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+				Pkg: d.pkg,
+			}); err != nil {
 				if d.isErr {
 					return
 				}

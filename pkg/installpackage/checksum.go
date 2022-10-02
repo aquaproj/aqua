@@ -51,8 +51,21 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 	return inst.extractChecksum(pkg, assetName, b)
 }
 
-func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, assetName string, body io.Reader) (io.ReadCloser, error) { //nolint:cyclop,funlen
+type ParamVerifyChecksum struct {
+	ChecksumID string
+	Checksum   *checksum.Checksum
+	Checksums  *checksum.Checksums
+	Pkg        *config.Package
+	AssetName  string
+	Body       io.Reader
+}
+
+func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
+	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
+	checksums := param.Checksums
+	chksum := param.Checksum
+	checksumID := param.ChecksumID
 
 	tempDir, err := afero.TempDir(inst.fs, "", "")
 	if err != nil {
@@ -60,7 +73,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 	}
 	defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
 
-	assetName = filepath.Base(assetName)
+	assetName := filepath.Base(param.AssetName)
 	tempFilePath := filepath.Join(tempDir, assetName)
 	if assetName == "" && (pkgInfo.Type == "github_archive" || pkgInfo.Type == "go") {
 		tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
@@ -73,18 +86,9 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 	}
 	defer file.Close()
 
-	if _, err := io.Copy(file, body); err != nil {
+	if _, err := io.Copy(file, param.Body); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-
-	checksumID, err := pkg.GetChecksumID(inst.runtime)
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-	chksum := checksums.Get(checksumID)
-	logE.WithFields(logrus.Fields{
-		"checksum_id": checksumID,
-	}).Debug("get a checksum id")
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
 		logE.Info("downloading a checksum file")
