@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"sync"
 
 	"github.com/spf13/afero"
@@ -84,6 +85,9 @@ func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
 	for _, chk := range chksums.m {
 		arr = append(arr, chk)
 	}
+	sort.Slice(arr, func(i, j int) bool {
+		return arr[i].ID < arr[j].ID
+	})
 	chkJSON := &checksumsJSON{
 		Checksums: arr,
 	}
