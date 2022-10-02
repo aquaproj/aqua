@@ -68,7 +68,9 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	}
 	chksum := param.Checksums.Get(checksumID)
 	if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
-		return errChecksumIsRequired
+		return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
+			"doc": "https://aquaproj.github.io/docs/reference/codes/001",
+		})
 	}
 
 	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, ppkg, param.Asset, logE)
