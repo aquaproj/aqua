@@ -124,7 +124,7 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 	return nil
 }
 
-func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error { //nolint:funlen,cyclop
+func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
 	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
 		return fmt.Errorf("get supported platforms: %w", err)
@@ -135,81 +135,88 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 		logE := logE.WithFields(logrus.Fields{
 			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
 		})
-		pkgInfo := pkg.PackageInfo
-		pkgInfo = pkgInfo.Copy()
-		pkgInfo.OverrideByRuntime(rt)
-		pkg := &config.Package{
-			Package:     pkg.Package,
-			PackageInfo: pkgInfo,
+		if err := ctrl.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		if !pkg.PackageInfo.Checksum.GetEnabled() {
-			logE.Debug("chekcsum isn't supported")
-			continue
-		}
+func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime) error { //nolint:funlen,cyclop
+	pkgInfo := pkg.PackageInfo
+	pkgInfo = pkgInfo.Copy()
+	pkgInfo.OverrideByRuntime(rt)
+	pkg = &config.Package{
+		Package:     pkg.Package,
+		PackageInfo: pkgInfo,
+	}
 
-		checksumID, err := pkg.GetChecksumID(rt)
-		if err != nil {
-			return fmt.Errorf("get a checksum id: %w", err)
-		}
+	if !pkg.PackageInfo.Checksum.GetEnabled() {
+		logE.Debug("chekcsum isn't supported")
+		return nil
+	}
 
-		if a := checksums.Get(checksumID); a != nil {
-			continue
-		}
+	checksumID, err := pkg.GetChecksumID(rt)
+	if err != nil {
+		return fmt.Errorf("get a checksum id: %w", err)
+	}
 
-		checksumFileID, err := pkg.RenderChecksumFileID(rt)
+	if a := checksums.Get(checksumID); a != nil {
+		return nil
+	}
+
+	checksumFileID, err := pkg.RenderChecksumFileID(rt)
+	if err != nil {
+		return fmt.Errorf("render a checksum file ID: %w", err)
+	}
+	if _, ok := checksumFiles[checksumFileID]; ok {
+		return nil
+	}
+	checksumFiles[checksumFileID] = struct{}{}
+	logE.Debug("downloading a checksum file")
+	file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, rt, pkg)
+	if err != nil {
+		return fmt.Errorf("download a checksum file: %w", err)
+	}
+	if file == nil {
+		return nil
+	}
+	defer file.Close()
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("read a checksum file: %w", err)
+	}
+	checksumFile := strings.TrimSpace(string(b))
+	if pkgInfo.Checksum.FileFormat == "raw" {
+		logE.WithFields(logrus.Fields{
+			"checksum_id": checksumID,
+			"checksum":    checksumFile,
+		}).Debug("set a checksum")
+		checksums.Set(checksumID, &checksum.Checksum{
+			ID:        checksumID,
+			Checksum:  checksumFile,
+			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+		})
+		return nil
+	}
+	m, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
+	if err != nil {
+		return fmt.Errorf("parse a checksum file: %w", err)
+	}
+	for assetName, chksum := range m {
+		checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
 		if err != nil {
-			return fmt.Errorf("render a checksum file ID: %w", err)
+			return fmt.Errorf("get a checksum id from asset: %w", err)
 		}
-		if _, ok := checksumFiles[checksumFileID]; ok {
-			continue
-		}
-		checksumFiles[checksumFileID] = struct{}{}
-		logE.Debug("downloading a checksum file")
-		file, _, err := ctrl.chkDL.DownloadChecksum(ctx, logE, rt, pkg)
-		if err != nil {
-			return fmt.Errorf("download a checksum file: %w", err)
-		}
-		if file == nil {
-			continue
-		}
-		defer file.Close()
-		b, err := io.ReadAll(file)
-		if err != nil {
-			return fmt.Errorf("read a checksum file: %w", err)
-		}
-		checksumFile := strings.TrimSpace(string(b))
-		if pkgInfo.Checksum.FileFormat == "raw" {
-			logE.WithFields(logrus.Fields{
-				"checksum_id": checksumID,
-				"checksum":    checksumFile,
-			}).Debug("set a checksum")
-			checksums.Set(checksumID, &checksum.Checksum{
-				ID:        checksumID,
-				Checksum:  checksumFile,
-				Algorithm: pkgInfo.Checksum.GetAlgorithm(),
-			})
-			continue
-		}
-		m, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
-		if err != nil {
-			return fmt.Errorf("parse a checksum file: %w", err)
-		}
-		for assetName, chksum := range m {
-			checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
-			if err != nil {
-				return fmt.Errorf("get a checksum id from asset: %w", err)
-			}
-			logE.WithFields(logrus.Fields{
-				"checksum_id": checksumID,
-				"checksum":    chksum,
-			}).Debug("set a checksum")
-			checksums.Set(checksumID, &checksum.Checksum{
-				ID:        checksumID,
-				Checksum:  chksum,
-				Algorithm: pkgInfo.Checksum.GetAlgorithm(),
-			})
-		}
+		logE.WithFields(logrus.Fields{
+			"checksum_id": checksumID,
+			"checksum":    chksum,
+		}).Debug("set a checksum")
+		checksums.Set(checksumID, &checksum.Checksum{
+			ID:        checksumID,
+			Checksum:  chksum,
+			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+		})
 	}
 	return nil
 }
