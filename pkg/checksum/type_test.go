@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
+	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )
 
@@ -11,22 +12,30 @@ func TestChecksums_Get(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name string
-		m    map[string]string
+		m    map[string]*checksum.Checksum
 		key  string
-		exp  string
+		exp  *checksum.Checksum
 	}{
 		{
 			name: "key not found",
 			key:  "foo",
-			exp:  "",
+			exp:  nil,
 		},
 		{
 			name: "key is found",
 			key:  "foo",
-			m: map[string]string{
-				"foo": "bar",
+			m: map[string]*checksum.Checksum{
+				"foo": {
+					ID:        "foo",
+					Checksum:  "bar",
+					Algorithm: "sha256",
+				},
 			},
-			exp: "bar",
+			exp: &checksum.Checksum{
+				ID:        "foo",
+				Checksum:  "bar",
+				Algorithm: "sha256",
+			},
 		},
 	}
 	for _, d := range data {
@@ -38,8 +47,8 @@ func TestChecksums_Get(t *testing.T) {
 				checksums.Set(k, v)
 			}
 			v := checksums.Get(d.key)
-			if v != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, v)
+			if diff := cmp.Diff(v, d.exp); diff != "" {
+				t.Fatalf(diff)
 			}
 		})
 	}
@@ -95,16 +104,18 @@ func TestChecksums_UpdateFile(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name  string
-		m     map[string]string
+		m     []*checksum.Checksum
 		p     string
 		isErr bool
 	}{
 		{
 			name: "normal",
-			m: map[string]string{
-				".aqua-checksums.json": `{
-  "github_release/github.com/cli/cli/v2.10.1/gh_2.10.1_macOS_amd64.tar.gz": "xxx"
-}`,
+			m: []*checksum.Checksum{
+				{
+					ID:        "github_release/github.com/cli/cli/v2.10.1/gh_2.10.1_macOS_amd64.tar.gz",
+					Checksum:  "xxx",
+					Algorithm: "sha256",
+				},
 			},
 			p: ".aqua-checksums.json",
 		},
@@ -115,8 +126,8 @@ func TestChecksums_UpdateFile(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()
 			checksums := checksum.New()
-			for k, v := range d.m {
-				checksums.Set(k, v)
+			for _, v := range d.m {
+				checksums.Set(v.ID, v)
 			}
 			if err := checksums.UpdateFile(fs, d.p); err != nil {
 				if d.isErr {

@@ -77,13 +77,6 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 		return nil, err //nolint:wrapcheck
 	}
 
-	calculatedSum, err := checksum.Calculate(inst.fs, tempFilePath, pkg.PackageInfo.Checksum.GetAlgorithm())
-	if err != nil {
-		return nil, fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
-			"temp_file": tempFilePath,
-		}))
-	}
-
 	checksumID, err := pkg.GetChecksumID(inst.runtime)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
@@ -93,33 +86,55 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, c
 		"checksum_id": checksumID,
 	}).Debug("get a checksum id")
 
-	if chksum == "" && pkgInfo.Checksum.GetEnabled() {
+	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
 		logE.Info("downloading a checksum file")
 		c, err := inst.dlAndExtractChecksum(ctx, logE, pkg, assetName)
 		if err != nil {
 			return nil, err
 		}
-		chksum = c
+		chksum = &checksum.Checksum{
+			ID:        checksumID,
+			Checksum:  c,
+			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+		}
 		checksums.Set(checksumID, chksum)
 	}
 
-	chksum = strings.ToUpper(chksum)
+	if chksum != nil {
+		chksum.Checksum = strings.ToUpper(chksum.Checksum)
+	}
+
+	algorithm := "sha512"
+	if chksum != nil {
+		algorithm = chksum.Algorithm
+	}
+	calculatedSum, err := checksum.Calculate(inst.fs, tempFilePath, algorithm)
+	if err != nil {
+		return nil, fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
+			"temp_file": tempFilePath,
+		}))
+	}
 	calculatedSum = strings.ToUpper(calculatedSum)
 
-	if chksum != "" && calculatedSum != chksum {
+	if chksum != nil && calculatedSum != chksum.Checksum {
 		return nil, logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
 			"actual_checksum":   calculatedSum,
 			"expected_checksum": chksum,
 		})
 	}
 
-	if chksum == "" {
+	if chksum == nil {
 		logE.WithFields(logrus.Fields{
 			"checksum_id": checksumID,
 			"checksum":    calculatedSum,
 		}).Debug("set a calculated checksum")
-		checksums.Set(checksumID, calculatedSum)
+		chksum = &checksum.Checksum{
+			ID:        checksumID,
+			Checksum:  calculatedSum,
+			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+		}
 	}
+	checksums.Set(checksumID, chksum)
 
 	readFile, err := inst.fs.Open(tempFilePath)
 	if err != nil {

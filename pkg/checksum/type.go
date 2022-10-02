@@ -10,34 +10,40 @@ import (
 )
 
 type Checksums struct {
-	m       map[string]string
+	m       map[string]*Checksum
 	rwmutex *sync.RWMutex
 	changed bool
 }
 
 func New() *Checksums {
 	return &Checksums{
-		m:       map[string]string{},
+		m:       map[string]*Checksum{},
 		rwmutex: &sync.RWMutex{},
 	}
 }
 
-func (chksums *Checksums) Get(key string) string {
+func (chksums *Checksums) Get(key string) *Checksum {
 	chksums.rwmutex.RLock()
-	id := chksums.m[key]
+	chk := chksums.m[key]
 	chksums.rwmutex.RUnlock()
-	return id
+	return chk
 }
 
-func (chksums *Checksums) Set(key, value string) {
+func (chksums *Checksums) Set(key string, chk *Checksum) {
 	chksums.rwmutex.Lock()
-	chksums.m[key] = value
+	chksums.m[key] = chk
 	chksums.changed = true
 	chksums.rwmutex.Unlock()
 }
 
 type checksumsJSON struct {
-	Checksums map[string]string `json:"checksums"`
+	Checksums []*Checksum `json:"checksums"`
+}
+
+type Checksum struct {
+	ID        string `json:"id"`
+	Checksum  string `json:"checksum"`
+	Algorithm string `json:"algorithm"`
 }
 
 func (chksums *Checksums) ReadFile(fs afero.Fs, p string) error {
@@ -55,7 +61,11 @@ func (chksums *Checksums) ReadFile(fs afero.Fs, p string) error {
 	if err := json.NewDecoder(f).Decode(chkJSON); err != nil {
 		return fmt.Errorf("parse a checksum file as JSON: %w", err)
 	}
-	chksums.m = chkJSON.Checksums
+	m := make(map[string]*Checksum, len(chkJSON.Checksums))
+	for _, chk := range chkJSON.Checksums {
+		m[chk.ID] = chk
+	}
+	chksums.m = m
 	return nil
 }
 
@@ -70,8 +80,12 @@ func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
 	defer f.Close()
 	encoder := json.NewEncoder(f)
 	encoder.SetIndent("", "  ")
+	arr := make([]*Checksum, 0, len(chksums.m))
+	for _, chk := range chksums.m {
+		arr = append(arr, chk)
+	}
 	chkJSON := &checksumsJSON{
-		Checksums: chksums.m,
+		Checksums: arr,
 	}
 	if err := encoder.Encode(chkJSON); err != nil {
 		return fmt.Errorf("write a checksum file as JSON: %w", err)

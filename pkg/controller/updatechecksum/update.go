@@ -153,7 +153,7 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 			return fmt.Errorf("get a checksum id: %w", err)
 		}
 
-		if a := checksums.Get(checksumID); a != "" {
+		if a := checksums.Get(checksumID); a != nil {
 			continue
 		}
 
@@ -184,7 +184,11 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 				"checksum_id": checksumID,
 				"checksum":    checksumFile,
 			}).Debug("set a checksum")
-			checksums.Set(checksumID, checksumFile)
+			checksums.Set(checksumID, &checksum.Checksum{
+				ID:        checksumID,
+				Checksum:  checksumFile,
+				Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+			})
 			continue
 		}
 		m, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
@@ -200,7 +204,11 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 				"checksum_id": checksumID,
 				"checksum":    chksum,
 			}).Debug("set a checksum")
-			checksums.Set(checksumID, chksum)
+			checksums.Set(checksumID, &checksum.Checksum{
+				ID:        checksumID,
+				Checksum:  chksum,
+				Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+			})
 		}
 	}
 	return nil
