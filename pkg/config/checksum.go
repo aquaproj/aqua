@@ -106,7 +106,7 @@ func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		m["URL"] = u
+		m["AssetURL"] = u
 	}
 
 	return template.Execute(cpkg.PackageInfo.Checksum.URL, m) //nolint:wrapcheck

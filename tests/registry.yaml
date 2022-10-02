@@ -144,7 +144,7 @@ packages:
     - amd64
   checksum:
     type: http
-    url: "{{.URL}}.sha256sum"
+    url: "{{.AssetURL}}.sha256sum"
     file_format: regexp
     algorithm: sha256
     pattern:
