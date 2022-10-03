@@ -160,15 +160,8 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 			logE.Debug("chekcsum isn't supported")
 			return nil
 		}
-		rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
-		if err != nil {
-			return fmt.Errorf("get supported runtimes from supported_envs: %w", err)
-		}
-		for _, rt := range rts {
-			logE := logE.WithField("env", fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH))
-			if err := ctrl.dlAssetAndGetChecksum(ctx, logE, checksums, pkg, rt); err != nil {
-				return err
-			}
+		if err := ctrl.dlAssetAndGetChecksum(ctx, logE, checksums, pkg, rt); err != nil {
+			return err
 		}
 		return nil
 	}
