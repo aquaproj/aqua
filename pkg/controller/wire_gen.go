@@ -153,6 +153,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	installer := registry.New(param, gitHubContentFileDownloader, fs)
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
-	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloader)
+	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloader, packageDownloader)
 	return controller
 }

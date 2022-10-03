@@ -330,6 +330,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
 		download.NewHTTPDownloader,
 		afero.NewOsFs,
 	)
