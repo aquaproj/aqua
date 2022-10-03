@@ -33,6 +33,8 @@ jobs:
     - run: aqua list
     - run: aqua update-checksum
       working-directory: tests
+    - run: aqua update-checksum -deep
+      working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
     - run: cmdx -v
@@ -135,6 +137,8 @@ jobs:
     - run: aqua list
     - run: aqua update-checksum
       working-directory: tests
+    - run: aqua update-checksum -deep
+      working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
     - run: cmdx -v
@@ -209,6 +213,8 @@ jobs:
 
     - run: aqua list
     - run: aqua update-checksum
+      working-directory: tests
+    - run: aqua update-checksum -deep
       working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
