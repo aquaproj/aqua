@@ -2,6 +2,7 @@ package installpackage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -26,14 +27,7 @@ func (inst *Installer) extractChecksum(pkg *config.Package, assetName string, ch
 		return "", fmt.Errorf("parse a checksum file: %w", err)
 	}
 
-	for fileName, chksum := range m {
-		if fileName != assetName {
-			continue
-		}
-		return chksum, nil
-	}
-
-	return "", nil
+	return m[assetName], nil
 }
 
 func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
@@ -48,7 +42,14 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 		return "", fmt.Errorf("read a checksum file: %w", err)
 	}
 
-	return inst.extractChecksum(pkg, assetName, b)
+	c, err := inst.extractChecksum(pkg, assetName, b)
+	if err != nil {
+		return "", err
+	}
+	if c == "" {
+		return "", errors.New("checksum isn't found in a checksum file")
+	}
+	return c, nil
 }
 
 type ParamVerifyChecksum struct {
@@ -94,7 +95,9 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 		logE.Info("downloading a checksum file")
 		c, err := inst.dlAndExtractChecksum(ctx, logE, pkg, assetName)
 		if err != nil {
-			return nil, err
+			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+				"asset_name": assetName,
+			})
 		}
 		chksum = &checksum.Checksum{
 			ID:        checksumID,
