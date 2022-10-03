@@ -123,7 +123,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 	if chksum != nil && calculatedSum != chksum.Checksum {
 		return nil, logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
 			"actual_checksum":   calculatedSum,
-			"expected_checksum": chksum,
+			"expected_checksum": chksum.Checksum,
 		})
 	}
 
