@@ -19,6 +19,10 @@ func (runner *Runner) newUpdateChecksumCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "Create or Update all .aqua-checksums.json including global configuration",
 			},
+			&cli.BoolFlag{
+				Name:  "deep",
+				Usage: "If a package's checksum configuration is disabled, download the asset and calculate the checksum",
+			},
 		},
 		Description: `Create or Update .aqua-checksums.json.
 

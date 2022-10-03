@@ -26,13 +26,15 @@ type Controller struct {
 	runtime           *runtime.Runtime
 	chkDL             domain.ChecksumDownloader
 	parser            *checksum.FileParser
+	pkgDownloader     domain.PackageDownloader
+	deep              bool
 }
 
 type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader domain.PackageDownloader) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -42,6 +44,8 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		runtime:           rt,
 		chkDL:             chkDL,
 		parser:            &checksum.FileParser{},
+		pkgDownloader:     pkgDownloader,
+		deep:              param.Deep,
 	}
 }
 
@@ -152,7 +156,13 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 	}
 
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		logE.Debug("chekcsum isn't supported")
+		if !ctrl.deep {
+			logE.Debug("chekcsum isn't supported")
+			return nil
+		}
+		if err := ctrl.dlAssetAndGetChecksum(ctx, logE, checksums, pkg, rt); err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -218,5 +228,46 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 		})
 	}
+	return nil
+}
+
+func (ctrl *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (gErr error) {
+	checksumID, err := pkg.GetChecksumID(rt)
+	if err != nil {
+		return fmt.Errorf("get a checksum id: %w", err)
+	}
+	if a := checksums.Get(checksumID); a != nil {
+		return nil
+	}
+	assetName, err := pkg.RenderAsset(rt)
+	if err != nil {
+		return fmt.Errorf("get an asset name: %w", err)
+	}
+	fields := logrus.Fields{
+		"asset_name": assetName,
+	}
+	logE = logE.WithFields(fields)
+	logE.Info("downloading an asset to calculate the checksum")
+	defer func() {
+		if gErr != nil {
+			gErr = logerr.WithFields(gErr, fields)
+		}
+	}()
+	file, _, err := ctrl.pkgDownloader.GetReadCloser(ctx, pkg, assetName, logE)
+	if err != nil {
+		return fmt.Errorf("download an asset: %w", err)
+	}
+	defer file.Close()
+	algorithm := "sha512"
+	fields["algorithm"] = algorithm
+	chk, err := checksum.CalculateReader(file, algorithm)
+	if err != nil {
+		return fmt.Errorf("calculate an asset: %w", err)
+	}
+	checksums.Set(checksumID, &checksum.Checksum{
+		ID:        checksumID,
+		Checksum:  chk,
+		Algorithm: algorithm,
+	})
 	return nil
 }

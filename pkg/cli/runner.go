@@ -56,6 +56,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	log.SetColor(param.LogColor, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
+	param.Deep = c.Bool("deep")
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)

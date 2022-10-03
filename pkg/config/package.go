@@ -179,6 +179,7 @@ type Param struct {
 	Insert                bool
 	SelectVersion         bool
 	ProgressBar           bool
+	Deep                  bool
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {

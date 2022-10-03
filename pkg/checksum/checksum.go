@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -25,6 +26,30 @@ func Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
 	default:
 		return "", errors.New("unsupported algorithm")
 	}
+}
+
+func CalculateReader(file io.Reader, algorithm string) (string, error) {
+	switch algorithm {
+	case "md5":
+		return checksum.MD5sumReader(file) //nolint:wrapcheck
+	case "sha256":
+		return checksum.SHA256sumReader(file) //nolint:wrapcheck
+	case "sha512":
+		return calculateSHA512Reader(file)
+	case "":
+		return "", errors.New("algorithm is required")
+	default:
+		return "", errors.New("unsupported algorithm")
+	}
+}
+
+func calculateSHA512Reader(file io.Reader) (string, error) {
+	byt, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("read a file: %w", err)
+	}
+	sum := sha512.Sum512(byt)
+	return hex.EncodeToString(sum[:]), nil
 }
 
 func calculateSHA512(fs afero.Fs, filename string) (string, error) {
