@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Controller struct {
@@ -49,23 +50,25 @@ func New(pkgInstaller domain.PackageInstaller, whichCtrl which.Controller, execu
 }
 
 func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error {
+	logE = logE.WithField("exe_name", exeName)
 	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 	if findResult.Package != nil {
+		logE = logE.WithFields(logrus.Fields{
+			"package":         findResult.Package.Package.Name,
+			"package_version": findResult.Package.Package.Version,
+		})
 		if err := ctrl.install(ctx, logE, findResult); err != nil {
-			return err
+			return logerr.WithFields(err, logE.Data) //nolint:wrapcheck
 		}
 	}
-	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
+	return logerr.WithFields(ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE), logE.Data) //nolint:wrapcheck
 }
 
 func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
-	logE = logE.WithFields(logrus.Fields{
-		"exe_path": findResult.ExePath,
-		"package":  findResult.Package.Package.Name,
-	})
+	logE = logE.WithField("exe_path", findResult.ExePath)
 
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
