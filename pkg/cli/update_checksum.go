@@ -34,6 +34,11 @@ If you want to update them too,
 please set "-a" option.
 
 $ aqua update-checksum -a
+
+By default, aqua update-checksum doesn't add checksums if the package's checksum configuration is disabled.
+If -deep option is set, aqua update-checksum downloads assets and calculate checksums.
+
+$ aqua update-checksum -deep
 `,
 		Action: runner.updateChecksumAction,
 	}
