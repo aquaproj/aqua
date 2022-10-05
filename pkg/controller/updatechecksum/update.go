@@ -209,9 +209,21 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 		})
 		return nil
 	}
-	m, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
+	m, s, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
 	if err != nil {
 		return fmt.Errorf("parse a checksum file: %w", err)
+	}
+	if s != "" {
+		logE.WithFields(logrus.Fields{
+			"checksum_id": checksumID,
+			"checksum":    s,
+		}).Debug("set a checksum")
+		checksums.Set(checksumID, &checksum.Checksum{
+			ID:        checksumID,
+			Checksum:  s,
+			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+		})
+		return nil
 	}
 	for assetName, chksum := range m {
 		checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
