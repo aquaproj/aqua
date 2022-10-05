@@ -22,9 +22,12 @@ func (inst *Installer) extractChecksum(pkg *config.Package, assetName string, ch
 		return strings.TrimSpace(string(checksumFile)), nil
 	}
 
-	m, err := inst.checksumFileParser.ParseChecksumFile(string(checksumFile), pkg)
+	m, s, err := inst.checksumFileParser.ParseChecksumFile(string(checksumFile), pkg)
 	if err != nil {
 		return "", fmt.Errorf("parse a checksum file: %w", err)
+	}
+	if s != "" {
+		return s, nil
 	}
 
 	return m[assetName], nil

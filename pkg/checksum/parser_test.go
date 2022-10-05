@@ -9,13 +9,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestFileParser_ParseChecksumFile(t *testing.T) {
+func TestFileParser_ParseChecksumFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name    string
 		content string
 		pkg     *config.Package
 		m       map[string]string
+		s       string
 		isErr   bool
 	}{
 		{
@@ -45,13 +46,28 @@ func TestFileParser_ParseChecksumFile(t *testing.T) {
 				"nova_3.2.0_darwin_arm64.tar.gz": "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101",
 			},
 		},
+		{
+			name:    "sha256",
+			content: `89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101  /home/runner/nova_3.2.0_darwin_arm64.tar.gz`,
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Checksum: &registry.Checksum{
+						FileFormat: "regexp",
+						Pattern: &registry.ChecksumPattern{
+							Checksum: `^(.{64})`,
+						},
+					},
+				},
+			},
+			s: "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101",
+		},
 	}
 	parser := &checksum.FileParser{}
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			m, err := parser.ParseChecksumFile(d.content, d.pkg)
+			m, s, err := parser.ParseChecksumFile(d.content, d.pkg)
 			if err != nil {
 				if d.isErr {
 					return
@@ -63,6 +79,9 @@ func TestFileParser_ParseChecksumFile(t *testing.T) {
 			}
 			if diff := cmp.Diff(m, d.m); diff != "" {
 				t.Fatal(diff)
+			}
+			if s != d.s {
+				t.Fatalf("wanted %s, got %s", d.s, s)
 			}
 		})
 	}
