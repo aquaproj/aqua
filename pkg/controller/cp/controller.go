@@ -22,12 +22,18 @@ const (
 )
 
 type Controller struct {
-	packageInstaller domain.PackageInstaller
+	packageInstaller PackageInstaller
 	rootDir          string
 	fs               afero.Fs
 	runtime          *runtime.Runtime
 	which            which.Controller
 	installer        Installer
+}
+
+type PackageInstaller interface {
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error
+	SetCopyDir(copyDir string)
 }
 
 type Installer interface {
@@ -38,7 +44,7 @@ type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer) *Controller {
 	return &Controller{
 		rootDir:          param.RootDir,
 		packageInstaller: pkgInstaller,
@@ -69,6 +75,8 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 		failed = true
 		flagMutex.Unlock()
 	}
+
+	ctrl.packageInstaller.SetCopyDir("")
 
 	for _, exeName := range param.Args {
 		go func(exeName string) {

@@ -42,6 +42,10 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
+func (inst *Installer) SetCopyDir(copyDir string) {
+	inst.copyDir = copyDir
+}
+
 func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
 	if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
