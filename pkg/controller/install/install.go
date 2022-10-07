@@ -15,9 +15,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-const (
-	dirPermission os.FileMode = 0o775
-)
+const dirPermission os.FileMode = 0o775
 
 type Controller struct {
 	packageInstaller  domain.PackageInstaller

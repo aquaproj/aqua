@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -14,6 +15,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
+
+const dirPermission os.FileMode = 0o775
 
 func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	logE = logE.WithFields(logrus.Fields{
@@ -169,6 +172,9 @@ func (inst *Installer) buildGoPkgFile(ctx context.Context, logE *logrus.Entry, p
 		"go_src":       src,
 		"go_build_dir": exeDir,
 	}).Info("building Go tool")
+	if err := inst.fs.MkdirAll(exeDir, dirPermission); err != nil {
+		return fmt.Errorf("create a install directory: %w", err)
+	}
 	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
 		return fmt.Errorf("build Go tool: %w", err)
 	}
