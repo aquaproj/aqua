@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -19,6 +21,9 @@ func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry
 		"package_version": param.Package.Package.Version,
 		"registry":        param.Package.Package.Registry,
 	})
+	if param.Package.PackageInfo.Type == "go" {
+		return inst.buildGoPkgFiles(ctx, logE, param)
+	}
 	retryCount := 0
 	for {
 		logE.Debug("check if the package is already installed")
@@ -128,6 +133,43 @@ func (inst *Installer) downloadGoInstall(ctx context.Context, pkg *config.Packag
 		"go_package_path": goPkgPath,
 	}).Info("Installing a Go tool")
 	if _, err := inst.executor.GoInstall(ctx, goPkgPath, dest); err != nil {
+		return fmt.Errorf("build Go tool: %w", err)
+	}
+	return nil
+}
+
+func (inst *Installer) buildGoPkgFiles(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+	for _, file := range param.Package.PackageInfo.Files {
+		file := file
+		if err := inst.buildGoPkgFile(ctx, logE, param, file); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (inst *Installer) buildGoPkgFile(ctx context.Context, logE *logrus.Entry, param *DownloadParam, file *registry.File) error {
+	pkg := param.Package
+	pkgInfo := pkg.PackageInfo
+	exePath := inst.getGoPkgExePath(pkg, file)
+	dir, err := pkg.RenderDir(file, inst.runtime)
+	if err != nil {
+		return fmt.Errorf("render file dir: %w", err)
+	}
+	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
+	if _, err := inst.fs.Stat(exePath); err == nil {
+		return nil
+	}
+	src := file.Src
+	if src == "" {
+		src = "."
+	}
+	logE.WithFields(logrus.Fields{
+		"exe_path":     exePath,
+		"go_src":       src,
+		"go_build_dir": exeDir,
+	}).Info("building Go tool")
+	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
 		return fmt.Errorf("build Go tool: %w", err)
 	}
 	return nil

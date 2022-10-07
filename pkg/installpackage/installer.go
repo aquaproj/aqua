@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
@@ -180,6 +181,24 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	return nil
 }
 
+func (inst *Installer) waitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
+	for i := 0; i < 10; i++ {
+		logE.Debug("check if exec file exists")
+		if fi, err := inst.fs.Stat(exePath); err == nil {
+			if util.IsOwnerExecutable(fi.Mode()) {
+				break
+			}
+		}
+		logE.WithFields(logrus.Fields{
+			"retry_count": i + 1,
+		}).Debug("command isn't found. wait for lazy install")
+		if err := util.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+			return fmt.Errorf("wait: %w", logerr.WithFields(err, logE.Data))
+		}
+	}
+	return nil
+}
+
 func (inst *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
 	failed := false
 	for _, pkg := range pkgs {
@@ -212,37 +231,17 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (inst *Installer) getGoPkgExePath(pkg *config.Package, file *registry.File) string {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if isWindows(inst.runtime.GOOS) {
 		exePath += ".exe"
 	}
-	dir, err := pkg.RenderDir(file, inst.runtime)
-	if err != nil {
-		return "", fmt.Errorf("render file dir: %w", err)
-	}
-	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
-	if _, err := inst.fs.Stat(exePath); err == nil {
-		return exePath, nil
-	}
-	src := file.Src
-	if src == "" {
-		src = "."
-	}
-	logE.WithFields(logrus.Fields{
-		"exe_path":     exePath,
-		"go_src":       src,
-		"go_build_dir": exeDir,
-	}).Info("building Go tool")
-	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
-		return "", fmt.Errorf("build Go tool: %w", err)
-	}
-	return exePath, nil
+	return exePath
 }
 
 func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
+	exePath, err := inst.checkFileSrc(pkg, file, logE)
 	if err != nil {
 		if inst.isTest {
 			return fmt.Errorf("check file_src is correct: %w", err)
@@ -260,15 +259,17 @@ func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package
 	return nil
 }
 
-func (inst *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (inst *Installer) checkFileSrc(pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	if pkg.PackageInfo.Type == "go" {
-		return inst.checkFileSrcGo(ctx, pkg, file, logE)
+		return inst.getGoPkgExePath(pkg, file), nil
 	}
 
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return "", fmt.Errorf("get the package install path: %w", err)
 	}
+
+	// TODO check file exists before renaming
 
 	fileSrc, err := pkg.RenameFile(logE, inst.fs, pkgPath, file, inst.runtime)
 	if err != nil {
