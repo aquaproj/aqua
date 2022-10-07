@@ -253,7 +253,7 @@ func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package
 		return nil
 	}
 	logE.Info("copying an executable file")
-	if err := inst.copy(filepath.Join(inst.copyDir, file.Name), exePath); err != nil {
+	if err := inst.Copy(filepath.Join(inst.copyDir, file.Name), exePath); err != nil {
 		return err
 	}
 
@@ -299,7 +299,7 @@ const (
 	filePermission os.FileMode = 0o755
 )
 
-func (inst *Installer) copy(dest, src string) error {
+func (inst *Installer) Copy(dest, src string) error {
 	dst, err := inst.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)

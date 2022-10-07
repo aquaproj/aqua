@@ -16,10 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-const (
-	filePermission os.FileMode = 0o755
-	dirPermission  os.FileMode = 0o775
-)
+const dirPermission os.FileMode = 0o775
 
 type Controller struct {
 	packageInstaller PackageInstaller
@@ -34,6 +31,7 @@ type PackageInstaller interface {
 	InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error
 	InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error
 	SetCopyDir(copyDir string)
+	Copy(dest, src string) error
 }
 
 type Installer interface {
