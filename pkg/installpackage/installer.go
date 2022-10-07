@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
@@ -170,7 +169,7 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
-		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
+		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
 			if inst.isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -178,24 +177,6 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 		}
 	}
 
-	return nil
-}
-
-func (inst *Installer) waitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
-	for i := 0; i < 10; i++ {
-		logE.Debug("check if exec file exists")
-		if fi, err := inst.fs.Stat(exePath); err == nil {
-			if util.IsOwnerExecutable(fi.Mode()) {
-				break
-			}
-		}
-		logE.WithFields(logrus.Fields{
-			"retry_count": i + 1,
-		}).Debug("command isn't found. wait for lazy install")
-		if err := util.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-			return fmt.Errorf("wait: %w", logerr.WithFields(err, logE.Data))
-		}
-	}
 	return nil
 }
 
@@ -240,7 +221,7 @@ func (inst *Installer) getGoPkgExePath(pkg *config.Package, file *registry.File)
 	return exePath
 }
 
-func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+func (inst *Installer) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	exePath, err := inst.checkFileSrc(pkg, file, logE)
 	if err != nil {
 		if inst.isTest {
