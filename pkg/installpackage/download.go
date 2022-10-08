@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -88,6 +89,11 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	var readBody io.Reader = body
 
 	if param.Checksums != nil {
+		tempDir, err := afero.TempDir(inst.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporal directory: %w", err)
+		}
+		defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
 		readFile, err := inst.verifyChecksum(ctx, logE, &ParamVerifyChecksum{
 			ChecksumID: checksumID,
 			Checksum:   chksum,
@@ -95,6 +101,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 			Pkg:        ppkg,
 			AssetName:  param.Asset,
 			Body:       body,
+			TempDir:    tempDir,
 		})
 		if err != nil {
 			return err
