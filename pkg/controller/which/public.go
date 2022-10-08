@@ -1,26 +1,18 @@
 package which
 
 import (
-	"context"
 	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-type Controller interface {
-	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*FindResult, error)
-}
-
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker link.Linker) Controller {
-	return &controller{
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker link.Linker) *Controller {
+	return &Controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -31,13 +23,4 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		fs:                fs,
 		linker:            linker,
 	}
-}
-
-type FindResult struct {
-	Package        *config.Package
-	File           *cfgRegistry.File
-	Config         *aqua.Config
-	ExePath        string
-	ConfigFilePath string
-	EnableChecksum bool
 }

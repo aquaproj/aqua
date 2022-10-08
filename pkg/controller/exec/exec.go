@@ -10,7 +10,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -24,7 +23,7 @@ type Controller struct {
 	stdin            io.Reader
 	stdout           io.Writer
 	stderr           io.Writer
-	which            which.Controller
+	which            domain.WhichController
 	packageInstaller domain.PackageInstaller
 	executor         Executor
 	enabledXSysExec  bool
@@ -36,7 +35,7 @@ type Executor interface {
 	ExecXSys(exePath string, args []string) error
 }
 
-func New(pkgInstaller domain.PackageInstaller, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
+func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
@@ -67,7 +66,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 	return logerr.WithFields(ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE), logE.Data) //nolint:wrapcheck
 }
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult) error {
 	logE = logE.WithField("exe_path", findResult.ExePath)
 
 	var checksums *checksum.Checksums
