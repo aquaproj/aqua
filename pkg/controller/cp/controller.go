@@ -31,6 +31,7 @@ type PackageInstaller interface {
 	InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error
 	SetCopyDir(copyDir string)
 	Copy(dest, src string) error
+	WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error
 }
 
 type Installer interface {
