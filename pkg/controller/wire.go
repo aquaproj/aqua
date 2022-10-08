@@ -165,7 +165,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -229,7 +229,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			reader.New,
 			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
 		),
-		which.New,
+		wire.NewSet(
+			which.New,
+			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+		),
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
@@ -266,6 +269,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(cp.PackageInstaller), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -284,7 +288,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			reader.New,
 			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
 		),
-		which.New,
+		wire.NewSet(
+			which.New,
+			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+		),
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),

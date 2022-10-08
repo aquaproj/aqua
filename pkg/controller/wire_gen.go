@@ -91,7 +91,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return controller
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)

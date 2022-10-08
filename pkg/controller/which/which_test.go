@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -36,7 +37,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 		exeName string
 		rt      *runtime.Runtime
 		isErr   bool
-		exp     *which.FindResult
+		exp     *domain.FindResult
 	}{
 		{
 			name: "normal",
@@ -66,7 +67,7 @@ packages:
   path: aqua-installer
 `,
 			},
-			exp: &which.FindResult{
+			exp: &domain.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Name:     "aquaproj/aqua-installer",
@@ -139,7 +140,7 @@ packages:
 			links: map[string]string{
 				"../foo/gh": "/usr/local/bin/gh",
 			},
-			exp: &which.FindResult{
+			exp: &domain.FindResult{
 				ExePath: "/usr/local/bin/gh",
 			},
 		},
@@ -181,7 +182,7 @@ packages:
   path: aqua-installer
 `,
 			},
-			exp: &which.FindResult{
+			exp: &domain.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Name:     "aquaproj/aqua-installer",

@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) copy(logE *logrus.Entry, param *config.Param, findResult *which.FindResult, exeName string) error {
+func (ctrl *Controller) copy(logE *logrus.Entry, param *config.Param, findResult *domain.FindResult, exeName string) error {
 	p := filepath.Join(param.Dest, exeName)
 	if ctrl.runtime.GOOS == "windows" && filepath.Ext(exeName) == "" {
 		p += ".exe"

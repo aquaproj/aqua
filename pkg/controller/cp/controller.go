@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -23,7 +22,7 @@ type Controller struct {
 	rootDir          string
 	fs               afero.Fs
 	runtime          *runtime.Runtime
-	which            which.Controller
+	which            domain.WhichController
 	installer        Installer
 }
 
@@ -42,7 +41,7 @@ type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer) *Controller {
 	return &Controller{
 		rootDir:          param.RootDir,
 		packageInstaller: pkgInstaller,
