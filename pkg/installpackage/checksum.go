@@ -62,6 +62,22 @@ type ParamVerifyChecksum struct {
 	Pkg        *config.Package
 	AssetName  string
 	Body       io.Reader
+	TempDir    string
+}
+
+func copyAsset(fs afero.Fs, tempFilePath string, body io.Reader) error {
+	file, err := fs.Create(tempFilePath)
+	if err != nil {
+		return fmt.Errorf("create a temporal file: %w", logerr.WithFields(err, logrus.Fields{
+			"temp_file": tempFilePath,
+		}))
+	}
+	defer file.Close()
+
+	if _, err := io.Copy(file, body); err != nil {
+		return err //nolint:wrapcheck
+	}
+	return nil
 }
 
 func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
@@ -70,28 +86,22 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 	checksums := param.Checksums
 	chksum := param.Checksum
 	checksumID := param.ChecksumID
+	tempDir := param.TempDir
 
-	tempDir, err := afero.TempDir(inst.fs, "", "")
-	if err != nil {
-		return nil, fmt.Errorf("create a temporal directory: %w", err)
-	}
-	defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
+	// Download an asset in a temporal directory
+	// Calculate the checksum of download asset
+	// Download a checksum file
+	// Extract the checksum from the checksum file
+	// Compare the checksum
+	// Store the checksum to aqua-checksums.json
 
 	assetName := filepath.Base(param.AssetName)
 	tempFilePath := filepath.Join(tempDir, assetName)
 	if assetName == "" && (pkgInfo.Type == "github_archive" || pkgInfo.Type == "go") {
 		tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
 	}
-	file, err := inst.fs.Create(tempFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("create a temporal file: %w", logerr.WithFields(err, logrus.Fields{
-			"temp_file": tempFilePath,
-		}))
-	}
-	defer file.Close()
-
-	if _, err := io.Copy(file, param.Body); err != nil {
-		return nil, err //nolint:wrapcheck
+	if err := copyAsset(inst.fs, tempFilePath, param.Body); err != nil {
+		return nil, err
 	}
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
