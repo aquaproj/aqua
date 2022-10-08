@@ -3,21 +3,14 @@ package cp
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult) error {
-	logE = logE.WithFields(logrus.Fields{
-		"exe_path": findResult.ExePath,
-		"package":  findResult.Package.Package.Name,
-	})
-
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -42,23 +35,5 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 	}); err != nil {
 		return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 	}
-	return ctrl.waitExe(ctx, logE, findResult.ExePath)
-}
-
-func (ctrl *Controller) waitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
-	for i := 0; i < 10; i++ {
-		logE.Debug("check if exec file exists")
-		if fi, err := ctrl.fs.Stat(exePath); err == nil {
-			if util.IsOwnerExecutable(fi.Mode()) {
-				break
-			}
-		}
-		logE.WithFields(logrus.Fields{
-			"retry_count": i + 1,
-		}).Debug("command isn't found. wait for lazy install")
-		if err := util.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-			return fmt.Errorf("wait: %w", logerr.WithFields(err, logE.Data))
-		}
-	}
-	return nil
+	return ctrl.packageInstaller.WaitExe(ctx, logE, findResult.ExePath) //nolint:wrapcheck
 }
