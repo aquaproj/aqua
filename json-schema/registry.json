@@ -57,8 +57,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "checksum",
-        "file"
+        "checksum"
       ]
     },
     "Config": {
