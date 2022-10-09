@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestCalculate(t *testing.T) {
+func TestCalculator_Calculate(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name      string
@@ -27,6 +27,7 @@ func TestCalculate(t *testing.T) {
 			algorithm: "foo",
 		},
 	}
+	calculator := &checksum.Calculator{}
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
@@ -35,7 +36,7 @@ func TestCalculate(t *testing.T) {
 			if err := afero.WriteFile(fs, d.filename, []byte(d.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
-			c, err := checksum.Calculate(fs, d.filename, d.algorithm)
+			c, err := calculator.Calculate(fs, d.filename, d.algorithm)
 			if err != nil {
 				if d.isErr {
 					return

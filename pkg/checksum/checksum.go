@@ -13,7 +13,13 @@ import (
 	"github.com/spf13/afero"
 )
 
-func Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
+func NewCalculator() *Calculator {
+	return &Calculator{}
+}
+
+type Calculator struct{}
+
+func (calc *Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
 	switch algorithm {
 	case "md5":
 		return checksum.MD5sum(filename) //nolint:wrapcheck

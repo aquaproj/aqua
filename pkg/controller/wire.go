@@ -7,6 +7,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
@@ -161,6 +162,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			download.NewChecksumDownloader,
 			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
 		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -246,6 +251,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		afero.NewOsFs,
 		link.New,
 		download.NewHTTPDownloader,
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -305,6 +314,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		afero.NewOsFs,
 		link.New,
 		download.NewHTTPDownloader,
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
 	)
 	return &cp.Controller{}
 }

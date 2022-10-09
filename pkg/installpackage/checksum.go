@@ -128,7 +128,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 	if chksum != nil {
 		algorithm = chksum.Algorithm
 	}
-	calculatedSum, err := checksum.Calculate(inst.fs, tempFilePath, algorithm)
+	calculatedSum, err := inst.checksumCalculator.Calculate(inst.fs, tempFilePath, algorithm)
 	if err != nil {
 		return nil, fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
 			"temp_file": tempFilePath,

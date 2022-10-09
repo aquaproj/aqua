@@ -28,6 +28,7 @@ type Installer struct {
 	packageDownloader  domain.PackageDownloader
 	checksumDownloader domain.ChecksumDownloader
 	checksumFileParser *checksum.FileParser
+	checksumCalculator ChecksumCalculator
 	runtime            *runtime.Runtime
 	fs                 afero.Fs
 	linker             link.Linker
@@ -36,6 +37,10 @@ type Installer struct {
 	onlyLink           bool
 	isTest             bool
 	copyDir            string
+}
+
+type ChecksumCalculator interface {
+	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
 }
 
 func isWindows(goos string) bool {
