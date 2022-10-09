@@ -28,6 +28,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"net/http"
@@ -88,7 +89,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
-	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator)
+	unarchiver := unarchive.New()
+	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt)
 	return controller
 }
@@ -116,7 +118,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator)
+	unarchiver := unarchive.New()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -136,7 +139,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator)
+	unarchiver := unarchive.New()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)

@@ -120,7 +120,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	return unarchive.Unarchive(&unarchive.File{ //nolint:wrapcheck
+	return inst.unarchiver.Unarchive(&unarchive.File{ //nolint:wrapcheck
 		Body:     readBody,
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),

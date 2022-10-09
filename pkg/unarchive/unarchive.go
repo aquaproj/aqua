@@ -19,7 +19,7 @@ type ProgressBarOpts struct {
 	Description   string
 }
 
-type Unarchiver interface {
+type Unarchiver2 interface {
 	Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
 }
 
@@ -29,7 +29,13 @@ type File struct {
 	Type     string
 }
 
-func Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+type Unarchiver struct{}
+
+func New() *Unarchiver {
+	return &Unarchiver{}
+}
+
+func (unarchiver *Unarchiver) Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *ProgressBarOpts) error {
 	arc, err := getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
@@ -49,7 +55,7 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func getUnarchiver(src *File, dest string) (Unarchiver, error) {
+func getUnarchiver(src *File, dest string) (Unarchiver2, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
