@@ -28,6 +28,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/google/wire"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -166,6 +167,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			checksum.NewCalculator,
 			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
 		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -255,6 +260,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			checksum.NewCalculator,
 			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
 		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -317,6 +326,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			checksum.NewCalculator,
 			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
 	)
 	return &cp.Controller{}

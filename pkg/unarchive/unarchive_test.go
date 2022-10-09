@@ -68,7 +68,7 @@ func getReadCloser(ctx context.Context, downloader download.HTTPDownloader, body
 	return downloader.Download(ctx, url) //nolint:wrapcheck
 }
 
-func TestUnarchive(t *testing.T) {
+func TestUnarchiver_Unarchive(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
@@ -102,6 +102,7 @@ func TestUnarchive(t *testing.T) {
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	httpDownloader := download.NewHTTPDownloader(http.DefaultClient)
+	unarchiver := &unarchive.Unarchiver{}
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
@@ -115,7 +116,7 @@ func TestUnarchive(t *testing.T) {
 				t.Fatal(err)
 			}
 			d.src.Body = body
-			if err := unarchive.Unarchive(d.src, t.TempDir(), logE, fs, nil); err != nil {
+			if err := unarchiver.Unarchive(d.src, t.TempDir(), logE, fs, nil); err != nil {
 				if d.isErr {
 					return
 				}
