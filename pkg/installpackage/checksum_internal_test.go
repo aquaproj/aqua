@@ -15,10 +15,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-func strP(s string) *string {
-	return &s
-}
-
 func TestInstaller_extractChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
