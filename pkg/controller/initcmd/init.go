@@ -14,6 +14,10 @@ import (
 const configTemplate = `---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
+# checksum:
+#   # https://aquaproj.github.io/docs/reference/checksum/
+#   enabled: true
+#   require_checksum: true
 registries:
 - type: standard
   ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
