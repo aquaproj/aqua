@@ -13,7 +13,7 @@ type Checksum struct {
 
 type ChecksumPattern struct {
 	Checksum string `json:"checksum"`
-	File     string `json:"file"`
+	File     string `json:"file,omitempty"`
 }
 
 func (chk *Checksum) GetReplacements() Replacements {
