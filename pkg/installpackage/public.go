@@ -16,13 +16,14 @@ type Executor interface {
 	GoInstall(ctx context.Context, path, gobin string) (int, error)
 }
 
-func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker link.Linker, executor Executor, chkDL domain.ChecksumDownloader) *Installer {
+func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker link.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator) *Installer {
 	return &Installer{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
 		packageDownloader:  downloader,
 		checksumDownloader: chkDL,
 		checksumFileParser: &checksum.FileParser{},
+		checksumCalculator: chkCalc,
 		runtime:            rt,
 		fs:                 fs,
 		linker:             linker,

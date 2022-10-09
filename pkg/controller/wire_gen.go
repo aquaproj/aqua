@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
@@ -86,7 +87,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	linker := link.New()
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
-	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader)
+	calculator := checksum.NewCalculator()
+	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt)
 	return controller
 }
@@ -113,7 +115,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	linker := link.New()
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader)
+	calculator := checksum.NewCalculator()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -132,7 +135,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	linker := link.New()
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader)
+	calculator := checksum.NewCalculator()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)

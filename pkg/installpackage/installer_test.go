@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -202,7 +203,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{})
 			if err := ctrl.InstallPackages(ctx, logE, &domain.ParamInstallPackages{
 				Config:         d.cfg,
 				Registries:     d.registries,
@@ -272,7 +273,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil)
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{})
 			if err := ctrl.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
 				Pkg: d.pkg,
 			}); err != nil {
