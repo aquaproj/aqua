@@ -95,7 +95,7 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 	// Compare the checksum
 	// Store the checksum to aqua-checksums.json
 
-	assetName := filepath.Base(param.AssetName)
+	assetName := param.AssetName
 	tempFilePath := filepath.Join(tempDir, assetName)
 	if assetName == "" && (pkgInfo.Type == "github_archive" || pkgInfo.Type == "go") {
 		tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
