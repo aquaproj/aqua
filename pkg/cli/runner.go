@@ -110,10 +110,8 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newCompletionCommand(),
 			runner.newVersionCommand(),
 			runner.newCpCommand(),
+			runner.newUpdateChecksumCommand(),
 		},
-	}
-	if os.Getenv("AQUA_EXPERIMENTAL_CHECKSUM_VERIFICATION") == "true" {
-		app.Commands = append(app.Commands, runner.newUpdateChecksumCommand())
 	}
 
 	return app.RunContext(ctx, args) //nolint:wrapcheck
