@@ -59,7 +59,7 @@ type mockPkgDownloader struct {
 	err  error
 }
 
-func (dl *mockPkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, int64, error) {
+func (dl *mockPkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry, rt *runtime.Runtime) (io.ReadCloser, int64, error) {
 	return io.NopCloser(strings.NewReader(dl.body)), dl.code, dl.err
 }
 

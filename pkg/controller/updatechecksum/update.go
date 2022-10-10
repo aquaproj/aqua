@@ -265,7 +265,7 @@ func (ctrl *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.
 			gErr = logerr.WithFields(gErr, fields)
 		}
 	}()
-	file, _, err := ctrl.pkgDownloader.GetReadCloser(ctx, pkg, assetName, logE)
+	file, _, err := ctrl.pkgDownloader.GetReadCloser(ctx, pkg, assetName, logE, rt)
 	if err != nil {
 		return fmt.Errorf("download an asset: %w", err)
 	}

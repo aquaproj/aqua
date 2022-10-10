@@ -34,7 +34,7 @@ func (unarchiver *mockUnarchiver) Unarchive(src *unarchive.File, dest string, lo
 	return unarchiver.err
 }
 
-func (dl *mockPackageDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry) (io.ReadCloser, int64, error) {
+func (dl *mockPackageDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry, rt *runtime.Runtime) (io.ReadCloser, int64, error) {
 	if dl.err == nil {
 		return io.NopCloser(strings.NewReader(dl.body)), dl.code, nil
 	}
