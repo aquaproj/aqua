@@ -137,8 +137,6 @@ jobs:
     - run: aqua list
     - run: aqua update-checksum
       working-directory: tests
-    - run: aqua update-checksum -deep
-      working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
     - run: cmdx -v
@@ -178,8 +176,6 @@ jobs:
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
       working-directory: tests
-
-    - run: aqua update-checksum -a
 
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
@@ -214,8 +210,6 @@ jobs:
     - run: aqua list
     - run: aqua update-checksum
       working-directory: tests
-    - run: aqua update-checksum -deep
-      working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
     - run: cmdx -v
@@ -255,8 +249,6 @@ jobs:
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
       working-directory: tests
-
-    - run: aqua update-checksum -a
 
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
