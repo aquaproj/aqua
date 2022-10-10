@@ -78,7 +78,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, ppkg, param.Asset, logE)
+	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, ppkg, param.Asset, logE, nil)
 	if body != nil {
 		defer body.Close()
 	}
