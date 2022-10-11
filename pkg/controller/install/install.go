@@ -27,6 +27,7 @@ type Controller struct {
 	registryInstaller domain.RegistryInstaller
 	fs                afero.Fs
 	runtime           *runtime.Runtime
+	skipLink          bool
 }
 
 type ConfigFinder interface {
@@ -42,6 +43,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		packageInstaller:  pkgInstaller,
 		fs:                fs,
 		runtime:           rt,
+		skipLink:          param.SkipLink,
 	}
 }
 
@@ -104,5 +106,6 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		Config:         cfg,
 		Registries:     registryContents,
 		ConfigFilePath: cfgFilePath,
+		SkipLink:       ctrl.skipLink,
 	})
 }

@@ -59,8 +59,10 @@ func (inst *Installer) SetCopyDir(copyDir string) {
 
 func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
-	if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
-		failed = failedCreateLinks
+	if !param.SkipLink {
+		if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
+			failed = failedCreateLinks
+		}
 	}
 
 	if inst.onlyLink {

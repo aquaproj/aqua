@@ -67,6 +67,7 @@ func (runner *Runner) cpAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.IsTest = true
+	param.SkipLink = true
 	ctrl := controller.InitializeCopyCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
 	if err := ctrl.Copy(c.Context, runner.LogE, param); err != nil {
 		return err //nolint:wrapcheck
