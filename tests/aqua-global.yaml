@@ -63,5 +63,5 @@ packages:
   # type: go_install
   version: e9ceff4e053200afb1eb7e8e3c16932b2e2f01ee
 # {{.URL}} in checksum
-- name: helm/helm@v3.10.0
+- name: helm/helm@v3.10.1
   registry: local
