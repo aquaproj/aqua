@@ -25,6 +25,7 @@ func isWindows(goos string) bool {
 type Package struct {
 	Package     *aqua.Package
 	PackageInfo *registry.PackageInfo
+	Registry    *aqua.Registry
 }
 
 func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {

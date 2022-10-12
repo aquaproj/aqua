@@ -92,3 +92,13 @@ func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) string {
 	}
 	return ""
 }
+
+func (registry *Registry) GetID() string {
+	switch registry.Type {
+	case RegistryTypeLocal:
+		return "local"
+	case RegistryTypeGitHubContent:
+		return filepath.Join(registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
+	}
+	return ""
+}
