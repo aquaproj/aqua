@@ -35,7 +35,7 @@ packages:
 - name: tfutils/tfenv@v3.0.0
   # github_archive package
   registry: local
-- name: containerd/nerdctl@v0.23.0
+- name: containerd/nerdctl@v1.0.0
   # supported_if
   registry: local
 - name: aristocratos/btop@v1.2.12
