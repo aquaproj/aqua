@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/config/security"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -39,6 +40,11 @@ type Installer struct {
 	onlyLink           bool
 	isTest             bool
 	copyDir            string
+	securityChecker    SecurityChecker
+}
+
+type SecurityChecker interface {
+	Validate(pkg *config.Package, secConfig *security.Config) error
 }
 
 type Unarchiver interface {
@@ -126,6 +132,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				Pkg:             pkg,
 				Checksums:       checksums,
 				RequireChecksum: param.Config.RequireChecksum(),
+				SecurityConfig:  param.SecurityConfig,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
@@ -150,6 +157,11 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 		"registry":        pkg.Package.Registry,
 	})
 	logE.Debug("install the package")
+
+	// TODO validate
+	// if err := inst.securityChecker.Validate(param.Pkg, param.SecurityConfig); err != nil {
+	// 	return err //nolint:wrapcheck
+	// }
 
 	if err := pkgInfo.Validate(); err != nil {
 		return fmt.Errorf("invalid package: %w", err)

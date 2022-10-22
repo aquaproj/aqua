@@ -2,8 +2,6 @@ package security
 
 type Config struct {
 	// OR condition
-	Registries []*Registry `json:"registries,omitempty"`
-	// OR condition
 	Packages []*Package `json:"packages,omitempty"`
 }
 
@@ -15,6 +13,11 @@ type Registry struct {
 }
 
 type Package struct {
+	Packages []*ChildPackage `json:"packages,omitempty"`
+	Registry *Registry       `json:"registry,omitempty"`
+}
+
+type ChildPackage struct {
 	ID string `json:"id"`
 	// AND condition
 	IDFormat string `yaml:"id_format" json:"id_format,omitempty"`
