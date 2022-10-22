@@ -28,6 +28,7 @@ type Controller struct {
 	fs                afero.Fs
 	runtime           *runtime.Runtime
 	skipLink          bool
+	tags              map[string]struct{}
 }
 
 type ConfigFinder interface {
@@ -101,6 +102,8 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
+	cfg.Packages = aqua.FilterPackagesByTag(cfg.Packages, ctrl.tags)
 
 	return ctrl.packageInstaller.InstallPackages(ctx, logE, &domain.ParamInstallPackages{ //nolint:wrapcheck
 		Config:         cfg,

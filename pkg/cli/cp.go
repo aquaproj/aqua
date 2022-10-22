@@ -25,6 +25,11 @@ func (runner *Runner) newCpCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "install all aqua configuration packages",
 			},
+			&cli.StringSliceFlag{
+				Name:    "tags",
+				Aliases: []string{"t"},
+				Usage:   "filter copied packages with tags",
+			},
 		},
 		Description: `Copy executable files in a directory.
 

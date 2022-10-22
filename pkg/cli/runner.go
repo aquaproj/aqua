@@ -63,6 +63,13 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
+	tags := c.StringSlice("tags")
+	tagsM := make(map[string]struct{}, len(tags))
+	for _, tag := range tags {
+		tagsM[tag] = struct{}{}
+	}
+	param.Tags = tagsM
+
 	return nil
 }
 

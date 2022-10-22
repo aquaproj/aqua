@@ -7,10 +7,11 @@ import (
 )
 
 type Package struct {
-	Name     string `validate:"required" json:"name,omitempty"`
-	Registry string `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
-	Version  string `validate:"required" yaml:",omitempty" json:"version,omitempty"`
-	Import   string `yaml:",omitempty" json:"import,omitempty"`
+	Name     string   `validate:"required" json:"name,omitempty"`
+	Registry string   `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
+	Version  string   `validate:"required" yaml:",omitempty" json:"version,omitempty"`
+	Import   string   `yaml:",omitempty" json:"import,omitempty"`
+	Tags     []string `yaml:",omitempty" json:"tags,omitempty"`
 }
 
 func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
