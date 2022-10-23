@@ -46,7 +46,7 @@ $ aqua i -a
 				Usage:   "install all aqua configuration packages",
 			},
 			&cli.StringSliceFlag{
-				Name:    "tags",
+				Name:    "tag",
 				Aliases: []string{"t"},
 				Usage:   "filter installed packages with tags",
 			},

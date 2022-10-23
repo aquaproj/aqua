@@ -45,6 +45,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		fs:                fs,
 		runtime:           rt,
 		skipLink:          param.SkipLink,
+		tags:              param.Tags,
 	}
 }
 
