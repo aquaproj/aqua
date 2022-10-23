@@ -21,6 +21,7 @@ type ParamInstallPackages struct {
 	Config         *aqua.Config
 	Registries     map[string]*registry.Config
 	Tags           map[string]struct{}
+	ExcludedTags   map[string]struct{}
 	SkipLink       bool
 	IgnoreTags     bool
 }

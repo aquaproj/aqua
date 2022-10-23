@@ -45,10 +45,14 @@ $ aqua i -a
 				Aliases: []string{"a"},
 				Usage:   "install all aqua configuration packages",
 			},
-			&cli.StringSliceFlag{
-				Name:    "tag",
+			&cli.StringFlag{
+				Name:    "tags",
 				Aliases: []string{"t"},
 				Usage:   "filter installed packages with tags",
+			},
+			&cli.StringFlag{
+				Name:  "exclude-tags",
+				Usage: "exclude installed packages with tags",
 			},
 			&cli.BoolFlag{
 				Name:  "ignore-tags",

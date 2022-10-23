@@ -25,10 +25,14 @@ func (runner *Runner) newCpCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "install all aqua configuration packages",
 			},
-			&cli.StringSliceFlag{
+			&cli.StringFlag{
 				Name:    "tags",
 				Aliases: []string{"t"},
-				Usage:   "filter copied packages with tags",
+				Usage:   "filter installed packages with tags",
+			},
+			&cli.StringFlag{
+				Name:  "exclude-tags",
+				Usage: "exclude installed packages with tags",
 			},
 			&cli.BoolFlag{
 				Name:  "ignore-tags",

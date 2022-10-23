@@ -28,6 +28,7 @@ type Controller struct {
 	fs                afero.Fs
 	runtime           *runtime.Runtime
 	tags              map[string]struct{}
+	excludedTags      map[string]struct{}
 	skipLink          bool
 	ignoreTags        bool
 }
@@ -47,6 +48,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		runtime:           rt,
 		skipLink:          param.SkipLink,
 		tags:              param.Tags,
+		excludedTags:      param.ExcludedTags,
 		ignoreTags:        param.IgnoreTags,
 	}
 }
@@ -112,6 +114,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		ConfigFilePath: cfgFilePath,
 		SkipLink:       ctrl.skipLink,
 		Tags:           ctrl.tags,
+		ExcludedTags:   ctrl.excludedTags,
 		IgnoreTags:     ctrl.ignoreTags,
 	})
 }

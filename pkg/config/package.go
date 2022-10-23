@@ -174,6 +174,7 @@ type Param struct {
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}
+	ExcludedTags          map[string]struct{}
 	OnlyLink              bool
 	IsTest                bool
 	All                   bool
