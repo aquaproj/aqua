@@ -103,12 +103,11 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		return err //nolint:wrapcheck
 	}
 
-	cfg.Packages = aqua.FilterPackagesByTag(cfg.Packages, ctrl.tags)
-
 	return ctrl.packageInstaller.InstallPackages(ctx, logE, &domain.ParamInstallPackages{ //nolint:wrapcheck
 		Config:         cfg,
 		Registries:     registryContents,
 		ConfigFilePath: cfgFilePath,
 		SkipLink:       ctrl.skipLink,
+		Tags:           ctrl.tags,
 	})
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/link"
@@ -117,6 +118,9 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 			defer func() {
 				<-maxInstallChan
 			}()
+			if !aqua.FilterPackageByTag(pkg.Package, param.Tags) {
+				return
+			}
 			logE := logE.WithFields(logrus.Fields{
 				"package_name":    pkg.Package.Name,
 				"package_version": pkg.Package.Version,

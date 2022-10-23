@@ -1,9 +1,6 @@
 package aqua
 
 func FilterPackageByTag(pkg *Package, tags map[string]struct{}) bool {
-	if len(tags) == 0 {
-		return true
-	}
 	if len(pkg.Tags) == 0 {
 		return true
 	}
