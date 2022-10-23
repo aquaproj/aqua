@@ -20,8 +20,9 @@ type ParamInstallPackages struct {
 	ConfigFilePath string
 	Config         *aqua.Config
 	Registries     map[string]*registry.Config
-	SkipLink       bool
 	Tags           map[string]struct{}
+	SkipLink       bool
+	IgnoreTags     bool
 }
 
 type ParamInstallPackage struct {

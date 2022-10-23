@@ -50,6 +50,10 @@ $ aqua i -a
 				Aliases: []string{"t"},
 				Usage:   "filter installed packages with tags",
 			},
+			&cli.BoolFlag{
+				Name:  "ignore-tags",
+				Usage: "ignore package tags",
+			},
 		},
 	}
 }

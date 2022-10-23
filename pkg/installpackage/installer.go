@@ -118,7 +118,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 			defer func() {
 				<-maxInstallChan
 			}()
-			if !aqua.FilterPackageByTag(pkg.Package, param.Tags) {
+			if !param.IgnoreTags && !aqua.FilterPackageByTag(pkg.Package, param.Tags) {
 				return
 			}
 			logE := logE.WithFields(logrus.Fields{

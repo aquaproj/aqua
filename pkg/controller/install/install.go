@@ -27,8 +27,9 @@ type Controller struct {
 	registryInstaller domain.RegistryInstaller
 	fs                afero.Fs
 	runtime           *runtime.Runtime
-	skipLink          bool
 	tags              map[string]struct{}
+	skipLink          bool
+	ignoreTags        bool
 }
 
 type ConfigFinder interface {
@@ -46,6 +47,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		runtime:           rt,
 		skipLink:          param.SkipLink,
 		tags:              param.Tags,
+		ignoreTags:        param.IgnoreTags,
 	}
 }
 
@@ -110,5 +112,6 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		ConfigFilePath: cfgFilePath,
 		SkipLink:       ctrl.skipLink,
 		Tags:           ctrl.tags,
+		IgnoreTags:     ctrl.ignoreTags,
 	})
 }

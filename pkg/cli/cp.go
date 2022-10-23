@@ -30,6 +30,10 @@ func (runner *Runner) newCpCommand() *cli.Command {
 				Aliases: []string{"t"},
 				Usage:   "filter copied packages with tags",
 			},
+			&cli.BoolFlag{
+				Name:  "ignore-tags",
+				Usage: "ignore package tags",
+			},
 		},
 		Description: `Copy executable files in a directory.
 
