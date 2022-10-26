@@ -20,7 +20,7 @@ packages:
   version: v1.50.0 # renovate: depName=golangci/golangci-lint
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard # standard registry
-  version: v0.16.0 # renovate: depName=kubernetes-sigs/kind
+  version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
 - name: restic/restic@v0.14.0
   # decompressor, package name with version
   registry: aqua-registry # github content registry
