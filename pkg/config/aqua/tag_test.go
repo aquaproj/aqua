@@ -32,7 +32,7 @@ func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 				Registry: "standard",
 				Tags:     []string{"ci"},
 			},
-			exp: false,
+			exp: true,
 		},
 		{
 			name: "tag is matched",

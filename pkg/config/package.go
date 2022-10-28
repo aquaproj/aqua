@@ -183,7 +183,6 @@ type Param struct {
 	ProgressBar           bool
 	Deep                  bool
 	SkipLink              bool
-	IgnoreTags            bool
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {

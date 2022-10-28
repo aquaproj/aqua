@@ -30,7 +30,6 @@ type Controller struct {
 	tags              map[string]struct{}
 	excludedTags      map[string]struct{}
 	skipLink          bool
-	ignoreTags        bool
 }
 
 type ConfigFinder interface {
@@ -49,7 +48,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		skipLink:          param.SkipLink,
 		tags:              param.Tags,
 		excludedTags:      param.ExcludedTags,
-		ignoreTags:        param.IgnoreTags,
 	}
 }
 
@@ -115,6 +113,5 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		SkipLink:       ctrl.skipLink,
 		Tags:           ctrl.tags,
 		ExcludedTags:   ctrl.excludedTags,
-		IgnoreTags:     ctrl.ignoreTags,
 	})
 }

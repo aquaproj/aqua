@@ -54,10 +54,6 @@ $ aqua i -a
 				Name:  "exclude-tags",
 				Usage: "exclude installed packages with tags",
 			},
-			&cli.BoolFlag{
-				Name:  "ignore-tags",
-				Usage: "ignore package tags",
-			},
 		},
 	}
 }

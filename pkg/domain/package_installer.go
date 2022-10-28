@@ -23,7 +23,6 @@ type ParamInstallPackages struct {
 	Tags           map[string]struct{}
 	ExcludedTags   map[string]struct{}
 	SkipLink       bool
-	IgnoreTags     bool
 }
 
 type ParamInstallPackage struct {

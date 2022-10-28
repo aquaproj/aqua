@@ -5,6 +5,9 @@ func FilterPackageByTag(pkg *Package, tags, excludedTags map[string]struct{}) bo
 		return len(tags) == 0
 	}
 	if len(excludedTags) == 0 {
+		if len(tags) == 0 {
+			return true
+		}
 		for _, tag := range pkg.Tags {
 			if _, ok := tags[tag]; ok {
 				return true

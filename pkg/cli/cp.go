@@ -34,10 +34,6 @@ func (runner *Runner) newCpCommand() *cli.Command {
 				Name:  "exclude-tags",
 				Usage: "exclude installed packages with tags",
 			},
-			&cli.BoolFlag{
-				Name:  "ignore-tags",
-				Usage: "ignore package tags",
-			},
 		},
 		Description: `Copy executable files in a directory.
 
