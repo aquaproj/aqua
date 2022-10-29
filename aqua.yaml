@@ -3,7 +3,7 @@
 # https://aquaproj.github.io/
 registries:
 - type: standard
-  ref: v3.83.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.84.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
 - name: golangci/golangci-lint@v1.50.0
