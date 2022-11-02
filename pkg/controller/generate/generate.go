@@ -208,8 +208,7 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
-	m := map[string]*FindingPackage{}
+func (ctrl *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*registry.Config, m map[string]*FindingPackage) {
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
 		for pkgName, pkg := range registryContent.PackageInfos.ToMapWarn(logE) {
@@ -231,6 +230,11 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 			}
 		}
 	}
+}
+
+func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
+	m := map[string]*FindingPackage{}
+	ctrl.setPkgMap(logE, registryContents, m)
 
 	outputPkgs := []*aqua.Package{}
 	for _, pkgName := range pkgNames {
@@ -436,12 +440,11 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logr
 	}
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo) {
+func (ctrl *Controller) getVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
-	var tagName string
 
-	if param.SelectVersion { //nolint:nestif
+	if param.SelectVersion {
 		tags := ctrl.listTags(ctx, logE, pkgInfo)
 		versions := make([]*Version, len(tags))
 		for i, tag := range tags {
@@ -452,47 +455,35 @@ func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, logE *
 		}
 		idx, err := ctrl.versionSelector.Find(versions)
 		if err != nil {
-			return
+			return ""
 		}
-		tagName = versions[idx].Version
-	} else {
-		if pkgInfo.VersionFilter != nil {
-			tagName = ctrl.listAndGetTagNameFromTag(ctx, logE, pkgInfo)
-		} else {
-			tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, nil)
-			if err != nil {
-				logerr.WithError(logE, err).WithFields(logrus.Fields{
-					"repo_owner": repoOwner,
-					"repo_name":  repoName,
-				}).Warn("list GitHub tags")
-				return
-			}
-			if len(tags) == 0 {
-				return
-			}
-			tag := tags[0]
-			tagName = tag.GetName()
-		}
+		return versions[idx].Version
 	}
-
-	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
-		outputPkg.Name += "@" + tagName
-		outputPkg.Version = ""
-	} else {
-		outputPkg.Version = tagName
+	if pkgInfo.VersionFilter != nil {
+		return ctrl.listAndGetTagNameFromTag(ctx, logE, pkgInfo)
 	}
+	tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, nil)
+	if err != nil {
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
+			"repo_owner": repoOwner,
+			"repo_name":  repoName,
+		}).Warn("list GitHub tags")
+		return ""
+	}
+	if len(tags) == 0 {
+		return ""
+	}
+	return tags[0].GetName()
 }
 
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo) {
+func (ctrl *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
 	if pkgInfo.VersionSource == "github_tag" {
-		ctrl.getOutputtedGitHubPkgFromTag(ctx, logE, param, outputPkg, pkgInfo)
-		return
+		return ctrl.getVersionFromGitHubTag(ctx, logE, param, pkgInfo)
 	}
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
-	var tagName string
 
-	if param.SelectVersion { //nolint:nestif
+	if param.SelectVersion {
 		releases := ctrl.listReleases(ctx, logE, pkgInfo)
 		versions := make([]*Version, len(releases))
 		for i, release := range releases {
@@ -505,30 +496,33 @@ func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, logE *logrus.
 		}
 		idx, err := ctrl.versionSelector.Find(versions)
 		if err != nil {
-			return
+			return ""
 		}
-		tagName = versions[idx].Version
-	} else {
-		if pkgInfo.VersionFilter != nil {
-			tagName = ctrl.listAndGetTagName(ctx, logE, pkgInfo)
-		} else {
-			release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
-			if err != nil {
-				logerr.WithError(logE, err).WithFields(logrus.Fields{
-					"repo_owner": repoOwner,
-					"repo_name":  repoName,
-				}).Warn("get the latest release")
-				return
-			}
-			tagName = release.GetTagName()
-		}
+		return versions[idx].Version
 	}
+	if pkgInfo.VersionFilter != nil {
+		return ctrl.listAndGetTagName(ctx, logE, pkgInfo)
+	}
+	release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
+	if err != nil {
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
+			"repo_owner": repoOwner,
+			"repo_name":  repoName,
+		}).Warn("get the latest release")
+		return ""
+	}
+	return release.GetTagName()
+}
 
+func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo) {
+	version := ctrl.getVersionFromGitHub(ctx, logE, param, pkgInfo)
+	repoOwner := pkgInfo.RepoOwner
+	repoName := pkgInfo.RepoName
 	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
-		outputPkg.Name += "@" + tagName
+		outputPkg.Name += "@" + version
 		outputPkg.Version = ""
 	} else {
-		outputPkg.Version = tagName
+		outputPkg.Version = version
 	}
 }
 
