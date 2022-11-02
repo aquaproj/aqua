@@ -28,6 +28,12 @@ If you want to install packages in the global configuration too,
 please set "-a" option.
 
 $ aqua i -a
+
+You can filter installed packages with package tags.
+
+e.g.
+$ aqua i -t foo # Install only packages having a tag "foo"
+$ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 `,
 		Action: runner.installAction,
 		Flags: []cli.Flag{

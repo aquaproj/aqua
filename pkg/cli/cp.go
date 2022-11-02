@@ -53,6 +53,12 @@ $ aqua cp
 You can also copy global configuration files' commands with "-a" option.
 
 $ aqua cp -a
+
+You can filter copied commands with package tags.
+
+e.g.
+$ aqua cp -t foo # Copy only packages having a tag "foo"
+$ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 `,
 		Action: runner.cpAction,
 	}
