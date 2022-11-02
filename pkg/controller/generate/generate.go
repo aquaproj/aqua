@@ -20,7 +20,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"gopkg.in/yaml.v2"
 )
 
 type Controller struct {
@@ -33,6 +32,7 @@ type Controller struct {
 	fuzzyFinder       FuzzyFinder
 	versionSelector   VersionSelector
 	fs                afero.Fs
+	outputter         Outputter
 }
 
 type RepositoriesService interface {
@@ -43,6 +43,10 @@ type RepositoriesService interface {
 
 type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
+}
+
+type Outputter interface {
+	Output(param *OutputParam) error
 }
 
 func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
@@ -56,13 +60,31 @@ func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInst
 		fs:                fs,
 		fuzzyFinder:       fuzzyFinder,
 		versionSelector:   versionSelector,
+		outputter: &outputter{
+			fs:     fs,
+			stdout: os.Stdout,
+		},
 	}
 }
 
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error { //nolint:cyclop
+func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
+	// Find and read a configuration file (aqua.yaml).
+	// Install registries
+	// List outputted packages
+	//   Get packages by fuzzy finder or from file or from arguments
+	//   Get versions
+	//     Get versions from arguments or GitHub API (GitHub Tag or GitHub Release) or fuzzy finder (-s)
+	// Output packages
+	//   Format outputs
+	//     registry:
+	//       omit standard registry
+	//     version:
+	//       merge version with package name
+	//       set default value
+	//   Output to Stdout or Update aqua.yaml (-i)
 	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -81,23 +103,13 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 	if len(list) == 0 {
 		return nil
 	}
-	if !param.Insert && param.Dest == "" {
-		if err := yaml.NewEncoder(ctrl.stdout).Encode(list); err != nil {
-			return fmt.Errorf("output generated package configuration: %w", err)
-		}
-		return nil
-	}
 
-	if param.Dest != "" {
-		if _, err := ctrl.fs.Stat(param.Dest); err != nil {
-			if err := afero.WriteFile(ctrl.fs, param.Dest, []byte("packages:\n\n"), 0o644); err != nil { //nolint:gomnd
-				return fmt.Errorf("create a file: %w", err)
-			}
-		}
-		return ctrl.generateInsert(param.Dest, list) //nolint:contextcheck
-	}
-
-	return ctrl.generateInsert(cfgFilePath, list) //nolint:contextcheck
+	return ctrl.outputter.Output(&OutputParam{ //nolint:wrapcheck
+		Insert:         param.Insert,
+		Dest:           param.Dest,
+		List:           list,
+		ConfigFilePath: cfgFilePath,
+	})
 }
 
 func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Package) []*aqua.Package {
