@@ -1,4 +1,4 @@
-package generate
+package output
 
 import (
 	"fmt"
@@ -9,19 +9,26 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type outputter struct {
+type Outputter struct {
 	stdout io.Writer
 	fs     afero.Fs
 }
 
-type OutputParam struct {
+func New(stdout io.Writer, fs afero.Fs) *Outputter {
+	return &Outputter{
+		stdout: stdout,
+		fs:     fs,
+	}
+}
+
+type Param struct {
 	Insert         bool
 	Dest           string
 	List           []*aqua.Package
 	ConfigFilePath string
 }
 
-func (out *outputter) Output(param *OutputParam) error {
+func (out *Outputter) Output(param *Param) error {
 	if !param.Insert && param.Dest == "" {
 		if err := yaml.NewEncoder(out.stdout).Encode(param.List); err != nil {
 			return fmt.Errorf("output generated package configuration: %w", err)

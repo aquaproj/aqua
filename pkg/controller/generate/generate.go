@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -46,7 +47,7 @@ type ConfigFinder interface {
 }
 
 type Outputter interface {
-	Output(param *OutputParam) error
+	Output(param *output.Param) error
 }
 
 func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
@@ -60,10 +61,7 @@ func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInst
 		fs:                fs,
 		fuzzyFinder:       fuzzyFinder,
 		versionSelector:   versionSelector,
-		outputter: &outputter{
-			fs:     fs,
-			stdout: os.Stdout,
-		},
+		outputter:         output.New(os.Stdout, fs),
 	}
 }
 
@@ -104,7 +102,7 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 		return nil
 	}
 
-	return ctrl.outputter.Output(&OutputParam{ //nolint:wrapcheck
+	return ctrl.outputter.Output(&output.Param{ //nolint:wrapcheck
 		Insert:         param.Insert,
 		Dest:           param.Dest,
 		List:           list,

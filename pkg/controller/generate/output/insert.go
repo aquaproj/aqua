@@ -1,4 +1,4 @@
-package generate
+package output
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (out *outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
+func (out *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
 	b, err := afero.ReadFile(out.fs, cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
