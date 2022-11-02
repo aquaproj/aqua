@@ -1,7 +1,6 @@
 package generate
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -210,75 +209,6 @@ func (ctrl *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkgs []*aqua.Package, m map[string]*FindingPackage) ([]*aqua.Package, error) {
-	var file io.Reader
-	if param.File == "-" {
-		file = ctrl.stdin
-	} else {
-		f, err := ctrl.fs.Open(param.File)
-		if err != nil {
-			return nil, fmt.Errorf("open the package list file: %w", err)
-		}
-		defer f.Close()
-		file = f
-	}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		txt := getGeneratePkg(scanner.Text())
-		findingPkg, ok := m[txt]
-		if !ok {
-			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
-		}
-		outputPkg := ctrl.getOutputtedPkg(ctx, logE, param, findingPkg)
-		outputPkgs = append(outputPkgs, outputPkg)
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read the file: %w", err)
-	}
-	return outputPkgs, nil
-}
-
-func (ctrl *Controller) listTags(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryTag {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 100, //nolint:gomnd
-	}
-	var versionFilter *vm.Program
-	if pkgInfo.VersionFilter != nil {
-		var err error
-		versionFilter, err = expr.CompileVersionFilter(*pkgInfo.VersionFilter)
-		if err != nil {
-			return nil
-		}
-	}
-	var arr []*github.RepositoryTag
-	for i := 0; i < 10; i++ {
-		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return arr
-		}
-		for _, tag := range tags {
-			if versionFilter != nil {
-				f, err := expr.EvaluateVersionFilter(versionFilter, tag.GetName())
-				if err != nil || !f {
-					continue
-				}
-			}
-			arr = append(arr, tag)
-		}
-		if len(tags) != opt.PerPage {
-			return arr
-		}
-		opt.Page++
-	}
-	return arr
-}
-
 func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease { //nolint:cyclop
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
@@ -357,76 +287,6 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entr
 		}
 		opt.Page++
 	}
-}
-
-func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
-	}
-	versionFilter, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
-	if err != nil {
-		return ""
-	}
-	for {
-		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return ""
-		}
-		for _, tag := range tags {
-			tagName := tag.GetName()
-			f, err := expr.EvaluateVersionFilter(versionFilter, tagName)
-			if err != nil || !f {
-				continue
-			}
-			return tagName
-		}
-		if len(tags) != opt.PerPage {
-			return ""
-		}
-		opt.Page++
-	}
-}
-
-func (ctrl *Controller) getVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-
-	if param.SelectVersion {
-		tags := ctrl.listTags(ctx, logE, pkgInfo)
-		versions := make([]*Version, len(tags))
-		for i, tag := range tags {
-			versions[i] = &Version{
-				Name:    tag.GetName(),
-				Version: tag.GetName(),
-			}
-		}
-		idx, err := ctrl.versionSelector.Find(versions)
-		if err != nil {
-			return ""
-		}
-		return versions[idx].Version
-	}
-	if pkgInfo.VersionFilter != nil {
-		return ctrl.listAndGetTagNameFromTag(ctx, logE, pkgInfo)
-	}
-	tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, nil)
-	if err != nil {
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"repo_owner": repoOwner,
-			"repo_name":  repoName,
-		}).Warn("list GitHub tags")
-		return ""
-	}
-	if len(tags) == 0 {
-		return ""
-	}
-	return tags[0].GetName()
 }
 
 func (ctrl *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
