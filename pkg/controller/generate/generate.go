@@ -1,7 +1,6 @@
 package generate
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -9,23 +8,20 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"gopkg.in/yaml.v2"
 )
 
 type Controller struct {
 	stdin             io.Reader
-	stdout            io.Writer
 	github            RepositoriesService
 	registryInstaller domain.RegistryInstaller
 	configFinder      ConfigFinder
@@ -33,6 +29,7 @@ type Controller struct {
 	fuzzyFinder       FuzzyFinder
 	versionSelector   VersionSelector
 	fs                afero.Fs
+	outputter         Outputter
 }
 
 type RepositoriesService interface {
@@ -45,10 +42,13 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
+type Outputter interface {
+	Output(param *output.Param) error
+}
+
 func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
-		stdout:            os.Stdout,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,
@@ -56,13 +56,28 @@ func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInst
 		fs:                fs,
 		fuzzyFinder:       fuzzyFinder,
 		versionSelector:   versionSelector,
+		outputter:         output.New(os.Stdout, fs),
 	}
 }
 
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error { //nolint:cyclop
+func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
+	// Find and read a configuration file (aqua.yaml).
+	// Install registries
+	// List outputted packages
+	//   Get packages by fuzzy finder or from file or from arguments
+	//   Get versions
+	//     Get versions from arguments or GitHub API (GitHub Tag or GitHub Release) or fuzzy finder (-s)
+	// Output packages
+	//   Format outputs
+	//     registry:
+	//       omit standard registry
+	//     version:
+	//       merge version with package name
+	//       set default value
+	//   Output to Stdout or Update aqua.yaml (-i)
 	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -73,7 +88,7 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 		return err //nolint:wrapcheck
 	}
 
-	list, err := ctrl.generate(ctx, logE, param, cfg, cfgFilePath, args...)
+	list, err := ctrl.listPkgs(ctx, logE, param, cfg, cfgFilePath, args...)
 	if err != nil {
 		return err
 	}
@@ -81,72 +96,13 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 	if len(list) == 0 {
 		return nil
 	}
-	if !param.Insert && param.Dest == "" {
-		if err := yaml.NewEncoder(ctrl.stdout).Encode(list); err != nil {
-			return fmt.Errorf("output generated package configuration: %w", err)
-		}
-		return nil
-	}
 
-	if param.Dest != "" {
-		if _, err := ctrl.fs.Stat(param.Dest); err != nil {
-			if err := afero.WriteFile(ctrl.fs, param.Dest, []byte("packages:\n\n"), 0o644); err != nil { //nolint:gomnd
-				return fmt.Errorf("create a file: %w", err)
-			}
-		}
-		return ctrl.generateInsert(param.Dest, list) //nolint:contextcheck
-	}
-
-	return ctrl.generateInsert(cfgFilePath, list) //nolint:contextcheck
-}
-
-func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Package) []*aqua.Package {
-	ret := make([]*aqua.Package, 0, len(pkgs))
-	m := make(map[string]*aqua.Package, len(cfg.Packages))
-	for _, pkg := range cfg.Packages {
-		pkg := pkg
-		m[pkg.Registry+","+pkg.Name+"@"+pkg.Version] = pkg
-		m[pkg.Registry+","+pkg.Name] = pkg
-	}
-	for _, pkg := range pkgs {
-		pkg := pkg
-		var keyV string
-		var key string
-		registry := registryStandard
-		if pkg.Registry != "" {
-			registry = pkg.Registry
-		}
-		if pkg.Version == "" {
-			keyV = registry + "," + pkg.Name
-			if idx := strings.Index(pkg.Name, "@"); idx == -1 {
-				key = keyV
-			} else {
-				key = registry + "," + pkg.Name[:idx]
-			}
-		} else {
-			keyV = registry + "," + pkg.Name + "@" + pkg.Version
-			key = registry + "," + pkg.Name
-		}
-		if _, ok := m[keyV]; ok {
-			logE.WithFields(logrus.Fields{
-				"package_name":     pkg.Name,
-				"package_version":  pkg.Version,
-				"package_registry": registry,
-			}).Warn("skip adding a duplicate package")
-			continue
-		}
-		m[keyV] = pkg
-		ret = append(ret, pkg)
-		if _, ok := m[key]; ok {
-			logE.WithFields(logrus.Fields{
-				"package_name":     pkg.Name,
-				"package_registry": registry,
-			}).Warn("same package already exists")
-			continue
-		}
-		m[key] = pkg
-	}
-	return ret
+	return ctrl.outputter.Output(&output.Param{ //nolint:wrapcheck
+		Insert:         param.Insert,
+		Dest:           param.Dest,
+		List:           list,
+		ConfigFilePath: cfgFilePath,
+	})
 }
 
 type FindingPackage struct {
@@ -154,16 +110,20 @@ type FindingPackage struct {
 	RegistryName string
 }
 
-func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
+func (ctrl *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
 	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
 	if param.File != "" || len(args) != 0 {
-		return ctrl.outputListedPkgs(ctx, logE, param, registryContents, args...)
+		return ctrl.listPkgsWithoutFinder(ctx, logE, param, registryContents, args...)
 	}
 
+	return ctrl.listPkgsWithFinder(ctx, logE, param, registryContents)
+}
+
+func (ctrl *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*aqua.Package, error) {
 	// maps the package and the registry
 	var pkgs []*FindingPackage
 	for registryName, registryContent := range registryContents {
@@ -191,15 +151,7 @@ func (ctrl *Controller) generate(ctx context.Context, logE *logrus.Entry, param 
 	return arr, nil
 }
 
-func getGeneratePkg(s string) string {
-	if !strings.Contains(s, ",") {
-		return "standard," + s
-	}
-	return s
-}
-
-func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
-	m := map[string]*FindingPackage{}
+func (ctrl *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*registry.Config, m map[string]*FindingPackage) {
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
 		for pkgName, pkg := range registryContent.PackageInfos.ToMapWarn(logE) {
@@ -221,6 +173,18 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 			}
 		}
 	}
+}
+
+func getGeneratePkg(s string) string {
+	if !strings.Contains(s, ",") {
+		return "standard," + s
+	}
+	return s
+}
+
+func (ctrl *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
+	m := map[string]*FindingPackage{}
+	ctrl.setPkgMap(logE, registryContents, m)
 
 	outputPkgs := []*aqua.Package{}
 	for _, pkgName := range pkgNames {
@@ -243,283 +207,17 @@ func (ctrl *Controller) outputListedPkgs(ctx context.Context, logE *logrus.Entry
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkgs []*aqua.Package, m map[string]*FindingPackage) ([]*aqua.Package, error) {
-	var file io.Reader
-	if param.File == "-" {
-		file = ctrl.stdin
-	} else {
-		f, err := ctrl.fs.Open(param.File)
-		if err != nil {
-			return nil, fmt.Errorf("open the package list file: %w", err)
-		}
-		defer f.Close()
-		file = f
-	}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		txt := getGeneratePkg(scanner.Text())
-		findingPkg, ok := m[txt]
-		if !ok {
-			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
-		}
-		outputPkg := ctrl.getOutputtedPkg(ctx, logE, param, findingPkg)
-		outputPkgs = append(outputPkgs, outputPkg)
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read the file: %w", err)
-	}
-	return outputPkgs, nil
-}
-
-func (ctrl *Controller) listTags(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryTag {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 100, //nolint:gomnd
-	}
-	var versionFilter *vm.Program
-	if pkgInfo.VersionFilter != nil {
-		var err error
-		versionFilter, err = expr.CompileVersionFilter(*pkgInfo.VersionFilter)
-		if err != nil {
-			return nil
-		}
-	}
-	var arr []*github.RepositoryTag
-	for i := 0; i < 10; i++ {
-		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return arr
-		}
-		for _, tag := range tags {
-			if versionFilter != nil {
-				f, err := expr.EvaluateVersionFilter(versionFilter, tag.GetName())
-				if err != nil || !f {
-					continue
-				}
-			}
-			arr = append(arr, tag)
-		}
-		if len(tags) != opt.PerPage {
-			return arr
-		}
-		opt.Page++
-	}
-	return arr
-}
-
-func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease { //nolint:cyclop
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 100, //nolint:gomnd
-	}
-	var versionFilter *vm.Program
-	if pkgInfo.VersionFilter != nil {
-		var err error
-		versionFilter, err = expr.CompileVersionFilter(*pkgInfo.VersionFilter)
-		if err != nil {
-			return nil
-		}
-	}
-	var arr []*github.RepositoryRelease
-	for i := 0; i < 10; i++ {
-		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return arr
-		}
-		for _, release := range releases {
-			if release.GetPrerelease() {
-				continue
-			}
-			if versionFilter != nil {
-				f, err := expr.EvaluateVersionFilter(versionFilter, release.GetTagName())
-				if err != nil || !f {
-					continue
-				}
-			}
-			arr = append(arr, release)
-		}
-		if len(releases) != opt.PerPage {
-			return arr
-		}
-		opt.Page++
-	}
-	return arr
-}
-
-func (ctrl *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
-	}
-	versionFilter, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
-	if err != nil {
-		return ""
-	}
-	for {
-		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return ""
-		}
-		for _, release := range releases {
-			if release.GetPrerelease() {
-				continue
-			}
-			f, err := expr.EvaluateVersionFilter(versionFilter, release.GetTagName())
-			if err != nil || !f {
-				continue
-			}
-			return release.GetTagName()
-		}
-		if len(releases) != opt.PerPage {
-			return ""
-		}
-		opt.Page++
-	}
-}
-
-func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
-	}
-	versionFilter, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
-	if err != nil {
-		return ""
-	}
-	for {
-		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return ""
-		}
-		for _, tag := range tags {
-			tagName := tag.GetName()
-			f, err := expr.EvaluateVersionFilter(versionFilter, tagName)
-			if err != nil || !f {
-				continue
-			}
-			return tagName
-		}
-		if len(tags) != opt.PerPage {
-			return ""
-		}
-		opt.Page++
-	}
-}
-
-func (ctrl *Controller) getOutputtedGitHubPkgFromTag(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo) {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	var tagName string
-
-	if param.SelectVersion { //nolint:nestif
-		tags := ctrl.listTags(ctx, logE, pkgInfo)
-		versions := make([]*Version, len(tags))
-		for i, tag := range tags {
-			versions[i] = &Version{
-				Name:    tag.GetName(),
-				Version: tag.GetName(),
-			}
-		}
-		idx, err := ctrl.versionSelector.Find(versions)
-		if err != nil {
-			return
-		}
-		tagName = versions[idx].Version
-	} else {
-		if pkgInfo.VersionFilter != nil {
-			tagName = ctrl.listAndGetTagNameFromTag(ctx, logE, pkgInfo)
-		} else {
-			tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, nil)
-			if err != nil {
-				logerr.WithError(logE, err).WithFields(logrus.Fields{
-					"repo_owner": repoOwner,
-					"repo_name":  repoName,
-				}).Warn("list GitHub tags")
-				return
-			}
-			if len(tags) == 0 {
-				return
-			}
-			tag := tags[0]
-			tagName = tag.GetName()
-		}
-	}
-
-	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
-		outputPkg.Name += "@" + tagName
-		outputPkg.Version = ""
-	} else {
-		outputPkg.Version = tagName
-	}
-}
-
-func (ctrl *Controller) getOutputtedGitHubPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkg *aqua.Package, pkgInfo *registry.PackageInfo) {
+func (ctrl *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
 	if pkgInfo.VersionSource == "github_tag" {
-		ctrl.getOutputtedGitHubPkgFromTag(ctx, logE, param, outputPkg, pkgInfo)
-		return
+		return ctrl.getVersionFromGitHubTag(ctx, logE, param, pkgInfo)
 	}
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	var tagName string
-
-	if param.SelectVersion { //nolint:nestif
-		releases := ctrl.listReleases(ctx, logE, pkgInfo)
-		versions := make([]*Version, len(releases))
-		for i, release := range releases {
-			versions[i] = &Version{
-				Name:        release.GetName(),
-				Version:     release.GetTagName(),
-				Description: release.GetBody(),
-				URL:         release.GetHTMLURL(),
-			}
-		}
-		idx, err := ctrl.versionSelector.Find(versions)
-		if err != nil {
-			return
-		}
-		tagName = versions[idx].Version
-	} else {
-		if pkgInfo.VersionFilter != nil {
-			tagName = ctrl.listAndGetTagName(ctx, logE, pkgInfo)
-		} else {
-			release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
-			if err != nil {
-				logerr.WithError(logE, err).WithFields(logrus.Fields{
-					"repo_owner": repoOwner,
-					"repo_name":  repoName,
-				}).Warn("get the latest release")
-				return
-			}
-			tagName = release.GetTagName()
-		}
+	if param.SelectVersion {
+		return ctrl.selectVersionFromReleases(ctx, logE, pkgInfo)
 	}
-
-	if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
-		outputPkg.Name += "@" + tagName
-		outputPkg.Version = ""
-	} else {
-		outputPkg.Version = tagName
+	if pkgInfo.VersionFilter != nil {
+		return ctrl.listAndGetTagName(ctx, logE, pkgInfo)
 	}
+	return ctrl.getVersionFromLatestRelease(ctx, logE, pkgInfo)
 }
 
 func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) *aqua.Package {
@@ -535,7 +233,15 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry,
 		return outputPkg
 	}
 	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {
-		ctrl.getOutputtedGitHubPkg(ctx, logE, param, outputPkg, pkgInfo)
+		version := ctrl.getVersionFromGitHub(ctx, logE, param, pkgInfo)
+		repoOwner := pkgInfo.RepoOwner
+		repoName := pkgInfo.RepoName
+		if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
+			outputPkg.Name += "@" + version
+			outputPkg.Version = ""
+		} else {
+			outputPkg.Version = version
+		}
 		return outputPkg
 	}
 	return outputPkg
