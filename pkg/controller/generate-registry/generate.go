@@ -63,7 +63,7 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 		}
 		return nil
 	}
-	if err := ctrl.insert(param.InsertFile, registry.PackageInfos{pkgInfo}); err != nil { //nolint:contextcheck
+	if err := ctrl.insert(param.InsertFile, registry.PackageInfos{pkgInfo}); err != nil {
 		return err
 	}
 	return nil
