@@ -25,10 +25,10 @@ func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Pa
 		}
 		if pkg.Version == "" {
 			keyV = registry + "," + pkg.Name
-			if idx := strings.Index(pkg.Name, "@"); idx == -1 {
-				key = keyV
+			if pkgName, _, found := strings.Cut(pkg.Name, "@"); found {
+				key = registry + "," + pkgName
 			} else {
-				key = registry + "," + pkg.Name[:idx]
+				key = keyV
 			}
 		} else {
 			keyV = registry + "," + pkg.Name + "@" + pkg.Version
