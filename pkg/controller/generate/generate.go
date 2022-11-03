@@ -251,6 +251,9 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry,
 		outputPkg.Version = "[SET PACKAGE VERSION]"
 		return outputPkg
 	}
+	if param.Pin {
+		return outputPkg
+	}
 	pkgInfo := pkg.PackageInfo
 	if pkgInfo.HasRepo() {
 		repoOwner := pkgInfo.RepoOwner
