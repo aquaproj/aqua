@@ -1,4 +1,4 @@
-package genrgst
+package asset
 
 import (
 	"strings"
@@ -6,7 +6,9 @@ import (
 	"github.com/mholt/archiver/v3"
 )
 
-func (ctrl *Controller) getFormat(assetName string) string { //nolint:funlen,cyclop
+const formatRaw = "raw"
+
+func GetFormat(assetName string) string { //nolint:funlen,cyclop
 	a, err := archiver.ByExtension(assetName)
 	if err != nil {
 		return formatRaw

@@ -1,10 +1,10 @@
-package genrgst
+package asset
 
 import (
 	"strings"
 )
 
-func (ctrl *Controller) setOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen
+func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen
 	osList := []*OS{
 		{
 			Name: "apple-darwin",

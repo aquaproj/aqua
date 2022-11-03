@@ -31,11 +31,11 @@ func NewChecksumDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, h
 	}
 }
 
-func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package) (io.ReadCloser, int64, error) {
+func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
-	switch pkgInfo.GetType() {
+	switch pkg.PackageInfo.Checksum.Type {
 	case config.PkgInfoTypeGitHubRelease:
-		asset, err := pkg.RenderChecksumFileName(dl.runtime)
+		asset, err := pkg.RenderChecksumFileName(rt)
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 		}
@@ -45,6 +45,18 @@ func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus
 			Version:   pkg.Package.Version,
 			Asset:     asset,
 		})
+	case config.PkgInfoTypeHTTP:
+		u, err := pkg.RenderChecksumURL(rt)
+		if err != nil {
+			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
+		}
+		rc, code, err := dl.http.Download(ctx, u)
+		if err != nil {
+			return rc, code, fmt.Errorf("download a checksum file: %w", logerr.WithFields(err, logrus.Fields{
+				"download_url": u,
+			}))
+		}
+		return rc, code, nil
 	default:
 		return nil, 0, logerr.WithFields(errUnknownChecksumFileType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),

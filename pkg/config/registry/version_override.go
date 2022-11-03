@@ -2,7 +2,7 @@ package registry
 
 import "github.com/aquaproj/aqua/pkg/expr"
 
-func (pkgInfo *PackageInfo) setVersion(v string) (*PackageInfo, error) {
+func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
 	if pkgInfo.VersionConstraints == "" {
 		return pkgInfo, nil
 	}
@@ -11,7 +11,7 @@ func (pkgInfo *PackageInfo) setVersion(v string) (*PackageInfo, error) {
 		return nil, err //nolint:wrapcheck
 	}
 	if a {
-		return pkgInfo.copy(), nil
+		return pkgInfo.Copy(), nil
 	}
 	for _, vo := range pkgInfo.VersionOverrides {
 		a, err := expr.EvaluateVersionConstraints(vo.VersionConstraints, v)
@@ -22,5 +22,5 @@ func (pkgInfo *PackageInfo) setVersion(v string) (*PackageInfo, error) {
 			return pkgInfo.overrideVersion(vo), nil
 		}
 	}
-	return pkgInfo.copy(), nil
+	return pkgInfo.Copy(), nil
 }

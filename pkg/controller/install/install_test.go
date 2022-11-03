@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
@@ -16,6 +17,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -89,7 +91,7 @@ packages:
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
 			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, registryDownloader, fs), pkgInstaller, fs, d.rt)
 			if err := ctrl.Install(ctx, logE, d.param); err != nil {
 				if d.isErr {

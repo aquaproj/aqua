@@ -48,13 +48,18 @@ You can update the configuration file directly with "-i" option.
 
 $ aqua g -i
 
+You can update an imported file with "-o" option.
+
+$ aqua g -o aqua/pkgs.yaml
+
 You can pass packages with positional arguments.
 
-$ aqua g [<registry name>,<package name> ...]
+$ aqua g [<registry name>,<package name>[@<version>] ...]
 
-$ aqua g standard,cli/cli standard,junegunn/fzf
+$ aqua g standard,cli/cli standard,junegunn/fzf standard,suzuki-shunsuke/tfcmt@v3.0.0
 - name: cli/cli@v2.2.0
 - name: junegunn/fzf@0.28.0
+- name: suzuki-shunsuke/tfcmt@v3.0.0
 
 You can omit the registry name if it is "standard".
 
@@ -83,6 +88,12 @@ echo "cli/cli" | aqua g -f -
 You can select a version interactively with "-s" option.
 
 $ aqua g -s
+
+The option "-pin" is useful to prevent the package from being updated by Renovate.
+
+$ aqua g -pin cli/cli
+- name: cli/cli
+  version: v2.2.0
 `
 
 func (runner *Runner) newGenerateCommand() *cli.Command {
@@ -101,6 +112,14 @@ func (runner *Runner) newGenerateCommand() *cli.Command {
 			&cli.BoolFlag{
 				Name:  "i",
 				Usage: `Insert packages to configuration file`,
+			},
+			&cli.BoolFlag{
+				Name:  "pin",
+				Usage: `Pin version`,
+			},
+			&cli.StringFlag{
+				Name:  "o",
+				Usage: `inserted file`,
 			},
 			&cli.BoolFlag{
 				Name:    "select-version",

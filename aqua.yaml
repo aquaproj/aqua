@@ -3,9 +3,9 @@
 # https://aquaproj.github.io/
 registries:
 - type: standard
-  ref: v3.19.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.86.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
-- name: golangci/golangci-lint@v1.46.2
-- name: rhysd/actionlint@v1.6.15
+- name: golangci/golangci-lint@v1.50.1
+- name: rhysd/actionlint@v1.6.22
 - import: aqua/*.yaml

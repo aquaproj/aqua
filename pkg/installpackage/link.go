@@ -34,8 +34,7 @@ func (inst *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry)
 		}
 	}
 	logE.WithFields(logrus.Fields{
-		"link_file": linkPath,
-		"new":       linkDest,
+		"command": filepath.Base(linkPath),
 	}).Info("create a symbolic link")
 	if err := inst.linker.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)

@@ -32,10 +32,12 @@ type LDFlags struct {
 }
 
 func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error {
+	param.Args = c.Args().Slice()
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
 	param.ConfigFilePath = c.String("config")
+	param.Dest = c.String("o")
 	param.OnlyLink = c.Bool("only-link")
 	param.IsTest = c.Bool("test")
 	if commandName == "generate-registry" {
@@ -54,6 +56,8 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	log.SetColor(param.LogColor, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
+	param.Deep = c.Bool("deep")
+	param.Pin = c.Bool("pin")
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -107,6 +111,8 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newGenerateRegistryCommand(),
 			runner.newCompletionCommand(),
 			runner.newVersionCommand(),
+			runner.newCpCommand(),
+			runner.newUpdateChecksumCommand(),
 		},
 	}
 

@@ -6,17 +6,19 @@ on:
     tags: [v*]
   pull_request:
     branches: [main]
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  AQUA_LOG_LEVEL: debug
+  AQUA_LOG_COLOR: always
+  AQUA_EXPERIMENTAL_CHECKSUM_VERIFICATION: "true"
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.2.1
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+    - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
-        go-version: '1.18.4'
+        go-version: '1.19.2'
         cache: true
 
     - run: go install ./cmd/aqua
@@ -26,9 +28,15 @@ jobs:
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/aqua-global.yaml g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
+    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
+    - name: Test -pin
+      run: aqua g cli/cli suzuki-shunsuke/tfcmt@v2.0.0
 
     - run: aqua list
+    - run: aqua update-checksum
+      working-directory: tests
+    - run: aqua update-checksum -deep
+      working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
     - run: cmdx -v
@@ -59,6 +67,7 @@ jobs:
     - run: wire --help
     - run: gox --help
     - run: bats -v
+    - run: helm version
     - run: github-compare -v
     - run: terrafmt version
 
@@ -68,6 +77,9 @@ jobs:
       run: aqua completion zsh
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
+      working-directory: tests
+    - name: add duplicated package
+      run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests
     - run: git diff aqua.yaml
       working-directory: tests
@@ -83,6 +95,19 @@ jobs:
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
       working-directory: tests
 
+    - name: test aqua cp
+      run: aqua cp actionlint golangci-lint
+    - name: test aqua cp
+      run: dist/actionlint -version
+    - name: test aqua cp
+      run: dist/golangci-lint version
+    - name: test aqua cp
+      run: aqua cp
+    - name: test aqua cp -a
+      run: aqua cp -a
+
+    - run: aqua update-checksum -a
+
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
       working-directory: /tmp
@@ -93,17 +118,14 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
     defaults:
       run:
         shell: bash
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.2.1
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+    - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
-        go-version: '1.18.4'
+        go-version: '1.19.2'
         cache: true
 
     - run: go install ./cmd/aqua
@@ -115,6 +137,8 @@ jobs:
     - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
 
     - run: aqua list
+    - run: aqua update-checksum
+      working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
     - run: cmdx -v
@@ -138,6 +162,7 @@ jobs:
     - run: wire --help
     - run: gox --help
     - run: github-compare -v
+    - run: helm version
     - run: terrafmt version
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
@@ -160,16 +185,20 @@ jobs:
     - run: aqua list
       working-directory: ${{ env.HOME }}
 
+    - name: test aqua cp
+      run: aqua cp actionlint golangci-lint
+    - name: test aqua cp
+      run: dist/actionlint -version
+    - name: test aqua cp
+      run: dist/golangci-lint version
+
   build-windows-pwsh:
     runs-on: windows-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AQUA_LOG_LEVEL: debug
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.2.1
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+    - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
-        go-version: '1.18.4'
+        go-version: '1.19.2'
         cache: true
 
     - run: go install ./cmd/aqua
@@ -181,6 +210,8 @@ jobs:
     - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
 
     - run: aqua list
+    - run: aqua update-checksum
+      working-directory: tests
     - run: aqua i -l -a
       working-directory: tests
     - run: cmdx -v
@@ -205,6 +236,7 @@ jobs:
     - run: gox --help
     - run: github-compare -v
     - run: terrafmt version
+    - run: helm version
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
       working-directory: tests
@@ -225,3 +257,10 @@ jobs:
       working-directory: ${{ env.HOME }}
     - run: aqua list
       working-directory: ${{ env.HOME }}
+
+    - name: test aqua cp
+      run: aqua cp actionlint golangci-lint
+    - name: test aqua cp
+      run: dist/actionlint -version
+    - name: test aqua cp
+      run: dist/golangci-lint version

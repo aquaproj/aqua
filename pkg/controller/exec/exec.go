@@ -8,21 +8,22 @@ import (
 	"os"
 	"time"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Controller struct {
 	stdin            io.Reader
 	stdout           io.Writer
 	stderr           io.Writer
-	which            which.Controller
+	which            domain.WhichController
 	packageInstaller domain.PackageInstaller
 	executor         Executor
 	enabledXSysExec  bool
@@ -34,13 +35,13 @@ type Executor interface {
 	ExecXSys(exePath string, args []string) error
 }
 
-func New(pkgInstaller domain.PackageInstaller, which which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
+func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		stderr:           os.Stderr,
 		packageInstaller: pkgInstaller,
-		which:            which,
+		which:            whichCtrl,
 		executor:         executor,
 		enabledXSysExec:  osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
 		fs:               fs,
@@ -48,34 +49,65 @@ func New(pkgInstaller domain.PackageInstaller, which which.Controller, executor 
 }
 
 func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error {
-	which, err := ctrl.which.Which(ctx, param, exeName, logE)
+	logE = logE.WithField("exe_name", exeName)
+	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if which.Package != nil { //nolint:nestif
+	if findResult.Package != nil {
 		logE = logE.WithFields(logrus.Fields{
-			"exe_path": which.ExePath,
-			"package":  which.Package.Package.Name,
+			"package":         findResult.Package.Package.Name,
+			"package_version": findResult.Package.Package.Version,
 		})
-		if err := ctrl.packageInstaller.InstallPackage(ctx, which.Package, logE); err != nil {
-			return err //nolint:wrapcheck
-		}
-		for i := 0; i < 10; i++ {
-			logE.Debug("check if exec file exists")
-			if fi, err := ctrl.fs.Stat(which.ExePath); err == nil {
-				if util.IsOwnerExecutable(fi.Mode()) {
-					break
-				}
-			}
-			logE.WithFields(logrus.Fields{
-				"retry_count": i + 1,
-			}).Debug("command isn't found. wait for lazy install")
-			if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
-				return err
-			}
+		if err := ctrl.install(ctx, logE, findResult); err != nil {
+			return logerr.WithFields(err, logE.Data) //nolint:wrapcheck
 		}
 	}
-	return ctrl.execCommandWithRetry(ctx, which.ExePath, args, logE)
+	return logerr.WithFields(ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE), logE.Data) //nolint:wrapcheck
+}
+
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult) error {
+	logE = logE.WithField("exe_path", findResult.ExePath)
+
+	var checksums *checksum.Checksums
+	if findResult.Config.ChecksumEnabled() {
+		checksums = checksum.New()
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, findResult.ConfigFilePath)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+			return fmt.Errorf("read a checksum JSON: %w", err)
+		}
+		defer func() {
+			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+				logE.WithError(err).Error("update a checksum file")
+			}
+		}()
+	}
+
+	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+		Pkg:             findResult.Package,
+		Checksums:       checksums,
+		RequireChecksum: findResult.Config.RequireChecksum(),
+	}); err != nil {
+		return err //nolint:wrapcheck
+	}
+	for i := 0; i < 10; i++ {
+		logE.Debug("check if exec file exists")
+		if fi, err := ctrl.fs.Stat(findResult.ExePath); err == nil {
+			if util.IsOwnerExecutable(fi.Mode()) {
+				break
+			}
+		}
+		logE.WithFields(logrus.Fields{
+			"retry_count": i + 1,
+		}).Debug("command isn't found. wait for lazy install")
+		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+			return err
+		}
+	}
+	return nil
 }
 
 func wait(ctx context.Context, duration time.Duration) error {

@@ -14,6 +14,10 @@ import (
 const configTemplate = `---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
+# checksum:
+#   # https://aquaproj.github.io/docs/reference/checksum/
+#   enabled: true
+#   require_checksum: true
 registries:
 - type: standard
   ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
@@ -48,7 +52,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		return nil
 	}
 
-	registryVersion := "v3.19.0" // renovate: depName=aquaproj/aqua-registry
+	registryVersion := "v3.86.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{

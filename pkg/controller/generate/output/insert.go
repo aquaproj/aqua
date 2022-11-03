@@ -1,17 +1,18 @@
-package generate
+package output
 
 import (
 	"errors"
 	"fmt"
 
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
 	"github.com/spf13/afero"
 )
 
-func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) error {
-	b, err := afero.ReadFile(ctrl.fs, cfgFilePath)
+func (out *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
+	b, err := afero.ReadFile(out.fs, cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
@@ -20,32 +21,37 @@ func (ctrl *Controller) generateInsert(cfgFilePath string, pkgs interface{}) err
 		return fmt.Errorf("parse configuration file as YAML: %w", err)
 	}
 
-	if err := ctrl.updateASTFile(file, pkgs); err != nil {
+	if err := updateASTFile(file, pkgs); err != nil {
 		return err
 	}
 
-	stat, err := ctrl.fs.Stat(cfgFilePath)
+	stat, err := out.fs.Stat(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
+	if err := afero.WriteFile(out.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil
 }
 
-func (ctrl *Controller) updateASTFile(file *ast.File, pkgs interface{}) error {
+func updateASTFile(file *ast.File, pkgs []*aqua.Package) error { //nolint:cyclop
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)
 	}
 
 	for _, doc := range file.Docs {
-		body, ok := doc.Body.(*ast.MappingNode)
-		if !ok {
+		var values []*ast.MappingValueNode
+		switch body := doc.Body.(type) {
+		case *ast.MappingNode:
+			values = body.Values
+		case *ast.MappingValueNode:
+			values = append(values, body)
+		default:
 			continue
 		}
-		for _, mapValue := range body.Values {
+		for _, mapValue := range values {
 			if mapValue.Key.String() != "packages" {
 				continue
 			}

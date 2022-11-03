@@ -8,9 +8,11 @@ package controller
 
 import (
 	"context"
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/cp"
 	exec2 "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/generate-registry"
@@ -18,6 +20,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
+	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
@@ -26,6 +29,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"net/http"
@@ -84,12 +88,15 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
 	linker := link.New()
 	executor := exec.New()
-	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor)
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt)
 	return controller
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
@@ -110,7 +117,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	fs := afero.NewOsFs()
 	linker := link.New()
 	executor := exec.New()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor)
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -128,5 +138,41 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubReleaseDownloader := download.NewGitHubReleaseDownloader(repositoriesService, httpDownloader)
 	controller := updateaqua.New(param, fs, rt, execFinder, gitHubReleaseDownloader, repositoriesService)
+	return controller
+}
+
+func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	fs := afero.NewOsFs()
+	linker := link.New()
+	executor := exec.New()
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
+	configFinder := finder.NewConfigFinder(fs)
+	configReader := reader.New(fs)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
+	osEnv := osenv.New()
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt)
+	cpController := cp.New(param, installer, fs, rt, controller, installController)
+	return cpController
+}
+
+func InitializeUpdateChecksumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
+	fs := afero.NewOsFs()
+	configFinder := finder.NewConfigFinder(fs)
+	configReader := reader.New(fs)
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloader, packageDownloader)
 	return controller
 }

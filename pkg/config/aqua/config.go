@@ -35,17 +35,14 @@ func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func parseNameWithVersion(name string) (string, string) {
-	idx := strings.Index(name, "@")
-	if idx == -1 {
-		return name, ""
-	}
-	return name[:idx], name[idx+1:]
+	pkgName, version, _ := strings.Cut(name, "@")
+	return pkgName, version
 }
 
 type Config struct {
 	Packages   []*Package `validate:"dive" json:"packages"`
 	Registries Registries `validate:"dive" json:"registries"`
-	Checksum   *Checksum  `json:"checksum"`
+	Checksum   *Checksum  `json:"checksum,omitempty"`
 }
 
 type Registries map[string]*Registry
@@ -74,6 +71,9 @@ func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) e
 	}
 	m := make(map[string]*Registry, len(arr))
 	for _, registry := range arr {
+		if registry == nil {
+			continue
+		}
 		m[registry.Name] = registry
 	}
 	*registries = m

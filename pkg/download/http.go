@@ -30,7 +30,7 @@ func (downloader *httpDownloader) Download(ctx context.Context, u string) (io.Re
 	if err != nil {
 		return nil, 0, fmt.Errorf("send http request: %w", err)
 	}
-	if resp.StatusCode >= 400 { //nolint:gomnd
+	if resp.StatusCode >= http.StatusBadRequest {
 		return resp.Body, 0, errInvalidHTTPStatusCode
 	}
 	return resp.Body, resp.ContentLength, nil

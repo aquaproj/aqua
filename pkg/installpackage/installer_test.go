@@ -5,13 +5,16 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -201,8 +204,12 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor)
-			if err := ctrl.InstallPackages(ctx, d.cfg, d.registries, logE); err != nil {
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New())
+			if err := ctrl.InstallPackages(ctx, logE, &domain.ParamInstallPackages{
+				Config:         d.cfg,
+				Registries:     d.registries,
+				ConfigFilePath: d.param.ConfigFilePath,
+			}); err != nil {
 				if d.isErr {
 					return
 				}
@@ -267,8 +274,10 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor)
-			if err := ctrl.InstallPackage(ctx, d.pkg, logE); err != nil {
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{}, unarchive.New())
+			if err := ctrl.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+				Pkg: d.pkg,
+			}); err != nil {
 				if d.isErr {
 					return
 				}

@@ -3,11 +3,11 @@ package registry
 import "github.com/aquaproj/aqua/pkg/runtime"
 
 func (pkgInfo *PackageInfo) Override(v string, rt *runtime.Runtime) (*PackageInfo, error) {
-	pkg, err := pkgInfo.setVersion(v)
+	pkg, err := pkgInfo.SetVersion(v)
 	if err != nil {
 		return nil, err
 	}
-	pkg.override(rt)
+	pkg.OverrideByRuntime(rt)
 	return pkg, nil
 }
 

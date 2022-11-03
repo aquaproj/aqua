@@ -7,9 +7,11 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/cp"
 	cexec "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/pkg/controller/generate-registry"
@@ -17,6 +19,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
+	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
@@ -26,6 +29,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/google/wire"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -156,11 +160,23 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
 	)
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -224,16 +240,31 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			reader.New,
 			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
 		),
-		which.New,
+		wire.NewSet(
+			which.New,
+			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+		),
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
 		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
 		osenv.New,
 		afero.NewOsFs,
 		link.New,
 		download.NewHTTPDownloader,
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -259,4 +290,109 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 	)
 	return &updateaqua.Controller{}
+}
+
+func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {
+	wire.Build(
+		cp.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
+			wire.Bind(new(install.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			install.New,
+			wire.Bind(new(cp.Installer), new(*install.Controller)),
+		),
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(cp.PackageInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
+		wire.NewSet(
+			which.New,
+			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		osenv.New,
+		afero.NewOsFs,
+		link.New,
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+	)
+	return &cp.Controller{}
+}
+
+func InitializeUpdateChecksumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
+	wire.Build(
+		updatechecksum.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(updatechecksum.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
+		download.NewHTTPDownloader,
+		afero.NewOsFs,
+	)
+	return &updatechecksum.Controller{}
 }

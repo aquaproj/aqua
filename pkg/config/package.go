@@ -170,13 +170,18 @@ type Param struct {
 	PWD                   string
 	InsertFile            string
 	LogColor              string
+	Dest                  string
 	MaxParallelism        int
+	Args                  []string
 	OnlyLink              bool
 	IsTest                bool
 	All                   bool
 	Insert                bool
 	SelectVersion         bool
 	ProgressBar           bool
+	Deep                  bool
+	SkipLink              bool
+	Pin                   bool
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
@@ -239,6 +244,29 @@ func (cpkg *Package) renderTemplateString(s string, rt *runtime.Runtime) (string
 		return "", fmt.Errorf("parse a template: %w", err)
 	}
 	return cpkg.renderTemplate(tpl, rt)
+}
+
+func (cpkg *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	pkg := cpkg.Package
+	tpl, err := template.Compile(pkgInfo.Checksum.Asset)
+	if err != nil {
+		return "", fmt.Errorf("parse a template: %w", err)
+	}
+	replacements := pkgInfo.GetChecksumReplacements()
+	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
+		"Version": pkg.Version,
+		"GOOS":    rt.GOOS,
+		"GOARCH":  rt.GOARCH,
+		"OS":      replace(rt.GOOS, replacements),
+		"Arch":    getArch(pkgInfo.GetRosetta2(), replacements, rt),
+		"Format":  pkgInfo.GetFormat(),
+		"Asset":   asset,
+	})
+	if err != nil {
+		return "", fmt.Errorf("render a template: %w", err)
+	}
+	return uS, nil
 }
 
 func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime) (string, error) {

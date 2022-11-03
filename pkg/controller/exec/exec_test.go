@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
@@ -20,6 +21,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -128,7 +130,7 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor)
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
 			if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
 				if d.isErr {
@@ -225,7 +227,7 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, afero.NewOsFs()), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor)
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {

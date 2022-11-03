@@ -14,6 +14,8 @@ type Override struct {
 	URL                *string      `yaml:",omitempty" json:"url,omitempty"`
 	CompleteWindowsExt *bool        `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string       `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	Checksum           *Checksum    `json:"checksum,omitempty"`
+	Type               string       `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 }
 
 func (ov *Override) Match(rt *runtime.Runtime) bool {
