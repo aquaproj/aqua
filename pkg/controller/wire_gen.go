@@ -133,11 +133,16 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 
 func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
 	fs := afero.NewOsFs()
-	execFinder := updateaqua.NewExecFinder()
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
-	gitHubReleaseDownloader := download.NewGitHubReleaseDownloader(repositoriesService, httpDownloader)
-	controller := updateaqua.New(param, fs, rt, execFinder, gitHubReleaseDownloader, repositoriesService)
+	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	linker := link.New()
+	executor := exec.New()
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
+	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
 	return controller
 }
 

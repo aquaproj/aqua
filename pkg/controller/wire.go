@@ -276,18 +276,34 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubReleaseAPI), new(*github.RepositoriesService)),
 			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
-			download.NewGitHubReleaseDownloader,
-			wire.Bind(new(domain.GitHubReleaseDownloader), new(*download.GitHubReleaseDownloader)),
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
 		wire.NewSet(
-			updateaqua.NewExecFinder,
-			wire.Bind(new(domain.ExecFinder), new(*updateaqua.ExecFinder)),
+			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		link.New,
 	)
 	return &updateaqua.Controller{}
 }

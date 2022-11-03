@@ -67,7 +67,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 		Name: "aqua",
 	}, inst.runtime)
 	if err != nil {
-		return err
+		return fmt.Errorf("get a file path to aqua: %w", err)
 	}
 
 	p := filepath.Join(pkgPath, fileSrc)
