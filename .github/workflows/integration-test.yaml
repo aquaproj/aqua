@@ -114,6 +114,11 @@ jobs:
     - run: aqua list
       working-directory: /tmp
 
+    - name: Test update-aqua
+      run: aqua update-aqua
+    - name: Test update-aqua with arg
+      run: aqua update-aqua v1.20.0
+
     - run: aqua-installer -v v0.8.1 -i /tmp/aqua
 
   build-windows:
@@ -192,6 +197,11 @@ jobs:
     - name: test aqua cp
       run: dist/golangci-lint version
 
+    - name: Test update-aqua
+      run: aqua update-aqua
+    - name: Test update-aqua with arg
+      run: aqua update-aqua v1.20.0
+
   build-windows-pwsh:
     runs-on: windows-latest
     steps:
@@ -264,3 +274,8 @@ jobs:
       run: dist/actionlint -version
     - name: test aqua cp
       run: dist/golangci-lint version
+
+    - name: Test update-aqua
+      run: aqua update-aqua
+    - name: Test update-aqua with arg
+      run: aqua update-aqua v1.20.0
