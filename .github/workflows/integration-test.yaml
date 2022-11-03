@@ -116,8 +116,6 @@ jobs:
 
     - name: Test update-aqua
       run: aqua update-aqua
-    - name: Test update-aqua with arg
-      run: aqua update-aqua v1.20.0
 
     - run: aqua-installer -v v0.8.1 -i /tmp/aqua
 
@@ -199,8 +197,6 @@ jobs:
 
     - name: Test update-aqua
       run: aqua update-aqua
-    - name: Test update-aqua with arg
-      run: aqua update-aqua v1.20.0
 
   build-windows-pwsh:
     runs-on: windows-latest
@@ -277,5 +273,3 @@ jobs:
 
     - name: Test update-aqua
       run: aqua update-aqua
-    - name: Test update-aqua with arg
-      run: aqua update-aqua v1.20.0
