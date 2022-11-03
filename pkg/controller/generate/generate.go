@@ -108,6 +108,7 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 type FindingPackage struct {
 	PackageInfo  *registry.PackageInfo
 	RegistryName string
+	Version      string
 }
 
 func (ctrl *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
@@ -189,7 +190,9 @@ func (ctrl *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.
 	outputPkgs := []*aqua.Package{}
 	for _, pkgName := range pkgNames {
 		pkgName = getGeneratePkg(pkgName)
-		findingPkg, ok := m[pkgName]
+		key, version, _ := strings.Cut(pkgName, "@")
+		findingPkg, ok := m[key]
+		findingPkg.Version = version
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": pkgName}) //nolint:wrapcheck
 		}
@@ -220,27 +223,41 @@ func (ctrl *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.E
 	return ctrl.getVersionFromLatestRelease(ctx, logE, pkgInfo)
 }
 
+func (ctrl *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) string {
+	if pkg.Version != "" {
+		return pkg.Version
+	}
+	if ctrl.github == nil {
+		return ""
+	}
+	pkgInfo := pkg.PackageInfo
+	if pkgInfo.HasRepo() {
+		return ctrl.getVersionFromGitHub(ctx, logE, param, pkgInfo)
+	}
+	return ""
+}
+
 func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) *aqua.Package {
 	outputPkg := &aqua.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
-		Version:  "[SET PACKAGE VERSION]",
+		Version:  pkg.Version,
 	}
 	if outputPkg.Registry == registryStandard {
 		outputPkg.Registry = ""
 	}
-	if ctrl.github == nil {
+	version := ctrl.getVersion(ctx, logE, param, pkg)
+	if version == "" {
+		outputPkg.Version = "[SET PACKAGE VERSION]"
 		return outputPkg
 	}
-	if pkgInfo := pkg.PackageInfo; pkgInfo.HasRepo() {
-		version := ctrl.getVersionFromGitHub(ctx, logE, param, pkgInfo)
+	pkgInfo := pkg.PackageInfo
+	if pkgInfo.HasRepo() {
 		repoOwner := pkgInfo.RepoOwner
 		repoName := pkgInfo.RepoName
 		if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
 			outputPkg.Name += "@" + version
 			outputPkg.Version = ""
-		} else {
-			outputPkg.Version = version
 		}
 		return outputPkg
 	}

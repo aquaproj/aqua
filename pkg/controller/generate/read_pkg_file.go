@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
@@ -27,10 +28,12 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *log
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		txt := getGeneratePkg(scanner.Text())
-		findingPkg, ok := m[txt]
+		key, version, _ := strings.Cut(txt, "@")
+		findingPkg, ok := m[key]
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
 		}
+		findingPkg.Version = version
 		outputPkg := ctrl.getOutputtedPkg(ctx, logE, param, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
