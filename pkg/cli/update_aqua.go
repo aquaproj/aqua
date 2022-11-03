@@ -18,7 +18,7 @@ func (runner *Runner) newUpdateAquaCommand() *cli.Command {
 e.g.
 $ aqua update-aqua [version]
 
-aqua is installed in $AQUA_ROOT_DIR/pkgs and a symbolic link is created to $AQUA_ROOT_DIR/bin/aqua.
+aqua is installed in $AQUA_ROOT_DIR/bin.
 By default the latest version of aqua is installed, but you can specify the version with argument.
 
 e.g.

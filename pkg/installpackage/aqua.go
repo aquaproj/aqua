@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
@@ -70,7 +69,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 	p := filepath.Join(pkgPath, fileSrc)
 
 	if inst.runtime.GOOS == "windows" {
-		return inst.createAquaWindows(logE, p)
+		return inst.Copy(filepath.Join(inst.rootDir, "bin", "aqua.exe"), p)
 	}
 
 	// create a symbolic link
@@ -81,23 +80,4 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 	}
 
 	return inst.createLink(filepath.Join(inst.rootDir, "bin", binName), a, logE)
-}
-
-const (
-	aquaBatTemplate = `@echo off
-<AQUA> %*
-`
-	aquaScrTemplate = `#!/usr/bin/env bash
-exec <AQUA> $@
-`
-)
-
-func (inst *Installer) createAquaWindows(logE *logrus.Entry, p string) error {
-	if err := inst.createBinWindows(filepath.Join(inst.rootDir, "bin", "aqua"), strings.Replace(aquaScrTemplate, "<AQUA>", p, 1), logE); err != nil {
-		return err
-	}
-	if err := inst.createBinWindows(filepath.Join(inst.rootDir, "bat", "aqua.bat"), strings.Replace(aquaBatTemplate, "<AQUA>", p, 1), logE); err != nil {
-		return err
-	}
-	return nil
 }
