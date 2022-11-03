@@ -16,10 +16,14 @@ func (runner *Runner) newUpdateAquaCommand() *cli.Command {
 		Description: `Update aqua.
 
 e.g.
-$ aqua update-aqua
+$ aqua update-aqua [version]
 
 aqua is installed in $AQUA_ROOT_DIR/pkgs and a symbolic link is created to $AQUA_ROOT_DIR/bin/aqua.
-The latest version of aqua is installed.
+By default the latest version of aqua is installed, but you can specify the version with argument.
+
+e.g.
+$ aqua update-aqua # Install the latest version
+$ aqua update-aqua v1.20.0 # Install v1.20.0
 `,
 		Action: runner.updaetAquaAction,
 	}

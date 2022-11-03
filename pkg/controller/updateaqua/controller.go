@@ -2,6 +2,7 @@ package updateaqua
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -58,16 +59,25 @@ func (ctrl *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, para
 		}
 	}
 
-	release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua")
-	if err != nil {
-		return fmt.Errorf("get the latest version of aqua: %w", err)
+	var version string
+	switch len(param.Args) {
+	case 0:
+		release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua")
+		if err != nil {
+			return fmt.Errorf("get the latest version of aqua: %w", err)
+		}
+		version = release.GetTagName()
+	case 1:
+		version = param.Args[0]
+	default:
+		return errors.New("too many arguments")
 	}
-	latestAquaVersion := release.GetTagName()
-	logE = logE.WithField("new_version", latestAquaVersion)
 
-	if err := ctrl.installer.InstallAqua(ctx, logE, latestAquaVersion); err != nil {
+	logE = logE.WithField("new_version", version)
+
+	if err := ctrl.installer.InstallAqua(ctx, logE, version); err != nil {
 		return fmt.Errorf("download aqua: %w", logerr.WithFields(err, logrus.Fields{
-			"new_version": latestAquaVersion,
+			"new_version": version,
 		}))
 	}
 	return nil

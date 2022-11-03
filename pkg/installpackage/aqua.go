@@ -29,6 +29,16 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 					Name: "aqua",
 				},
 			},
+			Checksum: &registry.Checksum{
+				Type:       "github_release",
+				Asset:      "aqua_{{trimV .Version}}_checksums.txt",
+				FileFormat: "regexp",
+				Algorithm:  "sha256",
+				Pattern: &registry.ChecksumPattern{
+					Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+					File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+				},
+			},
 		},
 	}
 	logE = logE.WithFields(logrus.Fields{
