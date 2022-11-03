@@ -17,7 +17,7 @@ packages:
 - name: x-motemen/ghq@v1.3.0
 - name: golangci-lint # local registry
   registry: local
-  version: v1.50.0 # renovate: depName=golangci/golangci-lint
+  version: v1.50.1 # renovate: depName=golangci/golangci-lint
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard # standard registry
   version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
