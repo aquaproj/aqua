@@ -53,24 +53,9 @@ func (ctrl *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, para
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	if ctrl.runtime.GOOS == "windows" {
-		if err := ctrl.fs.MkdirAll(filepath.Join(ctrl.rootDir, "bat"), dirPermission); err != nil {
-			return fmt.Errorf("create the directory: %w", err)
-		}
-	}
-
-	var version string
-	switch len(param.Args) {
-	case 0:
-		release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua")
-		if err != nil {
-			return fmt.Errorf("get the latest version of aqua: %w", err)
-		}
-		version = release.GetTagName()
-	case 1:
-		version = param.Args[0]
-	default:
-		return errors.New("too many arguments")
+	version, err := ctrl.getVersion(ctx, param)
+	if err != nil {
+		return err
 	}
 
 	logE = logE.WithField("new_version", version)
@@ -81,4 +66,19 @@ func (ctrl *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, para
 		}))
 	}
 	return nil
+}
+
+func (ctrl *Controller) getVersion(ctx context.Context, param *config.Param) (string, error) {
+	switch len(param.Args) {
+	case 0:
+		release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua")
+		if err != nil {
+			return "", fmt.Errorf("get the latest version of aqua: %w", err)
+		}
+		return release.GetTagName(), nil
+	case 1:
+		return param.Args[0], nil
+	default:
+		return "", errors.New("too many arguments")
+	}
 }

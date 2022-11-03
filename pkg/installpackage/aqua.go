@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
+func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error {
 	assetTemplate := `aqua_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
 		Package: &aqua.Package{
@@ -44,7 +44,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 	}
 
 	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
-		Checksums: checksum.New(),
+		Checksums: checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 	}); err != nil {
 		return err
@@ -55,29 +55,34 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 		"package_version": pkg.Package.Version,
 	})
 
+	exePath, err := inst.getExePath(pkg)
+	if err != nil {
+		return err
+	}
+
+	if inst.runtime.GOOS == "windows" {
+		return inst.Copy(filepath.Join(inst.rootDir, "bin", "aqua.exe"), exePath)
+	}
+
+	// create a symbolic link
+	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), exePath)
+	if err != nil {
+		return fmt.Errorf("get a relative path: %w", err)
+	}
+
+	return inst.createLink(filepath.Join(inst.rootDir, "bin", "aqua"), a, logE)
+}
+
+func (inst *Installer) getExePath(pkg *config.Package) (string, error) {
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
-		return err //nolint:wrapcheck
+		return "", err //nolint:wrapcheck
 	}
 	fileSrc, err := pkg.GetFileSrc(&registry.File{
 		Name: "aqua",
 	}, inst.runtime)
 	if err != nil {
-		return fmt.Errorf("get a file path to aqua: %w", err)
+		return "", fmt.Errorf("get a file path to aqua: %w", err)
 	}
-
-	p := filepath.Join(pkgPath, fileSrc)
-
-	if inst.runtime.GOOS == "windows" {
-		return inst.Copy(filepath.Join(inst.rootDir, "bin", "aqua.exe"), p)
-	}
-
-	// create a symbolic link
-	binName := "aqua"
-	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), p)
-	if err != nil {
-		return fmt.Errorf("get a relative path: %w", err)
-	}
-
-	return inst.createLink(filepath.Join(inst.rootDir, "bin", binName), a, logE)
+	return filepath.Join(pkgPath, fileSrc), nil
 }
