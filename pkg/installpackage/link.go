@@ -20,8 +20,13 @@ func (inst *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry)
 			// if file is a pipe, raise error
 			return fmt.Errorf("%s has already existed and is a named pipe", linkPath)
 		case mode.IsRegular():
-			// TODO if file is a regular file, remove it and create a symlink.
-			return fmt.Errorf("%s has already existed and is a regular file", linkPath)
+			if err := inst.fs.Remove(linkPath); err != nil {
+				return fmt.Errorf("remove a file to create a symbolic link (%s): %w", linkPath, err)
+			}
+			if err := inst.linker.Symlink(linkDest, linkPath); err != nil {
+				return fmt.Errorf("create a symbolic link: %w", err)
+			}
+			return nil
 		case mode&os.ModeSymlink != 0:
 			return inst.recreateLink(linkPath, linkDest, logE)
 		default:
