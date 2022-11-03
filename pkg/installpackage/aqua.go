@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,38 +43,23 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 			},
 		},
 	}
+
+	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+		Checksums: checksum.New(),
+		Pkg:       pkg,
+	}); err != nil {
+		return err
+	}
+
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
 		"package_version": pkg.Package.Version,
 	})
 
-	logE.Debug("install aqua")
-	assetName, err := pkg.RenderAsset(inst.runtime)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	logE.Debug("check if aqua is already installed")
-	finfo, err := inst.fs.Stat(pkgPath)
-	if err != nil {
-		// file doesn't exist
-		if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
-			Package: pkg,
-			Dest:    pkgPath,
-			Asset:   assetName,
-		}); err != nil {
-			return err
-		}
-	} else {
-		if !finfo.IsDir() {
-			return fmt.Errorf("%s isn't a directory", pkgPath)
-		}
-	}
-
 	fileSrc, err := pkg.GetFileSrc(&registry.File{
 		Name: "aqua",
 	}, inst.runtime)
