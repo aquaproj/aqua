@@ -13,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -33,7 +32,7 @@ type Installer struct {
 	checksumCalculator ChecksumCalculator
 	runtime            *runtime.Runtime
 	fs                 afero.Fs
-	linker             link.Linker
+	linker             domain.Linker
 	executor           Executor
 	unarchiver         Unarchiver
 	progressBar        bool
@@ -46,8 +45,25 @@ type Unarchiver interface {
 	Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
 }
 
+type MockUnarchiver struct {
+	Err error
+}
+
+func (unarchiver *MockUnarchiver) Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error {
+	return unarchiver.Err
+}
+
 type ChecksumCalculator interface {
 	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
+}
+
+type MockChecksumCalculator struct {
+	Checksum string
+	Err      error
+}
+
+func (calc *MockChecksumCalculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
+	return calc.Checksum, calc.Err
 }
 
 func isWindows(goos string) bool {

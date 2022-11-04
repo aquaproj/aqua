@@ -26,18 +26,6 @@ type Controller struct {
 	installer        Installer
 }
 
-type PackageInstaller interface {
-	InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error
-	InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error
-	SetCopyDir(copyDir string)
-	Copy(dest, src string) error
-	WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error
-}
-
-type Installer interface {
-	Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error
-}
-
 type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }

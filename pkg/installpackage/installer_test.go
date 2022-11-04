@@ -12,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
@@ -197,7 +196,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker(afero.NewMemMapFs())
+			linker := domain.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

@@ -201,6 +201,17 @@
         },
         "checksum": {
           "$ref": "#/$defs/Checksum"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "github_content",
+            "github_archive",
+            "http",
+            "go",
+            "go_install"
+          ]
         }
       },
       "additionalProperties": false,

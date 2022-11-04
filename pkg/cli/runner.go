@@ -58,6 +58,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = c.Bool("deep")
+	param.Pin = c.Bool("pin")
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -117,6 +118,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		Commands: []*cli.Command{
 			runner.newInitCommand(),
 			runner.newInstallCommand(),
+			runner.newUpdateAquaCommand(),
 			runner.newGenerateCommand(),
 			runner.newWhichCommand(),
 			runner.newExecCommand(),

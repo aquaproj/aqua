@@ -19,6 +19,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/download"
@@ -128,6 +129,21 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	execController := exec2.New(installer, controller, executor, osEnv, fs)
 	return execController
+}
+
+func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
+	fs := afero.NewOsFs()
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	linker := link.New()
+	executor := exec.New()
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver)
+	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
+	return controller
 }
 
 func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {

@@ -2,8 +2,6 @@ package updatechecksum_test
 
 import (
 	"context"
-	"io"
-	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -15,53 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-type mockConfigFinder struct {
-	files []string
-}
-
-func (finder *mockConfigFinder) Finds(wd, configFilePath string) []string {
-	return finder.files
-}
-
-type mockCfgReader struct {
-	cfg *aqua.Config
-	err error
-}
-
-func (reader *mockCfgReader) Read(configFilePath string, cfg *aqua.Config) error {
-	*cfg = *reader.cfg
-	return reader.err
-}
-
-type mockRegistryInstaller struct {
-	m   map[string]*registry.Config
-	err error
-}
-
-func (inst *mockRegistryInstaller) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
-	return inst.m, inst.err
-}
-
-type mockChecksumDownloader struct {
-	body string
-	code int64
-	err  error
-}
-
-func (chkDL *mockChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
-	return io.NopCloser(strings.NewReader(chkDL.body)), chkDL.code, chkDL.err
-}
-
-type mockPkgDownloader struct {
-	body string
-	code int64
-	err  error
-}
-
-func (dl *mockPkgDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry, rt *runtime.Runtime) (io.ReadCloser, int64, error) {
-	return io.NopCloser(strings.NewReader(dl.body)), dl.code, dl.err
-}
 
 func boolP(b bool) *bool {
 	return &b
@@ -90,13 +41,13 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/global/aqua.yaml",
 				},
 			},
-			cfgFinder: &mockConfigFinder{
-				files: []string{
+			cfgFinder: &updatechecksum.MockConfigFinder{
+				Files: []string{
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &mockCfgReader{
-				cfg: &aqua.Config{
+			cfgReader: &domain.MockConfigReader{
+				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
 					},
@@ -109,8 +60,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &mockRegistryInstaller{
-				m: map[string]*registry.Config{
+			registInstaller: &domain.MockRegistryInstaller{
+				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
 							{
@@ -126,8 +77,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:         &mockChecksumDownloader{},
-			pkgDownloader: &mockPkgDownloader{},
+			chkDL:         &domain.MockChecksumDownloader{},
+			pkgDownloader: &domain.MockPackageDownloader{},
 		},
 		{
 			name: "deep",
@@ -139,13 +90,13 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/global/aqua.yaml",
 				},
 			},
-			cfgFinder: &mockConfigFinder{
-				files: []string{
+			cfgFinder: &updatechecksum.MockConfigFinder{
+				Files: []string{
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &mockCfgReader{
-				cfg: &aqua.Config{
+			cfgReader: &domain.MockConfigReader{
+				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
 					},
@@ -158,8 +109,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &mockRegistryInstaller{
-				m: map[string]*registry.Config{
+			registInstaller: &domain.MockRegistryInstaller{
+				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
 							{
@@ -175,8 +126,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:         &mockChecksumDownloader{},
-			pkgDownloader: &mockPkgDownloader{},
+			chkDL:         &domain.MockChecksumDownloader{},
+			pkgDownloader: &domain.MockPackageDownloader{},
 		},
 		{
 			name: "enabled",
@@ -187,13 +138,13 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/global/aqua.yaml",
 				},
 			},
-			cfgFinder: &mockConfigFinder{
-				files: []string{
+			cfgFinder: &updatechecksum.MockConfigFinder{
+				Files: []string{
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &mockCfgReader{
-				cfg: &aqua.Config{
+			cfgReader: &domain.MockConfigReader{
+				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
 					},
@@ -206,8 +157,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &mockRegistryInstaller{
-				m: map[string]*registry.Config{
+			registInstaller: &domain.MockRegistryInstaller{
+				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
 							{
@@ -233,8 +184,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL: &mockChecksumDownloader{
-				body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
+			chkDL: &domain.MockChecksumDownloader{
+				Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
 34c0ba49d290ffe108c723ffb0063a4a749a8810979b71fc503434b839688b5c  gh_2.17.0_linux_386.rpm
 3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963  gh_2.17.0_macOS_amd64.tar.gz
 3fb9532fd907547ad1ed89d507f785589c70f3896133ca64de609ba0dcc080d5  gh_2.17.0_linux_armv6.tar.gz
@@ -250,7 +201,7 @@ d373e305512e53145df7064a0253df696fe17f9ec71804311239f3e2c9e19999  gh_2.17.0_linu
 d3b06f291551ce0357e08334d8ba72810a552b593329e3c0dd3489f51a8712a3  gh_2.17.0_windows_386.zip
 ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linux_386.tar.gz`,
 			},
-			pkgDownloader: &mockPkgDownloader{},
+			pkgDownloader: &domain.MockPackageDownloader{},
 		},
 	}
 	ctx := context.Background()

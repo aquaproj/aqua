@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -27,7 +26,7 @@ type Controller struct {
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	fs                afero.Fs
-	linker            link.Linker
+	linker            domain.Linker
 }
 
 type ConfigFinder interface {
