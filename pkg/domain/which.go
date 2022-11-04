@@ -13,6 +13,15 @@ type WhichController interface {
 	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*FindResult, error)
 }
 
+type MockWhichController struct {
+	FindResult *FindResult
+	Err        error
+}
+
+func (ctrl *MockWhichController) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*FindResult, error) {
+	return ctrl.FindResult, ctrl.Err
+}
+
 type FindResult struct {
 	Package        *config.Package
 	File           *registry.File

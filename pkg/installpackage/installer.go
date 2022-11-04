@@ -45,8 +45,25 @@ type Unarchiver interface {
 	Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
 }
 
+type MockUnarchiver struct {
+	Err error
+}
+
+func (unarchiver *MockUnarchiver) Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error {
+	return unarchiver.Err
+}
+
 type ChecksumCalculator interface {
 	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
+}
+
+type MockChecksumCalculator struct {
+	Checksum string
+	Err      error
+}
+
+func (calc *MockChecksumCalculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
+	return calc.Checksum, calc.Err
 }
 
 func isWindows(goos string) bool {

@@ -2,43 +2,20 @@ package installpackage
 
 import (
 	"context"
-	"io"
-	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
 func strP(s string) *string {
 	return &s
-}
-
-type mockPackageDownloader struct {
-	body string
-	code int64
-	err  error
-}
-
-type mockUnarchiver struct {
-	err error
-}
-
-func (unarchiver *mockUnarchiver) Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error {
-	return unarchiver.err
-}
-
-func (dl *mockPackageDownloader) GetReadCloser(ctx context.Context, pkg *config.Package, assetName string, logE *logrus.Entry, rt *runtime.Runtime) (io.ReadCloser, int64, error) {
-	if dl.err == nil {
-		return io.NopCloser(strings.NewReader(dl.body)), dl.code, nil
-	}
-	return nil, dl.code, dl.err
 }
 
 func TestInstaler_download(t *testing.T) { //nolint:funlen
@@ -84,16 +61,16 @@ func TestInstaler_download(t *testing.T) { //nolint:funlen
 					GOARCH: "arm64",
 				},
 				fs: afero.NewMemMapFs(),
-				packageDownloader: &mockPackageDownloader{
-					body: "hello",
+				packageDownloader: &domain.MockPackageDownloader{
+					Body: "hello",
 				},
-				unarchiver:         &mockUnarchiver{},
+				unarchiver:         &MockUnarchiver{},
 				checksumFileParser: &checksum.FileParser{},
 				checksumCalculator: &mockChecksumCalculator{
 					checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
 				},
-				checksumDownloader: &mockChecksumDownloader{
-					body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
+				checksumDownloader: &domain.MockChecksumDownloader{
+					Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
 34c0ba49d290ffe108c723ffb0063a4a749a8810979b71fc503434b839688b5c  gh_2.17.0_linux_386.rpm
 3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963  gh_2.17.0_macOS_amd64.tar.gz
 3fb9532fd907547ad1ed89d507f785589c70f3896133ca64de609ba0dcc080d5  gh_2.17.0_linux_armv6.tar.gz

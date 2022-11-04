@@ -30,10 +30,6 @@ type Controller struct {
 	deep              bool
 }
 
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
-}
-
 func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader domain.PackageDownloader) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
