@@ -18,6 +18,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
@@ -266,6 +267,45 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 	)
 	return &cexec.Controller{}
+}
+
+func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
+	wire.Build(
+		updateaqua.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		link.New,
+	)
+	return &updateaqua.Controller{}
 }
 
 func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {

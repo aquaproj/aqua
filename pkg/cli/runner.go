@@ -103,6 +103,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		Commands: []*cli.Command{
 			runner.newInitCommand(),
 			runner.newInstallCommand(),
+			runner.newUpdateAquaCommand(),
 			runner.newGenerateCommand(),
 			runner.newWhichCommand(),
 			runner.newExecCommand(),
