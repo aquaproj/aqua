@@ -154,7 +154,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
 		afero.NewOsFs,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			exec.New,
@@ -203,7 +206,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		osenv.New,
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 	)
 	return nil
 }
@@ -255,7 +261,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		osenv.New,
 		afero.NewOsFs,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -303,7 +312,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			download.NewChecksumDownloader,
 			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
 		),
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 	)
 	return &updateaqua.Controller{}
 }
@@ -361,7 +373,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		osenv.New,
 		afero.NewOsFs,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			checksum.NewCalculator,

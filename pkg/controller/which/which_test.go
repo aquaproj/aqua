@@ -14,7 +14,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
@@ -237,7 +236,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker(fs)
+			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

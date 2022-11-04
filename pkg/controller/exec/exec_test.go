@@ -15,11 +15,11 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	execCtrl "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
@@ -119,7 +119,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker(fs)
+			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)
@@ -216,7 +216,7 @@ packages:
 					b.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker(fs)
+			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					b.Fatal(err)
