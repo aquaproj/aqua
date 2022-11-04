@@ -66,8 +66,8 @@ func TestInstaler_download(t *testing.T) { //nolint:funlen
 				},
 				unarchiver:         &MockUnarchiver{},
 				checksumFileParser: &checksum.FileParser{},
-				checksumCalculator: &mockChecksumCalculator{
-					checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
+				checksumCalculator: &MockChecksumCalculator{
+					Checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
 				},
 				checksumDownloader: &domain.MockChecksumDownloader{
 					Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb

@@ -12,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -32,7 +31,7 @@ type Installer struct {
 	checksumCalculator ChecksumCalculator
 	runtime            *runtime.Runtime
 	fs                 afero.Fs
-	linker             link.Linker
+	linker             domain.Linker
 	executor           Executor
 	unarchiver         Unarchiver
 	progressBar        bool

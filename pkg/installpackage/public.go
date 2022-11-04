@@ -6,7 +6,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/spf13/afero"
 )
@@ -16,7 +15,7 @@ type Executor interface {
 	GoInstall(ctx context.Context, path, gobin string) (int, error)
 }
 
-func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker link.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver) *Installer {
+func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver) *Installer {
 	return &Installer{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,

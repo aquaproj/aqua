@@ -9,10 +9,10 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -388,7 +388,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			linker := link.NewMockLinker(fs)
+			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)
