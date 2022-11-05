@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/config/security"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
@@ -39,11 +38,7 @@ type Installer struct {
 	onlyLink           bool
 	isTest             bool
 	copyDir            string
-	securityChecker    SecurityChecker
-}
-
-type SecurityChecker interface {
-	Validate(pkg *config.Package, secConfig *security.Config) error
+	policyChecker      domain.PolicyChecker
 }
 
 type Unarchiver interface {
@@ -148,7 +143,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				Pkg:             pkg,
 				Checksums:       checksums,
 				RequireChecksum: param.Config.RequireChecksum(),
-				SecurityConfig:  param.SecurityConfig,
+				PolicyConfig:    param.PolicyConfig,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
@@ -175,7 +170,7 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	logE.Debug("install the package")
 
 	// TODO validate
-	// if err := inst.securityChecker.Validate(param.Pkg, param.SecurityConfig); err != nil {
+	// if err := inst.policyChecker.Validate(param.Pkg, param.PolicyConfig); err != nil {
 	// 	return err //nolint:wrapcheck
 	// }
 

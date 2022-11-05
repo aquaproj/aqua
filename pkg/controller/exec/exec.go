@@ -10,7 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/security"
+	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -21,16 +21,16 @@ import (
 )
 
 type Controller struct {
-	stdin                io.Reader
-	stdout               io.Writer
-	stderr               io.Writer
-	which                domain.WhichController
-	packageInstaller     domain.PackageInstaller
-	executor             Executor
-	enabledXSysExec      bool
-	fs                   afero.Fs
-	securityConfigReader domain.SecurityConfigReader
-	securityChecker      domain.SecurityChecker
+	stdin              io.Reader
+	stdout             io.Writer
+	stderr             io.Writer
+	which              domain.WhichController
+	packageInstaller   domain.PackageInstaller
+	executor           Executor
+	enabledXSysExec    bool
+	fs                 afero.Fs
+	policyConfigReader domain.PolicyConfigReader
+	policyChecker      domain.PolicyChecker
 }
 
 type Executor interface {
@@ -38,18 +38,18 @@ type Executor interface {
 	ExecXSys(exePath string, args []string) error
 }
 
-func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, securityConfigReader domain.SecurityConfigReader, securityChecker domain.SecurityChecker) *Controller {
+func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader domain.PolicyConfigReader, policyChecker domain.PolicyChecker) *Controller {
 	return &Controller{
-		stdin:                os.Stdin,
-		stdout:               os.Stdout,
-		stderr:               os.Stderr,
-		packageInstaller:     pkgInstaller,
-		which:                whichCtrl,
-		executor:             executor,
-		enabledXSysExec:      osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
-		fs:                   fs,
-		securityConfigReader: securityConfigReader,
-		securityChecker:      securityChecker,
+		stdin:              os.Stdin,
+		stdout:             os.Stdout,
+		stderr:             os.Stderr,
+		packageInstaller:   pkgInstaller,
+		which:              whichCtrl,
+		executor:           executor,
+		enabledXSysExec:    osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		fs:                 fs,
+		policyConfigReader: policyConfigReader,
+		policyChecker:      policyChecker,
 	}
 }
 
@@ -75,12 +75,12 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 }
 
 func (ctrl *Controller) validate(pkg *config.Package) error {
-	secCfg := &security.Config{}
-	if cfgFilePath := os.Getenv("AQUA_SECURITY_CONFIG"); cfgFilePath != "" {
-		if err := ctrl.securityConfigReader.Read(cfgFilePath, secCfg); err != nil {
-			return fmt.Errorf("read the security config file: %w", err)
+	policyCfg := &policy.Config{}
+	if cfgFilePath := os.Getenv("AQUA_POLICY_CONFIG"); cfgFilePath != "" {
+		if err := ctrl.policyConfigReader.Read(cfgFilePath, policyCfg); err != nil {
+			return fmt.Errorf("read the policy config file: %w", err)
 		}
-		if err := ctrl.securityChecker.Validate(pkg, secCfg); err != nil {
+		if err := ctrl.policyChecker.Validate(pkg, policyCfg); err != nil {
 			return fmt.Errorf("validate the installed package for security: %w", err)
 		}
 	}

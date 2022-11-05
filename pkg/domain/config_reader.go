@@ -2,7 +2,7 @@ package domain
 
 import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/security"
+	"github.com/aquaproj/aqua/pkg/config/policy"
 )
 
 type ConfigReader interface {
@@ -19,6 +19,6 @@ func (reader *MockConfigReader) Read(configFilePath string, cfg *aqua.Config) er
 	return reader.Err
 }
 
-type SecurityConfigReader interface {
-	Read(configFilePath string, cfg *security.Config) error
+type PolicyConfigReader interface {
+	Read(configFilePath string, cfg *policy.Config) error
 }

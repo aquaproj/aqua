@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/aquaproj/aqua/pkg/config/security"
+	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
-func (sec *SecurityChecker) validateRegistries(pkg *Package, registries []*security.Registry) error {
+func (pc *PolicyChecker) validateRegistries(pkg *Package, registries []*policy.Registry) error {
 	for _, regist := range registries {
-		f, err := sec.matchRegistry(pkg, regist)
+		f, err := pc.matchRegistry(pkg, regist)
 		if err != nil {
 			return err
 		}
@@ -22,18 +22,18 @@ func (sec *SecurityChecker) validateRegistries(pkg *Package, registries []*secur
 	return errUnAllowedRegistry
 }
 
-func (sec *SecurityChecker) matchRegistry(pkg *Package, regist *security.Registry) (bool, error) {
-	f, err := sec.matchRegistryID(pkg, regist)
+func (pc *PolicyChecker) matchRegistry(pkg *Package, regist *policy.Registry) (bool, error) {
+	f, err := pc.matchRegistryID(pkg, regist)
 	if err != nil {
 		return false, err
 	}
 	if !f {
 		return false, nil
 	}
-	return sec.matchRegistryVersion(pkg, regist)
+	return pc.matchRegistryVersion(pkg, regist)
 }
 
-func (sec *SecurityChecker) matchRegistryID(pkg *Package, regist *security.Registry) (bool, error) { //nolint:cyclop
+func (pc *PolicyChecker) matchRegistryID(pkg *Package, regist *policy.Registry) (bool, error) { //nolint:cyclop
 	registID := pkg.Registry.GetID()
 	switch regist.ID {
 	case "standard":
@@ -70,7 +70,7 @@ func (sec *SecurityChecker) matchRegistryID(pkg *Package, regist *security.Regis
 	return false, nil
 }
 
-func (sec *SecurityChecker) matchRegistryVersion(pkg *Package, regist *security.Registry) (bool, error) {
+func (pc *PolicyChecker) matchRegistryVersion(pkg *Package, regist *policy.Registry) (bool, error) {
 	matched, err := expr.EvaluateVersionConstraints(regist.Version, pkg.Registry.Ref)
 	if err != nil {
 		return false, fmt.Errorf("evaluate the version constraint of registry: %w", err)

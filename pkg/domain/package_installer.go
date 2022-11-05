@@ -6,8 +6,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/config/security"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,12 +22,12 @@ type ParamInstallPackages struct {
 	Config         *aqua.Config
 	Registries     map[string]*registry.Config
 	SkipLink       bool
-	SecurityConfig *security.Config
+	PolicyConfig   *policy.Config
 }
 
 type ParamInstallPackage struct {
 	Pkg             *config.Package
 	Checksums       *checksum.Checksums
 	RequireChecksum bool
-	SecurityConfig  *security.Config
+	PolicyConfig    *policy.Config
 }

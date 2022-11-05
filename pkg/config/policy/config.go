@@ -1,4 +1,4 @@
-package security
+package policy
 
 type Config struct {
 	// OR condition

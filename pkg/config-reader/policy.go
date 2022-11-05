@@ -3,22 +3,22 @@ package reader
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config/security"
+	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
 
-func NewSecurity(fs afero.Fs) *SecurityConfigReader {
-	return &SecurityConfigReader{
+func NewPolicy(fs afero.Fs) *PolicyConfigReader {
+	return &PolicyConfigReader{
 		fs: fs,
 	}
 }
 
-type SecurityConfigReader struct {
+type PolicyConfigReader struct {
 	fs afero.Fs
 }
 
-func (reader *SecurityConfigReader) Read(configFilePath string, cfg *security.Config) error {
+func (reader *PolicyConfigReader) Read(configFilePath string, cfg *policy.Config) error {
 	file, err := reader.fs.Open(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
