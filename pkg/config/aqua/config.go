@@ -35,11 +35,8 @@ func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func parseNameWithVersion(name string) (string, string) {
-	idx := strings.Index(name, "@")
-	if idx == -1 {
-		return name, ""
-	}
-	return name[:idx], name[idx+1:]
+	pkgName, version, _ := strings.Cut(name, "@")
+	return pkgName, version
 }
 
 type Config struct {

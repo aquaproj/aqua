@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -122,28 +123,6 @@ func TestInstaller_extractChecksum(t *testing.T) { //nolint:funlen
 	}
 }
 
-type mockChecksumDownloader struct {
-	body string
-	code int64
-	err  error
-}
-
-func (dl *mockChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
-	if dl.err != nil {
-		return nil, dl.code, dl.err
-	}
-	return io.NopCloser(strings.NewReader(dl.body)), dl.code, dl.err
-}
-
-type mockChecksumCalculator struct {
-	checksum string
-	err      error
-}
-
-func (calc *mockChecksumCalculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
-	return calc.checksum, calc.err
-}
-
 func boolP(b bool) *bool {
 	return &b
 }
@@ -185,8 +164,8 @@ func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
 			},
 			inst: &Installer{
 				fs: afero.NewMemMapFs(),
-				checksumDownloader: &mockChecksumDownloader{
-					body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
+				checksumDownloader: &domain.MockChecksumDownloader{
+					Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
 34c0ba49d290ffe108c723ffb0063a4a749a8810979b71fc503434b839688b5c  gh_2.17.0_linux_386.rpm
 3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963  gh_2.17.0_macOS_amd64.tar.gz
 3fb9532fd907547ad1ed89d507f785589c70f3896133ca64de609ba0dcc080d5  gh_2.17.0_linux_armv6.tar.gz
@@ -207,8 +186,8 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 					GOARCH: "arm64",
 				},
 				checksumFileParser: &checksum.FileParser{},
-				checksumCalculator: &mockChecksumCalculator{
-					checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
+				checksumCalculator: &MockChecksumCalculator{
+					Checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
 				},
 			},
 		},

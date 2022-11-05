@@ -1,12 +1,12 @@
 registries:
 - type: standard # standard registry
-  ref: v3.72.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.87.0 # renovate: depName=aquaproj/aqua-registry
 - name: local # local registry
   type: local
   path: registry.yaml
 - name: aqua-registry
   type: github_content # github_content registry
-  ref: v3.72.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.87.0 # renovate: depName=aquaproj/aqua-registry
   repo_owner: aquaproj
   repo_name: aqua-registry
   path: registry.yaml
@@ -17,10 +17,10 @@ packages:
 - name: x-motemen/ghq@v1.3.0
 - name: golangci-lint # local registry
   registry: local
-  version: v1.50.0 # renovate: depName=golangci/golangci-lint
+  version: v1.50.1 # renovate: depName=golangci/golangci-lint
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard # standard registry
-  version: v0.16.0 # renovate: depName=kubernetes-sigs/kind
+  version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
 - name: restic/restic@v0.14.0
   # decompressor, package name with version
   registry: aqua-registry # github content registry
@@ -35,7 +35,7 @@ packages:
 - name: tfutils/tfenv@v3.0.0
   # github_archive package
   registry: local
-- name: containerd/nerdctl@v0.23.0
+- name: containerd/nerdctl@v1.0.0
   # supported_if
   registry: local
 - name: aristocratos/btop@v1.2.12
@@ -63,5 +63,5 @@ packages:
   # type: go_install
   version: e9ceff4e053200afb1eb7e8e3c16932b2e2f01ee
 # {{.URL}} in checksum
-- name: helm/helm@v3.10.0
+- name: helm/helm@v3.10.1
   registry: local

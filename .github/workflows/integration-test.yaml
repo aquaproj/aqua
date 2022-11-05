@@ -15,8 +15,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.3.0
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+    - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
         go-version: '1.19.2'
         cache: true
@@ -28,7 +28,9 @@ jobs:
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/aqua-global.yaml g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
-    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer
+    - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
+    - name: Test -pin
+      run: aqua g cli/cli suzuki-shunsuke/tfcmt@v2.0.0
 
     - run: aqua list
     - run: aqua update-checksum
@@ -112,6 +114,9 @@ jobs:
     - run: aqua list
       working-directory: /tmp
 
+    - name: Test update-aqua
+      run: aqua update-aqua
+
     - run: aqua-installer -v v0.8.1 -i /tmp/aqua
 
   build-windows:
@@ -120,8 +125,8 @@ jobs:
       run:
         shell: bash
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.3.0
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+    - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
         go-version: '1.19.2'
         cache: true
@@ -190,11 +195,14 @@ jobs:
     - name: test aqua cp
       run: dist/golangci-lint version
 
+    - name: Test update-aqua
+      run: aqua update-aqua
+
   build-windows-pwsh:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3.3.0
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+    - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
         go-version: '1.19.2'
         cache: true
@@ -262,3 +270,6 @@ jobs:
       run: dist/actionlint -version
     - name: test aqua cp
       run: dist/golangci-lint version
+
+    - name: Test update-aqua
+      run: aqua update-aqua

@@ -182,6 +182,7 @@ type Param struct {
 	ProgressBar           bool
 	Deep                  bool
 	SkipLink              bool
+	Pin                   bool
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {

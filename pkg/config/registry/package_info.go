@@ -191,6 +191,9 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.WindowsExt != "" {
 		pkgInfo.WindowsExt = ov.WindowsExt
 	}
+	if ov.Type != "" {
+		pkgInfo.Type = ov.Type
+	}
 }
 
 type VersionOverride struct {

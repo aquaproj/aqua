@@ -18,6 +18,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/domain"
@@ -153,7 +154,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
 		afero.NewOsFs,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			exec.New,
@@ -202,7 +206,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		osenv.New,
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 	)
 	return nil
 }
@@ -254,7 +261,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		osenv.New,
 		afero.NewOsFs,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -266,6 +276,48 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 	)
 	return &cexec.Controller{}
+}
+
+func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
+	wire.Build(
+		updateaqua.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			download.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+	)
+	return &updateaqua.Controller{}
 }
 
 func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {
@@ -321,7 +373,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		osenv.New,
 		afero.NewOsFs,
-		link.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			checksum.NewCalculator,
