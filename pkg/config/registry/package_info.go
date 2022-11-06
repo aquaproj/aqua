@@ -197,7 +197,7 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 }
 
 type VersionOverride struct {
-	Type               string            `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http"`
+	Type               string            `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 	RepoOwner          string            `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string            `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string           `yaml:",omitempty" json:"asset,omitempty"`
