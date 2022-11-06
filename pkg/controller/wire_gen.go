@@ -28,6 +28,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/spf13/afero"
@@ -91,9 +92,9 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	policyChecker := config.NewPolicyChecker(rt)
-	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, policyChecker)
-	policyConfigReader := reader.NewPolicy(fs)
+	checker := policy.NewChecker(rt)
+	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	policyConfigReader := policy.NewConfigReader(fs)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyConfigReader)
 	return controller
 }
@@ -122,16 +123,16 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	policyChecker := config.NewPolicyChecker(rt)
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, policyChecker)
+	checker := policy.NewChecker(rt)
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
-	policyConfigReader := reader.NewPolicy(fs)
-	execController := exec2.New(installer, controller, executor, osEnv, fs, policyConfigReader, policyChecker)
+	policyConfigReader := policy.NewConfigReader(fs)
+	execController := exec2.New(installer, controller, executor, osEnv, fs, policyConfigReader, checker)
 	return execController
 }
 
@@ -145,8 +146,8 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	policyChecker := config.NewPolicyChecker(rt)
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, policyChecker)
+	checker := policy.NewChecker(rt)
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
 	return controller
 }
@@ -161,15 +162,15 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	policyChecker := config.NewPolicyChecker(rt)
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, policyChecker)
+	checker := policy.NewChecker(rt)
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
-	policyConfigReader := reader.NewPolicy(fs)
+	policyConfigReader := policy.NewConfigReader(fs)
 	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyConfigReader)
 	cpController := cp.New(param, installer, fs, rt, controller, installController)
 	return cpController

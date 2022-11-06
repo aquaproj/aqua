@@ -2,7 +2,7 @@ package domain
 
 import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/policy"
+	"github.com/aquaproj/aqua/pkg/policy"
 )
 
 type ConfigReader interface {
@@ -20,7 +20,7 @@ func (reader *MockConfigReader) Read(configFilePath string, cfg *aqua.Config) er
 }
 
 type PolicyConfigReader interface {
-	Read(configFilePath string, cfg *policy.Config) error
+	Read(cfg *policy.Config) error
 }
 
 type MockPolicyConfigReader struct {
@@ -28,7 +28,7 @@ type MockPolicyConfigReader struct {
 	Err error
 }
 
-func (reader *MockPolicyConfigReader) Read(configFilePath string, cfg *policy.Config) error {
+func (reader *MockPolicyConfigReader) Read(cfg *policy.Config) error {
 	*cfg = *reader.Cfg
 	return reader.Err
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -48,7 +48,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
 		if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
@@ -67,12 +67,12 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 
 	var policyCfg *policy.Config
 	if param.PolicyConfigFilePath != "" {
-		policyCfg = &policy.Config{}
-		if err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePath, policyCfg); err != nil {
-			return fmt.Errorf("read the policy config file: %w", err)
+		policyCfg = &policy.Config{
+			Path: param.PolicyConfigFilePath,
+			YAML: &policy.ConfigYAML{},
 		}
-		if err := policyCfg.Init(); err != nil {
-			return fmt.Errorf("parse the policy file: %w", err)
+		if err := ctrl.policyConfigReader.Read(policyCfg); err != nil {
+			return fmt.Errorf("read the policy config file: %w", err)
 		}
 	}
 

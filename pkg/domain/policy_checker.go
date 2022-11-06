@@ -1,22 +1,22 @@
 package domain
 
 import (
-	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/policy"
 )
 
 type PolicyChecker interface {
-	ValidatePackage(param *config.ParamValidatePackage) error
-	ValidateRegistry(param *config.ParamValidateRegistry) error
+	ValidatePackage(param *policy.ParamValidatePackage) error
+	ValidateRegistry(param *policy.ParamValidateRegistry) error
 }
 
 type MockPolicyChecker struct {
 	Err error
 }
 
-func (pc *MockPolicyChecker) ValidatePackage(param *config.ParamValidatePackage) error {
+func (pc *MockPolicyChecker) ValidatePackage(param *policy.ParamValidatePackage) error {
 	return pc.Err
 }
 
-func (pc *MockPolicyChecker) ValidateRegistry(param *config.ParamValidateRegistry) error {
+func (pc *MockPolicyChecker) ValidateRegistry(param *policy.ParamValidateRegistry) error {
 	return pc.Err
 }

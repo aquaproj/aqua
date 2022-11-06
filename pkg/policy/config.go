@@ -1,14 +1,25 @@
 package policy
 
-import "errors"
+import (
+	"errors"
+	"path/filepath"
+)
 
 const (
 	registryTypeStandard = "standard"
 )
 
-var errUnknownRegistry = errors.New("unknown registry")
+var (
+	errUnknownRegistry     = errors.New("unknown registry")
+	errLocalPathIsRequired = errors.New("local registry requires path")
+)
 
 type Config struct {
+	Path string
+	YAML *ConfigYAML
+}
+
+type ConfigYAML struct {
 	Registries []*Registry `json:"registries"`
 	Packages   []*Package  `json:"packages,omitempty"`
 }
@@ -29,9 +40,9 @@ type Package struct {
 	Registry     *Registry `yaml:"-" json:"-"`
 }
 
-func (cfg *Config) Init() error {
-	m := make(map[string]*Registry, len(cfg.Registries))
-	for _, rgst := range cfg.Registries {
+func (cfg *Config) Init() error { //nolint:cyclop
+	m := make(map[string]*Registry, len(cfg.YAML.Registries))
+	for _, rgst := range cfg.YAML.Registries {
 		rgst := rgst
 		if rgst.Type == registryTypeStandard {
 			rgst.Type = "github_content"
@@ -44,9 +55,17 @@ func (cfg *Config) Init() error {
 				rgst.Name = registryTypeStandard
 			}
 		}
+		if rgst.Type == "local" {
+			if rgst.Path == "" {
+				return errLocalPathIsRequired
+			}
+			if !filepath.IsAbs(rgst.Path) {
+				rgst.Path = filepath.Join(filepath.Dir(cfg.Path), rgst.Path)
+			}
+		}
 		m[rgst.Name] = rgst
 	}
-	for _, pkg := range cfg.Packages {
+	for _, pkg := range cfg.YAML.Packages {
 		pkg := pkg
 		if pkg.RegistryName == "" {
 			pkg.RegistryName = registryTypeStandard

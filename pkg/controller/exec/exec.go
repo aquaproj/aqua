@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -65,7 +64,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
-		if err := ctrl.validate(findResult.Package, filepath.Dir(findResult.ConfigFilePath), param.PolicyConfigFilePath); err != nil {
+		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePath); err != nil {
 			return err
 		}
 		if err := ctrl.install(ctx, logE, findResult); err != nil {
@@ -75,20 +74,18 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 	return logerr.WithFields(ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE), logE.Data) //nolint:wrapcheck
 }
 
-func (ctrl *Controller) validate(pkg *config.Package, cfgDir, policyConfigFilePath string) error {
-	policyCfg := &policy.Config{}
+func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePath string) error {
+	policyCfg := &policy.Config{
+		Path: policyConfigFilePath,
+		YAML: &policy.ConfigYAML{},
+	}
 	if policyConfigFilePath != "" {
-		if err := ctrl.policyConfigReader.Read(policyConfigFilePath, policyCfg); err != nil {
+		if err := ctrl.policyConfigReader.Read(policyCfg); err != nil {
 			return fmt.Errorf("read the policy config file: %w", err)
 		}
-		if err := policyCfg.Init(); err != nil {
-			return fmt.Errorf("parse the policy file: %w", err)
-		}
-		if err := ctrl.policyChecker.ValidatePackage(&config.ParamValidatePackage{
-			Pkg:           pkg,
-			PolicyConfig:  policyCfg,
-			ConfigFileDir: cfgDir,
-			PolicyFileDir: filepath.Dir(policyConfigFilePath),
+		if err := ctrl.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
+			Pkg:          pkg,
+			PolicyConfig: policyCfg.YAML,
 		}); err != nil {
 			return fmt.Errorf("validate the installed package for security: %w", err)
 		}

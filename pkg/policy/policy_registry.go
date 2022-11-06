@@ -1,27 +1,25 @@
-package config
+package policy
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
 type ParamValidateRegistry struct {
 	Registry      *aqua.Registry
-	PolicyConfig  *policy.Config
+	PolicyConfig  *ConfigYAML
 	ConfigFileDir string
 	PolicyFileDir string
 }
 
-func (pc *PolicyChecker) ValidateRegistry(param *ParamValidateRegistry) error {
+func (pc *Checker) ValidateRegistry(param *ParamValidateRegistry) error {
 	if param.PolicyConfig == nil {
 		return errUnAllowedPackage
 	}
 	for _, regist := range param.PolicyConfig.Registries {
-		f, err := pc.matchRegistry(param.Registry, regist, param.ConfigFileDir, param.PolicyFileDir)
+		f, err := pc.matchRegistry(param.Registry, regist)
 		if err != nil {
 			return err
 		}
@@ -32,12 +30,12 @@ func (pc *PolicyChecker) ValidateRegistry(param *ParamValidateRegistry) error {
 	return errUnAllowedRegistry
 }
 
-func (pc *PolicyChecker) matchRegistry(rgst *aqua.Registry, rgstPolicy *policy.Registry, cfgDir, policyDir string) (bool, error) {
+func (pc *Checker) matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
 	if rgst.Type != rgstPolicy.Type {
 		return false, nil
 	}
 	if rgst.Type == "local" {
-		return pc.matchLocalRegistryPath(cfgDir, rgst.Path, policyDir, rgstPolicy.Path)
+		return rgst.Path == rgstPolicy.Path, nil
 	}
 	if rgst.RepoOwner != rgstPolicy.RepoOwner {
 		return false, nil
@@ -57,14 +55,4 @@ func (pc *PolicyChecker) matchRegistry(rgst *aqua.Registry, rgstPolicy *policy.R
 		return matched, nil
 	}
 	return true, nil
-}
-
-func (pc *PolicyChecker) matchLocalRegistryPath(cfgDir, rgstPath, policyDir, rgstPolicyPath string) (bool, error) {
-	if !filepath.IsAbs(rgstPath) {
-		rgstPath = filepath.Join(cfgDir, rgstPath)
-	}
-	if !filepath.IsAbs(rgstPolicyPath) {
-		rgstPolicyPath = filepath.Join(policyDir, rgstPolicyPath)
-	}
-	return rgstPath == rgstPolicyPath, nil
 }

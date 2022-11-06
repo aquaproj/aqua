@@ -9,8 +9,8 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -69,12 +69,12 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 
 	var policyCfg *policy.Config
 	if param.PolicyConfigFilePath != "" {
-		policyCfg = &policy.Config{}
-		if err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePath, policyCfg); err != nil {
-			return fmt.Errorf("read the policy config file: %w", err)
+		policyCfg = &policy.Config{
+			Path: param.PolicyConfigFilePath,
+			YAML: &policy.ConfigYAML{},
 		}
-		if err := policyCfg.Init(); err != nil {
-			return fmt.Errorf("parse the policy file: %w", err)
+		if err := ctrl.policyConfigReader.Read(policyCfg); err != nil {
+			return fmt.Errorf("read the policy config file: %w", err)
 		}
 	}
 	policyFileDir := filepath.Dir(param.PolicyConfigFilePath)

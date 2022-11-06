@@ -1,25 +1,23 @@
-package config
+package policy
 
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config/policy"
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
 type ParamValidatePackage struct {
-	Pkg           *Package
-	PolicyConfig  *policy.Config
-	ConfigFileDir string
-	PolicyFileDir string
+	Pkg          *config.Package
+	PolicyConfig *ConfigYAML
 }
 
-func (pc *PolicyChecker) ValidatePackage(param *ParamValidatePackage) error {
+func (pc *Checker) ValidatePackage(param *ParamValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}
 	for _, policyPkg := range param.PolicyConfig.Packages {
-		f, err := pc.matchPkg(param.Pkg, policyPkg, param.ConfigFileDir, param.PolicyFileDir)
+		f, err := pc.matchPkg(param.Pkg, policyPkg)
 		if err != nil {
 			return err
 		}
@@ -30,7 +28,7 @@ func (pc *PolicyChecker) ValidatePackage(param *ParamValidatePackage) error {
 	return errUnAllowedPackage
 }
 
-func (pc *PolicyChecker) matchPkg(pkg *Package, policyPkg *policy.Package, cfgDir, policyDir string) (bool, error) {
+func (pc *Checker) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}
@@ -43,5 +41,5 @@ func (pc *PolicyChecker) matchPkg(pkg *Package, policyPkg *policy.Package, cfgDi
 			return false, nil
 		}
 	}
-	return pc.matchRegistry(pkg.Registry, policyPkg.Registry, cfgDir, policyDir)
+	return pc.matchRegistry(pkg.Registry, policyPkg.Registry)
 }

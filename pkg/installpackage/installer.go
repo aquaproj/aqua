@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -169,13 +170,13 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	})
 	logE.Debug("install the package")
 
-	if err := inst.policyChecker.ValidatePackage(&config.ParamValidatePackage{
-		Pkg:           param.Pkg,
-		PolicyConfig:  param.PolicyConfig,
-		ConfigFileDir: param.ConfigFileDir,
-		PolicyFileDir: param.PolicyFileDir,
-	}); err != nil {
-		return err //nolint:wrapcheck
+	if param.PolicyConfig != nil {
+		if err := inst.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
+			Pkg:          param.Pkg,
+			PolicyConfig: param.PolicyConfig.YAML,
+		}); err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 
 	if err := pkgInfo.Validate(); err != nil {
