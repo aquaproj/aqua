@@ -79,6 +79,11 @@ packages:
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
 					},
+					Registry: &aqua.Registry{
+						Name: "standard",
+						Type: "local",
+						Path: "registry.yaml",
+					},
 				},
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
@@ -193,6 +198,11 @@ packages:
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
+					},
+					Registry: &aqua.Registry{
+						Name: "standard",
+						Type: "local",
+						Path: "registry.yaml",
 					},
 				},
 				File: &cfgRegistry.File{
