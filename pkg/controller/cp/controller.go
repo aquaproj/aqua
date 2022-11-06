@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -18,12 +20,13 @@ import (
 const dirPermission os.FileMode = 0o775
 
 type Controller struct {
-	packageInstaller PackageInstaller
-	rootDir          string
-	fs               afero.Fs
-	runtime          *runtime.Runtime
-	which            domain.WhichController
-	installer        Installer
+	packageInstaller   PackageInstaller
+	rootDir            string
+	fs                 afero.Fs
+	runtime            *runtime.Runtime
+	which              domain.WhichController
+	installer          Installer
+	policyConfigReader domain.PolicyConfigReader
 }
 
 type ConfigFinder interface {
@@ -64,6 +67,18 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 
 	ctrl.packageInstaller.SetCopyDir("")
 
+	var policyCfg *policy.Config
+	if param.PolicyConfigFilePath != "" {
+		policyCfg = &policy.Config{}
+		if err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePath, policyCfg); err != nil {
+			return fmt.Errorf("read the policy config file: %w", err)
+		}
+		if err := policyCfg.Init(); err != nil {
+			return fmt.Errorf("parse the policy file: %w", err)
+		}
+	}
+	policyFileDir := filepath.Dir(param.PolicyConfigFilePath)
+
 	for _, exeName := range param.Args {
 		go func(exeName string) {
 			defer wg.Done()
@@ -72,7 +87,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 				<-maxInstallChan
 			}()
 			logE := logE.WithField("exe_name", exeName)
-			if err := ctrl.installAndCopy(ctx, logE, param, exeName); err != nil {
+			if err := ctrl.installAndCopy(ctx, logE, param, exeName, policyCfg, policyFileDir); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -86,7 +101,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 	return nil
 }
 
-func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) error {
+func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfig *policy.Config, policyFileDir string) error {
 	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -94,7 +109,7 @@ func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, 
 	logE = logE.WithField("exe_path", findResult.ExePath)
 	if findResult.Package != nil {
 		logE = logE.WithField("package", findResult.Package.Package.Name)
-		if err := ctrl.install(ctx, logE, findResult); err != nil {
+		if err := ctrl.install(ctx, logE, findResult, policyConfig, policyFileDir); err != nil {
 			return err
 		}
 	}

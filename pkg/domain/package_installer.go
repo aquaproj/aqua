@@ -23,6 +23,7 @@ type ParamInstallPackages struct {
 	Registries     map[string]*registry.Config
 	SkipLink       bool
 	PolicyConfig   *policy.Config
+	PolicyFileDir  string
 }
 
 type ParamInstallPackage struct {

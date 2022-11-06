@@ -48,7 +48,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
 		if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
@@ -65,16 +65,29 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
+	var policyCfg *policy.Config
+	if param.PolicyConfigFilePath != "" {
+		policyCfg = &policy.Config{}
+		if err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePath, policyCfg); err != nil {
+			return fmt.Errorf("read the policy config file: %w", err)
+		}
+		if err := policyCfg.Init(); err != nil {
+			return fmt.Errorf("parse the policy file: %w", err)
+		}
+	}
+
+	policyFileDir := filepath.Dir(param.PolicyConfigFilePath)
+
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		if err := ctrl.install(ctx, logE, cfgFilePath, param.PolicyConfigFilePath); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath, policyCfg, policyFileDir); err != nil {
 			return err
 		}
 	}
 
-	return ctrl.installAll(ctx, logE, param)
+	return ctrl.installAll(ctx, logE, param, policyCfg, policyFileDir)
 }
 
-func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfig *policy.Config, policyFileDir string) error {
 	if !param.All {
 		return nil
 	}
@@ -82,14 +95,14 @@ func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, para
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := ctrl.install(ctx, logE, cfgFilePath, param.PolicyConfigFilePath); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath, policyConfig, policyFileDir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath, policyConfigFilePath string) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfig *policy.Config, policyFileDir string) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -103,22 +116,12 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		return err //nolint:wrapcheck
 	}
 
-	var policyCfg *policy.Config
-	if policyConfigFilePath != "" {
-		policyCfg = &policy.Config{}
-		if err := ctrl.policyConfigReader.Read(policyConfigFilePath, policyCfg); err != nil {
-			return fmt.Errorf("read the policy config file: %w", err)
-		}
-		if err := policyCfg.Init(); err != nil {
-			return fmt.Errorf("parse the policy file: %w", err)
-		}
-	}
-
 	return ctrl.packageInstaller.InstallPackages(ctx, logE, &domain.ParamInstallPackages{ //nolint:wrapcheck
 		Config:         cfg,
 		Registries:     registryContents,
 		ConfigFilePath: cfgFilePath,
 		SkipLink:       ctrl.skipLink,
-		PolicyConfig:   policyCfg,
+		PolicyConfig:   policyConfig,
+		PolicyFileDir:  policyFileDir,
 	})
 }
