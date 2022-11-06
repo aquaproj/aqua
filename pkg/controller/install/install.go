@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -18,30 +19,32 @@ import (
 const dirPermission os.FileMode = 0o775
 
 type Controller struct {
-	packageInstaller  domain.PackageInstaller
-	rootDir           string
-	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
-	registryInstaller domain.RegistryInstaller
-	fs                afero.Fs
-	runtime           *runtime.Runtime
-	skipLink          bool
+	packageInstaller   domain.PackageInstaller
+	rootDir            string
+	configFinder       ConfigFinder
+	configReader       domain.ConfigReader
+	registryInstaller  domain.RegistryInstaller
+	fs                 afero.Fs
+	runtime            *runtime.Runtime
+	skipLink           bool
+	policyConfigReader domain.PolicyConfigReader
 }
 
 type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, policyConfigReader domain.PolicyConfigReader) *Controller {
 	return &Controller{
-		rootDir:           param.RootDir,
-		configFinder:      configFinder,
-		configReader:      configReader,
-		registryInstaller: registInstaller,
-		packageInstaller:  pkgInstaller,
-		fs:                fs,
-		runtime:           rt,
-		skipLink:          param.SkipLink,
+		rootDir:            param.RootDir,
+		configFinder:       configFinder,
+		configReader:       configReader,
+		registryInstaller:  registInstaller,
+		packageInstaller:   pkgInstaller,
+		fs:                 fs,
+		runtime:            rt,
+		skipLink:           param.SkipLink,
+		policyConfigReader: policyConfigReader,
 	}
 }
 
@@ -63,7 +66,7 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		if err := ctrl.install(ctx, logE, cfgFilePath); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath, param.PolicyConfigFilePath); err != nil {
 			return err
 		}
 	}
@@ -79,14 +82,14 @@ func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, para
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := ctrl.install(ctx, logE, cfgFilePath); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath, param.PolicyConfigFilePath); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath, policyConfigFilePath string) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -100,10 +103,22 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		return err //nolint:wrapcheck
 	}
 
+	var policyCfg *policy.Config
+	if policyConfigFilePath != "" {
+		policyCfg = &policy.Config{}
+		if err := ctrl.policyConfigReader.Read(policyConfigFilePath, policyCfg); err != nil {
+			return fmt.Errorf("read the policy config file: %w", err)
+		}
+		if err := policyCfg.Init(); err != nil {
+			return fmt.Errorf("parse the policy file: %w", err)
+		}
+	}
+
 	return ctrl.packageInstaller.InstallPackages(ctx, logE, &domain.ParamInstallPackages{ //nolint:wrapcheck
 		Config:         cfg,
 		Registries:     registryContents,
 		ConfigFilePath: cfgFilePath,
 		SkipLink:       ctrl.skipLink,
+		PolicyConfig:   nil,
 	})
 }

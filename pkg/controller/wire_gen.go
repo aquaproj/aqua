@@ -93,7 +93,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	unarchiver := unarchive.New()
 	policyChecker := config.NewPolicyChecker(rt)
 	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, policyChecker)
-	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt)
+	policyConfigReader := reader.NewPolicy(fs)
+	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyConfigReader)
 	return controller
 }
 
@@ -168,7 +169,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
-	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt)
+	policyConfigReader := reader.NewPolicy(fs)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyConfigReader)
 	cpController := cp.New(param, installer, fs, rt, controller, installController)
 	return cpController
 }

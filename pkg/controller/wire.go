@@ -179,6 +179,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			config.NewPolicyChecker,
 			wire.Bind(new(domain.PolicyChecker), new(*config.PolicyChecker)),
 		),
+		wire.NewSet(
+			reader.NewPolicy,
+			wire.Bind(new(domain.PolicyConfigReader), new(*reader.PolicyConfigReader)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -405,6 +409,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			config.NewPolicyChecker,
 			wire.Bind(new(domain.PolicyChecker), new(*config.PolicyChecker)),
+		),
+		wire.NewSet(
+			reader.NewPolicy,
+			wire.Bind(new(domain.PolicyConfigReader), new(*reader.PolicyConfigReader)),
 		),
 	)
 	return &cp.Controller{}

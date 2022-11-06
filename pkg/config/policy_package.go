@@ -31,7 +31,7 @@ func (pc *PolicyChecker) ValidatePackage(param *ParamValidatePackage) error {
 }
 
 func (pc *PolicyChecker) matchPkg(pkg *Package, policyPkg *policy.Package, cfgDir, policyDir string) (bool, error) {
-	if pkg.Package.Name != policyPkg.Name {
+	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}
 	if policyPkg.Version != "" {

@@ -64,6 +64,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
+	param.PolicyConfigFilePath = os.Getenv("AQUA_POLICY_CONFIG")
 	return nil
 }
 

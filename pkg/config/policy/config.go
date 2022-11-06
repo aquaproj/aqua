@@ -1,5 +1,13 @@
 package policy
 
+import "errors"
+
+const (
+	registryTypeStandard = "standard"
+)
+
+var errUnknownRegistry = errors.New("unknown registry")
+
 type Config struct {
 	Registries []*Registry `json:"registries"`
 	Packages   []*Package  `json:"packages,omitempty"`
@@ -19,4 +27,35 @@ type Package struct {
 	Version      string    `json:"version,omitempty"`
 	RegistryName string    `yaml:"registry" json:"registry,omitempty"`
 	Registry     *Registry `yaml:"-" json:"-"`
+}
+
+func (cfg *Config) Init() error {
+	m := make(map[string]*Registry, len(cfg.Registries))
+	for _, rgst := range cfg.Registries {
+		rgst := rgst
+		if rgst.Type == registryTypeStandard {
+			rgst.Type = "github_content"
+			rgst.RepoOwner = "aquaproj"
+			rgst.RepoName = "aqua-registry"
+			if rgst.Path == "" {
+				rgst.Path = "registry.yaml"
+			}
+			if rgst.Name == "" {
+				rgst.Name = registryTypeStandard
+			}
+		}
+		m[rgst.Name] = rgst
+	}
+	for _, pkg := range cfg.Packages {
+		pkg := pkg
+		if pkg.RegistryName == "" {
+			pkg.RegistryName = registryTypeStandard
+		}
+		rgst, ok := m[pkg.RegistryName]
+		if !ok {
+			return errUnknownRegistry
+		}
+		pkg.Registry = rgst
+	}
+	return nil
 }
