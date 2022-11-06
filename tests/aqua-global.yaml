@@ -38,7 +38,7 @@ packages:
 - name: containerd/nerdctl@v1.0.0
   # supported_if
   registry: local
-- name: aristocratos/btop@v1.2.12
+- name: aristocratos/btop@v1.2.13
   # replacements_overrides
   registry: local
 - name: ahmetb/kubens
