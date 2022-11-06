@@ -86,9 +86,10 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 			"package_version": pkg.Version,
 			"registry":        pkg.Registry,
 		})
-		if registry, ok := cfg.Registries[pkg.Registry]; ok {
-			if registry.Ref != "" {
-				logE = logE.WithField("registry_ref", registry.Ref)
+		rgst, ok := cfg.Registries[pkg.Registry]
+		if ok {
+			if rgst.Ref != "" {
+				logE = logE.WithField("registry_ref", rgst.Ref)
 			}
 		}
 		pkgInfo, err := getPkgInfoFromRegistries(logE, registries, pkg, m)
@@ -117,6 +118,7 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 		pkgs = append(pkgs, &Package{
 			Package:     pkg,
 			PackageInfo: pkgInfo,
+			Registry:    rgst,
 		})
 	}
 	return pkgs, failed
