@@ -175,6 +175,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
+		wire.NewSet(
+			config.NewPolicyChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*config.PolicyChecker)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -274,6 +278,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
+		wire.NewSet(
+			config.NewPolicyChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*config.PolicyChecker)),
+		),
+		wire.NewSet(
+			reader.NewPolicy,
+			wire.Bind(new(domain.PolicyConfigReader), new(*reader.PolicyConfigReader)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -315,6 +327,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			config.NewPolicyChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*config.PolicyChecker)),
 		),
 	)
 	return &updateaqua.Controller{}
@@ -385,6 +401,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			config.NewPolicyChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*config.PolicyChecker)),
 		),
 	)
 	return &cp.Controller{}

@@ -28,9 +28,12 @@ func (pc *PolicyChecker) matchRegistry(rgst *aqua.Registry, rgstPolicy *policy.R
 	if rgst.Type != rgstPolicy.Type {
 		return false, nil
 	}
-	matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Ref, rgst.Ref)
-	if err != nil {
-		return false, fmt.Errorf("evaluate the version constraint of registry: %w", err)
+	if rgstPolicy.Ref != "" {
+		matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Ref, rgst.Ref)
+		if err != nil {
+			return false, fmt.Errorf("evaluate the version constraint of registry: %w", err)
+		}
+		return matched, nil
 	}
-	return matched, nil
+	return true, nil
 }

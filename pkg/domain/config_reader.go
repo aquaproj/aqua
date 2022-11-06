@@ -22,3 +22,13 @@ func (reader *MockConfigReader) Read(configFilePath string, cfg *aqua.Config) er
 type PolicyConfigReader interface {
 	Read(configFilePath string, cfg *policy.Config) error
 }
+
+type MockPolicyConfigReader struct {
+	Cfg *policy.Config
+	Err error
+}
+
+func (reader *MockPolicyConfigReader) Read(configFilePath string, cfg *policy.Config) error {
+	*cfg = *reader.Cfg
+	return reader.Err
+}

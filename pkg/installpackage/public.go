@@ -15,7 +15,7 @@ type Executor interface {
 	GoInstall(ctx context.Context, path, gobin string) (int, error)
 }
 
-func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver) *Installer {
+func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker) *Installer {
 	return &Installer{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
@@ -32,5 +32,6 @@ func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.R
 		onlyLink:           param.OnlyLink,
 		copyDir:            param.Dest,
 		unarchiver:         unarchiver,
+		policyChecker:      policyChecker,
 	}
 }

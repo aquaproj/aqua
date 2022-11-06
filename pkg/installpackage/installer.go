@@ -158,7 +158,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error {
+func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error { //nolint:cyclop
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -169,10 +169,9 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	})
 	logE.Debug("install the package")
 
-	// TODO validate
-	// if err := inst.policyChecker.Validate(param.Pkg, param.PolicyConfig); err != nil {
-	// 	return err //nolint:wrapcheck
-	// }
+	if err := inst.policyChecker.ValidatePackage(param.Pkg, param.PolicyConfig); err != nil {
+		return err //nolint:wrapcheck
+	}
 
 	if err := pkgInfo.Validate(); err != nil {
 		return fmt.Errorf("invalid package: %w", err)

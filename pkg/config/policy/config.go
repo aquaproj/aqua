@@ -12,7 +12,8 @@ type Registry struct {
 }
 
 type Package struct {
-	Name     string `json:"name"`
-	Version  string `json:"version,omitempty"`
-	Registry string `json:"registry,omitempty"`
+	Name         string    `json:"name"`
+	Version      string    `json:"version,omitempty"`
+	RegistryName string    `yaml:"registry" json:"registry,omitempty"`
+	Registry     *Registry `yaml:"-" json:"-"`
 }

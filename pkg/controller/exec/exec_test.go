@@ -130,8 +130,8 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &domain.MockPolicyConfigReader{}, &domain.MockPolicyChecker{})
 			if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
 				if d.isErr {
 					return
@@ -227,8 +227,8 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, afero.NewOsFs()), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &domain.MockPolicyConfigReader{}, &domain.MockPolicyChecker{})
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				func() {

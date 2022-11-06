@@ -80,7 +80,7 @@ func (ctrl *Controller) validate(pkg *config.Package) error {
 		if err := ctrl.policyConfigReader.Read(cfgFilePath, policyCfg); err != nil {
 			return fmt.Errorf("read the policy config file: %w", err)
 		}
-		if err := ctrl.policyChecker.Validate(pkg, policyCfg); err != nil {
+		if err := ctrl.policyChecker.ValidatePackage(pkg, policyCfg); err != nil {
 			return fmt.Errorf("validate the installed package for security: %w", err)
 		}
 	}
