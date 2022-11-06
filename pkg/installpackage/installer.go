@@ -169,7 +169,12 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	})
 	logE.Debug("install the package")
 
-	if err := inst.policyChecker.ValidatePackage(param.Pkg, param.PolicyConfig); err != nil {
+	if err := inst.policyChecker.ValidatePackage(&config.ParamValidatePackage{
+		Pkg:           param.Pkg,
+		PolicyConfig:  param.PolicyConfig,
+		ConfigFileDir: param.ConfigFileDir,
+		PolicyFileDir: param.PolicyFileDir,
+	}); err != nil {
 		return err //nolint:wrapcheck
 	}
 

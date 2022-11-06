@@ -30,4 +30,6 @@ type ParamInstallPackage struct {
 	Checksums       *checksum.Checksums
 	RequireChecksum bool
 	PolicyConfig    *policy.Config
+	ConfigFileDir   string
+	PolicyFileDir   string
 }

@@ -2,18 +2,26 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
-func (pc *PolicyChecker) ValidateRegistry(rgst *aqua.Registry, policyConfig *policy.Config) error {
-	if policyConfig == nil {
+type ParamValidateRegistry struct {
+	Registry      *aqua.Registry
+	PolicyConfig  *policy.Config
+	ConfigFileDir string
+	PolicyFileDir string
+}
+
+func (pc *PolicyChecker) ValidateRegistry(param *ParamValidateRegistry) error {
+	if param.PolicyConfig == nil {
 		return errUnAllowedPackage
 	}
-	for _, regist := range policyConfig.Registries {
-		f, err := pc.matchRegistry(rgst, regist)
+	for _, regist := range param.PolicyConfig.Registries {
+		f, err := pc.matchRegistry(param.Registry, regist, param.ConfigFileDir, param.PolicyFileDir)
 		if err != nil {
 			return err
 		}
@@ -24,10 +32,23 @@ func (pc *PolicyChecker) ValidateRegistry(rgst *aqua.Registry, policyConfig *pol
 	return errUnAllowedRegistry
 }
 
-func (pc *PolicyChecker) matchRegistry(rgst *aqua.Registry, rgstPolicy *policy.Registry) (bool, error) {
+func (pc *PolicyChecker) matchRegistry(rgst *aqua.Registry, rgstPolicy *policy.Registry, cfgDir, policyDir string) (bool, error) {
 	if rgst.Type != rgstPolicy.Type {
 		return false, nil
 	}
+	if rgst.Type == "local" {
+		return pc.matchLocalRegistryPath(cfgDir, rgst.Path, policyDir, rgstPolicy.Path)
+	}
+	if rgst.RepoOwner != rgstPolicy.RepoOwner {
+		return false, nil
+	}
+	if rgst.RepoName != rgstPolicy.RepoName {
+		return false, nil
+	}
+	if rgst.Path != rgstPolicy.Path {
+		return false, nil
+	}
+
 	if rgstPolicy.Ref != "" {
 		matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Ref, rgst.Ref)
 		if err != nil {
@@ -36,4 +57,14 @@ func (pc *PolicyChecker) matchRegistry(rgst *aqua.Registry, rgstPolicy *policy.R
 		return matched, nil
 	}
 	return true, nil
+}
+
+func (pc *PolicyChecker) matchLocalRegistryPath(cfgDir, rgstPath, policyDir, rgstPolicyPath string) (bool, error) {
+	if !filepath.IsAbs(rgstPath) {
+		rgstPath = filepath.Join(cfgDir, rgstPath)
+	}
+	if !filepath.IsAbs(rgstPolicyPath) {
+		rgstPolicyPath = filepath.Join(policyDir, rgstPolicyPath)
+	}
+	return rgstPath == rgstPolicyPath, nil
 }

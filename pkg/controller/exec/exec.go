@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
@@ -64,7 +65,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
-		if err := ctrl.validate(findResult.Package); err != nil {
+		if err := ctrl.validate(findResult.Package, filepath.Dir(findResult.ConfigFilePath)); err != nil {
 			return err
 		}
 		if err := ctrl.install(ctx, logE, findResult); err != nil {
@@ -74,13 +75,18 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 	return logerr.WithFields(ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE), logE.Data) //nolint:wrapcheck
 }
 
-func (ctrl *Controller) validate(pkg *config.Package) error {
+func (ctrl *Controller) validate(pkg *config.Package, cfgDir string) error {
 	policyCfg := &policy.Config{}
 	if cfgFilePath := os.Getenv("AQUA_POLICY_CONFIG"); cfgFilePath != "" {
 		if err := ctrl.policyConfigReader.Read(cfgFilePath, policyCfg); err != nil {
 			return fmt.Errorf("read the policy config file: %w", err)
 		}
-		if err := ctrl.policyChecker.ValidatePackage(pkg, policyCfg); err != nil {
+		if err := ctrl.policyChecker.ValidatePackage(&config.ParamValidatePackage{
+			Pkg:           pkg,
+			PolicyConfig:  policyCfg,
+			ConfigFileDir: cfgDir,
+			PolicyFileDir: filepath.Dir(cfgFilePath),
+		}); err != nil {
 			return fmt.Errorf("validate the installed package for security: %w", err)
 		}
 	}
