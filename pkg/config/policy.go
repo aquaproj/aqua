@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 
-	"github.com/aquaproj/aqua/pkg/config/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 )
 
@@ -21,16 +20,3 @@ var (
 	errUnAllowedPackage  = errors.New("this package isn't allowed")
 	errUnAllowedRegistry = errors.New("this registry isn't allowed")
 )
-
-func (pc *PolicyChecker) Validate(pkg *Package, policyConfig *policy.Config) error {
-	if policyConfig == nil {
-		return errUnAllowedPackage
-	}
-	if err := pc.validateRegistries(pkg, policyConfig.Registries); err != nil {
-		return err
-	}
-	if err := pc.validatePkgs(pkg, policyConfig.Packages); err != nil {
-		return err
-	}
-	return nil
-}

@@ -1,25 +1,18 @@
 package policy
 
 type Config struct {
-	// OR condition
-	Packages []*Package `json:"packages,omitempty"`
+	Registries []*Registry `json:"registries"`
+	Packages   []*Package  `json:"packages,omitempty"`
 }
 
 type Registry struct {
-	ID string `json:"id"`
-	// AND condition
-	IDFormat string `yaml:"id_format" json:"id_format,omitempty"`
-	Version  string `json:"version,omitempty"`
+	Type string `json:"type"`
+	Ref  string `json:"ref"`
+	Name string `json:"name,omitempty"`
 }
 
 type Package struct {
-	Packages []*ChildPackage `json:"packages,omitempty"`
-	Registry *Registry       `json:"registry,omitempty"`
-}
-
-type ChildPackage struct {
-	ID string `json:"id"`
-	// AND condition
-	IDFormat string `yaml:"id_format" json:"id_format,omitempty"`
+	Name     string `json:"name"`
 	Version  string `json:"version,omitempty"`
+	Registry string `json:"registry,omitempty"`
 }

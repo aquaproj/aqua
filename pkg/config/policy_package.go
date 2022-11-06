@@ -9,8 +9,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
-func (pc *PolicyChecker) validatePkgs(pkg *Package, pkgs []*policy.Package) error {
-	for _, policyPkg := range pkgs {
+func (pc *PolicyChecker) ValidatePackage(pkg *Package, cfg *policy.Config) error {
+	for _, policyPkg := range cfg.Packages {
 		f, err := pc.matchPkg(pkg, policyPkg)
 		if err != nil {
 			return err
