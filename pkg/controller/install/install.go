@@ -119,6 +119,6 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		Registries:     registryContents,
 		ConfigFilePath: cfgFilePath,
 		SkipLink:       ctrl.skipLink,
-		PolicyConfig:   nil,
+		PolicyConfig:   policyCfg,
 	})
 }
