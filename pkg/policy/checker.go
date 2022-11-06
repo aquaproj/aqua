@@ -2,8 +2,6 @@ package policy
 
 import (
 	"errors"
-
-	"github.com/aquaproj/aqua/pkg/runtime"
 )
 
 var (
@@ -11,12 +9,8 @@ var (
 	errUnAllowedRegistry = errors.New("this registry isn't allowed")
 )
 
-type Checker struct {
-	rt *runtime.Runtime
-}
+type Checker struct{}
 
-func NewChecker(rt *runtime.Runtime) *Checker {
-	return &Checker{
-		rt: rt,
-	}
+func NewChecker() *Checker {
+	return &Checker{}
 }
