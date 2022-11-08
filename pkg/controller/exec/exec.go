@@ -53,8 +53,14 @@ func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController,
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) (gErr error) {
 	logE = logE.WithField("exe_name", exeName)
+	defer func() {
+		if gErr != nil {
+			gErr = logerr.WithFields(gErr, logE.Data)
+		}
+	}()
+
 	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -65,13 +71,15 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"package_version": findResult.Package.Package.Version,
 		})
 		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePath); err != nil {
-			return err
+			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+				"policy_file": param.PolicyConfigFilePath,
+			})
 		}
 		if err := ctrl.install(ctx, logE, findResult); err != nil {
-			return logerr.WithFields(err, logE.Data) //nolint:wrapcheck
+			return err
 		}
 	}
-	return logerr.WithFields(ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE), logE.Data) //nolint:wrapcheck
+	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
 }
 
 func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePath string) error {
