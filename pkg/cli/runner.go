@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -64,7 +65,21 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
+	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
+	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
 	return nil
+}
+
+func parseTags(tags []string) map[string]struct{} {
+	tagsM := map[string]struct{}{}
+	for _, tag := range tags {
+		tag = strings.TrimSpace(tag)
+		if tag == "" {
+			continue
+		}
+		tagsM[tag] = struct{}{}
+	}
+	return tagsM
 }
 
 func (runner *Runner) Run(ctx context.Context, args ...string) error {

@@ -25,6 +25,15 @@ func (runner *Runner) newCpCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "install all aqua configuration packages",
 			},
+			&cli.StringFlag{
+				Name:    "tags",
+				Aliases: []string{"t"},
+				Usage:   "filter installed packages with tags",
+			},
+			&cli.StringFlag{
+				Name:  "exclude-tags",
+				Usage: "exclude installed packages with tags",
+			},
 		},
 		Description: `Copy executable files in a directory.
 
@@ -44,6 +53,12 @@ $ aqua cp
 You can also copy global configuration files' commands with "-a" option.
 
 $ aqua cp -a
+
+You can filter copied commands with package tags.
+
+e.g.
+$ aqua cp -t foo # Copy only packages having a tag "foo"
+$ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 `,
 		Action: runner.cpAction,
 	}
