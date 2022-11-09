@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/policy"
@@ -140,6 +141,10 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
+			if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
+				logE.Debug("skip installing the package because package tags are unmatched")
+				return
+			}
 			if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       checksums,

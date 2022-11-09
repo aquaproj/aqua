@@ -21,6 +21,8 @@ type ParamInstallPackages struct {
 	ConfigFilePath string
 	Config         *aqua.Config
 	Registries     map[string]*registry.Config
+	Tags           map[string]struct{}
+	ExcludedTags   map[string]struct{}
 	SkipLink       bool
 	PolicyConfig   *policy.Config
 	PolicyFileDir  string

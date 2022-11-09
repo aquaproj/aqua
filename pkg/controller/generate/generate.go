@@ -192,10 +192,10 @@ func (ctrl *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.
 		pkgName = getGeneratePkg(pkgName)
 		key, version, _ := strings.Cut(pkgName, "@")
 		findingPkg, ok := m[key]
-		findingPkg.Version = version
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": pkgName}) //nolint:wrapcheck
 		}
+		findingPkg.Version = version
 		outputPkg := ctrl.getOutputtedPkg(ctx, logE, param, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}

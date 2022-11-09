@@ -18,15 +18,15 @@ jobs:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
     - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
-        go-version: '1.19.2'
+        go-version: '1.19.3'
         cache: true
 
     - run: go install ./cmd/aqua
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
+    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/main/aqua-global.yaml:$PWD/tests/main/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
-    - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/aqua-global.yaml g -f -
+    - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/main/aqua-global.yaml g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
     - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
     - name: Test -pin
@@ -34,23 +34,23 @@ jobs:
 
     - run: aqua list
     - run: aqua update-checksum
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua update-checksum -deep
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua i -l -a
-      working-directory: tests
+      working-directory: tests/main
     - run: cmdx -v
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua i --test
-      working-directory: tests
+      working-directory: tests/main
       env:
         AQUA_LOG_COLOR: always
     - run: aqua which golangci-lint
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua which go
     - run: golangci-lint version
     - run: kind version
-      working-directory: tests
+      working-directory: tests/main
     - run: kind version
     - run: restic version
       env:
@@ -59,7 +59,7 @@ jobs:
     - run: ghq -version
     - run: gh version
     - run: tfenv --version
-    - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
+    - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
     - run: btop -v
     - run: btop -v
       env:
@@ -77,12 +77,12 @@ jobs:
       run: aqua completion zsh
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
-      working-directory: tests
+      working-directory: tests/main
     - name: add duplicated package
       run: aqua g -i suzuki-shunsuke/tfcmt
-      working-directory: tests
+      working-directory: tests/main
     - run: git diff aqua.yaml
-      working-directory: tests
+      working-directory: tests/main
 
     - name: "Test generate-registry"
       run: aqua gr cli/cli
@@ -93,7 +93,7 @@ jobs:
 
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
-      working-directory: tests
+      working-directory: tests/main
 
     - name: test aqua cp
       run: aqua cp actionlint golangci-lint
@@ -105,6 +105,38 @@ jobs:
       run: aqua cp
     - name: test aqua cp -a
       run: aqua cp -a
+
+    - name: test tags
+      run: aqua i
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua i -t test
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua i -t foo,bar
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua i --exclude-tags test
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua i --exclude-tags test -t foo
+      working-directory: tests/tag
+
+    - name: test tags
+      run: aqua cp
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua cp -t test
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua cp -t foo,bar
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua cp --exclude-tags test
+      working-directory: tests/tag
+    - name: test tags
+      run: aqua cp --exclude-tags test -t foo
+      working-directory: tests/tag
 
     - run: aqua update-checksum -a
 
@@ -128,12 +160,12 @@ jobs:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
     - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
-        go-version: '1.19.2'
+        go-version: '1.19.3'
         cache: true
 
     - run: go install ./cmd/aqua
     - run: echo "$HOME/AppData/Local/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/aqua-global.yaml:$PWD/tests/aqua-global-2.yaml" >> "$GITHUB_ENV"
+    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/main/aqua-global.yaml:$PWD/tests/main/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
@@ -141,19 +173,19 @@ jobs:
 
     - run: aqua list
     - run: aqua update-checksum
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua i -l -a
-      working-directory: tests
+      working-directory: tests/main
     - run: cmdx -v
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua i --test
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua which golangci-lint
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua which go
     - run: golangci-lint version
     - run: kind version
-      working-directory: tests
+      working-directory: tests/main
     - run: kind version
     - run: restic version
       env:
@@ -161,7 +193,7 @@ jobs:
     - run: migrate -version
     - run: ghq -version
     - run: gh version
-    - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
+    - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
     - run: wire --help
     - run: gox --help
     - run: github-compare -v
@@ -169,9 +201,9 @@ jobs:
     - run: terrafmt version
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
-      working-directory: tests
+      working-directory: tests/main
     - run: git diff aqua.yaml
-      working-directory: tests
+      working-directory: tests/main
 
     - name: "Test generate-registry"
       run: aqua gr cli/cli
@@ -180,7 +212,7 @@ jobs:
 
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
-      working-directory: tests
+      working-directory: tests/main
 
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
@@ -204,12 +236,12 @@ jobs:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
     - uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # tag=v3.3.1
       with:
-        go-version: '1.19.2'
+        go-version: '1.19.3'
         cache: true
 
     - run: go install ./cmd/aqua
     - run: echo "$HOME\AppData\Local\aquaproj-aqua\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD\tests\aqua-global.yaml;$PWD\tests\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - run: echo "AQUA_GLOBAL_CONFIG=$PWD\tests\main\aqua-global.yaml;$PWD\tests\main\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
@@ -217,19 +249,19 @@ jobs:
 
     - run: aqua list
     - run: aqua update-checksum
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua i -l -a
-      working-directory: tests
+      working-directory: tests/main
     - run: cmdx -v
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua i --test
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua which golangci-lint
-      working-directory: tests
+      working-directory: tests/main
     - run: aqua which go
     - run: golangci-lint version
     - run: kind version
-      working-directory: tests
+      working-directory: tests/main
     - run: kind version
     - run: restic version
       env:
@@ -237,7 +269,7 @@ jobs:
     - run: migrate -version
     - run: ghq -version
     - run: gh version
-    - run: aqua -c tests/aqua-global.yaml g local,kubernetes-sigs/kustomize
+    - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
     - run: wire --help
     - run: gox --help
     - run: github-compare -v
@@ -245,9 +277,9 @@ jobs:
     - run: helm version
 
     - run: aqua g -i suzuki-shunsuke/tfcmt
-      working-directory: tests
+      working-directory: tests/main
     - run: git diff aqua.yaml
-      working-directory: tests
+      working-directory: tests/main
 
     - name: "Test generate-registry"
       run: aqua gr cli/cli
@@ -256,7 +288,7 @@ jobs:
 
     - name: "test version_source: github_tag"
       run: aqua -c aqua-global.yaml g local,mitchellh/gox
-      working-directory: tests
+      working-directory: tests/main
 
     # Test if global configuration files are read in `aqua list` and `aqua g`
     - run: aqua g suzuki-shunsuke/cmdx
