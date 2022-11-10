@@ -7,29 +7,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
-type ParamValidateRegistry struct {
-	Registry      *aqua.Registry
-	PolicyConfig  *ConfigYAML
-	ConfigFileDir string
-	PolicyFileDir string
-}
-
-func (pc *Checker) ValidateRegistry(param *ParamValidateRegistry) error {
-	if param.PolicyConfig == nil {
-		return errUnAllowedPackage
-	}
-	for _, regist := range param.PolicyConfig.Registries {
-		f, err := pc.matchRegistry(param.Registry, regist)
-		if err != nil {
-			return err
-		}
-		if f {
-			return nil
-		}
-	}
-	return errUnAllowedRegistry
-}
-
 func (pc *Checker) matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
 	if rgst.Type != rgstPolicy.Type {
 		return false, nil
