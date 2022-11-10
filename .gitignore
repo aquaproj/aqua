@@ -1,3 +1,4 @@
 dist
 .aqua
 .coverage
+cosign.key
