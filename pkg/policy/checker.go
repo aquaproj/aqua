@@ -9,7 +9,7 @@ import (
 
 var (
 	errUnAllowedPackage = logerr.WithFields(errors.New("this package isn't allowed"), logrus.Fields{
-		"doc": "https://github.com/aquaproj/aqua/issues/1306", // TODO change URL
+		"doc": "https://aquaproj.github.io/docs/reference/codes/002",
 	})
 	errUnAllowedRegistry = errors.New("this registry isn't allowed")
 )
