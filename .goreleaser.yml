@@ -14,6 +14,11 @@ builds:
   goarch:
   - amd64
   - arm64
+signs:
+- cmd: cosign
+  stdin: "{{ .Env.COSIGN_PASSWORD }}"
+  args: ["sign-blob", "--key=cosign.key", "--output-signature=${signature}", "${artifact}"]
+  artifacts: checksum
 release:
   prerelease: true
   header: |
