@@ -35,12 +35,12 @@ type ConfigFinder interface {
 
 func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*domain.FindResult, error) {
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		which, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		findResult, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
 		}
-		if which != nil {
-			return which, nil
+		if findResult != nil {
+			return findResult, nil
 		}
 	}
 
@@ -50,12 +50,12 @@ func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName 
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		which, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		findResult, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
 		if err != nil {
 			return nil, err
 		}
-		if which != nil {
-			return which, nil
+		if findResult != nil {
+			return findResult, nil
 		}
 	}
 
@@ -69,10 +69,10 @@ func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName 
 	})
 }
 
-func (ctrl *Controller) getExePath(which *domain.FindResult) (string, error) {
-	pkg := which.Package
+func (ctrl *Controller) getExePath(findResult *domain.FindResult) (string, error) {
+	pkg := findResult.Package
 	pkgInfo := pkg.PackageInfo
-	file := which.File
+	file := findResult.File
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
 	}
@@ -101,10 +101,11 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 		return nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
-		if which := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); which != nil {
-			which.Config = cfg
-			which.ConfigFilePath = cfgFilePath
-			return which, nil
+		if findResult := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); findResult != nil {
+			findResult.Config = cfg
+			findResult.ConfigFilePath = cfgFilePath
+			findResult.Package.Registry = cfg.Registries[pkg.Registry]
+			return findResult, nil
 		}
 	}
 	return nil, nil //nolint:nilnil
@@ -151,20 +152,20 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 
 	for _, file := range pkgInfo.GetFiles() {
 		if file.Name == exeName {
-			which := &domain.FindResult{
+			findResult := &domain.FindResult{
 				Package: &config.Package{
 					Package:     pkg,
 					PackageInfo: pkgInfo,
 				},
 				File: file,
 			}
-			exePath, err := ctrl.getExePath(which)
+			exePath, err := ctrl.getExePath(findResult)
 			if err != nil {
 				logE.WithError(err).Error("get the execution file path")
 				return nil
 			}
-			which.ExePath = exePath
-			return which
+			findResult.ExePath = exePath
+			return findResult
 		}
 	}
 	return nil

@@ -3,14 +3,16 @@ package cp
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult, policyConfig *policy.Config, policyFileDir string) error {
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -32,6 +34,9 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(),
+		ConfigFileDir:   filepath.Dir(findResult.ConfigFilePath),
+		PolicyConfig:    policyConfig,
+		PolicyFileDir:   policyFileDir,
 	}); err != nil {
 		return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 	}

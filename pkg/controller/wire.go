@@ -28,6 +28,7 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/google/wire"
@@ -175,6 +176,14 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			policy.NewConfigReader,
+			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -274,6 +283,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			policy.NewConfigReader,
+			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -315,6 +332,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
 		),
 	)
 	return &updateaqua.Controller{}
@@ -385,6 +406,14 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			policy.NewConfigReader,
+			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
 		),
 	)
 	return &cp.Controller{}

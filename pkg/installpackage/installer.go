@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -39,6 +40,7 @@ type Installer struct {
 	onlyLink           bool
 	isTest             bool
 	copyDir            string
+	policyChecker      domain.PolicyChecker
 }
 
 type Unarchiver interface {
@@ -147,6 +149,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				Pkg:             pkg,
 				Checksums:       checksums,
 				RequireChecksum: param.Config.RequireChecksum(),
+				PolicyConfig:    param.PolicyConfig,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
@@ -161,7 +164,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error {
+func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error { //nolint:cyclop
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -171,6 +174,15 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 		"registry":        pkg.Package.Registry,
 	})
 	logE.Debug("install the package")
+
+	if param.PolicyConfig != nil {
+		if err := inst.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
+			Pkg:          param.Pkg,
+			PolicyConfig: param.PolicyConfig.YAML,
+		}); err != nil {
+			return err //nolint:wrapcheck
+		}
+	}
 
 	if err := pkgInfo.Validate(); err != nil {
 		return fmt.Errorf("invalid package: %w", err)
