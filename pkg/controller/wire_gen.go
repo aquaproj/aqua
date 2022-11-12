@@ -17,6 +17,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
+	"github.com/aquaproj/aqua/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
@@ -61,6 +62,12 @@ func InitializeInitCommandController(ctx context.Context, param *config.Param) *
 	repositoriesService := github.New(ctx)
 	fs := afero.NewOsFs()
 	controller := initcmd.New(repositoriesService, fs)
+	return controller
+}
+
+func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Controller {
+	fs := afero.NewOsFs()
+	controller := initpolicy.New(fs)
 	return controller
 }
 

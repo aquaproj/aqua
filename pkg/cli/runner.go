@@ -118,6 +118,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			runner.newInitCommand(),
+			runner.newInitPolicyCommand(),
 			runner.newInstallCommand(),
 			runner.newUpdateAquaCommand(),
 			runner.newGenerateCommand(),
