@@ -16,6 +16,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
+	"github.com/aquaproj/aqua/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
@@ -88,6 +89,14 @@ func InitializeInitCommandController(ctx context.Context, param *config.Param) *
 		afero.NewOsFs,
 	)
 	return &initcmd.Controller{}
+}
+
+func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Controller {
+	wire.Build(
+		initpolicy.New,
+		afero.NewOsFs,
+	)
+	return &initpolicy.Controller{}
 }
 
 func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *generate.Controller {
