@@ -25,12 +25,15 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/workspace/foo/aqua.yaml": `registries:
 - type: standard
   ref: v2.5.0
+- type: local
+  name: local
+  path: registry.yaml
 packages:`,
 			},
-			configFilePath: "aqua.yaml",
+			configFilePath: "/home/workspace/foo/aqua.yaml",
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {
@@ -41,6 +44,11 @@ packages:`,
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 					},
+					"local": {
+						Type: "local",
+						Name: "local",
+						Path: "/home/workspace/foo/registry.yaml",
+					},
 				},
 				Packages: []*aqua.Package{},
 			},
@@ -48,18 +56,18 @@ packages:`,
 		{
 			name: "import package",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/workspace/foo/aqua.yaml": `registries:
 - type: standard
   ref: v2.5.0
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
 - import: aqua-installer.yaml
 `,
-				"aqua-installer.yaml": `packages:
+				"/home/workspace/foo/aqua-installer.yaml": `packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
 			},
-			configFilePath: "aqua.yaml",
+			configFilePath: "/home/workspace/foo/aqua.yaml",
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {

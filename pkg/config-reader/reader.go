@@ -29,6 +29,16 @@ func (reader *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error 
 	if err := yaml.NewDecoder(file).Decode(cfg); err != nil {
 		return fmt.Errorf("parse a configuration file as YAML %s: %w", configFilePath, err)
 	}
+	var configFileDir string
+	for _, rgst := range cfg.Registries {
+		rgst := rgst
+		if rgst.Type == "local" && !filepath.IsAbs(rgst.Path) {
+			if configFileDir == "" {
+				configFileDir = filepath.Dir(configFilePath)
+			}
+			rgst.Path = filepath.Join(configFileDir, rgst.Path)
+		}
+	}
 	if err := reader.readImports(configFilePath, cfg); err != nil {
 		return fmt.Errorf("read imports (%s): %w", configFilePath, err)
 	}
