@@ -149,7 +149,7 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 				"/home/.aqua.yaml": "",
 			},
 			exp: []string{
-				"aqua-2.yaml",
+				"/home/foo/aqua-2.yaml",
 				"/home/.aqua.yaml",
 			},
 		},

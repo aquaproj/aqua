@@ -3,6 +3,8 @@ package policy
 import (
 	"errors"
 	"path/filepath"
+
+	"github.com/aquaproj/aqua/pkg/util"
 )
 
 const (
@@ -40,7 +42,7 @@ type Package struct {
 	Registry     *Registry `yaml:"-" json:"-"`
 }
 
-func (cfg *Config) Init() error { //nolint:cyclop
+func (cfg *Config) Init() error {
 	m := make(map[string]*Registry, len(cfg.YAML.Registries))
 	for _, rgst := range cfg.YAML.Registries {
 		rgst := rgst
@@ -59,9 +61,7 @@ func (cfg *Config) Init() error { //nolint:cyclop
 			if rgst.Path == "" {
 				return errLocalPathIsRequired
 			}
-			if !filepath.IsAbs(rgst.Path) {
-				rgst.Path = filepath.Join(filepath.Dir(cfg.Path), rgst.Path)
-			}
+			rgst.Path = util.Abs(filepath.Dir(cfg.Path), rgst.Path)
 		}
 		m[rgst.Name] = rgst
 	}

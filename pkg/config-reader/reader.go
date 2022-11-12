@@ -32,16 +32,9 @@ func (reader *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error 
 	var configFileDir string
 	for _, rgst := range cfg.Registries {
 		rgst := rgst
-		if rgst.Type != "local" {
-			continue
-		}
-		if !filepath.IsAbs(rgst.Path) {
+		if rgst.Type == "local" && !filepath.IsAbs(rgst.Path) {
 			if configFileDir == "" {
-				absConfigFilePath, err := filepath.Abs(configFilePath)
-				if err != nil {
-					return fmt.Errorf("get an absolute path of configuration file: %w", err)
-				}
-				configFileDir = filepath.Dir(absConfigFilePath)
+				configFileDir = filepath.Dir(configFilePath)
 			}
 			rgst.Path = filepath.Join(configFileDir, rgst.Path)
 		}
