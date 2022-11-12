@@ -2,6 +2,7 @@ package policy
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
@@ -17,7 +18,22 @@ type ConfigReader struct {
 	fs afero.Fs
 }
 
-func (reader *ConfigReader) Read(cfg *Config) error {
+func (reader *ConfigReader) Read(files []string) ([]*Config, error) {
+	policyCfgs := make([]*Config, len(files))
+	for i, cfgFilePath := range files {
+		policyCfg := &Config{
+			Path: cfgFilePath,
+			YAML: &ConfigYAML{},
+		}
+		if err := reader.read(policyCfg); err != nil {
+			return nil, fmt.Errorf("read the policy config file: %w", err)
+		}
+		policyCfgs[i] = policyCfg
+	}
+	return policyCfgs, nil
+}
+
+func (reader *ConfigReader) read(cfg *Config) error {
 	file, err := reader.fs.Open(cfg.Path)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -30,4 +46,21 @@ func (reader *ConfigReader) Read(cfg *Config) error {
 		return err
 	}
 	return nil
+}
+
+func ParseEnv(env string) []string {
+	src := filepath.SplitList(env)
+	paths := make([]string, 0, len(src))
+	m := make(map[string]struct{}, len(src))
+	for _, s := range src {
+		if s == "" {
+			continue
+		}
+		if _, ok := m[s]; ok {
+			continue
+		}
+		m[s] = struct{}{}
+		paths = append(paths, s)
+	}
+	return paths
 }

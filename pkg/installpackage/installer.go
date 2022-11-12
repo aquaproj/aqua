@@ -149,7 +149,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				Pkg:             pkg,
 				Checksums:       checksums,
 				RequireChecksum: param.Config.RequireChecksum(),
-				PolicyConfig:    param.PolicyConfig,
+				PolicyConfigs:   param.PolicyConfigs,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
@@ -175,13 +175,11 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	})
 	logE.Debug("install the package")
 
-	if param.PolicyConfig != nil {
-		if err := inst.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
-			Pkg:          param.Pkg,
-			PolicyConfig: param.PolicyConfig.YAML,
-		}); err != nil {
-			return err //nolint:wrapcheck
-		}
+	if err := inst.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
+		Pkg:           param.Pkg,
+		PolicyConfigs: param.PolicyConfigs,
+	}); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	if err := pkgInfo.Validate(); err != nil {

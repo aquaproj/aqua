@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -33,14 +32,15 @@ type ConfigFinder interface {
 	Finds(wd, configFilePath string) []string
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer, policyConfigReader domain.PolicyConfigReader) *Controller {
 	return &Controller{
-		rootDir:          param.RootDir,
-		packageInstaller: pkgInstaller,
-		fs:               fs,
-		runtime:          rt,
-		which:            whichCtrl,
-		installer:        installer,
+		rootDir:            param.RootDir,
+		packageInstaller:   pkgInstaller,
+		fs:                 fs,
+		runtime:            rt,
+		which:              whichCtrl,
+		installer:          installer,
+		policyConfigReader: policyConfigReader,
 	}
 }
 
@@ -67,17 +67,10 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 
 	ctrl.packageInstaller.SetCopyDir("")
 
-	var policyCfg *policy.Config
-	if param.PolicyConfigFilePath != "" {
-		policyCfg = &policy.Config{
-			Path: param.PolicyConfigFilePath,
-			YAML: &policy.ConfigYAML{},
-		}
-		if err := ctrl.policyConfigReader.Read(policyCfg); err != nil {
-			return fmt.Errorf("read the policy config file: %w", err)
-		}
+	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths)
+	if err != nil {
+		return fmt.Errorf("read policy files: %w", err)
 	}
-	policyFileDir := filepath.Dir(param.PolicyConfigFilePath)
 
 	for _, exeName := range param.Args {
 		go func(exeName string) {
@@ -87,7 +80,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 				<-maxInstallChan
 			}()
 			logE := logE.WithField("exe_name", exeName)
-			if err := ctrl.installAndCopy(ctx, logE, param, exeName, policyCfg, policyFileDir); err != nil {
+			if err := ctrl.installAndCopy(ctx, logE, param, exeName, policyCfgs); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -101,7 +94,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 	return nil
 }
 
-func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfig *policy.Config, policyFileDir string) error {
+func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config) error {
 	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -109,7 +102,7 @@ func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, 
 	logE = logE.WithField("exe_path", findResult.ExePath)
 	if findResult.Package != nil {
 		logE = logE.WithField("package", findResult.Package.Package.Name)
-		if err := ctrl.install(ctx, logE, findResult, policyConfig, policyFileDir); err != nil {
+		if err := ctrl.install(ctx, logE, findResult, policyConfigs); err != nil {
 			return err
 		}
 	}

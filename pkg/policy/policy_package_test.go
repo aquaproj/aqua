@@ -38,21 +38,25 @@ func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
 						Ref:       "v1.90.0",
 					},
 				},
-				PolicyConfig: &policy.ConfigYAML{
-					Packages: []*policy.Package{
-						{
-							Name: "cli/cli",
-						},
-						{
-							Name:         "suzuki-shunsuke/tfcmt",
-							Version:      `semver(">= 3.0.0")`,
-							RegistryName: "standard",
-							Registry: &policy.Registry{
-								Type:      "github_content",
-								Name:      registryTypeStandard,
-								RepoOwner: "aquaproj",
-								RepoName:  "aqua",
-								Path:      "registry.yaml",
+				PolicyConfigs: []*policy.Config{
+					{
+						YAML: &policy.ConfigYAML{
+							Packages: []*policy.Package{
+								{
+									Name: "cli/cli",
+								},
+								{
+									Name:         "suzuki-shunsuke/tfcmt",
+									Version:      `semver(">= 3.0.0")`,
+									RegistryName: "standard",
+									Registry: &policy.Registry{
+										Type:      "github_content",
+										Name:      registryTypeStandard,
+										RepoOwner: "aquaproj",
+										RepoName:  "aqua",
+										Path:      "registry.yaml",
+									},
+								},
 							},
 						},
 					},

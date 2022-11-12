@@ -69,29 +69,21 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	var policyCfg *policy.Config
-	if param.PolicyConfigFilePath != "" {
-		policyCfg = &policy.Config{
-			Path: param.PolicyConfigFilePath,
-			YAML: &policy.ConfigYAML{},
-		}
-		if err := ctrl.policyConfigReader.Read(policyCfg); err != nil {
-			return fmt.Errorf("read the policy config file: %w", err)
-		}
+	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths)
+	if err != nil {
+		return fmt.Errorf("read policy files: %w", err)
 	}
 
-	policyFileDir := filepath.Dir(param.PolicyConfigFilePath)
-
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		if err := ctrl.install(ctx, logE, cfgFilePath, policyCfg, policyFileDir); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath, policyCfgs); err != nil {
 			return err
 		}
 	}
 
-	return ctrl.installAll(ctx, logE, param, policyCfg, policyFileDir)
+	return ctrl.installAll(ctx, logE, param, policyCfgs)
 }
 
-func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfig *policy.Config, policyFileDir string) error {
+func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfigs []*policy.Config) error {
 	if !param.All {
 		return nil
 	}
@@ -99,14 +91,14 @@ func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, para
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := ctrl.install(ctx, logE, cfgFilePath, policyConfig, policyFileDir); err != nil {
+		if err := ctrl.install(ctx, logE, cfgFilePath, policyConfigs); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfig *policy.Config, policyFileDir string) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfigs []*policy.Config) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -127,7 +119,6 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		SkipLink:       ctrl.skipLink,
 		Tags:           ctrl.tags,
 		ExcludedTags:   ctrl.excludedTags,
-		PolicyConfig:   policyConfig,
-		PolicyFileDir:  policyFileDir,
+		PolicyConfigs:  policyConfigs,
 	})
 }

@@ -70,9 +70,9 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
-		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePath); err != nil {
+		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePaths); err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"policy_file": param.PolicyConfigFilePath,
+				"policy_files": param.PolicyConfigFilePaths,
 			})
 		}
 		if err := ctrl.install(ctx, logE, findResult); err != nil {
@@ -82,21 +82,16 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
 }
 
-func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePath string) error {
-	policyCfg := &policy.Config{
-		Path: policyConfigFilePath,
-		YAML: &policy.ConfigYAML{},
+func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []string) error {
+	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths)
+	if err != nil {
+		return fmt.Errorf("read policy files: %w", err)
 	}
-	if policyConfigFilePath != "" {
-		if err := ctrl.policyConfigReader.Read(policyCfg); err != nil {
-			return fmt.Errorf("read the policy config file: %w", err)
-		}
-		if err := ctrl.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
-			Pkg:          pkg,
-			PolicyConfig: policyCfg.YAML,
-		}); err != nil {
-			return fmt.Errorf("validate the installed package for security: %w", err)
-		}
+	if err := ctrl.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
+		Pkg:           pkg,
+		PolicyConfigs: policyCfgs,
+	}); err != nil {
+		return fmt.Errorf("validate the installed package for security: %w", err)
 	}
 	return nil
 }

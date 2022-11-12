@@ -24,15 +24,13 @@ type ParamInstallPackages struct {
 	Tags           map[string]struct{}
 	ExcludedTags   map[string]struct{}
 	SkipLink       bool
-	PolicyConfig   *policy.Config
-	PolicyFileDir  string
+	PolicyConfigs  []*policy.Config
 }
 
 type ParamInstallPackage struct {
 	Pkg             *config.Package
 	Checksums       *checksum.Checksums
 	RequireChecksum bool
-	PolicyConfig    *policy.Config
+	PolicyConfigs   []*policy.Config
 	ConfigFileDir   string
-	PolicyFileDir   string
 }
