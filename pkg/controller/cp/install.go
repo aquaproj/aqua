@@ -12,7 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult, policyConfig *policy.Config, policyFileDir string) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult, policyConfigs []*policy.Config) error {
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -35,8 +35,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(),
 		ConfigFileDir:   filepath.Dir(findResult.ConfigFilePath),
-		PolicyConfig:    policyConfig,
-		PolicyFileDir:   policyFileDir,
+		PolicyConfigs:   policyConfigs,
 	}); err != nil {
 		return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 	}

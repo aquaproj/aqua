@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -65,7 +66,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
-	param.PolicyConfigFilePath = os.Getenv("AQUA_POLICY_CONFIG")
+	param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
 	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
 	return nil

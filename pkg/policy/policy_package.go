@@ -8,11 +8,32 @@ import (
 )
 
 type ParamValidatePackage struct {
+	Pkg           *config.Package
+	PolicyConfigs []*Config
+}
+
+func (pc *Checker) ValidatePackage(param *ParamValidatePackage) error {
+	if len(param.PolicyConfigs) == 0 {
+		return nil
+	}
+	for _, policyCfg := range param.PolicyConfigs {
+		policyCfg := policyCfg
+		if err := pc.validatePackage(&paramValidatePackage{
+			Pkg:          param.Pkg,
+			PolicyConfig: policyCfg.YAML,
+		}); err == nil {
+			return nil
+		}
+	}
+	return errUnAllowedPackage
+}
+
+type paramValidatePackage struct {
 	Pkg          *config.Package
 	PolicyConfig *ConfigYAML
 }
 
-func (pc *Checker) ValidatePackage(param *ParamValidatePackage) error {
+func (pc *Checker) validatePackage(param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}

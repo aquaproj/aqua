@@ -185,7 +185,7 @@ type Param struct {
 	Deep                  bool
 	SkipLink              bool
 	Pin                   bool
-	PolicyConfigFilePath  string
+	PolicyConfigFilePaths []string
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
