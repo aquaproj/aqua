@@ -401,7 +401,7 @@ packages:
 			}
 			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs)
-			configReader := reader.New(fs)
+			configReader := reader.New(fs, d.param)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
 			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector)

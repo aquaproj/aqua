@@ -253,7 +253,7 @@ packages:
 				}
 			}
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker)
+			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker)
 			which, err := ctrl.Which(ctx, d.param, d.exeName, logE)
 			if err != nil {
 				if d.isErr {

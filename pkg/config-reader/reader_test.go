@@ -3,6 +3,7 @@ package reader_test
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/google/go-cmp/cmp"
@@ -17,6 +18,7 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 		isErr          bool
 		files          map[string]string
 		configFilePath string
+		homeDir        string
 	}{
 		{
 			name:  "file isn't found",
@@ -104,7 +106,9 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			reader := reader.New(fs)
+			reader := reader.New(fs, &config.Param{
+				HomeDir: d.homeDir,
+			})
 			cfg := &aqua.Config{}
 			if err := reader.Read(d.configFilePath, cfg); err != nil {
 				if d.isErr {
