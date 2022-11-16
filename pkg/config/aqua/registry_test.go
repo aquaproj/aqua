@@ -92,7 +92,7 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestRegistry_GetFilePath(t *testing.T) {
+func TestRegistry_GetFilePath(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title       string
@@ -101,6 +101,7 @@ func TestRegistry_GetFilePath(t *testing.T) {
 		rootDir     string
 		homeDir     string
 		cfgFilePath string
+		isErr       bool
 	}{
 		{
 			title:       "normal",
@@ -140,7 +141,17 @@ func TestRegistry_GetFilePath(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if p := d.registry.GetFilePath(d.rootDir, d.homeDir, d.cfgFilePath); p != d.exp {
+			p, err := d.registry.GetFilePath(d.rootDir, d.homeDir, d.cfgFilePath)
+			if err != nil {
+				if d.isErr {
+					return
+				}
+				t.Fatal(err)
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+			if p != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, p)
 			}
 		})

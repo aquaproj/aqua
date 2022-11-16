@@ -53,7 +53,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = runner.LDFlags.Version
 	param.RootDir = config.GetRootDir(osenv.New())
-	homeDir, _ := os.UserHomeDir() // TODO error handling
+	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
 	logE := runner.LogE
 	log.SetLevel(param.LogLevel, logE)

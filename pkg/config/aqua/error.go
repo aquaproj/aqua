@@ -8,4 +8,5 @@ var (
 	errRepoOwnerIsRequired = errors.New("repo_owner is required")
 	errRepoNameIsRequired  = errors.New("repo_name is required")
 	errRefIsRequired       = errors.New("ref is required for github_content registry")
+	errHomeDirEmpty        = errors.New("failed to get a user home directory")
 )
