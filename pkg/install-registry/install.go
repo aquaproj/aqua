@@ -99,7 +99,7 @@ const dirPermission os.FileMode = 0o775
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
 func (inst *Installer) installRegistry(ctx context.Context, regist *aqua.Registry, cfgFilePath string, logE *logrus.Entry) (*registry.Config, error) {
-	registryFilePath, err := regist.GetFilePath(inst.param.RootDir, inst.param.HomeDir, cfgFilePath)
+	registryFilePath, err := regist.GetFilePath(inst.param.RootDir, cfgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
 	}

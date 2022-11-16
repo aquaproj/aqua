@@ -92,7 +92,7 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestRegistry_GetFilePath(t *testing.T) { //nolint:funlen
+func TestRegistry_GetFilePath(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
@@ -115,16 +115,6 @@ func TestRegistry_GetFilePath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title:       "$HOME",
-			exp:         "/home/foo/.config/aquaproj-aqua/registry.yaml",
-			homeDir:     "/home/foo",
-			cfgFilePath: "/home/foo/aqua.yaml",
-			registry: &aqua.Registry{
-				Path: "$HOME/.config/aquaproj-aqua/registry.yaml",
-				Type: "local",
-			},
-		},
-		{
 			title:   "github_content",
 			exp:     "/root/.aqua/registries/github_content/github.com/aquaproj/aqua-registry/v0.8.0/foo.yaml",
 			rootDir: "/root/.aqua",
@@ -141,7 +131,7 @@ func TestRegistry_GetFilePath(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			p, err := d.registry.GetFilePath(d.rootDir, d.homeDir, d.cfgFilePath)
+			p, err := d.registry.GetFilePath(d.rootDir, d.cfgFilePath)
 			if err != nil {
 				if d.isErr {
 					return

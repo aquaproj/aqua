@@ -42,7 +42,7 @@ import (
 func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *list.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
-	configReader := reader.New(fs)
+	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -74,7 +74,7 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *generate.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
-	configReader := reader.New(fs)
+	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -88,7 +88,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *install.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
-	configReader := reader.New(fs)
+	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -109,7 +109,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
-	configReader := reader.New(fs)
+	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -133,7 +133,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	checker := policy.NewChecker()
 	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
 	configFinder := finder.NewConfigFinder(fs)
-	configReader := reader.New(fs)
+	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
 	osEnv := osenv.New()
@@ -172,7 +172,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	checker := policy.NewChecker()
 	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
 	configFinder := finder.NewConfigFinder(fs)
-	configReader := reader.New(fs)
+	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
 	osEnv := osenv.New()
@@ -186,7 +186,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 func InitializeUpdateChecksumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
-	configReader := reader.New(fs)
+	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
