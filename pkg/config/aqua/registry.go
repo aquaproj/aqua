@@ -1,7 +1,9 @@
 package aqua
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -81,10 +83,17 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return nil
 }
 
-func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) string {
+func (registry *Registry) getLocalPath(homeDir, cfgFilePath string) string {
+	if strings.HasPrefix(registry.Path, "$HOME"+string(os.PathSeparator)) {
+		return filepath.Join(homeDir, registry.Path[6:]) // strip "$HOME" + os.PathSeperator
+	}
+	return util.Abs(filepath.Dir(cfgFilePath), registry.Path)
+}
+
+func (registry *Registry) GetFilePath(rootDir, homeDir, cfgFilePath string) string {
 	switch registry.Type {
 	case RegistryTypeLocal:
-		return util.Abs(filepath.Dir(cfgFilePath), registry.Path)
+		return registry.getLocalPath(homeDir, cfgFilePath)
 	case RegistryTypeGitHubContent:
 		return filepath.Join(rootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
 	}
