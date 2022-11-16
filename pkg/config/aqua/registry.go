@@ -81,12 +81,12 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return nil
 }
 
-func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) string {
+func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) (string, error) {
 	switch registry.Type {
 	case RegistryTypeLocal:
-		return util.Abs(filepath.Dir(cfgFilePath), registry.Path)
+		return util.Abs(filepath.Dir(cfgFilePath), registry.Path), nil
 	case RegistryTypeGitHubContent:
-		return filepath.Join(rootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path)
+		return filepath.Join(rootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path), nil
 	}
-	return ""
+	return "", errInvalidRegistryType
 }

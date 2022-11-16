@@ -61,7 +61,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs))
+			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs))
 			if err := ctrl.List(ctx, d.param, logE); err != nil {
 				if d.isErr {
 					return

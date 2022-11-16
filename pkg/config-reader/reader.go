@@ -1,24 +1,35 @@
 package reader
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
 
-func New(fs afero.Fs) *ConfigReader {
+var errHomeDirEmpty = errors.New("failed to get a user home directory")
+
+func New(fs afero.Fs, param *config.Param) *ConfigReader {
 	return &ConfigReader{
-		fs: fs,
+		fs:      fs,
+		homeDir: param.HomeDir,
 	}
 }
 
 type ConfigReader struct {
-	fs afero.Fs
+	fs      afero.Fs
+	homeDir string
 }
+
+const homePrefix = "$HOME" + string(os.PathSeparator)
 
 func (reader *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
 	file, err := reader.fs.Open(configFilePath)
@@ -32,11 +43,17 @@ func (reader *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error 
 	var configFileDir string
 	for _, rgst := range cfg.Registries {
 		rgst := rgst
-		if rgst.Type == "local" && !filepath.IsAbs(rgst.Path) {
+		if rgst.Type == "local" {
+			if strings.HasPrefix(rgst.Path, homePrefix) {
+				if reader.homeDir == "" {
+					return errHomeDirEmpty
+				}
+				rgst.Path = filepath.Join(reader.homeDir, rgst.Path[6:])
+			}
 			if configFileDir == "" {
 				configFileDir = filepath.Dir(configFilePath)
 			}
-			rgst.Path = filepath.Join(configFileDir, rgst.Path)
+			rgst.Path = util.Abs(configFileDir, rgst.Path)
 		}
 	}
 	if err := reader.readImports(configFilePath, cfg); err != nil {

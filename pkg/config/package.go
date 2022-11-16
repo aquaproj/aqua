@@ -172,6 +172,7 @@ type Param struct {
 	InsertFile            string
 	LogColor              string
 	Dest                  string
+	HomeDir               string
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}
