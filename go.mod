@@ -3,10 +3,10 @@ module github.com/aquaproj/aqua
 go 1.19
 
 require (
-	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/adrg/xdg v0.4.0
 	github.com/antonmedv/expr v1.9.0
 	github.com/codingsince1985/checksum v1.2.5
+	github.com/go-task/slim-sprig v2.20.0+incompatible
 	github.com/goccy/go-yaml v1.9.6
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v45 v45.2.0
@@ -34,7 +34,7 @@ require (
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.1.1 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/andybalholm/brotli v1.0.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -56,8 +56,6 @@ require (
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
-	github.com/mitchellh/copystructure v1.0.0 // indirect
-	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/nsf/termbox-go v1.1.1 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.2 // indirect
@@ -65,8 +63,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/spf13/cast v1.3.1 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/ulikunitz/xz v0.5.9 // indirect
