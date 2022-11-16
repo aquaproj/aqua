@@ -2,6 +2,7 @@ package registry
 
 import (
 	"path"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/iancoleman/orderedmap"
@@ -388,26 +389,31 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 	if len(pkgInfo.Files) != 0 {
 		return pkgInfo.Files
 	}
-	if pkgInfo.HasRepo() {
+	if cmdName := pkgInfo.getDefaultCmdName(); cmdName != "" {
 		return []*File{
 			{
-				Name: pkgInfo.RepoName,
-			},
-		}
-	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		if pkgInfo.Asset != nil {
-			return []*File{
-				{
-					Name: *pkgInfo.Asset,
-				},
-			}
-		}
-		return []*File{
-			{
-				Name: path.Base(pkgInfo.GetPath()),
+				Name: cmdName,
 			},
 		}
 	}
 	return pkgInfo.Files
+}
+
+func (pkgInfo *PackageInfo) getDefaultCmdName() string {
+	if pkgInfo.HasRepo() {
+		if pkgInfo.Name == "" {
+			return pkgInfo.RepoName
+		}
+		if i := strings.LastIndex(pkgInfo.Name, "/"); i != -1 {
+			return pkgInfo.Name[i+1:]
+		}
+		return pkgInfo.Name
+	}
+	if pkgInfo.Type == PkgInfoTypeGoInstall {
+		if pkgInfo.Asset != nil {
+			return *pkgInfo.Asset
+		}
+		return path.Base(pkgInfo.GetPath())
+	}
+	return ""
 }
