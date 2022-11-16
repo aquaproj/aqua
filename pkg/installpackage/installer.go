@@ -213,7 +213,7 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
-		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
+		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
 			if inst.isTest {
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
@@ -256,37 +256,8 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
-	pkgInfo := pkg.PackageInfo
-	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
-	if isWindows(inst.runtime.GOOS) {
-		exePath += ".exe"
-	}
-	dir, err := pkg.RenderDir(file, inst.runtime)
-	if err != nil {
-		return "", fmt.Errorf("render file dir: %w", err)
-	}
-	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
-	if _, err := inst.fs.Stat(exePath); err == nil {
-		return exePath, nil
-	}
-	src := file.Src
-	if src == "" {
-		src = "."
-	}
-	logE.WithFields(logrus.Fields{
-		"exe_path":     exePath,
-		"go_src":       src,
-		"go_build_dir": exeDir,
-	}).Info("building Go tool")
-	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
-		return "", fmt.Errorf("build Go tool: %w", err)
-	}
-	return exePath, nil
-}
-
-func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
+func (inst *Installer) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+	exePath, err := inst.checkFileSrc(pkg, file, logE)
 	if err != nil {
 		if inst.isTest {
 			return fmt.Errorf("check file_src is correct: %w", err)
@@ -304,11 +275,7 @@ func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package
 	return nil
 }
 
-func (inst *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
-	if pkg.PackageInfo.Type == "go" {
-		return inst.checkFileSrcGo(ctx, pkg, file, logE)
-	}
-
+func (inst *Installer) checkFileSrc(pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return "", fmt.Errorf("get the package install path: %w", err)

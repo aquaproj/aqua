@@ -89,26 +89,6 @@ packages:
   - goos: windows
     format: zip
 
-# Go
-- type: go
-  repo_owner: google
-  repo_name: wire
-  description: Compile-time Dependency Injection for Go
-  files:
-  - name: wire
-    src: ./cmd/wire
-    dir: "wire-{{trimV .Version}}"
-
-# version_source: github_tag
-- type: go
-  repo_owner: mitchellh
-  repo_name: gox
-  description: A dead simple, no frills Go cross compile tool
-  version_source: github_tag
-  files:
-    - name: gox
-      dir: "gox-{{trimV .Version}}"
-
 - type: go_install
   path: github.com/anqiansong/github-compare
   description: A GitHub repositories statistics command-line tool for the terminal
