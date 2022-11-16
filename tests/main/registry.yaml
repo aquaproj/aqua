@@ -44,12 +44,6 @@ packages:
     src: tfenv-{{trimV .Version}}/bin/terraform
 
 - type: github_release
-  repo_owner: containerd
-  repo_name: nerdctl
-  asset: 'nerdctl-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
-  supported_if: GOOS != "darwin" # supported_if
-
-- type: github_release
   repo_owner: aristocratos
   repo_name: btop
   asset: 'btop-{{.Arch}}-{{.OS}}.tbz'
