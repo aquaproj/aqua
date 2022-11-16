@@ -10,7 +10,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   AQUA_LOG_LEVEL: debug
   AQUA_LOG_COLOR: always
-  AQUA_EXPERIMENTAL_CHECKSUM_VERIFICATION: "true"
+  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
 jobs:
   build:
     runs-on: ubuntu-latest
