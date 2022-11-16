@@ -1,5 +1,7 @@
 ---
 name: test
+env:
+  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
 on:
   push:
     branches: [main]
