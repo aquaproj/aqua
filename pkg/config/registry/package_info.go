@@ -44,6 +44,7 @@ type PackageInfo struct {
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Checksum           *Checksum          `json:"checksum,omitempty"`
+	Cosign             *Cosign            `json:"cosign,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {

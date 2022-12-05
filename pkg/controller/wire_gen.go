@@ -23,6 +23,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -100,7 +101,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	verifier := cosign.NewVerifier(executor)
+	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier)
 	policyConfigReader := policy.NewConfigReader(fs)
 	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyConfigReader)
 	return controller
@@ -131,7 +133,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	verifier := cosign.NewVerifier(executor)
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -154,7 +157,8 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	verifier := cosign.NewVerifier(executor)
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
 	return controller
 }
@@ -170,7 +174,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	verifier := cosign.NewVerifier(executor)
+	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)

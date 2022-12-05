@@ -62,7 +62,7 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 			}
 			ctrl := installpackage.New(d.param, &domain.MockPackageDownloader{
 				Body: "xxx",
-			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &installpackage.MockUnarchiver{}, &domain.MockPolicyChecker{})
+			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &installpackage.MockUnarchiver{}, &domain.MockPolicyChecker{}, &domain.MockCosignVerifier{})
 			if err := ctrl.InstallAqua(ctx, logE, d.version); err != nil {
 				if d.isErr {
 					return

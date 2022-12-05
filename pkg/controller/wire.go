@@ -22,6 +22,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
@@ -172,6 +173,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -192,6 +194,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(domain.CosignVerifier), new(*cosign.Verifier)),
 		),
 	)
 	return &install.Controller{}
@@ -272,6 +278,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -300,6 +307,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			policy.NewConfigReader,
 			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
 		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(domain.CosignVerifier), new(*cosign.Verifier)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -325,6 +336,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			unarchive.New,
@@ -345,6 +357,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			policy.NewChecker,
 			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(domain.CosignVerifier), new(*cosign.Verifier)),
 		),
 	)
 	return &updateaqua.Controller{}
@@ -396,6 +412,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -423,6 +440,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(domain.CosignVerifier), new(*cosign.Verifier)),
 		),
 	)
 	return &cp.Controller{}

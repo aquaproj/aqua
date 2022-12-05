@@ -10,6 +10,8 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -33,6 +35,29 @@ func (inst *Installer) extractChecksum(pkg *config.Package, assetName string, ch
 	return m[assetName], nil
 }
 
+func (inst *Installer) verifyChecksumFileWithCosign(ctx context.Context, logE *logrus.Entry, cos *registry.Cosign, b []byte) (bool, error) {
+	if !inst.cosign.HasCosign() {
+		logE.Info("skip verifying a signature of checksum file with Cosign, because Cosign isn't inatalled")
+		return true, nil
+	}
+	f, err := afero.TempFile(inst.fs, "", "")
+	if err != nil {
+		return true, fmt.Errorf("create a temporal file: %w", err)
+	}
+	if _, err := f.Write(b); err != nil {
+		return true, fmt.Errorf("write contents to a temporal file: %w", err)
+	}
+	defer inst.fs.Remove(f.Name()) //nolint:errcheck
+	logE.Info("verify a checksum file with Cosign")
+	if err := inst.cosign.Verify(ctx, &cosign.ParamVerify{
+		Opts:   cos.Opts,
+		Target: f.Name(),
+	}); err != nil {
+		return false, fmt.Errorf("verify a checksum file with Cosign: %w", err)
+	}
+	return true, nil
+}
+
 func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
 	file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, inst.runtime, pkg)
 	if err != nil {
@@ -43,6 +68,16 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 	b, err := io.ReadAll(file)
 	if err != nil {
 		return "", fmt.Errorf("read a checksum file: %w", err)
+	}
+
+	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos != nil {
+		f, err := inst.verifyChecksumFileWithCosign(ctx, logE, cos, b)
+		if err != nil {
+			if !f {
+				return "", fmt.Errorf("verify a checksum file with Cosign: %w", err)
+			}
+			logerr.WithError(logE, err).Debug("verify a checksum file with Cosign")
+		}
 	}
 
 	c, err := inst.extractChecksum(pkg, assetName, b)
@@ -161,6 +196,18 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 		}
 	}
 	checksums.Set(checksumID, chksum)
+
+	// Verify with Cosign
+	if cos := pkg.PackageInfo.Cosign; cos != nil {
+		if inst.cosign.HasCosign() {
+			if err := inst.cosign.Verify(ctx, &cosign.ParamVerify{
+				Opts:   cos.Opts,
+				Target: tempFilePath,
+			}); err != nil {
+				return nil, fmt.Errorf("verify with Cosign: %w", err)
+			}
+		}
+	}
 
 	readFile, err := inst.fs.Open(tempFilePath)
 	if err != nil {
