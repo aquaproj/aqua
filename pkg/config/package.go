@@ -211,6 +211,24 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	return asset, nil
 }
 
+func (cpkg *Package) RenderCosign(cos *registry.Cosign, rt *runtime.Runtime) (*registry.Cosign, error) {
+	if cpkg == nil || cpkg.PackageInfo == nil || !cos.GetEnabled() {
+		return nil, nil //nolint:nilnil
+	}
+
+	opts := make([]string, len(cos.Opts))
+	for i, opt := range cos.Opts {
+		s, err := cpkg.renderTemplateString(opt, rt)
+		if err != nil {
+			return nil, err
+		}
+		opts[i] = s
+	}
+	return &registry.Cosign{
+		Opts: opts,
+	}, nil
+}
+
 func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	switch pkgInfo.Type {

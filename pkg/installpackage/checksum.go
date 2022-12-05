@@ -35,7 +35,7 @@ func (inst *Installer) extractChecksum(pkg *config.Package, assetName string, ch
 	return m[assetName], nil
 }
 
-func (inst *Installer) verifyChecksumFileWithCosign(ctx context.Context, logE *logrus.Entry, cos *registry.Cosign, b []byte) (bool, error) {
+func (inst *Installer) verifyChecksumFileWithCosign(ctx context.Context, logE *logrus.Entry, pkg *config.Package, cos *registry.Cosign, b []byte) (bool, error) {
 	if !inst.cosign.HasCosign() {
 		logE.Info("skip verifying a signature of checksum file with Cosign, because Cosign isn't inatalled")
 		return true, nil
@@ -48,9 +48,13 @@ func (inst *Installer) verifyChecksumFileWithCosign(ctx context.Context, logE *l
 		return true, fmt.Errorf("write contents to a temporal file: %w", err)
 	}
 	defer inst.fs.Remove(f.Name()) //nolint:errcheck
+	c, err := pkg.RenderCosign(cos, inst.runtime)
+	if err != nil {
+		return true, fmt.Errorf("render cosign options: %w", err)
+	}
 	logE.Info("verify a checksum file with Cosign")
 	if err := inst.cosign.Verify(ctx, &cosign.ParamVerify{
-		Opts:   cos.Opts,
+		Opts:   c.Opts,
 		Target: f.Name(),
 	}); err != nil {
 		return false, fmt.Errorf("verify a checksum file with Cosign: %w", err)
@@ -71,7 +75,7 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 	}
 
 	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos != nil {
-		f, err := inst.verifyChecksumFileWithCosign(ctx, logE, cos, b)
+		f, err := inst.verifyChecksumFileWithCosign(ctx, logE, pkg, cos, b)
 		if err != nil {
 			if !f {
 				return "", fmt.Errorf("verify a checksum file with Cosign: %w", err)
@@ -115,7 +119,7 @@ func copyAsset(fs afero.Fs, tempFilePath string, body io.Reader) error {
 	return nil
 }
 
-func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
+func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen,gocognit
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
@@ -198,10 +202,14 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 	checksums.Set(checksumID, chksum)
 
 	// Verify with Cosign
-	if cos := pkg.PackageInfo.Cosign; cos != nil {
+	if cos := pkg.PackageInfo.Cosign; cos != nil { //nolint:nestif
 		if inst.cosign.HasCosign() {
+			c, err := pkg.RenderCosign(cos, inst.runtime)
+			if err != nil {
+				return nil, fmt.Errorf("render cosign options: %w", err)
+			}
 			if err := inst.cosign.Verify(ctx, &cosign.ParamVerify{
-				Opts:   cos.Opts,
+				Opts:   c.Opts,
 				Target: tempFilePath,
 			}); err != nil {
 				return nil, fmt.Errorf("verify with Cosign: %w", err)
