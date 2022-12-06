@@ -54,8 +54,9 @@ func (inst *Installer) verifyChecksumFileWithCosign(ctx context.Context, logE *l
 	}
 	logE.Info("verify a checksum file with Cosign")
 	if err := inst.cosign.Verify(ctx, &cosign.ParamVerify{
-		Opts:   c.Opts,
-		Target: f.Name(),
+		Opts:               c.Opts,
+		CosignExperimental: c.CosignExperimental,
+		Target:             f.Name(),
 	}); err != nil {
 		return fmt.Errorf("verify a checksum file with Cosign: %w", err)
 	}
@@ -205,8 +206,9 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 				return nil, fmt.Errorf("render cosign options: %w", err)
 			}
 			if err := inst.cosign.Verify(ctx, &cosign.ParamVerify{
-				Opts:   c.Opts,
-				Target: tempFilePath,
+				CosignExperimental: c.CosignExperimental,
+				Opts:               c.Opts,
+				Target:             tempFilePath,
 			}); err != nil {
 				return nil, fmt.Errorf("verify with Cosign: %w", err)
 			}

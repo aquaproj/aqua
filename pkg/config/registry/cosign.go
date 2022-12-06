@@ -1,7 +1,8 @@
 package registry
 
 type Cosign struct {
-	Opts []string `json:"opts"`
+	CosignExperimental bool     `yaml:"cosign_experimental" json:"cosign_experimental,omitempty"`
+	Opts               []string `json:"opts"`
 }
 
 func (cos *Cosign) GetEnabled() bool {

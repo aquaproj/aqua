@@ -20,12 +20,17 @@ func NewVerifier(executor Executor) *Verifier {
 }
 
 type ParamVerify struct {
-	Opts   []string
-	Target string
+	CosignExperimental bool
+	Opts               []string
+	Target             string
 }
 
 func (verifier *Verifier) Verify(ctx context.Context, param *ParamVerify) error {
-	_, err := verifier.executor.ExecWithEnvs(ctx, "cosign", append([]string{"verify-blob"}, append(param.Opts, param.Target)...), []string{"COSIGN_EXPERIMENTAL=1"})
+	envs := []string{}
+	if param.CosignExperimental {
+		envs = []string{"COSIGN_EXPERIMENTAL=1"}
+	}
+	_, err := verifier.executor.ExecWithEnvs(ctx, "cosign", append([]string{"verify-blob"}, append(param.Opts, param.Target)...), envs)
 	if err != nil {
 		return fmt.Errorf("verify with cosign: %w", err)
 	}

@@ -225,7 +225,8 @@ func (cpkg *Package) RenderCosign(cos *registry.Cosign, rt *runtime.Runtime) (*r
 		opts[i] = s
 	}
 	return &registry.Cosign{
-		Opts: opts,
+		CosignExperimental: cos.CosignExperimental,
+		Opts:               opts,
 	}, nil
 }
 
