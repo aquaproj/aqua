@@ -24,8 +24,12 @@ signs:
   - COSIGN_EXPERIMENTAL=1
   args:
   - sign-blob
-  - --output-signature=${signature}
-  - --output-certificate=${certificate}
+  - --output-signature
+  - ${signature}
+  - --output-certificate
+  - ${certificate}
+  - --oidc-provider
+  - github
   - ${artifact}
 release:
   draft: true
