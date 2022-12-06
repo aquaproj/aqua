@@ -41,11 +41,6 @@ jobs:
       run: git fetch --tags -f
     - name: Unshallow
       run: git fetch --prune --unshallow
-    - name: Get a Cosign Private Key
-      if: startsWith(github.ref, 'refs/tags/')
-      run: echo "$COSIGN_KEY" > cosign.key
-      env:
-        COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@b508e2e3ef3b19d4e4146d4f8fb3ba9db644a757 # tag=v3.2.0
       if: startsWith(github.ref, 'refs/tags/')
@@ -54,8 +49,4 @@ jobs:
         args: release --rm-dist
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         HOMEBREW_TAP_GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
-    - name: Remove a Cosign Private Key
-      if: startsWith(github.ref, 'refs/tags/')
-      run: rm cosign.key

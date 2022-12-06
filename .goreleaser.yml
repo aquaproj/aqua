@@ -16,11 +16,19 @@ builds:
   - arm64
 signs:
 - cmd: cosign
-  stdin: "{{ .Env.COSIGN_PASSWORD }}"
-  args: ["sign-blob", "--key=cosign.key", "--output-signature=${signature}", "${artifact}"]
   artifacts: checksum
+  signature: ${artifact}.sig
+  certificate: ${artifact}.pem
+  output: true
+  env:
+  - COSIGN_EXPERIMENTAL=1
+  args:
+  - sign-blob
+  - --output-signature=${signature}
+  - --output-certificate=${certificate}
+  - ${artifact}
 release:
-  prerelease: true
+  draft: true
   header: |
     [Pull Requests](https://github.com/aquaproj/aqua/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/aquaproj/aqua/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/aquaproj/aqua/compare/{{.PreviousTag}}...{{.Tag}}
 brews:
