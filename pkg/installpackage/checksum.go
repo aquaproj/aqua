@@ -75,7 +75,7 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 		return "", fmt.Errorf("read a checksum file: %w", err)
 	}
 
-	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos != nil {
+	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() {
 		if err := inst.verifyChecksumFileWithCosign(ctx, logE, pkg, cos, b); err != nil {
 			return "", fmt.Errorf("verify a checksum file with Cosign: %w", err)
 		}
