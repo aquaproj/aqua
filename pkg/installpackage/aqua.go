@@ -43,9 +43,9 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 					CosignExperimental: true,
 					Opts: []string{
 						"--signature",
-						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/checksums.txt.sig",
+						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/aqua_{{trimV .Version}}_checksums.txt.sig",
 						"--certificate",
-						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/checksums.txt.pem",
+						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/aqua_{{trimV .Version}}_checksums.txt.pem",
 					},
 				},
 			},
