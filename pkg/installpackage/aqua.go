@@ -39,6 +39,33 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 					Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
 					File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
 				},
+				Cosign: &registry.Cosign{
+					Opts: []string{
+						"--signature",
+						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/checksums.txt.sig",
+						"--certificate",
+						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/checksums.txt.pem",
+					},
+				},
+			},
+			VersionConstraints: "semver(>= 1.15.0)", // TODO Fix version
+			VersionOverrides: []*registry.VersionOverride{
+				{
+					VersionConstraints: "true",
+					Checksum: &registry.Checksum{
+						Type:       "github_release",
+						Asset:      "aqua_{{trimV .Version}}_checksums.txt",
+						FileFormat: "regexp",
+						Algorithm:  "sha256",
+						Pattern: &registry.ChecksumPattern{
+							Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+							File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+						},
+						Cosign: &registry.Cosign{
+							Opts: []string{},
+						},
+					},
+				},
 			},
 		},
 	}

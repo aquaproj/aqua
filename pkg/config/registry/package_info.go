@@ -78,7 +78,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop
+func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
 	pkg := pkgInfo.Copy()
 	if child.Type != "" {
 		pkg.Type = child.Type
@@ -136,6 +136,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.Checksum != nil {
 		pkg.Checksum = child.Checksum
+	}
+	if child.Cosign != nil {
+		pkg.Cosign = child.Cosign
 	}
 	return pkg
 }
@@ -195,6 +198,9 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.Type != "" {
 		pkgInfo.Type = ov.Type
 	}
+	if ov.Cosign != nil {
+		pkgInfo.Cosign = ov.Cosign
+	}
 }
 
 type VersionOverride struct {
@@ -218,6 +224,7 @@ type VersionOverride struct {
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	Checksum           *Checksum         `json:"checksum,omitempty"`
+	Cosign             *Cosign           `json:"cosign,omitempty"`
 }
 
 type Alias struct {
