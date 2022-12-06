@@ -40,6 +40,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 					File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
 				},
 				Cosign: &registry.Cosign{
+					CosignExperimental: true,
 					Opts: []string{
 						"--signature",
 						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/checksums.txt.sig",
