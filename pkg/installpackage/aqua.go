@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error {
+func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
 	assetTemplate := `aqua_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
 		Package: &aqua.Package{
