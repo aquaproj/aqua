@@ -71,6 +71,12 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 		},
 	}
 
+	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, inst.runtime)
+	if err != nil {
+		return fmt.Errorf("evaluate version constraints: %w", err)
+	}
+	pkg.PackageInfo = pkgInfo
+
 	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
 		Checksums: checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
