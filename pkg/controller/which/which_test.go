@@ -52,14 +52,14 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 			},
 			exeName: "aqua-installer",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -79,6 +79,11 @@ packages:
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
 					},
+					Registry: &aqua.Registry{
+						Name: "standard",
+						Type: "local",
+						Path: "/home/foo/workspace/registry.yaml",
+					},
 				},
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
@@ -95,13 +100,13 @@ packages:
 						"standard": {
 							Name: "standard",
 							Type: "local",
-							Path: "registry.yaml",
+							Path: "/home/foo/workspace/registry.yaml",
 						},
 					},
 				},
 
 				ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
-				ConfigFilePath: "aqua.yaml",
+				ConfigFilePath: "/home/foo/workspace/aqua.yaml",
 			},
 		},
 		{
@@ -121,14 +126,14 @@ packages:
 				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -194,6 +199,11 @@ packages:
 						RepoName:  "aqua-installer",
 						Path:      stringP("aqua-installer"),
 					},
+					Registry: &aqua.Registry{
+						Name: "standard",
+						Type: "local",
+						Path: "/etc/aqua/registry.yaml",
+					},
 				},
 				File: &cfgRegistry.File{
 					Name: "aqua-installer",
@@ -215,7 +225,7 @@ packages:
 						"standard": {
 							Name: "standard",
 							Type: "local",
-							Path: "registry.yaml",
+							Path: "/etc/aqua/registry.yaml",
 						},
 					},
 				},
@@ -243,7 +253,7 @@ packages:
 				}
 			}
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker)
+			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker)
 			which, err := ctrl.Which(ctx, d.param, d.exeName, logE)
 			if err != nil {
 				if d.isErr {

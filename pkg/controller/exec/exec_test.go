@@ -54,14 +54,14 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
 			},
 			exeName: "aqua-installer",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -87,14 +87,14 @@ packages:
 				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -127,11 +127,11 @@ packages:
 			}
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &domain.MockPolicyConfigReader{}, &domain.MockPolicyChecker{})
 			if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
 				if d.isErr {
 					return
@@ -224,11 +224,11 @@ packages:
 			}
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, afero.NewOsFs()), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, afero.NewOsFs()), d.rt, osEnv, fs, linker)
 			pkgDownloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs)
+			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &domain.MockPolicyConfigReader{}, &domain.MockPolicyChecker{})
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				func() {

@@ -16,6 +16,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
+	"github.com/aquaproj/aqua/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/pkg/controller/install"
 	"github.com/aquaproj/aqua/pkg/controller/list"
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
@@ -28,6 +29,7 @@ import (
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/link"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/google/wire"
@@ -87,6 +89,14 @@ func InitializeInitCommandController(ctx context.Context, param *config.Param) *
 		afero.NewOsFs,
 	)
 	return &initcmd.Controller{}
+}
+
+func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Controller {
+	wire.Build(
+		initpolicy.New,
+		afero.NewOsFs,
+	)
+	return &initpolicy.Controller{}
 }
 
 func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *generate.Controller {
@@ -174,6 +184,14 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			policy.NewConfigReader,
+			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
 		),
 	)
 	return &install.Controller{}
@@ -274,6 +292,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			policy.NewConfigReader,
+			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -315,6 +341,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
 		),
 	)
 	return &updateaqua.Controller{}
@@ -385,6 +415,14 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			unarchive.New,
 			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			policy.NewConfigReader,
+			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
 		),
 	)
 	return &cp.Controller{}

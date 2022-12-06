@@ -3,6 +3,7 @@ package reader_test
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/google/go-cmp/cmp"
@@ -17,6 +18,7 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 		isErr          bool
 		files          map[string]string
 		configFilePath string
+		homeDir        string
 	}{
 		{
 			name:  "file isn't found",
@@ -25,12 +27,15 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/workspace/foo/aqua.yaml": `registries:
 - type: standard
   ref: v2.5.0
+- type: local
+  name: local
+  path: registry.yaml
 packages:`,
 			},
-			configFilePath: "aqua.yaml",
+			configFilePath: "/home/workspace/foo/aqua.yaml",
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {
@@ -41,6 +46,11 @@ packages:`,
 						RepoName:  "aqua-registry",
 						Path:      "registry.yaml",
 					},
+					"local": {
+						Type: "local",
+						Name: "local",
+						Path: "/home/workspace/foo/registry.yaml",
+					},
 				},
 				Packages: []*aqua.Package{},
 			},
@@ -48,18 +58,18 @@ packages:`,
 		{
 			name: "import package",
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/workspace/foo/aqua.yaml": `registries:
 - type: standard
   ref: v2.5.0
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
 - import: aqua-installer.yaml
 `,
-				"aqua-installer.yaml": `packages:
+				"/home/workspace/foo/aqua-installer.yaml": `packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
 			},
-			configFilePath: "aqua.yaml",
+			configFilePath: "/home/workspace/foo/aqua.yaml",
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {
@@ -96,7 +106,9 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			reader := reader.New(fs)
+			reader := reader.New(fs, &config.Param{
+				HomeDir: d.homeDir,
+			})
 			cfg := &aqua.Config{}
 			if err := reader.Read(d.configFilePath, cfg); err != nil {
 				if d.isErr {

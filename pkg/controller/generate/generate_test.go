@@ -53,13 +53,13 @@ func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -86,13 +86,13 @@ packages:
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -122,13 +122,13 @@ packages:
 				File:           "list.txt",
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -155,13 +155,13 @@ packages:
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_release
   repo_owner: kubernetes-sigs
   repo_name: kustomize
@@ -193,13 +193,13 @@ packages:
 				Insert:         true,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -230,13 +230,13 @@ packages:
 			},
 			idx: 1,
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -270,13 +270,13 @@ packages:
 			},
 			idx: 1,
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -309,13 +309,13 @@ packages:
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -348,13 +348,13 @@ packages:
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -401,7 +401,7 @@ packages:
 			}
 			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs)
-			configReader := reader.New(fs)
+			configReader := reader.New(fs, d.param)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
 			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector)

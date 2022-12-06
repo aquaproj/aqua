@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/log"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -52,6 +53,8 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = runner.LDFlags.Version
 	param.RootDir = config.GetRootDir(osenv.New())
+	homeDir, _ := os.UserHomeDir()
+	param.HomeDir = homeDir
 	logE := runner.LogE
 	log.SetLevel(param.LogLevel, logE)
 	log.SetColor(param.LogColor, logE)
@@ -65,6 +68,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
+	param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
 	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
 	return nil
@@ -117,6 +121,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			runner.newInitCommand(),
+			runner.newInitPolicyCommand(),
 			runner.newInstallCommand(),
 			runner.newUpdateAquaCommand(),
 			runner.newGenerateCommand(),

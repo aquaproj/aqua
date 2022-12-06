@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -20,14 +21,16 @@ import (
 )
 
 type Controller struct {
-	stdin            io.Reader
-	stdout           io.Writer
-	stderr           io.Writer
-	which            domain.WhichController
-	packageInstaller domain.PackageInstaller
-	executor         Executor
-	enabledXSysExec  bool
-	fs               afero.Fs
+	stdin              io.Reader
+	stdout             io.Writer
+	stderr             io.Writer
+	which              domain.WhichController
+	packageInstaller   domain.PackageInstaller
+	executor           Executor
+	enabledXSysExec    bool
+	fs                 afero.Fs
+	policyConfigReader domain.PolicyConfigReader
+	policyChecker      domain.PolicyChecker
 }
 
 type Executor interface {
@@ -35,21 +38,29 @@ type Executor interface {
 	ExecXSys(exePath string, args []string) error
 }
 
-func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs) *Controller {
+func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader domain.PolicyConfigReader, policyChecker domain.PolicyChecker) *Controller {
 	return &Controller{
-		stdin:            os.Stdin,
-		stdout:           os.Stdout,
-		stderr:           os.Stderr,
-		packageInstaller: pkgInstaller,
-		which:            whichCtrl,
-		executor:         executor,
-		enabledXSysExec:  osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
-		fs:               fs,
+		stdin:              os.Stdin,
+		stdout:             os.Stdout,
+		stderr:             os.Stderr,
+		packageInstaller:   pkgInstaller,
+		which:              whichCtrl,
+		executor:           executor,
+		enabledXSysExec:    osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		fs:                 fs,
+		policyConfigReader: policyConfigReader,
+		policyChecker:      policyChecker,
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) error {
+func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) (gErr error) {
 	logE = logE.WithField("exe_name", exeName)
+	defer func() {
+		if gErr != nil {
+			gErr = logerr.WithFields(gErr, logE.Data)
+		}
+	}()
+
 	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -59,11 +70,30 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
+		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePaths); err != nil {
+			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+				"policy_files": param.PolicyConfigFilePaths,
+			})
+		}
 		if err := ctrl.install(ctx, logE, findResult); err != nil {
-			return logerr.WithFields(err, logE.Data) //nolint:wrapcheck
+			return err
 		}
 	}
-	return logerr.WithFields(ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE), logE.Data) //nolint:wrapcheck
+	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
+}
+
+func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []string) error {
+	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths)
+	if err != nil {
+		return fmt.Errorf("read policy files: %w", err)
+	}
+	if err := ctrl.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
+		Pkg:           pkg,
+		PolicyConfigs: policyCfgs,
+	}); err != nil {
+		return fmt.Errorf("validate the installed package for security: %w", err)
+	}
+	return nil
 }
 
 func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult) error {

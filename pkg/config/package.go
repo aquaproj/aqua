@@ -25,6 +25,7 @@ func isWindows(goos string) bool {
 type Package struct {
 	Package     *aqua.Package
 	PackageInfo *registry.PackageInfo
+	Registry    *aqua.Registry
 }
 
 func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -171,6 +172,7 @@ type Param struct {
 	InsertFile            string
 	LogColor              string
 	Dest                  string
+	HomeDir               string
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}
@@ -184,6 +186,7 @@ type Param struct {
 	Deep                  bool
 	SkipLink              bool
 	Pin                   bool
+	PolicyConfigFilePaths []string
 }
 
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {

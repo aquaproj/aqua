@@ -32,14 +32,14 @@ func TestController_List(t *testing.T) {
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -61,7 +61,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, downloader, fs))
+			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs))
 			if err := ctrl.List(ctx, d.param, logE); err != nil {
 				if d.isErr {
 					return

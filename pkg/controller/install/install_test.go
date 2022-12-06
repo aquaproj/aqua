@@ -46,14 +46,14 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"aqua.yaml": `registries:
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"registry.yaml": `packages:
+				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -91,8 +91,8 @@ packages:
 			}
 			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New())
-			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs), registry.New(d.param, registryDownloader, fs), pkgInstaller, fs, d.rt)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
+			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs), pkgInstaller, fs, d.rt, &domain.MockPolicyConfigReader{})
 			if err := ctrl.Install(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return
