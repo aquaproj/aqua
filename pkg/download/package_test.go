@@ -375,8 +375,9 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			downloader := download.NewPackageDownloader(d.github, d.rt, download.NewHTTPDownloader(d.httpClient))
-			file, _, err := downloader.GetReadCloser(ctx, d.pkg, d.assetName, logE, nil)
+			downloader := download.NewDownloader(d.github, download.NewHTTPDownloader(d.httpClient))
+			pkgDownloader := download.NewPackageDownloader(d.github, d.rt, downloader)
+			file, _, err := pkgDownloader.GetReadCloser(ctx, d.pkg, d.assetName, logE, nil)
 			if err != nil {
 				if d.isErr {
 					return

@@ -164,6 +164,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			download.NewPackageDownloader,
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
+		download.NewDownloader,
 		afero.NewOsFs,
 		wire.NewSet(
 			link.New,
@@ -249,6 +250,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			download.NewPackageDownloader,
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
+		download.NewDownloader,
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
@@ -329,6 +331,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
 		),
 		download.NewHTTPDownloader,
+		download.NewDownloader,
 		wire.NewSet(
 			download.NewPackageDownloader,
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
@@ -382,6 +385,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			download.NewPackageDownloader,
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
+		download.NewDownloader,
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
@@ -482,6 +486,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 			wire.Bind(new(domain.PackageDownloader), new(*download.PackageDownloader)),
 		),
 		download.NewHTTPDownloader,
+		download.NewDownloader,
 		afero.NewOsFs,
 	)
 	return &updatechecksum.Controller{}

@@ -12,6 +12,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/cosign"
+	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -52,6 +54,41 @@ func (inst *Installer) verifyChecksumFileWithCosign(ctx context.Context, logE *l
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
 	}
+
+	if c.Signature != nil {
+		sigFile, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer inst.fs.Remove(sigFile.Name())
+		if err := inst.downloadCosignFile(ctx, logE, pkg, c, c.Signature, sigFile); err != nil {
+			return fmt.Errorf("download a signature: %w", err)
+		}
+		c.Opts = append(c.Opts, "--signature", sigFile.Name())
+	}
+	if c.Key != nil {
+		keyFile, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer inst.fs.Remove(keyFile.Name())
+		if err := inst.downloadCosignFile(ctx, logE, pkg, c, c.Signature, keyFile); err != nil {
+			return fmt.Errorf("download a key: %w", err)
+		}
+		c.Opts = append(c.Opts, "--key", keyFile.Name())
+	}
+	if c.Certificate != nil {
+		certFile, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer inst.fs.Remove(certFile.Name())
+		if err := inst.downloadCosignFile(ctx, logE, pkg, c, c.Signature, certFile); err != nil {
+			return fmt.Errorf("download a certificate: %w", err)
+		}
+		c.Opts = append(c.Opts, "--certificate", certFile.Name())
+	}
+
 	logE.Info("verify a checksum file with Cosign")
 	if err := inst.cosign.Verify(ctx, &cosign.ParamVerify{
 		Opts:               c.Opts,
@@ -59,6 +96,62 @@ func (inst *Installer) verifyChecksumFileWithCosign(ctx context.Context, logE *l
 		Target:             f.Name(),
 	}); err != nil {
 		return fmt.Errorf("verify a checksum file with Cosign: %w", err)
+	}
+	return nil
+}
+
+func convertDownloadedFileToFile(file *registry.DownloadedFile, pkg *config.Package, rt *runtime.Runtime) (*download.File, error) {
+	f := &download.File{
+		Type:      file.Type,
+		RepoOwner: file.RepoOwner,
+		RepoName:  file.RepoName,
+		Version:   pkg.Package.Version,
+	}
+	pkgInfo := pkg.PackageInfo
+	switch file.Type {
+	case "github_release":
+		if f.RepoOwner == "" {
+			f.RepoOwner = pkgInfo.RepoOwner
+		}
+		if f.RepoName == "" {
+			f.RepoName = pkgInfo.RepoName
+		}
+		if file.Asset == nil {
+			return nil, errors.New("asset is required")
+		}
+		asset, err := pkg.RenderTemplateString(*file.Asset, rt)
+		if err != nil {
+			return nil, err
+		}
+		f.Asset = asset
+		return f, nil
+	case "http":
+		if file.URL == nil {
+			return nil, errors.New("url is required")
+		}
+		u, err := pkg.RenderTemplateString(*file.URL, rt)
+		if err != nil {
+			return nil, err
+		}
+		f.URL = u
+		return f, nil
+	}
+	return nil, logerr.WithFields(errors.New("invalid file type"), logrus.Fields{
+		"file_type": file.Type,
+	})
+}
+
+func (inst *Installer) downloadCosignFile(ctx context.Context, logE *logrus.Entry, pkg *config.Package, cos *registry.Cosign, file *registry.DownloadedFile, tf io.Writer) error {
+	f, err := convertDownloadedFileToFile(file, pkg, inst.runtime)
+	if err != nil {
+		return err
+	}
+	rc, _, err := inst.downloader.GetReadCloser(ctx, f, logE)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(tf, rc); err != nil {
+		return err
 	}
 	return nil
 }

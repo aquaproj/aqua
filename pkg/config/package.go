@@ -218,14 +218,18 @@ func (cpkg *Package) RenderCosign(cos *registry.Cosign, rt *runtime.Runtime) (*r
 
 	opts := make([]string, len(cos.Opts))
 	for i, opt := range cos.Opts {
-		s, err := cpkg.renderTemplateString(opt, rt)
+		s, err := cpkg.RenderTemplateString(opt, rt)
 		if err != nil {
 			return nil, err
 		}
 		opts[i] = s
 	}
+
 	return &registry.Cosign{
 		CosignExperimental: cos.CosignExperimental,
+		Signature:          cos.Signature,
+		Certificate:        cos.Certificate,
+		Key:                cos.Key,
 		Opts:               opts,
 	}, nil
 }
@@ -241,13 +245,13 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 		}
 		return path.Base(pkgInfo.GetPath()), nil
 	case PkgInfoTypeGitHubContent:
-		s, err := cpkg.renderTemplateString(*pkgInfo.Path, rt)
+		s, err := cpkg.RenderTemplateString(*pkgInfo.Path, rt)
 		if err != nil {
 			return "", fmt.Errorf("render a package path: %w", err)
 		}
 		return s, nil
 	case PkgInfoTypeGitHubRelease:
-		return cpkg.renderTemplateString(*pkgInfo.Asset, rt)
+		return cpkg.RenderTemplateString(*pkgInfo.Asset, rt)
 	case PkgInfoTypeHTTP:
 		uS, err := cpkg.RenderURL(rt)
 		if err != nil {
@@ -262,7 +266,7 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	return "", nil
 }
 
-func (cpkg *Package) renderTemplateString(s string, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
 	tpl, err := template.Compile(s)
 	if err != nil {
 		return "", fmt.Errorf("parse a template: %w", err)
@@ -312,7 +316,7 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 
 func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
-	s, err := cpkg.renderTemplateString(*pkgInfo.URL, rt)
+	s, err := cpkg.RenderTemplateString(*pkgInfo.URL, rt)
 	if err != nil {
 		return "", err
 	}

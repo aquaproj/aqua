@@ -142,6 +142,9 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqu
 		return nil, err //nolint:wrapcheck
 	}
 
+	// TODO Install registry in a temporal file
+	// TODO Verify signature
+
 	file, err := inst.fs.Create(registryFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("create a registry file: %w", err)

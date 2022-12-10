@@ -63,8 +63,9 @@ func Test_installer_InstallProxy(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{}, &domain.MockCosignVerifier{})
+			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+			pkgDownloader := download.NewPackageDownloader(nil, d.rt, downloader)
+			ctrl := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{}, &domain.MockCosignVerifier{})
 			if err := ctrl.InstallProxy(ctx, logE); err != nil {
 				if d.isErr {
 					return
