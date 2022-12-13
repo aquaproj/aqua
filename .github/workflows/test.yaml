@@ -42,7 +42,7 @@ jobs:
     - name: Unshallow
       run: git fetch --prune --unshallow
     - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@23e0ed5919ab72a1ad1e8a55eb43f524d527d40c # v4.0.0
+      uses: goreleaser/goreleaser-action@8f67e590f2d095516493f017008adc464e63adb1 # v4.1.0
       if: startsWith(github.ref, 'refs/tags/')
       with:
         version: latest
