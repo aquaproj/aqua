@@ -1,4 +1,4 @@
-package download_test
+package pkg_test
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/download/pkg"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -376,7 +377,7 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			downloader := download.NewDownloader(d.github, download.NewHTTPDownloader(d.httpClient))
-			pkgDownloader := download.NewPackageDownloader(d.github, d.rt, downloader)
+			pkgDownloader := pkg.NewPackageDownloader(d.github, d.rt, downloader)
 			file, _, err := pkgDownloader.GetReadCloser(ctx, d.pkg, d.assetName, logE, nil)
 			if err != nil {
 				if d.isErr {

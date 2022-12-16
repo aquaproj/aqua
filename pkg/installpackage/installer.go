@@ -37,7 +37,7 @@ type Installer struct {
 	linker             domain.Linker
 	executor           Executor
 	unarchiver         Unarchiver
-	cosign             domain.CosignVerifier
+	cosign             CosignVerifier
 	progressBar        bool
 	onlyLink           bool
 	isTest             bool

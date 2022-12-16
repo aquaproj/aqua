@@ -14,6 +14,9 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -24,6 +27,13 @@ type Installer struct {
 	registryDownloader domain.GitHubContentFileDownloader
 	param              *config.Param
 	fs                 afero.Fs
+	cosign             CosignVerifier
+	rt                 *runtime.Runtime
+}
+
+type CosignVerifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, b []byte) error
+	HasCosign() bool
 }
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
@@ -131,7 +141,7 @@ func (inst *Installer) getRegistry(ctx context.Context, registry *aqua.Registry,
 
 const registryFilePermission = 0o600
 
-func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) { //nolint:cyclop,funlen
 	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
@@ -141,15 +151,6 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqu
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-
-	// TODO Install registry in a temporal file
-	// TODO Verify signature
-
-	file, err := inst.fs.Create(registryFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("create a registry file: %w", err)
-	}
-	defer file.Close()
 
 	var content []byte
 
@@ -163,6 +164,27 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqu
 		}
 		content = cnt
 	}
+
+	if regist.Cosign != nil && inst.cosign.HasCosign() {
+		art := &template.Artifact{
+			Version: regist.Ref,
+			Asset:   regist.Path,
+		}
+		if err := inst.cosign.Verify(ctx, logE, inst.rt, &download.File{
+			RepoOwner: regist.RepoOwner,
+			RepoName:  regist.RepoName,
+			Version:   regist.Ref,
+		}, regist.Cosign, art, content); err != nil {
+			return nil, fmt.Errorf("verify a registry with Cosign: %w", err)
+		}
+	}
+
+	file, err := inst.fs.Create(registryFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("create a registry file: %w", err)
+	}
+	defer file.Close()
+
 	if err := afero.WriteFile(inst.fs, registryFilePath, content, registryFilePermission); err != nil {
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}

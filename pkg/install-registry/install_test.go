@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -160,6 +161,10 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
+	rt := &runtime.Runtime{
+		GOOS:   "linux",
+		GOARCH: "amd64",
+	}
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
@@ -170,7 +175,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			inst := registry.New(d.param, d.downloader, fs)
+			inst := registry.New(d.param, d.downloader, fs, rt)
 			registries, err := inst.InstallRegistries(ctx, d.cfg, d.cfgFilePath, logE)
 			if err != nil {
 				if d.isErr {

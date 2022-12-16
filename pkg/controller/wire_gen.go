@@ -25,6 +25,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/download/pkg"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/install-registry"
@@ -40,14 +41,14 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *list.Controller {
+func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *list.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt)
 	controller := list.NewController(configFinder, configReader, installer)
 	return controller
 }
@@ -72,14 +73,14 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 	return controller
 }
 
-func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *generate.Controller {
+func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *generate.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt)
 	fuzzyFinder := generate.NewFuzzyFinder()
 	versionSelector := generate.NewVersionSelector()
 	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyFinder, versionSelector)
@@ -93,9 +94,9 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, downloader)
+	packageDownloader := pkg.NewPackageDownloader(repositoriesService, rt, downloader)
 	linker := link.New()
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
@@ -116,7 +117,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt)
 	osEnv := osenv.New()
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
@@ -127,7 +128,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, downloader)
+	packageDownloader := pkg.NewPackageDownloader(repositoriesService, rt, downloader)
 	fs := afero.NewOsFs()
 	linker := link.New()
 	executor := exec.New()
@@ -140,7 +141,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	policyConfigReader := policy.NewConfigReader(fs)
@@ -153,7 +154,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, downloader)
+	packageDownloader := pkg.NewPackageDownloader(repositoriesService, rt, downloader)
 	linker := link.New()
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
@@ -170,7 +171,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, downloader)
+	packageDownloader := pkg.NewPackageDownloader(repositoriesService, rt, downloader)
 	fs := afero.NewOsFs()
 	linker := link.New()
 	executor := exec.New()
@@ -183,7 +184,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	policyConfigReader := policy.NewConfigReader(fs)
@@ -199,10 +200,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt)
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, downloader)
+	packageDownloader := pkg.NewPackageDownloader(repositoriesService, rt, downloader)
 	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloader, packageDownloader)
 	return controller
 }

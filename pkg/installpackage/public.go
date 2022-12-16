@@ -5,8 +5,12 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/template"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -15,7 +19,12 @@ type Executor interface {
 	GoInstall(ctx context.Context, path, gobin string) (int, error)
 }
 
-func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier domain.CosignVerifier) *Installer {
+type CosignVerifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, b []byte) error
+	HasCosign() bool
+}
+
+func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier CosignVerifier) *Installer {
 	return &Installer{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,

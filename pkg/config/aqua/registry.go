@@ -3,6 +3,7 @@ package aqua
 import (
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -15,6 +16,7 @@ type Registry struct {
 	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`
 	Ref       string `json:"ref,omitempty"`
 	Path      string `validate:"required" json:"path,omitempty"`
+	Cosign    *registry.Cosign
 }
 
 const (

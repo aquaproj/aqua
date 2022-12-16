@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -66,6 +67,24 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 	default:
 		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
 			"package_type": pkgInfo.GetType(),
+		})
+	}
+}
+
+func ConvertRegistryToFile(rgst *aqua.Registry) (*File, error) {
+	file := &File{
+		Type:      rgst.Type,
+		RepoOwner: rgst.RepoOwner,
+		RepoName:  rgst.RepoName,
+		Version:   rgst.Ref,
+	}
+	switch rgst.Type {
+	case config.PkgInfoTypeGitHubContent:
+		file.Path = rgst.Path
+		return file, nil
+	default:
+		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
+			"registry_type": rgst.Type,
 		})
 	}
 }
