@@ -20,7 +20,7 @@ type Executor interface {
 }
 
 type CosignVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, b []byte) error
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
 	HasCosign() bool
 }
 

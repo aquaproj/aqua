@@ -47,12 +47,18 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 	}
 
 	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() {
+		f, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return "", fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer f.Close()
+		defer inst.fs.Remove(f.Name()) //nolint:errcheck
 		art := pkg.GetTemplateArtifact(inst.runtime, assetName)
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: pkg.PackageInfo.RepoOwner,
 			RepoName:  pkg.PackageInfo.RepoName,
 			Version:   pkg.Package.Version,
-		}, cos, art, b); err != nil {
+		}, cos, art, f.Name()); err != nil {
 			return "", fmt.Errorf("verify a checksum file with Cosign: %w", err)
 		}
 	}
@@ -92,7 +98,7 @@ func copyAsset(fs afero.Fs, tempFilePath string, body io.Reader) error {
 	return nil
 }
 
-func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen,gocognit
+func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
@@ -173,22 +179,6 @@ func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, p
 		}
 	}
 	checksums.Set(checksumID, chksum)
-
-	// Verify with Cosign
-	if cos := pkg.PackageInfo.Cosign; cos != nil { //nolint:nestif
-		b, err := afero.ReadFile(inst.fs, tempFilePath)
-		if err != nil {
-			return nil, fmt.Errorf("read a temporal file: %w", err)
-		}
-		art := pkg.GetTemplateArtifact(inst.runtime, assetName)
-		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
-			RepoOwner: pkg.PackageInfo.RepoOwner,
-			RepoName:  pkg.PackageInfo.RepoName,
-			Version:   pkg.Package.Version,
-		}, cos, art, b); err != nil {
-			return nil, fmt.Errorf("verify a checksum file with Cosign: %w", err)
-		}
-	}
 
 	readFile, err := inst.fs.Open(tempFilePath)
 	if err != nil {

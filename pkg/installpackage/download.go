@@ -8,6 +8,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -88,6 +89,33 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 
 	var readBody io.Reader = body
 
+	// Verify with Cosign
+	if cos := ppkg.PackageInfo.Cosign; cos != nil { //nolint:nestif
+		f, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer f.Close()
+		defer inst.fs.Remove(f.Name())
+		if _, err := io.Copy(f, readBody); err != nil {
+			return fmt.Errorf("copy a package to a temporal file: %w", err)
+		}
+		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
+		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
+			RepoOwner: ppkg.PackageInfo.RepoOwner,
+			RepoName:  ppkg.PackageInfo.RepoName,
+			Version:   ppkg.Package.Version,
+		}, cos, art, f.Name()); err != nil {
+			return fmt.Errorf("verify a checksum file with Cosign: %w", err)
+		}
+		a, err := inst.fs.Open(f.Name())
+		if err != nil {
+			return fmt.Errorf("open a temporal file: %w", err)
+		}
+		defer a.Close()
+		readBody = a
+	}
+
 	if param.Checksums != nil {
 		tempDir, err := afero.TempDir(inst.fs, "", "")
 		if err != nil {
@@ -100,7 +128,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 			Checksums:  param.Checksums,
 			Pkg:        ppkg,
 			AssetName:  param.Asset,
-			Body:       body,
+			Body:       readBody,
 			TempDir:    tempDir,
 		})
 		if err != nil {

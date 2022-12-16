@@ -29,9 +29,11 @@ type Executor interface {
 	ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error)
 }
 
-func NewVerifier(executor Executor) *Verifier {
+func NewVerifier(executor Executor, fs afero.Fs, downloader Downloader) *Verifier {
 	return &Verifier{
-		executor: executor,
+		executor:   executor,
+		fs:         fs,
+		downloader: downloader,
 	}
 }
 
@@ -53,19 +55,11 @@ func (verifier *Verifier) verify(ctx context.Context, param *ParamVerify) error 
 	return nil
 }
 
-func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, b []byte) error { //nolint:cyclop,funlen
+func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
 	if !verifier.HasCosign() {
-		logE.Info("skip verifying a signature of checksum file with Cosign, because Cosign isn't inatalled")
+		logE.Info("skip verifying a signature with Cosign, because Cosign isn't inatalled")
 		return nil
 	}
-	f, err := afero.TempFile(verifier.fs, "", "")
-	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
-	}
-	if _, err := f.Write(b); err != nil {
-		return fmt.Errorf("write contents to a temporal file: %w", err)
-	}
-	defer verifier.fs.Remove(f.Name()) //nolint:errcheck
 	opts, err := cos.RenderOpts(rt, art)
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
@@ -129,13 +123,13 @@ func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *ru
 		cos.Opts = append(cos.Opts, "--certificate", certFile.Name())
 	}
 
-	logE.Info("verify a checksum file with Cosign")
+	logE.Info("verify a signature with Cosign")
 	if err := verifier.verify(ctx, &ParamVerify{
 		Opts:               cos.Opts,
 		CosignExperimental: cos.CosignExperimental,
-		Target:             f.Name(),
+		Target:             verifiedFilePath,
 	}); err != nil {
-		return fmt.Errorf("verify a checksum file with Cosign: %w", err)
+		return fmt.Errorf("verify a signature file with Cosign: %w", err)
 	}
 	return nil
 }

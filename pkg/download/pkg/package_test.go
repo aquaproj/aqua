@@ -363,8 +363,16 @@ func Test_PackageDownloader_GetReadCloser(t *testing.T) { //nolint:funlen,mainti
 		{
 			name: "invalid type",
 			pkg: &config.Package{
+				Package: &aqua.Package{
+					Name:     "GoogleContainerTools/container-diff",
+					Registry: "standard",
+					Version:  "v0.17.0",
+				},
 				PackageInfo: &registry.PackageInfo{
-					Type: "invalid-type",
+					Type:      "invalid-type",
+					RepoOwner: "GoogleContainerTools",
+					RepoName:  "container-diff",
+					URL:       stringP("https://storage.googleapis.com/container-diff/{{.Version}}/container-diff-{{.OS}}-amd64"),
 				},
 			},
 			isErr: true,

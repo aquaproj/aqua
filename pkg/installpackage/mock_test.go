@@ -19,6 +19,6 @@ func (mock *MockCosignVerifier) HasCosign() bool {
 	return mock.hasCosign
 }
 
-func (mock *MockCosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, b []byte) error { //nolint:cyclop,funlen
+func (mock *MockCosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
 	return mock.err
 }
