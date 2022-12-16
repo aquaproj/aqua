@@ -13,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/unarchive"
@@ -43,11 +42,6 @@ type Installer struct {
 	isTest             bool
 	copyDir            string
 	policyChecker      domain.PolicyChecker
-	downloader         Downloader
-}
-
-type Downloader interface {
-	GetReadCloser(ctx context.Context, file *download.File, logE *logrus.Entry) (io.ReadCloser, int64, error)
 }
 
 type Unarchiver interface {

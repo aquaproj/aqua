@@ -90,13 +90,13 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	var readBody io.Reader = body
 
 	// Verify with Cosign
-	if cos := ppkg.PackageInfo.Cosign; cos != nil { //nolint:nestif
+	if cos := ppkg.PackageInfo.Cosign; cos != nil {
 		f, err := afero.TempFile(inst.fs, "", "")
 		if err != nil {
 			return fmt.Errorf("create a temporal file: %w", err)
 		}
 		defer f.Close()
-		defer inst.fs.Remove(f.Name())
+		defer inst.fs.Remove(f.Name()) //nolint:errcheck
 		if _, err := io.Copy(f, readBody); err != nil {
 			return fmt.Errorf("copy a package to a temporal file: %w", err)
 		}

@@ -141,7 +141,7 @@ func (inst *Installer) getRegistry(ctx context.Context, registry *aqua.Registry,
 
 const registryFilePermission = 0o600
 
-func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) { //nolint:cyclop,funlen
+func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) { //nolint:cyclop
 	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
