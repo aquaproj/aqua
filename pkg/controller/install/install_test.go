@@ -94,7 +94,7 @@ packages:
 			pkgDownloader := pkg.NewPackageDownloader(nil, d.rt, downloader)
 			executor := &exec.Mock{}
 			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{}, &MockCosignVerifier{})
-			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt), pkgInstaller, fs, d.rt, &domain.MockPolicyConfigReader{})
+			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &MockCosignVerifier{}), pkgInstaller, fs, d.rt, &domain.MockPolicyConfigReader{})
 			if err := ctrl.Install(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

@@ -400,7 +400,7 @@ packages:
 				Tags:     d.tags,
 			}
 			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
-			registryInstaller := registry.New(d.param, downloader, fs, d.rt)
+			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &MockCosignVerifier{})
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)

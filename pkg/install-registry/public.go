@@ -7,11 +7,12 @@ import (
 	"github.com/spf13/afero"
 )
 
-func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime) *Installer {
+func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier) *Installer {
 	return &Installer{
 		param:              param,
 		registryDownloader: downloader,
 		fs:                 fs,
 		rt:                 rt,
+		cosign:             cos,
 	}
 }

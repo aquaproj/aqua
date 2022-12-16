@@ -128,7 +128,7 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &MockCosignVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			pkgDownloader := pkg.NewPackageDownloader(nil, d.rt, downloader)
 			executor := &exec.Mock{}
@@ -226,7 +226,7 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &MockCosignVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			pkgDownloader := pkg.NewPackageDownloader(nil, d.rt, downloader)
 			executor := &exec.Mock{}

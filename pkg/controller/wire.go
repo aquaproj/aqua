@@ -65,6 +65,18 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+		),
 	)
 	return &list.Controller{}
 }
@@ -112,6 +124,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			github.New,
 			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -129,6 +142,18 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		generate.NewFuzzyFinder,
 		generate.NewVersionSelector,
 		download.NewHTTPDownloader,
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+		),
 	)
 	return &generate.Controller{}
 }
@@ -203,6 +228,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 	)
 	return &install.Controller{}
@@ -238,6 +264,18 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
 		),
 	)
 	return nil
@@ -319,6 +357,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 	)
 	return &cexec.Controller{}
@@ -461,6 +500,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 	)
 	return &cp.Controller{}
@@ -504,6 +544,14 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
 		),
 		afero.NewOsFs,
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+		),
 	)
 	return &updatechecksum.Controller{}
 }

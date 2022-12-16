@@ -32,7 +32,7 @@ type Installer struct {
 }
 
 type CosignVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, b []byte) error
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
 	HasCosign() bool
 }
 
@@ -141,7 +141,7 @@ func (inst *Installer) getRegistry(ctx context.Context, registry *aqua.Registry,
 
 const registryFilePermission = 0o600
 
-func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) { //nolint:cyclop
+func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) { //nolint:cyclop,funlen
 	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
@@ -170,11 +170,20 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqu
 			Version: regist.Ref,
 			Asset:   regist.Path,
 		}
+		f, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return nil, fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer f.Close()
+		defer inst.fs.Remove(f.Name()) //nolint:errcheck
+		if _, err := f.Write(content); err != nil {
+			return nil, fmt.Errorf("write a registry to a temporal file: %w", err)
+		}
 		if err := inst.cosign.Verify(ctx, logE, inst.rt, &download.File{
 			RepoOwner: regist.RepoOwner,
 			RepoName:  regist.RepoName,
 			Version:   regist.Ref,
-		}, regist.Cosign, art, content); err != nil {
+		}, regist.Cosign, art, f.Name()); err != nil {
 			return nil, fmt.Errorf("verify a registry with Cosign: %w", err)
 		}
 	}
