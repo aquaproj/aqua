@@ -65,3 +65,11 @@ packages:
 # {{.URL}} in checksum
 - name: helm/helm@v3.10.1
   registry: local
+# Verify checksum file with Cosign
+- name: terraform-linters/tflint
+  version: v0.43.0
+  registry: local
+# Verify with Cosign
+- name: aquaproj/aqua-installer
+  version: v1.1.3-3
+  registry: local
