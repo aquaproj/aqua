@@ -21,7 +21,7 @@ jobs:
         go-version: '1.19.3'
         cache: true
 
-    - uses: sigstore/cosign-installer@main
+    - uses: sigstore/cosign-installer@v2.8.1
       with:
         cosign-release: v1.13.0 # renovate: depName=sigstore/cosign
 
@@ -74,6 +74,10 @@ jobs:
     - run: helm version
     - run: github-compare -v
     - run: terrafmt version
+
+    - name: test cosign
+      run: aqua i
+      working-directory: tests/cosign
 
     - name: output bash completion
       run: aqua completion bash
