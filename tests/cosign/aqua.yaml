@@ -1,10 +1,9 @@
 ---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
-# checksum:
-#   # https://aquaproj.github.io/docs/reference/checksum/
-#   enabled: true
-#   require_checksum: true
+checksum:
+  # https://aquaproj.github.io/docs/reference/checksum/
+  enabled: true
 registries:
 - type: standard
   ref: v3.105.0 # renovate: depName=aquaproj/aqua-registry
