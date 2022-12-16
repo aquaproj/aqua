@@ -106,7 +106,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 			RepoName:  ppkg.PackageInfo.RepoName,
 			Version:   ppkg.Package.Version,
 		}, cos, art, f.Name()); err != nil {
-			return fmt.Errorf("verify a checksum file with Cosign: %w", err)
+			return fmt.Errorf("verify a package with Cosign: %w", err)
 		}
 		a, err := inst.fs.Open(f.Name())
 		if err != nil {

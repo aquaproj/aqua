@@ -53,6 +53,9 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 		}
 		defer f.Close()
 		defer inst.fs.Remove(f.Name()) //nolint:errcheck
+		if _, err := f.Write(b); err != nil {
+			return "", fmt.Errorf("write a checksum to a temporal file: %w", err)
+		}
 		art := pkg.GetTemplateArtifact(inst.runtime, assetName)
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: pkg.PackageInfo.RepoOwner,
