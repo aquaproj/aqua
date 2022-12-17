@@ -176,7 +176,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 				}
 			}
 			inst := registry.New(d.param, d.downloader, fs, rt, &MockCosignVerifier{})
-			registries, err := inst.InstallRegistries(ctx, d.cfg, d.cfgFilePath, logE)
+			registries, err := inst.InstallRegistries(ctx, logE, d.cfg, d.cfgFilePath)
 			if err != nil {
 				if d.isErr {
 					return

@@ -1,5 +1,11 @@
 package domain
 
+import (
+	"context"
+
+	"github.com/sirupsen/logrus"
+)
+
 // import (
 // 	"context"
 //
@@ -23,3 +29,15 @@ package domain
 // func (cos *MockCosignVerifier) Verify(ctx context.Context, param *cosign.ParamVerify) error {
 // 	return cos.err
 // }
+
+type CosignInstaller interface {
+	InstallCosign(ctx context.Context, logE *logrus.Entry, version string) error
+}
+
+type MockCosignInstaller struct {
+	err error
+}
+
+func (mock *MockCosignInstaller) InstallCosign(ctx context.Context, logE *logrus.Entry, version string) error {
+	return mock.err
+}

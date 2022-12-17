@@ -21,7 +21,6 @@ type Executor interface {
 
 type CosignVerifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
-	HasCosign() bool
 }
 
 func New(param *config.Param, downloader domain.PackageDownloader, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier CosignVerifier) *Installer {

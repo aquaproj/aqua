@@ -101,6 +101,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 			return fmt.Errorf("copy a package to a temporal file: %w", err)
 		}
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
+		logE.Info("verify a package with Cosign")
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
 			RepoName:  ppkg.PackageInfo.RepoName,

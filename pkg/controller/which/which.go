@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -27,15 +28,15 @@ type Controller struct {
 	osenv             osenv.OSEnv
 	fs                afero.Fs
 	linker            domain.Linker
+	cosignInstaller   domain.CosignInstaller
 }
 
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
-}
-
-func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*domain.FindResult, error) {
+func (ctrl *Controller) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*domain.FindResult, error) {
+	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
+		return nil, fmt.Errorf("install Cosign: %w", err)
+	}
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		findResult, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		findResult, err := ctrl.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +51,7 @@ func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName 
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		findResult, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		findResult, err := ctrl.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -90,13 +91,13 @@ func (ctrl *Controller) getExePath(findResult *domain.FindResult) (string, error
 	return filepath.Join(pkgPath, fileSrc), nil
 }
 
-func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*domain.FindResult, error) {
+func (ctrl *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*domain.FindResult, error) {
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

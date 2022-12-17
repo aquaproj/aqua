@@ -11,12 +11,7 @@ import (
 )
 
 type MockCosignVerifier struct {
-	hasCosign bool
-	err       error
-}
-
-func (mock *MockCosignVerifier) HasCosign() bool {
-	return mock.hasCosign
+	err error
 }
 
 func (mock *MockCosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {

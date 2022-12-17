@@ -253,8 +253,8 @@ packages:
 				}
 			}
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, d.rt, &MockCosignVerifier{}), d.rt, osenv.NewMock(d.env), fs, linker)
-			which, err := ctrl.Which(ctx, d.param, d.exeName, logE)
+			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, d.rt, &MockCosignVerifier{}), d.rt, osenv.NewMock(d.env), fs, linker, &domain.MockCosignInstaller{})
+			which, err := ctrl.Which(ctx, logE, d.param, d.exeName)
 			if err != nil {
 				if d.isErr {
 					return

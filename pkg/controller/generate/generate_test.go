@@ -404,7 +404,7 @@ packages:
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector)
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, &domain.MockCosignInstaller{})
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

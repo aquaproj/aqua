@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -27,10 +28,11 @@ type Controller struct {
 	chkDL             domain.ChecksumDownloader
 	parser            *checksum.FileParser
 	pkgDownloader     domain.PackageDownloader
+	cosignInstaller   domain.CosignInstaller
 	deep              bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader domain.PackageDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader domain.PackageDownloader, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -42,10 +44,14 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		parser:            &checksum.FileParser{},
 		pkgDownloader:     pkgDownloader,
 		deep:              param.Deep,
+		cosignInstaller:   cosignInstaller,
 	}
 }
 
 func (ctrl *Controller) UpdateChecksum(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
+		return fmt.Errorf("install Cosign: %w", err)
+	}
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		if err := ctrl.updateChecksum(ctx, logE, cfgFilePath); err != nil {
 			return err
@@ -79,7 +85,7 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 		return err //nolint:wrapcheck
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

@@ -33,12 +33,11 @@ type Installer struct {
 
 type CosignVerifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
-	HasCosign() bool
 }
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
 
-func (inst *Installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
+func (inst *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
@@ -61,7 +60,7 @@ func (inst *Installer) InstallRegistries(ctx context.Context, cfg *aqua.Config, 
 				return
 			}
 			maxInstallChan <- struct{}{}
-			registryContent, err := inst.installRegistry(ctx, registry, cfgFilePath, logE)
+			registryContent, err := inst.installRegistry(ctx, logE, registry, cfgFilePath)
 			if err != nil {
 				<-maxInstallChan
 				logerr.WithError(logE, err).WithFields(logrus.Fields{
@@ -108,7 +107,7 @@ const dirPermission os.FileMode = 0o775
 
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (inst *Installer) installRegistry(ctx context.Context, regist *aqua.Registry, cfgFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *Installer) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string) (*registry.Config, error) {
 	registryFilePath, err := regist.GetFilePath(inst.param.RootDir, cfgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
@@ -123,14 +122,14 @@ func (inst *Installer) installRegistry(ctx context.Context, regist *aqua.Registr
 	if err := inst.fs.MkdirAll(filepath.Dir(registryFilePath), dirPermission); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
-	return inst.getRegistry(ctx, regist, registryFilePath, logE)
+	return inst.getRegistry(ctx, logE, regist, registryFilePath)
 }
 
 // getRegistry downloads and installs the registry file.
-func (inst *Installer) getRegistry(ctx context.Context, registry *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) {
+func (inst *Installer) getRegistry(ctx context.Context, logE *logrus.Entry, registry *aqua.Registry, registryFilePath string) (*registry.Config, error) {
 	switch registry.Type {
 	case aqua.RegistryTypeGitHubContent:
-		return inst.getGitHubContentRegistry(ctx, registry, registryFilePath, logE)
+		return inst.getGitHubContentRegistry(ctx, logE, registry, registryFilePath)
 	case aqua.RegistryTypeLocal:
 		return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
 			"local_registry_file_path": registryFilePath,
@@ -141,7 +140,7 @@ func (inst *Installer) getRegistry(ctx context.Context, registry *aqua.Registry,
 
 const registryFilePermission = 0o600
 
-func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqua.Registry, registryFilePath string, logE *logrus.Entry) (*registry.Config, error) { //nolint:cyclop,funlen
+func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string) (*registry.Config, error) { //nolint:cyclop,funlen
 	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
@@ -165,7 +164,7 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqu
 		content = cnt
 	}
 
-	if regist.Cosign != nil && inst.cosign.HasCosign() {
+	if regist.Cosign != nil {
 		art := &template.Artifact{
 			Version: regist.Ref,
 			Asset:   regist.Path,
@@ -179,6 +178,9 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, regist *aqu
 		if _, err := f.Write(content); err != nil {
 			return nil, fmt.Errorf("write a registry to a temporal file: %w", err)
 		}
+		logE.WithFields(logrus.Fields{
+			"registry_name": regist.Name,
+		}).Info("verify a registry with Cosign")
 		if err := inst.cosign.Verify(ctx, logE, inst.rt, &download.File{
 			RepoOwner: regist.RepoOwner,
 			RepoName:  regist.RepoName,

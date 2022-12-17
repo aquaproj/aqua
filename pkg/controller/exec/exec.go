@@ -33,11 +33,6 @@ type Controller struct {
 	policyChecker      domain.PolicyChecker
 }
 
-type Executor interface {
-	Exec(ctx context.Context, exePath string, args []string) (int, error)
-	ExecXSys(exePath string, args []string) error
-}
-
 func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader domain.PolicyConfigReader, policyChecker domain.PolicyChecker) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
@@ -53,7 +48,7 @@ func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController,
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) (gErr error) {
+func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args []string) (gErr error) {
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -61,7 +56,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 		}
 	}()
 
-	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
+	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

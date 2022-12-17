@@ -128,13 +128,13 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &MockCosignVerifier{}), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &MockCosignVerifier{}), d.rt, osEnv, fs, linker, &domain.MockCosignInstaller{})
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			pkgDownloader := pkg.NewPackageDownloader(nil, d.rt, downloader)
 			executor := &exec.Mock{}
 			pkgInstaller := installpackage.New(d.param, pkgDownloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{}, &MockCosignVerifier{})
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &domain.MockPolicyConfigReader{}, &domain.MockPolicyChecker{})
-			if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
+			if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args); err != nil {
 				if d.isErr {
 					return
 				}
@@ -226,7 +226,7 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &MockCosignVerifier{}), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &MockCosignVerifier{}), d.rt, osEnv, fs, linker, &domain.MockCosignInstaller{})
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			pkgDownloader := pkg.NewPackageDownloader(nil, d.rt, downloader)
 			executor := &exec.Mock{}
@@ -235,7 +235,7 @@ packages:
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				func() {
-					if err := ctrl.Exec(ctx, d.param, d.exeName, d.args, logE); err != nil {
+					if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args); err != nil {
 						if d.isErr {
 							return
 						}

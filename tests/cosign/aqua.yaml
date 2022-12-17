@@ -5,15 +5,29 @@ checksum:
   # https://aquaproj.github.io/docs/reference/checksum/
   enabled: true
 registries:
-- type: standard
-  ref: v3.105.0 # renovate: depName=aquaproj/aqua-registry
-- name: local
-  type: local
-  path: registry.yaml
+  - type: standard
+    ref: v3.105.0 # renovate: depName=aquaproj/aqua-registry
+  - name: local
+    type: local
+    path: registry.yaml
+  - name: cosign
+    type: github_content
+    repo_owner: aquaproj
+    repo_name: aqua-registry
+    ref: v3.105.1-1
+    path: registry.yaml
+    cosign:
+      cosign_experimental: true
+      signature:
+        type: github_release
+        asset: registry.yaml.sig
+      certificate:
+        type: github_release
+        asset: registry.yaml.pem
 packages:
-- name: terraform-linters/tflint
-  version: v0.43.0
-  registry: local
-- name: aquaproj/aqua-installer
-  version: v1.1.3-3
-  registry: local
+  - name: terraform-linters/tflint
+    version: v0.43.0
+    registry: local
+  - name: aquaproj/aqua-installer
+    version: v1.1.3-3
+    registry: local

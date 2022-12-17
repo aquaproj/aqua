@@ -68,14 +68,44 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
 			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			pkg.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
 		),
 	)
 	return &list.Controller{}
@@ -144,15 +174,45 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
 			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			pkg.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
 		),
 	)
 	return &generate.Controller{}
@@ -185,6 +245,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			pkg.NewPackageDownloader,
@@ -267,15 +328,41 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
 			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			pkg.NewPackageDownloader,
+			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
 		),
 	)
 	return nil
@@ -299,6 +386,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -442,6 +530,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
 			wire.Bind(new(cp.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -547,10 +636,32 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			policy.NewChecker,
+			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
 		),
 	)
 	return &updatechecksum.Controller{}

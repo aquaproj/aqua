@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -16,9 +17,26 @@ import (
 )
 
 type Verifier struct {
-	executor   Executor
-	fs         afero.Fs
-	downloader Downloader
+	executor      Executor
+	fs            afero.Fs
+	downloader    Downloader
+	cosignExePath string
+}
+
+func NewVerifier(executor Executor, fs afero.Fs, downloader Downloader, param *config.Param, rt *runtime.Runtime) *Verifier {
+	return &Verifier{
+		executor:   executor,
+		fs:         fs,
+		downloader: downloader,
+		cosignExePath: ExePath(&ParamExePath{
+			RootDir: param.RootDir,
+			Runtime: rt,
+		}),
+	}
+}
+
+func (verifier *Verifier) SetCosignExePath(p string) {
+	verifier.cosignExePath = p
 }
 
 type Downloader interface {
@@ -29,18 +47,11 @@ type Executor interface {
 	ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error)
 }
 
-func NewVerifier(executor Executor, fs afero.Fs, downloader Downloader) *Verifier {
-	return &Verifier{
-		executor:   executor,
-		fs:         fs,
-		downloader: downloader,
-	}
-}
-
 type ParamVerify struct {
 	CosignExperimental bool
 	Opts               []string
 	Target             string
+	CosignExePath      string
 }
 
 func (verifier *Verifier) verify(ctx context.Context, param *ParamVerify) error {
@@ -48,7 +59,7 @@ func (verifier *Verifier) verify(ctx context.Context, param *ParamVerify) error 
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
 	}
-	_, err := verifier.executor.ExecWithEnvs(ctx, "cosign", append([]string{"verify-blob"}, append(param.Opts, param.Target)...), envs)
+	_, err := verifier.executor.ExecWithEnvs(ctx, verifier.cosignExePath, append([]string{"verify-blob"}, append(param.Opts, param.Target)...), envs)
 	if err != nil {
 		return fmt.Errorf("verify with cosign: %w", err)
 	}
@@ -56,10 +67,6 @@ func (verifier *Verifier) verify(ctx context.Context, param *ParamVerify) error 
 }
 
 func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
-	if !verifier.HasCosign() {
-		logE.Info("skip verifying a signature with Cosign, because Cosign isn't inatalled")
-		return nil
-	}
 	opts, err := cos.RenderOpts(rt, art)
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
@@ -123,7 +130,6 @@ func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *ru
 		cos.Opts = append(cos.Opts, "--certificate", certFile.Name())
 	}
 
-	logE.Info("verify a signature with Cosign")
 	if err := verifier.verify(ctx, &ParamVerify{
 		Opts:               cos.Opts,
 		CosignExperimental: cos.CosignExperimental,
