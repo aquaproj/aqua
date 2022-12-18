@@ -33,5 +33,13 @@
         'cosign-release: (?<currentValue>.*) +# renovate: depName=sigstore/cosign',
       ],
     },
+    {
+      fileMatch: ["^pkgs/cosign/version\\.go"],
+      depNameTemplate: "sigstore/cosign",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        'const Version = "(?<currentValue>.*)"',
+      ],
+    },
   ],
 }
