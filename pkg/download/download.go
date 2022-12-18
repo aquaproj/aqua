@@ -7,9 +7,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -40,59 +38,21 @@ func NewDownloader(gh domain.RepositoriesService, httpDownloader HTTPDownloader)
 	}
 }
 
-func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Runtime) (*File, error) {
-	pkgInfo := pkg.PackageInfo
-	file := &File{
-		Type:      pkgInfo.GetType(),
-		RepoOwner: pkgInfo.RepoOwner,
-		RepoName:  pkgInfo.RepoName,
-		Version:   pkg.Package.Version,
-	}
-	switch pkgInfo.GetType() {
-	case config.PkgInfoTypeGitHubRelease:
-		file.Asset = assetName
-		return file, nil
-	case config.PkgInfoTypeGitHubContent:
-		file.Path = assetName
-		return file, nil
-	case config.PkgInfoTypeGitHubArchive:
-		return file, nil
-	case config.PkgInfoTypeGo:
-		file.Type = "github_archive"
-		return file, nil
-	case config.PkgInfoTypeHTTP:
-		uS, err := pkg.RenderURL(rt)
-		if err != nil {
-			return nil, err //nolint:wrapcheck
-		}
-		file.URL = uS
-		return file, nil
-	default:
-		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
-			"package_type": pkgInfo.GetType(),
-		})
-	}
+type ClientAPI interface {
+	GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error)
 }
 
-func ConvertRegistryToFile(rgst *aqua.Registry) (*File, error) {
-	file := &File{
-		Type:      rgst.Type,
-		RepoOwner: rgst.RepoOwner,
-		RepoName:  rgst.RepoName,
-		Version:   rgst.Ref,
-	}
-	switch rgst.Type {
-	case config.PkgInfoTypeGitHubContent:
-		file.Path = rgst.Path
-		return file, nil
-	default:
-		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
-			"registry_type": rgst.Type,
-		})
-	}
+type Mock struct {
+	RC   io.ReadCloser
+	Code int64
+	Err  error
 }
 
-func (downloader *Downloader) GetReadCloser(ctx context.Context, file *File, logE *logrus.Entry) (io.ReadCloser, int64, error) {
+func (mock *Mock) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
+	return mock.RC, mock.Code, mock.Err
+}
+
+func (downloader *Downloader) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
 	switch file.Type {
 	case config.PkgInfoTypeGitHubRelease:
 		return downloader.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck

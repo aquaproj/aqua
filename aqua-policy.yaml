@@ -10,7 +10,11 @@ registries:
 - name: cosign
   type: local
   path: tests/cosign/registry.yaml
+- name: slsa
+  type: local
+  path: tests/slsa/registry.yaml
 packages:
 - registry: standard
 - registry: main
 - registry: cosign
+- registry: slsa

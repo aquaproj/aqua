@@ -2,6 +2,8 @@ package updatechecksum_test
 
 import (
 	"context"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -9,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -16,6 +19,10 @@ import (
 
 func boolP(b bool) *bool {
 	return &b
+}
+
+func strP(s string) *string {
+	return &s
 }
 
 func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
@@ -29,7 +36,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		fs              afero.Fs
 		rt              *runtime.Runtime
 		chkDL           domain.ChecksumDownloader
-		pkgDownloader   domain.PackageDownloader
+		downloader      download.ClientAPI
 		isErr           bool
 	}{
 		{
@@ -67,6 +74,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 							{
 								RepoOwner: "cli",
 								RepoName:  "cli",
+								Type:      "github_release",
 							},
 						},
 					},
@@ -77,8 +85,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:         &domain.MockChecksumDownloader{},
-			pkgDownloader: &domain.MockPackageDownloader{},
+			chkDL:      &domain.MockChecksumDownloader{},
+			downloader: &download.Mock{},
 		},
 		{
 			name: "deep",
@@ -116,6 +124,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 							{
 								RepoOwner: "cli",
 								RepoName:  "cli",
+								Type:      "github_release",
+								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 							},
 						},
 					},
@@ -126,8 +136,10 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:         &domain.MockChecksumDownloader{},
-			pkgDownloader: &domain.MockPackageDownloader{},
+			chkDL: &domain.MockChecksumDownloader{},
+			downloader: &download.Mock{
+				RC: io.NopCloser(strings.NewReader("hello")),
+			},
 		},
 		{
 			name: "enabled",
@@ -164,6 +176,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 							{
 								RepoOwner: "cli",
 								RepoName:  "cli",
+								Type:      "github_release",
+								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 								Checksum: &registry.Checksum{
 									Type:       "github_release",
 									Asset:      "gh_{{trimV .Version}}_checksums.txt",
@@ -201,7 +215,7 @@ d373e305512e53145df7064a0253df696fe17f9ec71804311239f3e2c9e19999  gh_2.17.0_linu
 d3b06f291551ce0357e08334d8ba72810a552b593329e3c0dd3489f51a8712a3  gh_2.17.0_windows_386.zip
 ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linux_386.tar.gz`,
 			},
-			pkgDownloader: &domain.MockPackageDownloader{},
+			downloader: &download.Mock{},
 		},
 	}
 	ctx := context.Background()
@@ -210,7 +224,7 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.pkgDownloader, &domain.MockCosignInstaller{})
+			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader, &domain.MockCosignInstaller{})
 			if err := ctrl.UpdateChecksum(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

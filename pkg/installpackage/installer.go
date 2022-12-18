@@ -12,9 +12,12 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -27,7 +30,7 @@ const proxyName = "aqua-proxy"
 type Installer struct {
 	rootDir            string
 	maxParallelism     int
-	packageDownloader  domain.PackageDownloader
+	downloader         download.ClientAPI
 	checksumDownloader domain.ChecksumDownloader
 	checksumFileParser *checksum.FileParser
 	checksumCalculator ChecksumCalculator
@@ -36,12 +39,36 @@ type Installer struct {
 	linker             domain.Linker
 	executor           Executor
 	unarchiver         Unarchiver
-	cosign             CosignVerifier
+	cosign             cosign.VerifierAPI
+	slsaVerifier       slsa.VerifierAPI
 	progressBar        bool
 	onlyLink           bool
 	isTest             bool
 	copyDir            string
 	policyChecker      domain.PolicyChecker
+}
+
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Installer {
+	return &Installer{
+		rootDir:            param.RootDir,
+		maxParallelism:     param.MaxParallelism,
+		downloader:         downloader,
+		checksumDownloader: chkDL,
+		checksumFileParser: &checksum.FileParser{},
+		checksumCalculator: chkCalc,
+		runtime:            rt,
+		fs:                 fs,
+		linker:             linker,
+		executor:           executor,
+		progressBar:        param.ProgressBar,
+		isTest:             param.IsTest,
+		onlyLink:           param.OnlyLink,
+		copyDir:            param.Dest,
+		unarchiver:         unarchiver,
+		policyChecker:      policyChecker,
+		cosign:             cosignVerifier,
+		slsaVerifier:       slsaVerifier,
+	}
 }
 
 type Unarchiver interface {
@@ -58,15 +85,6 @@ func (unarchiver *MockUnarchiver) Unarchive(src *unarchive.File, dest string, lo
 
 type ChecksumCalculator interface {
 	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
-}
-
-type MockChecksumCalculator struct {
-	Checksum string
-	Err      error
-}
-
-func (calc *MockChecksumCalculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
-	return calc.Checksum, calc.Err
 }
 
 func isWindows(goos string) bool {

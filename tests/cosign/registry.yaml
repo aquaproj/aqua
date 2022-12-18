@@ -24,7 +24,7 @@ packages:
           - https://github.com/terraform-linters/tflint/releases/download/{{.Version}}/checksums.txt.keyless.sig
           - --certificate
           - https://github.com/terraform-linters/tflint/releases/download/{{.Version}}/checksums.txt.pem
-  # Verify checksum file with Cosign
+  # Verify with Cosign
   - type: github_content
     repo_owner: aquaproj
     repo_name: aqua-installer

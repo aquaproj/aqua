@@ -25,7 +25,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/download/pkg"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
@@ -33,6 +32,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/google/wire"
 	"github.com/spf13/afero"
@@ -67,8 +67,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -77,15 +76,11 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
-		),
-		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
 		),
 		wire.NewSet(
 			unarchive.New,
@@ -106,6 +101,10 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			policy.NewChecker,
 			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
 	)
 	return &list.Controller{}
@@ -174,8 +173,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
-			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -184,15 +182,11 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
-		),
-		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
 		),
 		wire.NewSet(
 			unarchive.New,
@@ -213,6 +207,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			policy.NewChecker,
 			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
 	)
 	return &generate.Controller{}
@@ -248,12 +246,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
-		),
-		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		afero.NewOsFs,
 		wire.NewSet(
@@ -288,8 +282,11 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
-			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
 	)
 	return &install.Controller{}
@@ -328,8 +325,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
-			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -338,15 +334,11 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
-		),
-		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -364,6 +356,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 			policy.NewChecker,
 			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
 		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+		),
 	)
 	return nil
 }
@@ -376,12 +372,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
 		),
 		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
-		),
-		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
 			installpackage.New,
@@ -444,8 +436,11 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
-			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
 	)
 	return &cexec.Controller{}
@@ -467,11 +462,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
-		),
-		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -500,7 +491,11 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
 	)
 	return &updateaqua.Controller{}
@@ -519,12 +514,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(cp.Installer), new(*install.Controller)),
 		),
 		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
-		),
-		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
 			installpackage.New,
@@ -588,8 +579,11 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
-			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
 	)
 	return &cp.Controller{}
@@ -623,20 +617,15 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
-		wire.NewSet(
-			pkg.NewPackageDownloader,
-			wire.Bind(new(domain.PackageDownloader), new(*pkg.PackageDownloader)),
-		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			download.NewDownloader,
-			wire.Bind(new(cosign.Downloader), new(*download.Downloader)),
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		afero.NewOsFs,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
-			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -662,6 +651,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		wire.NewSet(
 			policy.NewChecker,
 			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
 	)
 	return &updatechecksum.Controller{}

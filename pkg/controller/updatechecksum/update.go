@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -27,12 +28,12 @@ type Controller struct {
 	runtime           *runtime.Runtime
 	chkDL             domain.ChecksumDownloader
 	parser            *checksum.FileParser
-	pkgDownloader     domain.PackageDownloader
+	downloader        download.ClientAPI
 	cosignInstaller   domain.CosignInstaller
 	deep              bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader domain.PackageDownloader, cosignInstaller domain.CosignInstaller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader download.ClientAPI, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -42,7 +43,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		runtime:           rt,
 		chkDL:             chkDL,
 		parser:            &checksum.FileParser{},
-		pkgDownloader:     pkgDownloader,
+		downloader:        pkgDownloader,
 		deep:              param.Deep,
 		cosignInstaller:   cosignInstaller,
 	}
@@ -267,7 +268,11 @@ func (ctrl *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.
 			gErr = logerr.WithFields(gErr, fields)
 		}
 	}()
-	file, _, err := ctrl.pkgDownloader.GetReadCloser(ctx, pkg, assetName, logE, rt)
+	f, err := download.ConvertPackageToFile(pkg, assetName, rt)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	file, _, err := ctrl.downloader.GetReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("download an asset: %w", err)
 	}

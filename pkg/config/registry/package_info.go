@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"fmt"
 	"path"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -45,6 +46,7 @@ type PackageInfo struct {
 	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Checksum           *Checksum          `json:"checksum,omitempty"`
 	Cosign             *Cosign            `json:"cosign,omitempty"`
+	SLSAProvenance     *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
@@ -419,4 +421,23 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 		}
 	}
 	return pkgInfo.Files
+}
+
+func (pkgInfo *PackageInfo) SLSASourceURI() string {
+	sp := pkgInfo.SLSAProvenance
+	if sp == nil {
+		return ""
+	}
+	if sp.SourceURI != nil {
+		return *sp.SourceURI
+	}
+	repoOwner := sp.RepoOwner
+	repoName := sp.RepoName
+	if repoOwner == "" {
+		repoOwner = pkgInfo.RepoOwner
+	}
+	if repoName == "" {
+		repoName = pkgInfo.RepoName
+	}
+	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }

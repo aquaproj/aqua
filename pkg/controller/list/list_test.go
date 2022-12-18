@@ -9,6 +9,7 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
@@ -64,7 +65,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &MockCosignVerifier{}), &domain.MockCosignInstaller{})
+			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}), &domain.MockCosignInstaller{})
 			if err := ctrl.List(ctx, d.param, logE); err != nil {
 				if d.isErr {
 					return

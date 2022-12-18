@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -27,12 +28,18 @@ type Installer struct {
 	registryDownloader domain.GitHubContentFileDownloader
 	param              *config.Param
 	fs                 afero.Fs
-	cosign             CosignVerifier
+	cosign             cosign.VerifierAPI
 	rt                 *runtime.Runtime
 }
 
-type CosignVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
+func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos cosign.VerifierAPI) *Installer {
+	return &Installer{
+		param:              param,
+		registryDownloader: downloader,
+		fs:                 fs,
+		rt:                 rt,
+		cosign:             cos,
+	}
 }
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")

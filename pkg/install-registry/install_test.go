@@ -8,6 +8,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
@@ -175,7 +176,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			inst := registry.New(d.param, d.downloader, fs, rt, &MockCosignVerifier{})
+			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{})
 			registries, err := inst.InstallRegistries(ctx, logE, d.cfg, d.cfgFilePath)
 			if err != nil {
 				if d.isErr {

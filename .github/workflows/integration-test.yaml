@@ -79,6 +79,10 @@ jobs:
       run: aqua i
       working-directory: tests/cosign
 
+    - name: test SLSA
+      run: aqua i
+      working-directory: tests/slsa
+
     - name: output bash completion
       run: aqua completion bash
     - name: output zsh completion
