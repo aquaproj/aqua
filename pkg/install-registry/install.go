@@ -17,6 +17,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -29,16 +30,18 @@ type Installer struct {
 	param              *config.Param
 	fs                 afero.Fs
 	cosign             cosign.VerifierAPI
+	slsaVerifier       slsa.VerifierAPI
 	rt                 *runtime.Runtime
 }
 
-func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos cosign.VerifierAPI) *Installer {
+func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Installer {
 	return &Installer{
 		param:              param,
 		registryDownloader: downloader,
 		fs:                 fs,
 		rt:                 rt,
 		cosign:             cos,
+		slsaVerifier:       slsaVerifier,
 	}
 }
 
@@ -171,11 +174,8 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logru
 		content = cnt
 	}
 
-	if regist.Cosign != nil {
-		art := &template.Artifact{
-			Version: regist.Ref,
-			Asset:   regist.Path,
-		}
+	var tempFilePath string
+	if regist.Cosign != nil || regist.SLSAProvenance != nil {
 		f, err := afero.TempFile(inst.fs, "", "")
 		if err != nil {
 			return nil, fmt.Errorf("create a temporal file: %w", err)
@@ -185,6 +185,13 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logru
 		if _, err := f.Write(content); err != nil {
 			return nil, fmt.Errorf("write a registry to a temporal file: %w", err)
 		}
+		tempFilePath = f.Name()
+	}
+	if regist.Cosign != nil {
+		art := &template.Artifact{
+			Version: regist.Ref,
+			Asset:   regist.Path,
+		}
 		logE.WithFields(logrus.Fields{
 			"registry_name": regist.Name,
 		}).Info("verify a registry with Cosign")
@@ -192,8 +199,29 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logru
 			RepoOwner: regist.RepoOwner,
 			RepoName:  regist.RepoName,
 			Version:   regist.Ref,
-		}, regist.Cosign, art, f.Name()); err != nil {
+		}, regist.Cosign, art, tempFilePath); err != nil {
 			return nil, fmt.Errorf("verify a registry with Cosign: %w", err)
+		}
+	}
+
+	if regist.SLSAProvenance != nil {
+		art := &template.Artifact{
+			Version: regist.Ref,
+			Asset:   regist.Path,
+		}
+		logE.WithFields(logrus.Fields{
+			"registry_name": regist.Name,
+		}).Info("verify a registry with slsa-verifier")
+		if err := inst.slsaVerifier.Verify(ctx, logE, inst.rt, regist.SLSAProvenance, art, &download.File{
+			RepoOwner: regist.RepoOwner,
+			RepoName:  regist.RepoName,
+			Version:   regist.Ref,
+		}, &slsa.ParamVerify{
+			SourceURI:    regist.SLSASourceURI(),
+			SourceTag:    regist.Ref,
+			ArtifactPath: tempFilePath,
+		}); err != nil {
+			return nil, fmt.Errorf("verify a registry with slsa-verifier: %w", err)
 		}
 	}
 

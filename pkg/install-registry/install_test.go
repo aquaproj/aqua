@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -176,7 +177,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{})
+			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			registries, err := inst.InstallRegistries(ctx, logE, d.cfg, d.cfgFilePath)
 			if err != nil {
 				if d.isErr {
