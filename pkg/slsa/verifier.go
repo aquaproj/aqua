@@ -17,12 +17,14 @@ import (
 type Verifier struct {
 	downloader download.ClientAPI
 	fs         afero.Fs
+	exe        ExecutorAPI
 }
 
-func New(downloader download.ClientAPI, fs afero.Fs) *Verifier {
+func New(downloader download.ClientAPI, fs afero.Fs, exe ExecutorAPI) *Verifier {
 	return &Verifier{
 		downloader: downloader,
 		fs:         fs,
+		exe:        exe,
 	}
 }
 
@@ -46,6 +48,36 @@ type ParamVerify struct {
 	ArtifactPath string
 }
 
+type Executor struct{}
+
+func NewExecutor() *Executor {
+	return &Executor{}
+}
+
+type ExecutorAPI interface {
+	Verify(ctx context.Context, param *ParamVerify, provenancePath string) error
+}
+
+type MockExecutor struct {
+	Err error
+}
+
+func (mock *MockExecutor) Verify(ctx context.Context, param *ParamVerify, provenancePath string) error {
+	return mock.Err
+}
+
+func (exe *Executor) Verify(ctx context.Context, param *ParamVerify, provenancePath string) error {
+	v := verify.VerifyArtifactCommand{
+		ProvenancePath: provenancePath,
+		SourceURI:      param.SourceURI,
+		SourceTag:      &param.SourceTag,
+	}
+	if _, err := v.Exec(ctx, []string{param.ArtifactPath}); err != nil {
+		return fmt.Errorf("run slsa-verifier's verify-artifact command: %w", err)
+	}
+	return nil
+}
+
 func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
 	f, err := download.ConvertDownloadedFileToFile(sp.ToDownloadedFile(), file, rt, art)
 	if err != nil {
@@ -67,17 +99,5 @@ func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *ru
 		return fmt.Errorf("copy a provenance to a temporal file: %w", err)
 	}
 
-	return verifier.verify(ctx, param, provenanceFile.Name())
-}
-
-func (verifier *Verifier) verify(ctx context.Context, param *ParamVerify, provenancePath string) error {
-	v := verify.VerifyArtifactCommand{
-		ProvenancePath: provenancePath,
-		SourceURI:      param.SourceURI,
-		SourceTag:      &param.SourceTag,
-	}
-	if _, err := v.Exec(ctx, []string{param.ArtifactPath}); err != nil {
-		return fmt.Errorf("run slsa-verifier's verify-artifact command: %w", err)
-	}
-	return nil
+	return verifier.exe.Verify(ctx, param, provenanceFile.Name()) //nolint:wrapcheck
 }

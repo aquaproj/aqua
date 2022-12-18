@@ -106,6 +106,10 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+		),
 	)
 	return &list.Controller{}
 }
@@ -212,6 +216,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+		),
 	)
 	return &generate.Controller{}
 }
@@ -288,6 +296,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -359,6 +371,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		wire.NewSet(
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
 		),
 	)
 	return nil
@@ -442,6 +458,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -496,6 +516,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
 		),
 	)
 	return &updateaqua.Controller{}
@@ -585,6 +609,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
 		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+		),
 	)
 	return &cp.Controller{}
 }
@@ -655,6 +683,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		wire.NewSet(
 			slsa.New,
 			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
 		),
 	)
 	return &updatechecksum.Controller{}
