@@ -76,6 +76,8 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
 		WindowsExt:         pkgInfo.WindowsExt,
 		Checksum:           pkgInfo.Checksum,
+		Cosign:             pkgInfo.Cosign,
+		SLSAProvenance:     pkgInfo.SLSAProvenance,
 	}
 	return pkg
 }
@@ -142,6 +144,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.Cosign != nil {
 		pkg.Cosign = child.Cosign
 	}
+	if child.SLSAProvenance != nil {
+		pkg.SLSAProvenance = child.SLSAProvenance
+	}
 	return pkg
 }
 
@@ -203,6 +208,9 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.Cosign != nil {
 		pkgInfo.Cosign = ov.Cosign
 	}
+	if ov.SLSAProvenance != nil {
+		pkgInfo.SLSAProvenance = ov.SLSAProvenance
+	}
 }
 
 type VersionOverride struct {
@@ -227,6 +235,7 @@ type VersionOverride struct {
 	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	Checksum           *Checksum         `json:"checksum,omitempty"`
 	Cosign             *Cosign           `json:"cosign,omitempty"`
+	SLSAProvenance     *SLSAProvenance   `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 }
 
 type Alias struct {
