@@ -13,6 +13,10 @@ func (exe *Mock) Exec(ctx context.Context, exePath string, args []string) (int, 
 	return exe.ExitCode, exe.Err
 }
 
+func (exe *Mock) ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error) {
+	return exe.ExitCode, exe.Err
+}
+
 func (exe *Mock) ExecXSys(exePath string, args []string) error {
 	return exe.Err
 }

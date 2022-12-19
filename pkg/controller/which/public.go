@@ -10,7 +10,7 @@ import (
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -21,5 +21,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		osenv:             osEnv,
 		fs:                fs,
 		linker:            linker,
+		cosignInstaller:   cosignInstaller,
 	}
 }

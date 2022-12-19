@@ -13,6 +13,10 @@ import (
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
+func stringP(s string) *string {
+	return &s
+}
+
 func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {

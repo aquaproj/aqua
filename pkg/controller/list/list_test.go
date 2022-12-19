@@ -9,8 +9,12 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/list"
+	"github.com/aquaproj/aqua/pkg/cosign"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -51,6 +55,7 @@ packages:
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+	rt := &runtime.Runtime{}
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
@@ -61,7 +66,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs))
+			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), &domain.MockCosignInstaller{})
 			if err := ctrl.List(ctx, d.param, logE); err != nil {
 				if d.isErr {
 					return

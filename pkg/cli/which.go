@@ -56,7 +56,7 @@ func (runner *Runner) whichAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	which, err := ctrl.Which(c.Context, param, exeName, runner.LogE)
+	which, err := ctrl.Which(c.Context, runner.LogE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

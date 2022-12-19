@@ -44,6 +44,6 @@ func (runner *Runner) listAction(c *cli.Context) error {
 	if err := runner.setParam(c, "list", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient)
+	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
 	return ctrl.List(c.Context, param, runner.LogE) //nolint:wrapcheck
 }

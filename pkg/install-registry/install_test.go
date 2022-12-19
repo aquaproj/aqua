@@ -8,9 +8,12 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -160,6 +163,10 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
+	rt := &runtime.Runtime{
+		GOOS:   "linux",
+		GOARCH: "amd64",
+	}
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
@@ -170,8 +177,8 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			inst := registry.New(d.param, d.downloader, fs)
-			registries, err := inst.InstallRegistries(ctx, d.cfg, d.cfgFilePath, logE)
+			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			registries, err := inst.InstallRegistries(ctx, logE, d.cfg, d.cfgFilePath)
 			if err != nil {
 				if d.isErr {
 					return

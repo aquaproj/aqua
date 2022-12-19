@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -30,13 +31,10 @@ type Controller struct {
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
 	policyConfigReader domain.PolicyConfigReader
+	cosignInstaller    domain.CosignInstaller
 }
 
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
-}
-
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, policyConfigReader domain.PolicyConfigReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, policyConfigReader domain.PolicyConfigReader, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -49,6 +47,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		tags:               param.Tags,
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
+		cosignInstaller:    cosignInstaller,
 	}
 }
 
@@ -72,6 +71,10 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
+	}
+
+	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
+		return fmt.Errorf("install Cosign: %w", err)
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
@@ -107,7 +110,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		return err //nolint:wrapcheck
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

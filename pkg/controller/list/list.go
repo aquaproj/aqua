@@ -8,6 +8,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/sirupsen/logrus"
 )
@@ -17,18 +18,16 @@ type Controller struct {
 	configFinder      ConfigFinder
 	configReader      domain.ConfigReader
 	registryInstaller domain.RegistryInstaller
+	cosignInstaller   domain.CosignInstaller
 }
 
-type ConfigFinder interface {
-	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
-}
-
-func NewController(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller) *Controller {
+func NewController(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,
+		cosignInstaller:   cosignInstaller,
 	}
 }
 
@@ -43,7 +42,11 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *log
 		return err //nolint:wrapcheck
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
+		return fmt.Errorf("install Cosign: %w", err)
+	}
+
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

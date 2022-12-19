@@ -1,20 +1,24 @@
 package aqua
 
 import (
+	"fmt"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Registry struct {
-	Name      string `validate:"required" json:"name,omitempty"`
-	Type      string `validate:"required" json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"`
-	RepoOwner string `yaml:"repo_owner" json:"repo_owner,omitempty"`
-	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`
-	Ref       string `json:"ref,omitempty"`
-	Path      string `validate:"required" json:"path,omitempty"`
+	Name           string                   `validate:"required" json:"name,omitempty"`
+	Type           string                   `validate:"required" json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"`
+	RepoOwner      string                   `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName       string                   `yaml:"repo_name" json:"repo_name,omitempty"`
+	Ref            string                   `json:"ref,omitempty"`
+	Path           string                   `validate:"required" json:"path,omitempty"`
+	Cosign         *registry.Cosign         `json:"cosign,omitempty"`
+	SLSAProvenance *registry.SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance"`
 }
 
 const (
@@ -89,4 +93,23 @@ func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) (string, erro
 		return filepath.Join(rootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path), nil
 	}
 	return "", errInvalidRegistryType
+}
+
+func (registry *Registry) SLSASourceURI() string {
+	sp := registry.SLSAProvenance
+	if sp == nil {
+		return ""
+	}
+	if sp.SourceURI != nil {
+		return *sp.SourceURI
+	}
+	repoOwner := sp.RepoOwner
+	repoName := sp.RepoName
+	if repoOwner == "" {
+		repoOwner = registry.RepoOwner
+	}
+	if repoName == "" {
+		repoName = registry.RepoName
+	}
+	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }

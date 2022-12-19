@@ -12,8 +12,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/generate/output"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -30,23 +30,10 @@ type Controller struct {
 	versionSelector   VersionSelector
 	fs                afero.Fs
 	outputter         Outputter
+	cosignInstaller   domain.CosignInstaller
 }
 
-type RepositoriesService interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
-	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
-	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
-}
-
-type ConfigFinder interface {
-	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
-}
-
-type Outputter interface {
-	Output(param *output.Param) error
-}
-
-func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
+func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
@@ -57,6 +44,7 @@ func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInst
 		fuzzyFinder:       fuzzyFinder,
 		versionSelector:   versionSelector,
 		outputter:         output.New(os.Stdout, fs),
+		cosignInstaller:   cosignInstaller,
 	}
 }
 
@@ -88,6 +76,10 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 		return err //nolint:wrapcheck
 	}
 
+	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
+		return fmt.Errorf("install Cosign: %w", err)
+	}
+
 	list, err := ctrl.listPkgs(ctx, logE, param, cfg, cfgFilePath, args...)
 	if err != nil {
 		return err
@@ -112,7 +104,7 @@ type FindingPackage struct {
 }
 
 func (ctrl *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

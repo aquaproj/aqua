@@ -28,10 +28,6 @@ type Controller struct {
 	policyConfigReader domain.PolicyConfigReader
 }
 
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
-}
-
 func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer, policyConfigReader domain.PolicyConfigReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
@@ -95,7 +91,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 }
 
 func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config) error {
-	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
+	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

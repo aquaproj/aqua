@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -43,6 +44,27 @@ func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.En
 	b, err := io.ReadAll(file)
 	if err != nil {
 		return "", fmt.Errorf("read a checksum file: %w", err)
+	}
+
+	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() {
+		f, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return "", fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer f.Close()
+		defer inst.fs.Remove(f.Name()) //nolint:errcheck
+		if _, err := f.Write(b); err != nil {
+			return "", fmt.Errorf("write a checksum to a temporal file: %w", err)
+		}
+		art := pkg.GetTemplateArtifact(inst.runtime, assetName)
+		logE.Info("verify a checksum file with Cosign")
+		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
+			RepoOwner: pkg.PackageInfo.RepoOwner,
+			RepoName:  pkg.PackageInfo.RepoName,
+			Version:   pkg.Package.Version,
+		}, cos, art, f.Name()); err != nil {
+			return "", fmt.Errorf("verify a checksum file with Cosign: %w", err)
+		}
 	}
 
 	c, err := inst.extractChecksum(pkg, assetName, b)

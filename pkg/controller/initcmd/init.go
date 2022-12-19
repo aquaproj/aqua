@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -27,10 +26,6 @@ packages:
 type Controller struct {
 	github RepositoriesService
 	fs     afero.Fs
-}
-
-type RepositoriesService interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
 }
 
 func New(gh RepositoriesService, fs afero.Fs) *Controller {

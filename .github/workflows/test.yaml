@@ -22,5 +22,7 @@ jobs:
     - run: aqua i
 
     - uses: suzuki-shunsuke/github-action-golangci-lint@4b6bb7682772359cf0e7959932803ca2ff998895 # v0.1.4
+      with:
+        timeout: 120s
 
     - run: go test -v ./... -race -covermode=atomic

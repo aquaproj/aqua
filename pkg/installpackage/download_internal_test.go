@@ -2,6 +2,8 @@ package installpackage
 
 import (
 	"context"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
@@ -9,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -61,8 +64,8 @@ func TestInstaler_download(t *testing.T) { //nolint:funlen
 					GOARCH: "arm64",
 				},
 				fs: afero.NewMemMapFs(),
-				packageDownloader: &domain.MockPackageDownloader{
-					Body: "hello",
+				downloader: &download.Mock{
+					RC: io.NopCloser(strings.NewReader("hello")),
 				},
 				unarchiver:         &MockUnarchiver{},
 				checksumFileParser: &checksum.FileParser{},

@@ -33,4 +33,5 @@ type ParamInstallPackage struct {
 	RequireChecksum bool
 	PolicyConfigs   []*policy.Config
 	ConfigFileDir   string
+	CosignExePath   string
 }
