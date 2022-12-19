@@ -8,7 +8,7 @@ import (
 )
 
 type Cosign struct {
-	Enabled            *bool           `json:"enabled"`
+	Enabled            *bool           `json:"enabled,omitempty"`
 	CosignExperimental bool            `yaml:"cosign_experimental" json:"cosign_experimental,omitempty"`
 	Opts               []string        `json:"opts,omitempty"`
 	Signature          *DownloadedFile `json:"signature,omitempty"`

@@ -3,7 +3,7 @@ package registry
 import "fmt"
 
 type SLSAProvenance struct {
-	Enabled   *bool   `json:"enabled"`
+	Enabled   *bool   `json:"enabled,omitempty"`
 	Type      string  `json:"type"  jsonschema:"enum=github_release,enum=http"`
 	RepoOwner string  `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName  string  `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
