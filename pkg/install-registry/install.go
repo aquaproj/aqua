@@ -175,7 +175,7 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logru
 	}
 
 	var tempFilePath string
-	if regist.Cosign != nil || regist.SLSAProvenance != nil {
+	if regist.Cosign.GetEnabled() || regist.SLSAProvenance.GetEnabled() {
 		f, err := afero.TempFile(inst.fs, "", "")
 		if err != nil {
 			return nil, fmt.Errorf("create a temporal file: %w", err)
@@ -187,7 +187,7 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logru
 		}
 		tempFilePath = f.Name()
 	}
-	if regist.Cosign != nil {
+	if regist.Cosign.GetEnabled() {
 		art := &template.Artifact{
 			Version: regist.Ref,
 			Asset:   regist.Path,
@@ -204,7 +204,7 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logru
 		}
 	}
 
-	if regist.SLSAProvenance != nil {
+	if regist.SLSAProvenance.GetEnabled() {
 		art := &template.Artifact{
 			Version: regist.Ref,
 			Asset:   regist.Path,

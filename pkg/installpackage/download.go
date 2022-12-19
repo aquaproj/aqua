@@ -94,7 +94,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 
 	var readBody io.Reader = body
 	var tempFilePath string
-	if ppkg.PackageInfo.Cosign != nil || ppkg.PackageInfo.SLSAProvenance != nil {
+	if ppkg.PackageInfo.Cosign.GetEnabled() || ppkg.PackageInfo.SLSAProvenance.GetEnabled() {
 		// create and remove a temporal file
 		f, err := afero.TempFile(inst.fs, "", "")
 		if err != nil {
@@ -109,7 +109,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	}
 
 	// Verify with Cosign
-	if cos := ppkg.PackageInfo.Cosign; cos != nil {
+	if cos := ppkg.PackageInfo.Cosign; cos.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with Cosign")
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
@@ -122,7 +122,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	}
 
 	// Verify with SLSA Provenance
-	if sp := ppkg.PackageInfo.SLSAProvenance; sp != nil {
+	if sp := ppkg.PackageInfo.SLSAProvenance; sp.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with slsa-verifier")
 		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{

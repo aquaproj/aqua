@@ -16,6 +16,7 @@ import (
 func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
 	assetTemplate := `aqua_{{.OS}}_{{.Arch}}.tar.gz`
 	provTemplate := "multiple.intoto.jsonl"
+	disabled := false
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    "aquaproj/aqua",
@@ -58,6 +59,9 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 			VersionOverrides: []*registry.VersionOverride{
 				{
 					VersionConstraints: "true",
+					SLSAProvenance: &registry.SLSAProvenance{
+						Enabled: &disabled,
+					},
 					Checksum: &registry.Checksum{
 						Type:       "github_release",
 						Asset:      "aqua_{{trimV .Version}}_checksums.txt",
