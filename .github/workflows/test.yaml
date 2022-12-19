@@ -5,7 +5,6 @@ env:
 on:
   push:
     branches: [main]
-    tags: [v*]
   pull_request:
     branches: [main]
 jobs:
@@ -25,28 +24,3 @@ jobs:
     - uses: suzuki-shunsuke/github-action-golangci-lint@4b6bb7682772359cf0e7959932803ca2ff998895 # v0.1.4
 
     - run: go test -v ./... -race -covermode=atomic
-
-    - name: Generate token
-      id: generate_token
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # tag=v1.7.0
-      with:
-        app_id: ${{ secrets.APP_ID }}
-        private_key: ${{ secrets.APP_PRIVATE_KEY }}
-
-    - name: remove changes
-      # Sometimes it is failed to release by goreleaser due to changes of go.sum
-      run: git checkout -- .
-    - name: fetch tags to release
-      run: git fetch --tags -f
-    - name: Unshallow
-      run: git fetch --prune --unshallow
-    - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@8f67e590f2d095516493f017008adc464e63adb1 # v4.1.0
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        version: latest
-        args: release --rm-dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        HOMEBREW_TAP_GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
