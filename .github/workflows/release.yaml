@@ -69,7 +69,6 @@ jobs:
     needs: [provenance]
     runs-on: ubuntu-latest
     steps:
-      - run: mkdir -p dist/provenance
       - name: Download the provenance
         uses: actions/download-artifact@v3
         with:
@@ -77,7 +76,7 @@ jobs:
           path: ${{ needs.provenance.outputs.provenance-name }}
 
       - name: Upload provenance
-        run: gh release upload "${REF#refs/tags/}" multiple.intoto.jsonl
+        run: gh release upload -R aquaproj/aqua "${REF#refs/tags/}" multiple.intoto.jsonl
         env:
           REF: ${{ github.ref }}
           GITHUB_TOKEN: ${{ github.token }}
