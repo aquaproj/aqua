@@ -74,7 +74,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ needs.provenance.outputs.provenance-name }}
-          path: dist/provenance/${{ needs.provenance.outputs.provenance-name }}
+          path: ${{ needs.provenance.outputs.provenance-name }}
 
       - name: Upload provenance
         run: gh release upload "${REF#refs/tags/}" multiple.intoto.jsonl
