@@ -86,12 +86,107 @@
           },
           "path": {
             "type": "string"
+          },
+          "cosign": {
+            "$ref": "#/$defs/Cosign"
+          },
+          "slsa_provenance": {
+            "$ref": "#/$defs/SLSAProvenance"
           }
         },
         "additionalProperties": false,
         "type": "object"
       },
       "type": "array"
+    },
+    "Cosign": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "cosign_experimental": {
+          "type": "boolean"
+        },
+        "opts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "signature": {
+          "$ref": "#/$defs/DownloadedFile"
+        },
+        "certificate": {
+          "$ref": "#/$defs/DownloadedFile"
+        },
+        "key": {
+          "$ref": "#/$defs/DownloadedFile"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "DownloadedFile": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "http"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ]
+    },
+    "SLSAProvenance": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "http"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "source_uri": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ]
     }
   }
 }
