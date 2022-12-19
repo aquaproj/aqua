@@ -15,6 +15,7 @@ import (
 
 func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
 	assetTemplate := `aqua_{{.OS}}_{{.Arch}}.tar.gz`
+	provTemplate := "multiple.intoto.jsonl"
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    "aquaproj/aqua",
@@ -30,26 +31,30 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 					Name: "aqua",
 				},
 			},
-			Checksum: &registry.Checksum{
-				Type:       "github_release",
-				Asset:      "aqua_{{trimV .Version}}_checksums.txt",
-				FileFormat: "regexp",
-				Algorithm:  "sha256",
-				Pattern: &registry.ChecksumPattern{
-					Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
-					File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
-				},
-				Cosign: &registry.Cosign{
-					CosignExperimental: true,
-					Opts: []string{
-						"--signature",
-						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/aqua_{{trimV .Version}}_checksums.txt.sig",
-						"--certificate",
-						"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/aqua_{{trimV .Version}}_checksums.txt.pem",
-					},
-				},
+			SLSAProvenance: &registry.SLSAProvenance{
+				Type:  "github_release",
+				Asset: &provTemplate,
 			},
-			VersionConstraints: `semver(">= 1.26.0")`, // TODO Fix version
+			// Checksum: &registry.Checksum{
+			// 	Type:       "github_release",
+			// 	Asset:      "aqua_{{trimV .Version}}_checksums.txt",
+			// 	FileFormat: "regexp",
+			// 	Algorithm:  "sha256",
+			// 	Pattern: &registry.ChecksumPattern{
+			// 		Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+			// 		File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+			// 	},
+			// 	Cosign: &registry.Cosign{
+			// 		CosignExperimental: true,
+			// 		Opts: []string{
+			// 			"--signature",
+			// 			"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/aqua_{{trimV .Version}}_checksums.txt.sig",
+			// 			"--certificate",
+			// 			"https://github.com/aquaproj/aqua/releases/download/{{.Version}}/aqua_{{trimV .Version}}_checksums.txt.pem",
+			// 		},
+			// 	},
+			// },
+			VersionConstraints: `semver(">= 1.25.1-7")`, // TODO Fix version
 			VersionOverrides: []*registry.VersionOverride{
 				{
 					VersionConstraints: "true",
