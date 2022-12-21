@@ -89,6 +89,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
 		Checksums: checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
+		// PolicyConfigs is nil, so the policy check is skipped
 	}); err != nil {
 		return err
 	}

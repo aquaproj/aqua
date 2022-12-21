@@ -46,6 +46,7 @@ func (inst *Installer) InstallCosign(ctx context.Context, logE *logrus.Entry, ve
 	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
 		Checksums: checksum.New(), // Check cosign's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
+		// PolicyConfigs is nil, so the policy check is skipped
 	}); err != nil {
 		return err
 	}
