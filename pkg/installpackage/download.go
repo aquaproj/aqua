@@ -66,20 +66,6 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 
 	logE.Info("download and unarchive the package")
 
-	checksumID, err := ppkg.GetChecksumID(inst.runtime)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-	var chksum *checksum.Checksum
-	if param.Checksums != nil {
-		chksum = param.Checksums.Get(checksumID)
-		if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
-			return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
-				"doc": "https://aquaproj.github.io/docs/reference/codes/001",
-			})
-		}
-	}
-
 	file, err := download.ConvertPackageToFile(ppkg, param.Asset, inst.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -147,7 +133,22 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 		readBody = a
 	}
 
-	if param.Checksums != nil {
+	if param.Checksums != nil { //nolint:nestif
+		checksumID, err := ppkg.GetChecksumID(inst.runtime)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		var chksum *checksum.Checksum
+		// If SLSA Provenance is enabled checksum verification is skipped
+		if param.Checksums != nil && !ppkg.PackageInfo.SLSAProvenance.GetEnabled() {
+			chksum = param.Checksums.Get(checksumID)
+			if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
+					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
+				})
+			}
+		}
+
 		tempDir, err := afero.TempDir(inst.fs, "", "")
 		if err != nil {
 			return fmt.Errorf("create a temporal directory: %w", err)
