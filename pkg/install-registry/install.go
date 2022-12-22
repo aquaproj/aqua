@@ -15,10 +15,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/template"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -150,7 +148,7 @@ func (inst *Installer) getRegistry(ctx context.Context, logE *logrus.Entry, regi
 
 const registryFilePermission = 0o600
 
-func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string) (*registry.Config, error) { //nolint:cyclop,funlen
+func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string) (*registry.Config, error) {
 	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
@@ -172,57 +170,6 @@ func (inst *Installer) getGitHubContentRegistry(ctx context.Context, logE *logru
 			return nil, fmt.Errorf("read the registry configuration file: %w", err)
 		}
 		content = cnt
-	}
-
-	var tempFilePath string
-	if regist.Cosign.GetEnabled() || regist.SLSAProvenance.GetEnabled() {
-		f, err := afero.TempFile(inst.fs, "", "")
-		if err != nil {
-			return nil, fmt.Errorf("create a temporal file: %w", err)
-		}
-		defer f.Close()
-		defer inst.fs.Remove(f.Name()) //nolint:errcheck
-		if _, err := f.Write(content); err != nil {
-			return nil, fmt.Errorf("write a registry to a temporal file: %w", err)
-		}
-		tempFilePath = f.Name()
-	}
-	if regist.Cosign.GetEnabled() {
-		art := &template.Artifact{
-			Version: regist.Ref,
-			Asset:   regist.Path,
-		}
-		logE.WithFields(logrus.Fields{
-			"registry_name": regist.Name,
-		}).Info("verify a registry with Cosign")
-		if err := inst.cosign.Verify(ctx, logE, inst.rt, &download.File{
-			RepoOwner: regist.RepoOwner,
-			RepoName:  regist.RepoName,
-			Version:   regist.Ref,
-		}, regist.Cosign, art, tempFilePath); err != nil {
-			return nil, fmt.Errorf("verify a registry with Cosign: %w", err)
-		}
-	}
-
-	if regist.SLSAProvenance.GetEnabled() {
-		art := &template.Artifact{
-			Version: regist.Ref,
-			Asset:   regist.Path,
-		}
-		logE.WithFields(logrus.Fields{
-			"registry_name": regist.Name,
-		}).Info("verify a registry with slsa-verifier")
-		if err := inst.slsaVerifier.Verify(ctx, logE, inst.rt, regist.SLSAProvenance, art, &download.File{
-			RepoOwner: regist.RepoOwner,
-			RepoName:  regist.RepoName,
-			Version:   regist.Ref,
-		}, &slsa.ParamVerify{
-			SourceURI:    regist.SLSASourceURI(),
-			SourceTag:    regist.Ref,
-			ArtifactPath: tempFilePath,
-		}); err != nil {
-			return nil, fmt.Errorf("verify a registry with slsa-verifier: %w", err)
-		}
 	}
 
 	file, err := inst.fs.Create(registryFilePath)

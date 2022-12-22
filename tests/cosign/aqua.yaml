@@ -10,20 +10,6 @@ registries:
   - name: local
     type: local
     path: registry.yaml
-  - name: cosign
-    type: github_content
-    repo_owner: aquaproj
-    repo_name: aqua-registry
-    ref: v3.105.1-1
-    path: registry.yaml
-    cosign:
-      cosign_experimental: true
-      signature:
-        type: github_release
-        asset: registry.yaml.sig
-      certificate:
-        type: github_release
-        asset: registry.yaml.pem
 packages:
   - name: terraform-linters/tflint
     version: v0.43.0

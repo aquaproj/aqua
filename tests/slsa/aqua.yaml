@@ -10,15 +10,6 @@ registries:
   - name: local
     type: local
     path: registry.yaml
-  - name: slsa
-    type: github_content
-    repo_owner: aquaproj
-    repo_name: aqua-registry
-    ref: v3.105.2-0
-    path: registry.yaml
-    slsa_provenance:
-      type: github_release
-      asset: registry.yaml.intoto.jsonl
 packages:
   - name: suzuki-shunsuke/test-cosign-keyless-aqua
     version: v0.1.0-7
