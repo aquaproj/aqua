@@ -30,7 +30,7 @@ jobs:
     - run: aqua g x-motemen/ghq aquaproj/aqua-installer
     - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
     - name: Test -pin
-      run: aqua g cli/cli suzuki-shunsuke/tfcmt@v2.0.0
+      run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
 
     - run: aqua list
     - run: aqua update-checksum
