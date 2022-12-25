@@ -246,23 +246,18 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry,
 	if outputPkg.Registry == registryStandard {
 		outputPkg.Registry = ""
 	}
-	version := ctrl.getVersion(ctx, logE, param, pkg)
-	if version == "" {
-		outputPkg.Version = "[SET PACKAGE VERSION]"
-		return outputPkg
+	if outputPkg.Version == "" {
+		version := ctrl.getVersion(ctx, logE, param, pkg)
+		if version == "" {
+			outputPkg.Version = "[SET PACKAGE VERSION]"
+			return outputPkg
+		}
+		outputPkg.Version = version
 	}
 	if param.Pin {
 		return outputPkg
 	}
-	pkgInfo := pkg.PackageInfo
-	if pkgInfo.HasRepo() {
-		repoOwner := pkgInfo.RepoOwner
-		repoName := pkgInfo.RepoName
-		if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
-			outputPkg.Name += "@" + version
-			outputPkg.Version = ""
-		}
-		return outputPkg
-	}
+	outputPkg.Name += "@" + outputPkg.Version
+	outputPkg.Version = ""
 	return outputPkg
 }
