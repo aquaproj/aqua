@@ -46,6 +46,15 @@ func (inst *Installer) InstallCosign(ctx context.Context, logE *logrus.Entry, ve
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
+	supported, err := pkgInfo.CheckSupported(inst.runtime, inst.runtime.GOOS+"/"+inst.runtime.GOARCH)
+	if err != nil {
+		return fmt.Errorf("check if cosign is supported: %w", err)
+	}
+	if !supported {
+		logE.Debug("the package isn't supported on this environment")
+		return nil
+	}
+
 	pkg.PackageInfo = pkgInfo
 
 	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
