@@ -11,6 +11,8 @@ on:
     branches: [main]
     paths:
     - .github/**
+permissions:
+  contents: read
 jobs:
   default:
     runs-on: ubuntu-latest
