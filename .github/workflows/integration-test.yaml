@@ -21,6 +21,10 @@ jobs:
         go-version: '1.19.3'
         cache: true
 
+    - uses: sigstore/cosign-installer@v2.8.1
+      with:
+        cosign-release: v1.13.0 # renovate: depName=sigstore/cosign
+
     - run: go install ./cmd/aqua
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
     - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/main/aqua-global.yaml:$PWD/tests/main/aqua-global-2.yaml" >> "$GITHUB_ENV"
@@ -70,6 +74,14 @@ jobs:
     - run: helm version
     - run: github-compare -v
     - run: terrafmt version
+
+    - name: test cosign
+      run: aqua i
+      working-directory: tests/cosign
+
+    - name: test SLSA
+      run: aqua i
+      working-directory: tests/slsa
 
     - name: output bash completion
       run: aqua completion bash

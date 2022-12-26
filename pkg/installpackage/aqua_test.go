@@ -2,12 +2,17 @@ package installpackage_test
 
 import (
 	"context"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -60,9 +65,9 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 					t.Fatal(err)
 				}
 			}
-			ctrl := installpackage.New(d.param, &domain.MockPackageDownloader{
-				Body: "xxx",
-			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &installpackage.MockUnarchiver{}, &domain.MockPolicyChecker{})
+			ctrl := installpackage.New(d.param, &download.Mock{
+				RC: io.NopCloser(strings.NewReader("xxx")),
+			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &installpackage.MockUnarchiver{}, &domain.MockPolicyChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallAqua(ctx, logE, d.version); err != nil {
 				if d.isErr {
 					return

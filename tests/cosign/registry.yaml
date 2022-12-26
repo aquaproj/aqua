@@ -1,0 +1,42 @@
+packages:
+  # Verify checksum file with Cosign
+  - type: github_release
+    repo_owner: terraform-linters
+    repo_name: tflint
+    description: A Pluggable Terraform Linter
+    supported_envs:
+      - darwin
+      - linux
+      - amd64
+    asset: tflint_{{.OS}}_{{.Arch}}.zip
+    checksum:
+      type: github_release
+      asset: checksums.txt
+      file_format: regexp
+      algorithm: sha256
+      pattern:
+        checksum: ^(\b[A-Fa-f0-9]{64}\b)
+        file: "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$"
+      cosign:
+        cosign_experimental: true
+        opts:
+          - --signature
+          - https://github.com/terraform-linters/tflint/releases/download/{{.Version}}/checksums.txt.keyless.sig
+          - --certificate
+          - https://github.com/terraform-linters/tflint/releases/download/{{.Version}}/checksums.txt.pem
+  # Verify with Cosign
+  - type: github_content
+    repo_owner: aquaproj
+    repo_name: aqua-installer
+    path: aqua-installer
+    description: Install aqua quickly
+    supported_envs:
+      - darwin
+      - linux
+    cosign:
+      cosign_experimental: true
+      opts:
+        - --signature
+        - https://github.com/aquaproj/aqua-installer/releases/download/{{.Version}}/aqua-installer.sig
+        - --certificate
+        - https://github.com/aquaproj/aqua-installer/releases/download/{{.Version}}/aqua-installer.pem

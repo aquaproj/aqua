@@ -10,7 +10,7 @@ import (
 )
 
 type WhichController interface {
-	Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*FindResult, error)
+	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error)
 }
 
 type MockWhichController struct {
@@ -18,7 +18,7 @@ type MockWhichController struct {
 	Err        error
 }
 
-func (ctrl *MockWhichController) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*FindResult, error) {
+func (ctrl *MockWhichController) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
 	return ctrl.FindResult, ctrl.Err
 }
 

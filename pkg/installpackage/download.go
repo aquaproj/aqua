@@ -8,6 +8,8 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -48,7 +50,7 @@ func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry
 	}
 }
 
-func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
+func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop,gocognit
 	ppkg := param.Package
 	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{
@@ -64,21 +66,11 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 
 	logE.Info("download and unarchive the package")
 
-	checksumID, err := ppkg.GetChecksumID(inst.runtime)
+	file, err := download.ConvertPackageToFile(ppkg, param.Asset, inst.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	var chksum *checksum.Checksum
-	if param.Checksums != nil {
-		chksum = param.Checksums.Get(checksumID)
-		if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
-			return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
-				"doc": "https://aquaproj.github.io/docs/reference/codes/001",
-			})
-		}
-	}
-
-	body, cl, err := inst.packageDownloader.GetReadCloser(ctx, ppkg, param.Asset, logE, nil)
+	body, cl, err := inst.downloader.GetReadCloser(ctx, logE, file)
 	if body != nil {
 		defer body.Close()
 	}
@@ -87,8 +79,76 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	}
 
 	var readBody io.Reader = body
+	var tempFilePath string
+	if ppkg.PackageInfo.Cosign.GetEnabled() || ppkg.PackageInfo.SLSAProvenance.GetEnabled() {
+		// create and remove a temporal file
+		f, err := afero.TempFile(inst.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporal file: %w", err)
+		}
+		defer f.Close()
+		tempFilePath = f.Name()
+		defer inst.fs.Remove(tempFilePath) //nolint:errcheck
+		if _, err := io.Copy(f, readBody); err != nil {
+			return fmt.Errorf("copy a package to a temporal file: %w", err)
+		}
+	}
 
-	if param.Checksums != nil {
+	// Verify with Cosign
+	if cos := ppkg.PackageInfo.Cosign; cos.GetEnabled() {
+		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
+		logE.Info("verify a package with Cosign")
+		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
+			RepoOwner: ppkg.PackageInfo.RepoOwner,
+			RepoName:  ppkg.PackageInfo.RepoName,
+			Version:   ppkg.Package.Version,
+		}, cos, art, tempFilePath); err != nil {
+			return fmt.Errorf("verify a package with Cosign: %w", err)
+		}
+	}
+
+	// Verify with SLSA Provenance
+	if sp := ppkg.PackageInfo.SLSAProvenance; sp.GetEnabled() {
+		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
+		logE.Info("verify a package with slsa-verifier")
+		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{
+			RepoOwner: ppkg.PackageInfo.RepoOwner,
+			RepoName:  ppkg.PackageInfo.RepoName,
+			Version:   ppkg.Package.Version,
+		}, &slsa.ParamVerify{
+			SourceURI:    pkgInfo.SLSASourceURI(),
+			SourceTag:    ppkg.Package.Version,
+			ArtifactPath: tempFilePath,
+		}); err != nil {
+			return fmt.Errorf("verify a package with slsa-verifier: %w", err)
+		}
+	}
+
+	if tempFilePath != "" {
+		a, err := inst.fs.Open(tempFilePath)
+		if err != nil {
+			return fmt.Errorf("open a temporal file: %w", err)
+		}
+		defer a.Close()
+		readBody = a
+	}
+
+	if param.Checksums != nil { //nolint:nestif
+		checksumID, err := ppkg.GetChecksumID(inst.runtime)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		var chksum *checksum.Checksum
+		// Even if SLSA Provenance is enabled checksum verification isn't skipped
+		if param.Checksums != nil {
+			chksum = param.Checksums.Get(checksumID)
+			if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
+					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
+				})
+			}
+		}
+
 		tempDir, err := afero.TempDir(inst.fs, "", "")
 		if err != nil {
 			return fmt.Errorf("create a temporal directory: %w", err)
@@ -100,7 +160,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 			Checksums:  param.Checksums,
 			Pkg:        ppkg,
 			AssetName:  param.Asset,
-			Body:       body,
+			Body:       readBody,
 			TempDir:    tempDir,
 		})
 		if err != nil {

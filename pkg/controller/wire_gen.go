@@ -23,6 +23,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -31,6 +32,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/link"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -39,15 +41,26 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *list.Controller {
+func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *list.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
-	controller := list.NewController(configFinder, configReader, installer)
+	executor := exec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	linker := link.New()
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	checker := policy.NewChecker()
+	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
+	controller := list.NewController(configFinder, configReader, installer, installpackageInstaller)
 	return controller
 }
 
@@ -71,17 +84,28 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 	return controller
 }
 
-func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *generate.Controller {
+func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *generate.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	executor := exec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	fuzzyFinder := generate.NewFuzzyFinder()
 	versionSelector := generate.NewVersionSelector()
-	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyFinder, versionSelector)
+	linker := link.New()
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	checker := policy.NewChecker()
+	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
+	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyFinder, versionSelector, installpackageInstaller)
 	return controller
 }
 
@@ -92,17 +116,20 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
-	linker := link.New()
 	executor := exec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	linker := link.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installpackageInstaller := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
 	policyConfigReader := policy.NewConfigReader(fs)
-	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyConfigReader)
+	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyConfigReader, installpackageInstaller)
 	return controller
 }
 
@@ -113,17 +140,27 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	executor := exec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	checker := policy.NewChecker()
+	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker, installpackageInstaller)
 	return controller
 }
 
 func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *exec2.Controller {
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	fs := afero.NewOsFs()
 	linker := link.New()
 	executor := exec.New()
@@ -131,13 +168,16 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker, installer)
 	policyConfigReader := policy.NewConfigReader(fs)
 	execController := exec2.New(installer, controller, executor, osEnv, fs, policyConfigReader, checker)
 	return execController
@@ -147,14 +187,17 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	fs := afero.NewOsFs()
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	linker := link.New()
 	executor := exec.New()
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
 	return controller
 }
@@ -162,7 +205,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	fs := afero.NewOsFs()
 	linker := link.New()
 	executor := exec.New()
@@ -170,15 +213,18 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
-	installer := installpackage.New(param, packageDownloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker, installer)
 	policyConfigReader := policy.NewConfigReader(fs)
-	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyConfigReader)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyConfigReader, installer)
 	cpController := cp.New(param, installer, fs, rt, controller, installController, policyConfigReader)
 	return cpController
 }
@@ -190,9 +236,18 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs)
+	executor := exec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param, rt)
+	slsaExecutor := slsa.NewExecutor()
+	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	checksumDownloader := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
-	packageDownloader := download.NewPackageDownloader(repositoriesService, rt, httpDownloader)
-	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloader, packageDownloader)
+	linker := link.New()
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New()
+	checker := policy.NewChecker()
+	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloader, calculator, unarchiver, checker, verifier, slsaVerifier)
+	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloader, downloader, installpackageInstaller)
 	return controller
 }

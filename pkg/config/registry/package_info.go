@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"fmt"
 	"path"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -44,6 +45,8 @@ type PackageInfo struct {
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Checksum           *Checksum          `json:"checksum,omitempty"`
+	Cosign             *Cosign            `json:"cosign,omitempty"`
+	SLSAProvenance     *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
@@ -73,11 +76,13 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
 		WindowsExt:         pkgInfo.WindowsExt,
 		Checksum:           pkgInfo.Checksum,
+		Cosign:             pkgInfo.Cosign,
+		SLSAProvenance:     pkgInfo.SLSAProvenance,
 	}
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop
+func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
 	pkg := pkgInfo.Copy()
 	if child.Type != "" {
 		pkg.Type = child.Type
@@ -135,6 +140,12 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.Checksum != nil {
 		pkg.Checksum = child.Checksum
+	}
+	if child.Cosign != nil {
+		pkg.Cosign = child.Cosign
+	}
+	if child.SLSAProvenance != nil {
+		pkg.SLSAProvenance = child.SLSAProvenance
 	}
 	return pkg
 }
@@ -194,6 +205,12 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.Type != "" {
 		pkgInfo.Type = ov.Type
 	}
+	if ov.Cosign != nil {
+		pkgInfo.Cosign = ov.Cosign
+	}
+	if ov.SLSAProvenance != nil {
+		pkgInfo.SLSAProvenance = ov.SLSAProvenance
+	}
 }
 
 type VersionOverride struct {
@@ -217,6 +234,8 @@ type VersionOverride struct {
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	Checksum           *Checksum         `json:"checksum,omitempty"`
+	Cosign             *Cosign           `json:"cosign,omitempty"`
+	SLSAProvenance     *SLSAProvenance   `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 }
 
 type Alias struct {
@@ -411,4 +430,23 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 		}
 	}
 	return pkgInfo.Files
+}
+
+func (pkgInfo *PackageInfo) SLSASourceURI() string {
+	sp := pkgInfo.SLSAProvenance
+	if sp == nil {
+		return ""
+	}
+	if sp.SourceURI != nil {
+		return *sp.SourceURI
+	}
+	repoOwner := sp.RepoOwner
+	repoName := sp.RepoName
+	if repoOwner == "" {
+		repoOwner = pkgInfo.RepoOwner
+	}
+	if repoName == "" {
+		repoName = pkgInfo.RepoName
+	}
+	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }

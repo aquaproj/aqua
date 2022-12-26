@@ -4,9 +4,17 @@
 registries:
 - type: standard
   ref: semver(">= 3.0.0")
-- name: local
+- name: main
   type: local
   path: tests/main/registry.yaml
+- name: cosign
+  type: local
+  path: tests/cosign/registry.yaml
+- name: slsa
+  type: local
+  path: tests/slsa/registry.yaml
 packages:
 - registry: standard
-- registry: local
+- registry: main
+- registry: cosign
+- registry: slsa

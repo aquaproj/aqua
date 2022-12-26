@@ -58,5 +58,5 @@ func (runner *Runner) execAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	return ctrl.Exec(c.Context, param, exeName, args, runner.LogE) //nolint:wrapcheck
+	return ctrl.Exec(c.Context, runner.LogE, param, exeName, args) //nolint:wrapcheck
 }

@@ -9,7 +9,7 @@ import (
 )
 
 type RegistryInstaller interface {
-	InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error)
+	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string) (map[string]*registry.Config, error)
 }
 
 type MockRegistryInstaller struct {
@@ -17,6 +17,6 @@ type MockRegistryInstaller struct {
 	Err error
 }
 
-func (inst *MockRegistryInstaller) InstallRegistries(ctx context.Context, cfg *aqua.Config, cfgFilePath string, logE *logrus.Entry) (map[string]*registry.Config, error) {
+func (inst *MockRegistryInstaller) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string) (map[string]*registry.Config, error) {
 	return inst.M, inst.Err
 }

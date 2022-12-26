@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -23,10 +22,6 @@ type Controller struct {
 	installer AquaInstaller
 }
 
-type AquaInstaller interface {
-	InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error
-}
-
 func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, gh RepositoriesService, installer AquaInstaller) *Controller {
 	return &Controller{
 		rootDir:   param.RootDir,
@@ -35,14 +30,6 @@ func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, gh RepositoriesS
 		github:    gh,
 		installer: installer,
 	}
-}
-
-type RepositoriesService interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
-}
-
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
 }
 
 const dirPermission os.FileMode = 0o775

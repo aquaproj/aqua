@@ -9,6 +9,7 @@ type Checksum struct {
 	Pattern      *ChecksumPattern `json:"pattern,omitempty"`
 	Enabled      *bool            `json:"enabled,omitempty"`
 	Replacements Replacements     `json:"replacements,omitempty"`
+	Cosign       *Cosign          `json:"cosign,omitempty"`
 }
 
 type ChecksumPattern struct {
@@ -38,4 +39,11 @@ func (chk *Checksum) GetAlgorithm() string {
 		return "sha512"
 	}
 	return chk.Algorithm
+}
+
+func (chk *Checksum) GetCosign() *Cosign {
+	if chk == nil {
+		return nil
+	}
+	return chk.Cosign
 }
