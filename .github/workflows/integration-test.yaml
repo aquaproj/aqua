@@ -23,7 +23,7 @@ jobs:
 
     - uses: sigstore/cosign-installer@v2.8.1
       with:
-        cosign-release: v1.13.0 # renovate: depName=sigstore/cosign
+        cosign-release: v1.13.1 # renovate: depName=sigstore/cosign
 
     - run: go install ./cmd/aqua
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
