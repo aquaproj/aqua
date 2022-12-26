@@ -3,11 +3,16 @@ name: test-release
 on:
   push:
     branches: [main]
+    paths:
+    - .github/workflows/test-release.yaml
+    - .goreleaser.yml
   pull_request:
     branches: [main]
     paths:
     - .github/workflows/test-release.yaml
     - .goreleaser.yml
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -11,6 +11,8 @@ env:
   AQUA_LOG_LEVEL: debug
   AQUA_LOG_COLOR: always
   AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
