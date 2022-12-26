@@ -139,8 +139,8 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 			return err //nolint:wrapcheck
 		}
 		var chksum *checksum.Checksum
-		// If SLSA Provenance is enabled checksum verification is skipped
-		if param.Checksums != nil && !ppkg.PackageInfo.SLSAProvenance.GetEnabled() {
+		// Even if SLSA Provenance is enabled checksum verification isn't skipped
+		if param.Checksums != nil {
 			chksum = param.Checksums.Get(checksumID)
 			if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
 				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck

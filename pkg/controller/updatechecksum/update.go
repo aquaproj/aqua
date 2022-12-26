@@ -131,10 +131,6 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 }
 
 func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
-	if pkg.PackageInfo.SLSAProvenance.GetEnabled() {
-		// If SLSA Provenance is enabled, checksum verification is skipped
-		return nil
-	}
 	logE.Info("updating a package checksum")
 	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
