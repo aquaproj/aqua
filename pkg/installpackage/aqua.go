@@ -55,7 +55,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 			// 		},
 			// 	},
 			// },
-			VersionConstraints: `semver(">= 1.25.1-7")`, // TODO Fix version
+			VersionConstraints: `semver(">= 1.26.0")`,
 			VersionOverrides: []*registry.VersionOverride{
 				{
 					VersionConstraints: "true",
