@@ -24,6 +24,11 @@ func (inst *Installer) InstallCosign(ctx context.Context, logE *logrus.Entry, ve
 			RepoOwner: "sigstore",
 			RepoName:  "cosign",
 			Asset:     &assetTemplate,
+			SupportedEnvs: []string{
+				"darwin",
+				"linux",
+				"amd64",
+			},
 			Checksum: &registry.Checksum{
 				Type:       "github_release",
 				Asset:      "cosign_checksums.txt",

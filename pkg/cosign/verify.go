@@ -19,6 +19,7 @@ type Verifier struct {
 	fs            afero.Fs
 	downloader    download.ClientAPI
 	cosignExePath string
+	disabled      bool
 }
 
 func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param, rt *runtime.Runtime) *Verifier {
@@ -30,6 +31,8 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 			RootDir: param.RootDir,
 			Runtime: rt,
 		}),
+		// assets for windows/arm64 aren't released.
+		disabled: rt.GOOS == "windows" && rt.GOARCH == "arm64",
 	}
 }
 
@@ -46,6 +49,10 @@ func (mock *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *ru
 }
 
 func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
+	if verifier.disabled {
+		logE.Debug("verification with cosign is disabled")
+		return nil
+	}
 	opts, err := cos.RenderOpts(rt, art)
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
