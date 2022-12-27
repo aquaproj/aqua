@@ -17,6 +17,13 @@ func New() *Runtime {
 	}
 }
 
+func NewR() *Runtime {
+	return &Runtime{
+		GOOS:   runtime.GOOS,
+		GOARCH: runtime.GOARCH,
+	}
+}
+
 func goos() string {
 	if s := os.Getenv("AQUA_GOOS"); s != "" {
 		return s

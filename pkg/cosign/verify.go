@@ -22,7 +22,8 @@ type Verifier struct {
 	disabled      bool
 }
 
-func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param, rt *runtime.Runtime) *Verifier {
+func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *Verifier {
+	rt := runtime.NewR()
 	return &Verifier{
 		executor:   executor,
 		fs:         fs,

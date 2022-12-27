@@ -79,7 +79,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			installpackage.New,
+			installpackage.NewCosign,
 			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
 		),
 		wire.NewSet(

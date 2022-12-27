@@ -71,6 +71,29 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 	}
 }
 
+func NewCosign(param *config.Param, downloader download.ClientAPI, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Installer {
+	return &Installer{
+		rootDir:            param.RootDir,
+		maxParallelism:     param.MaxParallelism,
+		downloader:         downloader,
+		checksumDownloader: chkDL,
+		checksumFileParser: &checksum.FileParser{},
+		checksumCalculator: chkCalc,
+		runtime:            runtime.NewR(),
+		fs:                 fs,
+		linker:             linker,
+		executor:           executor,
+		progressBar:        param.ProgressBar,
+		isTest:             param.IsTest,
+		onlyLink:           param.OnlyLink,
+		copyDir:            param.Dest,
+		unarchiver:         unarchiver,
+		policyChecker:      policyChecker,
+		cosign:             cosignVerifier,
+		slsaVerifier:       slsaVerifier,
+	}
+}
+
 type Unarchiver interface {
 	Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
 }
