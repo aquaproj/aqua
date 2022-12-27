@@ -128,7 +128,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			verifier := cosign.NewVerifier(d.executor, d.fs, d.downloader, d.param, d.rt)
+			verifier := cosign.NewVerifier(d.executor, d.fs, d.downloader, d.param)
 			if err := verifier.Verify(ctx, logE, d.rt, d.file, d.cos, d.art, d.verifiedFilePath); err != nil {
 				if d.isErr {
 					return

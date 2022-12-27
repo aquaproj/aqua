@@ -79,8 +79,8 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			installpackage.New,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+			installpackage.NewCosign,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			unarchive.New,
@@ -189,8 +189,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			installpackage.New,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+			installpackage.NewCosign,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			unarchive.New,
@@ -251,7 +251,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			installpackage.NewCosign,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -349,8 +352,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			installpackage.New,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+			installpackage.NewCosign,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -394,7 +397,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			installpackage.NewCosign,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			github.New,
@@ -545,7 +551,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			installpackage.New,
 			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
 			wire.Bind(new(cp.PackageInstaller), new(*installpackage.Installer)),
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			installpackage.NewCosign,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			github.New,
@@ -661,8 +670,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
-			installpackage.New,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Installer)),
+			installpackage.NewCosign,
+			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			link.New,
