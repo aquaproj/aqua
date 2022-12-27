@@ -14,5 +14,9 @@ type ParamExePath struct {
 
 func ExePath(param *ParamExePath) string {
 	assetName := fmt.Sprintf("cosign-%s-%s", param.Runtime.GOOS, param.Runtime.GOARCH)
-	return filepath.Join(param.RootDir, "pkgs", "github_release", "github.com", "sigstore", "cosign", Version, assetName, assetName)
+	p := filepath.Join(param.RootDir, "pkgs", "github_release", "github.com", "sigstore", "cosign", Version, assetName, assetName)
+	if param.Runtime.GOOS == "windows" {
+		p += ".exe"
+	}
+	return p
 }
