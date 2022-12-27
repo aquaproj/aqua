@@ -8,11 +8,45 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 )
 
-func (inst *Installer) InstallCosign(ctx context.Context, logE *logrus.Entry, version string) error {
+type Cosign struct {
+	installer *Installer
+}
+
+func NewCosign(param *config.Param, downloader download.ClientAPI, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Cosign {
+	return &Cosign{
+		installer: &Installer{
+			rootDir:            param.RootDir,
+			maxParallelism:     param.MaxParallelism,
+			downloader:         downloader,
+			checksumDownloader: chkDL,
+			checksumFileParser: &checksum.FileParser{},
+			checksumCalculator: chkCalc,
+			runtime:            runtime.NewR(),
+			fs:                 fs,
+			linker:             linker,
+			executor:           executor,
+			progressBar:        param.ProgressBar,
+			isTest:             param.IsTest,
+			onlyLink:           param.OnlyLink,
+			copyDir:            param.Dest,
+			unarchiver:         unarchiver,
+			policyChecker:      policyChecker,
+			cosign:             cosignVerifier,
+			slsaVerifier:       slsaVerifier,
+		},
+	}
+}
+
+func (cos *Cosign) InstallCosign(ctx context.Context, logE *logrus.Entry, version string) error {
 	assetTemplate := `cosign-{{.OS}}-{{.Arch}}`
 	pkg := &config.Package{
 		Package: &aqua.Package{
@@ -42,11 +76,11 @@ func (inst *Installer) InstallCosign(ctx context.Context, logE *logrus.Entry, ve
 		},
 	}
 
-	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, inst.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, cos.installer.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
-	supported, err := pkgInfo.CheckSupported(inst.runtime, inst.runtime.GOOS+"/"+inst.runtime.GOARCH)
+	supported, err := pkgInfo.CheckSupported(cos.installer.runtime, cos.installer.runtime.GOOS+"/"+cos.installer.runtime.GOARCH)
 	if err != nil {
 		return fmt.Errorf("check if cosign is supported: %w", err)
 	}
@@ -57,7 +91,7 @@ func (inst *Installer) InstallCosign(ctx context.Context, logE *logrus.Entry, ve
 
 	pkg.PackageInfo = pkgInfo
 
-	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+	if err := cos.installer.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
 		Checksums: checksum.New(), // Check cosign's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 		// PolicyConfigs is nil, so the policy check is skipped
