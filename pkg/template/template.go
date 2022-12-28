@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/template"
 
-	sprig "github.com/go-task/slim-sprig"
+	"github.com/Masterminds/sprig/v3"
 )
 
 func Compile(s string) (*template.Template, error) {
