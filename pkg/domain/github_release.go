@@ -12,6 +12,7 @@ type DownloadGitHubReleaseParam struct {
 	RepoName  string
 	Version   string
 	Asset     string
+	Private   bool
 }
 
 type GitHubReleaseDownloader interface {

@@ -47,6 +47,7 @@ type PackageInfo struct {
 	Checksum           *Checksum          `json:"checksum,omitempty"`
 	Cosign             *Cosign            `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	Private            bool               `json:"private,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {

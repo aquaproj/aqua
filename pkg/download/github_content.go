@@ -26,18 +26,20 @@ func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) 
 }
 
 func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
-	// https://github.com/aquaproj/aqua/issues/391
-	body, _, err := dl.http.Download(ctx, fmt.Sprintf(
-		"https://raw.githubusercontent.com/%s/%s/%s/%s",
-		param.RepoOwner, param.RepoName, param.Ref, param.Path,
-	))
-	if err == nil {
-		return &domain.GitHubContentFile{
-			ReadCloser: body,
-		}, nil
-	}
-	if body != nil {
-		body.Close()
+	if !param.Private {
+		// https://github.com/aquaproj/aqua/issues/391
+		body, _, err := dl.http.Download(ctx, fmt.Sprintf(
+			"https://raw.githubusercontent.com/%s/%s/%s/%s",
+			param.RepoOwner, param.RepoName, param.Ref, param.Path,
+		))
+		if err == nil {
+			return &domain.GitHubContentFile{
+				ReadCloser: body,
+			}, nil
+		}
+		if body != nil {
+			body.Close()
+		}
 	}
 
 	file, _, _, err := dl.github.GetContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{

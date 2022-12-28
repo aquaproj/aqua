@@ -20,6 +20,7 @@ type File struct {
 	Asset     string
 	URL       string
 	Path      string
+	Private   bool
 }
 
 type Downloader struct {
@@ -67,6 +68,7 @@ func (downloader *Downloader) GetReadCloser(ctx context.Context, logE *logrus.En
 			RepoName:  file.RepoName,
 			Ref:       file.Version,
 			Path:      file.Path,
+			Private:   file.Private,
 		})
 		if err != nil {
 			return nil, 0, fmt.Errorf("download a package from GitHub Content: %w", err)

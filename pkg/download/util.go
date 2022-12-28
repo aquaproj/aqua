@@ -61,6 +61,7 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
 		Version:   pkg.Package.Version,
+		Private:   pkgInfo.Private,
 	}
 	switch pkgInfo.GetType() {
 	case config.PkgInfoTypeGitHubRelease:
@@ -94,6 +95,7 @@ func ConvertRegistryToFile(rgst *aqua.Registry) (*File, error) {
 		RepoOwner: rgst.RepoOwner,
 		RepoName:  rgst.RepoName,
 		Version:   rgst.Ref,
+		Private:   rgst.Private,
 	}
 	switch rgst.Type {
 	case config.PkgInfoTypeGitHubContent:
