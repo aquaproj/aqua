@@ -46,7 +46,7 @@ type PackageInfo struct {
 	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Checksum           *Checksum          `json:"checksum,omitempty"`
 	Cosign             *Cosign            `json:"cosign,omitempty"`
-	SLSAProvenance     *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance"`
+	SLSAProvenance     *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
