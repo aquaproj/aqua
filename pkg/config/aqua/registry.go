@@ -15,6 +15,7 @@ type Registry struct {
 	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`
 	Ref       string `json:"ref,omitempty"`
 	Path      string `validate:"required" json:"path,omitempty"`
+	Private   bool   `json:"private,omitempty"`
 }
 
 const (

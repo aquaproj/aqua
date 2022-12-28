@@ -12,6 +12,7 @@ type GitHubContentFileParam struct {
 	RepoName  string
 	Ref       string
 	Path      string
+	Private   bool
 }
 
 type GitHubContentFile struct {
