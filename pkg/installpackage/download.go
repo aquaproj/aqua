@@ -188,8 +188,11 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 }
 
 func (inst *Installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
-	pkgInfo := pkg.PackageInfo
-	goPkgPath := pkgInfo.GetPath() + "@" + pkg.Package.Version
+	p, err := pkg.RenderPath()
+	if err != nil {
+		return fmt.Errorf("render Go Module Path: %w", err)
+	}
+	goPkgPath := p + "@" + pkg.Package.Version
 	logE.WithFields(logrus.Fields{
 		"gobin":           dest,
 		"go_package_path": goPkgPath,

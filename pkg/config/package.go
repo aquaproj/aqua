@@ -311,6 +311,11 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	return s, nil
 }
 
+func (cpkg *Package) RenderPath() (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	return cpkg.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
+}
+
 func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
@@ -324,7 +329,11 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	case PkgInfoTypeGo:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), pkgInfo.GetPath(), pkg.Version, "bin"), nil
+		p, err := cpkg.RenderPath()
+		if err != nil {
+			return "", fmt.Errorf("render Go Module Path: %w", err)
+		}
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
