@@ -13,13 +13,13 @@ import (
 )
 
 type File struct {
-	Type      string `validate:"required" json:"type" jsonschema:"enum=github_release,enum=http"`
-	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	RepoName  string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Version   string `yaml:",omitempty" json:"version,omitempty"`
-	Asset     string `json:"asset,omitempty" yaml:",omitempty"`
-	URL       string `json:"url,omitempty" yaml:",omitempty"`
-	Path      string `json:"path,omitempty" yaml:",omitempty"`
+	Type      string
+	RepoOwner string
+	RepoName  string
+	Version   string
+	Asset     string
+	URL       string
+	Path      string
 }
 
 type Downloader struct {
