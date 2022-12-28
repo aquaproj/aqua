@@ -79,6 +79,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		Checksum:           pkgInfo.Checksum,
 		Cosign:             pkgInfo.Cosign,
 		SLSAProvenance:     pkgInfo.SLSAProvenance,
+		Private:            pkgInfo.Private,
 	}
 	return pkg
 }

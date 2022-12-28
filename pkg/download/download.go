@@ -61,6 +61,7 @@ func (downloader *Downloader) GetReadCloser(ctx context.Context, logE *logrus.En
 			RepoName:  file.RepoName,
 			Version:   file.Version,
 			Asset:     file.Asset,
+			Private:   file.Private,
 		})
 	case config.PkgInfoTypeGitHubContent:
 		file, err := downloader.ghContent.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
