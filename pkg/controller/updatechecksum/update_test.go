@@ -75,6 +75,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
+								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 							},
 						},
 					},

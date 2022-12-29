@@ -2,6 +2,7 @@ package updatechecksum
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -136,27 +137,52 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 	if err != nil {
 		return fmt.Errorf("get supported platforms: %w", err)
 	}
+	pkgs, assetNames, err := ctrl.getPkgs(pkg, rts)
+	if err != nil {
+		return err
+	}
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
 		rt := rt
 		logE := logE.WithFields(logrus.Fields{
 			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
 		})
-		if err := ctrl.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt); err != nil {
+		env := rt.GOOS + "/" + rt.GOARCH
+		pkg, ok := pkgs[env]
+		if !ok {
+			return errors.New("package isn't found")
+		}
+		if err := ctrl.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt, assetNames); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime) error { //nolint:funlen,cyclop
-	pkgInfo := pkg.PackageInfo
-	pkgInfo = pkgInfo.Copy()
-	pkgInfo.OverrideByRuntime(rt)
-	pkg = &config.Package{
-		Package:     pkg.Package,
-		PackageInfo: pkgInfo,
+func (ctrl *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[string]*config.Package, map[string]struct{}, error) {
+	pkgs := make(map[string]*config.Package, len(rts))
+	assets := make(map[string]struct{}, len(rts))
+	for _, rt := range rts {
+		env := rt.GOOS + "/" + rt.GOARCH
+		pkgInfo := pkg.PackageInfo
+		pkgInfo = pkgInfo.Copy()
+		pkgInfo.OverrideByRuntime(rt)
+		pkgWithEnv := &config.Package{
+			Package:     pkg.Package,
+			PackageInfo: pkgInfo,
+		}
+		asset, err := pkgWithEnv.RenderAsset(rt)
+		if err != nil {
+			return nil, nil, fmt.Errorf("render an asset: %w", err)
+		}
+		assets[asset] = struct{}{}
+		pkgs[env] = pkgWithEnv
 	}
+	return pkgs, assets, nil
+}
+
+func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}) error { //nolint:funlen,cyclop
+	pkgInfo := pkg.PackageInfo
 
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
 		if !ctrl.deep {
@@ -229,6 +255,9 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 		return nil
 	}
 	for assetName, chksum := range m {
+		if _, ok := assetNames[assetName]; !ok {
+			continue
+		}
 		checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
 		if err != nil {
 			return fmt.Errorf("get a checksum id from asset: %w", err)
