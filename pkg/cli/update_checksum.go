@@ -23,6 +23,10 @@ func (runner *Runner) newUpdateChecksumCommand() *cli.Command {
 				Name:  "deep",
 				Usage: "If a package's checksum configuration is disabled, download the asset and calculate the checksum",
 			},
+			&cli.BoolFlag{
+				Name:  "prune",
+				Usage: "Remove unused checksums",
+			},
 		},
 		Description: `Create or Update .aqua-checksums.json.
 
@@ -39,6 +43,11 @@ By default, aqua update-checksum doesn't add checksums if the package's checksum
 If -deep option is set, aqua update-checksum downloads assets and calculate checksums.
 
 $ aqua update-checksum -deep
+
+By default, aqua update-checksum doesn't remove existing checksums even if they aren't unused.
+If -prune option is set, aqua unused checksums would be removed.
+
+$ aqua update-checksum -prune
 `,
 		Action: runner.updateChecksumAction,
 	}

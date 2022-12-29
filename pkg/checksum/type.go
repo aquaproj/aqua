@@ -12,6 +12,7 @@ import (
 
 type Checksums struct {
 	m       map[string]*Checksum
+	newM    map[string]*Checksum
 	rwmutex *sync.RWMutex
 	changed bool
 }
@@ -19,6 +20,7 @@ type Checksums struct {
 func New() *Checksums {
 	return &Checksums{
 		m:       map[string]*Checksum{},
+		newM:    map[string]*Checksum{},
 		rwmutex: &sync.RWMutex{},
 	}
 }
@@ -26,6 +28,7 @@ func New() *Checksums {
 func (chksums *Checksums) Get(key string) *Checksum {
 	chksums.rwmutex.RLock()
 	chk := chksums.m[key]
+	chksums.newM[key] = chk
 	chksums.rwmutex.RUnlock()
 	return chk
 }
@@ -33,7 +36,17 @@ func (chksums *Checksums) Get(key string) *Checksum {
 func (chksums *Checksums) Set(key string, chk *Checksum) {
 	chksums.rwmutex.Lock()
 	chksums.m[key] = chk
+	chksums.newM[key] = chk
 	chksums.changed = true
+	chksums.rwmutex.Unlock()
+}
+
+func (chksums *Checksums) Prune() {
+	chksums.rwmutex.Lock()
+	if len(chksums.m) != len(chksums.newM) {
+		chksums.changed = true
+	}
+	chksums.m = chksums.newM
 	chksums.rwmutex.Unlock()
 }
 
