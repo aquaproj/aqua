@@ -43,6 +43,8 @@ jobs:
       working-directory: tests/main
     - run: aqua update-checksum -deep
       working-directory: tests/main
+    - run: aqua update-checksum -prune
+      working-directory: tests/main
     - run: aqua i -l -a
       working-directory: tests/main
     - run: cmdx -v

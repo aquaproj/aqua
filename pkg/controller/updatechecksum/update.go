@@ -32,6 +32,7 @@ type Controller struct {
 	downloader        download.ClientAPI
 	cosignInstaller   domain.CosignInstaller
 	deep              bool
+	prune             bool
 }
 
 func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader download.ClientAPI, cosignInstaller domain.CosignInstaller) *Controller {
@@ -46,6 +47,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		parser:            &checksum.FileParser{},
 		downloader:        pkgDownloader,
 		deep:              param.Deep,
+		prune:             param.Prune,
 		cosignInstaller:   cosignInstaller,
 	}
 }
@@ -78,7 +80,7 @@ func (ctrl *Controller) updateChecksumAll(ctx context.Context, logE *logrus.Entr
 	return nil
 }
 
-func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) (namedErr error) {
+func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) (namedErr error) { //nolint:cyclop
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -103,6 +105,9 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	pkgs, _ := config.ListPackagesNotOverride(logE, cfg, registryContents)
 	failed := false
 	defer func() {
+		if ctrl.prune {
+			checksums.Prune()
+		}
 		if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
 			namedErr = fmt.Errorf("update a checksum file: %w", err)
 		}

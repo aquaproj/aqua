@@ -186,6 +186,7 @@ type Param struct {
 	Deep                  bool
 	SkipLink              bool
 	Pin                   bool
+	Prune                 bool
 	PolicyConfigFilePaths []string
 }
 
