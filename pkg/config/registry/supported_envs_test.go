@@ -98,7 +98,7 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			b, err := d.pkgInfo.CheckSupported(d.rt, d.rt.GOOS+"/"+d.rt.GOARCH)
+			b, err := d.pkgInfo.CheckSupported(d.rt, d.rt.Env())
 			if d.isErr {
 				if err == nil {
 					t.Fatal("error must be returned")

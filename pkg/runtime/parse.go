@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -96,7 +95,7 @@ func GetRuntimesFromEnvs(envs []string) ([]*Runtime, error) {
 			return rts, nil
 		}
 		for _, rt := range rts {
-			id := fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)
+			id := rt.Env()
 			if _, ok := ids[id]; ok {
 				continue
 			}

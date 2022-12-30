@@ -112,13 +112,19 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 			namedErr = fmt.Errorf("update a checksum file: %w", err)
 		}
 	}()
+
+	var supportedEnvs []string
+	if cfg.Checksum != nil {
+		supportedEnvs = cfg.Checksum.SupportedEnvs
+	}
+
 	for _, pkg := range pkgs {
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":     pkg.Package.Name,
 			"package_version":  pkg.Package.Version,
 			"package_registry": pkg.Package.Registry,
 		})
-		if err := ctrl.updatePackage(ctx, logE, checksums, pkg); err != nil {
+		if err := ctrl.updatePackage(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
 			failed = true
 			logerr.WithError(logE, err).Error("update checksums")
 		}
@@ -129,19 +135,20 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
-	if err := ctrl.getChecksums(ctx, logE, checksums, pkg); err != nil {
+func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	if err := ctrl.getChecksums(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
+func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
 	logE.Info("updating a package checksum")
-	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
+	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
 		return fmt.Errorf("get supported platforms: %w", err)
 	}
+
 	pkgs, assetNames, err := ctrl.getPkgs(pkg, rts)
 	if err != nil {
 		return err
@@ -149,10 +156,10 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
 		rt := rt
+		env := rt.Env()
 		logE := logE.WithFields(logrus.Fields{
-			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
+			"checksum_env": env,
 		})
-		env := rt.GOOS + "/" + rt.GOARCH
 		pkg, ok := pkgs[env]
 		if !ok {
 			return errors.New("package isn't found")
@@ -168,7 +175,7 @@ func (ctrl *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (ma
 	pkgs := make(map[string]*config.Package, len(rts))
 	assets := make(map[string]struct{}, len(rts))
 	for _, rt := range rts {
-		env := rt.GOOS + "/" + rt.GOARCH
+		env := rt.Env()
 		pkgInfo := pkg.PackageInfo
 		pkgInfo = pkgInfo.Copy()
 		pkgInfo.OverrideByRuntime(rt)
