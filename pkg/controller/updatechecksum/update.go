@@ -112,13 +112,19 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 			namedErr = fmt.Errorf("update a checksum file: %w", err)
 		}
 	}()
+
+	var supportedEnvs []string
+	if cfg.Checksum != nil {
+		supportedEnvs = cfg.Checksum.SupportedEnvs
+	}
+
 	for _, pkg := range pkgs {
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":     pkg.Package.Name,
 			"package_version":  pkg.Package.Version,
 			"package_registry": pkg.Package.Registry,
 		})
-		if err := ctrl.updatePackage(ctx, logE, checksums, pkg); err != nil {
+		if err := ctrl.updatePackage(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
 			failed = true
 			logerr.WithError(logE, err).Error("update checksums")
 		}
@@ -129,19 +135,44 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
-	if err := ctrl.getChecksums(ctx, logE, checksums, pkg); err != nil {
+func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	if err := ctrl.getChecksums(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
+func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error { //nolint:cyclop
 	logE.Info("updating a package checksum")
 	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
 		return fmt.Errorf("get supported platforms: %w", err)
 	}
+	if len(supportedEnvs) != 0 {
+		cfgRTs, err := runtime.GetRuntimesFromEnvs(supportedEnvs)
+		if err != nil {
+			return fmt.Errorf("get supported platforms: %w", err)
+		}
+
+		cfgRTMap := make(map[string]struct{}, len(cfgRTs))
+		for _, rt := range cfgRTs {
+			cfgRTMap[rt.GOOS+"/"+rt.GOARCH] = struct{}{}
+		}
+
+		rtMap := make(map[string]*runtime.Runtime, len(rts))
+		for _, rt := range rts {
+			env := rt.GOOS + "/" + rt.GOARCH
+			if _, ok := cfgRTMap[env]; ok {
+				rtMap[rt.GOOS+"/"+rt.GOARCH] = rt
+			}
+		}
+
+		rts = make([]*runtime.Runtime, 0, len(rtMap))
+		for _, rt := range rtMap {
+			rts = append(rts, rt)
+		}
+	}
+
 	pkgs, assetNames, err := ctrl.getPkgs(pkg, rts)
 	if err != nil {
 		return err
