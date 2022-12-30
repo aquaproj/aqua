@@ -68,7 +68,7 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 	failed := false
 	// registry -> package name -> pkgInfo
 	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
-	env := rt.GOOS + "/" + rt.GOARCH
+	env := rt.Env()
 	for _, pkg := range cfg.Packages {
 		pkg := pkg
 		if pkg.Name == "" {

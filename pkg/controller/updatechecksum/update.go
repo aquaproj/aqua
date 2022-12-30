@@ -156,14 +156,14 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 
 		cfgRTMap := make(map[string]struct{}, len(cfgRTs))
 		for _, rt := range cfgRTs {
-			cfgRTMap[rt.GOOS+"/"+rt.GOARCH] = struct{}{}
+			cfgRTMap[rt.Env()] = struct{}{}
 		}
 
 		rtMap := make(map[string]*runtime.Runtime, len(rts))
 		for _, rt := range rts {
-			env := rt.GOOS + "/" + rt.GOARCH
+			env := rt.Env()
 			if _, ok := cfgRTMap[env]; ok {
-				rtMap[rt.GOOS+"/"+rt.GOARCH] = rt
+				rtMap[env] = rt
 			}
 		}
 
@@ -180,10 +180,10 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
 		rt := rt
+		env := rt.Env()
 		logE := logE.WithFields(logrus.Fields{
-			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
+			"checksum_env": env,
 		})
-		env := rt.GOOS + "/" + rt.GOARCH
 		pkg, ok := pkgs[env]
 		if !ok {
 			return errors.New("package isn't found")
@@ -199,7 +199,7 @@ func (ctrl *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (ma
 	pkgs := make(map[string]*config.Package, len(rts))
 	assets := make(map[string]struct{}, len(rts))
 	for _, rt := range rts {
-		env := rt.GOOS + "/" + rt.GOARCH
+		env := rt.Env()
 		pkgInfo := pkg.PackageInfo
 		pkgInfo = pkgInfo.Copy()
 		pkgInfo.OverrideByRuntime(rt)
