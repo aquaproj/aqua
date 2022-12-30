@@ -144,33 +144,9 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 
 func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error { //nolint:cyclop
 	logE.Info("updating a package checksum")
-	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
+	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
 		return fmt.Errorf("get supported platforms: %w", err)
-	}
-	if len(supportedEnvs) != 0 {
-		cfgRTs, err := runtime.GetRuntimesFromEnvs(supportedEnvs)
-		if err != nil {
-			return fmt.Errorf("get supported platforms: %w", err)
-		}
-
-		cfgRTMap := make(map[string]struct{}, len(cfgRTs))
-		for _, rt := range cfgRTs {
-			cfgRTMap[rt.Env()] = struct{}{}
-		}
-
-		rtMap := make(map[string]*runtime.Runtime, len(rts))
-		for _, rt := range rts {
-			env := rt.Env()
-			if _, ok := cfgRTMap[env]; ok {
-				rtMap[env] = rt
-			}
-		}
-
-		rts = make([]*runtime.Runtime, 0, len(rtMap))
-		for _, rt := range rtMap {
-			rts = append(rts, rt)
-		}
 	}
 
 	pkgs, assetNames, err := ctrl.getPkgs(pkg, rts)
