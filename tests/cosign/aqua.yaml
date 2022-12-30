@@ -12,7 +12,7 @@ registries:
     path: registry.yaml
 packages:
   - name: terraform-linters/tflint
-    version: v0.43.0
+    version: v0.44.1
     registry: local
   - name: aquaproj/aqua-installer
     version: v1.1.3-3
