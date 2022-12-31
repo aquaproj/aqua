@@ -406,6 +406,9 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
+        },
+        "private": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
