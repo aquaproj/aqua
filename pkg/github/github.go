@@ -2,7 +2,9 @@ package github
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/google/go-github/v45/github"
@@ -13,7 +15,7 @@ type (
 	ReleaseAsset                = github.ReleaseAsset
 	ListOptions                 = github.ListOptions
 	RepositoryRelease           = github.RepositoryRelease
-	RepositoriesService         = github.RepositoriesService
+	RepositoriesServiceImpl     = github.RepositoriesService
 	Repository                  = github.Repository
 	RepositoryContentGetOptions = github.RepositoryContentGetOptions
 	RepositoryContent           = github.RepositoryContent
@@ -24,8 +26,15 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context) *github.RepositoriesService {
+func New(ctx context.Context) *RepositoriesServiceImpl {
 	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
+}
+
+type RepositoriesService interface {
+	GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, followRedirects bool) (*url.URL, *github.Response, error)
+	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
+	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
+	GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
 }
 
 func getGitHubToken() string {
