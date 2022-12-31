@@ -128,9 +128,9 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	unarchiver := unarchive.New()
 	checker := policy.NewChecker()
 	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
-	configReader := policy.NewConfigReader(fs)
+	policyConfigReaderImpl := policy.NewConfigReader(fs)
 	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
-	controller := install.New(param, configFinder, configReaderImpl, installer, installpackageInstaller, fs, rt, configReader, installpackageCosign)
+	controller := install.New(param, configFinder, configReaderImpl, installer, installpackageInstaller, fs, rt, policyConfigReaderImpl, installpackageCosign)
 	return controller
 }
 
@@ -180,8 +180,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	osEnv := osenv.New()
 	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
 	controller := which.New(param, configFinder, configReaderImpl, registryInstaller, rt, osEnv, fs, linker, installpackageCosign)
-	configReader := policy.NewConfigReader(fs)
-	execController := exec2.New(installer, controller, executor, osEnv, fs, configReader, checker)
+	policyConfigReaderImpl := policy.NewConfigReader(fs)
+	execController := exec2.New(installer, controller, executor, osEnv, fs, policyConfigReaderImpl, checker)
 	return execController
 }
 
@@ -226,9 +226,9 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	osEnv := osenv.New()
 	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
 	controller := which.New(param, configFinder, configReaderImpl, registryInstaller, rt, osEnv, fs, linker, installpackageCosign)
-	configReader := policy.NewConfigReader(fs)
-	installController := install.New(param, configFinder, configReaderImpl, registryInstaller, installer, fs, rt, configReader, installpackageCosign)
-	cpController := cp.New(param, installer, fs, rt, controller, installController, configReader)
+	policyConfigReaderImpl := policy.NewConfigReader(fs)
+	installController := install.New(param, configFinder, configReaderImpl, registryInstaller, installer, fs, rt, policyConfigReaderImpl, installpackageCosign)
+	cpController := cp.New(param, installer, fs, rt, controller, installController, policyConfigReaderImpl)
 	return cpController
 }
 

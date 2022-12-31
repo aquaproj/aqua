@@ -8,17 +8,30 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func NewConfigReader(fs afero.Fs) *ConfigReader {
-	return &ConfigReader{
+type ConfigReaderImpl struct {
+	fs afero.Fs
+}
+
+func NewConfigReader(fs afero.Fs) *ConfigReaderImpl {
+	return &ConfigReaderImpl{
 		fs: fs,
 	}
 }
 
-type ConfigReader struct {
-	fs afero.Fs
+type ConfigReader interface {
+	Read([]string) ([]*Config, error)
 }
 
-func (reader *ConfigReader) Read(files []string) ([]*Config, error) {
+type MockConfigReader struct {
+	Cfgs []*Config
+	Err  error
+}
+
+func (reader *MockConfigReader) Read(files []string) ([]*Config, error) {
+	return reader.Cfgs, reader.Err
+}
+
+func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 	policyCfgs := make([]*Config, len(files))
 	for i, cfgFilePath := range files {
 		policyCfg := &Config{
@@ -33,7 +46,7 @@ func (reader *ConfigReader) Read(files []string) ([]*Config, error) {
 	return policyCfgs, nil
 }
 
-func (reader *ConfigReader) read(cfg *Config) error {
+func (reader *ConfigReaderImpl) read(cfg *Config) error {
 	file, err := reader.fs.Open(cfg.Path)
 	if err != nil {
 		return err //nolint:wrapcheck

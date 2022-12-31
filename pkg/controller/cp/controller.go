@@ -25,10 +25,10 @@ type Controller struct {
 	runtime            *runtime.Runtime
 	which              domain.WhichController
 	installer          Installer
-	policyConfigReader domain.PolicyConfigReader
+	policyConfigReader policy.ConfigReader
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer, policyConfigReader domain.PolicyConfigReader) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer, policyConfigReader policy.ConfigReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,

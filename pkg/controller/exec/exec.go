@@ -29,11 +29,11 @@ type Controller struct {
 	executor           Executor
 	enabledXSysExec    bool
 	fs                 afero.Fs
-	policyConfigReader domain.PolicyConfigReader
+	policyConfigReader policy.ConfigReader
 	policyChecker      domain.PolicyChecker
 }
 
-func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader domain.PolicyConfigReader, policyChecker domain.PolicyChecker) *Controller {
+func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker domain.PolicyChecker) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
