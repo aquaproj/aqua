@@ -35,7 +35,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		registInstaller domain.RegistryInstaller
 		fs              afero.Fs
 		rt              *runtime.Runtime
-		chkDL           domain.ChecksumDownloader
+		chkDL           download.ChecksumDownloader
 		downloader      download.ClientAPI
 		isErr           bool
 	}{
@@ -86,7 +86,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:      &domain.MockChecksumDownloader{},
+			chkDL:      &download.MockChecksumDownloader{},
 			downloader: &download.Mock{},
 		},
 		{
@@ -137,7 +137,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL: &domain.MockChecksumDownloader{},
+			chkDL: &download.MockChecksumDownloader{},
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),
 			},
@@ -199,7 +199,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL: &domain.MockChecksumDownloader{
+			chkDL: &download.MockChecksumDownloader{
 				Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
 34c0ba49d290ffe108c723ffb0063a4a749a8810979b71fc503434b839688b5c  gh_2.17.0_linux_386.rpm
 3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963  gh_2.17.0_macOS_amd64.tar.gz

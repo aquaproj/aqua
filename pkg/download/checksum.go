@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/domain"
@@ -15,15 +16,15 @@ import (
 
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
-type ChecksumDownloader struct {
+type ChecksumDownloaderImpl struct {
 	github    domain.RepositoriesService
 	runtime   *runtime.Runtime
 	http      HTTPDownloader
 	ghRelease domain.GitHubReleaseDownloader
 }
 
-func NewChecksumDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloader {
-	return &ChecksumDownloader{
+func NewChecksumDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloaderImpl {
+	return &ChecksumDownloaderImpl{
 		github:    gh,
 		runtime:   rt,
 		http:      httpDownloader,
@@ -31,7 +32,21 @@ func NewChecksumDownloader(gh domain.RepositoriesService, rt *runtime.Runtime, h
 	}
 }
 
-func (dl *ChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
+type ChecksumDownloader interface {
+	DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error)
+}
+
+type MockChecksumDownloader struct {
+	Body string
+	Code int64
+	Err  error
+}
+
+func (chkDL *MockChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
+	return io.NopCloser(strings.NewReader(chkDL.Body)), chkDL.Code, chkDL.Err
+}
+
+func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
 	switch pkg.PackageInfo.Checksum.Type {
 	case config.PkgInfoTypeGitHubRelease:

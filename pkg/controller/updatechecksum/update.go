@@ -27,7 +27,7 @@ type Controller struct {
 	registryInstaller domain.RegistryInstaller
 	fs                afero.Fs
 	runtime           *runtime.Runtime
-	chkDL             domain.ChecksumDownloader
+	chkDL             download.ChecksumDownloader
 	parser            *checksum.FileParser
 	downloader        download.ClientAPI
 	cosignInstaller   domain.CosignInstaller
@@ -35,7 +35,7 @@ type Controller struct {
 	prune             bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader download.ClientAPI, cosignInstaller domain.CosignInstaller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,

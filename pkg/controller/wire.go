@@ -92,7 +92,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -202,7 +202,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -273,7 +273,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -357,7 +357,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -431,7 +431,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
 		afero.NewOsFs,
@@ -505,7 +505,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			link.New,
@@ -585,7 +585,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
 		afero.NewOsFs,
@@ -639,7 +639,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			registry.New,

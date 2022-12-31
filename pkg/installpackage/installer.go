@@ -31,7 +31,7 @@ type Installer struct {
 	rootDir            string
 	maxParallelism     int
 	downloader         download.ClientAPI
-	checksumDownloader domain.ChecksumDownloader
+	checksumDownloader download.ChecksumDownloader
 	checksumFileParser *checksum.FileParser
 	checksumCalculator ChecksumCalculator
 	runtime            *runtime.Runtime
@@ -48,7 +48,7 @@ type Installer struct {
 	policyChecker      domain.PolicyChecker
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL domain.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Installer {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Installer {
 	return &Installer{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
