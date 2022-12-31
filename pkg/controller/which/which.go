@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/cosign"
@@ -22,7 +23,7 @@ type Controller struct {
 	stdout            io.Writer
 	rootDir           string
 	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
+	configReader      reader.ConfigReader
 	registryInstaller domain.RegistryInstaller
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv

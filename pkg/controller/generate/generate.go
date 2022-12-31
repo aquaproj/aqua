@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/generate/output"
@@ -25,7 +26,7 @@ type Controller struct {
 	github            RepositoriesService
 	registryInstaller domain.RegistryInstaller
 	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
+	configReader      reader.ConfigReader
 	fuzzyFinder       FuzzyFinder
 	versionSelector   VersionSelector
 	fs                afero.Fs
@@ -33,7 +34,7 @@ type Controller struct {
 	cosignInstaller   domain.CosignInstaller
 }
 
-func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cosignInstaller domain.CosignInstaller) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,

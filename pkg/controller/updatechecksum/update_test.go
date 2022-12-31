@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
@@ -31,7 +32,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		name            string
 		param           *config.Param
 		cfgFinder       updatechecksum.ConfigFinder
-		cfgReader       domain.ConfigReader
+		cfgReader       reader.ConfigReader
 		registInstaller domain.RegistryInstaller
 		fs              afero.Fs
 		rt              *runtime.Runtime
@@ -53,7 +54,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &domain.MockConfigReader{
+			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
@@ -104,7 +105,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &domain.MockConfigReader{
+			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
@@ -156,7 +157,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &domain.MockConfigReader{
+			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),

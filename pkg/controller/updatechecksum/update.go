@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
@@ -23,7 +24,7 @@ import (
 type Controller struct {
 	rootDir           string
 	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
+	configReader      reader.ConfigReader
 	registryInstaller domain.RegistryInstaller
 	fs                afero.Fs
 	runtime           *runtime.Runtime
@@ -35,7 +36,7 @@ type Controller struct {
 	prune             bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, cosignInstaller domain.CosignInstaller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,

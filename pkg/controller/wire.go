@@ -61,7 +61,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
@@ -169,7 +169,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		afero.NewOsFs,
 		generate.NewFuzzyFinder,
@@ -246,7 +246,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			installpackage.New,
@@ -329,7 +329,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		osenv.New,
 		afero.NewOsFs,
@@ -417,7 +417,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			which.New,
@@ -571,7 +571,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			which.New,
@@ -635,7 +635,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
