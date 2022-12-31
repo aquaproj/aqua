@@ -20,10 +20,8 @@
         "type": {
           "type": "string",
           "enum": [
-            "md5",
-            "sha1",
-            "sha256",
-            "sha512"
+            "github_release",
+            "http"
           ]
         },
         "asset": {
@@ -36,7 +34,13 @@
           "type": "string"
         },
         "algorithm": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "md5",
+            "sha1",
+            "sha256",
+            "sha512"
+          ]
         },
         "pattern": {
           "$ref": "#/$defs/ChecksumPattern"
