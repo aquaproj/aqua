@@ -1,7 +1,7 @@
 package registry
 
 type Checksum struct {
-	Type         string           `json:"type,omitempty"`
+	Type         string           `json:"type,omitempty" jsonschema:"enum=md5,enum=sha1,enum=sha256,enum=sha512"`
 	Asset        string           `json:"asset,omitempty"`
 	URL          string           `json:"url,omitempty"`
 	FileFormat   string           `yaml:"file_format" json:"file_format,omitempty"`

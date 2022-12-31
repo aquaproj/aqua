@@ -18,7 +18,13 @@
     "Checksum": {
       "properties": {
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "md5",
+            "sha1",
+            "sha256",
+            "sha512"
+          ]
         },
         "asset": {
           "type": "string"
