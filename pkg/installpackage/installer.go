@@ -27,7 +27,7 @@ import (
 
 const proxyName = "aqua-proxy"
 
-type Installer struct {
+type InstallerImpl struct {
 	rootDir            string
 	maxParallelism     int
 	downloader         download.ClientAPI
@@ -48,8 +48,8 @@ type Installer struct {
 	policyChecker      domain.PolicyChecker
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Installer {
-	return &Installer{
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *InstallerImpl {
+	return &InstallerImpl{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
 		downloader:         downloader,
@@ -69,6 +69,31 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 		cosign:             cosignVerifier,
 		slsaVerifier:       slsaVerifier,
 	}
+}
+
+type Installer interface {
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error
+	InstallProxy(ctx context.Context, logE *logrus.Entry) error
+}
+
+type ParamInstallPackages struct {
+	ConfigFilePath string
+	Config         *aqua.Config
+	Registries     map[string]*registry.Config
+	Tags           map[string]struct{}
+	ExcludedTags   map[string]struct{}
+	SkipLink       bool
+	PolicyConfigs  []*policy.Config
+}
+
+type ParamInstallPackage struct {
+	Pkg             *config.Package
+	Checksums       *checksum.Checksums
+	RequireChecksum bool
+	PolicyConfigs   []*policy.Config
+	ConfigFileDir   string
+	CosignExePath   string
 }
 
 type Unarchiver interface {
@@ -91,11 +116,11 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *Installer) SetCopyDir(copyDir string) {
+func (inst *InstallerImpl) SetCopyDir(copyDir string) {
 	inst.copyDir = copyDir
 }
 
-func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error { //nolint:funlen,cyclop
+func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
 	if !param.SkipLink {
 		if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
@@ -164,7 +189,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				logE.Debug("skip installing the package because package tags are unmatched")
 				return
 			}
-			if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+			if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       checksums,
 				RequireChecksum: param.Config.RequireChecksum(),
@@ -183,7 +208,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error { //nolint:cyclop
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -243,7 +268,7 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	return nil
 }
 
-func (inst *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
+func (inst *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
 	failed := false
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
@@ -275,7 +300,7 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (inst *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if isWindows(inst.runtime.GOOS) {
@@ -304,7 +329,7 @@ func (inst *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, 
 	return exePath, nil
 }
 
-func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
 	if err != nil {
 		if inst.isTest {
@@ -323,7 +348,7 @@ func (inst *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package
 	return nil
 }
 
-func (inst *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (inst *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	if pkg.PackageInfo.Type == "go" {
 		return inst.checkFileSrcGo(ctx, pkg, file, logE)
 	}
@@ -362,7 +387,7 @@ const (
 	filePermission os.FileMode = 0o755
 )
 
-func (inst *Installer) Copy(dest, src string) error {
+func (inst *InstallerImpl) Copy(dest, src string) error {
 	dst, err := inst.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)

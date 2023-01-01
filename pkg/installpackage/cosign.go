@@ -18,12 +18,12 @@ import (
 )
 
 type Cosign struct {
-	installer *Installer
+	installer *InstallerImpl
 }
 
 func NewCosign(param *config.Param, downloader download.ClientAPI, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Cosign {
 	return &Cosign{
-		installer: &Installer{
+		installer: &InstallerImpl{
 			rootDir:            param.RootDir,
 			maxParallelism:     param.MaxParallelism,
 			downloader:         downloader,
@@ -91,7 +91,7 @@ func (cos *Cosign) InstallCosign(ctx context.Context, logE *logrus.Entry, versio
 
 	pkg.PackageInfo = pkgInfo
 
-	if err := cos.installer.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+	if err := cos.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums: checksum.New(), // Check cosign's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 		// PolicyConfigs is nil, so the policy check is skipped

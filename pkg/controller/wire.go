@@ -250,7 +250,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCosign,
@@ -396,7 +396,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCosign,
@@ -483,7 +483,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.InstallerImpl)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -549,8 +549,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
-			wire.Bind(new(cp.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
+			wire.Bind(new(cp.PackageInstaller), new(*installpackage.InstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCosign,

@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -21,7 +22,7 @@ import (
 const dirPermission os.FileMode = 0o775
 
 type Controller struct {
-	packageInstaller   domain.PackageInstaller
+	packageInstaller   installpackage.Installer
 	rootDir            string
 	configFinder       ConfigFinder
 	configReader       reader.ConfigReader
@@ -35,7 +36,7 @@ type Controller struct {
 	cosignInstaller    domain.CosignInstaller
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader, cosignInstaller domain.CosignInstaller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -116,7 +117,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.packageInstaller.InstallPackages(ctx, logE, &domain.ParamInstallPackages{ //nolint:wrapcheck
+	return ctrl.packageInstaller.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
 		Config:         cfg,
 		Registries:     registryContents,
 		ConfigFilePath: cfgFilePath,

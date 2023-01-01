@@ -25,7 +25,7 @@ func TestInstaler_download(t *testing.T) { //nolint:funlen
 	data := []struct {
 		name  string
 		param *DownloadParam
-		inst  *Installer
+		inst  *InstallerImpl
 		isErr bool
 	}{
 		{
@@ -56,7 +56,7 @@ func TestInstaler_download(t *testing.T) { //nolint:funlen
 				Checksums: checksum.New(),
 				Asset:     "gh_2.17.0_macOS_amd64.tar.gz",
 			},
-			inst: &Installer{
+			inst: &InstallerImpl{
 				progressBar: true,
 				runtime: &runtime.Runtime{
 					GOOS:   "darwin",

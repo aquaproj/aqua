@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -30,7 +31,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		}()
 	}
 
-	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(),

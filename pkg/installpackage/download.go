@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+func (inst *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    param.Package.Package.Name,
 		"package_version": param.Package.Package.Version,
@@ -50,7 +50,7 @@ func (inst *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry
 	}
 }
 
-func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop,gocognit
+func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop,gocognit
 	ppkg := param.Package
 	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{
@@ -187,7 +187,7 @@ func (inst *Installer) download(ctx context.Context, logE *logrus.Entry, param *
 	}, param.Dest, logE, inst.fs, pOpts)
 }
 
-func (inst *Installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
+func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
 	p, err := pkg.RenderPath()
 	if err != nil {
 		return fmt.Errorf("render Go Module Path: %w", err)

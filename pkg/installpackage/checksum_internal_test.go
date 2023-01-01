@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestInstaller_extractChecksum(t *testing.T) { //nolint:funlen
+func TestInstallerImpl_extractChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name         string
@@ -97,7 +97,7 @@ func TestInstaller_extractChecksum(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			inst := &Installer{
+			inst := &InstallerImpl{
 				runtime: &runtime.Runtime{
 					GOOS:   "linux",
 					GOARCH: "amd64",
@@ -127,13 +127,13 @@ func boolP(b bool) *bool {
 	return &b
 }
 
-func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
+func TestInstallerImpl_verifyChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name  string
 		param *ParamVerifyChecksum
 		isErr bool
-		inst  *Installer
+		inst  *InstallerImpl
 	}{
 		{
 			name: "normal",
@@ -162,7 +162,7 @@ func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
 				TempDir:    "/tmp/verify_checksum",
 				Body:       io.NopCloser(strings.NewReader("")),
 			},
-			inst: &Installer{
+			inst: &InstallerImpl{
 				fs: afero.NewMemMapFs(),
 				checksumDownloader: &download.MockChecksumDownloader{
 					Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
