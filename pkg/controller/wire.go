@@ -100,7 +100,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -210,7 +210,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -285,7 +285,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
@@ -369,7 +369,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -450,7 +450,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
@@ -513,7 +513,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -604,7 +604,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
@@ -687,7 +687,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,

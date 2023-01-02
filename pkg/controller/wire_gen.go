@@ -58,8 +58,8 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
-	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	checkerImpl := policy.NewChecker()
+	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := list.NewController(configFinder, configReaderImpl, installer, installpackageCosign)
 	return controller
 }
@@ -103,8 +103,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
-	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	checkerImpl := policy.NewChecker()
+	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := generate.New(configFinder, configReaderImpl, installer, repositoriesService, fs, fuzzyFinder, versionSelector, installpackageCosign)
 	return controller
 }
@@ -126,10 +126,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	checkerImpl := policy.NewChecker()
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := install.New(param, configFinder, configReaderImpl, installer, installerImpl, fs, rt, policyConfigReaderImpl, installpackageCosign)
 	return controller
 }
@@ -152,8 +152,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
-	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	checkerImpl := policy.NewChecker()
+	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := which.New(param, configFinder, configReaderImpl, installer, rt, osEnv, fs, linker, installpackageCosign)
 	return controller
 }
@@ -168,20 +168,20 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
+	checkerImpl := policy.NewChecker()
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	slsaExecutor := slsa.NewExecutor()
 	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := which.New(param, configFinder, configReaderImpl, installer, rt, osEnv, fs, linker, installpackageCosign)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	execController := exec2.New(installerImpl, controller, executor, osEnv, fs, policyConfigReaderImpl, checker)
+	execController := exec2.New(installerImpl, controller, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl)
 	return execController
 }
 
@@ -195,11 +195,11 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
+	checkerImpl := policy.NewChecker()
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	slsaExecutor := slsa.NewExecutor()
 	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installerImpl)
 	return controller
 }
@@ -214,17 +214,17 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
+	checkerImpl := policy.NewChecker()
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	slsaExecutor := slsa.NewExecutor()
 	slsaVerifier := slsa.New(downloader, fs, slsaExecutor)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := which.New(param, configFinder, configReaderImpl, installer, rt, osEnv, fs, linker, installpackageCosign)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
 	installController := install.New(param, configFinder, configReaderImpl, installer, installerImpl, fs, rt, policyConfigReaderImpl, installpackageCosign)
@@ -249,8 +249,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	linker := link.New()
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New()
-	checker := policy.NewChecker()
-	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checker, verifier, slsaVerifier)
+	checkerImpl := policy.NewChecker()
+	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
 	controller := updatechecksum.New(param, configFinder, configReaderImpl, installer, fs, rt, checksumDownloaderImpl, downloader, installpackageCosign)
 	return controller
 }

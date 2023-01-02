@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
@@ -205,7 +206,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{
 				Config:         d.cfg,
 				Registries:     d.registries,
@@ -275,7 +276,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 				Pkg: d.pkg,
 			}); err != nil {

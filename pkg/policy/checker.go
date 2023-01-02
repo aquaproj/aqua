@@ -11,8 +11,20 @@ var errUnAllowedPackage = logerr.WithFields(errors.New("this package isn't allow
 	"doc": "https://aquaproj.github.io/docs/reference/codes/002",
 })
 
-type Checker struct{}
+type CheckerImpl struct{}
 
-func NewChecker() *Checker {
-	return &Checker{}
+func NewChecker() *CheckerImpl {
+	return &CheckerImpl{}
+}
+
+type Checker interface {
+	ValidatePackage(param *ParamValidatePackage) error
+}
+
+type MockChecker struct {
+	Err error
+}
+
+func (pc *MockChecker) ValidatePackage(param *ParamValidatePackage) error {
+	return pc.Err
 }

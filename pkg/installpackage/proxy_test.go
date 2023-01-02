@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
@@ -66,7 +67,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 				}
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallProxy(ctx, logE); err != nil {
 				if d.isErr {
 					return

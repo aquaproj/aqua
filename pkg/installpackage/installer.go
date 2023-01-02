@@ -45,10 +45,10 @@ type InstallerImpl struct {
 	onlyLink           bool
 	isTest             bool
 	copyDir            string
-	policyChecker      domain.PolicyChecker
+	policyChecker      policy.Checker
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker domain.PolicyChecker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
