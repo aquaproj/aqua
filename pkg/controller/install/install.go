@@ -144,5 +144,6 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		Tags:           ctrl.tags,
 		ExcludedTags:   ctrl.excludedTags,
 		PolicyConfigs:  policyConfigs,
+		Checksums:      checksums,
 	})
 }
