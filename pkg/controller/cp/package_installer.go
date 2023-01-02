@@ -3,13 +3,13 @@ package cp
 import (
 	"context"
 
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/sirupsen/logrus"
 )
 
 type PackageInstaller interface {
-	InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error
-	InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackages) error
 	SetCopyDir(copyDir string)
 	Copy(dest, src string) error
 	WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error
@@ -17,11 +17,11 @@ type PackageInstaller interface {
 
 type MockPackageInstaller struct{}
 
-func (inst *MockPackageInstaller) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error {
+func (inst *MockPackageInstaller) InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error {
 	return nil
 }
 
-func (inst *MockPackageInstaller) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error {
+func (inst *MockPackageInstaller) InstallPackages(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackages) error {
 	return nil
 }
 

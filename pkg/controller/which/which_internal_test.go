@@ -7,7 +7,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
@@ -24,7 +23,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 		registries map[string]*registry.Config
 		exeName    string
 		pkg        *aqua.Package
-		expWhich   *domain.FindResult
+		expWhich   *FindResult
 	}{
 		{
 			title:   "normal",
@@ -34,7 +33,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 				Name:     "kubernetes/kubectl",
 				Version:  "v1.21.0",
 			},
-			expWhich: &domain.FindResult{
+			expWhich: &FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Registry: "standard",
@@ -75,7 +74,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	ctrl := &Controller{
+	ctrl := &ControllerImpl{
 		runtime: &runtime.Runtime{
 			GOOS:   "linux",
 			GOARCH: "amd64",

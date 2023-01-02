@@ -31,7 +31,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		sp               *registry.SLSAProvenance
 		art              *template.Artifact
 		param            *slsa.ParamVerify
-		exe              slsa.ExecutorAPI
+		exe              slsa.Executor
 		verifiedFilePath string
 	}{
 		{

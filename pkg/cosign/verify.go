@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-type Verifier struct {
+type VerifierImpl struct {
 	executor      Executor
 	fs            afero.Fs
 	downloader    download.ClientAPI
@@ -22,9 +22,9 @@ type Verifier struct {
 	disabled      bool
 }
 
-func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *Verifier {
+func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *VerifierImpl {
 	rt := runtime.NewR()
-	return &Verifier{
+	return &VerifierImpl{
 		executor:   executor,
 		fs:         fs,
 		downloader: downloader,
@@ -37,7 +37,7 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 	}
 }
 
-type VerifierAPI interface {
+type Verifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
 }
 
@@ -49,7 +49,7 @@ func (mock *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *ru
 	return mock.err
 }
 
-func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
+func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
 	if verifier.disabled {
 		logE.Debug("verification with cosign is disabled")
 		return nil
@@ -138,7 +138,7 @@ type ParamVerify struct {
 	CosignExePath      string
 }
 
-func (verifier *Verifier) verify(ctx context.Context, param *ParamVerify) error {
+func (verifier *VerifierImpl) verify(ctx context.Context, param *ParamVerify) error {
 	envs := []string{}
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
@@ -150,7 +150,7 @@ func (verifier *Verifier) verify(ctx context.Context, param *ParamVerify) error 
 	return nil
 }
 
-func (verifier *Verifier) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
+func (verifier *VerifierImpl) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
 	rc, _, err := verifier.downloader.GetReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("get a readcloser: %w", err)

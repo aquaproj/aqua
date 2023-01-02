@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (ctrl *Controller) listExts() []string {
+func (ctrl *ControllerImpl) listExts() []string {
 	x := ctrl.osenv.Getenv(`PATHEXT`)
 	if x == "" {
 		return []string{"", ".com", ".exe", ".bat", ".cmd"}
@@ -27,7 +27,7 @@ func (ctrl *Controller) listExts() []string {
 	return exts
 }
 
-func (ctrl *Controller) lookPath(envPath, exeName string) string {
+func (ctrl *ControllerImpl) lookPath(envPath, exeName string) string {
 	binDir := filepath.Join(ctrl.rootDir, "bin")
 	batDir := filepath.Join(ctrl.rootDir, "bat")
 	exts := ctrl.listExts()

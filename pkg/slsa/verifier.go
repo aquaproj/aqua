@@ -14,21 +14,21 @@ import (
 	"github.com/spf13/afero"
 )
 
-type Verifier struct {
+type VerifierImpl struct {
 	downloader download.ClientAPI
 	fs         afero.Fs
-	exe        ExecutorAPI
+	exe        Executor
 }
 
-func New(downloader download.ClientAPI, fs afero.Fs, exe ExecutorAPI) *Verifier {
-	return &Verifier{
+func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *VerifierImpl {
+	return &VerifierImpl{
 		downloader: downloader,
 		fs:         fs,
 		exe:        exe,
 	}
 }
 
-type VerifierAPI interface {
+type Verifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error
 }
 
@@ -48,13 +48,13 @@ type ParamVerify struct {
 	ArtifactPath string
 }
 
-type Executor struct{}
+type ExecutorImpl struct{}
 
-func NewExecutor() *Executor {
-	return &Executor{}
+func NewExecutor() *ExecutorImpl {
+	return &ExecutorImpl{}
 }
 
-type ExecutorAPI interface {
+type Executor interface {
 	Verify(ctx context.Context, param *ParamVerify, provenancePath string) error
 }
 
@@ -66,7 +66,7 @@ func (mock *MockExecutor) Verify(ctx context.Context, param *ParamVerify, proven
 	return mock.Err
 }
 
-func (exe *Executor) Verify(ctx context.Context, param *ParamVerify, provenancePath string) error {
+func (exe *ExecutorImpl) Verify(ctx context.Context, param *ParamVerify, provenancePath string) error {
 	v := verify.VerifyArtifactCommand{
 		ProvenancePath: provenancePath,
 		SourceURI:      param.SourceURI,
@@ -78,7 +78,7 @@ func (exe *Executor) Verify(ctx context.Context, param *ParamVerify, provenanceP
 	return nil
 }
 
-func (verifier *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
+func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
 	f, err := download.ConvertDownloadedFileToFile(sp.ToDownloadedFile(), file, rt, art)
 	if err != nil {
 		return err //nolint:wrapcheck

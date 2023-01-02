@@ -9,11 +9,10 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
+func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
 	assetTemplate := `aqua_{{.OS}}_{{.Arch}}.tar.gz`
 	provTemplate := "multiple.intoto.jsonl"
 	disabled := false
@@ -86,7 +85,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 	}
 	pkg.PackageInfo = pkgInfo
 
-	if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+	if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums: checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 		// PolicyConfigs is nil, so the policy check is skipped
@@ -117,7 +116,7 @@ func (inst *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, vers
 	return inst.createLink(filepath.Join(inst.rootDir, "bin", "aqua"), a, logE)
 }
 
-func (inst *Installer) getExePath(pkg *config.Package) (string, error) {
+func (inst *InstallerImpl) getExePath(pkg *config.Package) (string, error) {
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return "", err //nolint:wrapcheck

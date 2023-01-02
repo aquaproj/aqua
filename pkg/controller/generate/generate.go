@@ -9,11 +9,13 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -23,9 +25,9 @@ import (
 type Controller struct {
 	stdin             io.Reader
 	github            RepositoriesService
-	registryInstaller domain.RegistryInstaller
+	registryInstaller rgst.Installer
 	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
+	configReader      reader.ConfigReader
 	fuzzyFinder       FuzzyFinder
 	versionSelector   VersionSelector
 	fs                afero.Fs
@@ -33,7 +35,7 @@ type Controller struct {
 	cosignInstaller   domain.CosignInstaller
 }
 
-func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cosignInstaller domain.CosignInstaller) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,

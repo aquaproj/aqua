@@ -12,7 +12,7 @@ type ParamValidatePackage struct {
 	PolicyConfigs []*Config
 }
 
-func (pc *Checker) ValidatePackage(param *ParamValidatePackage) error {
+func (pc *CheckerImpl) ValidatePackage(param *ParamValidatePackage) error {
 	if len(param.PolicyConfigs) == 0 {
 		return nil
 	}
@@ -33,7 +33,7 @@ type paramValidatePackage struct {
 	PolicyConfig *ConfigYAML
 }
 
-func (pc *Checker) validatePackage(param *paramValidatePackage) error {
+func (pc *CheckerImpl) validatePackage(param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}
@@ -49,7 +49,7 @@ func (pc *Checker) validatePackage(param *paramValidatePackage) error {
 	return errUnAllowedPackage
 }
 
-func (pc *Checker) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
+func (pc *CheckerImpl) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}

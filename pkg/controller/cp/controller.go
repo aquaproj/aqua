@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -23,12 +23,12 @@ type Controller struct {
 	rootDir            string
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
-	which              domain.WhichController
+	which              which.Controller
 	installer          Installer
-	policyConfigReader domain.PolicyConfigReader
+	policyConfigReader policy.ConfigReader
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer, policyConfigReader domain.PolicyConfigReader) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,

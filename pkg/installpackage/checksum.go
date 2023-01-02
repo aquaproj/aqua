@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (inst *Installer) extractChecksum(pkg *config.Package, assetName string, checksumFile []byte) (string, error) {
+func (inst *InstallerImpl) extractChecksum(pkg *config.Package, assetName string, checksumFile []byte) (string, error) {
 	pkgInfo := pkg.PackageInfo
 
 	if pkgInfo.Checksum.FileFormat == "raw" {
@@ -34,7 +34,7 @@ func (inst *Installer) extractChecksum(pkg *config.Package, assetName string, ch
 	return m[assetName], nil
 }
 
-func (inst *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
+func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
 	file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, inst.runtime, pkg)
 	if err != nil {
 		return "", fmt.Errorf("download a checksum file: %w", err)
@@ -102,7 +102,7 @@ func copyAsset(fs afero.Fs, tempFilePath string, body io.Reader) error {
 	return nil
 }
 
-func (inst *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
+func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums

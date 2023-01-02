@@ -48,12 +48,12 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -61,13 +61,13 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -92,7 +92,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -100,15 +100,15 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return &list.Controller{}
@@ -119,7 +119,7 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 		genrgst.NewController,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 		),
 		afero.NewOsFs,
 	)
@@ -131,7 +131,7 @@ func InitializeInitCommandController(ctx context.Context, param *config.Param) *
 		initcmd.New,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(initcmd.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(initcmd.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 		),
 		afero.NewOsFs,
 	)
@@ -155,13 +155,13 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -169,7 +169,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		afero.NewOsFs,
 		generate.NewFuzzyFinder,
@@ -177,7 +177,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -202,7 +202,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -210,15 +210,15 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return &generate.Controller{}
@@ -233,12 +233,12 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -246,11 +246,11 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCosign,
@@ -273,7 +273,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -285,29 +285,29 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
-			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.ControllerImpl {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -316,12 +316,12 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -329,7 +329,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		osenv.New,
 		afero.NewOsFs,
@@ -340,7 +340,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -357,7 +357,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -369,15 +369,15 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return nil
@@ -396,7 +396,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCosign,
@@ -404,12 +404,12 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -417,11 +417,11 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -431,7 +431,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
 		afero.NewOsFs,
@@ -450,23 +450,23 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
-			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return &cexec.Controller{}
@@ -478,12 +478,12 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		afero.NewOsFs,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesService)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.InstallerImpl)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -505,7 +505,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			link.New,
@@ -513,19 +513,19 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return &updateaqua.Controller{}
@@ -549,8 +549,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(domain.PackageInstaller), new(*installpackage.Installer)),
-			wire.Bind(new(cp.PackageInstaller), new(*installpackage.Installer)),
+			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
+			wire.Bind(new(cp.PackageInstaller), new(*installpackage.InstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCosign,
@@ -558,12 +558,12 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -571,11 +571,11 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -585,7 +585,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
 		afero.NewOsFs,
@@ -604,23 +604,23 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
-			wire.Bind(new(domain.PolicyConfigReader), new(*policy.ConfigReader)),
+			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return &cp.Controller{}
@@ -635,20 +635,20 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(domain.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
-			wire.Bind(new(domain.ChecksumDownloader), new(*download.ChecksumDownloader)),
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(domain.RepositoriesService), new(*github.RepositoriesService)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -662,7 +662,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		afero.NewOsFs,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -687,15 +687,15 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			policy.NewChecker,
-			wire.Bind(new(domain.PolicyChecker), new(*policy.Checker)),
+			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(slsa.VerifierAPI), new(*slsa.Verifier)),
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
-			wire.Bind(new(slsa.ExecutorAPI), new(*slsa.Executor)),
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
 	return &updatechecksum.Controller{}

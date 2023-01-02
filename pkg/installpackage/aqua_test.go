@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/sirupsen/logrus"
@@ -24,7 +25,7 @@ func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
 		files              map[string]string
 		param              *config.Param
 		rt                 *runtime.Runtime
-		checksumDownloader domain.ChecksumDownloader
+		checksumDownloader download.ChecksumDownloader
 		checksumCalculator installpackage.ChecksumCalculator
 		version            string
 		isTest             bool
@@ -44,7 +45,7 @@ func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
 			checksumCalculator: &installpackage.MockChecksumCalculator{
 				Checksum: "c6f3b1f37d9bf4f73e6c6dcf1bd4bb59b48447ad46d4b72e587d15f66a96ab5a",
 			},
-			checksumDownloader: &domain.MockChecksumDownloader{
+			checksumDownloader: &download.MockChecksumDownloader{
 				Body: `31adc2cfc3aab8e66803f6769016fe6953a22f88de403211abac83c04a542d46  aqua_darwin_arm64.tar.gz
 6e53f151abf10730bdfd4a52b99019ffa5f58d8ad076802affb3935dd82aba96  aqua_darwin_amd64.tar.gz
 c6f3b1f37d9bf4f73e6c6dcf1bd4bb59b48447ad46d4b72e587d15f66a96ab5a  aqua_linux_amd64.tar.gz
@@ -67,7 +68,7 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 			}
 			ctrl := installpackage.New(d.param, &download.Mock{
 				RC: io.NopCloser(strings.NewReader("xxx")),
-			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &installpackage.MockUnarchiver{}, &domain.MockPolicyChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &installpackage.MockUnarchiver{}, &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallAqua(ctx, logE, d.version); err != nil {
 				if d.isErr {
 					return
