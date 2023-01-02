@@ -53,7 +53,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -161,7 +161,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -238,7 +238,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -321,7 +321,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -409,7 +409,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -563,7 +563,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -643,7 +643,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(domain.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
 		),
 		wire.NewSet(
 			github.New,

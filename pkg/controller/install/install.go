@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -26,7 +27,7 @@ type Controller struct {
 	rootDir            string
 	configFinder       ConfigFinder
 	configReader       reader.ConfigReader
-	registryInstaller  domain.RegistryInstaller
+	registryInstaller  registry.Installer
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
 	skipLink           bool
@@ -36,7 +37,7 @@ type Controller struct {
 	cosignInstaller    domain.CosignInstaller
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader, cosignInstaller domain.CosignInstaller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,

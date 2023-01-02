@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
+	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -33,7 +34,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		param           *config.Param
 		cfgFinder       updatechecksum.ConfigFinder
 		cfgReader       reader.ConfigReader
-		registInstaller domain.RegistryInstaller
+		registInstaller rgst.Installer
 		fs              afero.Fs
 		rt              *runtime.Runtime
 		chkDL           download.ChecksumDownloader
@@ -68,7 +69,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &domain.MockRegistryInstaller{
+			registInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
@@ -119,7 +120,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &domain.MockRegistryInstaller{
+			registInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
@@ -171,7 +172,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &domain.MockRegistryInstaller{
+			registInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{

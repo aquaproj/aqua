@@ -12,6 +12,7 @@ import (
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -24,7 +25,7 @@ type Controller struct {
 	rootDir           string
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
-	registryInstaller domain.RegistryInstaller
+	registryInstaller registry.Installer
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	fs                afero.Fs

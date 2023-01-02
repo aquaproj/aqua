@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,11 +19,11 @@ type Controller struct {
 	stdout            io.Writer
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
-	registryInstaller domain.RegistryInstaller
+	registryInstaller registry.Installer
 	cosignInstaller   domain.CosignInstaller
 }
 
-func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller domain.RegistryInstaller, cosignInstaller domain.CosignInstaller) *Controller {
+func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, cosignInstaller domain.CosignInstaller) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
