@@ -85,6 +85,7 @@ type ParamInstallPackages struct {
 	ExcludedTags   map[string]struct{}
 	SkipLink       bool
 	PolicyConfigs  []*policy.Config
+	Checksums      *checksum.Checksums
 }
 
 type ParamInstallPackage struct {
@@ -156,23 +157,6 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 		flagMutex.Unlock()
 	}
 
-	var checksums *checksum.Checksums
-	if param.Config.ChecksumEnabled() {
-		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(inst.fs, param.ConfigFilePath)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
-		if err := checksums.ReadFile(inst.fs, checksumFilePath); err != nil {
-			return fmt.Errorf("read a checksum JSON: %w", err)
-		}
-		defer func() {
-			if err := checksums.UpdateFile(inst.fs, checksumFilePath); err != nil {
-				logE.WithError(err).Error("update a checksum file")
-			}
-		}()
-	}
-
 	for _, pkg := range pkgs {
 		go func(pkg *config.Package) {
 			defer wg.Done()
@@ -191,7 +175,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 			}
 			if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
-				Checksums:       checksums,
+				Checksums:       param.Checksums,
 				RequireChecksum: param.Config.RequireChecksum(),
 				PolicyConfigs:   param.PolicyConfigs,
 			}); err != nil {
