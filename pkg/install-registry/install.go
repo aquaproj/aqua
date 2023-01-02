@@ -28,11 +28,11 @@ type InstallerImpl struct {
 	param              *config.Param
 	fs                 afero.Fs
 	cosign             cosign.VerifierAPI
-	slsaVerifier       slsa.VerifierAPI
+	slsaVerifier       slsa.Verifier
 	rt                 *runtime.Runtime
 }
 
-func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *InstallerImpl {
+func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos cosign.VerifierAPI, slsaVerifier slsa.Verifier) *InstallerImpl {
 	return &InstallerImpl{
 		param:              param,
 		registryDownloader: downloader,

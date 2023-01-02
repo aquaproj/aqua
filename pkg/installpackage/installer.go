@@ -40,7 +40,7 @@ type InstallerImpl struct {
 	executor           Executor
 	unarchiver         Unarchiver
 	cosign             cosign.VerifierAPI
-	slsaVerifier       slsa.VerifierAPI
+	slsaVerifier       slsa.Verifier
 	progressBar        bool
 	onlyLink           bool
 	isTest             bool
@@ -48,7 +48,7 @@ type InstallerImpl struct {
 	policyChecker      policy.Checker
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.Verifier) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,

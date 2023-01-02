@@ -22,7 +22,7 @@ type Cosign struct {
 	installer *InstallerImpl
 }
 
-func NewCosign(param *config.Param, downloader download.ClientAPI, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.VerifierAPI) *Cosign {
+func NewCosign(param *config.Param, downloader download.ClientAPI, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.VerifierAPI, slsaVerifier slsa.Verifier) *Cosign {
 	return &Cosign{
 		installer: &InstallerImpl{
 			rootDir:            param.RootDir,
