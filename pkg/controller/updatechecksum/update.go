@@ -91,11 +91,6 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 		return err //nolint:wrapcheck
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-
 	checksums := checksum.New()
 	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
 	if err != nil {
@@ -103,6 +98,11 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	}
 	if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
+	}
+
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	if err != nil {
+		return err //nolint:wrapcheck
 	}
 	pkgs, _ := config.ListPackagesNotOverride(logE, cfg, registryContents)
 	failed := false
