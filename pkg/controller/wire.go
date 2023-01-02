@@ -67,7 +67,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -177,7 +177,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -293,7 +293,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -340,7 +340,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -458,7 +458,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -517,7 +517,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -612,7 +612,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -662,7 +662,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		afero.NewOsFs,
 		wire.NewSet(
 			cosign.NewVerifier,
-			wire.Bind(new(cosign.VerifierAPI), new(*cosign.Verifier)),
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
 		wire.NewSet(
 			exec.New,
