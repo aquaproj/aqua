@@ -17,10 +17,10 @@ import (
 type VerifierImpl struct {
 	downloader download.ClientAPI
 	fs         afero.Fs
-	exe        ExecutorAPI
+	exe        Executor
 }
 
-func New(downloader download.ClientAPI, fs afero.Fs, exe ExecutorAPI) *VerifierImpl {
+func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *VerifierImpl {
 	return &VerifierImpl{
 		downloader: downloader,
 		fs:         fs,
@@ -48,13 +48,13 @@ type ParamVerify struct {
 	ArtifactPath string
 }
 
-type Executor struct{}
+type ExecutorImpl struct{}
 
-func NewExecutor() *Executor {
-	return &Executor{}
+func NewExecutor() *ExecutorImpl {
+	return &ExecutorImpl{}
 }
 
-type ExecutorAPI interface {
+type Executor interface {
 	Verify(ctx context.Context, param *ParamVerify, provenancePath string) error
 }
 
@@ -66,7 +66,7 @@ func (mock *MockExecutor) Verify(ctx context.Context, param *ParamVerify, proven
 	return mock.Err
 }
 
-func (exe *Executor) Verify(ctx context.Context, param *ParamVerify, provenancePath string) error {
+func (exe *ExecutorImpl) Verify(ctx context.Context, param *ParamVerify, provenancePath string) error {
 	v := verify.VerifyArtifactCommand{
 		ProvenancePath: provenancePath,
 		SourceURI:      param.SourceURI,
