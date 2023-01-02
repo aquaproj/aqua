@@ -17,6 +17,8 @@ const configTemplate = `---
 #   # https://aquaproj.github.io/docs/reference/checksum/
 #   enabled: true
 #   require_checksum: true
+#   supported_envs:
+#   - all
 registries:
 - type: standard
   ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
