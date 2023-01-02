@@ -307,7 +307,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.ControllerImpl {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -421,7 +421,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -575,7 +575,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(domain.WhichController), new(*which.Controller)),
+			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
 		),
 		wire.NewSet(
 			exec.New,

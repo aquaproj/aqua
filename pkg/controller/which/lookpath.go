@@ -12,7 +12,7 @@ import (
 
 const proxyName = "aqua-proxy"
 
-func (ctrl *Controller) lookPath(envPath, exeName string) string {
+func (ctrl *ControllerImpl) lookPath(envPath, exeName string) string {
 	for _, p := range filepath.SplitList(envPath) {
 		bin := filepath.Join(p, exeName)
 		finfo, err := ctrl.readLink(bin)
@@ -30,7 +30,7 @@ func (ctrl *Controller) lookPath(envPath, exeName string) string {
 	return ""
 }
 
-func (ctrl *Controller) readLink(p string) (os.FileInfo, error) {
+func (ctrl *ControllerImpl) readLink(p string) (os.FileInfo, error) {
 	finfo, err := ctrl.linker.Lstat(p)
 	if err != nil {
 		return nil, fmt.Errorf("get a file stat (%s): %w", p, err)

@@ -10,7 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/util"
@@ -25,7 +25,7 @@ type Controller struct {
 	stdin              io.Reader
 	stdout             io.Writer
 	stderr             io.Writer
-	which              domain.WhichController
+	which              which.Controller
 	packageInstaller   installpackage.Installer
 	executor           Executor
 	enabledXSysExec    bool
@@ -34,7 +34,7 @@ type Controller struct {
 	policyChecker      policy.Checker
 }
 
-func New(pkgInstaller installpackage.Installer, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker) *Controller {
+func New(pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -92,7 +92,7 @@ func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []st
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
 	logE = logE.WithField("exe_path", findResult.ExePath)
 
 	var checksums *checksum.Checksums

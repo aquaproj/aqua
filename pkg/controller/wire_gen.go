@@ -134,7 +134,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return controller
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.ControllerImpl {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
@@ -154,8 +154,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	unarchiver := unarchive.New()
 	checkerImpl := policy.NewChecker()
 	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
-	controller := which.New(param, configFinder, configReaderImpl, installerImpl, rt, osEnv, fs, linker, installpackageCosign)
-	return controller
+	controllerImpl := which.New(param, configFinder, configReaderImpl, installerImpl, rt, osEnv, fs, linker, installpackageCosign)
+	return controllerImpl
 }
 
 func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *exec2.Controller {
@@ -179,10 +179,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	registryInstallerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
-	controller := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker, installpackageCosign)
+	controllerImpl := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker, installpackageCosign)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	execController := exec2.New(installerImpl, controller, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl)
-	return execController
+	controller := exec2.New(installerImpl, controllerImpl, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl)
+	return controller
 }
 
 func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
@@ -225,10 +225,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	registryInstallerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifier, slsaVerifier)
-	controller := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker, installpackageCosign)
+	controllerImpl := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker, installpackageCosign)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	installController := install.New(param, configFinder, configReaderImpl, registryInstallerImpl, installerImpl, fs, rt, policyConfigReaderImpl, installpackageCosign)
-	cpController := cp.New(param, installerImpl, fs, rt, controller, installController, policyConfigReaderImpl)
+	controller := install.New(param, configFinder, configReaderImpl, registryInstallerImpl, installerImpl, fs, rt, policyConfigReaderImpl, installpackageCosign)
+	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, policyConfigReaderImpl)
 	return cpController
 }
 
