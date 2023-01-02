@@ -60,7 +60,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	unarchiver := unarchive.New()
 	checkerImpl := policy.NewChecker()
 	installpackageCosign := installpackage.NewCosign(param, downloader, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiver, checkerImpl, verifierImpl, slsaVerifierImpl)
-	controller := list.NewController(configFinder, configReaderImpl, installerImpl, installpackageCosign)
+	controller := list.NewController(configFinder, configReaderImpl, installerImpl, installpackageCosign, fs)
 	return controller
 }
 

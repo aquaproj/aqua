@@ -26,17 +26,18 @@ type Controller struct {
 	fs                afero.Fs
 }
 
-func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, cosignInstaller domain.CosignInstaller) *Controller {
+func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, cosignInstaller domain.CosignInstaller, fs afero.Fs) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,
 		cosignInstaller:   cosignInstaller,
+		fs:                fs,
 	}
 }
 
-func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error {
+func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error { //nolint:cyclop
 	cfg := &aqua.Config{}
 	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
