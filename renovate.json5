@@ -3,9 +3,9 @@
     "config:base",
     "helpers:pinGitHubActionDigests",
     "github>suzuki-shunsuke/renovate-config",
-    "github>aquaproj/aqua-renovate-config#1.2.6",
-    "github>aquaproj/aqua-renovate-config:file#1.2.6(tests/aqua.*\\.yaml)",
-    "github>aquaproj/aqua-renovate-config:file#1.2.6(aqua/.*\\.ya?ml)",
+    "github>aquaproj/aqua-renovate-config#1.5.0",
+    "github>aquaproj/aqua-renovate-config:file#1.5.0(tests/aqua.*\\.yaml)",
+    "github>aquaproj/aqua-renovate-config:file#1.5.0(aqua/.*\\.ya?ml)",
   ],
   ignorePaths: [],
   regexManagers: [
@@ -23,6 +23,22 @@
       datasourceTemplate: "github-releases",
       matchStrings: [
         '"(?<currentValue>.*)",? // renovate: depName=aquaproj/aqua-registry',
+      ],
+    },
+    {
+      fileMatch: ["^\\.github/workflows/.*\\.ya?ml$"],
+      depNameTemplate: "sigstore/cosign",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        'cosign-release: (?<currentValue>.*) +# renovate: depName=sigstore/cosign',
+      ],
+    },
+    {
+      fileMatch: ["^pkgs/cosign/version\\.go"],
+      depNameTemplate: "sigstore/cosign",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        'const Version = "(?<currentValue>.*)"',
       ],
     },
   ],

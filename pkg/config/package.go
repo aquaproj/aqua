@@ -186,6 +186,7 @@ type Param struct {
 	Deep                  bool
 	SkipLink              bool
 	Pin                   bool
+	Prune                 bool
 	PolicyConfigFilePaths []string
 }
 
@@ -222,13 +223,13 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 		}
 		return path.Base(pkgInfo.GetPath()), nil
 	case PkgInfoTypeGitHubContent:
-		s, err := cpkg.renderTemplateString(*pkgInfo.Path, rt)
+		s, err := cpkg.RenderTemplateString(*pkgInfo.Path, rt)
 		if err != nil {
 			return "", fmt.Errorf("render a package path: %w", err)
 		}
 		return s, nil
 	case PkgInfoTypeGitHubRelease:
-		return cpkg.renderTemplateString(*pkgInfo.Asset, rt)
+		return cpkg.RenderTemplateString(*pkgInfo.Asset, rt)
 	case PkgInfoTypeHTTP:
 		uS, err := cpkg.RenderURL(rt)
 		if err != nil {
@@ -243,7 +244,7 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	return "", nil
 }
 
-func (cpkg *Package) renderTemplateString(s string, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
 	tpl, err := template.Compile(s)
 	if err != nil {
 		return "", fmt.Errorf("parse a template: %w", err)
@@ -293,7 +294,7 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 
 func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
-	s, err := cpkg.renderTemplateString(*pkgInfo.URL, rt)
+	s, err := cpkg.RenderTemplateString(*pkgInfo.URL, rt)
 	if err != nil {
 		return "", err
 	}
@@ -311,6 +312,11 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	return s, nil
 }
 
+func (cpkg *Package) RenderPath() (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	return cpkg.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
+}
+
 func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
@@ -324,7 +330,11 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	case PkgInfoTypeGo:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), pkgInfo.GetPath(), pkg.Version, "bin"), nil
+		p, err := cpkg.RenderPath()
+		if err != nil {
+			return "", fmt.Errorf("render Go Module Path: %w", err)
+		}
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
@@ -339,4 +349,16 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), u.Host, u.Path), nil
 	}
 	return "", nil
+}
+
+func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
+	pkg := cpkg.Package
+	pkgInfo := cpkg.PackageInfo
+	return &template.Artifact{
+		Version: pkg.Version,
+		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
+		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		Format:  pkgInfo.GetFormat(),
+		Asset:   asset,
+	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (inst *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
+func (inst *InstallerImpl) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	if fileInfo, err := inst.linker.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -43,7 +43,7 @@ func (inst *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry)
 	return nil
 }
 
-func (inst *Installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
+func (inst *InstallerImpl) recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	lnDest, err := inst.linker.Readlink(linkPath)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
@@ -77,7 +77,7 @@ exec aqua exec -- $0 $@
 	proxyPermission os.FileMode = 0o755
 )
 
-func (inst *Installer) createProxyWindows(binName string, logE *logrus.Entry) error {
+func (inst *InstallerImpl) createProxyWindows(binName string, logE *logrus.Entry) error {
 	if err := inst.createBinWindows(filepath.Join(inst.rootDir, "bin", binName), scrTemplate, logE); err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (inst *Installer) createProxyWindows(binName string, logE *logrus.Entry) er
 	return nil
 }
 
-func (inst *Installer) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
+func (inst *InstallerImpl) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
 	if fileInfo, err := inst.linker.Lstat(binPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -112,7 +112,7 @@ func (inst *Installer) createBinWindows(binPath, binTxt string, logE *logrus.Ent
 	return inst.writeBinWindows(binPath, binTxt, logE)
 }
 
-func (inst *Installer) writeBinWindows(proxyPath, binTxt string, logE *logrus.Entry) error {
+func (inst *InstallerImpl) writeBinWindows(proxyPath, binTxt string, logE *logrus.Entry) error {
 	logE.WithFields(logrus.Fields{
 		"proxy_path": proxyPath,
 	}).Info("create a proxy file")

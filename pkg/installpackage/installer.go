@@ -12,9 +12,12 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -24,11 +27,11 @@ import (
 
 const proxyName = "aqua-proxy"
 
-type Installer struct {
+type InstallerImpl struct {
 	rootDir            string
 	maxParallelism     int
-	packageDownloader  domain.PackageDownloader
-	checksumDownloader domain.ChecksumDownloader
+	downloader         download.ClientAPI
+	checksumDownloader download.ChecksumDownloader
 	checksumFileParser *checksum.FileParser
 	checksumCalculator ChecksumCalculator
 	runtime            *runtime.Runtime
@@ -36,11 +39,63 @@ type Installer struct {
 	linker             domain.Linker
 	executor           Executor
 	unarchiver         Unarchiver
+	cosign             cosign.Verifier
+	slsaVerifier       slsa.Verifier
 	progressBar        bool
 	onlyLink           bool
 	isTest             bool
 	copyDir            string
-	policyChecker      domain.PolicyChecker
+	policyChecker      policy.Checker
+}
+
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+	return &InstallerImpl{
+		rootDir:            param.RootDir,
+		maxParallelism:     param.MaxParallelism,
+		downloader:         downloader,
+		checksumDownloader: chkDL,
+		checksumFileParser: &checksum.FileParser{},
+		checksumCalculator: chkCalc,
+		runtime:            rt,
+		fs:                 fs,
+		linker:             linker,
+		executor:           executor,
+		progressBar:        param.ProgressBar,
+		isTest:             param.IsTest,
+		onlyLink:           param.OnlyLink,
+		copyDir:            param.Dest,
+		unarchiver:         unarchiver,
+		policyChecker:      policyChecker,
+		cosign:             cosignVerifier,
+		slsaVerifier:       slsaVerifier,
+	}
+}
+
+type Installer interface {
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error
+	InstallProxy(ctx context.Context, logE *logrus.Entry) error
+}
+
+type ParamInstallPackages struct {
+	ConfigFilePath string
+	Config         *aqua.Config
+	Registries     map[string]*registry.Config
+	Tags           map[string]struct{}
+	ExcludedTags   map[string]struct{}
+	SkipLink       bool
+	PolicyConfigs  []*policy.Config
+	Checksums      *checksum.Checksums
+}
+
+type ParamInstallPackage struct {
+	Pkg             *config.Package
+	Checksums       *checksum.Checksums
+	RequireChecksum bool
+	PolicyConfigs   []*policy.Config
+	ConfigFileDir   string
+	CosignExePath   string
+	Checksum        *checksum.Checksum
 }
 
 type Unarchiver interface {
@@ -59,24 +114,15 @@ type ChecksumCalculator interface {
 	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
 }
 
-type MockChecksumCalculator struct {
-	Checksum string
-	Err      error
-}
-
-func (calc *MockChecksumCalculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
-	return calc.Checksum, calc.Err
-}
-
 func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *Installer) SetCopyDir(copyDir string) {
+func (inst *InstallerImpl) SetCopyDir(copyDir string) {
 	inst.copyDir = copyDir
 }
 
-func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackages) error { //nolint:funlen,cyclop
+func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
 	if !param.SkipLink {
 		if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
@@ -112,23 +158,6 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 		flagMutex.Unlock()
 	}
 
-	var checksums *checksum.Checksums
-	if param.Config.ChecksumEnabled() {
-		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(inst.fs, param.ConfigFilePath)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
-		if err := checksums.ReadFile(inst.fs, checksumFilePath); err != nil {
-			return fmt.Errorf("read a checksum JSON: %w", err)
-		}
-		defer func() {
-			if err := checksums.UpdateFile(inst.fs, checksumFilePath); err != nil {
-				logE.WithError(err).Error("update a checksum file")
-			}
-		}()
-	}
-
 	for _, pkg := range pkgs {
 		go func(pkg *config.Package) {
 			defer wg.Done()
@@ -145,9 +174,9 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 				logE.Debug("skip installing the package because package tags are unmatched")
 				return
 			}
-			if err := inst.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+			if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
-				Checksums:       checksums,
+				Checksums:       param.Checksums,
 				RequireChecksum: param.Config.RequireChecksum(),
 				PolicyConfigs:   param.PolicyConfigs,
 			}); err != nil {
@@ -164,7 +193,7 @@ func (inst *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *domain.ParamInstallPackage) error { //nolint:cyclop
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -206,6 +235,7 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 		Asset:           assetName,
 		Checksums:       checksums,
 		RequireChecksum: param.RequireChecksum,
+		Checksum:        param.Checksum,
 	}); err != nil {
 		return err
 	}
@@ -224,7 +254,7 @@ func (inst *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, p
 	return nil
 }
 
-func (inst *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
+func (inst *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
 	failed := false
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
@@ -251,12 +281,13 @@ const maxRetryDownload = 1
 type DownloadParam struct {
 	Package         *config.Package
 	Checksums       *checksum.Checksums
+	Checksum        *checksum.Checksum
 	Dest            string
 	Asset           string
 	RequireChecksum bool
 }
 
-func (inst *Installer) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+func (inst *InstallerImpl) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	exePath, err := inst.checkFileSrc(pkg, file, logE)
 	if err != nil {
 		if inst.isTest {
@@ -275,7 +306,7 @@ func (inst *Installer) checkAndCopyFile(pkg *config.Package, file *registry.File
 	return nil
 }
 
-func (inst *Installer) checkFileSrc(pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (inst *InstallerImpl) checkFileSrc(pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return "", fmt.Errorf("get the package install path: %w", err)
@@ -310,7 +341,7 @@ const (
 	filePermission os.FileMode = 0o755
 )
 
-func (inst *Installer) Copy(dest, src string) error {
+func (inst *InstallerImpl) Copy(dest, src string) error {
 	dst, err := inst.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)

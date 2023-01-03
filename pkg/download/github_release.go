@@ -29,26 +29,28 @@ func NewGitHubReleaseDownloader(gh GitHubReleaseAPI, httpDL HTTPDownloader) *Git
 }
 
 func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, logE *logrus.Entry, param *domain.DownloadGitHubReleaseParam) (io.ReadCloser, int64, error) {
-	// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
-	// As a result of test, it seems not to be limited.
-	// So at first aqua tries to download assets without GitHub API.
-	// And if it failed, aqua tries again with GitHub API.
-	// It avoids the rate limit of the access token.
-	b, length, err := dl.http.Download(ctx, fmt.Sprintf(
-		"https://github.com/%s/%s/releases/download/%s/%s",
-		param.RepoOwner, param.RepoName, param.Version, param.Asset))
-	if err == nil {
-		return b, length, nil
+	if !param.Private {
+		// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
+		// As a result of test, it seems not to be limited.
+		// So at first aqua tries to download assets without GitHub API.
+		// And if it failed, aqua tries again with GitHub API.
+		// It avoids the rate limit of the access token.
+		b, length, err := dl.http.Download(ctx, fmt.Sprintf(
+			"https://github.com/%s/%s/releases/download/%s/%s",
+			param.RepoOwner, param.RepoName, param.Version, param.Asset))
+		if err == nil {
+			return b, length, nil
+		}
+		if b != nil {
+			b.Close()
+		}
+		logE.WithError(err).WithFields(logrus.Fields{
+			"repo_owner":    param.RepoOwner,
+			"repo_name":     param.RepoName,
+			"asset_version": param.Version,
+			"asset_name":    param.Asset,
+		}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
 	}
-	if b != nil {
-		b.Close()
-	}
-	logE.WithError(err).WithFields(logrus.Fields{
-		"repo_owner":    param.RepoOwner,
-		"repo_name":     param.RepoName,
-		"asset_version": param.Version,
-		"asset_name":    param.Asset,
-	}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
 
 	release, _, err := dl.github.GetReleaseByTag(ctx, param.RepoOwner, param.RepoName, param.Version)
 	if err != nil {
@@ -66,7 +68,7 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		// DownloadReleaseAsset doesn't return a http.Response, so the content length is zero.
 		return body, 0, nil
 	}
-	b, length, err = dl.http.Download(ctx, redirectURL)
+	b, length, err := dl.http.Download(ctx, redirectURL)
 	if err != nil {
 		if b != nil {
 			b.Close()

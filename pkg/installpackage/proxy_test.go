@@ -8,10 +8,13 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -63,8 +66,8 @@ func Test_installer_InstallProxy(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
+			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallProxy(ctx, logE); err != nil {
 				if d.isErr {
 					return

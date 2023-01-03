@@ -7,7 +7,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
-func (pc *Checker) matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
+func (pc *CheckerImpl) matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
 	if rgst.Type != rgstPolicy.Type {
 		return false, nil
 	}

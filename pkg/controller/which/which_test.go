@@ -11,10 +11,12 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -36,7 +38,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 		exeName string
 		rt      *runtime.Runtime
 		isErr   bool
-		exp     *domain.FindResult
+		exp     *which.FindResult
 	}{
 		{
 			name: "normal",
@@ -66,7 +68,7 @@ packages:
   path: aqua-installer
 `,
 			},
-			exp: &domain.FindResult{
+			exp: &which.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Name:     "aquaproj/aqua-installer",
@@ -144,7 +146,7 @@ packages:
 			links: map[string]string{
 				"../foo/gh": "/usr/local/bin/gh",
 			},
-			exp: &domain.FindResult{
+			exp: &which.FindResult{
 				ExePath: "/usr/local/bin/gh",
 			},
 		},
@@ -185,7 +187,7 @@ packages:
   path: aqua-installer
 `,
 			},
-			exp: &domain.FindResult{
+			exp: &which.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
 						Name:     "aquaproj/aqua-installer",
@@ -252,8 +254,8 @@ packages:
 				}
 			}
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs), d.rt, osenv.NewMock(d.env), fs, linker)
-			which, err := ctrl.Which(ctx, d.param, d.exeName, logE)
+			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(d.env), fs, linker)
+			which, err := ctrl.Which(ctx, logE, d.param, d.exeName)
 			if err != nil {
 				if d.isErr {
 					return

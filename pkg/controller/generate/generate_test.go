@@ -9,11 +9,13 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/github"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -400,7 +402,7 @@ packages:
 				Tags:     d.tags,
 			}
 			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
-			registryInstaller := registry.New(d.param, downloader, fs)
+			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)

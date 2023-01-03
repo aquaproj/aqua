@@ -1,5 +1,7 @@
 package aqua
 
+import "github.com/aquaproj/aqua/pkg/config/registry"
+
 func (cfg *Config) ChecksumEnabled() bool {
 	if cfg == nil {
 		return false
@@ -21,6 +23,7 @@ type Checksum struct {
 	RequireChecksum bool `yaml:"require_checksum" json:"require_checksum,omitempty"`
 	// SaveCalculatedChecksum   bool               `yaml:"save_calculated_checksum" json:"-"`
 	// Excludes                 []*ChekcsumExclude `json:"-"`
+	SupportedEnvs registry.SupportedEnvs `yaml:"supported_envs" json:"supported_envs,omitempty"`
 }
 
 // type ChekcsumExclude struct {

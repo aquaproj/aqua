@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -18,6 +17,8 @@ const configTemplate = `---
 #   # https://aquaproj.github.io/docs/reference/checksum/
 #   enabled: true
 #   require_checksum: true
+#   supported_envs:
+#   - all
 registries:
 - type: standard
   ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
@@ -27,10 +28,6 @@ packages:
 type Controller struct {
 	github RepositoriesService
 	fs     afero.Fs
-}
-
-type RepositoriesService interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
 }
 
 func New(gh RepositoriesService, fs afero.Fs) *Controller {
@@ -52,7 +49,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		return nil
 	}
 
-	registryVersion := "v3.94.1" // renovate: depName=aquaproj/aqua-registry
+	registryVersion := "v3.115.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{

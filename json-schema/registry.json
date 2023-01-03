@@ -18,7 +18,11 @@
     "Checksum": {
       "properties": {
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "github_release",
+            "http"
+          ]
         },
         "asset": {
           "type": "string"
@@ -30,7 +34,13 @@
           "type": "string"
         },
         "algorithm": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "md5",
+            "sha1",
+            "sha256",
+            "sha512"
+          ]
         },
         "pattern": {
           "$ref": "#/$defs/ChecksumPattern"
@@ -40,6 +50,9 @@
         },
         "replacements": {
           "$ref": "#/$defs/Replacements"
+        },
+        "cosign": {
+          "$ref": "#/$defs/Cosign"
         }
       },
       "additionalProperties": false,
@@ -80,6 +93,61 @@
       "type": "object",
       "required": [
         "packages"
+      ]
+    },
+    "Cosign": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "cosign_experimental": {
+          "type": "boolean"
+        },
+        "opts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "signature": {
+          "$ref": "#/$defs/DownloadedFile"
+        },
+        "certificate": {
+          "$ref": "#/$defs/DownloadedFile"
+        },
+        "key": {
+          "$ref": "#/$defs/DownloadedFile"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "DownloadedFile": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "http"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
       ]
     },
     "File": {
@@ -212,6 +280,12 @@
             "go",
             "go_install"
           ]
+        },
+        "cosign": {
+          "$ref": "#/$defs/Cosign"
+        },
+        "slsa_provenance": {
+          "$ref": "#/$defs/SLSAProvenance"
         }
       },
       "additionalProperties": false,
@@ -330,6 +404,15 @@
         },
         "checksum": {
           "$ref": "#/$defs/Checksum"
+        },
+        "cosign": {
+          "$ref": "#/$defs/Cosign"
+        },
+        "slsa_provenance": {
+          "$ref": "#/$defs/SLSAProvenance"
+        },
+        "private": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -363,6 +446,40 @@
         }
       },
       "type": "object"
+    },
+    "SLSAProvenance": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "http"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "source_uri": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ]
     },
     "SupportedEnvs": {
       "items": {
@@ -467,6 +584,12 @@
         },
         "checksum": {
           "$ref": "#/$defs/Checksum"
+        },
+        "cosign": {
+          "$ref": "#/$defs/Cosign"
+        },
+        "slsa_provenance": {
+          "$ref": "#/$defs/SLSAProvenance"
         }
       },
       "additionalProperties": false,

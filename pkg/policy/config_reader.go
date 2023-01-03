@@ -8,17 +8,30 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func NewConfigReader(fs afero.Fs) *ConfigReader {
-	return &ConfigReader{
+type ConfigReaderImpl struct {
+	fs afero.Fs
+}
+
+func NewConfigReader(fs afero.Fs) *ConfigReaderImpl {
+	return &ConfigReaderImpl{
 		fs: fs,
 	}
 }
 
-type ConfigReader struct {
-	fs afero.Fs
+type ConfigReader interface {
+	Read([]string) ([]*Config, error)
 }
 
-func (reader *ConfigReader) Read(files []string) ([]*Config, error) {
+type MockConfigReader struct {
+	Cfgs []*Config
+	Err  error
+}
+
+func (reader *MockConfigReader) Read(files []string) ([]*Config, error) {
+	return reader.Cfgs, reader.Err
+}
+
+func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 	if len(files) == 0 {
 		return reader.readDefault()
 	}
@@ -36,7 +49,7 @@ func (reader *ConfigReader) Read(files []string) ([]*Config, error) {
 	return policyCfgs, nil
 }
 
-func (reader *ConfigReader) readDefault() ([]*Config, error) {
+func (reader *ConfigReaderImpl) readDefault() ([]*Config, error) {
 	// https://github.com/aquaproj/aqua/issues/1404
 	// If no policy file is set, only standard registry is allowed by default.
 	cfg := &Config{
@@ -61,7 +74,7 @@ func (reader *ConfigReader) readDefault() ([]*Config, error) {
 	}, nil
 }
 
-func (reader *ConfigReader) read(cfg *Config) error {
+func (reader *ConfigReaderImpl) read(cfg *Config) error {
 	file, err := reader.fs.Open(cfg.Path)
 	if err != nil {
 		return err //nolint:wrapcheck

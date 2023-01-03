@@ -2,13 +2,17 @@ package updatechecksum_test
 
 import (
 	"context"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
+	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -18,18 +22,22 @@ func boolP(b bool) *bool {
 	return &b
 }
 
+func strP(s string) *string {
+	return &s
+}
+
 func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name            string
 		param           *config.Param
 		cfgFinder       updatechecksum.ConfigFinder
-		cfgReader       domain.ConfigReader
-		registInstaller domain.RegistryInstaller
+		cfgReader       reader.ConfigReader
+		registInstaller rgst.Installer
 		fs              afero.Fs
 		rt              *runtime.Runtime
-		chkDL           domain.ChecksumDownloader
-		pkgDownloader   domain.PackageDownloader
+		chkDL           download.ChecksumDownloader
+		downloader      download.ClientAPI
 		isErr           bool
 	}{
 		{
@@ -46,7 +54,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &domain.MockConfigReader{
+			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
@@ -60,13 +68,15 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &domain.MockRegistryInstaller{
+			registInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
 							{
 								RepoOwner: "cli",
 								RepoName:  "cli",
+								Type:      "github_release",
+								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 							},
 						},
 					},
@@ -77,8 +87,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:         &domain.MockChecksumDownloader{},
-			pkgDownloader: &domain.MockPackageDownloader{},
+			chkDL:      &download.MockChecksumDownloader{},
+			downloader: &download.Mock{},
 		},
 		{
 			name: "deep",
@@ -95,7 +105,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &domain.MockConfigReader{
+			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
@@ -109,13 +119,15 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &domain.MockRegistryInstaller{
+			registInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
 							{
 								RepoOwner: "cli",
 								RepoName:  "cli",
+								Type:      "github_release",
+								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 							},
 						},
 					},
@@ -126,8 +138,10 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:         &domain.MockChecksumDownloader{},
-			pkgDownloader: &domain.MockPackageDownloader{},
+			chkDL: &download.MockChecksumDownloader{},
+			downloader: &download.Mock{
+				RC: io.NopCloser(strings.NewReader("hello")),
+			},
 		},
 		{
 			name: "enabled",
@@ -143,7 +157,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					"/home/foo/workspace/aqua.yaml",
 				},
 			},
-			cfgReader: &domain.MockConfigReader{
+			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
 						Enabled: boolP(true),
@@ -157,13 +171,15 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &domain.MockRegistryInstaller{
+			registInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
 							{
 								RepoOwner: "cli",
 								RepoName:  "cli",
+								Type:      "github_release",
+								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 								Checksum: &registry.Checksum{
 									Type:       "github_release",
 									Asset:      "gh_{{trimV .Version}}_checksums.txt",
@@ -184,7 +200,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL: &domain.MockChecksumDownloader{
+			chkDL: &download.MockChecksumDownloader{
 				Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
 34c0ba49d290ffe108c723ffb0063a4a749a8810979b71fc503434b839688b5c  gh_2.17.0_linux_386.rpm
 3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963  gh_2.17.0_macOS_amd64.tar.gz
@@ -201,7 +217,7 @@ d373e305512e53145df7064a0253df696fe17f9ec71804311239f3e2c9e19999  gh_2.17.0_linu
 d3b06f291551ce0357e08334d8ba72810a552b593329e3c0dd3489f51a8712a3  gh_2.17.0_windows_386.zip
 ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linux_386.tar.gz`,
 			},
-			pkgDownloader: &domain.MockPackageDownloader{},
+			downloader: &download.Mock{},
 		},
 	}
 	ctx := context.Background()
@@ -210,7 +226,7 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.pkgDownloader)
+			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader)
 			if err := ctrl.UpdateChecksum(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

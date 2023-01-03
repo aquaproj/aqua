@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 )
@@ -15,6 +16,17 @@ func New() *Runtime {
 		GOOS:   goos(),
 		GOARCH: goarch(),
 	}
+}
+
+func NewR() *Runtime {
+	return &Runtime{
+		GOOS:   runtime.GOOS,
+		GOARCH: runtime.GOARCH,
+	}
+}
+
+func (rt *Runtime) Env() string {
+	return fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)
 }
 
 func goos() string {

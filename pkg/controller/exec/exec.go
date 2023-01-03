@@ -10,7 +10,8 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -24,21 +25,16 @@ type Controller struct {
 	stdin              io.Reader
 	stdout             io.Writer
 	stderr             io.Writer
-	which              domain.WhichController
-	packageInstaller   domain.PackageInstaller
+	which              which.Controller
+	packageInstaller   installpackage.Installer
 	executor           Executor
 	enabledXSysExec    bool
 	fs                 afero.Fs
-	policyConfigReader domain.PolicyConfigReader
-	policyChecker      domain.PolicyChecker
+	policyConfigReader policy.ConfigReader
+	policyChecker      policy.Checker
 }
 
-type Executor interface {
-	Exec(ctx context.Context, exePath string, args []string) (int, error)
-	ExecXSys(exePath string, args []string) error
-}
-
-func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader domain.PolicyConfigReader, policyChecker domain.PolicyChecker) *Controller {
+func New(pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -53,7 +49,7 @@ func New(pkgInstaller domain.PackageInstaller, whichCtrl domain.WhichController,
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName string, args []string, logE *logrus.Entry) (gErr error) {
+func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args []string) (gErr error) {
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -61,7 +57,7 @@ func (ctrl *Controller) Exec(ctx context.Context, param *config.Param, exeName s
 		}
 	}()
 
-	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
+	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -96,7 +92,7 @@ func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []st
 	return nil
 }
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *domain.FindResult) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
 	logE = logE.WithField("exe_path", findResult.ExePath)
 
 	var checksums *checksum.Checksums
@@ -116,7 +112,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		}()
 	}
 
-	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(),

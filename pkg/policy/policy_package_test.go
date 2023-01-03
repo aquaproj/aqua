@@ -64,7 +64,7 @@ func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	checker := &policy.Checker{}
+	checker := &policy.CheckerImpl{}
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {

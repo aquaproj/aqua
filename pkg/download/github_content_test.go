@@ -13,12 +13,16 @@ import (
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
+func stringP(s string) *string {
+	return &s
+}
+
 func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name       string
 		param      *domain.GitHubContentFileParam
-		github     domain.RepositoriesService
+		github     github.RepositoriesService
 		httpClient *http.Client
 		isErr      bool
 		exp        string

@@ -2,6 +2,7 @@ package updatechecksum
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -9,8 +10,10 @@ import (
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/download"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -20,17 +23,18 @@ import (
 type Controller struct {
 	rootDir           string
 	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
-	registryInstaller domain.RegistryInstaller
+	configReader      reader.ConfigReader
+	registryInstaller registry.Installer
 	fs                afero.Fs
 	runtime           *runtime.Runtime
-	chkDL             domain.ChecksumDownloader
+	chkDL             download.ChecksumDownloader
 	parser            *checksum.FileParser
-	pkgDownloader     domain.PackageDownloader
+	downloader        download.ClientAPI
 	deep              bool
+	prune             bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL domain.ChecksumDownloader, pkgDownloader domain.PackageDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -40,8 +44,9 @@ func New(param *config.Param, configFinder ConfigFinder, configReader domain.Con
 		runtime:           rt,
 		chkDL:             chkDL,
 		parser:            &checksum.FileParser{},
-		pkgDownloader:     pkgDownloader,
+		downloader:        pkgDownloader,
 		deep:              param.Deep,
+		prune:             param.Prune,
 	}
 }
 
@@ -70,17 +75,12 @@ func (ctrl *Controller) updateChecksumAll(ctx context.Context, logE *logrus.Entr
 	return nil
 }
 
-func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) (namedErr error) {
+func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) (namedErr error) { //nolint:cyclop
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
-		return err //nolint:wrapcheck
-	}
-
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
-	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
@@ -92,21 +92,34 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
+
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
 	pkgs, _ := config.ListPackagesNotOverride(logE, cfg, registryContents)
 	failed := false
 	defer func() {
+		if ctrl.prune {
+			checksums.Prune()
+		}
 		if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
 			namedErr = fmt.Errorf("update a checksum file: %w", err)
 		}
 	}()
+
+	var supportedEnvs []string
+	if cfg.Checksum != nil {
+		supportedEnvs = cfg.Checksum.SupportedEnvs
+	}
+
 	for _, pkg := range pkgs {
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":     pkg.Package.Name,
 			"package_version":  pkg.Package.Version,
 			"package_registry": pkg.Package.Registry,
 		})
-		logE.Info("updating a package checksum")
-		if err := ctrl.updatePackage(ctx, logE, checksums, pkg); err != nil {
+		if err := ctrl.updatePackage(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
 			failed = true
 			logerr.WithError(logE, err).Error("update checksums")
 		}
@@ -117,39 +130,66 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	return nil
 }
 
-func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
-	if err := ctrl.getChecksums(ctx, logE, checksums, pkg); err != nil {
+func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	if err := ctrl.getChecksums(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package) error {
-	rts, err := runtime.GetRuntimesFromEnvs(pkg.PackageInfo.SupportedEnvs)
+func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	logE.Info("updating a package checksum")
+	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
 		return fmt.Errorf("get supported platforms: %w", err)
+	}
+
+	pkgs, assetNames, err := ctrl.getPkgs(pkg, rts)
+	if err != nil {
+		return err
 	}
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
 		rt := rt
+		env := rt.Env()
 		logE := logE.WithFields(logrus.Fields{
-			"checksum_env": rt.GOOS + "/" + rt.GOARCH,
+			"checksum_env": env,
 		})
-		if err := ctrl.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt); err != nil {
+		pkg, ok := pkgs[env]
+		if !ok {
+			return errors.New("package isn't found")
+		}
+		if err := ctrl.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt, assetNames); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime) error { //nolint:funlen,cyclop
-	pkgInfo := pkg.PackageInfo
-	pkgInfo = pkgInfo.Copy()
-	pkgInfo.OverrideByRuntime(rt)
-	pkg = &config.Package{
-		Package:     pkg.Package,
-		PackageInfo: pkgInfo,
+func (ctrl *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[string]*config.Package, map[string]struct{}, error) {
+	pkgs := make(map[string]*config.Package, len(rts))
+	assets := make(map[string]struct{}, len(rts))
+	for _, rt := range rts {
+		env := rt.Env()
+		pkgInfo := pkg.PackageInfo
+		pkgInfo = pkgInfo.Copy()
+		pkgInfo.OverrideByRuntime(rt)
+		pkgWithEnv := &config.Package{
+			Package:     pkg.Package,
+			PackageInfo: pkgInfo,
+		}
+		asset, err := pkgWithEnv.RenderAsset(rt)
+		if err != nil {
+			return nil, nil, fmt.Errorf("render an asset: %w", err)
+		}
+		assets[asset] = struct{}{}
+		pkgs[env] = pkgWithEnv
 	}
+	return pkgs, assets, nil
+}
+
+func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}) error { //nolint:funlen,cyclop
+	pkgInfo := pkg.PackageInfo
 
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
 		if !ctrl.deep {
@@ -222,6 +262,9 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 		return nil
 	}
 	for assetName, chksum := range m {
+		if _, ok := assetNames[assetName]; !ok {
+			continue
+		}
 		checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
 		if err != nil {
 			return fmt.Errorf("get a checksum id from asset: %w", err)
@@ -261,7 +304,11 @@ func (ctrl *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.
 			gErr = logerr.WithFields(gErr, fields)
 		}
 	}()
-	file, _, err := ctrl.pkgDownloader.GetReadCloser(ctx, pkg, assetName, logE, rt)
+	f, err := download.ConvertPackageToFile(pkg, assetName, rt)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	file, _, err := ctrl.downloader.GetReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("download an asset: %w", err)
 	}

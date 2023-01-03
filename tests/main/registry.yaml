@@ -1,126 +1,152 @@
 packages:
-- name: golangci-lint
-  type: github_release
-  repo_owner: golangci
-  repo_name: golangci-lint
-  asset: 'golangci-lint-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
-  files:
   - name: golangci-lint
-    src: 'golangci-lint-{{trimV .Version}}-{{.OS}}-{{.Arch}}/golangci-lint'
+    type: github_release
+    repo_owner: golangci
+    repo_name: golangci-lint
+    asset: 'golangci-lint-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
+    files:
+      - name: golangci-lint
+        src: 'golangci-lint-{{trimV .Version}}-{{.OS}}-{{.Arch}}/golangci-lint'
 
-- type: github_release
-  repo_owner: kubernetes-sigs
-  repo_name: kustomize
-  asset: 'kustomize_{{trimPrefix "kustomize/" .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
-  version_filter: 'Version startsWith "kustomize/"'
-  version_constraint: 'semverWithVersion(">= 4.2.0", trimPrefix(Version, "kustomize/"))'
-  version_overrides:
-  - version_constraint: 'semverWithVersion("< 4.2.0", trimPrefix(Version, "kustomize/"))'
+  - type: github_release
+    repo_owner: kubernetes-sigs
+    repo_name: kustomize
+    asset: 'kustomize_{{trimPrefix "kustomize/" .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+    version_filter: 'Version startsWith "kustomize/"'
+    version_constraint: 'semverWithVersion(">= 4.2.0", trimPrefix(Version, "kustomize/"))'
+    version_overrides:
+      - version_constraint: 'semverWithVersion("< 4.2.0", trimPrefix(Version, "kustomize/"))'
+        rosetta2: true
+
+  - name: cmdx
+    type: github_release
+    repo_owner: suzuki-shunsuke
+    repo_name: cmdx
     rosetta2: true
+    asset: 'cmdx_{{.OS}}_{{.Arch}}.tar.gz'
+    version_constraint: 'semver(">= 1.6.1")'
+    version_overrides:
+      - version_constraint: 'semver("< 1.6.1")'
+        asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
 
-- name: cmdx
-  type: github_release
-  repo_owner: suzuki-shunsuke
-  repo_name: cmdx
-  rosetta2: true
-  asset: 'cmdx_{{.OS}}_{{.Arch}}.tar.gz'
-  version_constraint: 'semver(">= 1.6.1")'
-  version_overrides:
-  - version_constraint: 'semver("< 1.6.1")'
-    asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
+  - type: github_content # github_content package
+    repo_owner: aquaproj
+    repo_name: aqua-installer
+    path: aqua-installer
 
-- type: github_content # github_content package
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
+  - type: github_archive # github_archive package
+    repo_owner: tfutils
+    repo_name: tfenv
+    files:
+    - name: tfenv
+      src: tfenv-{{trimV .Version}}/bin/tfenv
+    - name: terraform
+      src: tfenv-{{trimV .Version}}/bin/terraform
 
-- type: github_archive # github_archive package
-  repo_owner: tfutils
-  repo_name: tfenv
-  files:
-  - name: tfenv
-    src: tfenv-{{trimV .Version}}/bin/tfenv
-  - name: terraform
-    src: tfenv-{{trimV .Version}}/bin/terraform
+  - type: github_release
+    repo_owner: containerd
+    repo_name: nerdctl
+    asset: 'nerdctl-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
+    supported_if: GOOS != "darwin" # supported_if
 
-- type: github_release
-  repo_owner: aristocratos
-  repo_name: btop
-  asset: 'btop-{{.Arch}}-{{.OS}}.tbz'
-  format: tar.bz2
-  description: 'A monitor of resources'
-  replacements:
-    linux: linux-musl
-    darwin: macos-monterey
-    amd64: x86_64
-  overrides:
-  - goos: linux
-    goarch: arm64
+  - type: github_release
+    repo_owner: aristocratos
+    repo_name: btop
+    asset: 'btop-{{.Arch}}-{{.OS}}.tbz'
+    format: tar.bz2
+    description: 'A monitor of resources'
     replacements:
-      arm64: aarch64
-  files:
-  - name: btop
-    src: bin/btop
+      linux: linux-musl
+      darwin: macos-monterey
+      amd64: x86_64
+    overrides:
+      - goos: linux
+        goarch: arm64
+        replacements:
+          arm64: aarch64
+    files:
+      - name: btop
+        src: bin/btop
 
-- name: ahmetb/kubectx/kubens
-  aliases:
-  - name: ahmetb/kubens
-  type: github_release
-  repo_owner: ahmetb
-  repo_name: kubectx
-  asset: "kubens_{{.Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"
-  description: Faster way to switch between clusters and namespaces in kubectl
-  search_words:
-    # search_words
-    - namespace
-  files:
-  - name: kubens
-  replacements:
-    386: i386
-    amd64: x86_64
-  format: tar.gz
-  format_overrides:
-  - goos: windows
-    format: zip
+  - name: ahmetb/kubectx/kubens
+    aliases:
+      - name: ahmetb/kubens
+    type: github_release
+    repo_owner: ahmetb
+    repo_name: kubectx
+    asset: "kubens_{{.Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"
+    description: Faster way to switch between clusters and namespaces in kubectl
+    search_words:
+      # search_words
+      - namespace
+    files:
+      - name: kubens
+    replacements:
+      386: i386
+      amd64: x86_64
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
 
-- type: go_install
-  path: github.com/anqiansong/github-compare
-  description: A GitHub repositories statistics command-line tool for the terminal
+  # Go
+  - type: go
+    repo_owner: google
+    repo_name: wire
+    description: Compile-time Dependency Injection for Go
+    files:
+      - name: wire
+        src: ./cmd/wire
+        dir: "wire-{{trimV .Version}}"
 
-- type: go_install
-  # ignore duplicate package
-  path: github.com/anqiansong/github-compare
+  # version_source: github_tag
+  - type: go
+    repo_owner: mitchellh
+    repo_name: gox
+    description: A dead simple, no frills Go cross compile tool
+    version_source: github_tag
+    files:
+      - name: gox
+        dir: "gox-{{trimV .Version}}"
 
-- type: go_install
-  repo_owner: katbyte
-  repo_name: terrafmt
-  description: Format terraform blocks embedded in files
+  - type: go_install
+    path: github.com/anqiansong/github-compare
+    description: A GitHub repositories statistics command-line tool for the terminal
 
-- type: go_install
-  description: invalid package
+  - type: go_install
+    # ignore duplicate package
+    path: github.com/anqiansong/github-compare
 
-# unknown package type
-- type: foo
-  name: foo
-  name: foo # duplicated key
+  - type: go_install
+    repo_owner: katbyte
+    repo_name: terrafmt
+    description: Format terraform blocks embedded in files
 
-- type: http
-  repo_owner: helm
-  repo_name: helm
-  url: https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz
-  description: The Kubernetes Package Manager
-  files:
-    - name: helm
-      src: "{{.OS}}-{{.Arch}}/helm"
-  supported_envs:
-    - darwin
-    - linux
-    - amd64
-  checksum:
-    type: http
-    url: "{{.AssetURL}}.sha256sum"
-    file_format: regexp
-    algorithm: sha256
-    pattern:
-      checksum: ^(\b[A-Fa-f0-9]{64}\b)
-      file: "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$"
+  - type: go_install
+    description: invalid package
+
+  # unknown package type
+  - type: foo
+    name: foo
+    name: foo # duplicated key
+
+  - type: http
+    repo_owner: helm
+    repo_name: helm
+    url: https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz
+    description: The Kubernetes Package Manager
+    files:
+      - name: helm
+        src: "{{.OS}}-{{.Arch}}/helm"
+    supported_envs:
+      - darwin
+      - linux
+      - amd64
+    checksum:
+      type: http
+      url: "{{.AssetURL}}.sha256sum"
+      file_format: regexp
+      algorithm: sha256
+      pattern:
+        checksum: ^(\b[A-Fa-f0-9]{64}\b)
+        file: "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$"

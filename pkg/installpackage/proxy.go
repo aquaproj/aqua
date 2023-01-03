@@ -13,7 +13,7 @@ import (
 
 const ProxyVersion = "v1.1.2" // renovate: depName=aquaproj/aqua-proxy
 
-func (inst *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
+func (inst *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
 	if isWindows(inst.runtime.GOOS) {
 		return nil
 	}

@@ -9,10 +9,13 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -190,9 +193,9 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
-			if err := ctrl.InstallPackages(ctx, logE, &domain.ParamInstallPackages{
+			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			if err := ctrl.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{
 				Config:         d.cfg,
 				Registries:     d.registries,
 				ConfigFilePath: d.param.ConfigFilePath,
@@ -260,9 +263,9 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewPackageDownloader(nil, d.rt, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &domain.MockPolicyChecker{})
-			if err := ctrl.InstallPackage(ctx, logE, &domain.ParamInstallPackage{
+			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			if err := ctrl.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 				Pkg: d.pkg,
 			}); err != nil {
 				if d.isErr {

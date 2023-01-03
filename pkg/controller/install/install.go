@@ -6,10 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/domain"
+	registry "github.com/aquaproj/aqua/pkg/install-registry"
+	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -19,24 +22,20 @@ import (
 const dirPermission os.FileMode = 0o775
 
 type Controller struct {
-	packageInstaller   domain.PackageInstaller
+	packageInstaller   installpackage.Installer
 	rootDir            string
 	configFinder       ConfigFinder
-	configReader       domain.ConfigReader
-	registryInstaller  domain.RegistryInstaller
+	configReader       reader.ConfigReader
+	registryInstaller  registry.Installer
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
 	skipLink           bool
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
-	policyConfigReader domain.PolicyConfigReader
+	policyConfigReader policy.ConfigReader
 }
 
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
-}
-
-func New(param *config.Param, configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, pkgInstaller domain.PackageInstaller, fs afero.Fs, rt *runtime.Runtime, policyConfigReader domain.PolicyConfigReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -107,12 +106,29 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		return err //nolint:wrapcheck
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	var checksums *checksum.Checksums
+	if cfg.ChecksumEnabled() {
+		checksums = checksum.New()
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+			return fmt.Errorf("read a checksum JSON: %w", err)
+		}
+		defer func() {
+			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+				logE.WithError(err).Error("update a checksum file")
+			}
+		}()
+	}
+
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	return ctrl.packageInstaller.InstallPackages(ctx, logE, &domain.ParamInstallPackages{ //nolint:wrapcheck
+	return ctrl.packageInstaller.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
 		Config:         cfg,
 		Registries:     registryContents,
 		ConfigFilePath: cfgFilePath,
@@ -120,5 +136,6 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 		Tags:           ctrl.tags,
 		ExcludedTags:   ctrl.excludedTags,
 		PolicyConfigs:  policyConfigs,
+		Checksums:      checksums,
 	})
 }

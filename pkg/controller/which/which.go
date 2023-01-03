@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/domain"
+	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -17,25 +21,57 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type Controller struct {
+type ControllerImpl struct {
 	stdout            io.Writer
 	rootDir           string
 	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
-	registryInstaller domain.RegistryInstaller
+	configReader      reader.ConfigReader
+	registryInstaller rgst.Installer
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	fs                afero.Fs
 	linker            domain.Linker
 }
 
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker) *ControllerImpl {
+	return &ControllerImpl{
+		stdout:            os.Stdout,
+		rootDir:           param.RootDir,
+		configFinder:      configFinder,
+		configReader:      configReader,
+		registryInstaller: registInstaller,
+		runtime:           rt,
+		osenv:             osEnv,
+		fs:                fs,
+		linker:            linker,
+	}
 }
 
-func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName string, logE *logrus.Entry) (*domain.FindResult, error) {
+type Controller interface {
+	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error)
+}
+
+type MockController struct {
+	FindResult *FindResult
+	Err        error
+}
+
+func (ctrl *MockController) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
+	return ctrl.FindResult, ctrl.Err
+}
+
+type FindResult struct {
+	Package        *config.Package
+	File           *registry.File
+	Config         *aqua.Config
+	ExePath        string
+	ConfigFilePath string
+	EnableChecksum bool
+}
+
+func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		findResult, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		findResult, err := ctrl.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +86,7 @@ func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName 
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		findResult, err := ctrl.findExecFile(ctx, cfgFilePath, exeName, logE)
+		findResult, err := ctrl.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -60,7 +96,7 @@ func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName 
 	}
 
 	if exePath := ctrl.lookPath(ctrl.osenv.Getenv("PATH"), exeName); exePath != "" {
-		return &domain.FindResult{
+		return &FindResult{
 			ExePath: exePath,
 		}, nil
 	}
@@ -69,7 +105,7 @@ func (ctrl *Controller) Which(ctx context.Context, param *config.Param, exeName 
 	})
 }
 
-func (ctrl *Controller) getExePath(findResult *domain.FindResult) (string, error) {
+func (ctrl *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
 	pkg := findResult.Package
 	pkgInfo := pkg.PackageInfo
 	file := findResult.File
@@ -90,13 +126,30 @@ func (ctrl *Controller) getExePath(findResult *domain.FindResult) (string, error
 	return filepath.Join(pkgPath, fileSrc), nil
 }
 
-func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName string, logE *logrus.Entry) (*domain.FindResult, error) {
+func (ctrl *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	var checksums *checksum.Checksums
+	if cfg.ChecksumEnabled() {
+		checksums = checksum.New()
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
+		if err != nil {
+			return nil, err //nolint:wrapcheck
+		}
+		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+			return nil, fmt.Errorf("read a checksum JSON: %w", err)
+		}
+		defer func() {
+			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+				logE.WithError(err).Error("update a checksum file")
+			}
+		}()
+	}
+
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -111,7 +164,7 @@ func (ctrl *Controller) findExecFile(ctx context.Context, cfgFilePath, exeName s
 	return nil, nil //nolint:nilnil
 }
 
-func (ctrl *Controller) findExecFileFromPkg(registries map[string]*cfgRegistry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *domain.FindResult { //nolint:cyclop
+func (ctrl *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *FindResult { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil
@@ -152,7 +205,7 @@ func (ctrl *Controller) findExecFileFromPkg(registries map[string]*cfgRegistry.C
 
 	for _, file := range pkgInfo.GetFiles() {
 		if file.Name == exeName {
-			findResult := &domain.FindResult{
+			findResult := &FindResult{
 				Package: &config.Package{
 					Package:     pkg,
 					PackageInfo: pkgInfo,

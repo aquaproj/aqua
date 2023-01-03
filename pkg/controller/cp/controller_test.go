@@ -7,7 +7,8 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/controller/cp"
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/controller/which"
+	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -25,7 +26,7 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		pkgInstaller cp.PackageInstaller
 		fs           afero.Fs
 		rt           *runtime.Runtime
-		whichCtrl    domain.WhichController
+		whichCtrl    which.Controller
 		installer    cp.Installer
 		isErr        bool
 	}{
@@ -49,8 +50,8 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 			},
 			fs:        afero.NewMemMapFs(),
 			installer: &cp.MockInstaller{},
-			whichCtrl: &domain.MockWhichController{
-				FindResult: &domain.FindResult{
+			whichCtrl: &which.MockController{
+				FindResult: &which.FindResult{
 					ExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/cli/cli/v2.17.0/gh_2.17.0_macOS_amd64.tar.gz/gh_2.17.0_macOS_amd64/bin/gh",
 					Package: &config.Package{
 						Package: &aqua.Package{
@@ -75,7 +76,7 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &domain.MockPolicyConfigReader{})
+			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockConfigReader{})
 			if err := ctrl.Copy(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

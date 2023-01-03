@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -23,16 +23,12 @@ type Controller struct {
 	rootDir            string
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
-	which              domain.WhichController
+	which              which.Controller
 	installer          Installer
-	policyConfigReader domain.PolicyConfigReader
+	policyConfigReader policy.ConfigReader
 }
 
-type ConfigFinder interface {
-	Finds(wd, configFilePath string) []string
-}
-
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl domain.WhichController, installer Installer, policyConfigReader domain.PolicyConfigReader) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,
@@ -95,7 +91,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 }
 
 func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config) error {
-	findResult, err := ctrl.which.Which(ctx, param, exeName, logE)
+	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

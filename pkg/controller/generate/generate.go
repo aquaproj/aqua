@@ -8,12 +8,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
+	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/generate/output"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/github"
+	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -23,30 +24,16 @@ import (
 type Controller struct {
 	stdin             io.Reader
 	github            RepositoriesService
-	registryInstaller domain.RegistryInstaller
+	registryInstaller rgst.Installer
 	configFinder      ConfigFinder
-	configReader      domain.ConfigReader
+	configReader      reader.ConfigReader
 	fuzzyFinder       FuzzyFinder
 	versionSelector   VersionSelector
 	fs                afero.Fs
 	outputter         Outputter
 }
 
-type RepositoriesService interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
-	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
-	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
-}
-
-type ConfigFinder interface {
-	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
-}
-
-type Outputter interface {
-	Output(param *output.Param) error
-}
-
-func New(configFinder ConfigFinder, configReader domain.ConfigReader, registInstaller domain.RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
@@ -112,7 +99,24 @@ type FindingPackage struct {
 }
 
 func (ctrl *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, cfg, cfgFilePath, logE)
+	var checksums *checksum.Checksums
+	if cfg.ChecksumEnabled() {
+		checksums = checksum.New()
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
+		if err != nil {
+			return nil, err //nolint:wrapcheck
+		}
+		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+			return nil, fmt.Errorf("read a checksum JSON: %w", err)
+		}
+		defer func() {
+			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+				logE.WithError(err).Error("update a checksum file")
+			}
+		}()
+	}
+
+	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -246,23 +250,18 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry,
 	if outputPkg.Registry == registryStandard {
 		outputPkg.Registry = ""
 	}
-	version := ctrl.getVersion(ctx, logE, param, pkg)
-	if version == "" {
-		outputPkg.Version = "[SET PACKAGE VERSION]"
-		return outputPkg
+	if outputPkg.Version == "" {
+		version := ctrl.getVersion(ctx, logE, param, pkg)
+		if version == "" {
+			outputPkg.Version = "[SET PACKAGE VERSION]"
+			return outputPkg
+		}
+		outputPkg.Version = version
 	}
 	if param.Pin {
 		return outputPkg
 	}
-	pkgInfo := pkg.PackageInfo
-	if pkgInfo.HasRepo() {
-		repoOwner := pkgInfo.RepoOwner
-		repoName := pkgInfo.RepoName
-		if pkgName := pkgInfo.GetName(); pkgName == repoOwner+"/"+repoName || strings.HasPrefix(pkgName, repoOwner+"/"+repoName+"/") {
-			outputPkg.Name += "@" + version
-			outputPkg.Version = ""
-		}
-		return outputPkg
-	}
+	outputPkg.Name += "@" + outputPkg.Version
+	outputPkg.Version = ""
 	return outputPkg
 }
