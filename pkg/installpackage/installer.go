@@ -95,6 +95,7 @@ type ParamInstallPackage struct {
 	PolicyConfigs   []*policy.Config
 	ConfigFileDir   string
 	CosignExePath   string
+	Checksum        *checksum.Checksum
 }
 
 type Unarchiver interface {
@@ -234,6 +235,7 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		Asset:           assetName,
 		Checksums:       checksums,
 		RequireChecksum: param.RequireChecksum,
+		Checksum:        param.Checksum,
 	}); err != nil {
 		return err
 	}
@@ -279,6 +281,7 @@ const maxRetryDownload = 1
 type DownloadParam struct {
 	Package         *config.Package
 	Checksums       *checksum.Checksums
+	Checksum        *checksum.Checksum
 	Dest            string
 	Asset           string
 	RequireChecksum bool

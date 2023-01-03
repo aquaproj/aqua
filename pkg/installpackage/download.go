@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/slsa"
@@ -133,36 +132,38 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		readBody = a
 	}
 
-	if param.Checksums != nil { //nolint:nestif
-		checksumID, err := ppkg.GetChecksumID(inst.runtime)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
-		var chksum *checksum.Checksum
-		// Even if SLSA Provenance is enabled checksum verification isn't skipped
-		if param.Checksums != nil {
-			chksum = param.Checksums.Get(checksumID)
-			if chksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
-				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
-					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
-				})
-			}
-		}
-
+	if param.Checksum != nil || param.Checksums != nil { //nolint:nestif
 		tempDir, err := afero.TempDir(inst.fs, "", "")
 		if err != nil {
 			return fmt.Errorf("create a temporal directory: %w", err)
 		}
 		defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
-		readFile, err := inst.verifyChecksum(ctx, logE, &ParamVerifyChecksum{
-			ChecksumID: checksumID,
-			Checksum:   chksum,
-			Checksums:  param.Checksums,
-			Pkg:        ppkg,
-			AssetName:  param.Asset,
-			Body:       readBody,
-			TempDir:    tempDir,
-		})
+		paramVerifyChecksum := &ParamVerifyChecksum{
+			Checksum:        param.Checksum,
+			Checksums:       param.Checksums,
+			Pkg:             ppkg,
+			AssetName:       param.Asset,
+			Body:            readBody,
+			TempDir:         tempDir,
+			SkipSetChecksum: true,
+		}
+
+		if param.Checksum == nil {
+			paramVerifyChecksum.SkipSetChecksum = false
+			cid, err := ppkg.GetChecksumID(inst.runtime)
+			if err != nil {
+				return err //nolint:wrapcheck
+			}
+			paramVerifyChecksum.ChecksumID = cid
+			// Even if SLSA Provenance is enabled checksum verification is run
+			paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
+			if paramVerifyChecksum.Checksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
+					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
+				})
+			}
+		}
+		readFile, err := inst.verifyChecksum(ctx, logE, paramVerifyChecksum)
 		if err != nil {
 			return err
 		}

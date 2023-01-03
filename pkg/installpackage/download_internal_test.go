@@ -20,7 +20,7 @@ func strP(s string) *string {
 	return &s
 }
 
-func TestInstaler_download(t *testing.T) { //nolint:funlen
+func TestInstaller_download(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name  string

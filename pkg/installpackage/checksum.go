@@ -78,13 +78,14 @@ func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logru
 }
 
 type ParamVerifyChecksum struct {
-	ChecksumID string
-	Checksum   *checksum.Checksum
-	Checksums  *checksum.Checksums
-	Pkg        *config.Package
-	AssetName  string
-	Body       io.Reader
-	TempDir    string
+	ChecksumID      string
+	Checksum        *checksum.Checksum
+	Checksums       *checksum.Checksums
+	Pkg             *config.Package
+	AssetName       string
+	Body            io.Reader
+	TempDir         string
+	SkipSetChecksum bool
 }
 
 func copyAsset(fs afero.Fs, tempFilePath string, body io.Reader) error {
@@ -182,7 +183,9 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 		}
 	}
-	checksums.Set(checksumID, chksum)
+	if !param.SkipSetChecksum {
+		checksums.Set(checksumID, chksum)
+	}
 
 	readFile, err := inst.fs.Open(tempFilePath)
 	if err != nil {
