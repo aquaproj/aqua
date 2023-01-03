@@ -48,12 +48,6 @@ func (exe *Executor) ExecWithEnvs(ctx context.Context, exePath string, args, env
 	return exe.exec(ctx, exe.command(cmd))
 }
 
-func (exe *Executor) GoBuild(ctx context.Context, exePath, src, exeDir string) (int, error) {
-	cmd := exe.command(exec.Command("go", "build", "-o", exePath, src))
-	cmd.Dir = exeDir
-	return exe.exec(ctx, cmd)
-}
-
 func (exe *Executor) GoInstall(ctx context.Context, path, gobin string) (int, error) {
 	cmd := exe.command(exec.Command("go", "install", path))
 	cmd.Env = append(os.Environ(), "GOBIN="+gobin)
