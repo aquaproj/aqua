@@ -35,7 +35,6 @@ type PackageInfo struct {
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
-	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
@@ -68,7 +67,6 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		FormatOverrides:    pkgInfo.FormatOverrides,
 		VersionConstraints: pkgInfo.VersionConstraints,
 		VersionOverrides:   pkgInfo.VersionOverrides,
-		SupportedIf:        pkgInfo.SupportedIf,
 		SupportedEnvs:      pkgInfo.SupportedEnvs,
 		VersionFilter:      pkgInfo.VersionFilter,
 		Rosetta2:           pkgInfo.Rosetta2,
@@ -118,9 +116,6 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.FormatOverrides != nil {
 		pkg.FormatOverrides = child.FormatOverrides
-	}
-	if child.SupportedIf != nil {
-		pkg.SupportedIf = child.SupportedIf
 	}
 	if child.SupportedEnvs != nil {
 		pkg.SupportedEnvs = child.SupportedEnvs
@@ -227,7 +222,6 @@ type VersionOverride struct {
 	Replacements       Replacements      `yaml:",omitempty" json:"replacements,omitempty"`
 	Overrides          []*Override       `yaml:",omitempty" json:"overrides,omitempty"`
 	FormatOverrides    []*FormatOverride `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	SupportedIf        *string           `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
 	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
