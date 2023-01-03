@@ -12,8 +12,6 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -32,12 +30,11 @@ type Controller struct {
 	chkDL             download.ChecksumDownloader
 	parser            *checksum.FileParser
 	downloader        download.ClientAPI
-	cosignInstaller   domain.CosignInstaller
 	deep              bool
 	prune             bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, cosignInstaller domain.CosignInstaller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -50,14 +47,10 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		downloader:        pkgDownloader,
 		deep:              param.Deep,
 		prune:             param.Prune,
-		cosignInstaller:   cosignInstaller,
 	}
 }
 
 func (ctrl *Controller) UpdateChecksum(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
-		return fmt.Errorf("install Cosign: %w", err)
-	}
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		if err := ctrl.updateChecksum(ctx, logE, cfgFilePath); err != nil {
 			return err

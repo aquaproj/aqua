@@ -12,7 +12,6 @@ import (
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/domain"
 	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -32,10 +31,9 @@ type ControllerImpl struct {
 	osenv             osenv.OSEnv
 	fs                afero.Fs
 	linker            domain.Linker
-	cosignInstaller   domain.CosignInstaller
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker, cosignInstaller domain.CosignInstaller) *ControllerImpl {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker) *ControllerImpl {
 	return &ControllerImpl{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -46,7 +44,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		osenv:             osEnv,
 		fs:                fs,
 		linker:            linker,
-		cosignInstaller:   cosignInstaller,
 	}
 }
 
@@ -73,9 +70,6 @@ type FindResult struct {
 }
 
 func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
-	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
-		return nil, fmt.Errorf("install Cosign: %w", err)
-	}
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		findResult, err := ctrl.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {

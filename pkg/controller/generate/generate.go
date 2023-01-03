@@ -14,8 +14,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/generate/output"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
 	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
@@ -33,10 +31,9 @@ type Controller struct {
 	versionSelector   VersionSelector
 	fs                afero.Fs
 	outputter         Outputter
-	cosignInstaller   domain.CosignInstaller
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cosignInstaller domain.CosignInstaller) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
@@ -47,7 +44,6 @@ func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInst
 		fuzzyFinder:       fuzzyFinder,
 		versionSelector:   versionSelector,
 		outputter:         output.New(os.Stdout, fs),
-		cosignInstaller:   cosignInstaller,
 	}
 }
 
@@ -77,10 +73,6 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 	cfg := &aqua.Config{}
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
-	}
-
-	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
-		return fmt.Errorf("install Cosign: %w", err)
 	}
 
 	list, err := ctrl.listPkgs(ctx, logE, param, cfg, cfgFilePath, args...)
