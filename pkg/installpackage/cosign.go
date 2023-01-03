@@ -64,18 +64,10 @@ func (cos *Cosign) InstallCosign(ctx context.Context, logE *logrus.Entry, versio
 				"linux",
 				"amd64",
 			},
-			Checksum: &registry.Checksum{
-				Type:       "github_release",
-				Asset:      "cosign_checksums.txt",
-				FileFormat: "regexp",
-				Algorithm:  "sha256",
-				Pattern: &registry.ChecksumPattern{
-					Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
-					File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
-				},
-			},
 		},
 	}
+
+	chksum := cosign.Checksums()[cos.installer.runtime.Env()]
 
 	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, cos.installer.runtime)
 	if err != nil {
@@ -95,6 +87,10 @@ func (cos *Cosign) InstallCosign(ctx context.Context, logE *logrus.Entry, versio
 	if err := cos.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums: checksum.New(), // Check cosign's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
+		Checksum: &checksum.Checksum{
+			Algorithm: "sha256",
+			Checksum:  chksum,
+		},
 		// PolicyConfigs is nil, so the policy check is skipped
 	}); err != nil {
 		return err
