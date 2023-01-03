@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
-	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -227,7 +226,7 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader, &domain.MockCosignInstaller{})
+			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader)
 			if err := ctrl.UpdateChecksum(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

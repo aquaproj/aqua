@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/slsa"
 	"github.com/aquaproj/aqua/pkg/unarchive"
@@ -97,6 +98,9 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	if cos := ppkg.PackageInfo.Cosign; cos.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with Cosign")
+		if err := inst.installCosign(ctx, logE, cosign.Version); err != nil {
+			return err
+		}
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
 			RepoName:  ppkg.PackageInfo.RepoName,

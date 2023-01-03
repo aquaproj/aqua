@@ -10,8 +10,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -22,17 +20,15 @@ type Controller struct {
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
 	registryInstaller registry.Installer
-	cosignInstaller   domain.CosignInstaller
 	fs                afero.Fs
 }
 
-func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, cosignInstaller domain.CosignInstaller, fs afero.Fs) *Controller {
+func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registInstaller,
-		cosignInstaller:   cosignInstaller,
 		fs:                fs,
 	}
 }
@@ -46,10 +42,6 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *log
 
 	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
-	}
-
-	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
-		return fmt.Errorf("install Cosign: %w", err)
 	}
 
 	var checksums *checksum.Checksums

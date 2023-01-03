@@ -71,36 +71,11 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			exec.New,
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
-		),
-		wire.NewSet(
-			installpackage.NewCosign,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
-		),
-		wire.NewSet(
-			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
-		),
-		wire.NewSet(
-			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
-		),
-		wire.NewSet(
-			download.NewChecksumDownloader,
-			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
-		),
-		wire.NewSet(
-			checksum.NewCalculator,
-			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
-		),
-		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -189,30 +164,6 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			installpackage.NewCosign,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
-		),
-		wire.NewSet(
-			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
-		),
-		wire.NewSet(
-			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
-		),
-		wire.NewSet(
-			download.NewChecksumDownloader,
-			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
-		),
-		wire.NewSet(
-			checksum.NewCalculator,
-			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
-		),
-		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			slsa.New,
 			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
 		),
@@ -251,10 +202,6 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
-		),
-		wire.NewSet(
-			installpackage.NewCosign,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -344,32 +291,11 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			exec.New,
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
-		),
-		wire.NewSet(
-			installpackage.NewCosign,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
-		),
-		wire.NewSet(
-			download.NewChecksumDownloader,
-			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
-		),
-		wire.NewSet(
-			checksum.NewCalculator,
-			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
-		),
-		wire.NewSet(
-			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
-		),
-		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -397,10 +323,6 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
-		),
-		wire.NewSet(
-			installpackage.NewCosign,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
 		),
 		wire.NewSet(
 			github.New,
@@ -553,10 +475,6 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(cp.PackageInstaller), new(*installpackage.InstallerImpl)),
 		),
 		wire.NewSet(
-			installpackage.NewCosign,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
-		),
-		wire.NewSet(
 			github.New,
 			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
@@ -667,27 +585,6 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
-		),
-		wire.NewSet(
-			installpackage.NewCosign,
-			wire.Bind(new(domain.CosignInstaller), new(*installpackage.Cosign)),
-		),
-		wire.NewSet(
-			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
-		),
-		wire.NewSet(
-			checksum.NewCalculator,
-			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
-		),
-		wire.NewSet(
-			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
-		),
-		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
 		),
 		wire.NewSet(
 			slsa.New,

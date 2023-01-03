@@ -11,8 +11,6 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
@@ -35,10 +33,9 @@ type Controller struct {
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
 	policyConfigReader policy.ConfigReader
-	cosignInstaller    domain.CosignInstaller
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader, cosignInstaller domain.CosignInstaller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -51,7 +48,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		tags:               param.Tags,
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
-		cosignInstaller:    cosignInstaller,
 	}
 }
 
@@ -75,10 +71,6 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
-	}
-
-	if err := ctrl.cosignInstaller.InstallCosign(ctx, logE, cosign.Version); err != nil {
-		return fmt.Errorf("install Cosign: %w", err)
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
