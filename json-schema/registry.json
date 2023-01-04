@@ -476,10 +476,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "type"
-      ]
+      "type": "object"
     },
     "SupportedEnvs": {
       "items": {
