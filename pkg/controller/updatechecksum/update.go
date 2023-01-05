@@ -12,6 +12,7 @@ import (
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	registry "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -21,32 +22,34 @@ import (
 )
 
 type Controller struct {
-	rootDir           string
-	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
-	registryInstaller registry.Installer
-	fs                afero.Fs
-	runtime           *runtime.Runtime
-	chkDL             download.ChecksumDownloader
-	parser            *checksum.FileParser
-	downloader        download.ClientAPI
-	deep              bool
-	prune             bool
+	rootDir            string
+	configFinder       ConfigFinder
+	configReader       reader.ConfigReader
+	registryInstaller  registry.Installer
+	registryDownloader domain.GitHubContentFileDownloader
+	fs                 afero.Fs
+	runtime            *runtime.Runtime
+	chkDL              download.ChecksumDownloader
+	parser             *checksum.FileParser
+	downloader         download.ClientAPI
+	deep               bool
+	prune              bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registDownloader domain.GitHubContentFileDownloader) *Controller {
 	return &Controller{
-		rootDir:           param.RootDir,
-		configFinder:      configFinder,
-		configReader:      configReader,
-		registryInstaller: registInstaller,
-		fs:                fs,
-		runtime:           rt,
-		chkDL:             chkDL,
-		parser:            &checksum.FileParser{},
-		downloader:        pkgDownloader,
-		deep:              param.Deep,
-		prune:             param.Prune,
+		rootDir:            param.RootDir,
+		configFinder:       configFinder,
+		configReader:       configReader,
+		registryInstaller:  registInstaller,
+		registryDownloader: registDownloader,
+		fs:                 fs,
+		runtime:            rt,
+		chkDL:              chkDL,
+		parser:             &checksum.FileParser{},
+		downloader:         pkgDownloader,
+		deep:               param.Deep,
+		prune:              param.Prune,
 	}
 }
 
@@ -113,6 +116,13 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 		supportedEnvs = cfg.Checksum.SupportedEnvs
 	}
 
+	for _, rgst := range cfg.Registries {
+		if err := ctrl.updateRegistry(ctx, logE, checksums, rgst); err != nil {
+			failed = true
+			logerr.WithError(logE, err).Error("update checksums")
+		}
+	}
+
 	for _, pkg := range pkgs {
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":     pkg.Package.Name,
@@ -127,6 +137,39 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	if failed {
 		return errFailedToUpdateChecksum
 	}
+	return nil
+}
+
+func (ctrl *Controller) updateRegistry(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, rgst *aqua.Registry) error {
+	if rgst.Type != "github_content" {
+		return nil
+	}
+	rgstID := checksum.RegistryID(rgst)
+	chksum := checksums.Get(rgstID)
+	if chksum != nil {
+		return nil
+	}
+	ghContentFile, err := ctrl.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
+		RepoOwner: rgst.RepoOwner,
+		RepoName:  rgst.RepoName,
+		Ref:       rgst.Ref,
+		Path:      rgst.Path,
+	})
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	defer ghContentFile.Close()
+	content := ghContentFile.Reader()
+	algorithm := "sha512"
+	c, err := checksum.CalculateReader(content, "sha512")
+	if err != nil {
+		return fmt.Errorf("calculate a checksum of Registry: %w", err)
+	}
+	checksums.Set(rgstID, &checksum.Checksum{
+		ID:        rgstID,
+		Algorithm: algorithm,
+		Checksum:  c,
+	})
 	return nil
 }
 
