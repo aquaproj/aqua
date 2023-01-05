@@ -63,19 +63,4 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       # Upload provenance to a new release
-      upload-assets: false
-
-  release:
-    needs: [provenance]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download the provenance
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ needs.provenance.outputs.provenance-name }}
-
-      - name: Upload provenance
-        run: gh release upload -R aquaproj/aqua "${REF#refs/tags/}" multiple.intoto.jsonl
-        env:
-          REF: ${{ github.ref }}
-          GITHUB_TOKEN: ${{ github.token }}
+      upload-assets: true
