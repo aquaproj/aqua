@@ -8,4 +8,5 @@ packages:
 - name: suzuki-shunsuke/cmdx@v1.6.1
 - name: golangci/golangci-lint@v1.50.1
 - name: rhysd/actionlint@v1.6.22
+- name: sigstore/cosign@v1.13.1
 - import: aqua/*.yaml
