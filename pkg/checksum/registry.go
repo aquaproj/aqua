@@ -10,8 +10,12 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+func RegistryID(regist *aqua.Registry) string {
+	return path.Join("registries", "github_content", "github.com", regist.RepoOwner, regist.RepoName, regist.Ref, regist.Path)
+}
+
 func CheckRegistry(regist *aqua.Registry, checksums *Checksums, content []byte) error {
-	checksumID := path.Join("registries", "github_content", "github.com", regist.RepoOwner, regist.RepoName, regist.Ref, regist.Path)
+	checksumID := RegistryID(regist)
 	chksum := checksums.Get(checksumID)
 	algorithm := "sha512"
 	if chksum != nil {
