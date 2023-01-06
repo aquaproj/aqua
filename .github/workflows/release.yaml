@@ -3,9 +3,7 @@ name: Release
 on:
   push:
     tags: [v*]
-permissions:
-  contents: write # required to create a release
-  id-token: write # required for cosign
+permissions: {}
 env:
   AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
 jobs:
@@ -13,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
+    permissions:
+      contents: write # required to create a release
+      id-token: write # required for cosign
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0

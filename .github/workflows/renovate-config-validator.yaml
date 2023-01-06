@@ -1,7 +1,6 @@
 name: renovate-config-validator
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   pull_request:
