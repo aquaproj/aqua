@@ -98,7 +98,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	if cos := ppkg.PackageInfo.Cosign; cos.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with Cosign")
-		if err := inst.installCosign(ctx, logE, cosign.Version); err != nil {
+		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
 			return err
 		}
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
