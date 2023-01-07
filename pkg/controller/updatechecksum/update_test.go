@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
+	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/download"
 	rgst "github.com/aquaproj/aqua/pkg/install-registry"
 	"github.com/aquaproj/aqua/pkg/runtime"
@@ -29,16 +30,17 @@ func strP(s string) *string {
 func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		name            string
-		param           *config.Param
-		cfgFinder       updatechecksum.ConfigFinder
-		cfgReader       reader.ConfigReader
-		registInstaller rgst.Installer
-		fs              afero.Fs
-		rt              *runtime.Runtime
-		chkDL           download.ChecksumDownloader
-		downloader      download.ClientAPI
-		isErr           bool
+		name             string
+		param            *config.Param
+		cfgFinder        updatechecksum.ConfigFinder
+		cfgReader        reader.ConfigReader
+		registInstaller  rgst.Installer
+		registDownloader domain.GitHubContentFileDownloader
+		fs               afero.Fs
+		rt               *runtime.Runtime
+		chkDL            download.ChecksumDownloader
+		downloader       download.ClientAPI
+		isErr            bool
 	}{
 		{
 			name: "normal",
@@ -80,6 +82,15 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 							},
 						},
 					},
+				},
+			},
+			registDownloader: &domain.MockGitHubContentFileDownloader{
+				File: &domain.GitHubContentFile{
+					String: `type: github_release
+repo_owner: cli
+repo_name: cli
+asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
+`,
 				},
 			},
 			fs: afero.NewMemMapFs(),
@@ -131,6 +142,15 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 							},
 						},
 					},
+				},
+			},
+			registDownloader: &domain.MockGitHubContentFileDownloader{
+				File: &domain.GitHubContentFile{
+					String: `type: github_release
+repo_owner: cli
+repo_name: cli
+asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
+`,
 				},
 			},
 			fs: afero.NewMemMapFs(),
@@ -195,6 +215,15 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
+			registDownloader: &domain.MockGitHubContentFileDownloader{
+				File: &domain.GitHubContentFile{
+					String: `type: github_release
+repo_owner: cli
+repo_name: cli
+asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
+`,
+				},
+			},
 			fs: afero.NewMemMapFs(),
 			rt: &runtime.Runtime{
 				GOOS:   "darwin",
@@ -226,7 +255,7 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader)
+			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registDownloader)
 			if err := ctrl.UpdateChecksum(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

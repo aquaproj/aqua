@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -164,7 +163,7 @@ func (inst *InstallerImpl) getRegistry(ctx context.Context, logE *logrus.Entry, 
 
 const registryFilePermission = 0o600
 
-func (inst *InstallerImpl) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) { //nolint:cyclop
+func (inst *InstallerImpl) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
@@ -174,18 +173,11 @@ func (inst *InstallerImpl) getGitHubContentRegistry(ctx context.Context, logE *l
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
+	defer ghContentFile.Close()
 
-	var content []byte
-
-	if ghContentFile.String != "" {
-		content = []byte(ghContentFile.String)
-	} else {
-		defer ghContentFile.ReadCloser.Close()
-		cnt, err := io.ReadAll(ghContentFile.ReadCloser)
-		if err != nil {
-			return nil, fmt.Errorf("read the registry configuration file: %w", err)
-		}
-		content = cnt
+	content, err := ghContentFile.Byte()
+	if err != nil {
+		return nil, err //nolint:wrapcheck
 	}
 
 	if checksums != nil {

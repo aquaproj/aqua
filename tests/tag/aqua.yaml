@@ -7,14 +7,14 @@
 #   require_checksum: true
 registries:
 - type: standard
-  ref: v3.115.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.117.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: suzuki-shunsuke/tfcmt@v4.0.0
   tags:
     - test
     - foo
-- name: suzuki-shunsuke/github-comment@v5.0.0
-- name: cli/cli@v2.21.1
+- name: suzuki-shunsuke/github-comment@v5.0.2
+- name: cli/cli@v2.21.2
   tags:
     - bar
     - foo

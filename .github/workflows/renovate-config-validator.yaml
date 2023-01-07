@@ -1,7 +1,6 @@
 name: renovate-config-validator
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   pull_request:
@@ -21,5 +20,5 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
     - uses: suzuki-shunsuke/github-action-renovate-config-validator@7ab3d8f19305664925f3e626580f075f14e40386 # tag=v0.1.2

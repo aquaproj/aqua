@@ -59,7 +59,7 @@ func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logru
 		}
 		art := pkg.GetTemplateArtifact(inst.runtime, assetName)
 		logE.Info("verify a checksum file with Cosign")
-		if err := inst.installCosign(ctx, logE, cosign.Version); err != nil {
+		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
 			return "", err
 		}
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
