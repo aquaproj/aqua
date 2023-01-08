@@ -3,9 +3,9 @@
     "config:base",
     "helpers:pinGitHubActionDigests",
     "github>suzuki-shunsuke/renovate-config",
-    "github>aquaproj/aqua-renovate-config#1.5.0",
-    "github>aquaproj/aqua-renovate-config:file#1.5.0(tests/aqua.*\\.yaml)",
-    "github>aquaproj/aqua-renovate-config:file#1.5.0(aqua/.*\\.ya?ml)",
+    "github>aquaproj/aqua-renovate-config#1.5.1",
+    "github>aquaproj/aqua-renovate-config:file#1.5.1(tests/aqua.*\\.yaml)",
+    "github>aquaproj/aqua-renovate-config:file#1.5.1(aqua/.*\\.ya?ml)",
   ],
   ignorePaths: [],
   packageRules: [
