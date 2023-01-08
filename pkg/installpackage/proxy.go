@@ -16,12 +16,12 @@ const ProxyVersion = "v1.1.4" // renovate: depName=aquaproj/aqua-proxy
 
 func ProxyChecksums() map[string]string {
 	return map[string]string{
-		"darwin/amd64":  "9f7bfea8cfa38602194c6f92c1c4a0ad79fb54a1d7db08f446d3a78680bc8ea9",
-		"darwin/arm64":  "b88992bf317af50109c32533b05e0bf19e1fb71489f18bbfe3ad3d1d0acee74b",
-		"linux/amd64":   "902453d96fd1bd9a0053a86124663f49cf7ef50859b65aa8720dc868052a9762",
-		"linux/arm64":   "3a4b8bb0665d0dc7e347711946c691d4ba85af51608310db2894d98b2c85694e",
-		"windows/amd64": "7b9bec780b67b0f02face65f9bd63e69133b230a4af5bd71ff327dcb9bcbc57d",
-		"windows/arm64": "f6e37900b7d7c0b189844be4a7597fa24781e89665862fa7cdf3b8ed38eec4c6",
+		"darwin/amd64":  "198be9c4e00175731e01724172ad3e2c141c4be17de702d5352babb11a446eb0",
+		"darwin/arm64":  "0e0c421e6e17cde8c3c1726e22adb99a95caa799ecb7478cc4d3e56a9ae55884",
+		"linux/amd64":   "1d5a9cc5cdab91d3527cca1a6dbafc9530deb9559a542b8a6137627a729ade20",
+		"linux/arm64":   "02ee1dbf7d20b75422bde16a82f602e5f7318177c22a67ef50d83bffdc198018",
+		"windows/amd64": "27ac08a887f3f873e500f96b3ee2459848fa0be5837af3f9051044afc9d173b3",
+		"windows/arm64": "4ad911f0a982a4287b93922642818fa3afeead236c9f1403638bb01507a32eb6",
 	}
 }
 
