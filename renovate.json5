@@ -32,7 +32,7 @@
       depNameTemplate: "aquaproj/aqua-proxy",
       datasourceTemplate: "github-releases",
       matchStrings: [
-        '"(?<currentValue>.*)", // renovate: depName=aquaproj/aqua-proxy',
+        '"(?<currentValue>.*)" // renovate: depName=aquaproj/aqua-proxy',
       ],
     },
     {
