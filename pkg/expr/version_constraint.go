@@ -20,15 +20,7 @@ func emptySemverWithVersion(constr, ver string) bool {
 
 func getSemverFunc(v string) func(s string) bool {
 	return func(s string) bool {
-		a, err := version.NewConstraint(s)
-		if err != nil {
-			panic(err)
-		}
-		ver, err := version.NewVersion(v)
-		if err != nil {
-			panic(err)
-		}
-		return a.Check(ver)
+		return semverWithVersion(s, v)
 	}
 }
 
