@@ -22,5 +22,5 @@ func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
 			return pkgInfo.overrideVersion(vo), nil
 		}
 	}
-	return pkgInfo.Copy(), nil
+	return nil, errNoVersionConstraintMatch
 }
