@@ -2,6 +2,7 @@ package policy
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/expr"
@@ -54,7 +55,11 @@ func (pc *CheckerImpl) matchPkg(pkg *config.Package, policyPkg *Package) (bool, 
 		return false, nil
 	}
 	if policyPkg.Version != "" {
-		matched, err := expr.EvaluateVersionConstraints(policyPkg.Version, pkg.Package.Version)
+		sv := pkg.Package.Version
+		if pkg.PackageInfo.VersionPrefix != nil {
+			sv = strings.TrimPrefix(pkg.Package.Version, *pkg.PackageInfo.VersionPrefix)
+		}
+		matched, err := expr.EvaluateVersionConstraints(policyPkg.Version, pkg.Package.Version, sv)
 		if err != nil {
 			return false, fmt.Errorf("evaluate the version constraint of package: %w", err)
 		}

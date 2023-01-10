@@ -38,6 +38,7 @@ type PackageInfo struct {
 	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
@@ -71,6 +72,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		SupportedIf:        pkgInfo.SupportedIf,
 		SupportedEnvs:      pkgInfo.SupportedEnvs,
 		VersionFilter:      pkgInfo.VersionFilter,
+		VersionPrefix:      pkgInfo.VersionPrefix,
 		Rosetta2:           pkgInfo.Rosetta2,
 		Aliases:            pkgInfo.Aliases,
 		VersionSource:      pkgInfo.VersionSource,
@@ -127,6 +129,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.VersionFilter != nil {
 		pkg.VersionFilter = child.VersionFilter
+	}
+	if child.VersionPrefix != nil {
+		pkg.VersionPrefix = child.VersionPrefix
 	}
 	if child.Rosetta2 != nil {
 		pkg.Rosetta2 = child.Rosetta2
@@ -231,6 +236,7 @@ type VersionOverride struct {
 	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix      *string           `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source,omitempty"`
 	Rosetta2           *bool             `yaml:",omitempty" json:"rosetta2,omitempty"`
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
