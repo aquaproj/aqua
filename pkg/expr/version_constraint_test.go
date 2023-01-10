@@ -6,7 +6,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/expr"
 )
 
-func TestVersionConstraints_Check(t *testing.T) {
+func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title       string
