@@ -3,7 +3,7 @@ package expr
 import (
 	"strings"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 func emptyTrimPrefix(string, string) string {
@@ -25,11 +25,11 @@ func getSemverFunc(v string) func(s string) bool {
 }
 
 func semverWithVersion(constr, ver string) bool {
-	a, err := version.NewConstraint(constr)
+	a, err := semver.NewConstraint(constr)
 	if err != nil {
 		panic(err)
 	}
-	v, err := version.NewVersion(ver)
+	v, err := semver.NewVersion(ver)
 	if err != nil {
 		panic(err)
 	}

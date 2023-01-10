@@ -3,6 +3,7 @@ module github.com/aquaproj/aqua
 go 1.19
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/adrg/xdg v0.4.0
 	github.com/antonmedv/expr v1.9.0
@@ -11,7 +12,6 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v45 v45.2.0
 	github.com/google/wire v0.5.0
-	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/orderedmap v0.2.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/ktr0731/go-fuzzyfinder v0.7.0
@@ -47,7 +47,6 @@ require (
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/ThalesIgnite/crypto11 v1.2.5 // indirect
 	github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.4 // indirect
 	github.com/alibabacloud-go/cr-20160607 v1.0.1 // indirect
