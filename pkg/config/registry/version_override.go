@@ -35,14 +35,12 @@ func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
 	}
 	for _, vo := range pkgInfo.VersionOverrides {
 		sv := v
+		p := pkgInfo.VersionPrefix
 		if vo.VersionPrefix != nil {
-			prefix := *vo.VersionPrefix
-			if !strings.HasPrefix(v, prefix) {
-				continue
-			}
-			sv = strings.TrimPrefix(v, prefix)
-		} else if pkgInfo.VersionPrefix != nil {
-			prefix := *pkgInfo.VersionPrefix
+			p = vo.VersionPrefix
+		}
+		if p != nil {
+			prefix := *p
 			if !strings.HasPrefix(v, prefix) {
 				continue
 			}
