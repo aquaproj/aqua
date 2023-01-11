@@ -351,11 +351,21 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	return "", nil
 }
 
+func (cpkg *Package) SemVer() string {
+	v := cpkg.Package.Version
+	prefix := cpkg.PackageInfo.GetVersionPrefix()
+	if prefix == "" {
+		return v
+	}
+	return strings.TrimPrefix(v, prefix)
+}
+
 func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
 	return &template.Artifact{
 		Version: pkg.Version,
+		SemVer:  cpkg.SemVer(),
 		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
 		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
 		Format:  pkgInfo.GetFormat(),

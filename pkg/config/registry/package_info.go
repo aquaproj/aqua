@@ -458,3 +458,11 @@ func (pkgInfo *PackageInfo) SLSASourceURI() string {
 	}
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }
+
+func (pkgInfo *PackageInfo) GetVersionPrefix() string {
+	prefix := pkgInfo.VersionPrefix
+	if prefix == nil {
+		return ""
+	}
+	return *prefix
+}
