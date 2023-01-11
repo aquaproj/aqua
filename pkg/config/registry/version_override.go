@@ -41,6 +41,12 @@ func (pkgInfo *PackageInfo) SetVersion(v string) (*PackageInfo, error) {
 				continue
 			}
 			sv = strings.TrimPrefix(v, prefix)
+		} else if pkgInfo.VersionPrefix != nil {
+			prefix := *pkgInfo.VersionPrefix
+			if !strings.HasPrefix(v, prefix) {
+				continue
+			}
+			sv = strings.TrimPrefix(v, prefix)
 		}
 		a, err := expr.EvaluateVersionConstraints(vo.VersionConstraints, v, sv)
 		if err != nil {
