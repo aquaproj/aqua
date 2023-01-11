@@ -33,6 +33,7 @@ func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string
 	pkgInfo := cpkg.PackageInfo
 	return template.Execute(file.Src, map[string]interface{}{ //nolint:wrapcheck
 		"Version":  pkg.Version,
+		"SemVer":   cpkg.SemVer(),
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
 		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
@@ -63,6 +64,7 @@ func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string
 	pkg := cpkg.Package
 	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
 		"Version":  pkg.Version,
+		"SemVer":   cpkg.SemVer(),
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
 		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
@@ -262,6 +264,7 @@ func (cpkg *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (stri
 	replacements := pkgInfo.GetChecksumReplacements()
 	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
 		"Version": pkg.Version,
+		"SemVer":  cpkg.SemVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
@@ -280,6 +283,7 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 	pkg := cpkg.Package
 	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
 		"Version": pkg.Version,
+		"SemVer":  cpkg.SemVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
