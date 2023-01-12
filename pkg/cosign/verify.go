@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -121,7 +122,7 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 		cos.Opts = append(cos.Opts, "--certificate", certFile.Name())
 	}
 
-	if err := verifier.verify(ctx, &ParamVerify{
+	if err := verifier.verify(ctx, logE, &ParamVerify{
 		Opts:               cos.Opts,
 		CosignExperimental: cos.CosignExperimental,
 		Target:             verifiedFilePath,
@@ -147,7 +148,7 @@ const tempErrMsg = "resource temporarily unavailable"
 
 var errVerify = errors.New("verify with Cosign")
 
-func (verifier *VerifierImpl) verify(ctx context.Context, param *ParamVerify) error {
+func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	envs := []string{}
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
@@ -161,7 +162,13 @@ func (verifier *VerifierImpl) verify(ctx context.Context, param *ParamVerify) er
 		if !strings.Contains(out, tempErrMsg) {
 			return fmt.Errorf("verify with cosign: %w", err)
 		}
-		if err := util.Wait(ctx, 1*time.Second); err != nil {
+		rand.Seed(time.Now().UnixNano())
+		waitTime := time.Duration(rand.Intn(1000)) * time.Millisecond //nolint:gosec,gomnd
+		logE.WithFields(logrus.Fields{
+			"retry_count": i + 1,
+			"wait_time":   waitTime,
+		}).Info("Verification by Cosign failed temporarily, retring")
+		if err := util.Wait(ctx, waitTime); err != nil {
 			return fmt.Errorf("wait 1 second: %w", err)
 		}
 	}
