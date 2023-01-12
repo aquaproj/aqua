@@ -133,7 +133,6 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 }
 
 type Executor interface {
-	ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error)
 	ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error)
 }
 
@@ -148,14 +147,20 @@ const tempErrMsg = "resource temporarily unavailable"
 
 var errVerify = errors.New("verify with Cosign")
 
+func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
+	out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, args, envs)
+	return out, err //nolint:wrapcheck
+}
+
 func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	envs := []string{}
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
 	}
+	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
-		out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, append([]string{"verify-blob"}, append(param.Opts, param.Target)...), envs)
+		out, err := verifier.exec(ctx, args, envs)
 		if err == nil {
 			return nil
 		}
