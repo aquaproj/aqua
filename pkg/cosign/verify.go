@@ -2,14 +2,19 @@ package cosign
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"math/rand"
+	"strings"
+	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -117,7 +122,7 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 		cos.Opts = append(cos.Opts, "--certificate", certFile.Name())
 	}
 
-	if err := verifier.verify(ctx, &ParamVerify{
+	if err := verifier.verify(ctx, logE, &ParamVerify{
 		Opts:               cos.Opts,
 		CosignExperimental: cos.CosignExperimental,
 		Target:             verifiedFilePath,
@@ -129,6 +134,7 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 
 type Executor interface {
 	ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error)
+	ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error)
 }
 
 type ParamVerify struct {
@@ -138,16 +144,39 @@ type ParamVerify struct {
 	CosignExePath      string
 }
 
-func (verifier *VerifierImpl) verify(ctx context.Context, param *ParamVerify) error {
+const tempErrMsg = "resource temporarily unavailable"
+
+var errVerify = errors.New("verify with Cosign")
+
+func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	envs := []string{}
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
 	}
-	_, err := verifier.executor.ExecWithEnvs(ctx, verifier.cosignExePath, append([]string{"verify-blob"}, append(param.Opts, param.Target)...), envs)
-	if err != nil {
-		return fmt.Errorf("verify with cosign: %w", err)
+	for i := 0; i < 5; i++ {
+		// https://github.com/aquaproj/aqua/issues/1554
+		out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, append([]string{"verify-blob"}, append(param.Opts, param.Target)...), envs)
+		if err == nil {
+			return nil
+		}
+		if !strings.Contains(out, tempErrMsg) {
+			return fmt.Errorf("verify with cosign: %w", err)
+		}
+		if i == 4 { //nolint:gomnd
+			// skip last wait
+			break
+		}
+		rand.Seed(time.Now().UnixNano())
+		waitTime := time.Duration(rand.Intn(1000)) * time.Millisecond //nolint:gosec,gomnd
+		logE.WithFields(logrus.Fields{
+			"retry_count": i + 1,
+			"wait_time":   waitTime,
+		}).Info("Verification by Cosign failed temporarily, retring")
+		if err := util.Wait(ctx, waitTime); err != nil {
+			return fmt.Errorf("wait 1 second: %w", err)
+		}
 	}
-	return nil
+	return errVerify
 }
 
 func (verifier *VerifierImpl) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {

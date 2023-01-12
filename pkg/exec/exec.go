@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"os"
@@ -46,6 +47,16 @@ func (exe *Executor) ExecWithEnvs(ctx context.Context, exePath string, args, env
 	cmd := exec.Command(exePath, args...)
 	cmd.Env = append(os.Environ(), envs...)
 	return exe.exec(ctx, exe.command(cmd))
+}
+
+func (exe *Executor) ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error) {
+	cmd := exe.command(exec.Command(exePath, args...))
+	cmd.Env = append(os.Environ(), envs...)
+	out := &bytes.Buffer{}
+	cmd.Stdout = io.MultiWriter(exe.stdout, out)
+	cmd.Stderr = io.MultiWriter(exe.stderr, out)
+	code, err := exe.exec(ctx, cmd)
+	return out.String(), code, err
 }
 
 func (exe *Executor) GoBuild(ctx context.Context, exePath, src, exeDir string) (int, error) {
