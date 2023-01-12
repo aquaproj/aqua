@@ -221,7 +221,7 @@ func (ctrl *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.E
 	if param.SelectVersion {
 		return ctrl.selectVersionFromReleases(ctx, logE, pkgInfo)
 	}
-	if pkgInfo.VersionFilter != nil {
+	if pkgInfo.VersionFilter != nil || pkgInfo.VersionPrefix != nil {
 		return ctrl.listAndGetTagName(ctx, logE, pkgInfo)
 	}
 	return ctrl.getVersionFromLatestRelease(ctx, logE, pkgInfo)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/policy"
 )
 
@@ -29,6 +30,7 @@ func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
 						Name:    "suzuki-shunsuke/tfcmt",
 						Version: "v4.0.0",
 					},
+					PackageInfo: &registry.PackageInfo{},
 					Registry: &aqua.Registry{
 						Type:      "github_content",
 						Name:      registryTypeStandard,
