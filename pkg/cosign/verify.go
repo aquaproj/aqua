@@ -162,6 +162,10 @@ func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, pa
 		if !strings.Contains(out, tempErrMsg) {
 			return fmt.Errorf("verify with cosign: %w", err)
 		}
+		if i == 4 { //nolint:gomnd
+			// skip last wait
+			break
+		}
 		rand.Seed(time.Now().UnixNano())
 		waitTime := time.Duration(rand.Intn(1000)) * time.Millisecond //nolint:gosec,gomnd
 		logE.WithFields(logrus.Fields{

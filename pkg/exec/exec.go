@@ -50,12 +50,12 @@ func (exe *Executor) ExecWithEnvs(ctx context.Context, exePath string, args, env
 }
 
 func (exe *Executor) ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error) {
-	cmd := exec.Command(exePath, args...)
+	cmd := exe.command(exec.Command(exePath, args...))
 	cmd.Env = append(os.Environ(), envs...)
 	out := &bytes.Buffer{}
-	cmd.Stdout = io.MultiWriter(cmd.Stdout, out)
-	cmd.Stderr = io.MultiWriter(cmd.Stderr, out)
-	code, err := exe.exec(ctx, exe.command(cmd))
+	cmd.Stdout = io.MultiWriter(exe.stdout, out)
+	cmd.Stderr = io.MultiWriter(exe.stderr, out)
+	code, err := exe.exec(ctx, cmd)
 	return out.String(), code, err
 }
 
