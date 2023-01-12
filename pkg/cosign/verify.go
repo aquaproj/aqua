@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
@@ -25,6 +26,7 @@ type VerifierImpl struct {
 	downloader    download.ClientAPI
 	cosignExePath string
 	disabled      bool
+	mutex         *sync.Mutex
 }
 
 func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *VerifierImpl {
@@ -39,6 +41,7 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 		}),
 		// assets for windows/arm64 aren't released.
 		disabled: rt.GOOS == "windows" && rt.GOARCH == "arm64",
+		mutex:    &sync.Mutex{},
 	}
 }
 
@@ -148,8 +151,24 @@ const tempErrMsg = "resource temporarily unavailable"
 var errVerify = errors.New("verify with Cosign")
 
 func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
+	// https://github.com/aquaproj/aqua/issues/1555
+	verifier.mutex.Lock()
+	defer verifier.mutex.Unlock()
 	out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, args, envs)
 	return out, err //nolint:wrapcheck
+}
+
+func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
+	rand.Seed(time.Now().UnixNano())
+	waitTime := time.Duration(rand.Intn(1000)) * time.Millisecond //nolint:gosec,gomnd
+	logE.WithFields(logrus.Fields{
+		"retry_count": retryCount,
+		"wait_time":   waitTime,
+	}).Info("Verification by Cosign failed temporarily, retring")
+	if err := util.Wait(ctx, waitTime); err != nil {
+		return fmt.Errorf("wait running Cosign: %w", err)
+	}
+	return nil
 }
 
 func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
@@ -171,14 +190,8 @@ func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, pa
 			// skip last wait
 			break
 		}
-		rand.Seed(time.Now().UnixNano())
-		waitTime := time.Duration(rand.Intn(1000)) * time.Millisecond //nolint:gosec,gomnd
-		logE.WithFields(logrus.Fields{
-			"retry_count": i + 1,
-			"wait_time":   waitTime,
-		}).Info("Verification by Cosign failed temporarily, retring")
-		if err := util.Wait(ctx, waitTime); err != nil {
-			return fmt.Errorf("wait 1 second: %w", err)
+		if err := wait(ctx, logE, i+1); err != nil {
+			return err
 		}
 	}
 	return errVerify
