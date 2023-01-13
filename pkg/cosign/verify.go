@@ -67,7 +67,6 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
 	}
-	cos.Opts = opts
 
 	if cos.Signature != nil {
 		sigFile, err := afero.TempFile(verifier.fs, "", "")
@@ -84,7 +83,7 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 		if err := verifier.downloadCosignFile(ctx, logE, f, sigFile); err != nil {
 			return fmt.Errorf("download a signature: %w", err)
 		}
-		cos.Opts = append(cos.Opts, "--signature", sigFile.Name())
+		opts = append(opts, "--signature", sigFile.Name())
 	}
 	if cos.Key != nil {
 		keyFile, err := afero.TempFile(verifier.fs, "", "")
@@ -102,7 +101,7 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 			return fmt.Errorf("download a signature: %w", err)
 		}
 
-		cos.Opts = append(cos.Opts, "--key", keyFile.Name())
+		opts = append(opts, "--key", keyFile.Name())
 	}
 	if cos.Certificate != nil {
 		certFile, err := afero.TempFile(verifier.fs, "", "")
@@ -123,16 +122,16 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 		if err := verifier.downloadCosignFile(ctx, logE, f, certFile); err != nil {
 			return fmt.Errorf("download a certificate: %w", err)
 		}
-		cos.Opts = append(cos.Opts, "--certificate", certFile.Name())
+		opts = append(opts, "--certificate", certFile.Name())
 	}
 
 	if err := verifier.verify(ctx, logE, &ParamVerify{
-		Opts:               cos.Opts,
+		Opts:               opts,
 		CosignExperimental: cos.CosignExperimental,
 		Target:             verifiedFilePath,
 	}); err != nil {
 		return fmt.Errorf("verify a signature file with Cosign: %w", logerr.WithFields(err, logrus.Fields{
-			"cosign_opts":         strings.Join(cos.Opts, ", "),
+			"cosign_opts":         strings.Join(opts, ", "),
 			"cosign_experimental": cos.CosignExperimental,
 			"target":              verifiedFilePath,
 		}))
