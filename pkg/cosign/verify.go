@@ -18,6 +18,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type VerifierImpl struct {
@@ -130,7 +131,11 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 		CosignExperimental: cos.CosignExperimental,
 		Target:             verifiedFilePath,
 	}); err != nil {
-		return fmt.Errorf("verify a signature file with Cosign: %w", err)
+		return fmt.Errorf("verify a signature file with Cosign: %w", logerr.WithFields(err, logrus.Fields{
+			"cosign_opts":         strings.Join(cos.Opts, ", "),
+			"cosign_experimental": cos.CosignExperimental,
+			"target":              verifiedFilePath,
+		}))
 	}
 	return nil
 }
