@@ -18,6 +18,19 @@ packages:
       - version_constraint: 'semverWithVersion("< 4.2.0", trimPrefix(Version, "kustomize/"))'
         rosetta2: true
 
+  - type: github_release
+    name: kubernetes-sigs/kustomize/version_prefix
+    repo_owner: kubernetes-sigs
+    repo_name: kustomize
+    asset: kustomize_{{.SemVer}}_{{.OS}}_{{.Arch}}.tar.gz
+    version_prefix: kustomize/
+    version_constraint: semver(">= 4.2.0")
+    version_overrides:
+      - version_constraint: "true"
+        rosetta2: true
+    files:
+      - name: kustomize
+
   - name: cmdx
     type: github_release
     repo_owner: suzuki-shunsuke
@@ -124,3 +137,75 @@ packages:
       pattern:
         checksum: ^(\b[A-Fa-f0-9]{64}\b)
         file: "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$"
+
+  - type: github_release
+    repo_owner: tamasfe
+    repo_name: taplo
+    version_constraint: semver(">= 0.8.0")
+    asset: taplo-{{.OS}}-{{.Arch}}.{{.Format}}
+    replacements:
+      amd64: x86_64
+      arm64: aarch64
+    supported_envs:
+      - darwin
+      - linux
+      - windows/amd64
+    format: gz
+    files:
+      - name: taplo
+        src: taplo-{{.OS}}-{{.Arch}}
+    overrides:
+      - goos: windows
+        format: zip
+        files:
+          - name: taplo
+            src: taplo.exe
+    version_overrides:
+      - version_constraint: "true"
+        version_prefix: release-taplo-cli-
+        asset: taplo-{{.Arch}}-{{.OS}}-gnu.{{.Format}}
+        rosetta2: true
+        format: tar.gz
+        supported_envs:
+          - darwin
+          - linux/amd64
+        replacements:
+          amd64: x86_64
+          darwin: apple-darwin
+          linux: unknown-linux
+        overrides: []
+        files:
+          - name: taplo
+      - version_constraint: semver(">= 0.6.0")
+        version_prefix: release-cli-
+        asset: taplo-{{.SemVer}}-{{.Arch}}-{{.OS}}-gnu.{{.Format}}
+        rosetta2: true
+        format: tar.gz
+        supported_envs:
+          - darwin
+          - linux/amd64
+        replacements:
+          amd64: x86_64
+          darwin: apple-darwin
+          linux: unknown-linux
+        overrides: []
+        files:
+          - name: taplo
+      - version_constraint: "true"
+        version_prefix: release-cli-
+        asset: taplo-{{.Arch}}-{{.OS}}-gnu.{{.Format}}
+        format: tar.gz
+        rosetta2: true
+        replacements:
+          amd64: x86_64
+          darwin: apple-darwin
+          linux: unknown-linux
+          windows: pc-windows
+        files:
+          - name: taplo
+        overrides:
+          - goos: windows
+            format: zip
+        supported_envs:
+          - darwin
+          - amd64

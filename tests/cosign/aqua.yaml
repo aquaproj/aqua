@@ -6,7 +6,7 @@ checksum:
   enabled: true
 registries:
   - type: standard
-    ref: v3.117.0 # renovate: depName=aquaproj/aqua-registry
+    ref: v3.120.0 # renovate: depName=aquaproj/aqua-registry
   - name: local
     type: local
     path: registry.yaml
@@ -14,10 +14,9 @@ packages:
   - name: terraform-linters/tflint
     version: v0.44.1
     registry: local
-  # Comment out flaky test
-  # Verification with Cosign frequently failed.
-  # > Error: verifying blob [/tmp/482325480]: getting Fulcio roots: error getting targets: error getting target fulcio.crt.pem by usage: open /home/runner/.sigstore/root/targets/fulcio.crt.pem: no such file or directory
-  # > main.go:62: error during command execution: verifying blob [/tmp/482325480]: getting Fulcio roots: error getting targets: error getting target fulcio.crt.pem by usage: open /home/runner/.sigstore/root/targets/fulcio.crt.pem: no such file or directory
-  # - name: aquaproj/aqua-installer
-  #   version: v1.1.3-3
-  #   registry: local
+  # https://github.com/sigstore/cosign/issues/2576
+  # https://github.com/aquaproj/aqua/issues/1555
+  # https://github.com/aquaproj/aqua/issues/1554
+  - name: aquaproj/aqua-installer
+    version: v1.1.3-3
+    registry: local

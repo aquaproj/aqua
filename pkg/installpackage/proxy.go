@@ -5,13 +5,25 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/sirupsen/logrus"
 )
 
-const ProxyVersion = "v1.1.2" // renovate: depName=aquaproj/aqua-proxy
+const ProxyVersion = "v1.1.4" // renovate: depName=aquaproj/aqua-proxy
+
+func ProxyChecksums() map[string]string {
+	return map[string]string{
+		"darwin/amd64":  "198be9c4e00175731e01724172ad3e2c141c4be17de702d5352babb11a446eb0",
+		"darwin/arm64":  "0e0c421e6e17cde8c3c1726e22adb99a95caa799ecb7478cc4d3e56a9ae55884",
+		"linux/amd64":   "1d5a9cc5cdab91d3527cca1a6dbafc9530deb9559a542b8a6137627a729ade20",
+		"linux/arm64":   "02ee1dbf7d20b75422bde16a82f602e5f7318177c22a67ef50d83bffdc198018",
+		"windows/amd64": "27ac08a887f3f873e500f96b3ee2459848fa0be5837af3f9051044afc9d173b3",
+		"windows/arm64": "4ad911f0a982a4287b93922642818fa3afeead236c9f1403638bb01507a32eb6",
+	}
+}
 
 func (inst *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
 	if isWindows(inst.runtime.GOOS) {
@@ -55,14 +67,19 @@ func (inst *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry)
 	finfo, err := inst.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
+		chksum := ProxyChecksums()[inst.runtime.Env()]
 		if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
 			Package: pkg,
 			Dest:    pkgPath,
 			Asset:   assetName,
+			Checksum: &checksum.Checksum{
+				Algorithm: "sha256",
+				Checksum:  chksum,
+			},
 		}); err != nil {
 			return err
 		}
-	} else {
+	} else { //nolint:gocritic
 		if !finfo.IsDir() {
 			return fmt.Errorf("%s isn't a directory", pkgPath)
 		}

@@ -37,6 +37,7 @@ type PackageInfo struct {
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
 	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
@@ -69,6 +70,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		VersionOverrides:   pkgInfo.VersionOverrides,
 		SupportedEnvs:      pkgInfo.SupportedEnvs,
 		VersionFilter:      pkgInfo.VersionFilter,
+		VersionPrefix:      pkgInfo.VersionPrefix,
 		Rosetta2:           pkgInfo.Rosetta2,
 		Aliases:            pkgInfo.Aliases,
 		VersionSource:      pkgInfo.VersionSource,
@@ -122,6 +124,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.VersionFilter != nil {
 		pkg.VersionFilter = child.VersionFilter
+	}
+	if child.VersionPrefix != nil {
+		pkg.VersionPrefix = child.VersionPrefix
 	}
 	if child.Rosetta2 != nil {
 		pkg.Rosetta2 = child.Rosetta2
@@ -225,6 +230,7 @@ type VersionOverride struct {
 	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix      *string           `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source,omitempty"`
 	Rosetta2           *bool             `yaml:",omitempty" json:"rosetta2,omitempty"`
 	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
@@ -451,4 +457,12 @@ func (pkgInfo *PackageInfo) SLSASourceURI() string {
 		repoName = pkgInfo.RepoName
 	}
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
+}
+
+func (pkgInfo *PackageInfo) GetVersionPrefix() string {
+	prefix := pkgInfo.VersionPrefix
+	if prefix == nil {
+		return ""
+	}
+	return *prefix
 }

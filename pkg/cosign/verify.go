@@ -2,16 +2,23 @@ package cosign
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"math/rand"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/template"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type VerifierImpl struct {
@@ -20,6 +27,7 @@ type VerifierImpl struct {
 	downloader    download.ClientAPI
 	cosignExePath string
 	disabled      bool
+	mutex         *sync.Mutex
 }
 
 func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *VerifierImpl {
@@ -34,6 +42,7 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 		}),
 		// assets for windows/arm64 aren't released.
 		disabled: rt.GOOS == "windows" && rt.GOARCH == "arm64",
+		mutex:    &sync.Mutex{},
 	}
 }
 
@@ -58,7 +67,6 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
 	}
-	cos.Opts = opts
 
 	if cos.Signature != nil {
 		sigFile, err := afero.TempFile(verifier.fs, "", "")
@@ -75,7 +83,7 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 		if err := verifier.downloadCosignFile(ctx, logE, f, sigFile); err != nil {
 			return fmt.Errorf("download a signature: %w", err)
 		}
-		cos.Opts = append(cos.Opts, "--signature", sigFile.Name())
+		opts = append(opts, "--signature", sigFile.Name())
 	}
 	if cos.Key != nil {
 		keyFile, err := afero.TempFile(verifier.fs, "", "")
@@ -93,7 +101,7 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 			return fmt.Errorf("download a signature: %w", err)
 		}
 
-		cos.Opts = append(cos.Opts, "--key", keyFile.Name())
+		opts = append(opts, "--key", keyFile.Name())
 	}
 	if cos.Certificate != nil {
 		certFile, err := afero.TempFile(verifier.fs, "", "")
@@ -114,21 +122,25 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 		if err := verifier.downloadCosignFile(ctx, logE, f, certFile); err != nil {
 			return fmt.Errorf("download a certificate: %w", err)
 		}
-		cos.Opts = append(cos.Opts, "--certificate", certFile.Name())
+		opts = append(opts, "--certificate", certFile.Name())
 	}
 
-	if err := verifier.verify(ctx, &ParamVerify{
-		Opts:               cos.Opts,
+	if err := verifier.verify(ctx, logE, &ParamVerify{
+		Opts:               opts,
 		CosignExperimental: cos.CosignExperimental,
 		Target:             verifiedFilePath,
 	}); err != nil {
-		return fmt.Errorf("verify a signature file with Cosign: %w", err)
+		return fmt.Errorf("verify a signature file with Cosign: %w", logerr.WithFields(err, logrus.Fields{
+			"cosign_opts":         strings.Join(opts, ", "),
+			"cosign_experimental": cos.CosignExperimental,
+			"target":              verifiedFilePath,
+		}))
 	}
 	return nil
 }
 
 type Executor interface {
-	ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error)
+	ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error)
 }
 
 type ParamVerify struct {
@@ -138,16 +150,55 @@ type ParamVerify struct {
 	CosignExePath      string
 }
 
-func (verifier *VerifierImpl) verify(ctx context.Context, param *ParamVerify) error {
+const tempErrMsg = "resource temporarily unavailable"
+
+var errVerify = errors.New("verify with Cosign")
+
+func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
+	// https://github.com/aquaproj/aqua/issues/1555
+	verifier.mutex.Lock()
+	defer verifier.mutex.Unlock()
+	out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, args, envs)
+	return out, err //nolint:wrapcheck
+}
+
+func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
+	rand.Seed(time.Now().UnixNano())
+	waitTime := time.Duration(rand.Intn(1000)) * time.Millisecond //nolint:gosec,gomnd
+	logE.WithFields(logrus.Fields{
+		"retry_count": retryCount,
+		"wait_time":   waitTime,
+	}).Info("Verification by Cosign failed temporarily, retring")
+	if err := util.Wait(ctx, waitTime); err != nil {
+		return fmt.Errorf("wait running Cosign: %w", err)
+	}
+	return nil
+}
+
+func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	envs := []string{}
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
 	}
-	_, err := verifier.executor.ExecWithEnvs(ctx, verifier.cosignExePath, append([]string{"verify-blob"}, append(param.Opts, param.Target)...), envs)
-	if err != nil {
-		return fmt.Errorf("verify with cosign: %w", err)
+	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
+	for i := 0; i < 5; i++ {
+		// https://github.com/aquaproj/aqua/issues/1554
+		out, err := verifier.exec(ctx, args, envs)
+		if err == nil {
+			return nil
+		}
+		if !strings.Contains(out, tempErrMsg) {
+			return fmt.Errorf("verify with cosign: %w", err)
+		}
+		if i == 4 { //nolint:gomnd
+			// skip last wait
+			break
+		}
+		if err := wait(ctx, logE, i+1); err != nil {
+			return err
+		}
 	}
-	return nil
+	return errVerify
 }
 
 func (verifier *VerifierImpl) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {

@@ -53,6 +53,7 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 	installer := newInstaller(param, downloader, rt, fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier)
 	installer.cosignInstaller = &Cosign{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
+		mutex:     &sync.Mutex{},
 	}
 	return installer
 }

@@ -25,7 +25,7 @@ func (pc *CheckerImpl) matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) 
 	}
 
 	if rgstPolicy.Ref != "" {
-		matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Ref, rgst.Ref)
+		matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Ref, rgst.Ref, rgst.Ref)
 		if err != nil {
 			return false, fmt.Errorf("evaluate the version constraint of registry: %w", err)
 		}

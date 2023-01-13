@@ -11,6 +11,7 @@ env:
   AQUA_LOG_LEVEL: debug
   AQUA_LOG_COLOR: always
   AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
+  AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
 permissions: {}
 jobs:
   build:
@@ -24,7 +25,6 @@ jobs:
 
     - run: go install ./cmd/aqua
     - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-    - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/main/aqua-global.yaml:$PWD/tests/main/aqua-global-2.yaml" >> "$GITHUB_ENV"
     - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
     - run: echo "x-motemen/ghq" | aqua g -f -
     - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/main/aqua-global.yaml g -f -
@@ -32,6 +32,10 @@ jobs:
     - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
     - name: Test -pin
       run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
+
+    - name: Test version_prefix
+      run: aqua -c aqua-global.yaml g -i local,kubernetes-sigs/kustomize/version_prefix
+      working-directory: tests/main
 
     - run: aqua list
     - run: aqua update-checksum

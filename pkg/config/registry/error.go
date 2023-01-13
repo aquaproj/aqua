@@ -10,4 +10,5 @@ var (
 	errAssetRequired            = errors.New("github_release package requires asset")
 	errURLRequired              = errors.New("http package requires url")
 	errInvalidPackageType       = errors.New("package type is invalid")
+	errNoVersionConstraintMatch = errors.New("no version constraint matches with the version")
 )

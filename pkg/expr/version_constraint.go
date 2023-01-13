@@ -20,15 +20,7 @@ func emptySemverWithVersion(constr, ver string) bool {
 
 func getSemverFunc(v string) func(s string) bool {
 	return func(s string) bool {
-		a, err := version.NewConstraint(s)
-		if err != nil {
-			panic(err)
-		}
-		ver, err := version.NewVersion(v)
-		if err != nil {
-			panic(err)
-		}
-		return a.Check(ver)
+		return semverWithVersion(s, v)
 	}
 }
 
@@ -44,15 +36,17 @@ func semverWithVersion(constr, ver string) bool {
 	return a.Check(v)
 }
 
-func EvaluateVersionConstraints(constraint, v string) (bool, error) {
+func EvaluateVersionConstraints(constraint, v, semver string) (bool, error) {
 	return evaluateBool(constraint, map[string]interface{}{
 		"Version":           "",
+		"SemVer":            "",
 		"semver":            emptySemver,
 		"semverWithVersion": emptySemverWithVersion,
 		"trimPrefix":        emptyTrimPrefix,
 	}, map[string]interface{}{
 		"Version":           v,
-		"semver":            getSemverFunc(v),
+		"SemVer":            semver,
+		"semver":            getSemverFunc(semver),
 		"semverWithVersion": semverWithVersion,
 		"trimPrefix":        strings.TrimPrefix,
 	})

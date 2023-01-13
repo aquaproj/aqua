@@ -52,6 +52,9 @@ packages:
   registry: local
   # type: go_install
   version: e9ceff4e053200afb1eb7e8e3c16932b2e2f01ee
-# {{.URL}} in checksum
 - name: helm/helm@v3.10.1
+  registry: local
+- name: tamasfe/taplo@0.8.0
+  registry: local
+- name: kubernetes-sigs/kustomize/version_prefix@kustomize/v4.5.7
   registry: local

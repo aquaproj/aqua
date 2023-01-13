@@ -3,6 +3,7 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
@@ -14,9 +15,12 @@ import (
 
 type Cosign struct {
 	installer *InstallerImpl
+	mutex     *sync.Mutex
 }
 
 func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, version string) error {
+	cos.mutex.Lock()
+	defer cos.mutex.Unlock()
 	assetTemplate := `cosign-{{.OS}}-{{.Arch}}`
 	pkg := &config.Package{
 		Package: &aqua.Package{

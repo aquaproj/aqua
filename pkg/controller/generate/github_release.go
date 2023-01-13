@@ -2,6 +2,7 @@ package generate
 
 import (
 	"context"
+	"strings"
 
 	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/pkg/config/registry"
@@ -43,21 +44,63 @@ func (ctrl *Controller) getVersionFromLatestRelease(ctx context.Context, logE *l
 	return release.GetTagName()
 }
 
-func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease { //nolint:cyclop
+type Filter struct {
+	Prefix     string
+	Filter     *vm.Program
+	Constraint string
+}
+
+func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
+	filters := make([]*Filter, 0, 1+len(pkgInfo.VersionOverrides))
+	topFilter := &Filter{}
+	if pkgInfo.VersionFilter != nil {
+		f, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
+		if err != nil {
+			return nil, err //nolint:wrapcheck
+		}
+		topFilter.Filter = f
+	}
+	topFilter.Constraint = pkgInfo.VersionConstraints
+	if pkgInfo.VersionPrefix != nil {
+		topFilter.Prefix = *pkgInfo.VersionPrefix
+	}
+	filters = append(filters, topFilter)
+
+	for _, vo := range pkgInfo.VersionOverrides {
+		flt := &Filter{
+			Prefix:     topFilter.Prefix,
+			Filter:     topFilter.Filter,
+			Constraint: topFilter.Constraint,
+		}
+		if vo.VersionFilter != nil {
+			f, err := expr.CompileVersionFilter(*vo.VersionFilter)
+			if err != nil {
+				return nil, err //nolint:wrapcheck
+			}
+			flt.Filter = f
+		}
+		flt.Constraint = vo.VersionConstraints
+		if vo.VersionPrefix != nil {
+			flt.Prefix = *vo.VersionPrefix
+		}
+		filters = append(filters, flt)
+	}
+	return filters, nil
+}
+
+func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
 		PerPage: 100, //nolint:gomnd
 	}
-	var versionFilter *vm.Program
-	if pkgInfo.VersionFilter != nil {
-		var err error
-		versionFilter, err = expr.CompileVersionFilter(*pkgInfo.VersionFilter)
-		if err != nil {
-			return nil
-		}
-	}
 	var arr []*github.RepositoryRelease
+
+	filters, err := createFilters(pkgInfo)
+	if err != nil {
+		return nil
+	}
+
 	for i := 0; i < 10; i++ {
 		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
@@ -68,16 +111,9 @@ func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pk
 			return arr
 		}
 		for _, release := range releases {
-			if release.GetPrerelease() {
-				continue
+			if filterRelease(release, filters) {
+				arr = append(arr, release)
 			}
-			if versionFilter != nil {
-				f, err := expr.EvaluateVersionFilter(versionFilter, release.GetTagName())
-				if err != nil || !f {
-					continue
-				}
-			}
-			arr = append(arr, release)
 		}
 		if len(releases) != opt.PerPage {
 			return arr
@@ -93,10 +129,12 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entr
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
 	}
-	versionFilter, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
+
+	filters, err := createFilters(pkgInfo)
 	if err != nil {
 		return ""
 	}
+
 	for {
 		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
@@ -107,18 +145,50 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entr
 			return ""
 		}
 		for _, release := range releases {
-			if release.GetPrerelease() {
-				continue
+			if filterRelease(release, filters) {
+				return release.GetTagName()
 			}
-			f, err := expr.EvaluateVersionFilter(versionFilter, release.GetTagName())
-			if err != nil || !f {
-				continue
-			}
-			return release.GetTagName()
 		}
 		if len(releases) != opt.PerPage {
 			return ""
 		}
 		opt.Page++
 	}
+}
+
+func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
+	if release.GetPrerelease() {
+		return false
+	}
+
+	tagName := release.GetTagName()
+
+	for _, filter := range filters {
+		if filterTagByFilter(tagName, filter) {
+			return true
+		}
+	}
+	return false
+}
+
+func filterTagByFilter(tagName string, filter *Filter) bool {
+	sv := tagName
+	if filter.Prefix != "" {
+		if !strings.HasPrefix(tagName, filter.Prefix) {
+			return false
+		}
+		sv = strings.TrimPrefix(tagName, filter.Prefix)
+	}
+	if filter.Filter != nil {
+		if f, err := expr.EvaluateVersionFilter(filter.Filter, tagName); err != nil || !f {
+			return false
+		}
+	}
+	if filter.Constraint == "" {
+		return true
+	}
+	if f, err := expr.EvaluateVersionConstraints(filter.Constraint, tagName, sv); err == nil && f {
+		return true
+	}
+	return false
 }
