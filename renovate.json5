@@ -2,7 +2,7 @@
   extends: [
     "config:base",
     "helpers:pinGitHubActionDigests",
-    "github>suzuki-shunsuke/renovate-config#1.0.0",
+    "github>suzuki-shunsuke/renovate-config#1.1.0",
     "github>aquaproj/aqua-renovate-config#1.5.1",
     "github>aquaproj/aqua-renovate-config:file#1.5.1(tests/aqua.*\\.yaml)",
     "github>aquaproj/aqua-renovate-config:file#1.5.1(aqua/.*\\.ya?ml)",
