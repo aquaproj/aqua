@@ -103,6 +103,8 @@ jobs:
       run: aqua gr hmarr/codeowners
     - name: "Test generate-registry (rust)"
       run: aqua gr XAMPPRocky/tokei
+    - name: Test generate-registry (specify version)
+      run: aqua gr suzuki-shunsuke/tfcmt@v3.2.4
 
     - name: test aqua cp
       run: aqua cp actionlint golangci-lint

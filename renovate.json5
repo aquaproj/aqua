@@ -2,30 +2,12 @@
   extends: [
     "config:base",
     "helpers:pinGitHubActionDigests",
-    "github>suzuki-shunsuke/renovate-config",
+    "github>suzuki-shunsuke/renovate-config#1.1.0",
     "github>aquaproj/aqua-renovate-config#1.5.1",
     "github>aquaproj/aqua-renovate-config:file#1.5.1(tests/aqua.*\\.yaml)",
     "github>aquaproj/aqua-renovate-config:file#1.5.1(aqua/.*\\.ya?ml)",
   ],
   ignorePaths: [],
-  packageRules: [
-    {
-      matchUpdateTypes: ["digest"],
-      enabled: false,
-    },
-    {
-      // slsa-framework/slsa-github-generator doesn't support pinning version
-      // > Invalid ref: 68bad40844440577b33778c9f29077a3388838e9. Expected ref of the form refs/tags/vX.Y.Z
-      // https://github.com/slsa-framework/slsa-github-generator/issues/722
-      matchDepTypes: [
-        "action",
-      ],
-      matchPackageNames: [
-        "slsa-framework/slsa-github-generator",
-      ],
-      pinDigests: false,
-    },
-  ],
   regexManagers: [
     {
       fileMatch: [".*\\.go"],
@@ -41,14 +23,6 @@
       datasourceTemplate: "github-releases",
       matchStrings: [
         '"(?<currentValue>.*)",? // renovate: depName=aquaproj/aqua-registry',
-      ],
-    },
-    {
-      fileMatch: ["^\\.github/workflows/.*\\.ya?ml$"],
-      depNameTemplate: "sigstore/cosign",
-      datasourceTemplate: "github-releases",
-      matchStrings: [
-        'cosign-release: (?<currentValue>.*) +# renovate: depName=sigstore/cosign',
       ],
     },
     {

@@ -63,7 +63,17 @@ func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, lo
 	return nil
 }
 
-func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) *registry.PackageInfo {
+func (ctrl *Controller) getRelease(ctx context.Context, repoOwner, repoName, version string) (*github.RepositoryRelease, error) {
+	if version == "" {
+		release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
+		return release, err //nolint:wrapcheck
+	}
+	release, _, err := ctrl.github.GetReleaseByTag(ctx, repoOwner, repoName, version)
+	return release, err //nolint:wrapcheck
+}
+
+func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string) *registry.PackageInfo {
+	pkgName, version, _ := strings.Cut(arg, "@")
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
 		Type: "github_release",
@@ -80,14 +90,14 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 		} else {
 			pkgInfo.Description = strings.TrimRight(strings.TrimSpace(repo.GetDescription()), ".!?")
 		}
-		release, _, err := ctrl.github.GetLatestRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName)
+		release, err := ctrl.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 		if err != nil {
 			logE.WithFields(logrus.Fields{
 				"repo_owner": pkgInfo.RepoOwner,
 				"repo_name":  pkgInfo.RepoName,
-			}).WithError(err).Warn("get the latest release")
+			}).WithError(err).Warn("get the release")
 		} else {
-			logE.WithField("version", release.GetTagName()).Debug("got the latest release")
+			logE.WithField("version", release.GetTagName()).Debug("got the release")
 			assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
 			if len(assets) != 0 {
 				logE.WithField("num_of_assets", len(assets)).Debug("got assets")
