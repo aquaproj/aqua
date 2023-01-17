@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"github.com/aquaproj/aqua/pkg/expr"
 	"github.com/aquaproj/aqua/pkg/runtime"
 )
 
@@ -9,10 +8,7 @@ func (pkgInfo *PackageInfo) CheckSupported(rt *runtime.Runtime, env string) (boo
 	if pkgInfo.SupportedEnvs != nil {
 		return pkgInfo.CheckSupportedEnvs(rt.GOOS, rt.GOARCH, env), nil
 	}
-	if pkgInfo.SupportedIf == nil {
-		return true, nil
-	}
-	return expr.EvaluateSupportedIf(pkgInfo.SupportedIf, rt) //nolint:wrapcheck
+	return true, nil
 }
 
 func (pkgInfo *PackageInfo) CheckSupportedEnvs(goos, goarch, env string) bool {
