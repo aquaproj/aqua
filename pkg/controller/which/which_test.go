@@ -177,6 +177,7 @@ packages:
   repo_owner: suzuki-shunsuke
   repo_name: ci-info
   asset: "ci-info_{{.Arch}}-{{.OS}}.tar.gz"
+  supported_if: "false"
 - type: github_release
   repo_owner: suzuki-shunsuke
   repo_name: github-comment
