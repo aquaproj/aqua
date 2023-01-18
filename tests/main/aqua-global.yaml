@@ -35,6 +35,9 @@ packages:
 - name: tfutils/tfenv@v3.0.0
   # github_archive package
   registry: local
+- name: containerd/nerdctl@v1.0.0
+  # supported_if
+  registry: local
 - name: aristocratos/btop@v1.2.12
   # replacements_overrides
   registry: local
@@ -42,6 +45,13 @@ packages:
   # alias
   registry: local
   version: v0.9.4 # renovate: depName=ahmetb/kubectx
+- name: google/wire@v0.5.0
+  # type: go
+  registry: local
+- name: mitchellh/gox
+  registry: local
+  # specify revision
+  version: 8c3b2b9e647dc52457d6ee7b5adcf97e2bafe131
 - name: katbyte/terrafmt@v0.5.2
   # type: go_install
   registry: local

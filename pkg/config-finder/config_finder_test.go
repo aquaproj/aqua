@@ -109,7 +109,7 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 	}
 }
 
-func Test_configFinderFinds(t *testing.T) {
+func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name           string
@@ -150,6 +150,7 @@ func Test_configFinderFinds(t *testing.T) {
 			},
 			exp: []string{
 				"/home/foo/aqua-2.yaml",
+				"/home/.aqua.yaml",
 			},
 		},
 	}

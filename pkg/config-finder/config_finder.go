@@ -63,7 +63,7 @@ func (finder *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
 		return findconfig.Finds(wd, finder.exist, configFileNames()...)
 	}
-	return []string{util.Abs(wd, configFilePath)}
+	return append([]string{util.Abs(wd, configFilePath)}, findconfig.Finds(wd, finder.exist, configFileNames()...)...)
 }
 
 func (finder *ConfigFinder) exist(p string) bool {
