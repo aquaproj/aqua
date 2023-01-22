@@ -16,5 +16,5 @@ on:
 
 jobs:
   renovate-config-validator:
-    uses: suzuki-shunsuke/renovate-config-validator-workflow/.github/workflows/validate.yaml@37f3b320ff7dd6fbf4fa25ce9e704ed817437a4c # v0.1.0
+    uses: suzuki-shunsuke/renovate-config-validator-workflow/.github/workflows/validate.yaml@1a2fd7b15d99b1c434124b0bd2d8bd55b54ed869 # v0.2.0
     permissions: {}
