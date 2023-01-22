@@ -6,18 +6,19 @@ on:
   push:
     branches: [main]
     paths:
-    - .github/**
+      - .github/**
+      - aqua/actionlint.yaml
+      - aqua/reviewdog.yaml
   pull_request:
-    branches: [main]
     paths:
-    - .github/**
+      - .github/**
+      - aqua/actionlint.yaml
+      - aqua/reviewdog.yaml
 permissions: {}
 jobs:
-  default:
+  actionlint:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-    - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
-      with:
-        aqua_version: v1.32.0
-    - run: actionlint
+    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@0c06ab0fadfa4f27569001388515dafdabc11bb3 # v0.2.0
+    permissions:
+      pull-requests: write
+      contents: read
