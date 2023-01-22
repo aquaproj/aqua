@@ -18,7 +18,7 @@ permissions: {}
 jobs:
   actionlint:
     runs-on: ubuntu-latest
-    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@0c06ab0fadfa4f27569001388515dafdabc11bb3 # v0.2.0
+    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@104c0a3e2d13d1c02de6ca630de82a0469f97f20 # v0.2.1
     permissions:
       pull-requests: write
       contents: read
