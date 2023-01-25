@@ -5,7 +5,4 @@ registries:
   - type: standard
     ref: v3.123.0 # renovate: depName=aquaproj/aqua-registry
 packages:
-  - name: suzuki-shunsuke/cmdx@v1.6.1
-  - name: golangci/golangci-lint@v1.50.1
-  - name: sigstore/cosign@v1.13.1
   - import: aqua/*.yaml
