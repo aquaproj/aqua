@@ -50,7 +50,7 @@ jobs:
       - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
         # Install ghcp
         with:
-          aqua_version: v1.32.0
+          aqua_version: v1.32.1
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - uses: aquaproj/update-checksum-action@2413c534a7d2cd2ce7a0dfb5a686e5142e565ce3 # v0.1.3
