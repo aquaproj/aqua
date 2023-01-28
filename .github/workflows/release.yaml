@@ -6,7 +6,7 @@ on:
 permissions: {}
 jobs:
   release:
-    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@256b1eef8f90d2877ee6c56dfae7e1e4f658272e # v0.2.0-1
+    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@256b1eef8f90d2877ee6c56dfae7e1e4f658272e # v0.2.0
     with:
       homebrew: true
       aqua_policy_config: aqua-policy.yaml
