@@ -31,6 +31,31 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/goreleaser/goreleaser/v1.14.1/goreleaser_Darwin_all.tar.gz",
+      "checksum": "38e1aa8cf4c0d9b2973a7e1fab4f85386eafa108c84172ad7e106b29b63bdce3",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v1.14.1/goreleaser_Linux_arm64.tar.gz",
+      "checksum": "a4b56c4bd70501937757e09526eff3d34bd7a730d49e88f96680be29c5e14e12",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v1.14.1/goreleaser_Linux_x86_64.tar.gz",
+      "checksum": "d6cc1340201de942cf1d1b213f7451e141daa6b29f5989de22560b05203e74cb",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v1.14.1/goreleaser_Windows_arm64.zip",
+      "checksum": "816cb16cb35ce1db1f0b02818fc17d5a0ce180c3865efee4cb763e9c2866f92d",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v1.14.1/goreleaser_Windows_x86_64.zip",
+      "checksum": "734de7027cad17ce4007f58b7c6afc46aa3a7b3d61c1578b7e250da15e4dea28",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/int128/ghcp/v1.13.2/ghcp_darwin_amd64.zip",
       "checksum": "8221f411ac4f2465b7cfd31efb6da4568e5fd20bad9f66ac312b23afa4520fdd",
       "algorithm": "sha256"
