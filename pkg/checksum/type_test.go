@@ -33,7 +33,7 @@ func TestChecksums_Get(t *testing.T) {
 			},
 			exp: &checksum.Checksum{
 				ID:        "foo",
-				Checksum:  "bar",
+				Checksum:  "BAR",
 				Algorithm: "sha256",
 			},
 		},
