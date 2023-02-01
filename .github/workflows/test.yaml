@@ -32,6 +32,7 @@ jobs:
               - renovate.json5
             ghalint:
               - .github/workflows/*.yaml
+              - aqua/ghalint.yaml
 
   update-aqua-checksums:
     # Update aqua-checksums.json and push a commit
@@ -89,6 +90,8 @@ jobs:
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: ghalint run
+        env:
+          GHALINT_LOG_COLOR: always
 
   enable-automerge:
     # Enable automerge to merge pull requests from Renovate automatically.
