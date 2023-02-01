@@ -171,6 +171,36 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.0/ghalint_0.2.0_darwin_amd64.tar.gz",
+      "checksum": "B3EE4418624CAA98DB36E90E8B0FBB1563F28B83DD8F23F18C5D9EE03507FD70",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.0/ghalint_0.2.0_darwin_arm64.tar.gz",
+      "checksum": "4D8DDD0DFB7C1C36675970F8995386129D55BE1DB2220FEDB09D2B761BBC8564",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.0/ghalint_0.2.0_linux_amd64.tar.gz",
+      "checksum": "9992E9E964D77E60680E24162E563D6685DBE63F4A061B9CC6EE37A3C65C685A",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.0/ghalint_0.2.0_linux_arm64.tar.gz",
+      "checksum": "4825803D51BE42B535B53BACD94929445F34FE3938D2BE4C07B66CD08E91E939",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.0/ghalint_0.2.0_windows_amd64.tar.gz",
+      "checksum": "6AFAFE403DC0538C837AE83D4CF422C0A8EAB5439E6A764356C3299226ED63E8",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.0/ghalint_0.2.0_windows_arm64.tar.gz",
+      "checksum": "ABAEDE412542D5E863973B9470F87A5829C33C54BBAF55BF7BE68FF1FF5AE713",
+      "algorithm": "sha256"
+    },
+    {
       "id": "registries/github_content/github.com/aquaproj/aqua-registry/v3.126.0/registry.yaml",
       "checksum": "c422babb50605f3063bc07ca2cb2a19a80fd71064acc4c26ab520353d015a5e940615f754a1c46a9166600aa18dea6029210ea081d66c6ce05793b432b652d96",
       "algorithm": "sha512"
