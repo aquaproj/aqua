@@ -15,6 +15,7 @@ jobs:
     outputs:
       update-aqua-checksums: ${{steps.changes.outputs.update-aqua-checksums}}
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
+      ghalint: ${{steps.changes.outputs.ghalint}}
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -29,6 +30,8 @@ jobs:
               - .github/workflows/test.yaml
             renovate-config-validator:
               - renovate.json5
+            ghalint:
+              - .github/workflows/*.yaml
 
   update-aqua-checksums:
     # Update aqua-checksums.json and push a commit
@@ -72,21 +75,34 @@ jobs:
     permissions:
       contents: read
 
+  ghalint:
+    # Validate GitHub Actions Workflows by ghalint.
+    needs: path-filter
+    if: needs.path-filter.outputs.ghalint == 'true'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
+      - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
+        with:
+          aqua_version: v1.32.2
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: ghalint run
+
   enable-automerge:
     # Enable automerge to merge pull requests from Renovate automatically.
     runs-on: ubuntu-latest
     needs:
-      - update-aqua-checksums
-      - renovate-config-validator
-      - test
-      - integration-test
+      - status-check
     permissions:
       contents: write # For enable automerge
       pull-requests: write # For enable automerge
-    # "! failure()" is required. success() returns false if dependent jobs are skipped. https://github.com/community/community/discussions/45058
-    # By default success() is used so we have to override success() by "! failure()"
+    # "! failure() && ! cancelled()" is required. success() returns false if dependent jobs are skipped.
+    # https://github.com/community/community/discussions/45058
+    # By default success() is used so we have to override success() by "! failure() && ! cancelled()"
     if: |
-      ! failure() && github.event.pull_request.user.login == 'renovate[bot]' && contains(github.event.pull_request.body, ' **Automerge**: Enabled.')
+      ! failure() && ! cancelled() && github.event.pull_request.user.login == 'renovate[bot]' && contains(github.event.pull_request.body, ' **Automerge**: Enabled.')
     steps:
       - name: Generate token
         id: generate_token
@@ -106,6 +122,7 @@ jobs:
     needs:
       - update-aqua-checksums
       - renovate-config-validator
+      - ghalint
       - test
       - integration-test
     permissions: {}
