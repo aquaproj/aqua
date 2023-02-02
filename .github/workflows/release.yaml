@@ -4,16 +4,15 @@ on:
   push:
     tags: [v*]
 permissions: {}
-env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
 jobs:
   release:
-    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@8e0d6d2a7171206b9d95b3b59fe74f8333b1be1b # v0.1.0
+    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@5f97504fee36e24636d22b12f10e3e343f14f0ae # v0.2.2
     with:
       homebrew: true
+      aqua_policy_config: aqua-policy.yaml
     secrets:
-      gh_app_id: ${{ secrets.APP_ID }}
-      gh_app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
+      gh_app_id: ${{secrets.APP_ID}}
+      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
     permissions:
       contents: write
       id-token: write

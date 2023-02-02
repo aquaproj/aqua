@@ -153,10 +153,6 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 		checksums.Set(checksumID, chksum)
 	}
 
-	if chksum != nil {
-		chksum.Checksum = strings.ToUpper(chksum.Checksum)
-	}
-
 	algorithm := "sha512"
 	if chksum != nil {
 		algorithm = chksum.Algorithm
@@ -167,12 +163,11 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 			"temp_file": tempFilePath,
 		}))
 	}
-	calculatedSum = strings.ToUpper(calculatedSum)
 
-	if chksum != nil && calculatedSum != chksum.Checksum {
+	if chksum != nil && !strings.EqualFold(calculatedSum, chksum.Checksum) {
 		return nil, logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
-			"actual_checksum":   calculatedSum,
-			"expected_checksum": chksum.Checksum,
+			"actual_checksum":   strings.ToUpper(calculatedSum),
+			"expected_checksum": strings.ToUpper(chksum.Checksum),
 		})
 	}
 

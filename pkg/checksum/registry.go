@@ -34,10 +34,10 @@ func CheckRegistry(regist *aqua.Registry, checksums *Checksums, content []byte) 
 		checksums.Set(checksumID, chksum)
 		return nil
 	}
-	if chksum.Checksum != chk {
+	if !strings.EqualFold(chksum.Checksum, chk) {
 		return logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
-			"actual_checksum":   chk,
-			"expected_checksum": chksum.Checksum,
+			"actual_checksum":   strings.ToUpper(chk),
+			"expected_checksum": strings.ToUpper(chksum.Checksum),
 		})
 	}
 	return nil

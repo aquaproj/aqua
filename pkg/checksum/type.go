@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/spf13/afero"
@@ -36,10 +37,15 @@ func (chksums *Checksums) Get(key string) *Checksum {
 }
 
 func (chksums *Checksums) Set(key string, chk *Checksum) {
+	chk.Checksum = strings.ToUpper(chk.Checksum)
 	chksums.rwmutex.Lock()
-	chksums.m[key] = chk
-	chksums.newM[key] = chk
-	chksums.changed = true
+	if _, ok := chksums.m[key]; !ok {
+		chksums.m[key] = chk
+		chksums.changed = true
+	}
+	if _, ok := chksums.newM[key]; !ok {
+		chksums.newM[key] = chk
+	}
 	chksums.rwmutex.Unlock()
 }
 
