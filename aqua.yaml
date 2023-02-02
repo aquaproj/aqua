@@ -1,6 +1,9 @@
 ---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
+checksum:
+  enabled: true
+  require_checksum: true
 registries:
   - type: standard
     ref: v3.127.0 # renovate: depName=aquaproj/aqua-registry
