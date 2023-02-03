@@ -12,7 +12,7 @@ on:
 permissions: {}
 jobs:
   actionlint:
-    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@db69a88f7127e31730fc9bac1551aa7770c4dfe0 # v0.3.0
+    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@83ed24209b10ecf15e25f7ca6a2364a91eb7019e # v0.3.1
     if: |
       ! github.event.pull_request.head.repo.fork
     permissions:
