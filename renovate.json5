@@ -3,7 +3,7 @@
     "config:base",
     "helpers:pinGitHubActionDigests",
     "github>suzuki-shunsuke/renovate-config#1.1.2",
-    "github>aquaproj/aqua-renovate-config#1.5.1",
+    "github>aquaproj/aqua-renovate-config#1.5.2",
     "github>aquaproj/aqua-renovate-config:file#1.5.2(tests/aqua.*\\.yaml)",
     "github>aquaproj/aqua-renovate-config:file#1.5.2(aqua/.*\\.ya?ml)",
   ],
