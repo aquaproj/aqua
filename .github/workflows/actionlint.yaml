@@ -1,34 +1,18 @@
 ---
 # Separate the workflow for actionlint to other workflows, because if a workflow for actionlint is broken actionlint isn't run
 name: actionlint
-env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
 on:
   pull_request:
     paths:
       - .github/workflows/*.yaml
       - aqua/actionlint.yaml
       - aqua/reviewdog.yaml
-permissions: {}
 jobs:
   actionlint:
-    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@67b3612237144931fa976f6ef10e257b4c601492 # v0.4.0
-    if: |
-      ! github.event.pull_request.head.repo.fork
+    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@6196583ab88cd36f36f7260fca4e8e4b2c4c9b66 # v0.4.1
+    with:
+      aqua_version: v1.32.3
+      aqua_policy_config: aqua-policy.yaml
     permissions:
       pull-requests: write
       contents: read
-
-  actionlint_fork:
-    # Lint GitHub Actions Workflows by actionlint.
-    if: github.event.pull_request.head.repo.fork
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
-      - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
-        with:
-          aqua_version: v1.32.3
-      - run: actionlint
-        env:
-          GITHUB_TOKEN: ${{github.token}}
