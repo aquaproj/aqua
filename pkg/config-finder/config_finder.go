@@ -44,10 +44,10 @@ func configFileNames() []string {
 		"aqua.yml",
 		".aqua.yaml",
 		".aqua.yml",
-		"aquaproj/aqua.yaml",
-		"aquaproj/aqua.yml",
-		".aquaproj/aqua.yaml",
-		".aquaproj/aqua.yml",
+		"aqua/aqua.yaml",
+		"aqua/aqua.yml",
+		".aqua/aqua.yaml",
+		".aqua/aqua.yml",
 	}
 }
 
