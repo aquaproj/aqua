@@ -89,6 +89,30 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			},
 		}
 	}
+	if strings.Contains(s, "md5") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			FileFormat: "regexp",
+			Algorithm:  "md5",
+			Asset:      convertChecksumFileName(filename, version),
+			Pattern: &registry.ChecksumPattern{
+				Checksum: `^(\b[A-Fa-f0-9]{32}\b)`,
+				File:     `^\b[A-Fa-f0-9]{32}\b\s+(\S+)$`,
+			},
+		}
+	}
+	if strings.Contains(s, "sha1") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			FileFormat: "regexp",
+			Algorithm:  "sha1",
+			Asset:      convertChecksumFileName(filename, version),
+			Pattern: &registry.ChecksumPattern{
+				Checksum: `^(\b[A-Fa-f0-9]{40}\b)`,
+				File:     `^\b[A-Fa-f0-9]{40}\b\s+(\S+)$`,
+			},
+		}
+	}
 	if strings.Contains(s, "sha256") || strings.Contains(s, "checksum") {
 		return &registry.Checksum{
 			Type:       "github_release",
