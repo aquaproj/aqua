@@ -117,11 +117,14 @@ func (ctrl *Controller) patchRelease(ctx context.Context, logE *logrus.Entry, pk
 	}
 	assetInfos := make([]*asset.AssetInfo, 0, len(assets))
 	pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
+	tagName := release.GetTagName()
 	for _, aset := range assets {
 		assetName := aset.GetName()
 		if !pkgNameContainChecksum {
-			chksum := checksum.GetChecksumConfigFromFilename(assetName, release.GetTagName())
+			chksum := checksum.GetChecksumConfigFromFilename(assetName, tagName)
 			if chksum != nil {
+				assetInfo := asset.ParseAssetName(assetName, tagName)
+				chksum.Asset = assetInfo.Template
 				pkgInfo.Checksum = chksum
 				continue
 			}
@@ -130,7 +133,7 @@ func (ctrl *Controller) patchRelease(ctx context.Context, logE *logrus.Entry, pk
 			logE.WithField("asset_name", assetName).Debug("exclude an asset")
 			continue
 		}
-		assetInfo := asset.ParseAssetName(aset.GetName(), release.GetTagName())
+		assetInfo := asset.ParseAssetName(aset.GetName(), tagName)
 		assetInfos = append(assetInfos, assetInfo)
 	}
 	asset.ParseAssetInfos(pkgInfo, assetInfos)
