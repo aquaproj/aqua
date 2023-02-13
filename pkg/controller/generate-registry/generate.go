@@ -108,7 +108,7 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 	return pkgInfo
 }
 
-func (ctrl *Controller) patchRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, release *github.RepositoryRelease) {
+func (ctrl *Controller) patchRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, release *github.RepositoryRelease) { //nolint:funlen,cyclop
 	logE.WithField("version", release.GetTagName()).Debug("got the release")
 	assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
 	logE.WithField("num_of_assets", len(assets)).Debug("got assets")
