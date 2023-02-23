@@ -175,6 +175,7 @@ type Param struct {
 	LogColor              string
 	Dest                  string
 	HomeDir               string
+	OutTestData           string
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}

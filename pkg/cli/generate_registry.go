@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
@@ -46,12 +47,20 @@ func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
 		Description: generateRegistryDescription,
 		Action:      runner.generateRegistryAction,
 		// TODO support "i" option
-		// Flags: []cli.Flag{
-		// 	&cli.StringFlag{
-		// 		Name:  "i",
-		// 		Usage: "Insert a registry to configuration file",
-		// 	},
-		// },
+		Flags: []cli.Flag{
+			// 	&cli.StringFlag{
+			// 		Name:  "i",
+			// 		Usage: "Insert a registry to configuration file",
+			// 	},
+			&cli.StringFlag{
+				Name:  "out-testdata",
+				Usage: "A file path where the testdata is outputted",
+			},
+			&cli.BoolFlag{
+				Name:  "deep",
+				Usage: "Resolve version_overrides",
+			},
+		},
 	}
 }
 
@@ -72,6 +81,6 @@ func (runner *Runner) generateRegistryAction(c *cli.Context) error {
 	if err := runner.setParam(c, "generate-registry", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient)
+	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient, os.Stdout)
 	return ctrl.GenerateRegistry(c.Context, param, runner.LogE, c.Args().Slice()...) //nolint:wrapcheck
 }
