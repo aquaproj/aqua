@@ -36,6 +36,29 @@ packages:
       - linux
       - amd64
     rosetta2: true
+
+By default, aqua gets the information from the latest GitHub Releases.
+You can specify a specific package version.
+
+e.g.
+
+$ aqua gr cli/cli@v2.0.0
+
+By default, aqua gr doesn't generate version_overrides.
+If --deep is set, aqua generates version_overrides.
+
+e.g.
+
+$ aqua gr --deep suzuki-shunsuke/tfcmt
+
+Note that if --deep is set, GitHub API is called per GitHub Release.
+This may cause GitHub API rate limiting.
+
+If --out-testdata is set, aqua inserts testdata into the specified file.
+
+e.g.
+
+$ aqua gr --out-testdata testdata.yaml suzuki-shunsuke/tfcmt
 `
 
 func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
