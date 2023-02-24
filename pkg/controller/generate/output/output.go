@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/spf13/afero"
@@ -36,14 +37,29 @@ func (out *Outputter) Output(param *Param) error {
 		return nil
 	}
 
-	if param.Dest != "" {
-		if _, err := out.fs.Stat(param.Dest); err != nil {
-			if err := afero.WriteFile(out.fs, param.Dest, []byte("packages:\n\n"), 0o644); err != nil { //nolint:gomnd
-				return fmt.Errorf("create a file: %w", err)
-			}
-		}
+	if param.Dest == "" {
+		return out.generateInsert(param.ConfigFilePath, param.List)
+	}
+
+	if _, err := out.fs.Stat(param.Dest); err == nil {
 		return out.generateInsert(param.Dest, param.List)
 	}
 
-	return out.generateInsert(param.ConfigFilePath, param.List)
+	f, err := out.fs.Create(param.Dest)
+	if err != nil {
+		return fmt.Errorf("create a file: %w", err)
+	}
+	defer f.Close()
+	if _, err := f.WriteString("packages:\n  "); err != nil {
+		return fmt.Errorf("write a string to a file %s: %w", param.Dest, err)
+	}
+
+	b, err := yaml.Marshal(param.List)
+	if err != nil {
+		return fmt.Errorf("marshal packages as YAML: %w", err)
+	}
+	if _, err := f.WriteString(strings.Join(strings.Split(strings.TrimSpace(string(b)), "\n"), "\n  ")); err != nil {
+		return fmt.Errorf("write a string to a file %s: %w", param.Dest, err)
+	}
+	return nil
 }
