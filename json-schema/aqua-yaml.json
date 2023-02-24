@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aquaproj/aqua/pkg/config/aqua/config",
+  "$ref": "#/$defs/Config",
+  "$defs": {
+    "Checksum": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "require_checksum": {
+          "type": "boolean"
+        },
+        "supported_envs": {
+          "$ref": "#/$defs/SupportedEnvs"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Config": {
+      "properties": {
+        "packages": {
+          "items": {
+            "$ref": "#/$defs/Package"
+          },
+          "type": "array"
+        },
+        "registries": {
+          "$ref": "#/$defs/Registries"
+        },
+        "checksum": {
+          "$ref": "#/$defs/Checksum"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "packages",
+        "registries"
+      ]
+    },
+    "Package": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "registry": {
+          "type": "string",
+          "description": "Registry name",
+          "default": "standard",
+          "examples": [
+            "foo",
+            "local"
+          ]
+        },
+        "version": {
+          "type": "string"
+        },
+        "import": {
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Registries": {
+      "items": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "local",
+              "github_content"
+            ]
+          },
+          "repo_owner": {
+            "type": "string"
+          },
+          "repo_name": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "private": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "SupportedEnvs": {
+      "items": {
+        "type": "string",
+        "enum": [
+          "all",
+          "darwin",
+          "linux",
+          "windows",
+          "amd64",
+          "arm64",
+          "darwin/amd64",
+          "darwin/arm64",
+          "linux/amd64",
+          "linux/arm64",
+          "windows/amd64",
+          "windows/arm64"
+        ]
+      },
+      "type": "array"
+    }
+  }
+}

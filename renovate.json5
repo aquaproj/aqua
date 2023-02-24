@@ -1,10 +1,11 @@
 {
   extends: [
     "config:base",
-    "github>suzuki-shunsuke/renovate-config",
-    "github>aquaproj/aqua-renovate-config#0.1.8",
-    "github>aquaproj/aqua-renovate-config:file#0.1.8(tests/aqua.*\\.yaml)",
-    "github>aquaproj/aqua-renovate-config:file#0.1.8(aqua/.*\\.ya?ml)",
+    "github>suzuki-shunsuke/renovate-config#1.1.3-1",
+    "github>suzuki-shunsuke/renovate-config:nolimit#1.1.2",
+    "github>aquaproj/aqua-renovate-config#1.5.2",
+    "github>aquaproj/aqua-renovate-config:file#1.5.2(tests/aqua.*\\.yaml)",
+    "github>aquaproj/aqua-renovate-config:file#1.5.2(aqua/.*\\.ya?ml)",
   ],
   ignorePaths: [],
   regexManagers: [
@@ -13,7 +14,23 @@
       depNameTemplate: "aquaproj/aqua-proxy",
       datasourceTemplate: "github-releases",
       matchStrings: [
-        '"(?<currentValue>.*)", // renovate: depName=aquaproj/aqua-proxy',
+        '"(?<currentValue>.*)" // renovate: depName=aquaproj/aqua-proxy',
+      ],
+    },
+    {
+      fileMatch: [".*\\.go"],
+      depNameTemplate: "aquaproj/aqua-registry",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        '"(?<currentValue>.*)",? // renovate: depName=aquaproj/aqua-registry',
+      ],
+    },
+    {
+      fileMatch: ["^pkgs/cosign/version\\.go"],
+      depNameTemplate: "sigstore/cosign",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        'const Version = "(?<currentValue>.*)"',
       ],
     },
   ],

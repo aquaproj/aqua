@@ -1,0 +1,10 @@
+packages:
+  # Verify checksum file with slsa-verifier
+  # Verify with slsa-verifier
+  - type: github_release
+    repo_owner: suzuki-shunsuke
+    repo_name: test-cosign-keyless-aqua
+    asset: aqua_{{.OS}}_{{.Arch}}.tar.gz
+    slsa_provenance:
+      type: github_release
+      asset: multiple.intoto.jsonl

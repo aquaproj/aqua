@@ -1,12 +1,11 @@
 ---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
+checksum:
+  enabled: true
+  require_checksum: true
 registries:
-- type: standard
-  ref: v1.4.0 # renovate: depName=aquaproj/aqua-registry
-
+  - type: standard
+    ref: v3.136.1 # renovate: depName=aquaproj/aqua-registry
 packages:
-- name: suzuki-shunsuke/cmdx@v1.6.1
-- name: golangci/golangci-lint@v1.43.0
-- name: rhysd/actionlint@v1.6.8
-- import: aqua/*.yaml
+  - import: aqua/*.yaml

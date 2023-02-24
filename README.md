@@ -18,10 +18,6 @@ https://aquaproj.github.io/
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Versioning Policy
-
-We are conforming [suzuki-shunsuke/versioning-policy v0.1.0](https://github.com/suzuki-shunsuke/versioning-policy/blob/v0.1.0/POLICY.md), which is compatible with [Semantic Versioning 2.0.0](https://semver.org/).
-
 ## Logo
 
 About logo, please see [logo](logo).

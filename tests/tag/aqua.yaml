@@ -1,0 +1,20 @@
+---
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+# checksum:
+#   # https://aquaproj.github.io/docs/reference/checksum/
+#   enabled: true
+#   require_checksum: true
+registries:
+- type: standard
+  ref: v3.136.1 # renovate: depName=aquaproj/aqua-registry
+packages:
+- name: suzuki-shunsuke/tfcmt@v4.2.0
+  tags:
+    - test
+    - foo
+- name: suzuki-shunsuke/github-comment@v5.0.3
+- name: cli/cli@v2.23.0
+  tags:
+    - bar
+    - foo

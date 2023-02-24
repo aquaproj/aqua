@@ -6,7 +6,7 @@ tasks:
   short: t
   description: test
   usage: test
-  script: go test -v ./... -race -covermode=atomic
+  script: go test ./... -race -covermode=atomic
 - name: vet
   short: v
   description: go vet
@@ -22,13 +22,13 @@ tasks:
   description: release the new version
   usage: release the new version
   script: |
-    git tag "{{.version}}"
+    git tag -m "chore: release {{.version}}" "{{.version}}"
     git push origin "{{.version}}"
   args:
   - name: version
     required: true
     validate:
-    - regexp: "^v\\d+\\.\\d+.\\d+(-\\d+)?$"
+    - regexp: "^v\\d+\\.\\d+.\\d+(-.+)?$"
 - name: build
   description: go build
   usage: go build
@@ -40,3 +40,24 @@ tasks:
   script: "bash scripts/coverage.sh {{.target}}"
   args:
   - name: target
+- name: wire
+  short: w
+  description: google/wire
+  usage: google/wire
+  script: "wire ./..."
+- name: js
+  description: Generate JSON Schema
+  usage: Generate JSON Schema
+  script: "go run ./cmd/gen-jsonschema"
+- name: validate-js
+  description: Validate aqua.yaml and registry.yaml with JSON Schema
+  usage: Validate aqua.yaml and registry.yaml with JSON Schema
+  # https://ajv.js.org/packages/ajv-cli.html
+  script: |
+    ajv --spec=draft2020 -s json-schema/aqua-yaml.json -d aqua.yaml
+    ajv --spec=draft2020 -s json-schema/registry.json -d tests/main/registry.yaml
+- name: install
+  short: i
+  description: Build and install aqua
+  usage: Build and install aqua by "go install" command
+  script: go install ./cmd/aqua

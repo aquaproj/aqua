@@ -2,17 +2,26 @@
 linters:
   enable-all: true
   disable:
-  - maligned # WARN [runner] The linter 'maligned' is deprecated (since v1.38.0) due to: The repository of the linter has been archived by the owner.  Replaced by govet 'fieldalignment'. 
-  - interfacer # WARN [runner] The linter 'interfacer' is deprecated (since v1.38.0) due to: The repository of the linter has been archived by the owner.  
-  - scopelint # WARN [runner] The linter 'scopelint' is deprecated (since v1.39.0) due to: The repository of the linter has been deprecated by the owner.  Replaced by exportloopref.
-  - wsl
-  - goerr113
-  - lll
-  - godot
-  - nlreturn
-  - godox
-  - golint
-  - tagliatelle
-  - exhaustivestruct # https://github.com/mbilski/exhaustivestruct
-  - ireturn
-  - varnamelen
+    - maligned # WARN [runner] The linter 'maligned' is deprecated (since v1.38.0) due to: The repository of the linter has been archived by the owner.  Replaced by govet 'fieldalignment'. 
+    - interfacer # WARN [runner] The linter 'interfacer' is deprecated (since v1.38.0) due to: The repository of the linter has been archived by the owner.  
+    - scopelint # WARN [runner] The linter 'scopelint' is deprecated (since v1.39.0) due to: The repository of the linter has been deprecated by the owner.  Replaced by exportloopref.
+    - nosnakecase # WARN [runner] The linter 'nosnakecase' is deprecated (since v1.48.1) due to: The repository of the linter has been deprecated by the owner.  Replaced by revive(var-naming). 
+    - deadcode # WARN [runner] The linter 'deadcode' is deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused. 
+    - structcheck # WARN [runner] The linter 'structcheck' is deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused. 
+    - ifshort # WARN [runner] The linter 'ifshort' is deprecated (since v1.48.0) due to: The repository of the linter has been deprecated by the owner.  
+    - varcheck # WARN [runner] The linter 'varcheck' is deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
+    - wsl
+    - goerr113
+    - lll
+    - godot
+    - nlreturn
+    - godox
+    - golint
+    - tagliatelle
+    - exhaustivestruct # https://github.com/mbilski/exhaustivestruct
+    - ireturn
+    - varnamelen
+    - exhaustive
+    - exhaustruct
+    - nonamedreturns
+    - musttag
