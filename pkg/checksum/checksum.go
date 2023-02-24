@@ -72,7 +72,7 @@ func convertChecksumFileName(filename, version string) string {
 
 func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum {
 	s := strings.ToLower(filename)
-	for _, suffix := range []string{"sig", "asc"} {
+	for _, suffix := range []string{"sig", "asc", "pem"} {
 		if strings.HasSuffix(s, "."+suffix) {
 			return nil
 		}

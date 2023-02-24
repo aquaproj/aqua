@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller"
@@ -35,6 +36,29 @@ packages:
       - linux
       - amd64
     rosetta2: true
+
+By default, aqua gets the information from the latest GitHub Releases.
+You can specify a specific package version.
+
+e.g.
+
+$ aqua gr cli/cli@v2.0.0
+
+By default, aqua gr doesn't generate version_overrides.
+If --deep is set, aqua generates version_overrides.
+
+e.g.
+
+$ aqua gr --deep suzuki-shunsuke/tfcmt
+
+Note that if --deep is set, GitHub API is called per GitHub Release.
+This may cause GitHub API rate limiting.
+
+If --out-testdata is set, aqua inserts testdata into the specified file.
+
+e.g.
+
+$ aqua gr --out-testdata testdata.yaml suzuki-shunsuke/tfcmt
 `
 
 func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
@@ -46,12 +70,20 @@ func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
 		Description: generateRegistryDescription,
 		Action:      runner.generateRegistryAction,
 		// TODO support "i" option
-		// Flags: []cli.Flag{
-		// 	&cli.StringFlag{
-		// 		Name:  "i",
-		// 		Usage: "Insert a registry to configuration file",
-		// 	},
-		// },
+		Flags: []cli.Flag{
+			// 	&cli.StringFlag{
+			// 		Name:  "i",
+			// 		Usage: "Insert a registry to configuration file",
+			// 	},
+			&cli.StringFlag{
+				Name:  "out-testdata",
+				Usage: "A file path where the testdata is outputted",
+			},
+			&cli.BoolFlag{
+				Name:  "deep",
+				Usage: "Resolve version_overrides",
+			},
+		},
 	}
 }
 
@@ -72,6 +104,6 @@ func (runner *Runner) generateRegistryAction(c *cli.Context) error {
 	if err := runner.setParam(c, "generate-registry", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient)
+	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient, os.Stdout)
 	return ctrl.GenerateRegistry(c.Context, param, runner.LogE, c.Args().Slice()...) //nolint:wrapcheck
 }
