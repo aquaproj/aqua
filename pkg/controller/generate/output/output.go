@@ -58,7 +58,7 @@ func (out *Outputter) Output(param *Param) error {
 	if err != nil {
 		return fmt.Errorf("marshal packages as YAML: %w", err)
 	}
-	if _, err := f.WriteString(strings.Join(strings.Split(strings.TrimSpace(string(b)), "\n"), "\n  ")); err != nil {
+	if _, err := f.WriteString(strings.Join(strings.Split(strings.TrimSpace(string(b)), "\n"), "\n  ") + "\n"); err != nil {
 		return fmt.Errorf("write a string to a file %s: %w", param.Dest, err)
 	}
 	return nil
