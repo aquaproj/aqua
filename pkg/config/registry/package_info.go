@@ -20,35 +20,35 @@ const (
 
 type PackageInfo struct {
 	Name               string             `json:"name,omitempty" yaml:",omitempty"`
+	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
+	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 	RepoOwner          string             `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
-	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
-	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
-	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
-	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
 	Link               string             `json:"link,omitempty" yaml:",omitempty"`
-	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
+	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
+	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
+	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
+	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
 	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
-	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
-	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Checksum           *Checksum          `json:"checksum,omitempty"`
 	Cosign             *Cosign            `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Private            bool               `json:"private,omitempty"`
+	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
