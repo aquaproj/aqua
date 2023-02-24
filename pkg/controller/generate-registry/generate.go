@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/pkg/asset"
 	"github.com/aquaproj/aqua/pkg/checksum"
 	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/pkg/github"
@@ -49,24 +48,6 @@ func (ctrl *Controller) GenerateRegistry(ctx context.Context, param *config.Para
 		}
 	}
 	return nil
-}
-
-func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
-	if len(versions) == 0 {
-		return nil
-	}
-	pkgs := []*aqua.Package{
-		{
-			Name: fmt.Sprintf("%s@%s", pkgName, versions[0]),
-		},
-	}
-	for _, v := range versions[1:] {
-		pkgs = append(pkgs, &aqua.Package{
-			Name:    pkgName,
-			Version: v,
-		})
-	}
-	return pkgs
 }
 
 func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {

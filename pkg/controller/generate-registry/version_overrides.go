@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/github"
 	"github.com/hashicorp/go-version"
@@ -37,6 +38,24 @@ type Release struct {
 	ID      int64
 	Tag     string
 	Version *version.Version
+}
+
+func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
+	if len(versions) == 0 {
+		return nil
+	}
+	pkgs := []*aqua.Package{
+		{
+			Name: fmt.Sprintf("%s@%s", pkgName, versions[0]),
+		},
+	}
+	for _, v := range versions[1:] {
+		pkgs = append(pkgs, &aqua.Package{
+			Name:    pkgName,
+			Version: v,
+		})
+	}
+	return pkgs
 }
 
 func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
@@ -137,11 +156,15 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) {
 	basePkg := pkgs[0]
 	basePkgInfo := basePkg.Info
 	latestPkgInfo := basePkgInfo
+	latestVersion := basePkg.Version
 	minimumVersion := basePkg.Version
 	var lastMinimumVersion string
 	vos := []*registry.VersionOverride{}
 	var lastVO *registry.VersionOverride
-	versions := []string{basePkg.Version}
+	versions := []string{latestVersion}
+	versionsM := map[string]struct{}{
+		latestVersion: {},
+	}
 	for _, pkg := range pkgs[1:] {
 		pkg := pkg
 		pkgInfo := pkg.Info
@@ -149,7 +172,10 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) {
 			minimumVersion = pkg.Version
 			continue
 		}
-		versions = append(versions, minimumVersion)
+		if _, ok := versionsM[minimumVersion]; !ok {
+			versions = append(versions, minimumVersion)
+			versionsM[minimumVersion] = struct{}{}
+		}
 		lastMinimumVersion = strings.TrimPrefix(minimumVersion, "v")
 		if lastVO == nil {
 			latestPkgInfo.VersionConstraints = fmt.Sprintf(`semver(">= %s")`, lastMinimumVersion)
@@ -162,7 +188,10 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) {
 		minimumVersion = pkg.Version
 	}
 	if lastMinimumVersion != "" {
-		versions = append(versions, minimumVersion)
+		if _, ok := versionsM[minimumVersion]; !ok {
+			versions = append(versions, minimumVersion)
+			versionsM[minimumVersion] = struct{}{}
+		}
 		lastVO.VersionConstraints = fmt.Sprintf(`semver("< %s")`, lastMinimumVersion)
 		vos = append(vos, lastVO)
 	}
