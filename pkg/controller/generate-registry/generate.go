@@ -12,7 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/github"
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -78,55 +78,131 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 	pkgInfo := &registry.PackageInfo{
 		Type: "github_release",
 	}
-	if len(splitPkgNames) > 1 { //nolint:nestif
-		pkgInfo.RepoOwner = splitPkgNames[0]
-		pkgInfo.RepoName = splitPkgNames[1]
-		repo, _, err := ctrl.github.Get(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName)
-		if err != nil {
-			logE.WithFields(logrus.Fields{
-				"repo_owner": pkgInfo.RepoOwner,
-				"repo_name":  pkgInfo.RepoName,
-			}).WithError(err).Warn("get the repository")
-		} else {
-			pkgInfo.Description = strings.TrimRight(strings.TrimSpace(repo.GetDescription()), ".!?")
-		}
-		release, err := ctrl.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
-		if err != nil {
-			logE.WithFields(logrus.Fields{
-				"repo_owner": pkgInfo.RepoOwner,
-				"repo_name":  pkgInfo.RepoName,
-			}).WithError(err).Warn("get the release")
-		} else {
-			logE.WithField("version", release.GetTagName()).Debug("got the release")
-			assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
-			if len(assets) != 0 {
-				logE.WithField("num_of_assets", len(assets)).Debug("got assets")
-				assetInfos := make([]*asset.AssetInfo, 0, len(assets))
-				pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
-				for _, aset := range assets {
-					assetName := aset.GetName()
-					if !pkgNameContainChecksum {
-						chksum := checksum.GetChecksumConfigFromFilename(assetName, release.GetTagName())
-						if chksum != nil {
-							pkgInfo.Checksum = chksum
-							continue
-						}
-					}
-					if asset.Exclude(pkgName, assetName, release.GetTagName()) {
-						logE.WithField("asset_name", assetName).Debug("exclude an asset")
-						continue
-					}
-					assetInfo := asset.ParseAssetName(aset.GetName(), release.GetTagName())
-					assetInfos = append(assetInfos, assetInfo)
-				}
-				asset.ParseAssetInfos(pkgInfo, assetInfos)
-			}
-		}
+	if len(splitPkgNames) == 1 {
+		pkgInfo.Name = pkgName
+		return pkgInfo
 	}
 	if len(splitPkgNames) != 2 { //nolint:gomnd
 		pkgInfo.Name = pkgName
 	}
+	pkgInfo.RepoOwner = splitPkgNames[0]
+	pkgInfo.RepoName = splitPkgNames[1]
+	repo, _, err := ctrl.github.Get(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName)
+	if err != nil {
+		logE.WithFields(logrus.Fields{
+			"repo_owner": pkgInfo.RepoOwner,
+			"repo_name":  pkgInfo.RepoName,
+		}).WithError(err).Warn("get the repository")
+	} else {
+		pkgInfo.Description = strings.TrimRight(strings.TrimSpace(repo.GetDescription()), ".!?")
+	}
+	release, err := ctrl.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
+	if err != nil {
+		logE.WithFields(logrus.Fields{
+			"repo_owner": pkgInfo.RepoOwner,
+			"repo_name":  pkgInfo.RepoName,
+		}).WithError(err).Warn("get the release")
+	} else {
+		ctrl.patchRelease(ctx, logE, pkgInfo, pkgName, release)
+	}
 	return pkgInfo
+}
+
+func (ctrl *Controller) patchRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, release *github.RepositoryRelease) { //nolint:funlen,cyclop
+	logE.WithField("version", release.GetTagName()).Debug("got the release")
+	assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
+	logE.WithField("num_of_assets", len(assets)).Debug("got assets")
+	if len(assets) == 0 {
+		return
+	}
+	assetInfos := make([]*asset.AssetInfo, 0, len(assets))
+	pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
+	tagName := release.GetTagName()
+	assetNames := map[string]struct{}{}
+	checksumNames := map[string]struct{}{}
+	for _, aset := range assets {
+		assetName := aset.GetName()
+		if !pkgNameContainChecksum {
+			chksum := checksum.GetChecksumConfigFromFilename(assetName, tagName)
+			if chksum != nil {
+				checksumNames[assetName] = struct{}{}
+				continue
+			}
+		}
+		if asset.Exclude(pkgName, assetName, release.GetTagName()) {
+			logE.WithField("asset_name", assetName).Debug("exclude an asset")
+			continue
+		}
+		assetNames[assetName] = struct{}{}
+		assetInfo := asset.ParseAssetName(assetName, tagName)
+		assetInfos = append(assetInfos, assetInfo)
+	}
+	for assetName := range assetNames {
+		if _, ok := checksumNames[assetName+".md5"]; ok {
+			pkgInfo.Checksum = &registry.Checksum{
+				Type:       "github_release",
+				Asset:      "{{.Asset}}.md5",
+				FileFormat: "regexp",
+				Algorithm:  "md5",
+				Pattern: &registry.ChecksumPattern{
+					Checksum: `^(\b[A-Fa-f0-9]{32}\b)`,
+					File:     `^\b[A-Fa-f0-9]{32}\b\s+(\S+)$`,
+				},
+			}
+			break
+		}
+		if _, ok := checksumNames[assetName+".sha256"]; ok {
+			pkgInfo.Checksum = &registry.Checksum{
+				Type:       "github_release",
+				Asset:      "{{.Asset}}.sha256",
+				FileFormat: "regexp",
+				Algorithm:  "sha256",
+				Pattern: &registry.ChecksumPattern{
+					Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+					File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+				},
+			}
+			break
+		}
+		if _, ok := checksumNames[assetName+".sha512"]; ok {
+			pkgInfo.Checksum = &registry.Checksum{
+				Type:       "github_release",
+				Asset:      "{{.Asset}}.sha512",
+				FileFormat: "regexp",
+				Algorithm:  "sha512",
+				Pattern: &registry.ChecksumPattern{
+					Checksum: `^(\b[A-Fa-f0-9]{128}\b)`,
+					File:     `^\b[A-Fa-f0-9]{128}\b\s+(\S+)$`,
+				},
+			}
+			break
+		}
+		if _, ok := checksumNames[assetName+".sha1"]; ok {
+			pkgInfo.Checksum = &registry.Checksum{
+				Type:       "github_release",
+				Asset:      "{{.Asset}}.sha512",
+				FileFormat: "regexp",
+				Algorithm:  "sha1",
+				Pattern: &registry.ChecksumPattern{
+					Checksum: `^(\b[A-Fa-f0-9]{40}\b)`,
+					File:     `^\b[A-Fa-f0-9]{40}\b\s+(\S+)$`,
+				},
+			}
+			break
+		}
+	}
+	if len(checksumNames) > 0 && pkgInfo.Checksum == nil {
+		for checksumName := range checksumNames {
+			chksum := checksum.GetChecksumConfigFromFilename(checksumName, tagName)
+			if chksum != nil {
+				assetInfo := asset.ParseAssetName(checksumName, tagName)
+				chksum.Asset = assetInfo.Template
+				pkgInfo.Checksum = chksum
+				break
+			}
+		}
+	}
+	asset.ParseAssetInfos(pkgInfo, assetInfos)
 }
 
 func boolP(b bool) *bool {
