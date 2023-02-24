@@ -72,7 +72,7 @@ func convertChecksumFileName(filename, version string) string {
 
 func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum {
 	s := strings.ToLower(filename)
-	for _, suffix := range []string{"sig", "asc"} {
+	for _, suffix := range []string{"sig", "asc", "pem"} {
 		if strings.HasSuffix(s, "."+suffix) {
 			return nil
 		}
@@ -86,6 +86,30 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			Pattern: &registry.ChecksumPattern{
 				Checksum: `^(\b[A-Fa-f0-9]{128}\b)`,
 				File:     `^\b[A-Fa-f0-9]{128}\b\s+(\S+)$`,
+			},
+		}
+	}
+	if strings.Contains(s, "md5") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			FileFormat: "regexp",
+			Algorithm:  "md5",
+			Asset:      convertChecksumFileName(filename, version),
+			Pattern: &registry.ChecksumPattern{
+				Checksum: `^(\b[A-Fa-f0-9]{32}\b)`,
+				File:     `^\b[A-Fa-f0-9]{32}\b\s+(\S+)$`,
+			},
+		}
+	}
+	if strings.Contains(s, "sha1") {
+		return &registry.Checksum{
+			Type:       "github_release",
+			FileFormat: "regexp",
+			Algorithm:  "sha1",
+			Asset:      convertChecksumFileName(filename, version),
+			Pattern: &registry.ChecksumPattern{
+				Checksum: `^(\b[A-Fa-f0-9]{40}\b)`,
+				File:     `^\b[A-Fa-f0-9]{40}\b\s+(\S+)$`,
 			},
 		}
 	}

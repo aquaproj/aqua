@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	goccyYAML "github.com/goccy/go-yaml"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
@@ -36,14 +37,24 @@ func (out *Outputter) Output(param *Param) error {
 		return nil
 	}
 
-	if param.Dest != "" {
-		if _, err := out.fs.Stat(param.Dest); err != nil {
-			if err := afero.WriteFile(out.fs, param.Dest, []byte("packages:\n\n"), 0o644); err != nil { //nolint:gomnd
-				return fmt.Errorf("create a file: %w", err)
-			}
-		}
+	if param.Dest == "" {
+		return out.generateInsert(param.ConfigFilePath, param.List)
+	}
+
+	if _, err := out.fs.Stat(param.Dest); err == nil {
 		return out.generateInsert(param.Dest, param.List)
 	}
 
-	return out.generateInsert(param.ConfigFilePath, param.List)
+	f, err := out.fs.Create(param.Dest)
+	if err != nil {
+		return fmt.Errorf("create a file: %w", err)
+	}
+	defer f.Close()
+
+	if err := goccyYAML.NewEncoder(f, goccyYAML.IndentSequence(true)).Encode(map[string]interface{}{
+		"packages": param.List,
+	}); err != nil {
+		return fmt.Errorf("encode YAML: %w", err)
+	}
+	return nil
 }

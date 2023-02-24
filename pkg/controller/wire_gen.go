@@ -16,6 +16,7 @@ import (
 	exec2 "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/generate-registry"
+	"github.com/aquaproj/aqua/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/pkg/controller/install"
@@ -36,6 +37,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"io"
 	"net/http"
 )
 
@@ -58,10 +60,11 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	return controller
 }
 
-func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
 	fs := afero.NewOsFs()
 	repositoriesService := github.New(ctx)
-	controller := genrgst.NewController(fs, repositoriesService)
+	outputter := output.New(stdout, fs)
+	controller := genrgst.NewController(fs, repositoriesService, outputter)
 	return controller
 }
 

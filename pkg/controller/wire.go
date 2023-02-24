@@ -5,6 +5,7 @@ package controller
 
 import (
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
@@ -15,6 +16,7 @@ import (
 	cexec "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/pkg/controller/generate-registry"
+	"github.com/aquaproj/aqua/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/pkg/controller/install"
@@ -89,7 +91,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	return &list.Controller{}
 }
 
-func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
 	wire.Build(
 		genrgst.NewController,
 		wire.NewSet(
@@ -97,6 +99,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 		),
 		afero.NewOsFs,
+		wire.NewSet(
+			output.New,
+			wire.Bind(new(genrgst.TestdataOutputter), new(*output.Outputter)),
+		),
 	)
 	return &genrgst.Controller{}
 }

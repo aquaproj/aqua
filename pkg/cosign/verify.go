@@ -163,8 +163,8 @@ func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (st
 }
 
 func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
-	rand.Seed(time.Now().UnixNano())
-	waitTime := time.Duration(rand.Intn(1000)) * time.Millisecond //nolint:gosec,gomnd
+	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
+	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:gomnd
 	logE.WithFields(logrus.Fields{
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
