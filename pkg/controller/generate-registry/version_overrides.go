@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -31,8 +33,30 @@ func getBool(p *bool) bool {
 	return *p
 }
 
+type Release struct {
+	ID      int64
+	Tag     string
+	Version *version.Version
+}
+
 func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
-	releases := ctrl.listReleases(ctx, logE, pkgInfo)
+	ghReleases := ctrl.listReleases(ctx, logE, pkgInfo)
+	releases := make([]*Release, len(ghReleases))
+	for i, release := range ghReleases {
+		tag := release.GetTagName()
+		v, err := version.NewVersion(tag)
+		if err != nil {
+			logE.WithField("tag_name", tag).WithError(err).Warn("parse a tag as semver")
+		}
+		releases[i] = &Release{
+			ID:      release.GetID(),
+			Tag:     tag,
+			Version: v,
+		}
+	}
+	sort.Slice(releases, func(i, j int) bool {
+		return releases[i].Version.GreaterThanOrEqual(releases[j].Version)
+	})
 	pkgs := make([]*Package, 0, len(releases))
 	for _, release := range releases {
 		pkgInfo := &registry.PackageInfo{
@@ -40,15 +64,15 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 		}
-		assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
+		assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
 		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
 		if len(assets) == 0 {
 			continue
 		}
-		ctrl.patchRelease(logE, pkgInfo, pkgName, release, assets)
+		ctrl.patchRelease(logE, pkgInfo, pkgName, release.Tag, assets)
 		pkgs = append(pkgs, &Package{
 			Info:    pkgInfo,
-			Version: release.GetTagName(),
+			Version: release.Tag,
 		})
 	}
 	p, versions := mergePackages(pkgs)

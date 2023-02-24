@@ -143,18 +143,17 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 		logE.WithField("version", release.GetTagName()).Debug("got the release")
 		assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
 		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
-		ctrl.patchRelease(logE, pkgInfo, pkgName, release, assets)
+		ctrl.patchRelease(logE, pkgInfo, pkgName, release.GetTagName(), assets)
 	}
 	return pkgInfo, []string{version}
 }
 
-func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, release *github.RepositoryRelease, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop
+func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, tagName string, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop
 	if len(assets) == 0 {
 		return
 	}
 	assetInfos := make([]*asset.AssetInfo, 0, len(assets))
 	pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
-	tagName := release.GetTagName()
 	assetNames := map[string]struct{}{}
 	checksumNames := map[string]struct{}{}
 	for _, aset := range assets {
@@ -166,7 +165,7 @@ func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.Packa
 				continue
 			}
 		}
-		if asset.Exclude(pkgName, assetName, release.GetTagName()) {
+		if asset.Exclude(pkgName, assetName, tagName) {
 			logE.WithField("asset_name", assetName).Debug("exclude an asset")
 			continue
 		}
