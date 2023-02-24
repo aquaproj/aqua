@@ -3,9 +3,9 @@ package output
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config/aqua"
+	goccyYAML "github.com/goccy/go-yaml"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
@@ -50,16 +50,11 @@ func (out *Outputter) Output(param *Param) error {
 		return fmt.Errorf("create a file: %w", err)
 	}
 	defer f.Close()
-	if _, err := f.WriteString("packages:\n  "); err != nil {
-		return fmt.Errorf("write a string to a file %s: %w", param.Dest, err)
-	}
 
-	b, err := yaml.Marshal(param.List)
-	if err != nil {
-		return fmt.Errorf("marshal packages as YAML: %w", err)
-	}
-	if _, err := f.WriteString(strings.Join(strings.Split(strings.TrimSpace(string(b)), "\n"), "\n  ") + "\n"); err != nil {
-		return fmt.Errorf("write a string to a file %s: %w", param.Dest, err)
+	if err := goccyYAML.NewEncoder(f, goccyYAML.IndentSequence(true)).Encode(map[string]interface{}{
+		"packages": param.List,
+	}); err != nil {
+		return fmt.Errorf("encode YAML: %w", err)
 	}
 	return nil
 }
