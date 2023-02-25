@@ -17,10 +17,10 @@ import (
 	"github.com/aquaproj/aqua/pkg/domain"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/slsa"
+	"github.com/aquaproj/aqua/pkg/yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"gopkg.in/yaml.v2"
 )
 
 type InstallerImpl struct {
@@ -30,6 +30,7 @@ type InstallerImpl struct {
 	cosign             cosign.Verifier
 	slsaVerifier       slsa.Verifier
 	rt                 *runtime.Runtime
+	yamlDecoder        *yaml.Decoder
 }
 
 func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
@@ -40,6 +41,7 @@ func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs 
 		rt:                 rt,
 		cosign:             cos,
 		slsaVerifier:       slsaVerifier,
+		yamlDecoder:        yaml.NewDecoder(fs),
 	}
 }
 
@@ -107,18 +109,18 @@ func (inst *InstallerImpl) InstallRegistries(ctx context.Context, logE *logrus.E
 }
 
 func (inst *InstallerImpl) readRegistry(p string, registry *registry.Config) error {
-	f, err := inst.fs.Open(p)
-	if err != nil {
-		return fmt.Errorf("open the registry configuration file: %w", err)
-	}
-	defer f.Close()
 	if filepath.Ext(p) == ".json" {
+		f, err := inst.fs.Open(p)
+		if err != nil {
+			return fmt.Errorf("open the registry configuration file: %w", err)
+		}
+		defer f.Close()
 		if err := json.NewDecoder(f).Decode(registry); err != nil {
 			return fmt.Errorf("parse the registry configuration as JSON: %w", err)
 		}
 		return nil
 	}
-	if err := yaml.NewDecoder(f).Decode(registry); err != nil {
+	if err := inst.yamlDecoder.ReadFile(p, registry); err != nil {
 		return fmt.Errorf("parse the registry configuration as YAML: %w", err)
 	}
 	return nil

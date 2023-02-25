@@ -7,7 +7,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	goccyYAML "github.com/goccy/go-yaml"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type Outputter struct {

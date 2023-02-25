@@ -11,21 +11,23 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config/aqua"
 	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/pkg/yaml"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v2"
 )
 
 var errHomeDirEmpty = errors.New("failed to get a user home directory")
 
 type ConfigReaderImpl struct {
-	fs      afero.Fs
-	homeDir string
+	fs          afero.Fs
+	homeDir     string
+	yamlDecoder *yaml.Decoder
 }
 
 func New(fs afero.Fs, param *config.Param) *ConfigReaderImpl {
 	return &ConfigReaderImpl{
-		fs:      fs,
-		homeDir: param.HomeDir,
+		fs:          fs,
+		homeDir:     param.HomeDir,
+		yamlDecoder: yaml.NewDecoder(fs),
 	}
 }
 
@@ -46,12 +48,7 @@ func (reader *MockConfigReader) Read(configFilePath string, cfg *aqua.Config) er
 const homePrefix = "$HOME" + string(os.PathSeparator)
 
 func (reader *ConfigReaderImpl) Read(configFilePath string, cfg *aqua.Config) error {
-	file, err := reader.fs.Open(configFilePath)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-	defer file.Close()
-	if err := yaml.NewDecoder(file).Decode(cfg); err != nil {
+	if err := reader.yamlDecoder.ReadFile(configFilePath, cfg); err != nil {
 		return fmt.Errorf("parse a configuration file as YAML %s: %w", configFilePath, err)
 	}
 	var configFileDir string

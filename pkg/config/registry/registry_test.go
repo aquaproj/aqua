@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"gopkg.in/yaml.v2"
+	"github.com/aquaproj/aqua/pkg/yaml"
+	"github.com/spf13/afero"
 )
 
 func downloadTestFile(uri, tempDir string) (string, error) {
@@ -44,16 +45,12 @@ func BenchmarkReadRegistry(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
+		yamlDecoder := yaml.NewDecoder(afero.NewOsFs())
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			func() {
-				f, err := os.Open(registryYAML)
-				if err != nil {
-					b.Fatal(err)
-				}
-				defer f.Close()
 				registry := &registry.Config{}
-				if err := yaml.NewDecoder(f).Decode(registry); err != nil {
+				if err := yamlDecoder.ReadFile(registryYAML, registry); err != nil {
 					b.Fatal(err)
 				}
 			}()
