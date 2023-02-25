@@ -18,6 +18,9 @@ func NewDecoder(fs afero.Fs) *Decoder {
 	}
 }
 
+// gopkg.in/yaml.v3 can't parse YAML which has duplicated keys, but aqua should allow invalid YAML as much as possible.
+// So aqua uses gopkg.in/yaml.v3 mainly and uses gopkg.in/yaml.v2 only when gopkg.in/yaml.v3 can't parse YAML.
+
 func (decoder *Decoder) ReadFile(p string, dest interface{}) error {
 	fileV3, err := decoder.fs.Open(p)
 	if err != nil {
