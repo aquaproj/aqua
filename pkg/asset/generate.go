@@ -113,10 +113,12 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 			}
 		}
 		if len(overrides) == 2 { //nolint:gomnd
+			// amd64, arm64
 			supportedEnvs = []string{goos}
 			asset1 := overrides[0]
 			asset2 := overrides[1]
 			if asset1.Format == asset2.Format && *asset1.Asset == *asset2.Asset {
+				// format and asset are equal
 				replacements, ok := mergeReplacements(overrides[0].Replacements, overrides[1].Replacements)
 				if ok {
 					overrides = []*registry.Override{
@@ -131,27 +133,17 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 			}
 		}
 		if len(overrides) == 1 {
-			overrides[0].GOArch = ""
+			overrides[0].GOArch = "" // omit arch
 		}
 		pkgInfo.Overrides = append(pkgInfo.Overrides, overrides...)
 		pkgInfo.SupportedEnvs = append(pkgInfo.SupportedEnvs, supportedEnvs...)
 	}
 
-	darwinAmd64 := GetOSArch("darwin", "amd64", assetInfos)
-	darwinArm64 := GetOSArch("darwin", "arm64", assetInfos)
-	if darwinAmd64 != nil && darwinArm64 == nil {
+	if checkRosetta2(assetInfos) {
 		pkgInfo.Rosetta2 = boolP(true)
 	}
 
-	if reflect.DeepEqual(pkgInfo.SupportedEnvs, registry.SupportedEnvs{"linux", "darwin", "windows"}) {
-		pkgInfo.SupportedEnvs = nil
-	}
-	if reflect.DeepEqual(pkgInfo.SupportedEnvs, registry.SupportedEnvs{"linux", "darwin", "windows/amd64"}) {
-		pkgInfo.SupportedEnvs = registry.SupportedEnvs{"darwin", "linux", "amd64"}
-	}
-	if reflect.DeepEqual(pkgInfo.SupportedEnvs, registry.SupportedEnvs{"linux/amd64", "darwin", "windows/amd64"}) {
-		pkgInfo.SupportedEnvs = registry.SupportedEnvs{"darwin", "amd64"}
-	}
+	pkgInfo.SupportedEnvs = normalizeSupportedEnvs(pkgInfo.SupportedEnvs)
 
 	formatCounts := map[string]int{}
 	for _, override := range pkgInfo.Overrides {
@@ -170,6 +162,8 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 			continue
 		}
 	}
+
+	// Decide default Asset
 	assetCounts := map[string]int{}
 	for _, override := range pkgInfo.Overrides {
 		override := override
@@ -188,6 +182,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 			continue
 		}
 	}
+
 	overrides := []*registry.Override{}
 	for _, override := range pkgInfo.Overrides {
 		override := override
@@ -229,17 +224,33 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 		}
 	}
 	pkgInfo.Overrides = overrides
-	if len(pkgInfo.Overrides) == 0 && pkgInfo.Format != "" && pkgInfo.Format != formatRaw {
-		asset := strings.Replace(*pkgInfo.Asset, "{{.Format}}", pkgInfo.Format, 1)
-		pkgInfo.Asset = &asset
-		pkgInfo.Format = ""
-	}
+
+	// Set CompleteWindowsExt
 	for _, assetInfo := range assetInfos {
 		if assetInfo.CompleteWindowsExt != nil {
 			pkgInfo.CompleteWindowsExt = assetInfo.CompleteWindowsExt
 			break
 		}
 	}
+}
+
+func checkRosetta2(assetInfos []*AssetInfo) bool {
+	darwinAmd64 := GetOSArch("darwin", "amd64", assetInfos)
+	darwinArm64 := GetOSArch("darwin", "arm64", assetInfos)
+	return darwinAmd64 != nil && darwinArm64 == nil
+}
+
+func normalizeSupportedEnvs(envs []string) []string {
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", "darwin", "windows"}) {
+		return nil
+	}
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", "darwin", "windows/amd64"}) {
+		return []string{"darwin", "linux", "amd64"}
+	}
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux/amd64", "darwin", "windows/amd64"}) {
+		return []string{"darwin", "amd64"}
+	}
+	return envs
 }
 
 func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
