@@ -113,6 +113,9 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	}
 	if !reflect.DeepEqual(pkgInfo.Replacements, latestPkgInfo.Replacements) {
 		vo.Replacements = pkgInfo.Replacements
+		if pkgInfo.Replacements == nil {
+			vo.Replacements = map[string]string{}
+		}
 	}
 	if !reflect.DeepEqual(pkgInfo.Overrides, latestPkgInfo.Overrides) {
 		vo.Overrides = pkgInfo.Overrides
