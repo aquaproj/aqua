@@ -151,7 +151,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 
 	pkgInfo.Overrides = normalizeOverridesByAsset(*pkgInfo.Asset, pkgInfo.Overrides)
 
-	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo.Overrides)
+	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo)
 
 	// Set CompleteWindowsExt
 	for _, assetInfo := range assetInfos {
@@ -162,7 +162,8 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	}
 }
 
-func normalizeOverridesByReplacements(overrides []*registry.Override) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
+func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
+	overrides := pkgInfo.Overrides
 	var replacements map[string]string
 	var ret []*registry.Override
 	for _, override := range overrides {
@@ -211,10 +212,12 @@ func normalizeOverridesByReplacements(overrides []*registry.Override) (map[strin
 				} else {
 					if override.GOOS == k || override.GOArch == k || (override.GOOS == "" && isOS) || (override.GOArch == "" && !isOS) {
 						if !matched {
-							if override.Replacements == nil {
-								override.Replacements = map[string]string{}
+							if isKeyUsed(pkgInfo, override, k) {
+								if override.Replacements == nil {
+									override.Replacements = map[string]string{}
+								}
+								override.Replacements[k] = k
 							}
-							override.Replacements[k] = k
 						}
 					}
 				}
@@ -232,6 +235,26 @@ func normalizeOverridesByReplacements(overrides []*registry.Override) (map[strin
 		}
 	}
 	return replacements, ret
+}
+
+func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key string) bool {
+	isOS := runtime.IsOS(key)
+	var asset string
+	if override.Asset != nil {
+		asset = *override.Asset
+	} else {
+		asset = *pkgInfo.Asset
+	}
+	var checksumAsset string
+	if override.Checksum != nil {
+		checksumAsset = override.Checksum.Asset
+	} else if pkgInfo.Checksum != nil {
+		checksumAsset = pkgInfo.Checksum.Asset
+	}
+	if isOS {
+		return strings.Contains(asset, "{{.OS}}") || strings.Contains(checksumAsset, "{{.OS}}")
+	}
+	return strings.Contains(asset, "{{.Arch}}") || strings.Contains(checksumAsset, "{{.Arch}}")
 }
 
 func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Override) []*registry.Override {
