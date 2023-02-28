@@ -148,9 +148,10 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 
 	pkgInfo.Overrides = normalizeOverridesByAsset(*pkgInfo.Asset, pkgInfo.Overrides)
 
-	rts, _ := runtime.GetRuntimesFromEnvs(pkgInfo.SupportedEnvs)
+	// rts, _ := runtime.GetRuntimesFromEnvs(pkgInfo.SupportedEnvs)
 
-	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(rts, pkgInfo.Overrides)
+	// pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(rts, pkgInfo.Overrides)
+	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements2(pkgInfo.Overrides)
 
 	// Set CompleteWindowsExt
 	for _, assetInfo := range assetInfos {
@@ -220,6 +221,78 @@ func normalizeOverridesByReplacements(rts []*runtime.Runtime, overrides []*regis
 			delete(override.Replacements, k)
 			if len(override.Replacements) == 0 {
 				override.Replacements = nil
+			}
+		}
+		if override.Replacements != nil || override.Format != "" || override.Asset != nil {
+			ret = append(ret, override)
+		}
+	}
+	return replacements, ret
+}
+
+func normalizeOverridesByReplacements2(overrides []*registry.Override) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
+	var replacements map[string]string
+	var ret []*registry.Override
+	for _, override := range overrides {
+		for k, v := range override.Replacements {
+			score := -1
+			matched := false
+			isOS := runtime.IsOS(k)
+			for _, override := range overrides {
+				if v2, ok := override.Replacements[k]; ok { //nolint:nestif
+					if v == v2 {
+						score++
+					} else if !matched {
+						score--
+					}
+				} else {
+					if override.GOOS == k || override.GOArch == k || (override.GOOS == "" && isOS) || (override.GOArch == "" && !isOS) {
+						if !matched {
+							score--
+						}
+					}
+				}
+
+				if isOS && override.GOOS == k && override.GOArch == "" {
+					matched = true
+				}
+				if !isOS && override.GOArch == k && override.GOOS == "" {
+					matched = true
+				}
+			}
+			if score < 0 {
+				continue
+			}
+			matched = false
+			if replacements == nil {
+				replacements = map[string]string{}
+			}
+			replacements[k] = v
+			for _, override := range overrides {
+				if v2, ok := override.Replacements[k]; ok { //nolint:nestif
+					if v == v2 {
+						delete(override.Replacements, k)
+						if len(override.Replacements) == 0 {
+							override.Replacements = nil
+						}
+					}
+				} else {
+					if override.GOOS == k || override.GOArch == k || (override.GOOS == "" && isOS) || (override.GOArch == "" && !isOS) {
+						if !matched {
+							if override.Replacements == nil {
+								override.Replacements = map[string]string{}
+							}
+							override.Replacements[k] = k
+						}
+					}
+				}
+
+				if isOS && override.GOOS == k && override.GOArch == "" {
+					matched = true
+				}
+				if !isOS && override.GOArch == k && override.GOOS == "" {
+					matched = true
+				}
 			}
 		}
 		if override.Replacements != nil || override.Format != "" || override.Asset != nil {
