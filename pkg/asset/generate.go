@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/pkg/runtime"
 )
 
 func boolP(b bool) *bool {
@@ -147,33 +148,9 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 
 	pkgInfo.Overrides = normalizeOverridesByAsset(*pkgInfo.Asset, pkgInfo.Overrides)
 
-	overrides := []*registry.Override{}
-	for _, override := range pkgInfo.Overrides {
-		override := override
-		if len(override.Replacements) == 0 {
-			overrides = append(overrides, override)
-			continue
-		}
-		if pkgInfo.Replacements == nil {
-			pkgInfo.Replacements = registry.Replacements{}
-		}
-		for k, v := range override.Replacements {
-			vp, ok := pkgInfo.Replacements[k]
-			if !ok {
-				pkgInfo.Replacements[k] = v
-				delete(override.Replacements, k)
-				continue
-			}
-			if v == vp {
-				delete(override.Replacements, k)
-				continue
-			}
-		}
-		if len(override.Replacements) != 0 || override.Format != "" || override.Asset != nil {
-			overrides = append(overrides, override)
-		}
-	}
-	pkgInfo.Overrides = overrides
+	rts, _ := runtime.GetRuntimesFromEnvs(pkgInfo.SupportedEnvs)
+
+	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(rts, pkgInfo.Overrides)
 
 	// Set CompleteWindowsExt
 	for _, assetInfo := range assetInfos {
@@ -184,8 +161,38 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	}
 }
 
-func normalizeOverridesByReplacements(overrides []*registry.Override) (map[string]string, []*registry.Override) {
+func normalizeReplacementsInOverrides(rts []*runtime.Runtime, defaultReplacements map[string]string, overrides []*registry.Override) []*registry.Override {
+	ovs := []*registry.Override{}
+	for _, rt := range rts {
+		m := make(map[string]string, len(defaultReplacements))
+		for k, v := range defaultReplacements {
+			if k == rt.GOOS || k == rt.GOARCH {
+				m[k] = v
+			}
+		}
+		for _, ov := range overrides {
+			if !ov.Match(rt) {
+				continue
+			}
+			for k, v := range ov.Replacements {
+				if k == rt.GOOS || k == rt.GOARCH {
+					m[k] = v
+				}
+			}
+			break
+		}
+		ovs = append(ovs, &registry.Override{
+			GOOS:         rt.GOOS,
+			GOArch:       rt.GOARCH,
+			Replacements: m,
+		})
+	}
+	return ovs
+}
+
+func normalizeOverridesByReplacements(rts []*runtime.Runtime, overrides []*registry.Override) (map[string]string, []*registry.Override) { //nolint:cyclop
 	ret := []*registry.Override{}
+	normalizedOverrides := normalizeReplacementsInOverrides(rts, nil, overrides)
 	var replacements map[string]string
 	for _, override := range overrides {
 		override := override
@@ -194,21 +201,28 @@ func normalizeOverridesByReplacements(overrides []*registry.Override) (map[strin
 			continue
 		}
 		for k, v := range override.Replacements {
-			vp, ok := replacements[k]
-			if !ok {
-				if replacements == nil {
-					replacements = map[string]string{}
-				}
-				replacements[k] = v
-				delete(override.Replacements, k)
+			m := make(map[string]string, len(replacements))
+			for k, v := range replacements {
+				m[k] = v
+			}
+
+			m[k] = v
+			ovs := normalizeReplacementsInOverrides(rts, m, overrides)
+			if !reflect.DeepEqual(normalizedOverrides, ovs) {
+				// fmt.Printf("GOOS=%s, GOARCH=%s, k=%s, v=%s\n", override.GOOS, override.GOArch, k, v)
+				// fmt.Println(cmp.Diff(normalizedOverrides, ovs))
 				continue
 			}
-			if v == vp {
-				delete(override.Replacements, k)
-				continue
+			if replacements == nil {
+				replacements = map[string]string{}
+			}
+			replacements[k] = v
+			delete(override.Replacements, k)
+			if len(override.Replacements) == 0 {
+				override.Replacements = nil
 			}
 		}
-		if len(override.Replacements) != 0 || override.Format != "" || override.Asset != nil {
+		if override.Replacements != nil || override.Format != "" || override.Asset != nil {
 			ret = append(ret, override)
 		}
 	}
@@ -277,7 +291,7 @@ func checkRosetta2(assetInfos []*AssetInfo) bool {
 	return darwinAmd64 != nil && darwinArm64 == nil
 }
 
-func normalizeSupportedEnvs(envs []string) []string {
+func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
 	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", "darwin", "windows"}) {
 		return nil
 	}
