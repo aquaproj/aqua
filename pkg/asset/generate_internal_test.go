@@ -159,7 +159,9 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			m, overrides := normalizeOverridesByReplacements(d.overrides)
+			m, overrides := normalizeOverridesByReplacements(&registry.PackageInfo{
+				Overrides: d.overrides,
+			})
 			if diff := cmp.Diff(d.replacements, m); diff != "" {
 				t.Fatal(diff)
 			}
