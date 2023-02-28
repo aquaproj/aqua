@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -69,19 +68,12 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name         string
-		rts          []*runtime.Runtime
 		overrides    []*registry.Override
 		replacements map[string]string
 		exp          []*registry.Override
 	}{
 		{
 			name: "normal",
-			rts: []*runtime.Runtime{
-				{
-					GOOS:   "linux",
-					GOARCH: "amd64",
-				},
-			},
 			overrides: []*registry.Override{
 				{
 					GOOS: "linux",
@@ -93,24 +85,10 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 			replacements: map[string]string{
 				"linux": "Linux",
 			},
-			exp: []*registry.Override{},
+			exp: nil,
 		},
 		{
 			name: "complicated",
-			rts: []*runtime.Runtime{
-				{
-					GOOS:   "linux",
-					GOARCH: "amd64",
-				},
-				{
-					GOOS:   "darwin",
-					GOARCH: "amd64",
-				},
-				{
-					GOOS:   "darwin",
-					GOARCH: "arm64",
-				},
-			},
 			overrides: []*registry.Override{
 				{
 					GOOS: "linux",
@@ -139,28 +117,6 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "complicated 2",
-			rts: []*runtime.Runtime{
-				{
-					GOOS:   "linux",
-					GOARCH: "amd64",
-				},
-				{
-					GOOS:   "linux",
-					GOARCH: "arm64",
-				},
-				{
-					GOOS:   "darwin",
-					GOARCH: "amd64",
-				},
-				{
-					GOOS:   "darwin",
-					GOARCH: "arm64",
-				},
-				{
-					GOOS:   "windows",
-					GOARCH: "amd64",
-				},
-			},
 			overrides: []*registry.Override{
 				{
 					GOOS: "linux",
@@ -203,122 +159,10 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			m, overrides := normalizeOverridesByReplacements(d.rts, d.overrides)
+			m, overrides := normalizeOverridesByReplacements(d.overrides)
 			if diff := cmp.Diff(d.replacements, m); diff != "" {
 				t.Fatal(diff)
 			}
-			if diff := cmp.Diff(d.exp, overrides); diff != "" {
-				t.Fatal(diff)
-			}
-		})
-	}
-}
-
-func Test_normalizeReplacementsInOverrides(t *testing.T) { //nolint:funlen
-	t.Parallel()
-	data := []struct {
-		name                string
-		rts                 []*runtime.Runtime
-		overrides           []*registry.Override
-		defaultReplacements map[string]string
-		exp                 []*registry.Override
-	}{
-		{
-			name: "normal",
-			rts: []*runtime.Runtime{
-				{
-					GOOS:   "linux",
-					GOARCH: "amd64",
-				},
-				{
-					GOOS:   "linux",
-					GOARCH: "arm64",
-				},
-				{
-					GOOS:   "darwin",
-					GOARCH: "amd64",
-				},
-				{
-					GOOS:   "darwin",
-					GOARCH: "arm64",
-				},
-				{
-					GOOS:   "windows",
-					GOARCH: "amd64",
-				},
-			},
-			overrides: []*registry.Override{
-				{
-					GOOS: "linux",
-					Replacements: map[string]string{
-						"linux": "Linux",
-						"amd64": "x86_64",
-					},
-				},
-				{
-					GOOS: "darwin",
-					Replacements: map[string]string{
-						"amd64":  "x86_64",
-						"darwin": "MacOS",
-					},
-				},
-				{
-					GOOS:   "windows",
-					Format: "zip",
-					Replacements: map[string]string{
-						"amd64":   "x86_64",
-						"windows": "Windows",
-					},
-				},
-			},
-			defaultReplacements: nil,
-			exp: []*registry.Override{
-				{
-					GOOS:   "linux",
-					GOArch: "amd64",
-					Replacements: map[string]string{
-						"linux": "Linux",
-						"amd64": "x86_64",
-					},
-				},
-				{
-					GOOS:   "linux",
-					GOArch: "arm64",
-					Replacements: map[string]string{
-						"linux": "Linux",
-					},
-				},
-				{
-					GOOS:   "darwin",
-					GOArch: "amd64",
-					Replacements: map[string]string{
-						"amd64":  "x86_64",
-						"darwin": "MacOS",
-					},
-				},
-				{
-					GOOS:   "darwin",
-					GOArch: "arm64",
-					Replacements: map[string]string{
-						"darwin": "MacOS",
-					},
-				},
-				{
-					GOOS:   "windows",
-					GOArch: "amd64",
-					Replacements: map[string]string{
-						"amd64":   "x86_64",
-						"windows": "Windows",
-					},
-				},
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.name, func(t *testing.T) {
-			t.Parallel()
-			overrides := normalizeReplacementsInOverrides(d.rts, d.defaultReplacements, d.overrides)
 			if diff := cmp.Diff(d.exp, overrides); diff != "" {
 				t.Fatal(diff)
 			}

@@ -148,10 +148,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 
 	pkgInfo.Overrides = normalizeOverridesByAsset(*pkgInfo.Asset, pkgInfo.Overrides)
 
-	// rts, _ := runtime.GetRuntimesFromEnvs(pkgInfo.SupportedEnvs)
-
-	// pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(rts, pkgInfo.Overrides)
-	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements2(pkgInfo.Overrides)
+	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo.Overrides)
 
 	// Set CompleteWindowsExt
 	for _, assetInfo := range assetInfos {
@@ -162,75 +159,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	}
 }
 
-func normalizeReplacementsInOverrides(rts []*runtime.Runtime, defaultReplacements map[string]string, overrides []*registry.Override) []*registry.Override {
-	ovs := []*registry.Override{}
-	for _, rt := range rts {
-		m := make(map[string]string, len(defaultReplacements))
-		for k, v := range defaultReplacements {
-			if k == rt.GOOS || k == rt.GOARCH {
-				m[k] = v
-			}
-		}
-		for _, ov := range overrides {
-			if !ov.Match(rt) {
-				continue
-			}
-			for k, v := range ov.Replacements {
-				if k == rt.GOOS || k == rt.GOARCH {
-					m[k] = v
-				}
-			}
-			break
-		}
-		ovs = append(ovs, &registry.Override{
-			GOOS:         rt.GOOS,
-			GOArch:       rt.GOARCH,
-			Replacements: m,
-		})
-	}
-	return ovs
-}
-
-func normalizeOverridesByReplacements(rts []*runtime.Runtime, overrides []*registry.Override) (map[string]string, []*registry.Override) { //nolint:cyclop
-	ret := []*registry.Override{}
-	normalizedOverrides := normalizeReplacementsInOverrides(rts, nil, overrides)
-	var replacements map[string]string
-	for _, override := range overrides {
-		override := override
-		if len(override.Replacements) == 0 {
-			ret = append(ret, override)
-			continue
-		}
-		for k, v := range override.Replacements {
-			m := make(map[string]string, len(replacements))
-			for k, v := range replacements {
-				m[k] = v
-			}
-
-			m[k] = v
-			ovs := normalizeReplacementsInOverrides(rts, m, overrides)
-			if !reflect.DeepEqual(normalizedOverrides, ovs) {
-				// fmt.Printf("GOOS=%s, GOARCH=%s, k=%s, v=%s\n", override.GOOS, override.GOArch, k, v)
-				// fmt.Println(cmp.Diff(normalizedOverrides, ovs))
-				continue
-			}
-			if replacements == nil {
-				replacements = map[string]string{}
-			}
-			replacements[k] = v
-			delete(override.Replacements, k)
-			if len(override.Replacements) == 0 {
-				override.Replacements = nil
-			}
-		}
-		if override.Replacements != nil || override.Format != "" || override.Asset != nil {
-			ret = append(ret, override)
-		}
-	}
-	return replacements, ret
-}
-
-func normalizeOverridesByReplacements2(overrides []*registry.Override) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
+func normalizeOverridesByReplacements(overrides []*registry.Override) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
 	var replacements map[string]string
 	var ret []*registry.Override
 	for _, override := range overrides {
