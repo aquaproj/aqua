@@ -70,29 +70,23 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 	return rawA
 }
 
-func mergeReplacements(m1, m2 map[string]string) (map[string]string, bool) {
-	if len(m1) == 0 {
-		return m2, true
-	}
-	if len(m2) == 0 {
-		return m1, true
-	}
-	m := map[string]string{}
-	for k, v1 := range m1 {
-		m[k] = v1
-		if v2, ok := m2[k]; ok && v1 != v2 {
-			return nil, false
+func mergeReplacements(goos string, m1, m2 map[string]string) (map[string]string, bool) {
+	v1, ok1 := m1[goos]
+	v2, ok2 := m2[goos]
+	if (ok1 && ok2 && v1 == v2) || (!ok1 && !ok2) {
+		m := map[string]string{}
+		for k, v := range m1 {
+			m[k] = v
 		}
-	}
-	for k, v2 := range m2 {
-		if _, ok := m[k]; !ok {
-			m[k] = v2
+		for k, v := range m2 {
+			m[k] = v
 		}
+		return m, true
 	}
-	return m, true
+	return nil, false
 }
 
-func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop,gocyclo
+func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop
 	for _, goos := range []string{"linux", "darwin", "windows"} {
 		var overrides []*registry.Override
 		var supportedEnvs []string
@@ -119,7 +113,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 			asset2 := overrides[1]
 			if asset1.Format == asset2.Format && *asset1.Asset == *asset2.Asset {
 				// format and asset are equal
-				replacements, ok := mergeReplacements(overrides[0].Replacements, overrides[1].Replacements)
+				replacements, ok := mergeReplacements(goos, overrides[0].Replacements, overrides[1].Replacements)
 				if ok {
 					overrides = []*registry.Override{
 						{
@@ -145,59 +139,15 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 
 	pkgInfo.SupportedEnvs = normalizeSupportedEnvs(pkgInfo.SupportedEnvs)
 
-	formatCounts := map[string]int{}
-	for _, override := range pkgInfo.Overrides {
-		formatCounts[override.Format]++
-	}
-	maxCnt := 0
-	for f, cnt := range formatCounts {
-		if cnt > maxCnt {
-			pkgInfo.Format = f
-			maxCnt = cnt
-			continue
-		}
-		if cnt == maxCnt && f != formatRaw {
-			pkgInfo.Format = f
-			maxCnt = cnt
-			continue
-		}
-	}
+	pkgInfo.Format = getDefaultFormat(pkgInfo.Overrides)
 
 	// Decide default Asset
-	assetCounts := map[string]int{}
-	for _, override := range pkgInfo.Overrides {
-		override := override
-		if override.Format != pkgInfo.Format {
-			continue
-		}
-		override.Format = ""
-		assetCounts[*override.Asset]++
-	}
-	maxCnt = 0
-	for asset, cnt := range assetCounts {
-		asset := asset
-		if cnt > maxCnt {
-			pkgInfo.Asset = &asset
-			maxCnt = cnt
-			continue
-		}
-	}
+	defaultAsset := getDefaultAsset(pkgInfo.Format, pkgInfo.Overrides)
+	pkgInfo.Asset = &defaultAsset
+
+	pkgInfo.Overrides = normalizeOverridesByAsset(*pkgInfo.Asset, pkgInfo.Overrides)
 
 	overrides := []*registry.Override{}
-	for _, override := range pkgInfo.Overrides {
-		override := override
-		if *override.Asset != *pkgInfo.Asset {
-			overrides = append(overrides, override)
-			continue
-		}
-		override.Asset = nil
-		if override.Format != "" || len(override.Replacements) != 0 {
-			overrides = append(overrides, override)
-		}
-	}
-	pkgInfo.Overrides = overrides
-
-	overrides = []*registry.Override{}
 	for _, override := range pkgInfo.Overrides {
 		override := override
 		if len(override.Replacements) == 0 {
@@ -232,6 +182,93 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 			break
 		}
 	}
+}
+
+func normalizeOverridesByReplacements(overrides []*registry.Override) (map[string]string, []*registry.Override) {
+	ret := []*registry.Override{}
+	var replacements map[string]string
+	for _, override := range overrides {
+		override := override
+		if len(override.Replacements) == 0 {
+			ret = append(ret, override)
+			continue
+		}
+		for k, v := range override.Replacements {
+			vp, ok := replacements[k]
+			if !ok {
+				if replacements == nil {
+					replacements = map[string]string{}
+				}
+				replacements[k] = v
+				delete(override.Replacements, k)
+				continue
+			}
+			if v == vp {
+				delete(override.Replacements, k)
+				continue
+			}
+		}
+		if len(override.Replacements) != 0 || override.Format != "" || override.Asset != nil {
+			ret = append(ret, override)
+		}
+	}
+	return replacements, ret
+}
+
+func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Override) []*registry.Override {
+	ret := []*registry.Override{}
+	for _, override := range overrides {
+		override := override
+		if *override.Asset != defaultAsset {
+			ret = append(ret, override)
+			continue
+		}
+		override.Asset = nil
+		if override.Format != "" || len(override.Replacements) != 0 {
+			ret = append(ret, override)
+		}
+	}
+	return ret
+}
+
+func getDefaultAsset(defaultFormat string, overrides []*registry.Override) string {
+	assetCounts := map[string]int{}
+	for _, override := range overrides {
+		override := override
+		if override.Format != defaultFormat {
+			continue
+		}
+		override.Format = ""
+		assetCounts[*override.Asset]++
+	}
+	var maxCnt int
+	var defaultAsset string
+	for asset, cnt := range assetCounts {
+		asset := asset
+		if cnt > maxCnt {
+			defaultAsset = asset
+			maxCnt = cnt
+			continue
+		}
+	}
+	return defaultAsset
+}
+
+func getDefaultFormat(overrides []*registry.Override) string {
+	formatCounts := map[string]int{}
+	for _, override := range overrides {
+		formatCounts[override.Format]++
+	}
+	var maxCnt int
+	var format string
+	for f, cnt := range formatCounts {
+		if (cnt > maxCnt) || (cnt == maxCnt && f != formatRaw) {
+			format = f
+			maxCnt = cnt
+			continue
+		}
+	}
+	return format
 }
 
 func checkRosetta2(assetInfos []*AssetInfo) bool {
