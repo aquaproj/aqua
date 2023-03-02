@@ -156,7 +156,12 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	return vo
 }
 
-func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) {
+func isSemver(v string) bool {
+	_, err := version.NewVersion(v)
+	return err == nil
+}
+
+func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint:funlen,cyclop
 	if len(pkgs) == 0 {
 		return nil, nil
 	}
@@ -187,10 +192,17 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) {
 			versionsM[minimumVersion] = struct{}{}
 		}
 		lastMinimumVersion = strings.TrimPrefix(minimumVersion, "v")
-		if lastVO == nil {
-			latestPkgInfo.VersionConstraints = fmt.Sprintf(`semver(">= %s")`, lastMinimumVersion)
+
+		var versionConstraints string
+		if isSemver(lastMinimumVersion) {
+			versionConstraints = fmt.Sprintf(`semver(">= %s")`, lastMinimumVersion)
 		} else {
-			lastVO.VersionConstraints = fmt.Sprintf(`semver(">= %s")`, lastMinimumVersion)
+			versionConstraints = fmt.Sprintf(`Version >= "%s"`, lastMinimumVersion)
+		}
+		if lastVO == nil {
+			latestPkgInfo.VersionConstraints = versionConstraints
+		} else {
+			lastVO.VersionConstraints = versionConstraints
 			vos = append(vos, lastVO)
 		}
 		lastVO = getVersionOverride(latestPkgInfo, pkgInfo)
@@ -202,7 +214,11 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) {
 			versions = append(versions, minimumVersion)
 			versionsM[minimumVersion] = struct{}{}
 		}
-		lastVO.VersionConstraints = fmt.Sprintf(`semver("< %s")`, lastMinimumVersion)
+		if isSemver(lastMinimumVersion) {
+			lastVO.VersionConstraints = fmt.Sprintf(`semver("< %s")`, lastMinimumVersion)
+		} else {
+			lastVO.VersionConstraints = fmt.Sprintf(`Version < "%s"`, lastMinimumVersion)
+		}
 		vos = append(vos, lastVO)
 	}
 	if len(vos) != 0 {
