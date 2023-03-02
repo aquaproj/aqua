@@ -74,7 +74,14 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 		}
 	}
 	sort.Slice(releases, func(i, j int) bool {
-		return releases[i].Version.GreaterThanOrEqual(releases[j].Version)
+		r1 := releases[i]
+		r2 := releases[j]
+		v1 := r1.Version
+		v2 := r2.Version
+		if v1 == nil || v2 == nil {
+			return r1.Tag >= r2.Tag
+		}
+		return v1.GreaterThanOrEqual(v2)
 	})
 	pkgs := make([]*Package, 0, len(releases))
 	for _, release := range releases {
