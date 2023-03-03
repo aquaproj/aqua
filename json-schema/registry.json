@@ -587,6 +587,9 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
+        },
+        "error_message": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
