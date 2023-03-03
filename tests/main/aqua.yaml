@@ -1,5 +1,6 @@
 checksum:
   enabled: true
+  require_checksum: false
 registries:
 - type: standard
   type: standard # duplicated keys
