@@ -49,6 +49,7 @@ type PackageInfo struct {
 	Private            bool               `json:"private,omitempty"`
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	ErrorMessage       string             `json:"-" yaml:"-"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
@@ -82,6 +83,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		Cosign:             pkgInfo.Cosign,
 		SLSAProvenance:     pkgInfo.SLSAProvenance,
 		Private:            pkgInfo.Private,
+		ErrorMessage:       pkgInfo.ErrorMessage,
 	}
 	return pkg
 }
@@ -153,6 +155,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.SLSAProvenance != nil {
 		pkg.SLSAProvenance = child.SLSAProvenance
+	}
+	if child.ErrorMessage != "" {
+		pkg.ErrorMessage = child.ErrorMessage
 	}
 	return pkg
 }
@@ -244,6 +249,7 @@ type VersionOverride struct {
 	Checksum           *Checksum       `json:"checksum,omitempty"`
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
 }
 
 type FormatOverrides []*FormatOverride
