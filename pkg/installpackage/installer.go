@@ -256,15 +256,28 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		return err
 	}
 
+	failed := false
+	var fileNotFoundErrors []*ErrorFileNotFound
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
+		var errFileNotFound *ErrorFileNotFound
 		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
+			if errors.As(err, &errFileNotFound) {
+				fileNotFoundErrors = append(fileNotFoundErrors, errFileNotFound)
+			}
 			if inst.isTest {
+				failed = true
 				return fmt.Errorf("check file_src is correct: %w", err)
 			}
 			logerr.WithError(logE, err).Warn("check file_src is correct")
 		}
+	}
+	if len(fileNotFoundErrors) != 0 {
+		logE.Error()
+	}
+	if failed {
+		return fmt.Errorf("check file_src is correct: %w", err) // TODO
 	}
 
 	return nil
@@ -369,7 +382,11 @@ func (inst *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package
 	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
-		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, logE.Data))
+		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(&ErrorFileNotFound{
+			err:  err,
+			file: file,
+			src:  fileSrc,
+		}, logE.Data))
 	}
 	if finfo.IsDir() {
 		return "", logerr.WithFields(errExePathIsDirectory, logE.Data) //nolint:wrapcheck
