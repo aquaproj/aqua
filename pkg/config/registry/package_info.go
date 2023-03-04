@@ -40,6 +40,7 @@ type PackageInfo struct {
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
+	NoAsset            *bool              `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
@@ -84,6 +85,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		SLSAProvenance:     pkgInfo.SLSAProvenance,
 		Private:            pkgInfo.Private,
 		ErrorMessage:       pkgInfo.ErrorMessage,
+		NoAsset:            pkgInfo.NoAsset,
 	}
 	return pkg
 }
@@ -158,6 +160,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.ErrorMessage != "" {
 		pkg.ErrorMessage = child.ErrorMessage
+	}
+	if child.NoAsset != nil {
+		pkg.NoAsset = child.NoAsset
 	}
 	return pkg
 }
@@ -250,6 +255,7 @@ type VersionOverride struct {
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 }
 
 type FormatOverrides []*FormatOverride
