@@ -43,7 +43,6 @@ type InstallerImpl struct {
 	slsaVerifier       slsa.Verifier
 	progressBar        bool
 	onlyLink           bool
-	isTest             bool
 	copyDir            string
 	policyChecker      policy.Checker
 	cosignInstaller    *Cosign
@@ -71,7 +70,6 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		linker:             linker,
 		executor:           executor,
 		progressBar:        param.ProgressBar,
-		isTest:             param.IsTest,
 		onlyLink:           param.OnlyLink,
 		copyDir:            param.Dest,
 		unarchiver:         unarchiver,
@@ -203,7 +201,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	return nil
 }
 
-func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -254,10 +252,7 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		file := file
 		logE := logE.WithField("file_name", file.Name)
 		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
-			if inst.isTest {
-				return fmt.Errorf("check file_src is correct: %w", err)
-			}
-			logerr.WithError(logE, err).Warn("check file_src is correct")
+			return fmt.Errorf("check file_src is correct: %w", err)
 		}
 	}
 
@@ -300,10 +295,7 @@ type DownloadParam struct {
 func (inst *InstallerImpl) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	exePath, err := inst.checkFileSrc(pkg, file, logE)
 	if err != nil {
-		if inst.isTest {
-			return fmt.Errorf("check file_src is correct: %w", err)
-		}
-		logerr.WithError(logE, err).Warn("check file_src is correct")
+		return fmt.Errorf("check file_src is correct: %w", err)
 	}
 	if inst.copyDir == "" {
 		return nil

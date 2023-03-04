@@ -40,7 +40,9 @@ func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
-			files:   map[string]string{},
+			files: map[string]string{
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua/v1.6.1/aqua_linux_amd64.tar.gz/aqua": "xxx",
+			},
 			version: "v1.6.1",
 			checksumCalculator: &installpackage.MockChecksumCalculator{
 				Checksum: "c6f3b1f37d9bf4f73e6c6dcf1bd4bb59b48447ad46d4b72e587d15f66a96ab5a",
