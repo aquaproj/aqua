@@ -192,7 +192,7 @@ jobs:
         working-directory: tests/main
       - run: cmdx -v
         working-directory: tests/main
-      - run: aqua i --test
+      - run: aqua i
         working-directory: tests/main
       - run: aqua which golangci-lint
         working-directory: tests/main
