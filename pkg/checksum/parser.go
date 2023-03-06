@@ -11,7 +11,7 @@ import (
 
 var (
 	errUnknownChecksumFileFormat = errors.New("checksum file format is unknown")
-	errNoChecksumExtracted       = errors.New("no checksum is extracted")
+	ErrNoChecksumExtracted       = errors.New("no checksum is extracted")
 )
 
 type FileParser struct{}
@@ -22,7 +22,7 @@ func (parser *FileParser) ParseChecksumFile(content string, pkg *config.Package)
 		return nil, "", err
 	}
 	if len(m) == 0 && s == "" {
-		return nil, "", errNoChecksumExtracted
+		return nil, "", ErrNoChecksumExtracted
 	}
 	return m, s, nil
 }
