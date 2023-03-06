@@ -93,8 +93,6 @@ func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []st
 }
 
 func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
-	logE = logE.WithField("exe_path", findResult.ExePath)
-
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -168,7 +166,6 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 }
 
 func (ctrl *Controller) execCommandWithRetry(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
-	logE = logE.WithField("exe_path", exePath)
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")
 		retried, err := ctrl.execCommand(ctx, exePath, args)
