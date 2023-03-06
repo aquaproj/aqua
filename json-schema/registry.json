@@ -413,6 +413,9 @@
         },
         "private": {
           "type": "boolean"
+        },
+        "no_asset": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -590,6 +593,9 @@
         },
         "error_message": {
           "type": "string"
+        },
+        "no_asset": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
