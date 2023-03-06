@@ -326,7 +326,6 @@ func (inst *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Packa
 		src = "."
 	}
 	logE.WithFields(logrus.Fields{
-		"exe_path":     exePath,
 		"go_src":       src,
 		"go_build_dir": exeDir,
 	}).Info("building Go tool")

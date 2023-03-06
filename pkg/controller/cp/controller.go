@@ -95,7 +95,6 @@ func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, 
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	logE = logE.WithField("exe_path", findResult.ExePath)
 	if findResult.Package != nil {
 		logE = logE.WithField("package", findResult.Package.Package.Name)
 		if err := ctrl.install(ctx, logE, findResult, policyConfigs); err != nil {
