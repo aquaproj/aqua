@@ -215,6 +215,10 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	})
 	logE.Debug("install the package")
 
+	if pkgInfo.NoAsset != nil && *pkgInfo.NoAsset {
+		logE.Error(fmt.Sprintf("failed to install a package %s@%s. No asset is released in this version", pkg.Package.Name, pkg.Package.Version))
+		return errors.New("")
+	}
 	if pkgInfo.ErrorMessage != "" {
 		logE.Error(fmt.Sprintf("failed to install a package %s@%s. %s", pkg.Package.Name, pkg.Package.Version, pkgInfo.ErrorMessage))
 		return errors.New("")
