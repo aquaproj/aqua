@@ -43,10 +43,6 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 				Usage:   "create links but skip downloading packages",
 			},
 			&cli.BoolFlag{
-				Name:  "test",
-				Usage: "test file.src after installing the package",
-			},
-			&cli.BoolFlag{
 				Name:    "all",
 				Aliases: []string{"a"},
 				Usage:   "install all aqua configuration packages",
