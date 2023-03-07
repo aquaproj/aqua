@@ -18,7 +18,7 @@ type ProgressBarOpts struct {
 	Description   string
 }
 
-type Unarchiver2 interface {
+type coreUnarchiver interface {
 	Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
 }
 
@@ -66,7 +66,7 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func getUnarchiver(src *File, dest string) (Unarchiver2, error) {
+func getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
