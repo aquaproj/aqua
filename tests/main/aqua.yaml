@@ -12,4 +12,4 @@ packages:
   registry: standard # duplicated keys
   version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
 - null
-- name: cycloidio/terracognita@v0.8.1 # update-checksum -deep
+- name: cycloidio/terracognita@v0.8.2 # update-checksum -deep
