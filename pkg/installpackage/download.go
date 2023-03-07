@@ -189,7 +189,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		Body:     readBody,
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),
-	}, param.Dest, logE, inst.fs, pOpts)
+	}, param.Dest, inst.fs, pOpts)
 }
 
 func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {

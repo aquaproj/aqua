@@ -16,7 +16,7 @@ func Test_getUnarchiver(t *testing.T) {
 		src   *File
 		dest  string
 		isErr bool
-		exp   Unarchiver2
+		exp   coreUnarchiver
 	}{
 		{
 			title: "raw",
