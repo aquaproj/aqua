@@ -39,7 +39,7 @@ type InstallerImpl struct {
 	fs                 afero.Fs
 	linker             domain.Linker
 	executor           Executor
-	unarchiver         Unarchiver
+	unarchiver         unarchive.Unarchiver
 	cosign             cosign.Verifier
 	slsaVerifier       slsa.Verifier
 	progressBar        bool
@@ -50,7 +50,7 @@ type InstallerImpl struct {
 	cosignInstaller    *Cosign
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	installer := newInstaller(param, downloader, rt, fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier)
 	installer.cosignInstaller = &Cosign{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
@@ -59,7 +59,7 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
@@ -107,18 +107,6 @@ type ParamInstallPackage struct {
 	ConfigFileDir   string
 	CosignExePath   string
 	Checksum        *checksum.Checksum
-}
-
-type Unarchiver interface {
-	Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
-}
-
-type MockUnarchiver struct {
-	Err error
-}
-
-func (unarchiver *MockUnarchiver) Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error {
-	return unarchiver.Err
 }
 
 type ChecksumCalculator interface {

@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/mholt/archiver/v3"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -29,13 +28,25 @@ type File struct {
 	Type     string
 }
 
-type Unarchiver struct{}
+type UnarchiverImpl struct{}
 
-func New() *Unarchiver {
-	return &Unarchiver{}
+type Unarchiver interface {
+	Unarchive(src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error
 }
 
-func (unarchiver *Unarchiver) Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+type MockUnarchiver struct {
+	Err error
+}
+
+func (unarchiver *MockUnarchiver) Unarchive(src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+	return unarchiver.Err
+}
+
+func New() *UnarchiverImpl {
+	return &UnarchiverImpl{}
+}
+
+func (unarchiver *UnarchiverImpl) Unarchive(src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
 	arc, err := getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)

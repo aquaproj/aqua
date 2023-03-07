@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/config/registry"
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -66,7 +67,7 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 				downloader: &download.Mock{
 					RC: io.NopCloser(strings.NewReader("hello")),
 				},
-				unarchiver:         &MockUnarchiver{},
+				unarchiver:         &unarchive.MockUnarchiver{},
 				checksumFileParser: &checksum.FileParser{},
 				checksumCalculator: &MockChecksumCalculator{
 					Checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
