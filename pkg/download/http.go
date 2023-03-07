@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type HTTPDownloader interface {
@@ -31,7 +34,9 @@ func (downloader *httpDownloader) Download(ctx context.Context, u string) (io.Re
 		return nil, 0, fmt.Errorf("send http request: %w", err)
 	}
 	if resp.StatusCode >= http.StatusBadRequest {
-		return resp.Body, 0, errInvalidHTTPStatusCode
+		return resp.Body, 0, logerr.WithFields(errInvalidHTTPStatusCode, logrus.Fields{ //nolint:wrapcheck
+			"http_status_code": resp.StatusCode,
+		})
 	}
 	return resp.Body, resp.ContentLength, nil
 }
