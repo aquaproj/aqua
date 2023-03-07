@@ -35,6 +35,16 @@ func (out *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) e
 	return nil
 }
 
+func getPkgsAST(values []*ast.MappingValueNode) *ast.MappingValueNode {
+	for _, mapValue := range values {
+		if mapValue.Key.String() != "packages" {
+			continue
+		}
+		return mapValue
+	}
+	return nil
+}
+
 func updateASTFile(file *ast.File, pkgs []*aqua.Package) error { //nolint:cyclop
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
@@ -51,22 +61,21 @@ func updateASTFile(file *ast.File, pkgs []*aqua.Package) error { //nolint:cyclop
 		default:
 			continue
 		}
-		for _, mapValue := range values {
-			if mapValue.Key.String() != "packages" {
-				continue
-			}
-			switch mapValue.Value.Type() {
-			case ast.NullType:
-				mapValue.Value = node
-			case ast.SequenceType:
-				if err := ast.Merge(mapValue.Value, node); err != nil {
-					return fmt.Errorf("merge packages: %w", err)
-				}
-			default:
-				return errors.New("packages must be null or array")
-			}
-			break
+		mapValue := getPkgsAST(values)
+		if mapValue == nil {
+			continue
 		}
+		switch mapValue.Value.Type() {
+		case ast.NullType:
+			mapValue.Value = node
+		case ast.SequenceType:
+			if err := ast.Merge(mapValue.Value, node); err != nil {
+				return fmt.Errorf("merge packages: %w", err)
+			}
+		default:
+			return errors.New("packages must be null or array")
+		}
+		break
 	}
 	return nil
 }
