@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
@@ -192,7 +193,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	return nil
 }
 
-func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop,funlen
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop,funlen,gocognit
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -248,15 +249,40 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		return err
 	}
 
+	failed := false
+	notFound := false
+	logLevel := logrus.WarnLevel
+	if inst.isTest {
+		logLevel = logrus.ErrorLevel
+	}
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
+		var errFileNotFound *FileNotFoundError
 		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
-			if inst.isTest {
-				return fmt.Errorf("check file_src is correct: %w", err)
+			if errors.As(err, &errFileNotFound) {
+				notFound = true
 			}
-			logerr.WithError(logE, err).Warn("check file_src is correct")
+			if inst.isTest {
+				failed = true
+			}
+			logerr.WithError(logE, err).Log(logLevel, "check file_src is correct")
 		}
+	}
+	if notFound { //nolint:nestif
+		paths, err := inst.walk(pkgPath)
+		if err != nil {
+			logerr.WithError(logE, err).Warn("traverse the content of unarchived package")
+		} else {
+			if len(paths) > 30 { //nolint:gomnd
+				logE.Logf(logLevel, "executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n"))
+			} else {
+				logE.Logf(logLevel, "executable files aren't found\nFiles in the unarchived package:\n%s\n ", strings.Join(paths, "\n"))
+			}
+		}
+	}
+	if failed {
+		return errors.New("check file_src is correct")
 	}
 
 	return nil
@@ -326,10 +352,7 @@ func (inst *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Packa
 func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
 	if err != nil {
-		if inst.isTest {
-			return fmt.Errorf("check file_src is correct: %w", err)
-		}
-		logerr.WithError(logE, err).Warn("check file_src is correct")
+		return fmt.Errorf("check file_src is correct: %w", err)
 	}
 	if inst.copyDir == "" {
 		return nil
@@ -360,7 +383,9 @@ func (inst *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package
 	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
-		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, logE.Data))
+		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(&FileNotFoundError{
+			err: err,
+		}, logE.Data))
 	}
 	if finfo.IsDir() {
 		return "", logerr.WithFields(errExePathIsDirectory, logE.Data) //nolint:wrapcheck
