@@ -8,6 +8,15 @@
     "github>aquaproj/aqua-renovate-config:file#1.5.2(aqua/.*\\.ya?ml)",
   ],
   ignorePaths: [],
+  packageRules: [
+    {
+      // Disable gomodTidy
+      matchManagers: [
+        "gomod"
+      ],
+      postUpdateOptions: [],
+    },
+  ],
   regexManagers: [
     {
       fileMatch: [".*\\.go"],

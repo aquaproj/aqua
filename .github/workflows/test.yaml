@@ -33,6 +33,10 @@ jobs:
             ghalint:
               - .github/workflows/*.yaml
               - aqua/ghalint.yaml
+            go-mod-tidy:
+              - go.mod
+              - go.sum
+              - "**.go"
 
   update-aqua-checksums:
     # Update aqua-checksums.json and push a commit
@@ -152,6 +156,17 @@ jobs:
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: go test -v ./... -race -covermode=atomic
+
+  go-mod-tidy:
+    uses: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml@dd0258320254eb20e317fb41f08ba16c754f8ffa # v0.1.0
+    with:
+      go-version: 1.20.2
+      aqua_version: v1.35.0
+    secrets:
+      gh_app_id: ${{secrets.APP_ID}}
+      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
+    permissions:
+      contents: read
 
   integration-test:
     runs-on: ubuntu-latest
