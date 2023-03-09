@@ -177,9 +177,6 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 
 func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	envs := []string{}
-	if param.CosignExperimental {
-		envs = []string{"COSIGN_EXPERIMENTAL=1"}
-	}
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
