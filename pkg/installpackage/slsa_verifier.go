@@ -22,18 +22,16 @@ func (slsaVerifier *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE 
 	slsaVerifier.mutex.Lock()
 	defer slsaVerifier.mutex.Unlock()
 	assetTemplate := `slsa-verifier-{{.OS}}-{{.Arch}}`
-	f := false
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    "aquaproj/slsa-verifier",
 			Version: version,
 		},
 		PackageInfo: &registry.PackageInfo{
-			Type:               "github_release",
-			RepoOwner:          "aquaproj",
-			RepoName:           "slsa-verifier",
-			Asset:              &assetTemplate,
-			CompleteWindowsExt: &f,
+			Type:      "github_release",
+			RepoOwner: "aquaproj",
+			RepoName:  "slsa-verifier",
+			Asset:     &assetTemplate,
 		},
 	}
 
