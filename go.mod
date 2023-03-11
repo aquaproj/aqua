@@ -10,7 +10,6 @@ require (
 	github.com/goccy/go-yaml v1.9.8
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v45 v45.2.0
-	github.com/google/go-github/v50 v50.1.0
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/orderedmap v0.2.0
