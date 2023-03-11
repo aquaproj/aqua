@@ -6,19 +6,34 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
-	"github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier/verify"
 )
 
-type ExecutorImpl struct{}
-
-func NewExecutor() *ExecutorImpl {
-	return &ExecutorImpl{}
+type CommandExecutor interface {
+	Exec(ctx context.Context, exePath string, args []string) (int, error)
 }
 
 type Executor interface {
 	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error
+}
+
+type ExecutorImpl struct {
+	executor        CommandExecutor
+	verifierExePath string
+}
+
+func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
+	rt := runtime.NewR()
+	return &ExecutorImpl{
+		executor: executor,
+		verifierExePath: ExePath(&ParamExePath{
+			RootDir: param.RootDir,
+			Runtime: rt,
+		}),
+	}
 }
 
 type MockExecutor struct {
@@ -30,13 +45,18 @@ func (mock *MockExecutor) Verify(ctx context.Context, logE *logrus.Entry, param 
 }
 
 func (exe *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
-	v := verify.VerifyArtifactCommand{
-		ProvenancePath: provenancePath,
-		SourceURI:      param.SourceURI,
-		SourceTag:      &param.SourceTag,
+	args := []string{
+		"verify-artifact",
+		param.ArtifactPath,
+		"--provenance-path",
+		provenancePath,
+		"--source-uri",
+		param.SourceURI,
+		"--source-tag",
+		param.SourceTag,
 	}
 	for i := 0; i < 5; i++ {
-		_, err := v.Exec(ctx, []string{param.ArtifactPath})
+		_, err := exe.executor.Exec(ctx, exe.verifierExePath, args)
 		if err == nil {
 			return nil
 		}
