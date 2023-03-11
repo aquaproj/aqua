@@ -30,30 +30,35 @@ import (
 const proxyName = "aqua-proxy"
 
 type InstallerImpl struct {
-	rootDir            string
-	maxParallelism     int
-	downloader         download.ClientAPI
-	checksumDownloader download.ChecksumDownloader
-	checksumFileParser *checksum.FileParser
-	checksumCalculator ChecksumCalculator
-	runtime            *runtime.Runtime
-	fs                 afero.Fs
-	linker             domain.Linker
-	executor           Executor
-	unarchiver         unarchive.Unarchiver
-	cosign             cosign.Verifier
-	slsaVerifier       slsa.Verifier
-	progressBar        bool
-	onlyLink           bool
-	isTest             bool
-	copyDir            string
-	policyChecker      policy.Checker
-	cosignInstaller    *Cosign
+	rootDir               string
+	maxParallelism        int
+	downloader            download.ClientAPI
+	checksumDownloader    download.ChecksumDownloader
+	checksumFileParser    *checksum.FileParser
+	checksumCalculator    ChecksumCalculator
+	runtime               *runtime.Runtime
+	fs                    afero.Fs
+	linker                domain.Linker
+	executor              Executor
+	unarchiver            unarchive.Unarchiver
+	cosign                cosign.Verifier
+	slsaVerifier          slsa.Verifier
+	progressBar           bool
+	onlyLink              bool
+	isTest                bool
+	copyDir               string
+	policyChecker         policy.Checker
+	cosignInstaller       *Cosign
+	slsaVerifierInstaller *SLSAVerifier
 }
 
 func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	installer := newInstaller(param, downloader, rt, fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier)
 	installer.cosignInstaller = &Cosign{
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
+		mutex:     &sync.Mutex{},
+	}
+	installer.slsaVerifierInstaller = &SLSAVerifier{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
 		mutex:     &sync.Mutex{},
 	}
