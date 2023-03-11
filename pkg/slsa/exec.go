@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 )
@@ -23,9 +25,14 @@ type ExecutorImpl struct {
 	verifierExePath string
 }
 
-func NewExecutor(executor CommandExecutor) *ExecutorImpl {
+func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
+	rt := runtime.NewR()
 	return &ExecutorImpl{
 		executor: executor,
+		verifierExePath: ExePath(&ParamExePath{
+			RootDir: param.RootDir,
+			Runtime: rt,
+		}),
 	}
 }
 
