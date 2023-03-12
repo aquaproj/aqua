@@ -61,7 +61,7 @@ jobs:
           aqua_version: v1.36.0
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
-      - uses: aquaproj/update-checksum-action@d5d72955a3da19ccf7b9ecb8080bc92247fd6633 # v0.2.1
+      - uses: aquaproj/update-checksum-action@2fb7f676d407d4fb8c2c466c19d09d3ddec4f82f # v0.2.2
         with:
           prune: true
           skip_push: ${{github.event.pull_request.head.repo.fork}}
