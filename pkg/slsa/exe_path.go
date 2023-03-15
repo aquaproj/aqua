@@ -17,5 +17,5 @@ func ExePath(param *ParamExePath) string {
 	if param.Runtime.GOOS == "windows" {
 		assetName += ".exe"
 	}
-	return filepath.Join(param.RootDir, "pkgs", "github_release", "github.com", "aquaproj", "slsa-verifier", Version, assetName, assetName)
+	return filepath.Join(param.RootDir, "pkgs", "github_release", "github.com", "slsa-framework", "slsa-verifier", Version, assetName, assetName)
 }
