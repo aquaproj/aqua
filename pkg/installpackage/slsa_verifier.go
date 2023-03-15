@@ -24,12 +24,12 @@ func (slsaVerifier *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE 
 	assetTemplate := `slsa-verifier-{{.OS}}-{{.Arch}}`
 	pkg := &config.Package{
 		Package: &aqua.Package{
-			Name:    "aquaproj/slsa-verifier",
+			Name:    "slsa-framework/slsa-verifier",
 			Version: version,
 		},
 		PackageInfo: &registry.PackageInfo{
 			Type:      "github_release",
-			RepoOwner: "aquaproj",
+			RepoOwner: "slsa-framework",
 			RepoName:  "slsa-verifier",
 			Asset:     &assetTemplate,
 		},
