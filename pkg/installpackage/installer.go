@@ -130,7 +130,7 @@ func (inst *InstallerImpl) SetCopyDir(copyDir string) {
 func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
 	if !param.SkipLink {
-		if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
+		if failedCreateLinks := inst.createLinks(logE, pkgs); failedCreateLinks {
 			failed = failedCreateLinks
 		}
 	}
