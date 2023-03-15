@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/aquaproj/aqua/pkg/config"
+	"github.com/aquaproj/aqua/pkg/cosign"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -25,7 +25,6 @@ type Executor interface {
 
 type ExecutorImpl struct {
 	executor        CommandExecutor
-	mutex           *sync.Mutex
 	verifierExePath string
 }
 
@@ -37,7 +36,6 @@ func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
 			RootDir: param.RootDir,
 			Runtime: rt,
 		}),
-		mutex: &sync.Mutex{},
 	}
 }
 
@@ -65,8 +63,9 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (exe *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) {
-	exe.mutex.Lock()
-	defer exe.mutex.Unlock()
+	mutex := cosign.GetMutex()
+	mutex.Lock()
+	defer mutex.Unlock()
 	out, _, err := exe.executor.ExecWithEnvsAndGetCombinedOutput(ctx, exe.verifierExePath, args, nil)
 	return out, err //nolint:wrapcheck
 }
