@@ -21,13 +21,18 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+var mutex = &sync.Mutex{} //nolint:gochecknoglobals
+
+func GetMutex() *sync.Mutex {
+	return mutex
+}
+
 type VerifierImpl struct {
 	executor      Executor
 	fs            afero.Fs
 	downloader    download.ClientAPI
 	cosignExePath string
 	disabled      bool
-	mutex         *sync.Mutex
 }
 
 func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *VerifierImpl {
@@ -42,7 +47,6 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 		}),
 		// assets for windows/arm64 aren't released.
 		disabled: rt.GOOS == "windows" && rt.GOARCH == "arm64",
-		mutex:    &sync.Mutex{},
 	}
 }
 
@@ -156,8 +160,8 @@ var errVerify = errors.New("verify with Cosign")
 
 func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
-	verifier.mutex.Lock()
-	defer verifier.mutex.Unlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 	out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, args, envs)
 	return out, err //nolint:wrapcheck
 }
