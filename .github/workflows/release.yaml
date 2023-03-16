@@ -11,7 +11,7 @@ jobs:
       homebrew: true
       go-version: 1.20.1
       aqua_policy_config: aqua-policy.yaml
-      aqua_version: v1.36.0
+      aqua_version: v1.36.1
     secrets:
       gh_app_id: ${{secrets.APP_ID}}
       gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
