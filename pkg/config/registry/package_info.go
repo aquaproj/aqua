@@ -90,9 +90,39 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 	return pkg
 }
 
+func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
+	switch typ {
+	case PkgInfoTypeGitHubRelease:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+	case PkgInfoTypeGitHubContent:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGitHubArchive:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+		pkgInfo.Format = ""
+	case PkgInfoTypeHTTP:
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGo:
+	case PkgInfoTypeGoInstall:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+		pkgInfo.WindowsExt = ""
+		pkgInfo.CompleteWindowsExt = nil
+		pkgInfo.Cosign = nil
+		pkgInfo.SLSAProvenance = nil
+		pkgInfo.Format = ""
+		pkgInfo.Rosetta2 = nil
+	}
+}
+
 func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
 	pkg := pkgInfo.Copy()
 	if child.Type != "" {
+		pkg.resetByPkgType(child.Type)
 		pkg.Type = child.Type
 	}
 	if child.RepoOwner != "" {
@@ -167,7 +197,7 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop
+func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
 	for _, fo := range pkgInfo.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
 			pkgInfo.Format = fo.Format
@@ -178,6 +208,11 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	ov := pkgInfo.getOverride(rt)
 	if ov == nil {
 		return
+	}
+
+	if ov.Type != "" {
+		pkgInfo.resetByPkgType(ov.Type)
+		pkgInfo.Type = ov.Type
 	}
 
 	if pkgInfo.Replacements == nil {
@@ -218,9 +253,6 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	}
 	if ov.WindowsExt != "" {
 		pkgInfo.WindowsExt = ov.WindowsExt
-	}
-	if ov.Type != "" {
-		pkgInfo.Type = ov.Type
 	}
 	if ov.Cosign != nil {
 		pkgInfo.Cosign = ov.Cosign
