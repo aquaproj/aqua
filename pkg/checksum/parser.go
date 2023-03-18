@@ -1,18 +1,12 @@
 package checksum
 
 import (
-	"errors"
 	"fmt"
 	"path"
 	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
-)
-
-var (
-	errUnknownChecksumFileFormat = errors.New("checksum file format is unknown")
-	ErrNoChecksumExtracted       = errors.New("no checksum is extracted")
 )
 
 type FileParser struct{}

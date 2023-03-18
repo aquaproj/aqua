@@ -3,7 +3,7 @@ name: Integration Test on Windows
 on: workflow_dispatch
 
 env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
+  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/policy.yaml
   AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
   AQUA_LOG_COLOR: always
   AQUA_LOG_LEVEL: debug
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: 1.20.1
+          go-version: 1.20.2
           cache: true
 
       - run: go install ./cmd/aqua
@@ -94,7 +94,7 @@ jobs:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: 1.20.1
+          go-version: 1.20.2
           cache: true
 
       - run: go install ./cmd/aqua

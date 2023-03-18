@@ -4,7 +4,7 @@ name: test
 on: pull_request
 
 env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
+  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/policy.yaml
   AQUA_LOG_COLOR: always
 
 permissions: {}
@@ -24,15 +24,15 @@ jobs:
         with:
           filters: |
             update-aqua-checksums:
-              - aqua.yaml
-              - aqua/*.yaml
-              - aqua-checksums.json
+              - aqua/aqua.yaml
+              - aqua/imports/*.yaml
+              - aqua/aqua-checksums.json
               - .github/workflows/test.yaml
             renovate-config-validator:
               - renovate.json5
             ghalint:
               - .github/workflows/*.yaml
-              - aqua/ghalint.yaml
+              - aqua/imports/ghalint.yaml
             go-mod-tidy:
               - go.mod
               - go.sum
@@ -145,7 +145,7 @@ jobs:
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: 1.20.1
+          go-version: 1.20.2
           cache: true
       - run: go build -o /usr/local/bin/aqua ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
@@ -173,13 +173,12 @@ jobs:
     env:
       GITHUB_TOKEN: ${{github.token}}
       AQUA_LOG_LEVEL: debug
-      AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
       AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
     steps:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: 1.20.1
+          go-version: 1.20.2
           cache: true
 
       - run: go install ./cmd/aqua
