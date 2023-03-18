@@ -1,18 +1,12 @@
 package checksum
 
 import (
-	"errors"
 	"fmt"
 	"path"
 	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/config"
-)
-
-var (
-	errUnknownChecksumFileFormat = errors.New("checksum file format is unknown")
-	ErrNoChecksumExtracted       = errors.New("no checksum is extracted")
 )
 
 type FileParser struct{}
@@ -52,7 +46,7 @@ func (parser *FileParser) parseDefault(content string) (map[string]string, strin
 		m[path.Base(strings.TrimSpace(line[idx:]))] = line[:idx]
 	}
 	if len(m) == 0 {
-		return nil, "", errNoChecksumExtracted
+		return nil, "", ErrNoChecksumExtracted
 	}
 	return m, "", nil
 }
