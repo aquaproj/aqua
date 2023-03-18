@@ -3,7 +3,7 @@ name: Integration Test on Windows
 on: workflow_dispatch
 
 env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
+  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/policy.yaml
   AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
   AQUA_LOG_COLOR: always
   AQUA_LOG_LEVEL: debug
