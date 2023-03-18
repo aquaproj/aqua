@@ -52,7 +52,7 @@ func (parser *FileParser) parseDefault(content string) (map[string]string, strin
 		m[path.Base(strings.TrimSpace(line[idx:]))] = line[:idx]
 	}
 	if len(m) == 0 {
-		return nil, "", errNoChecksumExtracted
+		return nil, "", ErrNoChecksumExtracted
 	}
 	return m, "", nil
 }

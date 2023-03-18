@@ -104,7 +104,6 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
 	case PkgInfoTypeHTTP:
 		pkgInfo.Path = nil
 		pkgInfo.Asset = nil
-	case PkgInfoTypeGo:
 	case PkgInfoTypeGoInstall:
 		pkgInfo.URL = nil
 		pkgInfo.Asset = nil

@@ -196,7 +196,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	return nil
 }
 
-func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop,funlen,gocognit
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -254,20 +254,16 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 
 	failed := false
 	notFound := false
-	logLevel := logrus.WarnLevel
-	if inst.isTest {
-		logLevel = logrus.ErrorLevel
-	}
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
 		var errFileNotFound *FileNotFoundError
-		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
+		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
 			if errors.As(err, &errFileNotFound) {
 				notFound = true
 			}
 			failed = true
-			logerr.WithError(logE, err).Log(logLevel, "check file_src is correct")
+			logerr.WithError(logE, err).Error("check file_src is correct")
 		}
 	}
 	if notFound { //nolint:nestif
@@ -276,9 +272,9 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 			logerr.WithError(logE, err).Warn("traverse the content of unarchived package")
 		} else {
 			if len(paths) > 30 { //nolint:gomnd
-				logE.Logf(logLevel, "executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n"))
+				logE.Errorf("executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n"))
 			} else {
-				logE.Logf(logLevel, "executable files aren't found\nFiles in the unarchived package:\n%s\n ", strings.Join(paths, "\n"))
+				logE.Errorf("executable files aren't found\nFiles in the unarchived package:\n%s\n ", strings.Join(paths, "\n"))
 			}
 		}
 	}
@@ -322,8 +318,8 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
+func (inst *InstallerImpl) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+	exePath, err := inst.checkFileSrc(pkg, file, logE)
 	if err != nil {
 		return fmt.Errorf("check file_src is correct: %w", err)
 	}
