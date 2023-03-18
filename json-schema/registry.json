@@ -413,6 +413,9 @@
         },
         "private": {
           "type": "boolean"
+        },
+        "no_asset": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -587,6 +590,12 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
+        },
+        "error_message": {
+          "type": "string"
+        },
+        "no_asset": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,

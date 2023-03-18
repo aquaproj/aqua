@@ -2,10 +2,12 @@ package installpackage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
@@ -28,36 +30,41 @@ import (
 const proxyName = "aqua-proxy"
 
 type InstallerImpl struct {
-	rootDir            string
-	maxParallelism     int
-	downloader         download.ClientAPI
-	checksumDownloader download.ChecksumDownloader
-	checksumFileParser *checksum.FileParser
-	checksumCalculator ChecksumCalculator
-	runtime            *runtime.Runtime
-	fs                 afero.Fs
-	linker             domain.Linker
-	executor           Executor
-	unarchiver         Unarchiver
-	cosign             cosign.Verifier
-	slsaVerifier       slsa.Verifier
-	progressBar        bool
-	onlyLink           bool
-	copyDir            string
-	policyChecker      policy.Checker
-	cosignInstaller    *Cosign
+	rootDir               string
+	maxParallelism        int
+	downloader            download.ClientAPI
+	checksumDownloader    download.ChecksumDownloader
+	checksumFileParser    *checksum.FileParser
+	checksumCalculator    ChecksumCalculator
+	runtime               *runtime.Runtime
+	fs                    afero.Fs
+	linker                domain.Linker
+	executor              Executor
+	unarchiver            unarchive.Unarchiver
+	cosign                cosign.Verifier
+	slsaVerifier          slsa.Verifier
+	progressBar           bool
+	onlyLink              bool
+	copyDir               string
+	policyChecker         policy.Checker
+	cosignInstaller       *Cosign
+	slsaVerifierInstaller *SLSAVerifier
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	installer := newInstaller(param, downloader, rt, fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier)
 	installer.cosignInstaller = &Cosign{
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
+		mutex:     &sync.Mutex{},
+	}
+	installer.slsaVerifierInstaller = &SLSAVerifier{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
 		mutex:     &sync.Mutex{},
 	}
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
@@ -106,18 +113,6 @@ type ParamInstallPackage struct {
 	Checksum        *checksum.Checksum
 }
 
-type Unarchiver interface {
-	Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
-}
-
-type MockUnarchiver struct {
-	Err error
-}
-
-func (unarchiver *MockUnarchiver) Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error {
-	return unarchiver.Err
-}
-
 type ChecksumCalculator interface {
 	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
 }
@@ -133,7 +128,7 @@ func (inst *InstallerImpl) SetCopyDir(copyDir string) {
 func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
 	if !param.SkipLink {
-		if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
+		if failedCreateLinks := inst.createLinks(logE, pkgs); failedCreateLinks {
 			failed = failedCreateLinks
 		}
 	}
@@ -201,7 +196,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	return nil
 }
 
-func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop,funlen,gocognit
 	pkg := param.Pkg
 	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
@@ -211,6 +206,15 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		"registry":        pkg.Package.Registry,
 	})
 	logE.Debug("install the package")
+
+	if pkgInfo.NoAsset != nil && *pkgInfo.NoAsset {
+		logE.Error(fmt.Sprintf("failed to install a package %s@%s. No asset is released in this version", pkg.Package.Name, pkg.Package.Version))
+		return errors.New("")
+	}
+	if pkgInfo.ErrorMessage != "" {
+		logE.Error(fmt.Sprintf("failed to install a package %s@%s. %s", pkg.Package.Name, pkg.Package.Version, pkgInfo.ErrorMessage))
+		return errors.New("")
+	}
 
 	if err := inst.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
 		Pkg:           param.Pkg,
@@ -248,12 +252,38 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		return err
 	}
 
+	failed := false
+	notFound := false
+	logLevel := logrus.WarnLevel
+	if inst.isTest {
+		logLevel = logrus.ErrorLevel
+	}
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
-		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
-			return fmt.Errorf("check file_src is correct: %w", err)
+		var errFileNotFound *FileNotFoundError
+		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
+			if errors.As(err, &errFileNotFound) {
+				notFound = true
+			}
+			failed = true
+			logerr.WithError(logE, err).Log(logLevel, "check file_src is correct")
 		}
+	}
+	if notFound { //nolint:nestif
+		paths, err := inst.walk(pkgPath)
+		if err != nil {
+			logerr.WithError(logE, err).Warn("traverse the content of unarchived package")
+		} else {
+			if len(paths) > 30 { //nolint:gomnd
+				logE.Logf(logLevel, "executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n"))
+			} else {
+				logE.Logf(logLevel, "executable files aren't found\nFiles in the unarchived package:\n%s\n ", strings.Join(paths, "\n"))
+			}
+		}
+	}
+	if failed {
+		return errors.New("check file_src is correct")
 	}
 
 	return nil
@@ -292,8 +322,8 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *InstallerImpl) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	exePath, err := inst.checkFileSrc(pkg, file, logE)
+func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
 	if err != nil {
 		return fmt.Errorf("check file_src is correct: %w", err)
 	}
@@ -322,7 +352,9 @@ func (inst *InstallerImpl) checkFileSrc(pkg *config.Package, file *registry.File
 	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
-		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, logE.Data))
+		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(&FileNotFoundError{
+			err: err,
+		}, logE.Data))
 	}
 	if finfo.IsDir() {
 		return "", logerr.WithFields(errExePathIsDirectory, logE.Data) //nolint:wrapcheck

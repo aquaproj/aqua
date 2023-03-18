@@ -93,6 +93,7 @@ func TestInstallerImpl_extractChecksum(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
+	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
@@ -106,7 +107,7 @@ func TestInstallerImpl_extractChecksum(t *testing.T) { //nolint:funlen
 			if d.runtime != nil {
 				inst.runtime = d.runtime
 			}
-			c, err := inst.extractChecksum(d.pkg, d.assetName, d.checksumFile)
+			c, err := inst.extractChecksum(logE, d.pkg, d.assetName, d.checksumFile)
 			if err != nil {
 				if d.isErr {
 					return

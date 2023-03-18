@@ -39,6 +39,7 @@ type PackageInfo struct {
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
+	NoAsset            *bool              `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
@@ -48,6 +49,7 @@ type PackageInfo struct {
 	Private            bool               `json:"private,omitempty"`
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	ErrorMessage       string             `json:"-" yaml:"-"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
@@ -80,13 +82,45 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		Cosign:             pkgInfo.Cosign,
 		SLSAProvenance:     pkgInfo.SLSAProvenance,
 		Private:            pkgInfo.Private,
+		ErrorMessage:       pkgInfo.ErrorMessage,
+		NoAsset:            pkgInfo.NoAsset,
 	}
 	return pkg
+}
+
+func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
+	switch typ {
+	case PkgInfoTypeGitHubRelease:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+	case PkgInfoTypeGitHubContent:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGitHubArchive:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+		pkgInfo.Format = ""
+	case PkgInfoTypeHTTP:
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGo:
+	case PkgInfoTypeGoInstall:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+		pkgInfo.WindowsExt = ""
+		pkgInfo.CompleteWindowsExt = nil
+		pkgInfo.Cosign = nil
+		pkgInfo.SLSAProvenance = nil
+		pkgInfo.Format = ""
+		pkgInfo.Rosetta2 = nil
+	}
 }
 
 func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
 	pkg := pkgInfo.Copy()
 	if child.Type != "" {
+		pkg.resetByPkgType(child.Type)
 		pkg.Type = child.Type
 	}
 	if child.RepoOwner != "" {
@@ -149,10 +183,16 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.SLSAProvenance != nil {
 		pkg.SLSAProvenance = child.SLSAProvenance
 	}
+	if child.ErrorMessage != "" {
+		pkg.ErrorMessage = child.ErrorMessage
+	}
+	if child.NoAsset != nil {
+		pkg.NoAsset = child.NoAsset
+	}
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop
+func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
 	for _, fo := range pkgInfo.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
 			pkgInfo.Format = fo.Format
@@ -163,6 +203,11 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	ov := pkgInfo.getOverride(rt)
 	if ov == nil {
 		return
+	}
+
+	if ov.Type != "" {
+		pkgInfo.resetByPkgType(ov.Type)
+		pkgInfo.Type = ov.Type
 	}
 
 	if pkgInfo.Replacements == nil {
@@ -204,9 +249,6 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.WindowsExt != "" {
 		pkgInfo.WindowsExt = ov.WindowsExt
 	}
-	if ov.Type != "" {
-		pkgInfo.Type = ov.Type
-	}
 	if ov.Cosign != nil {
 		pkgInfo.Cosign = ov.Cosign
 	}
@@ -238,6 +280,8 @@ type VersionOverride struct {
 	Checksum           *Checksum       `json:"checksum,omitempty"`
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 }
 
 type FormatOverrides []*FormatOverride

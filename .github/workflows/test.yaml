@@ -33,6 +33,10 @@ jobs:
             ghalint:
               - .github/workflows/*.yaml
               - aqua/ghalint.yaml
+            go-mod-tidy:
+              - go.mod
+              - go.sum
+              - "**.go"
 
   update-aqua-checksums:
     # Update aqua-checksums.json and push a commit
@@ -54,10 +58,10 @@ jobs:
       - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
         # Install ghcp
         with:
-          aqua_version: v1.33.0
+          aqua_version: v1.36.1
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
-      - uses: aquaproj/update-checksum-action@d5d72955a3da19ccf7b9ecb8080bc92247fd6633 # v0.2.1
+      - uses: aquaproj/update-checksum-action@2fb7f676d407d4fb8c2c466c19d09d3ddec4f82f # v0.2.2
         with:
           prune: true
           skip_push: ${{github.event.pull_request.head.repo.fork}}
@@ -86,7 +90,7 @@ jobs:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
       - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
         with:
-          aqua_version: v1.33.0
+          aqua_version: v1.36.1
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: ghalint run
@@ -139,7 +143,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: 1.20.1
           cache: true
@@ -153,6 +157,17 @@ jobs:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: go test -v ./... -race -covermode=atomic
 
+  go-mod-tidy:
+    uses: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml@8facac38f5b2008648c14e31c632c3a709439b9c # v0.1.1
+    with:
+      go-version: 1.20.2
+      aqua_version: v1.36.1
+    secrets:
+      gh_app_id: ${{secrets.APP_ID}}
+      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
+    permissions:
+      contents: read
+
   integration-test:
     runs-on: ubuntu-latest
     env:
@@ -161,8 +176,8 @@ jobs:
       AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua-policy.yaml
       AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: 1.20.1
           cache: true

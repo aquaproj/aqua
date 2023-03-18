@@ -9,7 +9,6 @@ import (
 
 	"github.com/aquaproj/aqua/pkg/download"
 	"github.com/aquaproj/aqua/pkg/unarchive"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -99,10 +98,9 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	httpDownloader := download.NewHTTPDownloader(http.DefaultClient)
-	unarchiver := &unarchive.Unarchiver{}
+	unarchiver := &unarchive.UnarchiverImpl{}
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
@@ -116,7 +114,7 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 				t.Fatal(err)
 			}
 			d.src.Body = body
-			if err := unarchiver.Unarchive(d.src, t.TempDir(), logE, fs, nil); err != nil {
+			if err := unarchiver.Unarchive(d.src, t.TempDir(), fs, nil); err != nil {
 				if d.isErr {
 					return
 				}

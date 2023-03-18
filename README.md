@@ -8,19 +8,17 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/aquaproj/aqua.svg)](https://github.com/aquaproj/aqua)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/aquaproj/aqua/main/LICENSE)
 
-Declarative CLI Version manager. Support `Lazy Install` and shareable configuration mechanism named `Registry`. Switch versions seamlessly.
+[Document](https://aquaproj.github.io/) | [Contributing](CONTRIBUTING.md) | [Logo](logo)
 
-## Document
+Declarative CLI Version Manager written in Go.
 
-https://aquaproj.github.io/
-
-## Contributing
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Logo
-
-About logo, please see [logo](logo).
+- Switch tool versions per project
+- Unify tool versions and how to install in your teams and CI
+- Continuous update by Renovate
+- Lazy Install
+- Ecosystem by Registry
+- Secure
+- Easy to use
 
 ## License
 
