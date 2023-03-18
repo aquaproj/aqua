@@ -161,13 +161,28 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.0/cmdx_darwin_arm64.tar.gz",
+      "checksum": "B54CD0914EA790F8EDB115B118182104B50C5E4788C2D084C2E61CF8F73E260A",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.0/cmdx_linux_amd64.tar.gz",
       "checksum": "0AD4FCC74BE1627061E5BA49257C43949328695E37D77639A0C8948966E2C4BC",
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.0/cmdx_linux_arm64.tar.gz",
+      "checksum": "78E6682CA96D0C5FB3DC0D1D70A13B673FECA602D14A260D8BFCCCB413FEF021",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.0/cmdx_windows_amd64.tar.gz",
       "checksum": "AB322D17CC61EA79D196D7A4B6F5F81984C4D39AC72BF87B96B4EF43595C4094",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.0/cmdx_windows_arm64.tar.gz",
+      "checksum": "789957A4817C03F2D400C08C2CB41A0E7C5F68F6B642FAE1544CF9C9F2EEA557",
       "algorithm": "sha256"
     },
     {
@@ -201,8 +216,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v3.145.0/registry.yaml",
-      "checksum": "1D0839E326E200B41D52D2A0A028317A74E2C56D3351BD01813E9F7418183AA88E35C630CFEAA6FD02EDEB2561F2B0D1B0ACD99A5BAB963FB0709ACFEBC28EAE",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v3.145.1/registry.yaml",
+      "checksum": "E5ECF92E6CBEBC45B03269D46B4086AECA9528162CE577BFC14A5CE1E4F0ECAB32ACC5EB7BBB03044628DC3C93CB7AEE7EB3B4268EF03415F76741452FF898BB",
       "algorithm": "sha512"
     }
   ]
