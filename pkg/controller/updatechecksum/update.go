@@ -32,7 +32,6 @@ type Controller struct {
 	chkDL              download.ChecksumDownloader
 	parser             *checksum.FileParser
 	downloader         download.ClientAPI
-	deep               bool
 	prune              bool
 }
 
@@ -48,7 +47,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		chkDL:              chkDL,
 		parser:             &checksum.FileParser{},
 		downloader:         pkgDownloader,
-		deep:               param.Deep,
 		prune:              param.Prune,
 	}
 }
@@ -235,10 +233,6 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 	pkgInfo := pkg.PackageInfo
 
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		if !ctrl.deep {
-			logE.Debug("chekcsum isn't supported")
-			return nil
-		}
 		if err := ctrl.dlAssetAndGetChecksum(ctx, logE, checksums, pkg, rt); err != nil {
 			return err
 		}
