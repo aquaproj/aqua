@@ -14,7 +14,6 @@ const configTemplate = `---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
 # checksum:
-#   # https://aquaproj.github.io/docs/reference/checksum/
 #   enabled: true
 #   require_checksum: true
 #   supported_envs:
