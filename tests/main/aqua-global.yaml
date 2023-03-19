@@ -11,13 +11,7 @@ registries:
   repo_name: aqua-registry
   path: registry.yaml
 packages:
-- name: cmdx
-  registry: local
-  version: v1.6.1 # renovate: depName=suzuki-shunsuke/cmdx
 - name: x-motemen/ghq@v1.3.0
-- name: golangci-lint # local registry
-  registry: local
-  version: v1.50.1 # renovate: depName=golangci/golangci-lint
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard # standard registry
   version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
@@ -35,13 +29,6 @@ packages:
 - name: tfutils/tfenv@v3.0.0
   # github_archive package
   registry: local
-- name: aristocratos/btop@v1.2.12
-  # replacements_overrides
-  registry: local
-- name: ahmetb/kubens
-  # alias
-  registry: local
-  version: v0.9.4 # renovate: depName=ahmetb/kubectx
 - name: katbyte/terrafmt@v0.5.2
   # type: go_install
   registry: local
