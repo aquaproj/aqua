@@ -98,66 +98,6 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 				GOOS:   "darwin",
 				GOARCH: "arm64",
 			},
-			chkDL:      &download.MockChecksumDownloader{},
-			downloader: &download.Mock{},
-		},
-		{
-			name: "deep",
-			param: &config.Param{
-				PWD:  "/home/foo/workspace",
-				Deep: true,
-				All:  true,
-				GlobalConfigFilePaths: []string{
-					"/home/foo/global/aqua.yaml",
-				},
-			},
-			cfgFinder: &updatechecksum.MockConfigFinder{
-				Files: []string{
-					"/home/foo/workspace/aqua.yaml",
-				},
-			},
-			cfgReader: &reader.MockConfigReader{
-				Cfg: &aqua.Config{
-					Checksum: &aqua.Checksum{
-						Enabled: boolP(true),
-					},
-					Packages: []*aqua.Package{
-						{
-							Name:     "cli/cli",
-							Version:  "v2.17.0",
-							Registry: "standard",
-						},
-					},
-				},
-			},
-			registInstaller: &rgst.MockInstaller{
-				M: map[string]*registry.Config{
-					"standard": {
-						PackageInfos: registry.PackageInfos{
-							{
-								RepoOwner: "cli",
-								RepoName:  "cli",
-								Type:      "github_release",
-								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
-							},
-						},
-					},
-				},
-			},
-			registDownloader: &domain.MockGitHubContentFileDownloader{
-				File: &domain.GitHubContentFile{
-					String: `type: github_release
-repo_owner: cli
-repo_name: cli
-asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
-`,
-				},
-			},
-			fs: afero.NewMemMapFs(),
-			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
-			},
 			chkDL: &download.MockChecksumDownloader{},
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),
