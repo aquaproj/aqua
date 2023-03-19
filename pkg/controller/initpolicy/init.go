@@ -11,7 +11,7 @@ import (
 
 const configTemplate = `---
 # aqua Policy
-# https://aquaproj.github.io/docs/tutorial-extras/policy-as-code
+# https://aquaproj.github.io/
 registries:
 - type: standard
   ref: semver(">= 3.0.0")
