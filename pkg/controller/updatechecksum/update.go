@@ -179,6 +179,10 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 }
 
 func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	if pkg.PackageInfo.Type == "go_install" {
+		logE.Debug("skip updating go_install package's checksum")
+		return nil
+	}
 	logE.Info("updating a package checksum")
 	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
