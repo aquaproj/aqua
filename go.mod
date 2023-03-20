@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/adrg/xdg v0.4.0
-	github.com/antonmedv/expr v1.12.3
+	github.com/antonmedv/expr v1.12.4
 	github.com/codingsince1985/checksum v1.3.0
 	github.com/goccy/go-yaml v1.10.0
 	github.com/google/go-cmp v0.5.9
