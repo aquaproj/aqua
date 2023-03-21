@@ -190,6 +190,7 @@ type Param struct {
 	SkipLink              bool
 	Pin                   bool
 	Prune                 bool
+	RequireChecksum       bool
 	PolicyConfigFilePaths []string
 }
 

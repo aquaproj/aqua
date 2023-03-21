@@ -26,6 +26,7 @@ type Controller struct {
 	which              which.Controller
 	installer          Installer
 	policyConfigReader policy.ConfigReader
+	requireChecksum    bool
 }
 
 func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader) *Controller {
@@ -37,6 +38,7 @@ func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *ru
 		which:              whichCtrl,
 		installer:          installer,
 		policyConfigReader: policyConfigReader,
+		requireChecksum:    param.RequireChecksum,
 	}
 }
 

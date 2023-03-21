@@ -95,14 +95,15 @@ type Installer interface {
 }
 
 type ParamInstallPackages struct {
-	ConfigFilePath string
-	Config         *aqua.Config
-	Registries     map[string]*registry.Config
-	Tags           map[string]struct{}
-	ExcludedTags   map[string]struct{}
-	SkipLink       bool
-	PolicyConfigs  []*policy.Config
-	Checksums      *checksum.Checksums
+	ConfigFilePath  string
+	Config          *aqua.Config
+	Registries      map[string]*registry.Config
+	Tags            map[string]struct{}
+	ExcludedTags    map[string]struct{}
+	PolicyConfigs   []*policy.Config
+	Checksums       *checksum.Checksums
+	SkipLink        bool
+	RequireChecksum bool
 }
 
 type ParamInstallPackage struct {
@@ -182,7 +183,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 			if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
-				RequireChecksum: param.Config.RequireChecksum(),
+				RequireChecksum: param.Config.RequireChecksum(param.RequireChecksum),
 				PolicyConfigs:   param.PolicyConfigs,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
