@@ -164,7 +164,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 			paramVerifyChecksum.ChecksumID = cid
 			// Even if SLSA Provenance is enabled checksum verification is run
 			paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
-			if paramVerifyChecksum.Checksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+			if paramVerifyChecksum.Checksum == nil && param.RequireChecksum {
 				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
 					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
 				})

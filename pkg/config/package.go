@@ -181,7 +181,6 @@ type Param struct {
 	Tags                  map[string]struct{}
 	ExcludedTags          map[string]struct{}
 	OnlyLink              bool
-	IsTest                bool
 	All                   bool
 	Insert                bool
 	SelectVersion         bool

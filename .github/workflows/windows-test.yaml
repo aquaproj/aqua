@@ -40,7 +40,7 @@ jobs:
         working-directory: tests/main
       - run: cmdx -v
         working-directory: tests/main
-      - run: aqua i --test
+      - run: aqua i
         working-directory: tests/main
       - run: aqua which golangci-lint
         working-directory: tests/main
@@ -56,8 +56,6 @@ jobs:
       - run: ghq -version
       - run: gh version
       - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
-      - run: wire --help
-      - run: gox --help
       - run: github-compare -v
       - run: helm version
       - run: terrafmt version
@@ -71,10 +69,6 @@ jobs:
         run: aqua gr cli/cli
       - name: "Test generate-registry (rust)"
         run: aqua gr XAMPPRocky/tokei
-
-      - name: "test version_source: github_tag"
-        run: aqua -c aqua-global.yaml g local,mitchellh/gox
-        working-directory: tests/main
 
       # Test if global configuration files are read in `aqua list` and `aqua g`
       - run: aqua g suzuki-shunsuke/cmdx
@@ -118,7 +112,7 @@ jobs:
         working-directory: tests/main
       - run: cmdx -v
         working-directory: tests/main
-      - run: aqua i --test
+      - run: aqua i
         working-directory: tests/main
       - run: aqua which golangci-lint
         working-directory: tests/main
@@ -134,8 +128,6 @@ jobs:
       - run: ghq -version
       - run: gh version
       - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
-      - run: wire --help
-      - run: gox --help
       - run: github-compare -v
       - run: terrafmt version
       - run: helm version
@@ -149,10 +141,6 @@ jobs:
         run: aqua gr cli/cli
       - name: "Test generate-registry (rust)"
         run: aqua gr XAMPPRocky/tokei
-
-      - name: "test version_source: github_tag"
-        run: aqua -c aqua-global.yaml g local,mitchellh/gox
-        working-directory: tests/main
 
       # Test if global configuration files are read in `aqua list` and `aqua g`
       - run: aqua g suzuki-shunsuke/cmdx

@@ -198,20 +198,13 @@ jobs:
       - run: aqua list
       - run: aqua update-checksum
         working-directory: tests/main
-      - run: aqua update-checksum -deep
-        working-directory: tests/main
       - run: aqua update-checksum -prune
         working-directory: tests/main
       - run: aqua i -l -a
         working-directory: tests/main
-      - run: cmdx -v
-        working-directory: tests/main
-      - run: aqua i --test
-        working-directory: tests/main
-      - run: aqua which golangci-lint
+      - run: aqua i
         working-directory: tests/main
       - run: aqua which go
-      - run: golangci-lint version
       - run: kind version
         working-directory: tests/main
       - run: kind version
@@ -223,12 +216,6 @@ jobs:
       - run: gh version
       - run: tfenv --version
       - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
-      - run: btop -v
-      - run: btop -v
-        env:
-          AQUA_EXPERIMENTAL_X_SYS_EXEC: "true"
-      - run: wire --help
-      - run: gox --help
       - run: bats -v
       - run: helm version
       - run: github-compare -v
@@ -264,16 +251,10 @@ jobs:
       - name: Test generate-registry (specify version)
         run: aqua gr suzuki-shunsuke/tfcmt@v3.2.4
 
-      - name: "test version_source: github_tag"
-        run: aqua -c aqua-global.yaml g local,mitchellh/gox
-        working-directory: tests/main
-
       - name: test aqua cp
-        run: aqua cp actionlint golangci-lint
+        run: aqua cp actionlint
       - name: test aqua cp
         run: dist/actionlint -version
-      - name: test aqua cp
-        run: dist/golangci-lint version
       - name: test aqua cp
         run: aqua cp
       - name: test aqua cp -a
@@ -314,8 +295,6 @@ jobs:
       - run: aqua update-checksum -a
 
       # Test if global configuration files are read in `aqua list` and `aqua g`
-      - run: aqua g suzuki-shunsuke/cmdx
-        working-directory: /tmp
       - run: aqua list
         working-directory: /tmp
 
