@@ -165,7 +165,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	osEnv := osenv.New()
 	controllerImpl := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	controller := exec2.New(installerImpl, controllerImpl, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl)
+	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl)
 	return controller
 }
 

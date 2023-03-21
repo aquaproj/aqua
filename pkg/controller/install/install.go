@@ -29,10 +29,11 @@ type Controller struct {
 	registryInstaller  registry.Installer
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
-	skipLink           bool
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
 	policyConfigReader policy.ConfigReader
+	skipLink           bool
+	requireChecksum    bool
 }
 
 func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader) *Controller {
@@ -48,6 +49,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		tags:               param.Tags,
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
+		requireChecksum:    param.RequireChecksum,
 	}
 }
 
@@ -129,13 +131,14 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 	}
 
 	return ctrl.packageInstaller.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
-		Config:         cfg,
-		Registries:     registryContents,
-		ConfigFilePath: cfgFilePath,
-		SkipLink:       ctrl.skipLink,
-		Tags:           ctrl.tags,
-		ExcludedTags:   ctrl.excludedTags,
-		PolicyConfigs:  policyConfigs,
-		Checksums:      checksums,
+		Config:          cfg,
+		Registries:      registryContents,
+		ConfigFilePath:  cfgFilePath,
+		SkipLink:        ctrl.skipLink,
+		Tags:            ctrl.tags,
+		ExcludedTags:    ctrl.excludedTags,
+		PolicyConfigs:   policyConfigs,
+		Checksums:       checksums,
+		RequireChecksum: ctrl.requireChecksum,
 	})
 }
