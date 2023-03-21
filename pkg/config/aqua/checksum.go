@@ -17,18 +17,7 @@ func (cfg *Config) RequireChecksum(defValue bool) bool {
 }
 
 type Checksum struct {
-	Enabled *bool `json:"enabled,omitempty"`
-	// RequireChecksumInAdvance bool               `yaml:"require_checksum_in_advance" json:"-"`
-	// CreateJSON               bool               `yaml:"create_json" json:"-"`
-	RequireChecksum *bool `yaml:"require_checksum" json:"require_checksum,omitempty"`
-	// SaveCalculatedChecksum   bool               `yaml:"save_calculated_checksum" json:"-"`
-	// Excludes                 []*ChekcsumExclude `json:"-"`
-	SupportedEnvs registry.SupportedEnvs `yaml:"supported_envs" json:"supported_envs,omitempty"`
+	Enabled         *bool                  `json:"enabled,omitempty"`
+	RequireChecksum *bool                  `yaml:"require_checksum" json:"require_checksum,omitempty"`
+	SupportedEnvs   registry.SupportedEnvs `yaml:"supported_envs" json:"supported_envs,omitempty"`
 }
-
-// type ChekcsumExclude struct {
-// 	Name     string   `json:"name,omitempty"`
-// 	Registry string   `json:"registry,omitempty"`
-// 	Version  string   `json:"version,omitempty"`
-// 	Envs     []string `json:"envs,omitempty"`
-// }
