@@ -9,13 +9,9 @@ func (cfg *Config) ChecksumEnabled() bool {
 	return cfg.Checksum.GetEnabled()
 }
 
-func (cfg *Config) RequireChecksum() bool {
-	if cfg == nil || cfg.Checksum == nil {
-		return false
-	}
-	if cfg.Checksum.RequireChecksum == nil {
-		// enable by default
-		return true
+func (cfg *Config) RequireChecksum(defValue bool) bool {
+	if cfg == nil || cfg.Checksum == nil || cfg.Checksum.RequireChecksum == nil {
+		return defValue
 	}
 	return *cfg.Checksum.RequireChecksum
 }

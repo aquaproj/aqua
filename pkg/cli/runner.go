@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -72,6 +73,14 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
 	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
+
+	if a := os.Getenv("AQUA_REQUIRE_CHECKSUM"); a != "" {
+		requireChecksum, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_REQUIRE_CHECKSUM as bool: %w", err)
+		}
+		param.RequireChecksum = requireChecksum
+	}
 	return nil
 }
 
