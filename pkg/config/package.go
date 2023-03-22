@@ -190,6 +190,7 @@ type Param struct {
 	Pin                   bool
 	Prune                 bool
 	RequireChecksum       bool
+	DisablePolicy         bool
 	PolicyConfigFilePaths []string
 }
 
