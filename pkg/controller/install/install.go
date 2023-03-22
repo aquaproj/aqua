@@ -70,13 +70,9 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	var policyCfgs []*policy.Config
-	if !param.DisablePolicy {
-		p, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths)
-		if err != nil {
-			return fmt.Errorf("read policy files: %w", err)
-		}
-		policyCfgs = p
+	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy)
+	if err != nil {
+		return fmt.Errorf("read policy files: %w", err)
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {

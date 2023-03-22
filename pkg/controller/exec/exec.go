@@ -68,7 +68,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
-		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePaths); err != nil {
+		if err := ctrl.validate(findResult.Package, param.DisablePolicy, param.PolicyConfigFilePaths); err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"policy_files": param.PolicyConfigFilePaths,
 			})
@@ -80,8 +80,8 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
 }
 
-func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []string) error {
-	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths)
+func (ctrl *Controller) validate(pkg *config.Package, disablePolicy bool, policyConfigFilePaths []string) error {
+	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths, disablePolicy)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
