@@ -19,7 +19,7 @@ func NewConfigReader(fs afero.Fs) *ConfigReaderImpl {
 }
 
 type ConfigReader interface {
-	Read([]string) ([]*Config, error)
+	Read(policyConfigFiles []string, disablePolicy bool) ([]*Config, error)
 }
 
 type MockConfigReader struct {
@@ -27,11 +27,14 @@ type MockConfigReader struct {
 	Err  error
 }
 
-func (reader *MockConfigReader) Read(files []string) ([]*Config, error) {
+func (reader *MockConfigReader) Read(files []string, disablePolicy bool) ([]*Config, error) {
 	return reader.Cfgs, reader.Err
 }
 
-func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
+func (reader *ConfigReaderImpl) Read(files []string, disablePolicy bool) ([]*Config, error) {
+	if disablePolicy {
+		return nil, nil
+	}
 	if len(files) == 0 {
 		return reader.readDefault()
 	}

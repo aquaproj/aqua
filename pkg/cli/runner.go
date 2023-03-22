@@ -34,7 +34,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error {
+func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error { //nolint:funlen
 	param.Args = c.Args().Slice()
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
@@ -70,10 +70,19 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
-	param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
 	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
 
+	if a := os.Getenv("AQUA_DISABLE_POLICY"); a != "" {
+		disablePolicy, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_DISABLE_POLICY as bool: %w", err)
+		}
+		param.DisablePolicy = disablePolicy
+	}
+	if !param.DisablePolicy {
+		param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
+	}
 	if a := os.Getenv("AQUA_REQUIRE_CHECKSUM"); a != "" {
 		requireChecksum, err := strconv.ParseBool(a)
 		if err != nil {
