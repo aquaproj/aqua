@@ -35,6 +35,9 @@ func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 	if len(files) == 0 {
 		return reader.readDefault()
 	}
+	if len(files) == 1 && files[0] == "disabled" {
+		return []*Config{}, nil
+	}
 	policyCfgs := make([]*Config, len(files))
 	for i, cfgFilePath := range files {
 		policyCfg := &Config{
@@ -96,6 +99,9 @@ func ParseEnv(env string) []string {
 	for _, s := range src {
 		if s == "" {
 			continue
+		}
+		if s == "disabled" {
+			return []string{"disabled"}
 		}
 		if _, ok := m[s]; ok {
 			continue
