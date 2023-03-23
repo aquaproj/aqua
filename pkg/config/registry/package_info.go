@@ -30,7 +30,7 @@ type PackageInfo struct {
 	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
 	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
-	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`

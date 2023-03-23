@@ -1,6 +1,7 @@
 package unarchive
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -20,7 +21,7 @@ type ProgressBarOpts struct {
 }
 
 type Unarchiver2 interface {
-	Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
+	Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
 }
 
 type File struct {
@@ -35,13 +36,13 @@ func New() *Unarchiver {
 	return &Unarchiver{}
 }
 
-func (unarchiver *Unarchiver) Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+func (unarchiver *Unarchiver) Unarchive(ctx context.Context, src *File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *ProgressBarOpts) error {
 	arc, err := getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	return arc.Unarchive(fs, src.Body, prgOpts) //nolint:wrapcheck
+	return arc.Unarchive(ctx, fs, src.Body, prgOpts) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
@@ -59,6 +60,11 @@ func getUnarchiver(src *File, dest string) (Unarchiver2, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
+			dest: filepath.Join(dest, filename),
+		}, nil
+	}
+	if src.Type == "dmg" {
+		return &dmgUnarchiver{
 			dest: filepath.Join(dest, filename),
 		}, nil
 	}
