@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
+//nolint:funlen
 func Test_getUnarchiver(t *testing.T) {
 	t.Parallel()
 	data := []struct {

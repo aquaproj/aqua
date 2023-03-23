@@ -69,6 +69,7 @@ func hdiutilDetach(ctx context.Context, exe *Executor, mountPath string) (int, e
 	cmd := exe.command(exec.Command("hdiutil", "detach", mountPath, "-quiet"))
 	return exe.exec(ctx, cmd)
 }
+
 func (exe *Executor) HdiutilAttach(ctx context.Context, dmgPath, mountPoint string) (int, func(ctx context.Context, exe *Executor, mountPath string) (int, error), error) {
 	cmd := exe.command(exec.Command("hdiutil", "attach", dmgPath, "-mountpoint", mountPoint, "-quiet"))
 	exit, err := exe.exec(ctx, cmd)

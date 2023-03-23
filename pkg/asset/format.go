@@ -7,12 +7,12 @@ import (
 	"github.com/mholt/archiver/v3"
 )
 
-const formatRaw = "raw"
-
-var formatOtherFormats = map[string]struct{}{unarchive.FormatDMG: {}, formatRaw: {}}
+const formatRaw string = "raw"
 
 // mholt/archiver/v3 not support but aqua support
 func getSupportOtherFormat(assetName string) string {
+	formatOtherFormats := map[string]struct{}{unarchive.FormatDMG: {}, formatRaw: {}}
+
 	ext := strings.TrimPrefix(assetName, ".")
 	if _, ok := formatOtherFormats[ext]; ok {
 		return ext

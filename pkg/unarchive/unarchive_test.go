@@ -119,7 +119,7 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 				t.Fatal(err)
 			}
 			d.src.Body = body
-			if err := unarchiver.Unarchive(context.Background(), d.src, t.TempDir(), fs, nil); err != nil {
+			if err := unarchiver.Unarchive(ctx, d.src, t.TempDir(), fs, nil); err != nil {
 				if d.isErr {
 					return
 				}
