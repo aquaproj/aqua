@@ -286,7 +286,7 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 		})
 		return nil
 	}
-	m, s, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
+	m, s, err := ctrl.parser.ParseChecksumFile(checksumFile, pkgInfo.Checksum)
 	if err != nil {
 		return fmt.Errorf("parse a checksum file: %w", err)
 	}
