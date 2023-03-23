@@ -1,6 +1,7 @@
 package unarchive
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -14,12 +15,7 @@ type rawUnarchiver struct {
 	dest string
 }
 
-const (
-	dirPermission  os.FileMode = 0o775
-	filePermission os.FileMode = 0o755
-)
-
-func (unarchiver *rawUnarchiver) Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (unarchiver *rawUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
 	if err := fs.MkdirAll(filepath.Dir(dest), dirPermission); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
