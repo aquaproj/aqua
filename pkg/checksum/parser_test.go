@@ -113,7 +113,7 @@ d3e8e4d8da6b6f5e0a77335864944fc3e74c109c3d4959c976c1caec1dc1807c  ./imgpkg-windo
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			m, s, err := parser.ParseChecksumFile(d.content, d.pkg)
+			m, s, err := parser.ParseChecksumFile(d.content, d.pkg.PackageInfo.Checksum)
 			if err != nil {
 				if d.isErr {
 					return

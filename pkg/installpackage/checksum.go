@@ -2,7 +2,6 @@ package installpackage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -16,42 +15,6 @@ import (
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-func (inst *InstallerImpl) extractChecksum(logE *logrus.Entry, pkg *config.Package, assetName string, checksumFile []byte) (string, error) {
-	pkgInfo := pkg.PackageInfo
-
-	checksumFileContent := string(checksumFile)
-
-	if pkgInfo.Checksum.FileFormat == "raw" {
-		return strings.TrimSpace(checksumFileContent), nil
-	}
-
-	m, s, err := inst.checksumFileParser.ParseChecksumFile(checksumFileContent, pkg)
-	if err != nil { //nolint:nestif
-		if errors.Is(err, checksum.ErrNoChecksumExtracted) {
-			logE := logE.WithFields(logrus.Fields{
-				"checksum_file_format": pkg.PackageInfo.Checksum.FileFormat,
-			})
-			if pkgInfo.Checksum.Pattern != nil {
-				logE = logE.WithFields(logrus.Fields{
-					"checksum_pattern_checksum": pkg.PackageInfo.Checksum.Pattern.Checksum,
-					"checksum_pattern_file":     pkg.PackageInfo.Checksum.Pattern.File,
-				})
-			}
-			s := checksumFileContent
-			if len(s) > 10000 { //nolint:gomnd
-				s = checksumFileContent[:10000]
-			}
-			logE.Error(fmt.Sprintf("Checksum isn't found in a checksum file. Checksum file content:\n%s", s))
-		}
-		return "", fmt.Errorf("parse a checksum file: %w", err)
-	}
-	if s != "" {
-		return s, nil
-	}
-
-	return m[assetName], nil
-}
 
 func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
 	file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, inst.runtime, pkg)
@@ -89,14 +52,7 @@ func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logru
 		}
 	}
 
-	c, err := inst.extractChecksum(logE, pkg, assetName, b)
-	if err != nil {
-		return "", err
-	}
-	if c == "" {
-		return "", errors.New("checksum isn't found in a checksum file")
-	}
-	return c, nil
+	return inst.checksumFileParser.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
 }
 
 type ParamVerifyChecksum struct {
