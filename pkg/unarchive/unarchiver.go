@@ -1,6 +1,7 @@
 package unarchive
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -14,7 +15,7 @@ type unarchiverWithUnarchiver struct {
 	dest       string
 }
 
-func (unarchiver *unarchiverWithUnarchiver) Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
 	f, err := afero.TempFile(fs, "", "")
 	if err != nil {

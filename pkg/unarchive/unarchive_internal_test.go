@@ -51,6 +51,17 @@ func Test_getUnarchiver(t *testing.T) {
 				decompressor: archiver.NewBz2(),
 			},
 		},
+		{
+			title: "ext is dmg",
+			src: &File{
+				Type:     "dmg",
+				Filename: "yoo.dmg",
+			},
+			dest: "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo",
+			exp: &dmgUnarchiver{
+				dest: "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo/yoo.dmg",
+			},
+		},
 	}
 	for _, d := range data {
 		d := d
@@ -64,7 +75,7 @@ func Test_getUnarchiver(t *testing.T) {
 				return
 			}
 			if diff := cmp.Diff(d.exp, unarchiver, cmp.AllowUnexported(
-				rawUnarchiver{}, unarchiverWithUnarchiver{}, Decompressor{}), cmpopts.IgnoreUnexported(archiver.TarGz{}, archiver.Tar{}, archiver.Bz2{}, afero.MemMapFs{})); diff != "" {
+				rawUnarchiver{}, unarchiverWithUnarchiver{}, Decompressor{}, dmgUnarchiver{}), cmpopts.IgnoreUnexported(archiver.TarGz{}, archiver.Tar{}, archiver.Bz2{}, afero.MemMapFs{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})

@@ -48,6 +48,11 @@ func TestIsUnarchived(t *testing.T) {
 			assetName: "foo.exe",
 			exp:       true,
 		},
+		{
+			title:     ".dmg",
+			assetName: "foo.dmg",
+			exp:       false,
+		},
 	}
 	for _, d := range data {
 		d := d
@@ -116,7 +121,7 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 				t.Fatal(err)
 			}
 			d.src.Body = body
-			if err := unarchiver.Unarchive(d.src, t.TempDir(), logE, fs, nil); err != nil {
+			if err := unarchiver.Unarchive(context.Background(), d.src, t.TempDir(), logE, fs, nil); err != nil {
 				if d.isErr {
 					return
 				}

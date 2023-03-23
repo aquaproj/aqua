@@ -110,7 +110,7 @@ type ParamInstallPackage struct {
 }
 
 type Unarchiver interface {
-	Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
+	Unarchive(ctx context.Context, src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
 }
 
 type MockUnarchiver struct {
