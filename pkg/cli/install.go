@@ -44,7 +44,7 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 			},
 			&cli.BoolFlag{
 				Name:  "test",
-				Usage: "test file.src after installing the package",
+				Usage: "This flag was deprecated and had no meaning from aqua v2.0.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/1691",
 			},
 			&cli.BoolFlag{
 				Name:    "all",

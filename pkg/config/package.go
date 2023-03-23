@@ -181,7 +181,6 @@ type Param struct {
 	Tags                  map[string]struct{}
 	ExcludedTags          map[string]struct{}
 	OnlyLink              bool
-	IsTest                bool
 	All                   bool
 	Insert                bool
 	SelectVersion         bool
@@ -190,6 +189,8 @@ type Param struct {
 	SkipLink              bool
 	Pin                   bool
 	Prune                 bool
+	RequireChecksum       bool
+	DisablePolicy         bool
 	PolicyConfigFilePaths []string
 }
 

@@ -1,9 +1,10 @@
 checksum:
   enabled: true
+  require_checksum: false
 registries:
 - type: standard
   type: standard # duplicated keys
-  ref: v3.136.1 # renovate: depName=aquaproj/aqua-registry
+  ref: v3.148.0 # renovate: depName=aquaproj/aqua-registry
 - null
 
 packages:
@@ -12,4 +13,4 @@ packages:
   registry: standard # duplicated keys
   version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
 - null
-- name: cycloidio/terracognita@v0.8.1 # update-checksum -deep
+- name: cycloidio/terracognita@v0.8.3 # update-checksum -deep

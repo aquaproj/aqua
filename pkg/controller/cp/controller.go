@@ -26,6 +26,7 @@ type Controller struct {
 	which              which.Controller
 	installer          Installer
 	policyConfigReader policy.ConfigReader
+	requireChecksum    bool
 }
 
 func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader) *Controller {
@@ -37,6 +38,7 @@ func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *ru
 		which:              whichCtrl,
 		installer:          installer,
 		policyConfigReader: policyConfigReader,
+		requireChecksum:    param.RequireChecksum,
 	}
 }
 
@@ -63,7 +65,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 
 	ctrl.packageInstaller.SetCopyDir("")
 
-	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths)
+	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}

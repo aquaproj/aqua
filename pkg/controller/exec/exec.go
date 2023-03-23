@@ -28,13 +28,14 @@ type Controller struct {
 	which              which.Controller
 	packageInstaller   installpackage.Installer
 	executor           Executor
-	enabledXSysExec    bool
 	fs                 afero.Fs
 	policyConfigReader policy.ConfigReader
 	policyChecker      policy.Checker
+	enabledXSysExec    bool
+	requireChecksum    bool
 }
 
-func New(pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker) *Controller {
+func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -46,6 +47,7 @@ func New(pkgInstaller installpackage.Installer, whichCtrl which.Controller, exec
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
 		policyChecker:      policyChecker,
+		requireChecksum:    param.RequireChecksum,
 	}
 }
 
@@ -66,7 +68,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
-		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePaths); err != nil {
+		if err := ctrl.validate(findResult.Package, param.DisablePolicy, param.PolicyConfigFilePaths); err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"policy_files": param.PolicyConfigFilePaths,
 			})
@@ -78,8 +80,8 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
 }
 
-func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []string) error {
-	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths)
+func (ctrl *Controller) validate(pkg *config.Package, disablePolicy bool, policyConfigFilePaths []string) error {
+	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths, disablePolicy)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
@@ -113,7 +115,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
-		RequireChecksum: findResult.Config.RequireChecksum(),
+		RequireChecksum: findResult.Config.RequireChecksum(ctrl.requireChecksum),
 	}); err != nil {
 		return err //nolint:wrapcheck
 	}

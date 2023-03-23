@@ -68,11 +68,6 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Registry: "standard",
 						Version:  "v2.0.3",
 					},
-					{
-						Name:     "suzuki-shunsuke/github-comment",
-						Registry: "standard",
-						Version:  "v4.1.0",
-					},
 				},
 			},
 			registries: map[string]*registry.Config{
@@ -83,13 +78,6 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "ci-info",
 							Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
-						},
-						{
-							Type:        "github_release",
-							RepoOwner:   "suzuki-shunsuke",
-							RepoName:    "github-comment",
-							Asset:       stringP("github-comment_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
-							SupportedIf: stringP("false"),
 						},
 					},
 				},

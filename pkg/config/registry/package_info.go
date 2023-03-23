@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/iancoleman/orderedmap"
@@ -14,7 +15,6 @@ const (
 	PkgInfoTypeGitHubContent = "github_content"
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGo            = "go"
 	PkgInfoTypeGoInstall     = "go_install"
 )
 
@@ -35,7 +35,6 @@ type PackageInfo struct {
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
 	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
-	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
@@ -71,7 +70,6 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		FormatOverrides:    pkgInfo.FormatOverrides,
 		VersionConstraints: pkgInfo.VersionConstraints,
 		VersionOverrides:   pkgInfo.VersionOverrides,
-		SupportedIf:        pkgInfo.SupportedIf,
 		SupportedEnvs:      pkgInfo.SupportedEnvs,
 		VersionFilter:      pkgInfo.VersionFilter,
 		VersionPrefix:      pkgInfo.VersionPrefix,
@@ -90,9 +88,38 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 	return pkg
 }
 
+func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
+	switch typ {
+	case PkgInfoTypeGitHubRelease:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+	case PkgInfoTypeGitHubContent:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGitHubArchive:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+		pkgInfo.Format = ""
+	case PkgInfoTypeHTTP:
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGoInstall:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+		pkgInfo.WindowsExt = ""
+		pkgInfo.CompleteWindowsExt = nil
+		pkgInfo.Cosign = nil
+		pkgInfo.SLSAProvenance = nil
+		pkgInfo.Format = ""
+		pkgInfo.Rosetta2 = nil
+	}
+}
+
 func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
 	pkg := pkgInfo.Copy()
 	if child.Type != "" {
+		pkg.resetByPkgType(child.Type)
 		pkg.Type = child.Type
 	}
 	if child.RepoOwner != "" {
@@ -124,9 +151,6 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.FormatOverrides != nil {
 		pkg.FormatOverrides = child.FormatOverrides
-	}
-	if child.SupportedIf != nil {
-		pkg.SupportedIf = child.SupportedIf
 	}
 	if child.SupportedEnvs != nil {
 		pkg.SupportedEnvs = child.SupportedEnvs
@@ -167,7 +191,7 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop
+func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
 	for _, fo := range pkgInfo.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
 			pkgInfo.Format = fo.Format
@@ -178,6 +202,11 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	ov := pkgInfo.getOverride(rt)
 	if ov == nil {
 		return
+	}
+
+	if ov.Type != "" {
+		pkgInfo.resetByPkgType(ov.Type)
+		pkgInfo.Type = ov.Type
 	}
 
 	if pkgInfo.Replacements == nil {
@@ -219,9 +248,6 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.WindowsExt != "" {
 		pkgInfo.WindowsExt = ov.WindowsExt
 	}
-	if ov.Type != "" {
-		pkgInfo.Type = ov.Type
-	}
 	if ov.Cosign != nil {
 		pkgInfo.Cosign = ov.Cosign
 	}
@@ -243,7 +269,6 @@ type VersionOverride struct {
 	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Overrides          Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
 	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
-	SupportedIf        *string         `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
 	SupportedEnvs      SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string         `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      *string         `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
@@ -363,7 +388,7 @@ func (pkgInfo *PackageInfo) GetLink() string {
 }
 
 func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == PkgInfoTypeGitHubArchive || pkgInfo.Type == PkgInfoTypeGo {
+	if pkgInfo.Type == PkgInfoTypeGitHubArchive {
 		return "tar.gz"
 	}
 	return pkgInfo.Format
@@ -408,7 +433,7 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 		return errPkgNameIsRequired
 	}
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
+	case PkgInfoTypeGitHubArchive:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
 		}
@@ -447,28 +472,34 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 	if len(pkgInfo.Files) != 0 {
 		return pkgInfo.Files
 	}
-	if pkgInfo.HasRepo() {
+
+	if cmdName := pkgInfo.getDefaultCmdName(); cmdName != "" {
 		return []*File{
 			{
-				Name: pkgInfo.RepoName,
-			},
-		}
-	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		if pkgInfo.Asset != nil {
-			return []*File{
-				{
-					Name: *pkgInfo.Asset,
-				},
-			}
-		}
-		return []*File{
-			{
-				Name: path.Base(pkgInfo.GetPath()),
+				Name: cmdName,
 			},
 		}
 	}
 	return pkgInfo.Files
+}
+
+func (pkgInfo *PackageInfo) getDefaultCmdName() string {
+	if pkgInfo.HasRepo() {
+		if pkgInfo.Name == "" {
+			return pkgInfo.RepoName
+		}
+		if i := strings.LastIndex(pkgInfo.Name, "/"); i != -1 {
+			return pkgInfo.Name[i+1:]
+		}
+		return pkgInfo.Name
+	}
+	if pkgInfo.Type == PkgInfoTypeGoInstall {
+		if pkgInfo.Asset != nil {
+			return *pkgInfo.Asset
+		}
+		return path.Base(pkgInfo.GetPath())
+	}
+	return ""
 }
 
 func (pkgInfo *PackageInfo) SLSASourceURI() string {

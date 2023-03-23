@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
 	"github.com/aquaproj/aqua/pkg/slsa"
+	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -40,7 +41,9 @@ func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
 			param: &config.Param{
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
-			files:   map[string]string{},
+			files: map[string]string{
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua/v1.6.1/aqua_linux_amd64.tar.gz/aqua": "xxx",
+			},
 			version: "v1.6.1",
 			checksumCalculator: &installpackage.MockChecksumCalculator{
 				Checksum: "c6f3b1f37d9bf4f73e6c6dcf1bd4bb59b48447ad46d4b72e587d15f66a96ab5a",
@@ -68,7 +71,7 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 			}
 			ctrl := installpackage.New(d.param, &download.Mock{
 				RC: io.NopCloser(strings.NewReader("xxx")),
-			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &installpackage.MockUnarchiver{}, &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			}, d.rt, fs, domain.NewMockLinker(fs), nil, d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallAqua(ctx, logE, d.version); err != nil {
 				if d.isErr {
 					return

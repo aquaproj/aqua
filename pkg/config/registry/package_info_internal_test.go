@@ -43,7 +43,6 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
-				Asset:       stringP("colima-amd64"),
 				Files: []*File{
 					{
 						Name: proxyName,

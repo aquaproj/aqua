@@ -114,6 +114,9 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	if sp := ppkg.PackageInfo.SLSAProvenance; sp.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with slsa-verifier")
+		if err := inst.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
+			return err
+		}
 		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
 			RepoName:  ppkg.PackageInfo.RepoName,
@@ -161,7 +164,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 			paramVerifyChecksum.ChecksumID = cid
 			// Even if SLSA Provenance is enabled checksum verification is run
 			paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
-			if paramVerifyChecksum.Checksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+			if paramVerifyChecksum.Checksum == nil && param.RequireChecksum {
 				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
 					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
 				})
@@ -189,7 +192,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		Body:     readBody,
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),
-	}, param.Dest, logE, inst.fs, pOpts)
+	}, param.Dest, inst.fs, pOpts)
 }
 
 func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {

@@ -1,13 +1,4 @@
 packages:
-  - name: golangci-lint
-    type: github_release
-    repo_owner: golangci
-    repo_name: golangci-lint
-    asset: 'golangci-lint-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
-    files:
-      - name: golangci-lint
-        src: 'golangci-lint-{{trimV .Version}}-{{.OS}}-{{.Arch}}/golangci-lint'
-
   - type: github_release
     repo_owner: kubernetes-sigs
     repo_name: kustomize
@@ -31,17 +22,6 @@ packages:
     files:
       - name: kustomize
 
-  - name: cmdx
-    type: github_release
-    repo_owner: suzuki-shunsuke
-    repo_name: cmdx
-    rosetta2: true
-    asset: 'cmdx_{{.OS}}_{{.Arch}}.tar.gz'
-    version_constraint: 'semver(">= 1.6.1")'
-    version_overrides:
-      - version_constraint: 'semver("< 1.6.1")'
-        asset: 'cmdx_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz'
-
   - type: github_content # github_content package
     repo_owner: aquaproj
     repo_name: aqua-installer
@@ -55,72 +35,6 @@ packages:
       src: tfenv-{{trimV .Version}}/bin/tfenv
     - name: terraform
       src: tfenv-{{trimV .Version}}/bin/terraform
-
-  - type: github_release
-    repo_owner: containerd
-    repo_name: nerdctl
-    asset: 'nerdctl-{{trimV .Version}}-{{.OS}}-{{.Arch}}.tar.gz'
-    supported_if: GOOS != "darwin" # supported_if
-
-  - type: github_release
-    repo_owner: aristocratos
-    repo_name: btop
-    asset: 'btop-{{.Arch}}-{{.OS}}.tbz'
-    format: tar.bz2
-    description: 'A monitor of resources'
-    replacements:
-      linux: linux-musl
-      darwin: macos-monterey
-      amd64: x86_64
-    overrides:
-      - goos: linux
-        goarch: arm64
-        replacements:
-          arm64: aarch64
-    files:
-      - name: btop
-        src: bin/btop
-
-  - name: ahmetb/kubectx/kubens
-    aliases:
-      - name: ahmetb/kubens
-    type: github_release
-    repo_owner: ahmetb
-    repo_name: kubectx
-    asset: "kubens_{{.Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"
-    description: Faster way to switch between clusters and namespaces in kubectl
-    search_words:
-      # search_words
-      - namespace
-    files:
-      - name: kubens
-    replacements:
-      386: i386
-      amd64: x86_64
-    format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
-
-  # Go
-  - type: go
-    repo_owner: google
-    repo_name: wire
-    description: Compile-time Dependency Injection for Go
-    files:
-      - name: wire
-        src: ./cmd/wire
-        dir: "wire-{{trimV .Version}}"
-
-  # version_source: github_tag
-  - type: go
-    repo_owner: mitchellh
-    repo_name: gox
-    description: A dead simple, no frills Go cross compile tool
-    version_source: github_tag
-    files:
-      - name: gox
-        dir: "gox-{{trimV .Version}}"
 
   - type: go_install
     path: github.com/anqiansong/github-compare

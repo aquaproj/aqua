@@ -34,7 +34,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
-		RequireChecksum: findResult.Config.RequireChecksum(),
+		RequireChecksum: findResult.Config.RequireChecksum(ctrl.requireChecksum),
 		ConfigFileDir:   filepath.Dir(findResult.ConfigFilePath),
 		PolicyConfigs:   policyConfigs,
 	}); err != nil {

@@ -6,13 +6,13 @@ registries:
   ref: semver(">= 3.0.0")
 - name: main
   type: local
-  path: tests/main/registry.yaml
+  path: ../tests/main/registry.yaml
 - name: cosign
   type: local
-  path: tests/cosign/registry.yaml
+  path: ../tests/cosign/registry.yaml
 - name: slsa
   type: local
-  path: tests/slsa/registry.yaml
+  path: ../tests/slsa/registry.yaml
 packages:
 - registry: standard
 - registry: main
