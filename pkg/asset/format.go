@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/unarchive"
@@ -10,20 +11,21 @@ import (
 const formatRaw string = "raw"
 
 // mholt/archiver/v3 not support but aqua support
-func getSupportOtherFormat(assetName string) string {
+func aquaSupportFormat(assetName string) string {
 	formatOtherFormats := map[string]struct{}{unarchive.FormatDMG: {}, formatRaw: {}}
 
 	ext := strings.TrimPrefix(assetName, ".")
+	fmt.Println(ext)
 	if _, ok := formatOtherFormats[ext]; ok {
 		return ext
 	}
-	return ""
+	return formatRaw
 }
 
 func GetFormat(assetName string) string { //nolint:funlen,cyclop
 	a, err := archiver.ByExtension(assetName)
 	if err != nil {
-		return getSupportOtherFormat(assetName)
+		return aquaSupportFormat(assetName)
 	}
 	switch a.(type) {
 	case *archiver.Rar:
@@ -77,6 +79,6 @@ func GetFormat(assetName string) string { //nolint:funlen,cyclop
 	case *archiver.Zstd:
 		return "zst"
 	default:
-		return getSupportOtherFormat(assetName)
+		return aquaSupportFormat(assetName)
 	}
 }
