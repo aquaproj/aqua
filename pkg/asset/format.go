@@ -1,7 +1,6 @@
 package asset
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/aquaproj/aqua/pkg/unarchive"
@@ -15,7 +14,6 @@ func aquaSupportFormat(assetName string) string {
 	formatOtherFormats := map[string]struct{}{unarchive.FormatDMG: {}, formatRaw: {}}
 
 	ext := strings.TrimPrefix(assetName, ".")
-	fmt.Println(ext)
 	if _, ok := formatOtherFormats[ext]; ok {
 		return ext
 	}
