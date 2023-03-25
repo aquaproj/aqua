@@ -42,7 +42,7 @@ func cpFile(fs afero.Fs, src, dst string) error {
 func cpDir(fs afero.Fs, src, dst string) error {
 	fileInfos, err := afero.ReadDir(fs, src)
 	if err != nil {
-		return fmt.Errorf("failed os.ReadDir :%w", err)
+		return fmt.Errorf("read a directory: %w", err)
 	}
 
 	for _, fileInfo := range fileInfos {
@@ -50,18 +50,15 @@ func cpDir(fs afero.Fs, src, dst string) error {
 		dstPath := filepath.Join(dst, fileInfo.Name())
 
 		if fileInfo.IsDir() {
-			err = fs.MkdirAll(dstPath, dirPermission)
-			if err != nil {
-				return fmt.Errorf("failed fs.MkdirAll dst:%s :%w", dstPath, err)
+			if err := fs.MkdirAll(dstPath, dirPermission); err != nil {
+				return fmt.Errorf("create a directory: %w", err)
 			}
-			err = cpDir(fs, srcPath, dstPath)
-			if err != nil {
-				return fmt.Errorf("failed cpDir src:%s,dst:%s :%w", srcPath, dstPath, err)
+			if err := cpDir(fs, srcPath, dstPath); err != nil {
+				return fmt.Errorf("copy a directory: %w", err)
 			}
 		} else {
-			err = cpFile(fs, srcPath, dstPath)
-			if err != nil {
-				return fmt.Errorf("failed cpFile src:%s,dst:%s :%w", srcPath, dstPath, err)
+			if err := cpFile(fs, srcPath, dstPath); err != nil {
+				return fmt.Errorf("copy a file: %w", err)
 			}
 		}
 	}
@@ -71,16 +68,15 @@ func cpDir(fs afero.Fs, src, dst string) error {
 
 func writeDmgFile(m io.Writer, body io.Reader, dest string) error {
 	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(body)
-	if err != nil {
+	if _, err := buf.ReadFrom(body); err != nil {
 		return fmt.Errorf("read the body to (%s): %w", dest, err)
 	}
 
 	if _, err := io.Copy(m, body); err != nil {
 		return fmt.Errorf("copy the body to (%s): %w", dest, err)
 	}
-	_, err = m.Write(buf.Bytes())
-	if err != nil {
+
+	if _, err := m.Write(buf.Bytes()); err != nil {
 		return fmt.Errorf("write the body to (%s): %w", dest, err)
 	}
 
@@ -92,11 +88,11 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 	destDir := filepath.Dir(dest)
 
 	if err := fs.MkdirAll(destDir, dirPermission); err != nil {
-		return fmt.Errorf("create a directory (%s): %w", dest, err)
+		return fmt.Errorf("create a directory: %w", err)
 	}
 	f, err := fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
 	if err != nil {
-		return fmt.Errorf("open the file (%s): %w", dest, err)
+		return fmt.Errorf("open the file: %w", err)
 	}
 	defer f.Close()
 
@@ -109,31 +105,27 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 		m = io.MultiWriter(f, bar)
 	}
 
-	err = writeDmgFile(m, body, dest)
-	if err != nil {
-		return fmt.Errorf("writeDmgFile failed :%w", err)
+	if err := writeDmgFile(m, body, dest); err != nil {
+		return fmt.Errorf("write a dmg file: %w", err)
 	}
 
 	exe := exec.New()
 	tmpMountPoint := destDir + string(filepath.Separator) + "mount"
 	_, hdiutilDetach, err := exe.HdiutilAttach(ctx, dest, tmpMountPoint)
 	if err != nil {
-		return fmt.Errorf("hdiutil attach failed: %w", err)
+		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 
-	err = cpDir(fs, tmpMountPoint, destDir)
-	if err != nil {
-		return fmt.Errorf("failed cpDir src:%s,dst:%s :%w", tmpMountPoint, destDir, err)
+	if err := cpDir(fs, tmpMountPoint, destDir); err != nil {
+		return fmt.Errorf("copy a directory: %w", err)
 	}
 
-	err = fs.Remove(dest)
-	if err != nil {
-		return fmt.Errorf("failed fs.Remove :%w", err)
+	if err := fs.Remove(dest); err != nil {
+		return fmt.Errorf("remove a file: %w", err)
 	}
 
-	_, err = hdiutilDetach(ctx, exe, tmpMountPoint)
-	if err != nil {
-		return fmt.Errorf("failed hdiutilDetach :%w", err)
+	if _, err := hdiutilDetach(ctx, exe, tmpMountPoint); err != nil {
+		return fmt.Errorf("hdiutil detach :%w", err)
 	}
 
 	return nil
