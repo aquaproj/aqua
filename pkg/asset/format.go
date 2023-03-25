@@ -3,7 +3,6 @@ package asset
 import (
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/unarchive"
 	"github.com/mholt/archiver/v3"
 )
 
@@ -11,11 +10,8 @@ const formatRaw string = "raw"
 
 // mholt/archiver/v3 not support but aqua support
 func aquaSupportFormat(assetName string) string {
-	formatOtherFormats := map[string]struct{}{unarchive.FormatDMG: {}, formatRaw: {}}
-
-	ext := strings.TrimPrefix(assetName, ".")
-	if _, ok := formatOtherFormats[ext]; ok {
-		return ext
+	if strings.HasSuffix(assetName, ".dmg") {
+		return "dmg"
 	}
 	return formatRaw
 }
