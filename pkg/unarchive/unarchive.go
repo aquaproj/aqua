@@ -80,7 +80,7 @@ func (unarchiver *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUna
 	}
 	if src.Type == "dmg" {
 		return &dmgUnarchiver{
-			dest:     filepath.Join(dest, filename),
+			dest:     dest,
 			executor: unarchiver.executor,
 		}, nil
 	}

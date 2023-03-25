@@ -70,42 +70,38 @@ func cpDir(fs afero.Fs, src, dst string) error {
 }
 
 func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
-	dest := unarchiver.dest
-	destDir := filepath.Dir(dest)
-
-	if err := fs.MkdirAll(destDir, dirPermission); err != nil {
+	if err := fs.MkdirAll(unarchiver.dest, dirPermission); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
-	f, err := fs.Create(dest)
+	tempFile, err := afero.TempFile(fs, "", "")
 	if err != nil {
-		return fmt.Errorf("create a file: %w", err)
+		return fmt.Errorf("create a temporal file: %w", err)
 	}
-	defer f.Close()
+	defer tempFile.Close()
+	defer func() {
+		fs.Remove(tempFile.Name()) //nolint:errcheck
+	}()
 
-	var m io.Writer = f
+	var m io.Writer = tempFile
 	if prgOpts != nil {
 		bar := progressbar.DefaultBytes(
 			prgOpts.ContentLength,
 			prgOpts.Description,
 		)
-		m = io.MultiWriter(f, bar)
+		m = io.MultiWriter(tempFile, bar)
 	}
 
 	if _, err := io.Copy(m, body); err != nil {
 		return fmt.Errorf("write a dmg file: %w", err)
 	}
 
-	tmpMountPoint := destDir + string(filepath.Separator) + "mount"
-	if _, err := unarchiver.executor.HdiutilAttach(ctx, dest, tmpMountPoint); err != nil {
+	tmpMountPoint := unarchiver.dest + string(filepath.Separator) + "mount"
+	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFile.Name(), tmpMountPoint); err != nil {
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 
-	if err := cpDir(fs, tmpMountPoint, destDir); err != nil {
+	if err := cpDir(fs, tmpMountPoint, unarchiver.dest); err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
-	}
-
-	if err := fs.Remove(dest); err != nil {
-		return fmt.Errorf("remove a file: %w", err)
 	}
 
 	if _, err := unarchiver.executor.HdiutilDetach(ctx, tmpMountPoint); err != nil {
