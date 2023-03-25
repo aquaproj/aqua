@@ -17,6 +17,7 @@ require (
 	github.com/ktr0731/go-fuzzyfinder v0.7.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mholt/archiver/v3 v3.5.1
+	github.com/otiai10/copy v1.9.0
 	github.com/schollz/progressbar/v3 v3.13.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.5

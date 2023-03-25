@@ -6,6 +6,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/otiai10/copy"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -41,6 +42,13 @@ func cpFile(fs afero.Fs, src, dst string) error {
 	}
 
 	return nil
+}
+
+func cpDirWrap(fs afero.Fs, src, dst string) error {
+	if _, ok := fs.(*afero.OsFs); ok {
+		return copy.Copy(src, dst) //nolint:wrapcheck
+	}
+	return cpDir(fs, src, dst)
 }
 
 func cpDir(fs afero.Fs, src, dst string) error {
@@ -118,7 +126,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 		}
 	}()
 
-	if err := cpDir(fs, tmpMountPoint, unarchiver.dest); err != nil {
+	if err := cpDirWrap(fs, tmpMountPoint, unarchiver.dest); err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
 	}
 
