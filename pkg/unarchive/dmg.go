@@ -22,19 +22,18 @@ type dmgUnarchiver struct {
 func cpFile(fs afero.Fs, src, dst string) error {
 	srcFile, err := fs.Open(src)
 	if err != nil {
-		return fmt.Errorf("failed fs.Open dst:%s, src:%s", dst, src)
+		return fmt.Errorf("open a file: %w", err)
 	}
 	defer srcFile.Close()
 
 	dstFile, err := fs.Create(dst)
 	if err != nil {
-		return fmt.Errorf("failed fs.Create dst:%s, src:%s", dst, src)
+		return fmt.Errorf("create a file: %w", err)
 	}
 	defer dstFile.Close()
 
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return fmt.Errorf("failed io.Copy dst:%s, src:%s", dst, src)
+	if _, err = io.Copy(dstFile, srcFile); err != nil {
+		return fmt.Errorf("copy a file: %w", err)
 	}
 
 	return nil
