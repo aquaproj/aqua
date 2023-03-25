@@ -41,7 +41,7 @@ func cpFile(fs afero.Fs, src, dst string) error {
 }
 
 func cpDir(fs afero.Fs, src, dst string) error {
-	fileInfos, err := os.ReadDir(src)
+	fileInfos, err := afero.ReadDir(fs, src)
 	if err != nil {
 		return fmt.Errorf("failed os.ReadDir :%w", err)
 	}
