@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
@@ -77,9 +76,9 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 	if err := fs.MkdirAll(destDir, dirPermission); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
-	f, err := fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
+	f, err := fs.Create(dest)
 	if err != nil {
-		return fmt.Errorf("open the file: %w", err)
+		return fmt.Errorf("create a file: %w", err)
 	}
 	defer f.Close()
 
