@@ -7,6 +7,7 @@ import (
 
 	"github.com/mholt/archiver/v3"
 	"github.com/schollz/progressbar/v3"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -15,7 +16,7 @@ type unarchiverWithUnarchiver struct {
 	dest       string
 }
 
-func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
 	f, err := afero.TempFile(fs, "", "")
 	if err != nil {

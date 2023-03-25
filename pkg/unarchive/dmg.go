@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -69,7 +70,7 @@ func cpDir(fs afero.Fs, src, dst string) error {
 	return nil
 }
 
-func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error { //nolint:cyclop
 	if err := fs.MkdirAll(unarchiver.dest, dirPermission); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
@@ -79,7 +80,9 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 	}
 	defer tempFile.Close()
 	defer func() {
-		fs.Remove(tempFile.Name()) //nolint:errcheck
+		if err := fs.Remove(tempFile.Name()); err != nil {
+			logE.WithError(err).Warn("remove a temporal file created to unarchive a dmg file")
+		}
 	}()
 
 	var m io.Writer = tempFile
@@ -101,12 +104,18 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 	}
 
 	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFile.Name(), tmpMountPoint); err != nil {
-		fs.Remove(tmpMountPoint) //nolint:errcheck
+		if err := fs.Remove(tmpMountPoint); err != nil {
+			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
+		}
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 	defer func() {
-		unarchiver.executor.HdiutilDetach(ctx, tmpMountPoint) //nolint:errcheck
-		fs.Remove(tmpMountPoint)                              //nolint:errcheck
+		if _, err := unarchiver.executor.HdiutilDetach(ctx, tmpMountPoint); err != nil {
+			logE.WithError(err).Warn("detach a DMG file")
+		}
+		if err := fs.Remove(tmpMountPoint); err != nil {
+			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
+		}
 	}()
 
 	if err := cpDir(fs, tmpMountPoint, unarchiver.dest); err != nil {

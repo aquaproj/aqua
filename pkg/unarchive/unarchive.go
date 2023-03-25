@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/mholt/archiver/v3"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -20,7 +21,7 @@ type ProgressBarOpts struct {
 }
 
 type coreUnarchiver interface {
-	Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
+	Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
 }
 
 type File struct {
@@ -34,14 +35,14 @@ type UnarchiverImpl struct {
 }
 
 type Unarchiver interface {
-	Unarchive(ctx context.Context, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error
+	Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error
 }
 
 type MockUnarchiver struct {
 	Err error
 }
 
-func (unarchiver *MockUnarchiver) Unarchive(ctx context.Context, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+func (unarchiver *MockUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
 	return unarchiver.Err
 }
 
@@ -51,13 +52,13 @@ func New(executor Executor) *UnarchiverImpl {
 	}
 }
 
-func (unarchiver *UnarchiverImpl) Unarchive(ctx context.Context, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+func (unarchiver *UnarchiverImpl) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
 	arc, err := unarchiver.getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	return arc.Unarchive(ctx, fs, src.Body, prgOpts) //nolint:wrapcheck
+	return arc.Unarchive(ctx, logE, fs, src.Body, prgOpts) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
