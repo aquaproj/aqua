@@ -72,9 +72,6 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		return file, nil
 	case config.PkgInfoTypeGitHubArchive:
 		return file, nil
-	case config.PkgInfoTypeGo:
-		file.Type = "github_archive"
-		return file, nil
 	case config.PkgInfoTypeHTTP:
 		uS, err := pkg.RenderURL(rt)
 		if err != nil {
