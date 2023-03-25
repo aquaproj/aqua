@@ -4,11 +4,11 @@ import (
 	"strings"
 )
 
-func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen
+func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen,cyclop
 	osList := []*OS{
 		{
 			Name: "apple-darwin",
-			OS:   "darwin",
+			OS:   osDarwin,
 		},
 		{
 			Name: "unknown-linux-gnu",
@@ -27,8 +27,8 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 			OS:   "windows",
 		},
 		{
-			Name: "darwin",
-			OS:   "darwin",
+			Name: osDarwin,
+			OS:   osDarwin,
 		},
 		{
 			Name: "linux",
@@ -40,19 +40,19 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 		},
 		{
 			Name: "apple",
-			OS:   "darwin",
+			OS:   osDarwin,
 		},
 		{
 			Name: "osx",
-			OS:   "darwin",
+			OS:   osDarwin,
 		},
 		{
 			Name: "macos",
-			OS:   "darwin",
+			OS:   osDarwin,
 		},
 		{
 			Name: "mac",
-			OS:   "darwin",
+			OS:   osDarwin,
 		},
 		{
 			Name: "win64",
@@ -83,5 +83,10 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 	}
 	if assetInfo.OS == "" && strings.Contains(lowAssetName, ".exe") {
 		assetInfo.OS = "windows"
+	}
+	if assetInfo.OS == "" && strings.HasSuffix(lowAssetName, ".dmg") {
+		// other formats take precedence over DMG because DMG requires external commands.
+		assetInfo.Score = -1
+		assetInfo.OS = osDarwin
 	}
 }

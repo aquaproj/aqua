@@ -1,6 +1,7 @@
 package unarchive
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/mholt/archiver/v3"
 	"github.com/schollz/progressbar/v3"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -16,7 +18,7 @@ type Decompressor struct {
 	dest         string
 }
 
-func (decompressor *Decompressor) Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := decompressor.dest
 	if err := fs.MkdirAll(filepath.Dir(dest), dirPermission); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)

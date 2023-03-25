@@ -226,6 +226,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -361,6 +362,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -428,6 +430,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			unarchive.New,
@@ -512,6 +515,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
