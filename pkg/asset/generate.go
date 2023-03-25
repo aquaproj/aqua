@@ -91,7 +91,7 @@ func mergeReplacements(goos string, m1, m2 map[string]string) (map[string]string
 }
 
 func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop
-	for _, goos := range []string{"linux", "darwin", "windows"} {
+	for _, goos := range []string{"linux", osDarwin, "windows"} {
 		var overrides []*registry.Override
 		var supportedEnvs []string
 		for _, goarch := range []string{"amd64", "arm64"} {
@@ -103,8 +103,8 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 					Replacements: assetInfo.Replacements,
 					Asset:        strP(assetInfo.Template),
 				})
-				if goos == "darwin" && goarch == "amd64" {
-					supportedEnvs = append(supportedEnvs, "darwin")
+				if goos == osDarwin && goarch == "amd64" {
+					supportedEnvs = append(supportedEnvs, osDarwin)
 				} else {
 					supportedEnvs = append(supportedEnvs, goos+"/"+goarch)
 				}
@@ -314,20 +314,20 @@ func getDefaultFormat(overrides []*registry.Override) string {
 }
 
 func checkRosetta2(assetInfos []*AssetInfo) bool {
-	darwinAmd64 := GetOSArch("darwin", "amd64", assetInfos)
-	darwinArm64 := GetOSArch("darwin", "arm64", assetInfos)
+	darwinAmd64 := GetOSArch(osDarwin, "amd64", assetInfos)
+	darwinArm64 := GetOSArch(osDarwin, "arm64", assetInfos)
 	return darwinAmd64 != nil && darwinArm64 == nil
 }
 
 func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
-	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", "darwin", "windows"}) {
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", osDarwin, "windows"}) {
 		return nil
 	}
-	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", "darwin", "windows/amd64"}) {
-		return []string{"darwin", "linux", "amd64"}
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", osDarwin, "windows/amd64"}) {
+		return []string{osDarwin, "linux", "amd64"}
 	}
-	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux/amd64", "darwin", "windows/amd64"}) {
-		return []string{"darwin", "amd64"}
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux/amd64", osDarwin, "windows/amd64"}) {
+		return []string{osDarwin, "amd64"}
 	}
 	return envs
 }
@@ -342,7 +342,7 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 	lowAssetName := strings.ToLower(assetName)
 	SetOS(assetName, lowAssetName, assetInfo)
 	SetArch(assetName, lowAssetName, assetInfo)
-	if assetInfo.Arch == "" && assetInfo.OS == "darwin" {
+	if assetInfo.Arch == "" && assetInfo.OS == osDarwin {
 		if strings.Contains(lowAssetName, "_all") || strings.Contains(lowAssetName, "-all") || strings.Contains(lowAssetName, ".all") {
 			assetInfo.DarwinAll = true
 		}
