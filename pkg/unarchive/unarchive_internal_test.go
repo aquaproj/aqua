@@ -61,7 +61,7 @@ func Test_getUnarchiver(t *testing.T) {
 			},
 			dest: "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo",
 			exp: &dmgUnarchiver{
-				dest: "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo/yoo.dmg",
+				dest: "/home/foo/.aqua/pkgs/github_release/github.com/aquaproj/foo/v1.0.0/foo",
 			},
 		},
 	}
