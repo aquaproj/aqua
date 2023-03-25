@@ -29,7 +29,9 @@ type File struct {
 	Type     string
 }
 
-type UnarchiverImpl struct{}
+type UnarchiverImpl struct {
+	executor Executor
+}
 
 type Unarchiver interface {
 	Unarchive(ctx context.Context, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error
@@ -43,12 +45,14 @@ func (unarchiver *MockUnarchiver) Unarchive(ctx context.Context, src *File, dest
 	return unarchiver.Err
 }
 
-func New() *UnarchiverImpl {
-	return &UnarchiverImpl{}
+func New(executor Executor) *UnarchiverImpl {
+	return &UnarchiverImpl{
+		executor: executor,
+	}
 }
 
 func (unarchiver *UnarchiverImpl) Unarchive(ctx context.Context, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
-	arc, err := getUnarchiver(src, dest)
+	arc, err := unarchiver.getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
@@ -67,7 +71,7 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
+func (unarchiver *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
@@ -76,7 +80,8 @@ func getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
 	}
 	if src.Type == "dmg" {
 		return &dmgUnarchiver{
-			dest: filepath.Join(dest, filename),
+			dest:     filepath.Join(dest, filename),
+			executor: unarchiver.executor,
 		}, nil
 	}
 

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/exec"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/afero"
 )
@@ -15,7 +14,13 @@ import (
 const FormatDMG string = "dmg"
 
 type dmgUnarchiver struct {
-	dest string
+	dest     string
+	executor Executor
+}
+
+type Executor interface {
+	HdiutilAttach(ctx context.Context, dmgPath, mountPoint string) (int, error)
+	HdiutilDetach(ctx context.Context, mountPath string) (int, error)
 }
 
 func cpFile(fs afero.Fs, src, dst string) error {
@@ -91,9 +96,8 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 		return fmt.Errorf("write a dmg file: %w", err)
 	}
 
-	exe := exec.New()
 	tmpMountPoint := destDir + string(filepath.Separator) + "mount"
-	if _, err := exe.HdiutilAttach(ctx, dest, tmpMountPoint); err != nil {
+	if _, err := unarchiver.executor.HdiutilAttach(ctx, dest, tmpMountPoint); err != nil {
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 
@@ -105,7 +109,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 		return fmt.Errorf("remove a file: %w", err)
 	}
 
-	if _, err := exe.HdiutilDetach(ctx, tmpMountPoint); err != nil {
+	if _, err := unarchiver.executor.HdiutilDetach(ctx, tmpMountPoint); err != nil {
 		return fmt.Errorf("hdiutil detach :%w", err)
 	}
 

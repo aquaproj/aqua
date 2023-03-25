@@ -29,3 +29,11 @@ func (exe *Mock) ExecXSys(exePath string, args []string) error {
 func (exe *Mock) GoInstall(ctx context.Context, path, gobin string) (int, error) {
 	return exe.ExitCode, exe.Err
 }
+
+func (exe *Mock) HdiutilDetach(ctx context.Context, mountPath string) (int, error) {
+	return exe.ExitCode, exe.Err
+}
+
+func (exe *Mock) HdiutilAttach(ctx context.Context, dmgPath, mountPoint string) (int, error) {
+	return exe.ExitCode, exe.Err
+}
