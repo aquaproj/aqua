@@ -95,17 +95,22 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 		return fmt.Errorf("write a dmg file: %w", err)
 	}
 
-	tmpMountPoint := filepath.Join(unarchiver.dest, "mount")
+	tmpMountPoint, err := afero.TempDir(fs, "", "")
+	if err != nil {
+		return fmt.Errorf("create a temporal file: %w", err)
+	}
+
 	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFile.Name(), tmpMountPoint); err != nil {
+		fs.Remove(tmpMountPoint) //nolint:errcheck
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
+	defer func() {
+		unarchiver.executor.HdiutilDetach(ctx, tmpMountPoint) //nolint:errcheck
+		fs.Remove(tmpMountPoint)                              //nolint:errcheck
+	}()
 
 	if err := cpDir(fs, tmpMountPoint, unarchiver.dest); err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
-	}
-
-	if _, err := unarchiver.executor.HdiutilDetach(ctx, tmpMountPoint); err != nil {
-		return fmt.Errorf("hdiutil detach :%w", err)
 	}
 
 	return nil
