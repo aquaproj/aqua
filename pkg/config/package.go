@@ -159,7 +159,6 @@ const (
 	PkgInfoTypeGitHubContent = "github_content"
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGo            = "go"
 	PkgInfoTypeGoInstall     = "go_install"
 )
 
@@ -219,7 +218,7 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
+	case PkgInfoTypeGitHubArchive:
 		return "", nil
 	case PkgInfoTypeGoInstall:
 		if pkgInfo.Asset != nil {
@@ -333,8 +332,6 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
-	case PkgInfoTypeGo:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
 		p, err := cpkg.RenderPath()
 		if err != nil {

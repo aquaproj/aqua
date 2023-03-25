@@ -20,7 +20,7 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
+	case PkgInfoTypeGitHubArchive:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
@@ -59,7 +59,7 @@ func (cpkg *Package) GetChecksumIDFromAsset(asset string) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
+	case PkgInfoTypeGitHubArchive:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
