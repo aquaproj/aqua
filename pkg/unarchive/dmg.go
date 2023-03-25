@@ -1,7 +1,6 @@
 package unarchive
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -66,23 +65,6 @@ func cpDir(fs afero.Fs, src, dst string) error {
 	return nil
 }
 
-func writeDmgFile(m io.Writer, body io.Reader, dest string) error {
-	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(body); err != nil {
-		return fmt.Errorf("read the body to (%s): %w", dest, err)
-	}
-
-	if _, err := io.Copy(m, body); err != nil {
-		return fmt.Errorf("copy the body to (%s): %w", dest, err)
-	}
-
-	if _, err := m.Write(buf.Bytes()); err != nil {
-		return fmt.Errorf("write the body to (%s): %w", dest, err)
-	}
-
-	return nil
-}
-
 func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
 	destDir := filepath.Dir(dest)
@@ -105,7 +87,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 		m = io.MultiWriter(f, bar)
 	}
 
-	if err := writeDmgFile(m, body, dest); err != nil {
+	if _, err := io.Copy(m, body); err != nil {
 		return fmt.Errorf("write a dmg file: %w", err)
 	}
 
