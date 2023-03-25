@@ -13,8 +13,12 @@ registries:
 - name: slsa
   type: local
   path: ../tests/slsa/registry.yaml
+- name: macos
+  type: local
+  path: ../tests/macos/registry.yaml
 packages:
 - registry: standard
 - registry: main
 - registry: cosign
 - registry: slsa
+- registry: macos

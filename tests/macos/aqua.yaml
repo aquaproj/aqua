@@ -1,0 +1,7 @@
+registries:
+  - name: local
+    type: local
+    path: registry.yaml
+packages:
+  - name: 99designs/aws-vault@v7.1.2
+    registry: local
