@@ -4,4 +4,5 @@ registries:
     path: registry.yaml
 packages:
   - name: 99designs/aws-vault@v7.1.2
+    # DMG https://github.com/aquaproj/aqua/issues/1706
     registry: local
