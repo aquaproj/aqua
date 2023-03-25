@@ -64,13 +64,3 @@ func (exe *Executor) GoInstall(ctx context.Context, path, gobin string) (int, er
 	cmd.Env = append(os.Environ(), "GOBIN="+gobin)
 	return exe.exec(ctx, cmd)
 }
-
-func (exe *Executor) HdiutilDetach(ctx context.Context, mountPath string) (int, error) {
-	cmd := exe.command(exec.Command("hdiutil", "detach", mountPath, "-quiet"))
-	return exe.exec(ctx, cmd)
-}
-
-func (exe *Executor) HdiutilAttach(ctx context.Context, dmgPath, mountPoint string) (int, error) {
-	cmd := exe.command(exec.Command("hdiutil", "attach", dmgPath, "-mountpoint", mountPoint, "-quiet"))
-	return exe.exec(ctx, cmd)
-}
