@@ -95,7 +95,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 		return fmt.Errorf("write a dmg file: %w", err)
 	}
 
-	tmpMountPoint := unarchiver.dest + string(filepath.Separator) + "mount"
+	tmpMountPoint := filepath.Join(unarchiver.dest, "mount")
 	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFile.Name(), tmpMountPoint); err != nil {
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
