@@ -93,8 +93,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 
 	exe := exec.New()
 	tmpMountPoint := destDir + string(filepath.Separator) + "mount"
-	_, hdiutilDetach, err := exe.HdiutilAttach(ctx, dest, tmpMountPoint)
-	if err != nil {
+	if _, err := exe.HdiutilAttach(ctx, dest, tmpMountPoint); err != nil {
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 
@@ -106,7 +105,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, fs afero.Fs, bod
 		return fmt.Errorf("remove a file: %w", err)
 	}
 
-	if _, err := hdiutilDetach(ctx, exe, tmpMountPoint); err != nil {
+	if _, err := exe.HdiutilDetach(ctx, tmpMountPoint); err != nil {
 		return fmt.Errorf("hdiutil detach :%w", err)
 	}
 
