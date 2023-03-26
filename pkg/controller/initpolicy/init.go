@@ -13,10 +13,25 @@ const configTemplate = `---
 # aqua Policy
 # https://aquaproj.github.io/
 registries:
-- type: standard
-  ref: semver(">= 3.0.0")
+# Example
+# - name: local
+#   type: local
+#   path: registry.yaml
+# - name: aqua-registry
+#   type: github_content
+#   repo_owner: aquaproj
+#   repo_name: aqua-registry
+#   ref: semver(">= 3.0.0") # ref is optional
+#   path: registry.yaml
+  - type: standard
+    ref: semver(">= 3.0.0")
 packages:
-- registry: standard
+# Example
+# - registry: local # allow all packages in the Registry
+# - name: cli/cli # allow only a specific package. The default value of registry is "standard"
+# - name: cli/cli
+#   version: semver(">= 2.0.0") # version is optional
+  - registry: standard
 `
 
 type Controller struct {
