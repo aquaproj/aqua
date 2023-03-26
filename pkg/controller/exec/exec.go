@@ -67,24 +67,14 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil { //nolint:nestif
+	if findResult.Package != nil {
 		logE = logE.WithFields(logrus.Fields{
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
 
-		policyFile, err := ctrl.policyConfigFinder.Find("", param.PWD)
-		if err != nil {
-			return fmt.Errorf("find a policy file: %w", err)
-		}
-		if policyFile != "" {
-			if err := ctrl.policyValidator.Validate(policyFile); err != nil {
-				if err := ctrl.policyValidator.Warn(logE, policyFile); err != nil {
-					logE.WithError(err).Warn("warn an denied policy file")
-				}
-			} else {
-				param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
-			}
+		if err := policy.Validate(logE, ctrl.policyConfigFinder, ctrl.policyValidator, param); err != nil {
+			return fmt.Errorf("validate a policy file: %w", err)
 		}
 
 		if err := ctrl.validate(findResult.Package, param.DisablePolicy, param.PolicyConfigFilePaths); err != nil {

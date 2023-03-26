@@ -51,6 +51,23 @@ func NewValidator(param *config.Param, fs afero.Fs) *ValidatorImpl {
 	}
 }
 
+func Validate(logE *logrus.Entry, finder ConfigFinder, validator Validator, param *config.Param) error {
+	policyFile, err := finder.Find("", param.PWD)
+	if err != nil {
+		return fmt.Errorf("find a policy file: %w", err)
+	}
+	if policyFile != "" {
+		if err := validator.Validate(policyFile); err != nil {
+			if err := validator.Warn(logE, policyFile); err != nil {
+				logE.WithError(err).Warn("warn an denied policy file")
+			}
+		} else {
+			param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
+		}
+	}
+	return nil
+}
+
 var (
 	errPolicyNotFound = errors.New("the policy file isn't found")
 	errPolicyUpdated  = errors.New("the policy file updated")

@@ -95,18 +95,8 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 }
 
 func (ctrl *Controller) readPolicy(logE *logrus.Entry, param *config.Param) ([]*policy.Config, error) {
-	policyFile, err := ctrl.policyConfigFinder.Find("", param.PWD)
-	if err != nil {
-		return nil, fmt.Errorf("find a policy file: %w", err)
-	}
-	if policyFile != "" {
-		if err := ctrl.policyValidator.Validate(policyFile); err != nil {
-			if err := ctrl.policyValidator.Warn(logE, policyFile); err != nil {
-				logE.WithError(err).Warn("warn an denied policy file")
-			}
-		} else {
-			param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
-		}
+	if err := policy.Validate(logE, ctrl.policyConfigFinder, ctrl.policyValidator, param); err != nil {
+		return nil, fmt.Errorf("validate a policy file: %w", err)
 	}
 	return ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy) //nolint:wrapcheck
 }

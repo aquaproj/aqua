@@ -55,7 +55,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
 		if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
@@ -72,18 +72,8 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	policyFile, err := ctrl.policyConfigFinder.Find("", param.PWD)
-	if err != nil {
-		return fmt.Errorf("find a policy file: %w", err)
-	}
-	if policyFile != "" {
-		if err := ctrl.policyValidator.Validate(policyFile); err != nil {
-			if err := ctrl.policyValidator.Warn(logE, policyFile); err != nil {
-				logE.WithError(err).Warn("warn an denied policy file")
-			}
-		} else {
-			param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
-		}
+	if err := policy.Validate(logE, ctrl.policyConfigFinder, ctrl.policyValidator, param); err != nil {
+		return fmt.Errorf("validate a policy file: %w", err)
 	}
 
 	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy)
