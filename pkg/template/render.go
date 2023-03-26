@@ -3,7 +3,7 @@ package template
 import (
 	"text/template"
 
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
 type Artifact struct {

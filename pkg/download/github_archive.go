@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 )
 
 func (downloader *Downloader) getReadCloserFromGitHubArchive(ctx context.Context, file *File) (io.ReadCloser, int64, error) {

@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/aquaproj/aqua/pkg/runtime"
+import "github.com/aquaproj/aqua/v2/pkg/runtime"
 
 func (pkgInfo *PackageInfo) Override(v string, rt *runtime.Runtime) (*PackageInfo, error) {
 	pkg, err := pkgInfo.SetVersion(v)

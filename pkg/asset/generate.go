@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
 func boolP(b bool) *bool {

@@ -3,7 +3,7 @@ package cp
 import (
 	"context"
 
-	"github.com/aquaproj/aqua/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/sirupsen/logrus"
 )
 

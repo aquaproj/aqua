@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 )

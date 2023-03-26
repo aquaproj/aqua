@@ -3,8 +3,8 @@ package generate
 import (
 	"context"
 
-	"github.com/aquaproj/aqua/pkg/controller/generate/output"
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 )
 
 type RepositoriesService interface {

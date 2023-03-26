@@ -3,7 +3,7 @@ package genrgst
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/asset"
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/goccy/go-yaml/parser"
 	"github.com/spf13/afero"
 )

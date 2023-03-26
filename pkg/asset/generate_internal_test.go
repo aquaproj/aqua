@@ -3,7 +3,7 @@ package asset
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/google/go-cmp/cmp"
 )
 

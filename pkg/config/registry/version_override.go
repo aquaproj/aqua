@@ -3,7 +3,7 @@ package registry
 import (
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/expr"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
 )
 
 func (pkgInfo *PackageInfo) setTopVersion(v string) (*PackageInfo, error) {
