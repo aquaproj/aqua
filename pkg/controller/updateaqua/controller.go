@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -32,11 +32,9 @@ func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, gh RepositoriesS
 	}
 }
 
-const dirPermission os.FileMode = 0o775
-
 func (ctrl *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	rootBin := filepath.Join(ctrl.rootDir, "bin")
-	if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
+	if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 

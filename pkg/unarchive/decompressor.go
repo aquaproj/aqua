@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/mholt/archiver/v3"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
@@ -20,7 +21,7 @@ type Decompressor struct {
 
 func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := decompressor.dest
-	if err := fs.MkdirAll(filepath.Dir(dest), dirPermission); err != nil {
+	if err := util.MkdirAll(fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
 	f, err := fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
