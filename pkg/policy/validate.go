@@ -130,13 +130,13 @@ func (validator *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string) 
 	}
 	logE.WithFields(logrus.Fields{
 		"policy_file": policyFilePath,
-	}).Warnf(`The policy file is ignored unless it is allowed by aqua allow-policy command.
+	}).Warnf(`The policy file is ignored unless it is allowed by "aqua policy allow" command.
 
-$ aqua allow-policy "%s"
+$ aqua policy allow "%s"
 
-If you want to keep ignoring the policy file without the warning, please run disallow-policy command.
+If you want to keep ignoring the policy file without the warning, please run "aqua policy disallow" command.
 
-$ aqua disallow-policy "%s"
+$ aqua policy disallow "%s"
 
  `, policyFilePath, policyFilePath)
 	return nil
