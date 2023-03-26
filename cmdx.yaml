@@ -63,3 +63,8 @@ tasks:
   description: Build and install aqua
   usage: Build and install aqua by "go install" command
   script: go install ./cmd/aqua
+- name: run
+  description: Run aqua via go run
+  usage: Run aqua via go run
+  script: |
+    go run ./cmd/aqua {{._builtin.args_string}}
