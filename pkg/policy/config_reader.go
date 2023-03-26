@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/yaml"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v2"
 )
 
 type ConfigReaderImpl struct {
-	fs afero.Fs
+	fs      afero.Fs
+	decoder *yaml.Decoder
 }
 
 func NewConfigReader(fs afero.Fs) *ConfigReaderImpl {
 	return &ConfigReaderImpl{
-		fs: fs,
+		fs:      fs,
+		decoder: yaml.NewDecoder(fs),
 	}
 }
 
@@ -45,7 +47,7 @@ func (reader *ConfigReaderImpl) Read(files []string, disablePolicy bool) ([]*Con
 			YAML: &ConfigYAML{},
 		}
 		if err := reader.read(policyCfg); err != nil {
-			return nil, fmt.Errorf("read the policy config file: %w", err)
+			return nil, fmt.Errorf("read a policy file: %w", err)
 		}
 		policyCfgs[i] = policyCfg
 	}
@@ -78,13 +80,8 @@ func (reader *ConfigReaderImpl) readDefault() ([]*Config, error) {
 }
 
 func (reader *ConfigReaderImpl) read(cfg *Config) error {
-	file, err := reader.fs.Open(cfg.Path)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-	defer file.Close()
-	if err := yaml.NewDecoder(file).Decode(cfg.YAML); err != nil {
-		return fmt.Errorf("parse a configuration file as YAML %s: %w", cfg.Path, err)
+	if err := reader.decoder.ReadFile(cfg.Path, cfg.YAML); err != nil {
+		return fmt.Errorf("parse a policy file as YAML: %w", err)
 	}
 	if err := cfg.Init(); err != nil {
 		return err
