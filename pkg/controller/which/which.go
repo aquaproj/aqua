@@ -107,13 +107,9 @@ func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param
 
 func (ctrl *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
 	pkg := findResult.Package
-	pkgInfo := pkg.PackageInfo
 	file := findResult.File
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
-	}
-	if pkg.PackageInfo.Type == "go" {
-		return filepath.Join(ctrl.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name), nil
 	}
 	fileSrc, err := pkg.GetFileSrc(file, ctrl.runtime)
 	if err != nil {
