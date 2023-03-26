@@ -35,8 +35,8 @@ func configFileNames() []string {
 	return []string{
 		"aqua-policy.yaml",
 		".aqua-policy.yaml",
-		"aqua/aqua-policy.yaml",
-		".aqua/aqua-policy.yaml",
+		filepath.Join("aqua", "aqua-policy.yaml"),
+		filepath.Join(".aqua", "aqua-policy.yaml"),
 	}
 }
 
