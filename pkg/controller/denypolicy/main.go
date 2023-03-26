@@ -1,4 +1,4 @@
-package disallowpolicy
+package denypolicy
 
 import (
 	"context"
@@ -25,7 +25,7 @@ func New(fs afero.Fs, policyConfigFinder policy.ConfigFinder, policyValidator po
 	}
 }
 
-func (ctrl *Controller) Disallow(ctx context.Context, logE *logrus.Entry, param *config.Param, policyFilePath string) error {
+func (ctrl *Controller) Deny(ctx context.Context, logE *logrus.Entry, param *config.Param, policyFilePath string) error {
 	policyFilePath, err := ctrl.policyConfigFinder.Find(policyFilePath, param.PWD)
 	if err != nil {
 		return fmt.Errorf("find a policy file: %w", err)
@@ -34,7 +34,7 @@ func (ctrl *Controller) Disallow(ctx context.Context, logE *logrus.Entry, param 
 		logE.Info("no policy file is found")
 		return nil
 	}
-	if err := ctrl.policyValidator.Disallow(policyFilePath); err != nil {
+	if err := ctrl.policyValidator.Deny(policyFilePath); err != nil {
 		return logerr.WithFields(fmt.Errorf("disallow a policy file: %w", err), logrus.Fields{ //nolint:wrapcheck
 			"policy_file": policyFilePath,
 		})

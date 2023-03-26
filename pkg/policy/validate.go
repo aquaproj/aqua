@@ -15,7 +15,7 @@ import (
 type Validator interface {
 	Validate(p string) error
 	Allow(p string) error
-	Disallow(p string) error
+	Deny(p string) error
 	Warn(logE *logrus.Entry, policyFilePath string) error
 }
 
@@ -27,7 +27,7 @@ func (validator *MockValidator) Allow(p string) error {
 	return validator.Err
 }
 
-func (validator *MockValidator) Disallow(p string) error {
+func (validator *MockValidator) Deny(p string) error {
 	return validator.Err
 }
 
@@ -90,7 +90,7 @@ func (validator *ValidatorImpl) Allow(p string) error {
 	return nil
 }
 
-func (validator *ValidatorImpl) Disallow(p string) error {
+func (validator *ValidatorImpl) Deny(p string) error {
 	policyPath := filepath.Join(validator.rootDir, "policies", p)
 	fs := validator.fs
 
@@ -134,9 +134,9 @@ func (validator *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string) 
 
 $ aqua policy allow "%s"
 
-If you want to keep ignoring the policy file without the warning, please run "aqua policy disallow" command.
+If you want to keep ignoring the policy file without the warning, please run "aqua policy deny" command.
 
-$ aqua policy disallow "%s"
+$ aqua policy deny "%s"
 
  `, policyFilePath, policyFilePath)
 	return nil

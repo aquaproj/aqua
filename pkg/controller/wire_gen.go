@@ -14,7 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/allowpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
-	"github.com/aquaproj/aqua/v2/pkg/controller/disallowpolicy"
+	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	exec2 "github.com/aquaproj/aqua/v2/pkg/controller/exec"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
@@ -249,10 +249,10 @@ func InitializeAllowPolicyCommandController(ctx context.Context, param *config.P
 	return controller
 }
 
-func InitializeDisallowPolicyCommandController(ctx context.Context, param *config.Param) *disallowpolicy.Controller {
+func InitializeDenyPolicyCommandController(ctx context.Context, param *config.Param) *denypolicy.Controller {
 	fs := afero.NewOsFs()
 	configFinderImpl := policy.NewConfigFinder(fs)
 	validatorImpl := policy.NewValidator(param, fs)
-	controller := disallowpolicy.New(fs, configFinderImpl, validatorImpl)
+	controller := denypolicy.New(fs, configFinderImpl, validatorImpl)
 	return controller
 }

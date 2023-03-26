@@ -10,7 +10,7 @@ func (runner *Runner) newPolicyCommand() *cli.Command {
 		Usage: "Manage Policy",
 		Subcommands: []*cli.Command{
 			runner.newAllowPolicyCommand(),
-			runner.newDisallowPolicyCommand(),
+			runner.newDenyPolicyCommand(),
 		},
 	}
 }

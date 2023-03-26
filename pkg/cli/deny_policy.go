@@ -8,11 +8,11 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newDisallowPolicyCommand() *cli.Command {
+func (runner *Runner) newDenyPolicyCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "disallow",
-		Usage: "Disallow a policy file",
-		Description: `Disallow a policy file
+		Usage: "Deny a policy file",
+		Description: `Deny a policy file
 e.g.
 $ aqua policy disallow [<policy file path>]
 `,
@@ -37,6 +37,6 @@ func (runner *Runner) disallowPolicyAction(c *cli.Context) error {
 	if err := runner.setParam(c, "disallow-policy", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeDisallowPolicyCommandController(c.Context, param)
-	return ctrl.Disallow(c.Context, runner.LogE, param, c.Args().First()) //nolint:wrapcheck
+	ctrl := controller.InitializeDenyPolicyCommandController(c.Context, param)
+	return ctrl.Deny(c.Context, runner.LogE, param, c.Args().First()) //nolint:wrapcheck
 }

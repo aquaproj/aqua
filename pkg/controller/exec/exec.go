@@ -80,7 +80,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		if policyFile != "" {
 			if err := ctrl.policyValidator.Validate(policyFile); err != nil {
 				if err := ctrl.policyValidator.Warn(logE, policyFile); err != nil {
-					logE.WithError(err).Warn("warn an disallowed policy file")
+					logE.WithError(err).Warn("warn an denied policy file")
 				}
 			} else {
 				param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
