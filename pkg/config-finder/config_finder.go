@@ -44,10 +44,10 @@ func configFileNames() []string {
 		"aqua.yml",
 		".aqua.yaml",
 		".aqua.yml",
-		"aqua/aqua.yaml",
-		"aqua/aqua.yml",
-		".aqua/aqua.yaml",
-		".aqua/aqua.yml",
+		filepath.Join("aqua", "aqua.yaml"),
+		filepath.Join("aqua", "aqua.yml"),
+		filepath.Join(".aqua", "aqua.yaml"),
+		filepath.Join(".aqua", "aqua.yml"),
 	}
 }
 
