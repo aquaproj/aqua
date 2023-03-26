@@ -3,6 +3,6 @@ registries:
     type: local
     path: registry.yaml
 packages:
-  - name: 99designs/aws-vault@v7.1.2
+  - name: 99designs/aws-vault@v7.2.0
     # DMG https://github.com/aquaproj/aqua/issues/1706
     registry: local
