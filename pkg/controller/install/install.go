@@ -3,7 +3,6 @@ package install
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/pkg/checksum"
@@ -15,11 +14,10 @@ import (
 	"github.com/aquaproj/aqua/pkg/installpackage"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-const dirPermission os.FileMode = 0o775
 
 type Controller struct {
 	packageInstaller   installpackage.Installer
@@ -56,11 +54,11 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
-		if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
+		if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
 			return fmt.Errorf("create the directory: %w", err)
 		}
 		if ctrl.runtime.GOOS == "windows" {
-			if err := ctrl.fs.MkdirAll(filepath.Join(ctrl.rootDir, "bat"), dirPermission); err != nil {
+			if err := util.MkdirAll(ctrl.fs, filepath.Join(ctrl.rootDir, "bat")); err != nil {
 				return fmt.Errorf("create the directory: %w", err)
 			}
 		}

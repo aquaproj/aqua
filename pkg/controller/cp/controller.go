@@ -4,19 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/controller/which"
 	"github.com/aquaproj/aqua/pkg/policy"
 	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-const dirPermission os.FileMode = 0o775
 
 type Controller struct {
 	packageInstaller   PackageInstaller
@@ -45,7 +43,7 @@ func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *ru
 var errCopyFailure = errors.New("it failed to copy some tools")
 
 func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if err := ctrl.fs.MkdirAll(param.Dest, dirPermission); err != nil {
+	if err := util.MkdirAll(ctrl.fs, param.Dest); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	if len(param.Args) == 0 {

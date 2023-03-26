@@ -6,6 +6,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/pkg/util"
 	"github.com/otiai10/copy"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
@@ -62,7 +63,7 @@ func cpDir(fs afero.Fs, src, dst string) error {
 		dstPath := filepath.Join(dst, fileInfo.Name())
 
 		if fileInfo.IsDir() {
-			if err := fs.MkdirAll(dstPath, dirPermission); err != nil {
+			if err := util.MkdirAll(fs, dstPath); err != nil {
 				return fmt.Errorf("create a directory: %w", err)
 			}
 			if err := cpDir(fs, srcPath, dstPath); err != nil {
@@ -79,7 +80,7 @@ func cpDir(fs afero.Fs, src, dst string) error {
 }
 
 func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error { //nolint:cyclop
-	if err := fs.MkdirAll(unarchiver.dest, dirPermission); err != nil {
+	if err := util.MkdirAll(fs, unarchiver.dest); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 	tempFile, err := afero.TempFile(fs, "", "")
