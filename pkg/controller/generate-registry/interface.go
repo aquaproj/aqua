@@ -3,7 +3,7 @@ package genrgst
 import (
 	"context"
 
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 )
 
 type RepositoriesService interface {

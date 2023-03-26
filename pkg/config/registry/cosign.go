@@ -3,8 +3,8 @@ package registry
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/template"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/template"
 )
 
 type Cosign struct {

@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
 type Override struct {

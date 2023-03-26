@@ -1,4 +1,4 @@
-module github.com/aquaproj/aqua
+module github.com/aquaproj/aqua/v2
 
 go 1.19
 

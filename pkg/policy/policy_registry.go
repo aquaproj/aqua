@@ -3,8 +3,8 @@ package policy
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/expr"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
 )
 
 func (pc *CheckerImpl) matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {

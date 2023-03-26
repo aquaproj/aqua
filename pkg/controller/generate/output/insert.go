@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"

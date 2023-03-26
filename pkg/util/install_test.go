@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 )
 
 func TestIsOwnerExecutable(t *testing.T) {

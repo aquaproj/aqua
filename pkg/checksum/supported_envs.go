@@ -3,7 +3,7 @@ package checksum
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
 func GetRuntimesFromSupportedEnvs(cfgSupportedEnvs, pkgSupportedEnvs []string) ([]*runtime.Runtime, error) {

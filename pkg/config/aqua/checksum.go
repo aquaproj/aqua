@@ -1,6 +1,6 @@
 package aqua
 
-import "github.com/aquaproj/aqua/pkg/config/registry"
+import "github.com/aquaproj/aqua/v2/pkg/config/registry"
 
 func (cfg *Config) ChecksumEnabled() bool {
 	if cfg == nil {

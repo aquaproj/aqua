@@ -8,9 +8,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )

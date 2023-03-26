@@ -3,7 +3,7 @@ package aqua_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 )

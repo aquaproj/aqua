@@ -3,7 +3,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 )
 
 func TestExt(t *testing.T) {

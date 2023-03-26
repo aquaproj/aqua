@@ -3,7 +3,7 @@ package checksum_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/spf13/afero"
 )
 

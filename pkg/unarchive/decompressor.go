@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/mholt/archiver/v3"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
