@@ -10,11 +10,11 @@ import (
 
 func (runner *Runner) newDisallowPolicyCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "disallow-policy",
+		Name:  "disallow",
 		Usage: "Disallow a policy file",
 		Description: `Disallow a policy file
 e.g.
-$ aqua disallow-policy
+$ aqua policy disallow [<policy file path>]
 `,
 		Action: runner.disallowPolicyAction,
 	}
