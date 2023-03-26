@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/initpolicy"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	goccyYAML "github.com/goccy/go-yaml"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"

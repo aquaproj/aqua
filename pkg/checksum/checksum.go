@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/codingsince1985/checksum"
 	"github.com/spf13/afero"
 )

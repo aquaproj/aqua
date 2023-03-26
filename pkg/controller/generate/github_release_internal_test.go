@@ -3,8 +3,8 @@ package generate
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/expr"
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 )
 
 func strP(s string) *string {

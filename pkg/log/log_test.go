@@ -3,8 +3,8 @@ package log_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/log"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/log"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
 func TestNew(t *testing.T) {

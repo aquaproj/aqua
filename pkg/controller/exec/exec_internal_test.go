@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/exec"
 	"github.com/sirupsen/logrus"
 )
 

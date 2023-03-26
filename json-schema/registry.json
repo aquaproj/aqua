@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/aquaproj/aqua/pkg/config/registry/config",
+  "$id": "https://github.com/aquaproj/aqua/v2/pkg/config/registry/config",
   "$ref": "#/$defs/Config",
   "$defs": {
     "Alias": {
