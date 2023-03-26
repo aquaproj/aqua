@@ -11,6 +11,7 @@ func (runner *Runner) newPolicyCommand() *cli.Command {
 		Subcommands: []*cli.Command{
 			runner.newAllowPolicyCommand(),
 			runner.newDenyPolicyCommand(),
+			runner.newSetPolicyCommand(),
 		},
 	}
 }
