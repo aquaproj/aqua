@@ -104,7 +104,7 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 		assetName = filepath.Base(assetName)
 	}
 	tempFilePath := filepath.Join(tempDir, assetName)
-	if assetName == "" && (pkgInfo.Type == "github_archive" || pkgInfo.Type == "go") {
+	if assetName == "" && pkgInfo.Type == "github_archive" {
 		tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
 	}
 	if err := copyAsset(inst.fs, tempFilePath, param.Body); err != nil {
