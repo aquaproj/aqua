@@ -30,12 +30,14 @@ type Controller struct {
 	executor           Executor
 	fs                 afero.Fs
 	policyConfigReader policy.ConfigReader
+	policyConfigFinder policy.ConfigFinder
 	policyChecker      policy.Checker
+	policyValidator    policy.Validator
 	enabledXSysExec    bool
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker) *Controller {
+func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker, policyConfigFinder policy.ConfigFinder, policyValidator policy.Validator) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -46,6 +48,8 @@ func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl w
 		enabledXSysExec:    osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
+		policyConfigFinder: policyConfigFinder,
+		policyValidator:    policyValidator,
 		policyChecker:      policyChecker,
 		requireChecksum:    param.RequireChecksum,
 	}
@@ -63,11 +67,26 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil {
+	if findResult.Package != nil { //nolint:nestif
 		logE = logE.WithFields(logrus.Fields{
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
+
+		policyFile, err := ctrl.policyConfigFinder.Find("", param.PWD)
+		if err != nil {
+			return fmt.Errorf("find a policy file: %w", err)
+		}
+		if policyFile != "" {
+			if err := ctrl.policyValidator.Validate(policyFile); err != nil {
+				if err := ctrl.policyValidator.Warn(logE, policyFile); err != nil {
+					logE.WithError(err).Warn("warn an disallowed policy file")
+				}
+			} else {
+				param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
+			}
+		}
+
 		if err := ctrl.validate(findResult.Package, param.DisablePolicy, param.PolicyConfigFilePaths); err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"policy_files": param.PolicyConfigFilePaths,

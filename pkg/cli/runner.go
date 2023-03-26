@@ -141,6 +141,8 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		Commands: []*cli.Command{
 			runner.newInitCommand(),
 			runner.newInitPolicyCommand(),
+			runner.newAllowPolicyCommand(),
+			runner.newDisallowPolicyCommand(),
 			runner.newInstallCommand(),
 			runner.newUpdateAquaCommand(),
 			runner.newGenerateCommand(),

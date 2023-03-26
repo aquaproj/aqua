@@ -12,7 +12,9 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	finder "github.com/aquaproj/aqua/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/allowpolicy"
 	"github.com/aquaproj/aqua/pkg/controller/cp"
+	"github.com/aquaproj/aqua/pkg/controller/disallowpolicy"
 	cexec "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/pkg/controller/generate-registry"
@@ -249,6 +251,14 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
 		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
@@ -390,6 +400,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
+		),
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -546,6 +564,14 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
 		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
@@ -614,4 +640,36 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 	)
 	return &updatechecksum.Controller{}
+}
+
+func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
+	wire.Build(
+		allowpolicy.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+	)
+	return &allowpolicy.Controller{}
+}
+
+func InitializeDisallowPolicyCommandController(ctx context.Context, param *config.Param) *disallowpolicy.Controller {
+	wire.Build(
+		disallowpolicy.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+	)
+	return &disallowpolicy.Controller{}
 }

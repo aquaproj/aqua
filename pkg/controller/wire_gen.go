@@ -12,7 +12,9 @@ import (
 	"github.com/aquaproj/aqua/pkg/config"
 	"github.com/aquaproj/aqua/pkg/config-finder"
 	"github.com/aquaproj/aqua/pkg/config-reader"
+	"github.com/aquaproj/aqua/pkg/controller/allowpolicy"
 	"github.com/aquaproj/aqua/pkg/controller/cp"
+	"github.com/aquaproj/aqua/pkg/controller/disallowpolicy"
 	exec2 "github.com/aquaproj/aqua/pkg/controller/exec"
 	"github.com/aquaproj/aqua/pkg/controller/generate"
 	"github.com/aquaproj/aqua/pkg/controller/generate-registry"
@@ -120,7 +122,9 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	checkerImpl := policy.NewChecker()
 	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checkerImpl, verifierImpl, slsaVerifierImpl)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	controller := install.New(param, configFinder, configReaderImpl, installerImpl, installpackageInstallerImpl, fs, rt, policyConfigReaderImpl)
+	configFinderImpl := policy.NewConfigFinder(fs)
+	validatorImpl := policy.NewValidator(param, fs)
+	controller := install.New(param, configFinder, configReaderImpl, installerImpl, installpackageInstallerImpl, fs, rt, policyConfigReaderImpl, configFinderImpl, validatorImpl)
 	return controller
 }
 
@@ -165,7 +169,9 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	osEnv := osenv.New()
 	controllerImpl := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl)
+	configFinderImpl := policy.NewConfigFinder(fs)
+	validatorImpl := policy.NewValidator(param, fs)
+	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl, configFinderImpl, validatorImpl)
 	return controller
 }
 
@@ -210,8 +216,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	osEnv := osenv.New()
 	controllerImpl := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	controller := install.New(param, configFinder, configReaderImpl, registryInstallerImpl, installerImpl, fs, rt, policyConfigReaderImpl)
-	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, policyConfigReaderImpl)
+	configFinderImpl := policy.NewConfigFinder(fs)
+	validatorImpl := policy.NewValidator(param, fs)
+	controller := install.New(param, configFinder, configReaderImpl, registryInstallerImpl, installerImpl, fs, rt, policyConfigReaderImpl, configFinderImpl, validatorImpl)
+	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, policyConfigReaderImpl, configFinderImpl, validatorImpl)
 	return cpController
 }
 
@@ -230,5 +238,21 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	controller := updatechecksum.New(param, configFinder, configReaderImpl, installerImpl, fs, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader)
+	return controller
+}
+
+func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
+	fs := afero.NewOsFs()
+	configFinderImpl := policy.NewConfigFinder(fs)
+	validatorImpl := policy.NewValidator(param, fs)
+	controller := allowpolicy.New(fs, configFinderImpl, validatorImpl)
+	return controller
+}
+
+func InitializeDisallowPolicyCommandController(ctx context.Context, param *config.Param) *disallowpolicy.Controller {
+	fs := afero.NewOsFs()
+	configFinderImpl := policy.NewConfigFinder(fs)
+	validatorImpl := policy.NewValidator(param, fs)
+	controller := disallowpolicy.New(fs, configFinderImpl, validatorImpl)
 	return controller
 }

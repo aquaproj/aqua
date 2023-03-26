@@ -24,10 +24,12 @@ type Controller struct {
 	which              which.Controller
 	installer          Installer
 	policyConfigReader policy.ConfigReader
+	policyConfigFinder policy.ConfigFinder
+	policyValidator    policy.Validator
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader, policyConfigFinder policy.ConfigFinder, policyValidator policy.Validator) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,
@@ -36,6 +38,8 @@ func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *ru
 		which:              whichCtrl,
 		installer:          installer,
 		policyConfigReader: policyConfigReader,
+		policyConfigFinder: policyConfigFinder,
+		policyValidator:    policyValidator,
 		requireChecksum:    param.RequireChecksum,
 	}
 }
@@ -63,9 +67,9 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 
 	ctrl.packageInstaller.SetCopyDir("")
 
-	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy)
+	policyCfgs, err := ctrl.readPolicy(logE, param)
 	if err != nil {
-		return fmt.Errorf("read policy files: %w", err)
+		return err
 	}
 
 	for _, exeName := range param.Args {
@@ -88,6 +92,23 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 		return errCopyFailure
 	}
 	return nil
+}
+
+func (ctrl *Controller) readPolicy(logE *logrus.Entry, param *config.Param) ([]*policy.Config, error) {
+	policyFile, err := ctrl.policyConfigFinder.Find("", param.PWD)
+	if err != nil {
+		return nil, fmt.Errorf("find a policy file: %w", err)
+	}
+	if policyFile != "" {
+		if err := ctrl.policyValidator.Validate(policyFile); err != nil {
+			if err := ctrl.policyValidator.Warn(logE, policyFile); err != nil {
+				logE.WithError(err).Warn("warn an disallowed policy file")
+			}
+		} else {
+			param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
+		}
+	}
+	return ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy) //nolint:wrapcheck
 }
 
 func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config) error {

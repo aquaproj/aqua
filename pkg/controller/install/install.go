@@ -30,11 +30,13 @@ type Controller struct {
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
 	policyConfigReader policy.ConfigReader
+	policyConfigFinder policy.ConfigFinder
+	policyValidator    policy.Validator
 	skipLink           bool
 	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader, policyConfigFinder policy.ConfigFinder, policyValidator policy.Validator) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -47,11 +49,13 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		tags:               param.Tags,
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
+		policyConfigFinder: policyConfigFinder,
+		policyValidator:    policyValidator,
 		requireChecksum:    param.RequireChecksum,
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
 		if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
@@ -65,6 +69,20 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 
 		if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {
 			return err //nolint:wrapcheck
+		}
+	}
+
+	policyFile, err := ctrl.policyConfigFinder.Find("", param.PWD)
+	if err != nil {
+		return fmt.Errorf("find a policy file: %w", err)
+	}
+	if policyFile != "" {
+		if err := ctrl.policyValidator.Validate(policyFile); err != nil {
+			if err := ctrl.policyValidator.Warn(logE, policyFile); err != nil {
+				logE.WithError(err).Warn("warn an disallowed policy file")
+			}
+		} else {
+			param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
 		}
 	}
 
