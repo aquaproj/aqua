@@ -15,7 +15,7 @@ func (runner *Runner) newInitPolicyCommand() *cli.Command {
 		ArgsUsage: `[<created file path. The default value is "aqua-policy.yaml">]`,
 		Description: `[Deprecated] Create a policy file if it doesn't exist
 
-Please use "aqua policy set" command instead.
+Please use "aqua policy init" command instead.
 
 e.g.
 $ aqua init-policy # create "aqua-policy.yaml"
