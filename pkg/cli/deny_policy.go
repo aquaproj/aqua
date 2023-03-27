@@ -10,17 +10,17 @@ import (
 
 func (runner *Runner) newDenyPolicyCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "disallow",
+		Name:  "deny",
 		Usage: "Deny a policy file",
 		Description: `Deny a policy file
 e.g.
-$ aqua policy disallow [<policy file path>]
+$ aqua policy deny [<policy file path>]
 `,
-		Action: runner.disallowPolicyAction,
+		Action: runner.denyPolicyAction,
 	}
 }
 
-func (runner *Runner) disallowPolicyAction(c *cli.Context) error {
+func (runner *Runner) denyPolicyAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (runner *Runner) disallowPolicyAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "disallow-policy", param); err != nil {
+	if err := runner.setParam(c, "deny-policy", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeDenyPolicyCommandController(c.Context, param)

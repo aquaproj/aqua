@@ -35,7 +35,7 @@ func (ctrl *Controller) Deny(ctx context.Context, logE *logrus.Entry, param *con
 		return nil
 	}
 	if err := ctrl.policyValidator.Deny(policyFilePath); err != nil {
-		return logerr.WithFields(fmt.Errorf("disallow a policy file: %w", err), logrus.Fields{ //nolint:wrapcheck
+		return logerr.WithFields(fmt.Errorf("deny a policy file: %w", err), logrus.Fields{ //nolint:wrapcheck
 			"policy_file": policyFilePath,
 		})
 	}
