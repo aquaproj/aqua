@@ -7,7 +7,7 @@ require (
 	github.com/adrg/xdg v0.4.0
 	github.com/antonmedv/expr v1.12.5
 	github.com/codingsince1985/checksum v1.3.0
-	github.com/goccy/go-yaml v1.10.0
+	github.com/goccy/go-yaml v1.10.1
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v50 v50.2.0
 	github.com/google/wire v0.5.0
