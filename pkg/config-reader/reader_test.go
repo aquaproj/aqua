@@ -6,8 +6,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 )
 
 func Test_configReader_Read(t *testing.T) { //nolint:funlen
@@ -100,11 +100,9 @@ packages:
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			reader := reader.New(fs, &config.Param{
 				HomeDir: d.homeDir,
