@@ -13,13 +13,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-func strP(s string) *string {
-	return &s
-}
 
 func TestInstaller_download(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -41,8 +38,8 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 						Type:      "github_release",
 						RepoOwner: "cli",
 						RepoName:  "cli",
-						Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
-						Rosetta2:  boolP(true),
+						Asset:     util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+						Rosetta2:  util.BoolP(true),
 						Checksum: &registry.Checksum{
 							Type:       "github_release",
 							Algorithm:  "sha256",

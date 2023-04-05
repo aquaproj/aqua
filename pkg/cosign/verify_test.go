@@ -13,13 +13,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/exec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-func strP(s string) *string {
-	return &s
-}
 
 func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -102,15 +99,15 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				CosignExperimental: true,
 				Signature: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: strP("aqua-installer.sig"),
+					Asset: util.StrP("aqua-installer.sig"),
 				},
 				Certificate: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: strP("aqua-installer.pem"),
+					Asset: util.StrP("aqua-installer.pem"),
 				},
 				Key: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: strP("aqua-installer.key"),
+					Asset: util.StrP("aqua-installer.key"),
 				},
 			},
 			art: &template.Artifact{

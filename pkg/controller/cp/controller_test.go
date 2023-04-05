@@ -10,13 +10,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-func boolP(b bool) *bool {
-	return &b
-}
 
 func TestController_Copy(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -60,8 +57,8 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 					},
 					Config: &aqua.Config{
 						Checksum: &aqua.Checksum{
-							Enabled:         boolP(true),
-							RequireChecksum: boolP(true),
+							Enabled:         util.BoolP(true),
+							RequireChecksum: util.BoolP(true),
 						},
 					},
 					ConfigFilePath: "aqua.yaml",

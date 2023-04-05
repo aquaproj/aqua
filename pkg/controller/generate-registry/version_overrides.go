@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -139,7 +140,7 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	if getBool(pkgInfo.Rosetta2) != getBool(latestPkgInfo.Rosetta2) {
 		vo.Rosetta2 = pkgInfo.Rosetta2
 		if pkgInfo.Rosetta2 == nil {
-			vo.Rosetta2 = boolP(false)
+			vo.Rosetta2 = util.BoolP(false)
 		}
 	}
 	if pkgInfo.WindowsExt != latestPkgInfo.WindowsExt {
@@ -149,7 +150,7 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 		vo.Checksum = pkgInfo.Checksum
 		if pkgInfo.Checksum == nil {
 			vo.Checksum = &registry.Checksum{
-				Enabled: boolP(false),
+				Enabled: util.BoolP(false),
 			}
 		}
 	}
