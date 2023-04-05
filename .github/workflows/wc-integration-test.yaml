@@ -8,7 +8,9 @@ jobs:
     env:
       GITHUB_TOKEN: ${{github.token}}
       AQUA_LOG_LEVEL: debug
+      AQUA_LOG_COLOR: always
       AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
+      AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/policy.yaml
     steps:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
