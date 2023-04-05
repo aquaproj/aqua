@@ -222,14 +222,6 @@ func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.Packa
 	asset.ParseAssetInfos(pkgInfo, assetInfos)
 }
 
-func boolP(b bool) *bool {
-	return &b
-}
-
-func strP(s string) *string {
-	return &s
-}
-
 func (ctrl *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, releaseID int64) []*github.ReleaseAsset {
 	opts := &github.ListOptions{
 		PerPage: 100, //nolint:gomnd
