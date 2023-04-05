@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -66,7 +67,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		}
 	}
 	cfgStr := strings.Replace(configTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1)
-	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(cfgStr), 0o644); err != nil { //nolint:gomnd
+	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(cfgStr), util.FilePermission); err != nil {
 		return fmt.Errorf("write a configuration file: %w", logerr.WithFields(err, logrus.Fields{
 			"configuration_file_path": cfgFilePath,
 		}))
