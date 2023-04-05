@@ -31,6 +31,7 @@ jobs:
               - .github/workflows/*.yaml
               - aqua/aqua.yaml
               - aqua/imports/ghalint.yaml
+              - ghalint.yaml
             go-mod-tidy:
               - go.mod
               - go.sum

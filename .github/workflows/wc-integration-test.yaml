@@ -4,6 +4,7 @@ on: workflow_call
 jobs:
   integration-test:
     runs-on: ubuntu-latest
+    permissions: {}
     env:
       GITHUB_TOKEN: ${{github.token}}
       AQUA_LOG_LEVEL: debug
