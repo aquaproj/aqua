@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -29,15 +30,13 @@ type Controller struct {
 	packageInstaller   installpackage.Installer
 	executor           Executor
 	fs                 afero.Fs
-	policyConfigReader policy.ConfigReader
+	policyConfigReader policy.Reader
 	policyConfigFinder policy.ConfigFinder
-	policyChecker      policy.Checker
-	policyValidator    policy.Validator
 	enabledXSysExec    bool
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker, policyConfigFinder policy.ConfigFinder, policyValidator policy.Validator) *Controller {
+func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -49,13 +48,11 @@ func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl w
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
 		policyConfigFinder: policyConfigFinder,
-		policyValidator:    policyValidator,
-		policyChecker:      policyChecker,
 		requireChecksum:    param.RequireChecksum,
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args []string) (gErr error) {
+func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args []string) (gErr error) { //nolint:cyclop
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -63,47 +60,48 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		}
 	}()
 
+	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
+	if err != nil {
+		return fmt.Errorf("read policy files: %w", err)
+	}
+
+	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
+	for _, p := range param.PolicyConfigFilePaths {
+		globalPolicyPaths[p] = struct{}{}
+	}
+
 	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil {
+	if findResult.Package != nil { //nolint:nestif
 		logE = logE.WithFields(logrus.Fields{
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
 
-		if err := policy.Validate(logE, ctrl.policyConfigFinder, ctrl.policyValidator, param); err != nil {
-			return fmt.Errorf("validate a policy file: %w", err)
+		policyFilePath, err := ctrl.policyConfigFinder.Find("", filepath.Dir(findResult.ConfigFilePath))
+		if err != nil {
+			return fmt.Errorf("find a policy file: %w", err)
+		}
+		if _, ok := globalPolicyPaths[policyFilePath]; !ok {
+			policyCfg, err := ctrl.policyConfigReader.ValidateAndRead(logE, policyFilePath)
+			if err != nil {
+				return fmt.Errorf("find a policy file: %w", err)
+			}
+			if policyCfg != nil {
+				policyCfgs = append(policyCfgs, policyCfg)
+			}
 		}
 
-		if err := ctrl.validate(findResult.Package, param.DisablePolicy, param.PolicyConfigFilePaths); err != nil {
-			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"policy_files": param.PolicyConfigFilePaths,
-			})
-		}
-		if err := ctrl.install(ctx, logE, findResult); err != nil {
+		if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {
 			return err
 		}
 	}
 	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
 }
 
-func (ctrl *Controller) validate(pkg *config.Package, disablePolicy bool, policyConfigFilePaths []string) error {
-	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths, disablePolicy)
-	if err != nil {
-		return fmt.Errorf("read policy files: %w", err)
-	}
-	if err := ctrl.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
-		Pkg:           pkg,
-		PolicyConfigs: policyCfgs,
-	}); err != nil {
-		return fmt.Errorf("validate the installed package for security: %w", err)
-	}
-	return nil
-}
-
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config) error {
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -125,6 +123,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(ctrl.requireChecksum),
+		PolicyConfigs:   policies,
 	}); err != nil {
 		return err //nolint:wrapcheck
 	}

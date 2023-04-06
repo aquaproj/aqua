@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +35,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error { //nolint:funlen
+func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error { //nolint:funlen,cyclop
 	param.Args = c.Args().Slice()
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
@@ -82,6 +83,11 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	if !param.DisablePolicy {
 		param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
+		for i, p := range param.PolicyConfigFilePaths {
+			if !filepath.IsAbs(p) {
+				param.PolicyConfigFilePaths[i] = filepath.Join(param.PWD, p)
+			}
+		}
 	}
 	if a := os.Getenv("AQUA_REQUIRE_CHECKSUM"); a != "" {
 		requireChecksum, err := strconv.ParseBool(a)

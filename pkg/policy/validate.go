@@ -40,32 +40,17 @@ func (validator *MockValidator) Warn(logE *logrus.Entry, policyFilePath string) 
 }
 
 type ValidatorImpl struct {
-	rootDir string
-	fs      afero.Fs
+	rootDir  string
+	fs       afero.Fs
+	disabled bool
 }
 
 func NewValidator(param *config.Param, fs afero.Fs) *ValidatorImpl {
 	return &ValidatorImpl{
-		rootDir: param.RootDir,
-		fs:      fs,
+		rootDir:  param.RootDir,
+		fs:       fs,
+		disabled: param.DisablePolicy,
 	}
-}
-
-func Validate(logE *logrus.Entry, finder ConfigFinder, validator Validator, param *config.Param) error {
-	policyFile, err := finder.Find("", param.PWD)
-	if err != nil {
-		return fmt.Errorf("find a policy file: %w", err)
-	}
-	if policyFile != "" {
-		if err := validator.Validate(policyFile); err != nil {
-			if err := validator.Warn(logE, policyFile); err != nil {
-				logE.WithError(err).Warn("warn an denied policy file")
-			}
-		} else {
-			param.PolicyConfigFilePaths = append(param.PolicyConfigFilePaths, policyFile)
-		}
-	}
-	return nil
 }
 
 var (
@@ -160,6 +145,9 @@ $ aqua policy deny "%s"
 }
 
 func (validator *ValidatorImpl) Validate(p string) error {
+	if validator.disabled {
+		return nil
+	}
 	policyPath := filepath.Join(validator.rootDir, "policies", p)
 	f, err := afero.Exists(validator.fs, policyPath)
 	if err != nil {

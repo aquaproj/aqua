@@ -72,6 +72,14 @@ packages:
   path: aqua-installer
 `,
 				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
 			},
 		},
 		{
@@ -132,8 +140,12 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			ctrl := execCtrl.New(d.param, pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockConfigReader{}, &policy.MockChecker{}, &policy.MockConfigFinder{}, &policy.MockValidator{})
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := execCtrl.New(d.param, pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockReader{
+				Config: &policy.Config{
+					Path: "",
+				},
+			}, policy.NewConfigFinder(fs))
 			if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args); err != nil {
 				if d.isErr {
 					return
@@ -227,8 +239,8 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			ctrl := execCtrl.New(d.param, pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockConfigReader{}, &policy.MockChecker{}, &policy.MockConfigFinder{}, &policy.MockValidator{})
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := execCtrl.New(d.param, pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockReader{}, policy.NewConfigFinder(fs))
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				func() {

@@ -244,10 +244,6 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
@@ -259,6 +255,11 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			policy.NewValidator,
 			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
 		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -395,10 +396,6 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
@@ -410,6 +407,11 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			policy.NewValidator,
 			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
 		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -468,10 +470,6 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
@@ -483,6 +481,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
+		policy.NewChecker,
 	)
 	return &updateaqua.Controller{}
 }
@@ -557,10 +556,6 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
@@ -572,6 +567,11 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			policy.NewValidator,
 			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
 		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),

@@ -17,8 +17,9 @@ var (
 )
 
 type Config struct {
-	Path string
-	YAML *ConfigYAML
+	Path    string
+	Allowed bool
+	YAML    *ConfigYAML
 }
 
 type ConfigYAML struct {

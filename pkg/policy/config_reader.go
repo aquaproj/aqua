@@ -19,7 +19,8 @@ func NewConfigReader(fs afero.Fs) *ConfigReaderImpl {
 }
 
 type ConfigReader interface {
-	Read(policyConfigFiles []string, disablePolicy bool) ([]*Config, error)
+	Read(policyConfigFiles []string) ([]*Config, error)
+	ReadFile(policyConfigFile string) (*Config, error)
 }
 
 type MockConfigReader struct {
@@ -27,17 +28,11 @@ type MockConfigReader struct {
 	Err  error
 }
 
-func (reader *MockConfigReader) Read(files []string, disablePolicy bool) ([]*Config, error) {
+func (reader *MockConfigReader) Read(files []string) ([]*Config, error) {
 	return reader.Cfgs, reader.Err
 }
 
-func (reader *ConfigReaderImpl) Read(files []string, disablePolicy bool) ([]*Config, error) {
-	if disablePolicy {
-		return nil, nil
-	}
-	if len(files) == 0 {
-		return reader.readDefault()
-	}
+func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 	policyCfgs := make([]*Config, len(files))
 	for i, cfgFilePath := range files {
 		policyCfg := &Config{
@@ -52,29 +47,15 @@ func (reader *ConfigReaderImpl) Read(files []string, disablePolicy bool) ([]*Con
 	return policyCfgs, nil
 }
 
-func (reader *ConfigReaderImpl) readDefault() ([]*Config, error) {
-	// https://github.com/aquaproj/aqua/issues/1404
-	// If no policy file is set, only standard registry is allowed by default.
-	cfg := &Config{
-		YAML: &ConfigYAML{
-			Registries: []*Registry{
-				{
-					Type: "standard",
-				},
-			},
-			Packages: []*Package{
-				{
-					RegistryName: "standard",
-				},
-			},
-		},
+func (reader *ConfigReaderImpl) ReadFile(file string) (*Config, error) {
+	policyCfg := &Config{
+		Path: file,
+		YAML: &ConfigYAML{},
 	}
-	if err := cfg.Init(); err != nil {
-		return nil, err
+	if err := reader.read(policyCfg); err != nil {
+		return nil, fmt.Errorf("read the policy config file: %w", err)
 	}
-	return []*Config{
-		cfg,
-	}, nil
+	return policyCfg, nil
 }
 
 func (reader *ConfigReaderImpl) read(cfg *Config) error {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -23,13 +24,12 @@ type Controller struct {
 	runtime            *runtime.Runtime
 	which              which.Controller
 	installer          Installer
-	policyConfigReader policy.ConfigReader
+	policyConfigReader policy.Reader
 	policyConfigFinder policy.ConfigFinder
-	policyValidator    policy.Validator
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader, policyConfigFinder policy.ConfigFinder, policyValidator policy.Validator) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,
@@ -39,7 +39,6 @@ func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *ru
 		installer:          installer,
 		policyConfigReader: policyConfigReader,
 		policyConfigFinder: policyConfigFinder,
-		policyValidator:    policyValidator,
 		requireChecksum:    param.RequireChecksum,
 	}
 }
@@ -67,9 +66,14 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 
 	ctrl.packageInstaller.SetCopyDir("")
 
-	policyCfgs, err := ctrl.readPolicy(logE, param)
+	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
 	if err != nil {
-		return err
+		return fmt.Errorf("read policy files: %w", err)
+	}
+
+	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
+	for _, p := range param.PolicyConfigFilePaths {
+		globalPolicyPaths[p] = struct{}{}
 	}
 
 	for _, exeName := range param.Args {
@@ -80,7 +84,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 				<-maxInstallChan
 			}()
 			logE := logE.WithField("exe_name", exeName)
-			if err := ctrl.installAndCopy(ctx, logE, param, exeName, policyCfgs); err != nil {
+			if err := ctrl.installAndCopy(ctx, logE, param, exeName, policyCfgs, globalPolicyPaths); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -94,20 +98,28 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 	return nil
 }
 
-func (ctrl *Controller) readPolicy(logE *logrus.Entry, param *config.Param) ([]*policy.Config, error) {
-	if err := policy.Validate(logE, ctrl.policyConfigFinder, ctrl.policyValidator, param); err != nil {
-		return nil, fmt.Errorf("validate a policy file: %w", err)
-	}
-	return ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy) //nolint:wrapcheck
-}
-
-func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config) error {
+func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config, globalPolicyPaths map[string]struct{}) error {
 	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil {
+	if findResult.Package != nil { //nolint:nestif
 		logE = logE.WithField("package", findResult.Package.Package.Name)
+
+		policyFilePath, err := ctrl.policyConfigFinder.Find("", filepath.Dir(findResult.ConfigFilePath))
+		if err != nil {
+			return fmt.Errorf("find a policy file: %w", err)
+		}
+		if _, ok := globalPolicyPaths[policyFilePath]; !ok {
+			policyCfg, err := ctrl.policyConfigReader.ValidateAndRead(logE, policyFilePath)
+			if err != nil {
+				return fmt.Errorf("find a policy file: %w", err)
+			}
+			if policyCfg != nil {
+				policyConfigs = append(policyConfigs, policyCfg)
+			}
+		}
+
 		if err := ctrl.install(ctx, logE, findResult, policyConfigs); err != nil {
 			return err
 		}

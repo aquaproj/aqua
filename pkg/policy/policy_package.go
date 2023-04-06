@@ -8,19 +8,46 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 )
 
-type ParamValidatePackage struct {
-	Pkg           *config.Package
-	PolicyConfigs []*Config
+func getDefaultPolicy() ([]*Config, error) {
+	// https://github.com/aquaproj/aqua/issues/1404
+	// If no policy file is set, only standard registry is allowed by default.
+	cfg := &Config{
+		YAML: &ConfigYAML{
+			Registries: []*Registry{
+				{
+					Type: "standard",
+				},
+			},
+			Packages: []*Package{
+				{
+					RegistryName: "standard",
+				},
+			},
+		},
+	}
+	if err := cfg.Init(); err != nil {
+		return nil, err
+	}
+	return []*Config{
+		cfg,
+	}, nil
 }
 
-func (pc *CheckerImpl) ValidatePackage(param *ParamValidatePackage) error {
-	if len(param.PolicyConfigs) == 0 {
+func (pc *Checker) ValidatePackage(pkg *config.Package, policies []*Config) error {
+	if pc.disabled {
 		return nil
 	}
-	for _, policyCfg := range param.PolicyConfigs {
+	if len(policies) == 0 {
+		a, err := getDefaultPolicy()
+		if err != nil {
+			return err
+		}
+		policies = a
+	}
+	for _, policyCfg := range policies {
 		policyCfg := policyCfg
 		if err := pc.validatePackage(&paramValidatePackage{
-			Pkg:          param.Pkg,
+			Pkg:          pkg,
 			PolicyConfig: policyCfg.YAML,
 		}); err == nil {
 			return nil
@@ -34,7 +61,7 @@ type paramValidatePackage struct {
 	PolicyConfig *ConfigYAML
 }
 
-func (pc *CheckerImpl) validatePackage(param *paramValidatePackage) error {
+func (pc *Checker) validatePackage(param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}
@@ -50,7 +77,7 @@ func (pc *CheckerImpl) validatePackage(param *paramValidatePackage) error {
 	return errUnAllowedPackage
 }
 
-func (pc *CheckerImpl) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
+func (pc *Checker) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}

@@ -29,14 +29,13 @@ type Controller struct {
 	runtime            *runtime.Runtime
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
-	policyConfigReader policy.ConfigReader
 	policyConfigFinder policy.ConfigFinder
-	policyValidator    policy.Validator
+	policyConfigReader policy.Reader
 	skipLink           bool
 	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader, policyConfigFinder policy.ConfigFinder, policyValidator policy.Validator) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -50,12 +49,11 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
 		policyConfigFinder: policyConfigFinder,
-		policyValidator:    policyValidator,
 		requireChecksum:    param.RequireChecksum,
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
 		if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
@@ -72,16 +70,31 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	if err := policy.Validate(logE, ctrl.policyConfigFinder, ctrl.policyValidator, param); err != nil {
-		return fmt.Errorf("validate a policy file: %w", err)
-	}
-
-	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy)
+	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
 
+	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
+	for _, p := range param.PolicyConfigFilePaths {
+		globalPolicyPaths[p] = struct{}{}
+	}
+
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+		policyFilePath, err := ctrl.policyConfigFinder.Find("", filepath.Dir(cfgFilePath))
+		if err != nil {
+			return fmt.Errorf("find a policy file: %w", err)
+		}
+		policyCfgs := policyCfgs
+		if _, ok := globalPolicyPaths[policyFilePath]; !ok {
+			policyCfg, err := ctrl.policyConfigReader.ValidateAndRead(logE, policyFilePath)
+			if err != nil {
+				return fmt.Errorf("find a policy file: %w", err)
+			}
+			if policyCfg != nil {
+				policyCfgs = append(policyCfgs, policyCfg)
+			}
+		}
 		if err := ctrl.install(ctx, logE, cfgFilePath, policyCfgs); err != nil {
 			return err
 		}

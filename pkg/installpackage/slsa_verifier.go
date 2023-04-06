@@ -59,7 +59,7 @@ func (slsaVerifier *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE 
 			Algorithm: "sha512",
 			Checksum:  chksum,
 		},
-		// PolicyConfigs is nil, so the policy check is skipped
+		DisablePolicy: true,
 	}); err != nil {
 		return err
 	}
