@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 )
@@ -80,11 +81,9 @@ func TestChecksums_ReadFile(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for k, v := range d.m {
-				if err := afero.WriteFile(fs, k, []byte(v), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.m)
+			if err != nil {
+				t.Fatal(err)
 			}
 			checksums := checksum.New()
 			if err := checksums.ReadFile(fs, d.p); err != nil {
@@ -199,11 +198,9 @@ func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for k, v := range d.files {
-				if err := afero.WriteFile(fs, k, []byte(v), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			p, err := checksum.GetChecksumFilePathFromConfigFilePath(fs, d.cfgFilePath)
 			if err != nil {

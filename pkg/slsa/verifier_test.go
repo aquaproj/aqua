@@ -11,13 +11,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/template"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-func strP(s string) *string {
-	return &s
-}
 
 func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -55,7 +52,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     strP("multiple.intoto.jsonl"),
+				Asset:     util.StrP("multiple.intoto.jsonl"),
 			},
 			art: &template.Artifact{
 				Version: "v1.6.0",

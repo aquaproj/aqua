@@ -5,11 +5,8 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 )
-
-func strP(s string) *string {
-	return &s
-}
 
 func Test_filterRelease(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -22,7 +19,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "no filter",
 			release: &github.RepositoryRelease{
-				TagName: strP("v1.0.0"),
+				TagName: util.StrP("v1.0.0"),
 			},
 			filters: []*Filter{
 				{},
@@ -32,7 +29,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_filter",
 			release: &github.RepositoryRelease{
-				TagName: strP("v1.0.0"),
+				TagName: util.StrP("v1.0.0"),
 			},
 			filters: []*Filter{
 				{
@@ -44,7 +41,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_prefix",
 			release: &github.RepositoryRelease{
-				TagName: strP("v1.0.0"),
+				TagName: util.StrP("v1.0.0"),
 			},
 			filters: []*Filter{
 				{
@@ -56,7 +53,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_constraints 1",
 			release: &github.RepositoryRelease{
-				TagName: strP("v1.0.0"),
+				TagName: util.StrP("v1.0.0"),
 			},
 			filters: []*Filter{
 				{
@@ -73,7 +70,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_constraints 2",
 			release: &github.RepositoryRelease{
-				TagName: strP("v2.0.0"),
+				TagName: util.StrP("v2.0.0"),
 			},
 			filters: []*Filter{
 				{
@@ -89,7 +86,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_constraints 3",
 			release: &github.RepositoryRelease{
-				TagName: strP("cli/v1.0.0"),
+				TagName: util.StrP("cli/v1.0.0"),
 			},
 			filters: []*Filter{
 				{

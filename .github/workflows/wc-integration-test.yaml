@@ -1,0 +1,141 @@
+---
+name: integration-test
+on: workflow_call
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    permissions: {}
+    env:
+      GITHUB_TOKEN: ${{github.token}}
+      AQUA_LOG_LEVEL: debug
+      AQUA_LOG_COLOR: always
+      AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
+      AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/policy.yaml
+    steps:
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version: 1.20.3
+          cache: true
+
+      - run: go install ./cmd/aqua
+      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
+      - run: echo "x-motemen/ghq" | aqua g -f -
+      - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/main/aqua-global.yaml g -f -
+      - run: aqua g x-motemen/ghq aquaproj/aqua-installer
+      - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
+      - name: Test -pin
+        run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
+
+      - name: Test version_prefix
+        run: aqua -c aqua-global.yaml g -i local,kubernetes-sigs/kustomize/version_prefix
+        working-directory: tests/main
+
+      - run: aqua list
+      - run: aqua update-checksum
+        working-directory: tests/main
+      - run: aqua update-checksum -prune
+        working-directory: tests/main
+      - run: aqua i -l -a
+        working-directory: tests/main
+      - run: aqua i
+        working-directory: tests/main
+      - run: aqua which go
+      - run: kind version
+        working-directory: tests/main
+      - run: kind version
+      - run: restic version
+        env:
+          AQUA_PROGRESS_BAR: "true"
+      - run: migrate -version
+      - run: ghq -version
+      - run: gh version
+      - run: tfenv --version
+      - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
+      - run: bats -v
+      - run: helm version
+      - run: github-compare -v
+      - run: terrafmt version
+
+      - name: test cosign
+        run: aqua i
+        working-directory: tests/cosign
+
+      - name: test SLSA
+        run: aqua i
+        working-directory: tests/slsa
+
+      - name: output bash completion
+        run: aqua completion bash
+      - name: output zsh completion
+        run: aqua completion zsh
+
+      - run: aqua g -i suzuki-shunsuke/tfcmt
+        working-directory: tests/main
+      - name: add duplicated package
+        run: aqua g -i suzuki-shunsuke/tfcmt
+        working-directory: tests/main
+      - run: git diff aqua.yaml
+        working-directory: tests/main
+
+      - name: "Test generate-registry"
+        run: aqua gr cli/cli
+      - name: "Test generate-registry (emoji)"
+        run: aqua gr hmarr/codeowners
+      - name: "Test generate-registry (rust)"
+        run: aqua gr XAMPPRocky/tokei
+      - name: Test generate-registry (specify version)
+        run: aqua gr suzuki-shunsuke/tfcmt@v3.2.4
+
+      - name: test aqua cp
+        run: aqua cp actionlint
+      - name: test aqua cp
+        run: dist/actionlint -version
+      - name: test aqua cp
+        run: aqua cp
+      - name: test aqua cp -a
+        run: aqua cp -a
+
+      - name: test tags
+        run: aqua i
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua i -t test
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua i -t foo,bar
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua i --exclude-tags test
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua i --exclude-tags test -t foo
+        working-directory: tests/tag
+
+      - name: test tags
+        run: aqua cp
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua cp -t test
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua cp -t foo,bar
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua cp --exclude-tags test
+        working-directory: tests/tag
+      - name: test tags
+        run: aqua cp --exclude-tags test -t foo
+        working-directory: tests/tag
+
+      - run: aqua update-checksum -a
+
+      # Test if global configuration files are read in `aqua list` and `aqua g`
+      - run: aqua list
+        working-directory: /tmp
+
+      - name: Test update-aqua
+        run: aqua update-aqua
+
+      - run: aqua-installer -v v0.8.1 -i /tmp/aqua

@@ -6,15 +6,8 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 )
-
-func boolP(b bool) *bool {
-	return &b
-}
-
-func strP(s string) *string {
-	return &s
-}
 
 func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
 	var a, rawA *AssetInfo
@@ -101,7 +94,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 					GOArch:       assetInfo.Arch,
 					Format:       assetInfo.Format,
 					Replacements: assetInfo.Replacements,
-					Asset:        strP(assetInfo.Template),
+					Asset:        util.StrP(assetInfo.Template),
 				})
 				if goos == osDarwin && goarch == "amd64" {
 					supportedEnvs = append(supportedEnvs, osDarwin)
@@ -138,7 +131,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	}
 
 	if checkRosetta2(assetInfos) {
-		pkgInfo.Rosetta2 = boolP(true)
+		pkgInfo.Rosetta2 = util.BoolP(true)
 	}
 
 	pkgInfo.SupportedEnvs = normalizeSupportedEnvs(pkgInfo.SupportedEnvs)
@@ -358,7 +351,7 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 		if strings.HasSuffix(assetInfo.Template, ".exe") {
 			assetInfo.Template = strings.TrimSuffix(assetInfo.Template, ".exe")
 		} else {
-			assetInfo.CompleteWindowsExt = boolP(false)
+			assetInfo.CompleteWindowsExt = util.BoolP(false)
 		}
 	}
 	return assetInfo

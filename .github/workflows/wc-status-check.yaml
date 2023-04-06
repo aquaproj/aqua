@@ -1,0 +1,11 @@
+---
+name: status-check
+on: workflow_call
+jobs:
+  status-check:
+    # This job is used for main branch's branch protection rule's status check.
+    # If all dependent jobs succeed or are skipped this job succeeds.
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - run: exit 1

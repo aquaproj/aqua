@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -56,7 +57,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		return nil
 	}
 
-	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(configTemplate), 0o644); err != nil { //nolint:gomnd
+	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(configTemplate), util.FilePermission); err != nil {
 		return fmt.Errorf("write a policy file: %w", logerr.WithFields(err, logrus.Fields{
 			"policy_file_path": cfgFilePath,
 		}))

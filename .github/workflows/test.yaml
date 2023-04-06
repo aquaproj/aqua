@@ -1,14 +1,7 @@
 ---
 name: test
-
 on: pull_request
-
-env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/policy.yaml
-  AQUA_LOG_COLOR: always
-
 permissions: {}
-
 jobs:
   path-filter:
     # Get changed files to filter jobs
@@ -16,6 +9,7 @@ jobs:
       update-aqua-checksums: ${{steps.changes.outputs.update-aqua-checksums}}
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
       ghalint: ${{steps.changes.outputs.ghalint}}
+      go-mod-tidy: ${{steps.changes.outputs.go-mod-tidy}}
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -28,78 +22,48 @@ jobs:
               - aqua/imports/*.yaml
               - aqua/aqua-checksums.json
               - .github/workflows/test.yaml
+              - .github/workflows/wc-update-aqua-checksums.yaml
             renovate-config-validator:
               - renovate.json5
+              - .github/workflows/test.yaml
+              - .github/workflows/wc-renovate-config-validator.yaml
             ghalint:
               - .github/workflows/*.yaml
+              - aqua/aqua.yaml
               - aqua/imports/ghalint.yaml
+              - ghalint.yaml
             go-mod-tidy:
               - go.mod
               - go.sum
               - "**.go"
+              - .github/workflows/test.yaml
+              - .github/workflows/wc-go-mod-tidy.yaml
 
   update-aqua-checksums:
-    # Update aqua-checksums.json and push a commit
-    runs-on: ubuntu-latest
     needs: path-filter
-    permissions: {}
-    if: |
-      needs.path-filter.outputs.update-aqua-checksums == 'true'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
-      - name: Generate token
-        id: generate_token
-        if: "! github.event.pull_request.head.repo.fork"
-        uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1
-        with:
-          app_id: ${{secrets.APP_ID}}
-          private_key: ${{secrets.APP_PRIVATE_KEY}}
-      - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
-        # Install ghcp
-        with:
-          aqua_version: v2.2.1
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - uses: aquaproj/update-checksum-action@2fb7f676d407d4fb8c2c466c19d09d3ddec4f82f # v0.2.2
-        with:
-          prune: true
-          skip_push: ${{github.event.pull_request.head.repo.fork}}
-        env:
-          # To trigger GitHub Actions Workflow by pushing a commit, GitHub App token is required.
-          # github.token doesn't trigger GitHub Actions Workflow.
-          # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
-          # > When you use the repository's GITHUB_TOKEN to perform tasks, events triggered by the GITHUB_TOKEN, with the exception of workflow_dispatch and repository_dispatch, will not create a new workflow run.
-          GITHUB_TOKEN: ${{steps.generate_token.outputs.token}}
+    if: needs.path-filter.outputs.update-aqua-checksums == 'true'
+    uses: ./.github/workflows/wc-update-aqua-checksums.yaml
+    permissions:
+      contents: read
+    secrets:
+      gh_app_id: ${{secrets.APP_ID}}
+      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
 
   renovate-config-validator:
-    # Validate Renovate Configuration by renovate-config-validator.
-    uses: suzuki-shunsuke/renovate-config-validator-workflow/.github/workflows/validate.yaml@1a2fd7b15d99b1c434124b0bd2d8bd55b54ed869 # v0.2.0
+    uses: ./.github/workflows/wc-renovate-config-validator.yaml
     needs: path-filter
     if: needs.path-filter.outputs.renovate-config-validator == 'true'
     permissions:
       contents: read
 
   ghalint:
-    # Validate GitHub Actions Workflows by ghalint.
     needs: path-filter
     if: needs.path-filter.outputs.ghalint == 'true'
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/wc-ghalint.yaml
     permissions: {}
-    steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
-      - uses: aquaproj/aqua-installer@61e2563dfe7674cbf74fe6ec212e444198a3bb00 # v2.0.2
-        with:
-          aqua_version: v2.2.1
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: ghalint run
-        env:
-          GHALINT_LOG_COLOR: always
 
   enable-automerge:
-    # Enable automerge to merge pull requests from Renovate automatically.
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/wc-enable-auto-merge.yaml
     needs:
       - status-check
     permissions:
@@ -110,58 +74,27 @@ jobs:
     # By default success() is used so we have to override success() by "! failure() && ! cancelled()"
     if: |
       ! failure() && ! cancelled() && github.event.pull_request.user.login == 'renovate[bot]' && contains(github.event.pull_request.body, ' **Automerge**: Enabled.')
-    steps:
-      - name: Generate token
-        id: generate_token
-        uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1
-        with:
-          app_id: ${{secrets.APP_ID}}
-          private_key: ${{secrets.APP_PRIVATE_KEY}}
-      - run: gh -R "$GITHUB_REPOSITORY" pr merge --merge --auto --delete-branch "$PR_NUMBER"
-        env:
-          GITHUB_TOKEN: ${{steps.generate_token.outputs.token}} # Use GitHub App to trigger GitHub Actions Workflow by merge commit.
-          PR_NUMBER: ${{github.event.pull_request.number}}
+    secrets:
+      gh_app_id: ${{secrets.APP_ID}}
+      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
 
   status-check:
-    # This job is used for main branch's branch protection rule's status check.
-    # If all dependent jobs succeed or are skipped this job succeeds.
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/wc-status-check.yaml
+    permissions: {}
+    if: failure()
     needs:
       - update-aqua-checksums
       - renovate-config-validator
       - ghalint
       - test
       - integration-test
-    permissions: {}
-    if: failure()
-    steps:
-      - run: exit 1
 
   test:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/wc-test.yaml
     permissions: {}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version: 1.20.2
-          cache: true
-      - run: go build -o /usr/local/bin/aqua ./cmd/aqua
-      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-      - run: aqua i -l
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: golangci-lint run --timeout 120s
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: go test -v ./... -race -covermode=atomic
 
   go-mod-tidy:
-    uses: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml@8facac38f5b2008648c14e31c632c3a709439b9c # v0.1.1
-    with:
-      go-version: 1.20.2
-      aqua_version: v2.2.1
+    uses: ./.github/workflows/wc-go-mod-tidy.yaml
     secrets:
       gh_app_id: ${{secrets.APP_ID}}
       gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
@@ -169,136 +102,5 @@ jobs:
       contents: read
 
   integration-test:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{github.token}}
-      AQUA_LOG_LEVEL: debug
-      AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
-    steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version: 1.20.2
-          cache: true
-
-      - run: go install ./cmd/aqua
-      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-      - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
-      - run: echo "x-motemen/ghq" | aqua g -f -
-      - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/main/aqua-global.yaml g -f -
-      - run: aqua g x-motemen/ghq aquaproj/aqua-installer
-      - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
-      - name: Test -pin
-        run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
-
-      - name: Test version_prefix
-        run: aqua -c aqua-global.yaml g -i local,kubernetes-sigs/kustomize/version_prefix
-        working-directory: tests/main
-
-      - run: aqua list
-      - run: aqua update-checksum
-        working-directory: tests/main
-      - run: aqua update-checksum -prune
-        working-directory: tests/main
-      - run: aqua i -l -a
-        working-directory: tests/main
-      - run: aqua i
-        working-directory: tests/main
-      - run: aqua which go
-      - run: kind version
-        working-directory: tests/main
-      - run: kind version
-      - run: restic version
-        env:
-          AQUA_PROGRESS_BAR: "true"
-      - run: migrate -version
-      - run: ghq -version
-      - run: gh version
-      - run: tfenv --version
-      - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
-      - run: bats -v
-      - run: helm version
-      - run: github-compare -v
-      - run: terrafmt version
-
-      - name: test cosign
-        run: aqua i
-        working-directory: tests/cosign
-
-      - name: test SLSA
-        run: aqua i
-        working-directory: tests/slsa
-
-      - name: output bash completion
-        run: aqua completion bash
-      - name: output zsh completion
-        run: aqua completion zsh
-
-      - run: aqua g -i suzuki-shunsuke/tfcmt
-        working-directory: tests/main
-      - name: add duplicated package
-        run: aqua g -i suzuki-shunsuke/tfcmt
-        working-directory: tests/main
-      - run: git diff aqua.yaml
-        working-directory: tests/main
-
-      - name: "Test generate-registry"
-        run: aqua gr cli/cli
-      - name: "Test generate-registry (emoji)"
-        run: aqua gr hmarr/codeowners
-      - name: "Test generate-registry (rust)"
-        run: aqua gr XAMPPRocky/tokei
-      - name: Test generate-registry (specify version)
-        run: aqua gr suzuki-shunsuke/tfcmt@v3.2.4
-
-      - name: test aqua cp
-        run: aqua cp actionlint
-      - name: test aqua cp
-        run: dist/actionlint -version
-      - name: test aqua cp
-        run: aqua cp
-      - name: test aqua cp -a
-        run: aqua cp -a
-
-      - name: test tags
-        run: aqua i
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua i -t test
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua i -t foo,bar
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua i --exclude-tags test
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua i --exclude-tags test -t foo
-        working-directory: tests/tag
-
-      - name: test tags
-        run: aqua cp
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua cp -t test
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua cp -t foo,bar
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua cp --exclude-tags test
-        working-directory: tests/tag
-      - name: test tags
-        run: aqua cp --exclude-tags test -t foo
-        working-directory: tests/tag
-
-      - run: aqua update-checksum -a
-
-      # Test if global configuration files are read in `aqua list` and `aqua g`
-      - run: aqua list
-        working-directory: /tmp
-
-      - name: Test update-aqua
-        run: aqua update-aqua
-
-      - run: aqua-installer -v v0.8.1 -i /tmp/aqua
+    uses: ./.github/workflows/wc-integration-test.yaml
+    permissions: {}
