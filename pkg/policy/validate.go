@@ -132,6 +132,7 @@ func (validator *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string) 
 	}
 	logE.WithFields(logrus.Fields{
 		"policy_file": policyFilePath,
+		"doc":         "https://aquaproj.github.io/docs/reference/codes/003",
 	}).Warnf(`The policy file is ignored unless it is allowed by "aqua policy allow" command.
 
 $ aqua policy allow "%s"
