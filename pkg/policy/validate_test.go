@@ -156,7 +156,7 @@ func TestValidator_Warn(t *testing.T) {
 			validator := policy.NewValidator(&config.Param{
 				RootDir: d.rootDir,
 			}, fs)
-			if err := validator.Warn(logE, d.configFilePath); err != nil {
+			if err := validator.Warn(logE, d.configFilePath, false); err != nil {
 				if d.isErr {
 					return
 				}

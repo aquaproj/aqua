@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -84,7 +85,7 @@ func (reader *ReaderImpl) Read(logE *logrus.Entry, policyFilePath string) (*Conf
 	}
 	if err := reader.validator.Validate(policyFilePath); err != nil {
 		reader.set(policyFilePath, &Config{})
-		if err := reader.validator.Warn(logE, policyFilePath); err != nil {
+		if err := reader.validator.Warn(logE, policyFilePath, errors.Is(err, errPolicyUpdated)); err != nil {
 			logE.WithError(err).Warn("warn an denied policy file")
 		}
 		return nil, nil //nolint:nilnil

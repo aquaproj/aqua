@@ -16,7 +16,7 @@ type Validator interface {
 	Validate(p string) error
 	Allow(p string) error
 	Deny(p string) error
-	Warn(logE *logrus.Entry, policyFilePath string) error
+	Warn(logE *logrus.Entry, policyFilePath string, updated bool) error
 }
 
 type MockValidator struct {
@@ -35,7 +35,7 @@ func (validator *MockValidator) Validate(p string) error {
 	return validator.Err
 }
 
-func (validator *MockValidator) Warn(logE *logrus.Entry, policyFilePath string) error {
+func (validator *MockValidator) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
 	return validator.Err
 }
 
@@ -120,7 +120,7 @@ func (validator *ValidatorImpl) Deny(p string) error {
 	return nil
 }
 
-func (validator *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string) error {
+func (validator *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
 	warnFilePath := filepath.Join(validator.rootDir, "policy-warnings", policyFilePath)
 	fs := validator.fs
 	f, err := afero.Exists(fs, warnFilePath)
@@ -130,10 +130,7 @@ func (validator *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string) 
 	if f {
 		return nil
 	}
-	logE.WithFields(logrus.Fields{
-		"policy_file": policyFilePath,
-		"doc":         "https://aquaproj.github.io/docs/reference/codes/003",
-	}).Warnf(`The policy file is ignored unless it is allowed by "aqua policy allow" command.
+	msg := `The policy file is ignored unless it is allowed by "aqua policy allow" command.
 
 $ aqua policy allow "%s"
 
@@ -141,7 +138,14 @@ If you want to keep ignoring the policy file without the warning, please run "aq
 
 $ aqua policy deny "%s"
 
- `, policyFilePath, policyFilePath)
+ `
+	if updated {
+		msg = `The policy file is changed. ` + msg
+	}
+	logE.WithFields(logrus.Fields{
+		"policy_file": policyFilePath,
+		"doc":         "https://aquaproj.github.io/docs/reference/codes/003",
+	}).Warnf(msg, policyFilePath, policyFilePath)
 	return nil
 }
 
