@@ -9,9 +9,8 @@ import (
 )
 
 type Reader interface {
-	Read(logE *logrus.Entry, policyFilePath, aquaConfigDir string) (*Config, error)
 	ReadFromEnv(policyFilePaths []string) ([]*Config, error)
-	ValidateAndRead(logE *logrus.Entry, policyFilePath string) (*Config, error)
+	Read(logE *logrus.Entry, policyFilePath string) (*Config, error)
 }
 
 type MockReader struct {
@@ -25,11 +24,7 @@ func (reader *MockReader) ReadFromEnv(policyFilePaths []string) ([]*Config, erro
 	return reader.Configs, reader.Err
 }
 
-func (reader *MockReader) Read(logE *logrus.Entry, policyFilePath, aquaConfigDir string) (*Config, error) {
-	return reader.Config, reader.Err
-}
-
-func (reader *MockReader) ValidateAndRead(logE *logrus.Entry, policyFilePath string) (*Config, error) {
+func (reader *MockReader) Read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
 	return reader.Config, reader.Err
 }
 
@@ -80,25 +75,7 @@ func (reader *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, erro
 	return cfgs, nil
 }
 
-func (reader *ReaderImpl) Read(logE *logrus.Entry, policyFilePath, aquaConfigDir string) (*Config, error) {
-	if policyFilePath != "" {
-		f, err := afero.Exists(reader.fs, policyFilePath)
-		if err != nil {
-			return nil, fmt.Errorf("check if a policy file exists: %w", err)
-		}
-		if !f {
-			return nil, ErrConfigFileNotFound
-		}
-		return reader.ValidateAndRead(logE, policyFilePath)
-	}
-	policyFilePath, err := reader.finder.Find("", aquaConfigDir)
-	if err != nil {
-		return nil, fmt.Errorf("find a policy file: %w", err)
-	}
-	return reader.ValidateAndRead(logE, policyFilePath)
-}
-
-func (reader *ReaderImpl) ValidateAndRead(logE *logrus.Entry, policyFilePath string) (*Config, error) {
+func (reader *ReaderImpl) Read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
 	if cfg := reader.get(policyFilePath); cfg != nil {
 		if cfg.Allowed {
 			return cfg, nil

@@ -87,7 +87,7 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 		policyCfgs := policyCfgs
 		if _, ok := globalPolicyPaths[policyFilePath]; !ok {
-			policyCfg, err := ctrl.policyConfigReader.ValidateAndRead(logE, policyFilePath)
+			policyCfg, err := ctrl.policyConfigReader.Read(logE, policyFilePath)
 			if err != nil {
 				return fmt.Errorf("find a policy file: %w", err)
 			}
