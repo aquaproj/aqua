@@ -68,3 +68,19 @@ tasks:
   usage: Run aqua via go run
   script: |
     go run ./cmd/aqua {{._builtin.args_string}}
+- name: docker
+  description: |
+    Build and run a new container and attach a pseudo-TTY.
+    You can test aqua in a clean environment.
+  usage: Test aqua in a clean container
+  script: |
+    set -eux
+    {{if .latest}}
+    bash scripts/docker.sh latest
+    {{else}}
+    bash scripts/docker.sh
+    {{end}}
+  flags:
+  - name: latest
+    short: l
+    type: bool
