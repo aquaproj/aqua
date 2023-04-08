@@ -10,6 +10,7 @@ jobs:
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
       ghalint: ${{steps.changes.outputs.ghalint}}
       go-mod-tidy: ${{steps.changes.outputs.go-mod-tidy}}
+      test-docker: ${{steps.changes.outputs.test-docker}}
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -38,6 +39,10 @@ jobs:
               - "**.go"
               - .github/workflows/test.yaml
               - .github/workflows/wc-go-mod-tidy.yaml
+            test-docker:
+              - Dockerfile
+              - Dockerfile-prebuilt
+              - .github/workflows/wc-test-docker.yaml
 
   update-aqua-checksums:
     needs: path-filter
@@ -91,6 +96,12 @@ jobs:
 
   test:
     uses: ./.github/workflows/wc-test.yaml
+    permissions: {}
+
+  test-docker:
+    uses: ./.github/workflows/wc-test-docker.yaml
+    needs: path-filter
+    if: needs.path-filter.outputs.test-docker == 'true'
     permissions: {}
 
   go-mod-tidy:
