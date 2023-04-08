@@ -77,7 +77,7 @@ func (reader *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, erro
 	return cfgs, nil
 }
 
-func (reader *ReaderImpl) Read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
+func (reader *ReaderImpl) read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
 	if cfg := reader.get(policyFilePath); cfg != nil {
 		if cfg.Allowed {
 			return cfg, nil
@@ -111,7 +111,7 @@ func (reader *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, polici
 	if _, ok := globalPolicyPaths[policyFilePath]; ok {
 		return policies, nil
 	}
-	policyCfg, err := reader.Read(logE, policyFilePath)
+	policyCfg, err := reader.read(logE, policyFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("read a policy file: %w", err)
 	}
