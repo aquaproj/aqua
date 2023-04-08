@@ -102,7 +102,7 @@ jobs:
     needs: path-filter
     permissions: {}
     with:
-      docker_is_changed: needs.path-filter.outputs.test-docker == 'true'
+      docker_is_changed: ${{needs.path-filter.outputs.test-docker == 'true'}}
 
   test-docker-prebuilt:
     uses: ./.github/workflows/wc-test-docker-prebuilt.yaml
