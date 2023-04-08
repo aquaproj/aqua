@@ -1,5 +1,5 @@
 ---
-name: test-docker
+name: test-docker-prebuilt
 on: workflow_call
 jobs:
   test-docker:
@@ -9,9 +9,3 @@ jobs:
     steps:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - run: docker build -t aquaproj-aqua-dev -f Dockerfile-prebuilt .
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version: 1.20.3
-          cache: true
-      - run: go build -o dist/aqua-docker ./cmd/aqua
-      - run: docker build -t aquaproj-aqua-dev .

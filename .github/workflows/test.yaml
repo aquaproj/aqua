@@ -11,6 +11,7 @@ jobs:
       ghalint: ${{steps.changes.outputs.ghalint}}
       go-mod-tidy: ${{steps.changes.outputs.go-mod-tidy}}
       test-docker: ${{steps.changes.outputs.test-docker}}
+      test-docker-prebuilt: ${{steps.changes.outputs.test-docker-prebuilt}}
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -41,8 +42,10 @@ jobs:
               - .github/workflows/wc-go-mod-tidy.yaml
             test-docker:
               - Dockerfile
+              - .github/workflows/wc-test.yaml
+            test-docker-prebuilt:
               - Dockerfile-prebuilt
-              - .github/workflows/wc-test-docker.yaml
+              - .github/workflows/wc-test-docker-prebuilt.yaml
 
   update-aqua-checksums:
     needs: path-filter
@@ -96,12 +99,15 @@ jobs:
 
   test:
     uses: ./.github/workflows/wc-test.yaml
-    permissions: {}
-
-  test-docker:
-    uses: ./.github/workflows/wc-test-docker.yaml
     needs: path-filter
-    if: needs.path-filter.outputs.test-docker == 'true'
+    permissions: {}
+    with:
+      docker_is_changed: needs.path-filter.outputs.test-docker == 'true'
+
+  test-docker-prebuilt:
+    uses: ./.github/workflows/wc-test-docker-prebuilt.yaml
+    needs: path-filter
+    if: needs.path-filter.outputs.test-docker-prebuilt == 'true'
     permissions: {}
 
   go-mod-tidy:
