@@ -102,6 +102,7 @@ func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param
 	}
 	return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
 		"exe_name": exeName,
+		"doc":      "https://aquaproj.github.io/docs/reference/codes/004",
 	})
 }
 
