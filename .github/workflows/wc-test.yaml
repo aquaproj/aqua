@@ -1,6 +1,12 @@
 ---
 name: test
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      docker_is_changed:
+        required: false
+        type: boolean
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,3 +27,10 @@ jobs:
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: go test -v ./... -race -covermode=atomic
+
+      - run: mkdir -p dist
+        if: inputs.docker_is_changed
+      - run: cp /usr/local/bin/aqua dist/aqua-docker
+        if: inputs.docker_is_changed
+      - run: docker build -t aquaproj-aqua-dev .
+        if: inputs.docker_is_changed
