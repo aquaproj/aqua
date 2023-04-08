@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -52,7 +51,7 @@ func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl w
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args []string) (gErr error) { //nolint:cyclop
+func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args []string) (gErr error) {
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -74,24 +73,15 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil { //nolint:nestif
+	if findResult.Package != nil {
 		logE = logE.WithFields(logrus.Fields{
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
 
-		policyFilePath, err := ctrl.policyConfigFinder.Find("", filepath.Dir(findResult.ConfigFilePath))
+		policyCfgs, err := ctrl.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
 		if err != nil {
-			return fmt.Errorf("find a policy file: %w", err)
-		}
-		if _, ok := globalPolicyPaths[policyFilePath]; !ok {
-			policyCfg, err := ctrl.policyConfigReader.Read(logE, policyFilePath)
-			if err != nil {
-				return fmt.Errorf("find a policy file: %w", err)
-			}
-			if policyCfg != nil {
-				policyCfgs = append(policyCfgs, policyCfg)
-			}
+			return err //nolint:wrapcheck
 		}
 
 		if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {

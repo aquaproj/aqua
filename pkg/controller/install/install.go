@@ -81,19 +81,9 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 	}
 
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		policyFilePath, err := ctrl.policyConfigFinder.Find("", filepath.Dir(cfgFilePath))
+		policyCfgs, err := ctrl.policyConfigReader.Append(logE, cfgFilePath, policyCfgs, globalPolicyPaths)
 		if err != nil {
-			return fmt.Errorf("find a policy file: %w", err)
-		}
-		policyCfgs := policyCfgs
-		if _, ok := globalPolicyPaths[policyFilePath]; !ok {
-			policyCfg, err := ctrl.policyConfigReader.Read(logE, policyFilePath)
-			if err != nil {
-				return fmt.Errorf("find a policy file: %w", err)
-			}
-			if policyCfg != nil {
-				policyCfgs = append(policyCfgs, policyCfg)
-			}
+			return err //nolint:wrapcheck
 		}
 		if err := ctrl.install(ctx, logE, cfgFilePath, policyCfgs); err != nil {
 			return err

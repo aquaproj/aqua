@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -103,21 +102,12 @@ func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, 
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil { //nolint:nestif
+	if findResult.Package != nil {
 		logE = logE.WithField("package", findResult.Package.Package.Name)
 
-		policyFilePath, err := ctrl.policyConfigFinder.Find("", filepath.Dir(findResult.ConfigFilePath))
+		policyConfigs, err := ctrl.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyConfigs, globalPolicyPaths)
 		if err != nil {
-			return fmt.Errorf("find a policy file: %w", err)
-		}
-		if _, ok := globalPolicyPaths[policyFilePath]; !ok {
-			policyCfg, err := ctrl.policyConfigReader.Read(logE, policyFilePath)
-			if err != nil {
-				return fmt.Errorf("find a policy file: %w", err)
-			}
-			if policyCfg != nil {
-				policyConfigs = append(policyConfigs, policyCfg)
-			}
+			return err //nolint:wrapcheck
 		}
 
 		if err := ctrl.install(ctx, logE, findResult, policyConfigs); err != nil {

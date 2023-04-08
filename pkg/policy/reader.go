@@ -3,6 +3,7 @@ package policy
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -11,7 +12,7 @@ import (
 
 type Reader interface {
 	ReadFromEnv(policyFilePaths []string) ([]*Config, error)
-	Read(logE *logrus.Entry, policyFilePath string) (*Config, error)
+	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error)
 }
 
 type MockReader struct {
@@ -25,8 +26,8 @@ func (reader *MockReader) ReadFromEnv(policyFilePaths []string) ([]*Config, erro
 	return reader.Configs, reader.Err
 }
 
-func (reader *MockReader) Read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
-	return reader.Config, reader.Err
+func (reader *MockReader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+	return reader.Configs, reader.Err
 }
 
 type ReaderImpl struct {
@@ -97,4 +98,25 @@ func (reader *ReaderImpl) Read(logE *logrus.Entry, policyFilePath string) (*Conf
 	cfg.Allowed = true
 	reader.set(policyFilePath, cfg)
 	return cfg, nil
+}
+
+func (reader *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+	policyFilePath, err := reader.finder.Find("", filepath.Dir(aquaYAMLPath))
+	if err != nil {
+		return nil, fmt.Errorf("find a policy file: %w", err)
+	}
+	if policyFilePath == "" {
+		return policies, nil
+	}
+	if _, ok := globalPolicyPaths[policyFilePath]; ok {
+		return policies, nil
+	}
+	policyCfg, err := reader.Read(logE, policyFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("read a policy file: %w", err)
+	}
+	if policyCfg == nil {
+		return policies, nil
+	}
+	return append(policies, policyCfg), nil
 }
