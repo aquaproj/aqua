@@ -90,16 +90,20 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	return ctrl.installAll(ctx, logE, param, policyCfgs)
+	return ctrl.installAll(ctx, logE, param, policyCfgs, globalPolicyPaths)
 }
 
-func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfigs []*policy.Config) error {
+func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfigs []*policy.Config, globalPolicyPaths map[string]struct{}) error {
 	if !param.All {
 		return nil
 	}
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
+		}
+		policyConfigs, err := ctrl.policyConfigReader.Append(logE, cfgFilePath, policyConfigs, globalPolicyPaths)
+		if err != nil {
+			return err //nolint:wrapcheck
 		}
 		if err := ctrl.install(ctx, logE, cfgFilePath, policyConfigs); err != nil {
 			return err

@@ -3,7 +3,6 @@ name: Integration Test on macOS
 on: workflow_dispatch
 
 env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/aqua-policy.yaml
   AQUA_LOG_COLOR: always
 
 permissions: {}
@@ -19,6 +18,7 @@ jobs:
           cache: true
       - run: go install ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      - run: aqua policy allow
       - run: aqua i -l
         working-directory: tests/macos
         env:

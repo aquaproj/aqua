@@ -3,7 +3,6 @@ name: Integration Test on Windows
 on: workflow_dispatch
 
 env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/aqua-policy.yaml
   AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
   AQUA_LOG_COLOR: always
   AQUA_LOG_LEVEL: debug
@@ -27,6 +26,7 @@ jobs:
 
       - run: go install ./cmd/aqua
       - run: echo "$HOME/AppData/Local/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      - run: aqua policy allow
       - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/main/aqua-global.yaml:$PWD/tests/main/aqua-global-2.yaml" >> "$GITHUB_ENV"
       - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
       - run: echo "x-motemen/ghq" | aqua g -f -
