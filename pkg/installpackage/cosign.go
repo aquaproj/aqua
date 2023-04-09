@@ -64,7 +64,7 @@ func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, versio
 			Algorithm: "sha256",
 			Checksum:  chksum,
 		},
-		// PolicyConfigs is nil, so the policy check is skipped
+		DisablePolicy: true,
 	}); err != nil {
 		return err
 	}

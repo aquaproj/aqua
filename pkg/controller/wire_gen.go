@@ -12,7 +12,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/controller/allowpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
+	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	exec2 "github.com/aquaproj/aqua/v2/pkg/controller/exec"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
@@ -117,10 +119,13 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiverImpl := unarchive.New(executor)
-	checkerImpl := policy.NewChecker()
-	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checkerImpl, verifierImpl, slsaVerifierImpl)
+	checker := policy.NewChecker(param)
+	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl)
+	validatorImpl := policy.NewValidator(param, fs)
+	configFinderImpl := policy.NewConfigFinder(fs)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	controller := install.New(param, configFinder, configReaderImpl, installerImpl, installpackageInstallerImpl, fs, rt, policyConfigReaderImpl)
+	readerImpl := policy.NewReader(fs, validatorImpl, configFinderImpl, policyConfigReaderImpl)
+	controller := install.New(param, configFinder, configReaderImpl, installerImpl, installpackageInstallerImpl, fs, rt, readerImpl, configFinderImpl)
 	return controller
 }
 
@@ -153,19 +158,22 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiverImpl := unarchive.New(executor)
-	checkerImpl := policy.NewChecker()
+	checker := policy.NewChecker(param)
 	verifierImpl := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checkerImpl, verifierImpl, slsaVerifierImpl)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	registryInstallerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	osEnv := osenv.New()
 	controllerImpl := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker)
+	validatorImpl := policy.NewValidator(param, fs)
+	configFinderImpl := policy.NewConfigFinder(fs)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, policyConfigReaderImpl, checkerImpl)
+	readerImpl := policy.NewReader(fs, validatorImpl, configFinderImpl, policyConfigReaderImpl)
+	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, readerImpl, configFinderImpl)
 	return controller
 }
 
@@ -179,11 +187,11 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiverImpl := unarchive.New(executor)
-	checkerImpl := policy.NewChecker()
+	checker := policy.NewChecker(param)
 	verifierImpl := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checkerImpl, verifierImpl, slsaVerifierImpl)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installerImpl)
 	return controller
 }
@@ -198,20 +206,23 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiverImpl := unarchive.New(executor)
-	checkerImpl := policy.NewChecker()
+	checker := policy.NewChecker(param)
 	verifierImpl := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checkerImpl, verifierImpl, slsaVerifierImpl)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, executor, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	registryInstallerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	osEnv := osenv.New()
 	controllerImpl := which.New(param, configFinder, configReaderImpl, registryInstallerImpl, rt, osEnv, fs, linker)
+	validatorImpl := policy.NewValidator(param, fs)
+	configFinderImpl := policy.NewConfigFinder(fs)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
-	controller := install.New(param, configFinder, configReaderImpl, registryInstallerImpl, installerImpl, fs, rt, policyConfigReaderImpl)
-	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, policyConfigReaderImpl)
+	readerImpl := policy.NewReader(fs, validatorImpl, configFinderImpl, policyConfigReaderImpl)
+	controller := install.New(param, configFinder, configReaderImpl, registryInstallerImpl, installerImpl, fs, rt, readerImpl, configFinderImpl)
+	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, readerImpl, configFinderImpl)
 	return cpController
 }
 
@@ -230,5 +241,21 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	controller := updatechecksum.New(param, configFinder, configReaderImpl, installerImpl, fs, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader)
+	return controller
+}
+
+func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
+	fs := afero.NewOsFs()
+	configFinderImpl := policy.NewConfigFinder(fs)
+	validatorImpl := policy.NewValidator(param, fs)
+	controller := allowpolicy.New(fs, configFinderImpl, validatorImpl)
+	return controller
+}
+
+func InitializeDenyPolicyCommandController(ctx context.Context, param *config.Param) *denypolicy.Controller {
+	fs := afero.NewOsFs()
+	configFinderImpl := policy.NewConfigFinder(fs)
+	validatorImpl := policy.NewValidator(param, fs)
+	controller := denypolicy.New(fs, configFinderImpl, validatorImpl)
 	return controller
 }

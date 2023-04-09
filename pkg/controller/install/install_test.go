@@ -30,6 +30,7 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 	data := []struct {
 		name              string
 		files             map[string]string
+		dirs              []string
 		links             map[string]string
 		param             *config.Param
 		rt                *runtime.Runtime
@@ -56,6 +57,13 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
+				"/home/foo/workspace/aqua-policy.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- registry: standard
+`,
 				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
@@ -66,6 +74,9 @@ packages:
 				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): ``,
 				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer": ``,
 				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy":     ``,
+			},
+			dirs: []string{
+				"/home/foo/workspace/.git",
 			},
 			links: map[string]string{
 				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer",
@@ -80,7 +91,7 @@ packages:
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs, err := testutil.NewFs(d.files)
+			fs, err := testutil.NewFs(d.files, d.dirs...)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -92,8 +103,10 @@ packages:
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, &policy.MockConfigReader{})
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			policyFinder := policy.NewConfigFinder(fs)
+			policyReader := policy.NewReader(fs, &policy.MockValidator{}, policyFinder, policy.NewConfigReader(fs))
+			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader, policyFinder)
 			if err := ctrl.Install(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

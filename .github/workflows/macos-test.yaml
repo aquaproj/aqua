@@ -3,7 +3,7 @@ name: Integration Test on macOS
 on: workflow_dispatch
 
 env:
-  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/policy.yaml
+  AQUA_POLICY_CONFIG: ${{ github.workspace }}/aqua/aqua-policy.yaml
   AQUA_LOG_COLOR: always
 
 permissions: {}

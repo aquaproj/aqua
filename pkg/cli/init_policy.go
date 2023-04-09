@@ -11,9 +11,12 @@ import (
 func (runner *Runner) newInitPolicyCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "init-policy",
-		Usage:     "Create a policy file if it doesn't exist",
+		Usage:     "[Deprecated] Create a policy file if it doesn't exist",
 		ArgsUsage: `[<created file path. The default value is "aqua-policy.yaml">]`,
-		Description: `Create a policy file if it doesn't exist
+		Description: `[Deprecated] Create a policy file if it doesn't exist
+
+Please use "aqua policy init" command instead.
+
 e.g.
 $ aqua init-policy # create "aqua-policy.yaml"
 $ aqua init-policy foo.yaml # create foo.yaml`,

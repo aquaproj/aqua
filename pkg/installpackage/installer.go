@@ -46,12 +46,12 @@ type InstallerImpl struct {
 	progressBar           bool
 	onlyLink              bool
 	copyDir               string
-	policyChecker         policy.Checker
+	policyChecker         *policy.Checker
 	cosignInstaller       *Cosign
 	slsaVerifierInstaller *SLSAVerifier
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	installer := newInstaller(param, downloader, rt, fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier)
 	installer.cosignInstaller = &Cosign{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
@@ -64,7 +64,7 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
@@ -109,6 +109,7 @@ type ParamInstallPackage struct {
 	Checksums       *checksum.Checksums
 	RequireChecksum bool
 	PolicyConfigs   []*policy.Config
+	DisablePolicy   bool
 	ConfigFileDir   string
 	CosignExePath   string
 	Checksum        *checksum.Checksum
@@ -217,11 +218,10 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		return errors.New("")
 	}
 
-	if err := inst.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
-		Pkg:           param.Pkg,
-		PolicyConfigs: param.PolicyConfigs,
-	}); err != nil {
-		return err //nolint:wrapcheck
+	if !param.DisablePolicy {
+		if err := inst.policyChecker.ValidatePackage(param.Pkg, param.PolicyConfigs); err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 
 	if err := pkgInfo.Validate(); err != nil {

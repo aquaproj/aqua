@@ -12,7 +12,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/controller/allowpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
+	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	cexec "github.com/aquaproj/aqua/v2/pkg/controller/exec"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
@@ -36,6 +38,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+
 	"github.com/google/wire"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -241,13 +244,22 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -384,13 +396,22 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -449,10 +470,6 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
@@ -464,6 +481,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
+		policy.NewChecker,
 	)
 	return &updateaqua.Controller{}
 }
@@ -538,13 +556,22 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -614,4 +641,36 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 	)
 	return &updatechecksum.Controller{}
+}
+
+func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
+	wire.Build(
+		allowpolicy.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+	)
+	return &allowpolicy.Controller{}
+}
+
+func InitializeDenyPolicyCommandController(ctx context.Context, param *config.Param) *denypolicy.Controller {
+	wire.Build(
+		denypolicy.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+	)
+	return &denypolicy.Controller{}
 }

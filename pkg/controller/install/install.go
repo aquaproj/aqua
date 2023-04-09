@@ -29,12 +29,13 @@ type Controller struct {
 	runtime            *runtime.Runtime
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
-	policyConfigReader policy.ConfigReader
+	policyConfigFinder policy.ConfigFinder
+	policyConfigReader policy.Reader
 	skipLink           bool
 	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -47,11 +48,12 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		tags:               param.Tags,
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
+		policyConfigFinder: policyConfigFinder,
 		requireChecksum:    param.RequireChecksum,
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
 		if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
@@ -68,12 +70,21 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 		}
 	}
 
-	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy)
+	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
 
+	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
+	for _, p := range param.PolicyConfigFilePaths {
+		globalPolicyPaths[p] = struct{}{}
+	}
+
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+		policyCfgs, err := ctrl.policyConfigReader.Append(logE, cfgFilePath, policyCfgs, globalPolicyPaths)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
 		if err := ctrl.install(ctx, logE, cfgFilePath, policyCfgs); err != nil {
 			return err
 		}

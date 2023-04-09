@@ -23,11 +23,12 @@ type Controller struct {
 	runtime            *runtime.Runtime
 	which              which.Controller
 	installer          Installer
-	policyConfigReader policy.ConfigReader
+	policyConfigReader policy.Reader
+	policyConfigFinder policy.ConfigFinder
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.ConfigReader) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,
@@ -36,6 +37,7 @@ func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *ru
 		which:              whichCtrl,
 		installer:          installer,
 		policyConfigReader: policyConfigReader,
+		policyConfigFinder: policyConfigFinder,
 		requireChecksum:    param.RequireChecksum,
 	}
 }
@@ -63,9 +65,14 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 
 	ctrl.packageInstaller.SetCopyDir("")
 
-	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths, param.DisablePolicy)
+	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
+	}
+
+	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
+	for _, p := range param.PolicyConfigFilePaths {
+		globalPolicyPaths[p] = struct{}{}
 	}
 
 	for _, exeName := range param.Args {
@@ -76,7 +83,7 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 				<-maxInstallChan
 			}()
 			logE := logE.WithField("exe_name", exeName)
-			if err := ctrl.installAndCopy(ctx, logE, param, exeName, policyCfgs); err != nil {
+			if err := ctrl.installAndCopy(ctx, logE, param, exeName, policyCfgs, globalPolicyPaths); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
 				return
@@ -90,13 +97,19 @@ func (ctrl *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *con
 	return nil
 }
 
-func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config) error {
+func (ctrl *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, policyConfigs []*policy.Config, globalPolicyPaths map[string]struct{}) error {
 	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 	if findResult.Package != nil {
 		logE = logE.WithField("package", findResult.Package.Package.Name)
+
+		policyConfigs, err := ctrl.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyConfigs, globalPolicyPaths)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+
 		if err := ctrl.install(ctx, logE, findResult, policyConfigs); err != nil {
 			return err
 		}
