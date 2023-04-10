@@ -28,18 +28,21 @@ type Package struct {
 	Registry    *aqua.Registry
 }
 
-func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) RenderSrc(assetName string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
+	format := pkgInfo.GetFormat()
 	return template.Execute(file.Src, map[string]interface{}{ //nolint:wrapcheck
-		"Version":  pkg.Version,
-		"SemVer":   cpkg.SemVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
+		"Version":         pkg.Version,
+		"SemVer":          cpkg.SemVer(),
+		"GOOS":            rt.GOOS,
+		"GOARCH":          rt.GOARCH,
+		"OS":              replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":            getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"Format":          format,
+		"FileName":        file.Name,
+		"Asset":           assetName,
+		"AssetWithoutExt": getAssetWithoutExt(assetName, format),
 	})
 }
 
@@ -57,21 +60,6 @@ func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runt
 		return replace("amd64", replacements)
 	}
 	return replace(rt.GOARCH, replacements)
-}
-
-func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
-		"Version":  pkg.Version,
-		"SemVer":   cpkg.SemVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
-	})
 }
 
 func (cpkg *Package) WindowsExt() string {
@@ -147,7 +135,7 @@ func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if file.Src == "" {
 		return file.Name, nil
 	}
-	src, err := cpkg.RenderSrc(file, rt)
+	src, err := cpkg.RenderSrc(assetName, file, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
@@ -193,7 +181,7 @@ type Param struct {
 	PolicyConfigFilePaths []string
 }
 
-func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	asset, err := cpkg.renderAsset(rt)
 	if err != nil {
 		return "", err
@@ -201,8 +189,14 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if asset == "" {
 		return "", nil
 	}
+
+	format := cpkg.PackageInfo.Format
+	if format != formatRaw && format != "" && !strings.HasSuffix(asset, fmt.Sprintf(".%s", format)) {
+		asset = fmt.Sprintf("%s.%s", asset, format)
+	}
+
 	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
+		if cpkg.PackageInfo.Format == formatRaw {
 			return cpkg.CompleteWindowsExt(asset), nil
 		}
 		if cpkg.PackageInfo.Format != "" {
@@ -304,7 +298,7 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 		return "", err
 	}
 	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
+		if cpkg.PackageInfo.Format == formatRaw {
 			return cpkg.CompleteWindowsExt(s), nil
 		}
 		if cpkg.PackageInfo.Format != "" {
@@ -366,12 +360,22 @@ func (cpkg *Package) SemVer() string {
 func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
+	replacements := pkgInfo.GetReplacements()
+	format := pkgInfo.GetFormat()
 	return &template.Artifact{
-		Version: pkg.Version,
-		SemVer:  cpkg.SemVer(),
-		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
-		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		Format:  pkgInfo.GetFormat(),
-		Asset:   asset,
+		Version:         pkg.Version,
+		SemVer:          cpkg.SemVer(),
+		OS:              replace(rt.GOOS, replacements),
+		Arch:            getArch(pkgInfo.GetRosetta2(), replacements, rt),
+		Format:          format,
+		Asset:           asset,
+		AssetWithoutExt: getAssetWithoutExt(asset, format),
 	}
+}
+
+func getAssetWithoutExt(asset, format string) string {
+	if format == "raw" {
+		return asset
+	}
+	return strings.TrimSuffix(asset, fmt.Sprintf(".%s", format))
 }
