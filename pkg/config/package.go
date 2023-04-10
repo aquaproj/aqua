@@ -181,7 +181,14 @@ type Param struct {
 	PolicyConfigFilePaths []string
 }
 
-func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) { //nolint:cyclop
+func appendExt(s, format string) string {
+	if format == formatRaw || format == "" || strings.HasSuffix(s, fmt.Sprintf(".%s", format)) {
+		return s
+	}
+	return fmt.Sprintf("%s.%s", s, format)
+}
+
+func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	asset, err := cpkg.renderAsset(rt)
 	if err != nil {
 		return "", err
@@ -191,9 +198,7 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) { //nolint
 	}
 
 	format := cpkg.PackageInfo.Format
-	if format != formatRaw && format != "" && !strings.HasSuffix(asset, fmt.Sprintf(".%s", format)) {
-		asset = fmt.Sprintf("%s.%s", asset, format)
-	}
+	asset = appendExt(asset, format)
 
 	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
 		if cpkg.PackageInfo.Format == formatRaw {
@@ -297,6 +302,8 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	format := cpkg.PackageInfo.Format
+	s = appendExt(s, format)
 	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
 		if cpkg.PackageInfo.Format == formatRaw {
 			return cpkg.CompleteWindowsExt(s), nil
