@@ -6,8 +6,8 @@ RUN sed -i 's|# %wheel ALL=(ALL:ALL) NOPASSWD|%wheel ALL=(ALL:ALL) NOPASSWD|' /e
 USER foo
 RUN mkdir /home/foo/workspace
 WORKDIR /home/foo/workspace
-RUN curl -sSfL -O https://raw.githubusercontent.com/aquaproj/aqua-installer/v2.0.2/aqua-installer
-RUN echo "acbb573997d664fcb8df20a8a5140dba80a4fd21f3d9e606e478e435a8945208  aqua-installer" | sha256sum -c
+RUN curl -sSfL -O https://raw.githubusercontent.com/aquaproj/aqua-installer/v2.1.1/aqua-installer
+RUN echo "c2af02bdd15da6794f9c98db40332c804224930212f553a805425441f8331665  aqua-installer" | sha256sum -c
 RUN chmod +x aqua-installer
 RUN ./aqua-installer -v "v2.3.1"
 ENV PATH=/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
