@@ -219,7 +219,7 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	}
 
 	if !param.DisablePolicy {
-		if err := inst.policyChecker.ValidatePackage(param.Pkg, param.PolicyConfigs); err != nil {
+		if err := inst.policyChecker.ValidatePackage(logE, param.Pkg, param.PolicyConfigs); err != nil {
 			return err //nolint:wrapcheck
 		}
 	}

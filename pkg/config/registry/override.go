@@ -1,9 +1,12 @@
 package registry
 
-import "github.com/aquaproj/aqua/v2/pkg/runtime"
+import (
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/sirupsen/logrus"
+)
 
-func (pkgInfo *PackageInfo) Override(v string, rt *runtime.Runtime) (*PackageInfo, error) {
-	pkg, err := pkgInfo.SetVersion(v)
+func (pkgInfo *PackageInfo) Override(logE *logrus.Entry, v string, rt *runtime.Runtime) (*PackageInfo, error) {
+	pkg, err := pkgInfo.SetVersion(logE, v)
 	if err != nil {
 		return nil, err
 	}
