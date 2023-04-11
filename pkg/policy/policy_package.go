@@ -70,6 +70,7 @@ func (pc *Checker) validatePackage(logE *logrus.Entry, param *paramValidatePacka
 	for _, policyPkg := range param.PolicyConfig.Packages {
 		f, err := pc.matchPkg(param.Pkg, policyPkg)
 		if err != nil {
+			// If it fails to check if the policy matches with the package, output a debug log and treat as the policy doesn't match with the package.
 			logerr.WithError(logE, err).Debug("check if the package matches with a policy")
 			continue
 		}

@@ -19,6 +19,7 @@ func (pkgInfo *PackageInfo) setTopVersion(logE *logrus.Entry, v string) *Package
 	}
 	a, err := expr.EvaluateVersionConstraints(pkgInfo.VersionConstraints, v, sv)
 	if err != nil {
+		// If it fails to evaluate version_constraint, output a debug log and treats as version_constraint is false.
 		logerr.WithError(logE, err).Debug("evaluate the version_constraint")
 		return nil
 	}
@@ -52,6 +53,7 @@ func (pkgInfo *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageIn
 		}
 		a, err := expr.EvaluateVersionConstraints(vo.VersionConstraints, v, sv)
 		if err != nil {
+			// If it fails to evaluate version_constraint, output a debug log and treats as version_constraint is false.
 			logerr.WithError(logE, err).Debug("evaluate the version_constraint")
 			continue
 		}
