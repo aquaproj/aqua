@@ -28,21 +28,18 @@ type Package struct {
 	Registry    *aqua.Registry
 }
 
-func (cpkg *Package) RenderSrc(assetName string, file *registry.File, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
-	format := pkgInfo.GetFormat()
 	return template.Execute(file.Src, map[string]interface{}{ //nolint:wrapcheck
-		"Version":         pkg.Version,
-		"SemVer":          cpkg.SemVer(),
-		"GOOS":            rt.GOOS,
-		"GOARCH":          rt.GOARCH,
-		"OS":              replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":            getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":          format,
-		"FileName":        file.Name,
-		"Asset":           assetName,
-		"AssetWithoutExt": getAssetWithoutExt(assetName, format),
+		"Version":  pkg.Version,
+		"SemVer":   cpkg.SemVer(),
+		"GOOS":     rt.GOOS,
+		"GOARCH":   rt.GOARCH,
+		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"Format":   pkgInfo.GetFormat(),
+		"FileName": file.Name,
 	})
 }
 
@@ -135,7 +132,7 @@ func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if file.Src == "" {
 		return file.Name, nil
 	}
-	src, err := cpkg.RenderSrc(assetName, file, rt)
+	src, err := cpkg.RenderSrc(file, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
@@ -181,13 +178,6 @@ type Param struct {
 	PolicyConfigFilePaths []string
 }
 
-func appendExt(s, format string) string {
-	if format == formatRaw || format == "" || strings.HasSuffix(s, fmt.Sprintf(".%s", format)) {
-		return s
-	}
-	return fmt.Sprintf("%s.%s", s, format)
-}
-
 func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	asset, err := cpkg.renderAsset(rt)
 	if err != nil {
@@ -196,12 +186,8 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if asset == "" {
 		return "", nil
 	}
-
-	format := cpkg.PackageInfo.Format
-	asset = appendExt(asset, format)
-
 	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
-		if cpkg.PackageInfo.Format == formatRaw {
+		if cpkg.PackageInfo.Format == "raw" {
 			return cpkg.CompleteWindowsExt(asset), nil
 		}
 		if cpkg.PackageInfo.Format != "" {
@@ -302,10 +288,8 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	format := cpkg.PackageInfo.Format
-	s = appendExt(s, format)
 	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
-		if cpkg.PackageInfo.Format == formatRaw {
+		if cpkg.PackageInfo.Format == "raw" {
 			return cpkg.CompleteWindowsExt(s), nil
 		}
 		if cpkg.PackageInfo.Format != "" {
@@ -367,22 +351,12 @@ func (cpkg *Package) SemVer() string {
 func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
-	replacements := pkgInfo.GetReplacements()
-	format := pkgInfo.GetFormat()
 	return &template.Artifact{
-		Version:         pkg.Version,
-		SemVer:          cpkg.SemVer(),
-		OS:              replace(rt.GOOS, replacements),
-		Arch:            getArch(pkgInfo.GetRosetta2(), replacements, rt),
-		Format:          format,
-		Asset:           asset,
-		AssetWithoutExt: getAssetWithoutExt(asset, format),
+		Version: pkg.Version,
+		SemVer:  cpkg.SemVer(),
+		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
+		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		Format:  pkgInfo.GetFormat(),
+		Asset:   asset,
 	}
-}
-
-func getAssetWithoutExt(asset, format string) string {
-	if format == "raw" {
-		return asset
-	}
-	return strings.TrimSuffix(asset, fmt.Sprintf(".%s", format))
 }
