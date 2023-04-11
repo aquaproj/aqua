@@ -76,17 +76,7 @@
     "Config": {
       "properties": {
         "packages": {
-          "oneOf": [
-            {
-              "items": {
-                "$ref": "#/$defs/PackageInfo"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/PackageInfos"
         }
       },
       "additionalProperties": false,
@@ -201,6 +191,12 @@
         "format"
       ]
     },
+    "FormatOverrides": {
+      "items": {
+        "$ref": "#/$defs/FormatOverride"
+      },
+      "type": "array"
+    },
     "Override": {
       "properties": {
         "goos": {
@@ -238,8 +234,16 @@
             "s390x"
           ]
         },
-        "replacements": {
-          "$ref": "#/$defs/Replacements"
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "github_content",
+            "github_archive",
+            "http",
+            "go",
+            "go_install"
+          ]
         },
         "format": {
           "type": "string",
@@ -267,19 +271,11 @@
         "windows_ext": {
           "type": "string"
         },
+        "replacements": {
+          "$ref": "#/$defs/Replacements"
+        },
         "checksum": {
           "$ref": "#/$defs/Checksum"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "github_release",
-            "github_content",
-            "github_archive",
-            "http",
-            "go",
-            "go_install"
-          ]
         },
         "cosign": {
           "$ref": "#/$defs/Cosign"
@@ -291,10 +287,28 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "Overrides": {
+      "items": {
+        "$ref": "#/$defs/Override"
+      },
+      "type": "array"
+    },
     "PackageInfo": {
       "properties": {
         "name": {
           "type": "string"
+        },
+        "aliases": {
+          "items": {
+            "$ref": "#/$defs/Alias"
+          },
+          "type": "array"
+        },
+        "search_words": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "type": {
           "type": "string",
@@ -313,7 +327,16 @@
         "repo_name": {
           "type": "string"
         },
+        "description": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
         "asset": {
+          "type": "string"
+        },
+        "url": {
           "type": "string"
         },
         "path": {
@@ -324,26 +347,9 @@
           "examples": [
             "tar.gz",
             "raw",
-            "zip"
+            "zip",
+            "dmg"
           ]
-        },
-        "files": {
-          "items": {
-            "$ref": "#/$defs/File"
-          },
-          "type": "array"
-        },
-        "url": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "link": {
-          "type": "string"
-        },
-        "replacements": {
-          "$ref": "#/$defs/Replacements"
         },
         "overrides": {
           "items": {
@@ -357,17 +363,14 @@
           },
           "type": "array"
         },
-        "version_constraint": {
-          "type": "string"
-        },
-        "version_overrides": {
+        "files": {
           "items": {
-            "$ref": "#/$defs/VersionOverride"
+            "$ref": "#/$defs/File"
           },
           "type": "array"
         },
-        "supported_if": {
-          "type": "string"
+        "replacements": {
+          "$ref": "#/$defs/Replacements"
         },
         "supported_envs": {
           "$ref": "#/$defs/SupportedEnvs"
@@ -375,14 +378,14 @@
         "version_filter": {
           "type": "string"
         },
+        "version_prefix": {
+          "type": "string"
+        },
         "rosetta2": {
           "type": "boolean"
         },
-        "aliases": {
-          "items": {
-            "$ref": "#/$defs/Alias"
-          },
-          "type": "array"
+        "no_asset": {
+          "type": "boolean"
         },
         "version_source": {
           "type": "string",
@@ -396,12 +399,6 @@
         "windows_ext": {
           "type": "string"
         },
-        "search_words": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
         "checksum": {
           "$ref": "#/$defs/Checksum"
         },
@@ -414,8 +411,14 @@
         "private": {
           "type": "boolean"
         },
-        "no_asset": {
-          "type": "boolean"
+        "version_constraint": {
+          "type": "string"
+        },
+        "version_overrides": {
+          "items": {
+            "$ref": "#/$defs/VersionOverride"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -503,6 +506,9 @@
     },
     "VersionOverride": {
       "properties": {
+        "version_constraint": {
+          "type": "string"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -526,6 +532,15 @@
         "path": {
           "type": "string"
         },
+        "url": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
         "format": {
           "type": "string",
           "examples": [
@@ -534,40 +549,22 @@
             "zip"
           ]
         },
-        "files": {
-          "items": {
-            "$ref": "#/$defs/File"
-          },
-          "type": "array"
+        "format_overrides": {
+          "$ref": "#/$defs/FormatOverrides"
         },
-        "url": {
-          "type": "string"
+        "overrides": {
+          "$ref": "#/$defs/Overrides"
         },
         "replacements": {
           "$ref": "#/$defs/Replacements"
         },
-        "overrides": {
-          "items": {
-            "$ref": "#/$defs/Override"
-          },
-          "type": "array"
-        },
-        "format_overrides": {
-          "items": {
-            "$ref": "#/$defs/FormatOverride"
-          },
-          "type": "array"
-        },
-        "supported_if": {
-          "type": "string"
-        },
         "supported_envs": {
           "$ref": "#/$defs/SupportedEnvs"
         },
-        "version_constraint": {
+        "version_filter": {
           "type": "string"
         },
-        "version_filter": {
+        "version_prefix": {
           "type": "string"
         },
         "version_source": {
