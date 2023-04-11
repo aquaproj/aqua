@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/sirupsen/logrus"
 )
 
 func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
@@ -78,11 +79,12 @@ func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
 		},
 	}
 	checker := &policy.Checker{}
+	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			if err := checker.ValidatePackage(d.pkg, d.policies); err != nil {
+			if err := checker.ValidatePackage(logE, d.pkg, d.policies); err != nil {
 				if d.isErr {
 					return
 				}

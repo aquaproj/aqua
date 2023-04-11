@@ -49,7 +49,7 @@ func ListPackagesNotOverride(logE *logrus.Entry, cfg *aqua.Config, registries ma
 			continue
 		}
 
-		pkgInfo, err = pkgInfo.SetVersion(pkg.Version)
+		pkgInfo, err = pkgInfo.SetVersion(logE, pkg.Version)
 		if err != nil {
 			logerr.WithError(logE, err).Error("evaluate version constraints")
 			failed = true
@@ -99,7 +99,7 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 			continue
 		}
 
-		pkgInfo, err = pkgInfo.Override(pkg.Version, rt)
+		pkgInfo, err = pkgInfo.Override(logE, pkg.Version, rt)
 		if err != nil {
 			logerr.WithError(logE, err).Error("evaluate version constraints")
 			failed = true

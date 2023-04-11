@@ -6,6 +6,8 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func getDefaultPolicy() ([]*Config, error) {
@@ -33,7 +35,7 @@ func getDefaultPolicy() ([]*Config, error) {
 	}, nil
 }
 
-func (pc *Checker) ValidatePackage(pkg *config.Package, policies []*Config) error {
+func (pc *Checker) ValidatePackage(logE *logrus.Entry, pkg *config.Package, policies []*Config) error {
 	if pc.disabled {
 		return nil
 	}
@@ -46,7 +48,7 @@ func (pc *Checker) ValidatePackage(pkg *config.Package, policies []*Config) erro
 	}
 	for _, policyCfg := range policies {
 		policyCfg := policyCfg
-		if err := pc.validatePackage(&paramValidatePackage{
+		if err := pc.validatePackage(logE, &paramValidatePackage{
 			Pkg:          pkg,
 			PolicyConfig: policyCfg.YAML,
 		}); err == nil {
@@ -61,14 +63,15 @@ type paramValidatePackage struct {
 	PolicyConfig *ConfigYAML
 }
 
-func (pc *Checker) validatePackage(param *paramValidatePackage) error {
+func (pc *Checker) validatePackage(logE *logrus.Entry, param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}
 	for _, policyPkg := range param.PolicyConfig.Packages {
 		f, err := pc.matchPkg(param.Pkg, policyPkg)
 		if err != nil {
-			return err
+			logerr.WithError(logE, err).Debug("check if the package matches with a policy")
+			continue
 		}
 		if f {
 			return nil

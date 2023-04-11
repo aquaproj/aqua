@@ -184,7 +184,7 @@ func (ctrl *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.
 		return nil
 	}
 
-	pkgInfo, err := pkgInfo.Override(pkg.Version, ctrl.runtime)
+	pkgInfo, err := pkgInfo.Override(logE, pkg.Version, ctrl.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil

@@ -42,7 +42,7 @@ func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, versio
 
 	chksum := cosign.Checksums()[cos.installer.runtime.Env()]
 
-	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, cos.installer.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, cos.installer.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}

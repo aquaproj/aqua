@@ -37,7 +37,7 @@ func (slsaVerifier *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE 
 
 	chksum := slsa.Checksums()[slsaVerifier.installer.runtime.Env()]
 
-	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, slsaVerifier.installer.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, slsaVerifier.installer.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
