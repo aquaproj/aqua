@@ -7,26 +7,24 @@ import (
 )
 
 type Artifact struct {
-	Version         string
-	SemVer          string
-	OS              string
-	Arch            string
-	Format          string
-	Asset           string
-	AssetWithoutExt string
+	Version string
+	SemVer  string
+	OS      string
+	Arch    string
+	Format  string
+	Asset   string
 }
 
 func renderParam(art *Artifact, rt *runtime.Runtime) map[string]interface{} {
 	return map[string]interface{}{
-		"Version":         art.Version,
-		"SemVer":          art.SemVer,
-		"GOOS":            rt.GOOS,
-		"GOARCH":          rt.GOARCH,
-		"OS":              art.OS,
-		"Arch":            art.Arch,
-		"Format":          art.Format,
-		"Asset":           art.Asset,
-		"AssetWithoutExt": art.AssetWithoutExt,
+		"Version": art.Version,
+		"SemVer":  art.SemVer,
+		"GOOS":    rt.GOOS,
+		"GOARCH":  rt.GOARCH,
+		"OS":      art.OS,
+		"Arch":    art.Arch,
+		"Format":  art.Format,
+		"Asset":   art.Asset,
 	}
 }
 
