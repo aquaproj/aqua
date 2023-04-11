@@ -33,7 +33,7 @@ func GetFormat(assetName string) string { //nolint:funlen,cyclop
 		return "tar.br"
 	case *archiver.TarBz2:
 		if strings.HasSuffix(assetName, ".tbz2") {
-			return "btz2"
+			return "tbz2"
 		}
 		return "tar.bz2"
 	case *archiver.TarGz:

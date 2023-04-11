@@ -79,7 +79,7 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 		},
 	}
 
-	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, inst.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
