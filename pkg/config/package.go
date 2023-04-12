@@ -198,7 +198,9 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	}
 
 	format := cpkg.PackageInfo.Format
-	asset = appendExt(asset, format)
+	if cpkg.PackageInfo.GetAppendFormat() {
+		asset = appendExt(asset, format)
+	}
 
 	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
 		if cpkg.PackageInfo.Format == formatRaw {
@@ -303,7 +305,9 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 		return "", err
 	}
 	format := cpkg.PackageInfo.Format
-	s = appendExt(s, format)
+	if cpkg.PackageInfo.GetAppendFormat() {
+		s = appendExt(s, format)
+	}
 	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
 		if cpkg.PackageInfo.Format == formatRaw {
 			return cpkg.CompleteWindowsExt(s), nil

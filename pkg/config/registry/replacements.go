@@ -18,6 +18,7 @@ type Override struct {
 	Checksum           *Checksum       `json:"checksum,omitempty"`
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	AppendFormat       *bool           `json:"append_format" yaml:"append_format"`
 }
 
 func (ov *Override) Match(rt *runtime.Runtime) bool {

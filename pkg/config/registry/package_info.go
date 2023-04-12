@@ -50,6 +50,14 @@ type PackageInfo struct {
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 	ErrorMessage       string             `json:"-" yaml:"-"`
+	AppendFormat       *bool              `json:"append_format" yaml:"append_format"`
+}
+
+func (pkgInfo *PackageInfo) GetAppendFormat() bool {
+	if pkgInfo.AppendFormat == nil {
+		return true
+	}
+	return *pkgInfo.AppendFormat
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
@@ -84,6 +92,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		Private:            pkgInfo.Private,
 		ErrorMessage:       pkgInfo.ErrorMessage,
 		NoAsset:            pkgInfo.NoAsset,
+		AppendFormat:       pkgInfo.AppendFormat,
 	}
 	return pkg
 }
@@ -113,6 +122,7 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
 		pkgInfo.SLSAProvenance = nil
 		pkgInfo.Format = ""
 		pkgInfo.Rosetta2 = nil
+		pkgInfo.AppendFormat = nil
 	}
 }
 
@@ -188,6 +198,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.NoAsset != nil {
 		pkg.NoAsset = child.NoAsset
 	}
+	if child.AppendFormat != nil {
+		pkg.AppendFormat = child.AppendFormat
+	}
 	return pkg
 }
 
@@ -254,6 +267,9 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.SLSAProvenance != nil {
 		pkgInfo.SLSAProvenance = ov.SLSAProvenance
 	}
+	if ov.AppendFormat != nil {
+		pkgInfo.AppendFormat = ov.AppendFormat
+	}
 }
 
 type VersionOverride struct {
@@ -281,6 +297,7 @@ type VersionOverride struct {
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
 	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
+	AppendFormat       *bool           `json:"append_format" yaml:"append_format"`
 }
 
 type FormatOverrides []*FormatOverride
