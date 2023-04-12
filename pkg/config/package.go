@@ -307,7 +307,7 @@ func (cpkg *Package) RenderPath() (string, error) {
 	return cpkg.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
 }
 
-func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
 	assetName, err := cpkg.RenderAsset(rt)
@@ -324,6 +324,9 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 		}
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
+			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		}
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := cpkg.RenderURL(rt)
