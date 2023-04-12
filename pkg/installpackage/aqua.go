@@ -89,6 +89,7 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 		Checksums:     checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:           pkg,
 		DisablePolicy: true,
+		RootDir:       filepath.Join(inst.rootDir, "internal"),
 	}); err != nil {
 		return err
 	}
@@ -98,7 +99,7 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 		"package_version": pkg.Package.Version,
 	})
 
-	exePath, err := inst.getExePath(pkg)
+	exePath, err := inst.getInternalExePath(pkg)
 	if err != nil {
 		return err
 	}
@@ -116,8 +117,8 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 	return inst.createLink(filepath.Join(inst.rootDir, "bin", "aqua"), a, logE)
 }
 
-func (inst *InstallerImpl) getExePath(pkg *config.Package) (string, error) {
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
+func (inst *InstallerImpl) getInternalExePath(pkg *config.Package) (string, error) {
+	pkgPath, err := pkg.GetPkgPath(filepath.Join(inst.rootDir, "internal"), inst.runtime)
 	if err != nil {
 		return "", err //nolint:wrapcheck
 	}

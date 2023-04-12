@@ -113,6 +113,7 @@ type ParamInstallPackage struct {
 	ConfigFileDir   string
 	CosignExePath   string
 	Checksum        *checksum.Checksum
+	RootDir         string
 }
 
 type ChecksumCalculator interface {
@@ -237,7 +238,11 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
+	rootDir := inst.rootDir
+	if param.RootDir != "" {
+		rootDir = param.RootDir
+	}
+	pkgPath, err := pkg.GetPkgPath(rootDir, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
