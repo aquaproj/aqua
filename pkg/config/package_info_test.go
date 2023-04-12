@@ -182,13 +182,13 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_release",
-			exp:   "/tmp/aqua/pkgs/github_release/github.com/aquaproj/aqua/v0.7.7/aqua.tar.gz",
+			exp:   "/tmp/aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v0.7.7/ci-info.tar.gz",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua",
-					Asset:     stringP("aqua.{{.Format}}"),
+					RepoOwner: "suzuki-shunsuke",
+					RepoName:  "ci-info",
+					Asset:     stringP("ci-info.{{.Format}}"),
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
