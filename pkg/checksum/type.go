@@ -27,12 +27,12 @@ func New() *Checksums {
 }
 
 func (chksums *Checksums) Get(key string) *Checksum {
-	chksums.rwmutex.RLock()
+	chksums.rwmutex.Lock()
 	chk := chksums.m[key]
 	if chk != nil {
 		chksums.newM[key] = chk
 	}
-	chksums.rwmutex.RUnlock()
+	chksums.rwmutex.Unlock()
 	return chk
 }
 
