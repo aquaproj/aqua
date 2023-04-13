@@ -182,7 +182,22 @@ type Param struct {
 }
 
 func appendExt(s, format string) string {
-	if format == formatRaw || format == "" || strings.HasSuffix(s, fmt.Sprintf(".%s", format)) {
+	aliases := unarchive.GetFormatAliases()
+	alias := ""
+	for k, v := range aliases {
+		if format == k {
+			alias = v
+		} else if format == v {
+			alias = k
+		}
+	}
+	if format == formatRaw || format == "" {
+		return s
+	}
+	if strings.HasSuffix(s, fmt.Sprintf(".%s", format)) {
+		return s
+	}
+	if alias != "" && strings.HasSuffix(s, fmt.Sprintf(".%s", alias)) {
 		return s
 	}
 	return fmt.Sprintf("%s.%s", s, format)

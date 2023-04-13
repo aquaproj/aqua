@@ -72,7 +72,7 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func getFormatAliases() map[string]string {
+func GetFormatAliases() map[string]string {
 	return map[string]string{
 		"tbr":  "tar.br",
 		"tbz":  "tar.bz2",
@@ -99,7 +99,7 @@ func (unarchiver *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUna
 
 	f := filename
 	if src.Type != "" {
-		if a, ok := getFormatAliases()[src.Type]; ok {
+		if a, ok := GetFormatAliases()[src.Type]; ok {
 			f = "." + a
 		} else {
 			f = "." + src.Type
