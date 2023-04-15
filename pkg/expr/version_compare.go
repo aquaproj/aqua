@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/go-version"
@@ -48,7 +49,12 @@ func getCompareFunc(v string) func(s string) bool {
 	}
 }
 
+var commitHash = regexp.MustCompile(`^[0-9a-f]{40}$`)
+
 func compare(constr, ver string) bool {
+	if commitHash.MatchString(ver) {
+		return false
+	}
 	sv1, err := version.NewVersion(ver)
 	if err != nil {
 		panic(err)
