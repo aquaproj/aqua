@@ -24,6 +24,11 @@ func (pkgInfo *PackageInfo) setTopVersion(logE *logrus.Entry, v string) *Package
 		return nil
 	}
 	if a {
+		logE.WithFields(logrus.Fields{
+			"version_constraint": pkgInfo.VersionConstraints,
+			"package_version":    v,
+			"package_semver":     sv,
+		}).Debug("match the version_constraint")
 		return pkgInfo.Copy()
 	}
 	return nil
@@ -31,6 +36,7 @@ func (pkgInfo *PackageInfo) setTopVersion(logE *logrus.Entry, v string) *Package
 
 func (pkgInfo *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageInfo, error) {
 	if pkgInfo.VersionConstraints == "" {
+		logE.Debug("no version_constraint")
 		return pkgInfo, nil
 	}
 
@@ -58,8 +64,17 @@ func (pkgInfo *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageIn
 			continue
 		}
 		if a {
+			logE.WithFields(logrus.Fields{
+				"version_constraint": pkgInfo.VersionConstraints,
+				"package_version":    v,
+				"package_semver":     sv,
+			}).Debug("match the version_constraint")
 			return pkgInfo.overrideVersion(vo), nil
 		}
 	}
+	logE.WithFields(logrus.Fields{
+		"version_constraint": pkgInfo.VersionConstraints,
+		"package_version":    v,
+	}).Debug("no version_constraint matches")
 	return pkgInfo.Copy(), nil
 }

@@ -51,6 +51,13 @@ func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 			semver:      "v0.3.0",
 			isErr:       true,
 		},
+		{
+			title:       "commit hash",
+			constraints: `semver(">= 0.4.0")`,
+			version:     "35661968adb8fa29ab1d4a8713c0547d9a6007bb",
+			semver:      "35661968adb8fa29ab1d4a8713c0547d9a6007bb",
+			exp:         false,
+		},
 	}
 
 	for _, d := range data {
