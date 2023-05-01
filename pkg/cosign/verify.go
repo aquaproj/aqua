@@ -154,8 +154,6 @@ type ParamVerify struct {
 	CosignExePath      string
 }
 
-const tempErrMsg = "resource temporarily unavailable"
-
 var errVerify = errors.New("verify with Cosign")
 
 func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
@@ -187,12 +185,8 @@ func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, pa
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
-		out, err := verifier.exec(ctx, args, envs)
-		if err == nil {
+		if _, err := verifier.exec(ctx, args, envs); err == nil {
 			return nil
-		}
-		if !strings.Contains(out, tempErrMsg) {
-			return fmt.Errorf("verify with cosign: %w", err)
 		}
 		if i == 4 { //nolint:gomnd
 			// skip last wait
