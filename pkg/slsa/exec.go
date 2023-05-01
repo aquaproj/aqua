@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -47,8 +46,6 @@ func (mock *MockExecutor) Verify(ctx context.Context, logE *logrus.Entry, param 
 	return mock.Err
 }
 
-const tempErrMsg = "resource temporarily unavailable"
-
 func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:gomnd
@@ -84,12 +81,8 @@ func (exe *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *
 		param.SourceTag,
 	}
 	for i := 0; i < 5; i++ {
-		out, err := exe.exec(ctx, args)
-		if err == nil {
+		if _, err := exe.exec(ctx, args); err == nil {
 			return nil
-		}
-		if !strings.Contains(out, tempErrMsg) {
-			return fmt.Errorf("verify with slsa-verifier: %w", err)
 		}
 		if i == 4 { //nolint:gomnd
 			break
