@@ -28,7 +28,7 @@
       ],
     },
     {
-      fileMatch: ["^pkgs/cosign/version\\.go"],
+      fileMatch: ["^pkg/cosign/version\\.go"],
       depNameTemplate: "sigstore/cosign",
       datasourceTemplate: "github-releases",
       matchStrings: [
@@ -36,7 +36,7 @@
       ],
     },
     {
-      fileMatch: ["^pkgs/slsa/version\\.go"],
+      fileMatch: ["^pkg/slsa/version\\.go"],
       depNameTemplate: "slsa-framework/slsa-verifier",
       datasourceTemplate: "github-releases",
       matchStrings: [
