@@ -35,5 +35,13 @@
         'const Version = "(?<currentValue>.*)"',
       ],
     },
+    {
+      fileMatch: ["^pkgs/slsa/version\\.go"],
+      depNameTemplate: "slsa-framework/slsa-verifier",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        'const Version = "(?<currentValue>.*)"',
+      ],
+    },
   ],
 }
