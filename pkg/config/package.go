@@ -82,6 +82,18 @@ func (cpkg *Package) CompleteWindowsExt(s string) string {
 	return s + cpkg.WindowsExt()
 }
 
+type FileNotFoundError struct {
+	Err error
+}
+
+func (errorFileNotFound *FileNotFoundError) Error() string {
+	return errorFileNotFound.Err.Error()
+}
+
+func (errorFileNotFound *FileNotFoundError) Unwrap() error {
+	return errorFileNotFound.Err
+}
+
 func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	s, err := cpkg.getFileSrc(file, rt)
 	if err != nil {
@@ -99,6 +111,11 @@ func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string,
 		return newName, nil
 	}
 	old := filepath.Join(pkgPath, s)
+	if _, err := fs.Stat(old); err != nil {
+		return "", &FileNotFoundError{
+			Err: err,
+		}
+	}
 	logE.WithFields(logrus.Fields{
 		"new": newPath,
 		"old": old,
