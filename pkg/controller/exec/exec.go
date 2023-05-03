@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -35,6 +36,19 @@ type Controller struct {
 	requireChecksum    bool
 }
 
+func getEnabledXSysExec(osEnv osenv.OSEnv, goos string) bool {
+	if goos == "windows" {
+		return false
+	}
+	if osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "false" {
+		return false
+	}
+	if osEnv.Getenv("AQUA_X_SYS_EXEC") == "false" {
+		return false
+	}
+	return true
+}
+
 func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
@@ -43,7 +57,7 @@ func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl w
 		packageInstaller:   pkgInstaller,
 		which:              whichCtrl,
 		executor:           executor,
-		enabledXSysExec:    osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		enabledXSysExec:    getEnabledXSysExec(osEnv, runtime.GOOS),
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
 		policyConfigFinder: policyConfigFinder,
