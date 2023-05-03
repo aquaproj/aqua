@@ -258,7 +258,7 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
-		var errFileNotFound *FileNotFoundError
+		var errFileNotFound *config.FileNotFoundError
 		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
 			if errors.As(err, &errFileNotFound) {
 				notFound = true
@@ -349,8 +349,8 @@ func (inst *InstallerImpl) checkFileSrc(pkg *config.Package, file *registry.File
 	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
-		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(&FileNotFoundError{
-			err: err,
+		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(&config.FileNotFoundError{
+			Err: err,
 		}, logE.Data))
 	}
 	if finfo.IsDir() {

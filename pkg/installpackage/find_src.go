@@ -6,18 +6,6 @@ import (
 	"path/filepath"
 )
 
-type FileNotFoundError struct {
-	err error
-}
-
-func (errorFileNotFound *FileNotFoundError) Error() string {
-	return errorFileNotFound.err.Error()
-}
-
-func (errorFileNotFound *FileNotFoundError) Unwrap() error {
-	return errorFileNotFound.err
-}
-
 func containPath(p string) bool {
 	switch p {
 	case "README", "README.md", "LICENSE":
