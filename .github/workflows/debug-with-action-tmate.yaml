@@ -1,0 +1,35 @@
+---
+name: Debug with action-tmate
+on:
+  workflow_dispatch:
+    inputs:
+      runs-on:
+        required: false
+        default: windows-latest
+      pr_number:
+        required: false
+permissions: {}
+jobs:
+  action-tmate:
+    runs-on: ${{inputs.runs-on}}
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - run: gh pr checkout "${{inputs.pr_number}}"
+        if: inputs.pr_number != ''
+      - uses: aquaproj/aqua-installer@v2.1.1
+        with:
+          aqua_version: v2.3.7
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version: 1.20.4
+
+      # The default vim doesn't work well, so we install the latest vim ourselves.
+      - uses: rhysd/action-setup-vim@015df8c5b8dabdca7febe31bb66c156c0d780374 # v1.2.15
+
+      - uses: mxschmitt/action-tmate@1005f9c9db5f1b055a495e72c6e589764984baf6 # v3.14
+        with:
+          limit-access-to-actor: true # SSH Key is required
+        env:
+          GITHUB_TOKEN: ${{github.token}} # Pass GitHub Token to shell session
