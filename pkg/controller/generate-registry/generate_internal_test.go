@@ -113,7 +113,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				Repo:     d.repo,
 			}
 			ctrl := NewController(nil, gh, nil)
-			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, true)
+			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, true, nil)
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}

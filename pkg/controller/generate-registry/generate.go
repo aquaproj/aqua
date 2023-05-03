@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
@@ -51,7 +52,15 @@ func (ctrl *Controller) GenerateRegistry(ctx context.Context, param *config.Para
 }
 
 func (ctrl *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
-	pkgInfo, versions := ctrl.getPackageInfo(ctx, logE, pkgName, param.Deep)
+	var versionFilter *expr.Program
+	if param.VersionFilter != "" {
+		a, err := expr.CompileVersionFilter(param.VersionFilter)
+		if err != nil {
+			return fmt.Errorf("compile the version-filter: %w", err)
+		}
+		versionFilter = a
+	}
+	pkgInfo, versions := ctrl.getPackageInfo(ctx, logE, pkgName, param.Deep, versionFilter)
 	if param.OutTestData != "" {
 		if err := ctrl.testdataOutputter.Output(&output.Param{
 			List: listPkgsFromVersions(pkgName, versions),
@@ -87,7 +96,7 @@ func (ctrl *Controller) getRelease(ctx context.Context, repoOwner, repoName, ver
 	return release, err //nolint:wrapcheck
 }
 
-func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, deep bool) (*registry.PackageInfo, []string) {
+func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, deep bool, versionFilter *expr.Program) (*registry.PackageInfo, []string) {
 	pkgName, version, _ := strings.Cut(arg, "@")
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
@@ -112,7 +121,7 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 		pkgInfo.Description = strings.TrimRight(strings.TrimSpace(repo.GetDescription()), ".!?")
 	}
 	if deep && version == "" {
-		return ctrl.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo)
+		return ctrl.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, versionFilter)
 	}
 	release, err := ctrl.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {

@@ -83,6 +83,10 @@ func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
 				Name:  "deep",
 				Usage: "Resolve version_overrides",
 			},
+			&cli.StringFlag{
+				Name:  "version-filter",
+				Usage: "version filter",
+			},
 		},
 	}
 }
