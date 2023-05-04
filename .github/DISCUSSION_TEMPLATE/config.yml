@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Issue of Standard Registry
+    url: https://github.com/aquaproj/aqua-registry/issues
+    about: Please report issues about aqua Standard Registry
+  - name: Slack
+    url: https://gophers.slack.com/archives/C04RALTG29K
+    about: Please ask questions freely
