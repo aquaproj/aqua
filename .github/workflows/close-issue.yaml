@@ -1,0 +1,34 @@
+name: Close issue
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  reaction:
+    runs-on: ubuntu-latest
+    if: github.event.issue.sender != 'suzuki-shunsuke'
+    permissions:
+      issues: write
+    steps:
+      - run: gh -R "$GITHUB_REPOSITORY" issue comment "${{github.event.issue.number}}" --body "$BODY"
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+          BODY: |
+            # Please create a GitHub Discussion instead of this issue
+
+            https://github.com/orgs/aquaproj/discussions
+
+            Only maintainers can create new Issues. If needed, a maintainer will create an Issue after your Discussion been triaged and confirmed.
+
+            This Issue will now be closed and locked. This way we keep Issues actionable, and free of duplicates or wrong bug reports.
+
+            Thanks
+
+      - run: gh -R "$GITHUB_REPOSITORY" issue close "${{github.event.issue.number}}"
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+
+      - run: gh -R "$GITHUB_REPOSITORY" issue lock "${{github.event.issue.number}}"
+        env:
+          GITHUB_TOKEN: ${{github.token}}
