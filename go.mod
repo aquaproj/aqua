@@ -7,6 +7,7 @@ require (
 	github.com/adrg/xdg v0.4.0
 	github.com/antonmedv/expr v1.12.5
 	github.com/codingsince1985/checksum v1.3.0
+	github.com/forPelevin/gomoji v1.1.8
 	github.com/goccy/go-yaml v1.11.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v52 v52.0.0
@@ -43,7 +44,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/forPelevin/gomoji v1.1.8 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.5.3 // indirect
 	github.com/go-playground/validator/v10 v10.11.1 // indirect
