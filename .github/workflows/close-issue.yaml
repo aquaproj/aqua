@@ -5,9 +5,9 @@ on:
     types: [opened]
 
 jobs:
-  reaction:
+  close-issue:
     runs-on: ubuntu-latest
-    if: github.event.issue.sender != 'suzuki-shunsuke'
+    if: github.event.sender != 'suzuki-shunsuke'
     permissions:
       issues: write
     steps:
