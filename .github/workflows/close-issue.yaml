@@ -7,7 +7,7 @@ on:
 jobs:
   close-issue:
     runs-on: ubuntu-latest
-    if: github.event.sender != 'suzuki-shunsuke'
+    if: github.triggering_actor != 'suzuki-shunsuke'
     permissions:
       issues: write
     steps:
