@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/forPelevin/gomoji"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -109,7 +110,7 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 			"repo_name":  pkgInfo.RepoName,
 		}).WithError(err).Warn("get the repository")
 	} else {
-		pkgInfo.Description = strings.TrimRight(strings.TrimSpace(repo.GetDescription()), ".!?")
+		pkgInfo.Description = strings.TrimRight(strings.TrimSpace(gomoji.RemoveEmojis(repo.GetDescription())), ".!?")
 	}
 	if deep && version == "" {
 		return ctrl.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo)
