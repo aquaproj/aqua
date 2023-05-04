@@ -1,6 +1,4 @@
 title: Q & A
-labels:
-  - qa
 body:
   - type: textarea
     id: question

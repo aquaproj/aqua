@@ -1,6 +1,4 @@
 title: Bug Report
-labels:
-  - bug
 body:
   - type: textarea
     id: aqua-version

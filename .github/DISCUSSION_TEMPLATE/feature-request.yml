@@ -1,6 +1,4 @@
 title: Feature Request
-labels:
-  - bug
 body:
   - type: textarea
     id: feature-overview
