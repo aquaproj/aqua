@@ -1,0 +1,56 @@
+title: Feature Request
+labels:
+  - bug
+body:
+  - type: textarea
+    id: feature-overview
+    attributes:
+      label: Feature Overview
+      value:
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is the feature needed?
+      description: Please explain the problem you want to solve.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: has-breaking-change
+    attributes:
+      label: Does the feature include Breaking Changes?
+      description: Please explain the problem you want to solve.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: example-code
+    attributes:
+      label: Example Code
+      description: |
+        Please explain the feature with code. For example, if you want a new subcommand, please explain the usage of the subcommand.
+      value: |
+        ```console
+        $ 
+        ```
+
+        Configuration
+
+        ```yaml
+
+        ```
+      render: bash
+    validations:
+      required: false
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      value: |
+        *
+      render: bash
+    validations:
+      required: false
