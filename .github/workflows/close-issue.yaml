@@ -11,10 +11,10 @@ jobs:
     permissions:
       issues: write
     steps:
-      - run: gh -R "$GITHUB_REPOSITORY" issue comment "${{github.event.issue.number}}" --body "$BODY"
-        env:
-          GITHUB_TOKEN: ${{github.token}}
-          BODY: |
+      - uses: suzuki-shunsuke/issue-close-lock-action@231aefd9a92cddfd2eb51e60965e9468f3d592bd # v0.1.0
+        with:
+          issue_number: ${{github.event.issue.number}}
+          message: |
             # Please create a GitHub Discussion instead of this issue
 
             https://github.com/orgs/aquaproj/discussions
@@ -24,11 +24,3 @@ jobs:
             This Issue will now be closed and locked. This way we keep Issues actionable, and free of duplicates or wrong bug reports.
 
             Thanks
-
-      - run: gh -R "$GITHUB_REPOSITORY" issue close "${{github.event.issue.number}}"
-        env:
-          GITHUB_TOKEN: ${{github.token}}
-
-      - run: gh -R "$GITHUB_REPOSITORY" issue lock "${{github.event.issue.number}}"
-        env:
-          GITHUB_TOKEN: ${{github.token}}
