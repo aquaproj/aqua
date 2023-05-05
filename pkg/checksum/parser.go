@@ -82,7 +82,7 @@ func (parser *FileParser) parseDefault(content string) (map[string]string, strin
 		if idx == -1 {
 			continue
 		}
-		m[path.Base(strings.TrimSpace(line[idx:]))] = line[:idx]
+		m[strings.TrimPrefix(path.Base(strings.TrimSpace(line[idx:])), "*")] = line[:idx]
 	}
 	if len(m) == 0 {
 		return nil, "", ErrNoChecksumExtracted
