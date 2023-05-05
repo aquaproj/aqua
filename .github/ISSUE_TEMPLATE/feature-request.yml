@@ -1,0 +1,62 @@
+name: Feature Request
+description: If you want to add a feature.
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## :warning: Please create a GitHub Discussion instead of GitHub Issue
+
+        https://github.com/orgs/aquaproj/discussions
+
+        Only maintainers can create new Issues. If needed, a maintainer will create an Issue after your Discussion been triaged and confirmed.
+        This way we keep Issues actionable, and free of duplicates or wrong bug reports.
+
+  - type: textarea
+    id: feature-overview
+    attributes:
+      label: Feature Overview
+      value:
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is the feature needed?
+      description: Please explain the problem you want to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: has-breaking-change
+    attributes:
+      label: Does the feature include Breaking Changes?
+      description: Please explain the problem you want to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: example-code
+    attributes:
+      label: Example Code
+      description: |
+        Please explain the feature with code. For example, if you want a new subcommand, please explain the usage of the subcommand.
+      value: |
+        ```console
+        $ 
+        ```
+
+        Configuration
+
+        ```yaml
+
+        ```
+    validations:
+      required: false
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      value: |
+        *
+    validations:
+      required: false
