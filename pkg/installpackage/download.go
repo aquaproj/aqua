@@ -99,7 +99,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with Cosign")
 		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
-			return err
+			return fmt.Errorf("install sigstore/cosign: %w", err)
 		}
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
@@ -115,7 +115,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with slsa-verifier")
 		if err := inst.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
-			return err
+			return fmt.Errorf("install slsa-verifier: %w", err)
 		}
 		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,

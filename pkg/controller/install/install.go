@@ -64,9 +64,8 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 				return fmt.Errorf("create the directory: %w", err)
 			}
 		}
-
 		if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {
-			return err //nolint:wrapcheck
+			return fmt.Errorf("install aqua-proxy: %w", err)
 		}
 	}
 
