@@ -200,7 +200,6 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 
 func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop,funlen
 	pkg := param.Pkg
-	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -246,7 +245,7 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		Package:         pkg,
 		Dest:            pkgPath,
 		Asset:           assetName,
-		Checksums:       checksums,
+		Checksums:       param.Checksums,
 		RequireChecksum: param.RequireChecksum,
 		Checksum:        param.Checksum,
 	}); err != nil {
