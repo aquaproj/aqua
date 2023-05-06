@@ -98,12 +98,8 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	if cos := ppkg.PackageInfo.Cosign; cos.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with Cosign")
-		cosignFields := logrus.Fields{
-			"package_name":    "sigstore/cosign",
-			"package_version": cosign.Version,
-		}
-		if err := inst.cosignInstaller.installCosign(ctx, logE.WithFields(cosignFields), cosign.Version); err != nil {
-			return logerr.WithFields(err, cosignFields) //nolint:wrapcheck
+		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
+			return fmt.Errorf("install sigstore/cosign: %w", err)
 		}
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
@@ -118,12 +114,8 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	if sp := ppkg.PackageInfo.SLSAProvenance; sp.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with slsa-verifier")
-		slsaFields := logrus.Fields{
-			"package_name":    "slsa-framework/slsa-verifier",
-			"package_version": slsa.Version,
-		}
-		if err := inst.slsaVerifierInstaller.installSLSAVerifier(ctx, logE.WithFields(slsaFields), slsa.Version); err != nil {
-			return logerr.WithFields(err, slsaFields) //nolint:wrapcheck
+		if err := inst.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
+			return fmt.Errorf("install slsa-verifier: %w", err)
 		}
 		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,

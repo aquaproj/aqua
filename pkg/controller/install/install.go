@@ -17,7 +17,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Controller struct {
@@ -65,13 +64,8 @@ func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *
 				return fmt.Errorf("create the directory: %w", err)
 			}
 		}
-
-		proxyFields := logrus.Fields{
-			"package_name":    "aquaproj/aqua-proxy",
-			"package_version": installpackage.ProxyVersion,
-		}
-		if err := ctrl.packageInstaller.InstallProxy(ctx, logE.WithFields(proxyFields)); err != nil {
-			return logerr.WithFields(err, proxyFields) //nolint:wrapcheck //nolint:wrapcheck
+		if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {
+			return fmt.Errorf("install aqua-proxy: %w", err)
 		}
 	}
 
