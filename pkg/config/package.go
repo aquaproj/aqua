@@ -187,6 +187,7 @@ type Param struct {
 	SelectVersion         bool
 	ProgressBar           bool
 	Deep                  bool
+	DeepAuto              bool
 	SkipLink              bool
 	Pin                   bool
 	Prune                 bool

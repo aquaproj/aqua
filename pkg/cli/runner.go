@@ -64,6 +64,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = c.Bool("deep")
+	param.DeepAuto = commandName == "generate-registry" && !c.IsSet("deep")
 	param.Pin = c.Bool("pin")
 	wd, err := os.Getwd()
 	if err != nil {
