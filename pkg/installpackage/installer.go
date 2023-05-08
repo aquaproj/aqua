@@ -297,7 +297,7 @@ func (inst *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Packag
 				}
 				continue
 			}
-			if err := inst.createLink(filepath.Join(inst.rootDir, "bin", file.Name), proxyName, logE); err != nil {
+			if err := inst.createLink(filepath.Join(inst.rootDir, "bin", file.Name), filepath.Join("..", proxyName), logE); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue
