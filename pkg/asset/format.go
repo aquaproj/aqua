@@ -6,12 +6,20 @@ import (
 	"github.com/mholt/archiver/v3"
 )
 
-const formatRaw = "raw"
+const formatRaw string = "raw"
+
+// mholt/archiver/v3 not support but aqua support
+func aquaSupportFormat(assetName string) string {
+	if strings.HasSuffix(assetName, ".dmg") {
+		return "dmg"
+	}
+	return formatRaw
+}
 
 func GetFormat(assetName string) string { //nolint:funlen,cyclop
 	a, err := archiver.ByExtension(assetName)
 	if err != nil {
-		return formatRaw
+		return aquaSupportFormat(assetName)
 	}
 	switch a.(type) {
 	case *archiver.Rar:
@@ -25,7 +33,7 @@ func GetFormat(assetName string) string { //nolint:funlen,cyclop
 		return "tar.br"
 	case *archiver.TarBz2:
 		if strings.HasSuffix(assetName, ".tbz2") {
-			return "btz2"
+			return "tbz2"
 		}
 		return "tar.bz2"
 	case *archiver.TarGz:
@@ -65,6 +73,6 @@ func GetFormat(assetName string) string { //nolint:funlen,cyclop
 	case *archiver.Zstd:
 		return "zst"
 	default:
-		return formatRaw
+		return aquaSupportFormat(assetName)
 	}
 }

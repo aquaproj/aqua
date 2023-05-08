@@ -1,0 +1,94 @@
+packages:
+  - type: github_release
+    repo_owner: 99designs
+    repo_name: aws-vault
+    description: A vault for securely storing and accessing AWS credentials in development environments
+    asset: aws-vault-{{.OS}}-{{.Arch}}
+    format: raw
+    supported_envs:
+      - linux
+      - windows/arm64
+      - darwin
+    checksum:
+      type: github_release
+      asset: SHA256SUMS
+      file_format: regexp
+      algorithm: sha256
+      pattern:
+        checksum: "^(\\b[A-Fa-f0-9]{64}\\b)"
+        file: "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$"
+    overrides:
+      - goos: darwin
+        format: dmg
+        asset: aws-vault-darwin-{{.Arch}}.{{.Format}}
+    version_constraint: semver(">= 6.5.0")
+    version_overrides:
+      - version_constraint: semver(">= 5.2.0")
+        supported_envs:
+          - linux
+      - version_constraint: semver(">= 5.1.0")
+        supported_envs:
+          - linux
+        checksum:
+          enabled: false
+      - version_constraint: semver(">= 4.7.0")
+        supported_envs:
+          - linux/amd64
+        checksum:
+          enabled: false
+      - version_constraint: semver(">= 3.5.0")
+        supported_envs:
+          - linux/amd64
+          - darwin
+        rosetta2: true
+        checksum:
+          enabled: false
+      - version_constraint: semver(">= 3.0.0-dev")
+        replacements:
+          amd64: x86_64
+          darwin: Darwin
+        supported_envs:
+          - darwin
+        rosetta2: true
+        checksum:
+          enabled: false
+      - version_constraint: semver(">= 2.4.0")
+        replacements:
+          amd64: x86_64
+          darwin: Darwin
+          linux: Linux
+        supported_envs:
+          - linux/amd64
+          - darwin
+        rosetta2: true
+        checksum:
+          enabled: false
+      - version_constraint: semver(">= 2.3.3")
+        replacements:
+          amd64: x86_64
+          darwin: Darwin
+        supported_envs:
+          - darwin
+        rosetta2: true
+        checksum:
+          enabled: false
+      - version_constraint: semver(">= 2.3.2")
+        replacements:
+          amd64: x86_64
+          darwin: Darwin
+          linux: Linux
+        supported_envs:
+          - linux/amd64
+          - darwin
+        rosetta2: true
+        checksum:
+          enabled: false
+      - version_constraint: semver("< 2.3.2")
+        replacements:
+          amd64: x86_64
+          darwin: Darwin
+        supported_envs:
+          - darwin
+        rosetta2: true
+        checksum:
+          enabled: false

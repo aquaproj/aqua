@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 )
 
 func TestNew(t *testing.T) {

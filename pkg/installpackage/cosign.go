@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/sirupsen/logrus"
 )
 
@@ -42,7 +42,7 @@ func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, versio
 
 	chksum := cosign.Checksums()[cos.installer.runtime.Env()]
 
-	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, cos.installer.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, cos.installer.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
@@ -64,7 +64,7 @@ func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, versio
 			Algorithm: "sha256",
 			Checksum:  chksum,
 		},
-		// PolicyConfigs is nil, so the policy check is skipped
+		DisablePolicy: true,
 	}); err != nil {
 		return err
 	}

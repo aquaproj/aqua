@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )

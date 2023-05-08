@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 const proxyName = "aqua-proxy"
@@ -43,7 +44,6 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
-				Asset:       stringP("colima-amd64"),
 				Files: []*File{
 					{
 						Name: proxyName,
@@ -125,11 +125,12 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 			version: "v0.3.0",
 		},
 	}
+	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgInfo, err := d.pkgInfo.SetVersion(d.version)
+			pkgInfo, err := d.pkgInfo.SetVersion(logE, d.version)
 			if err != nil {
 				t.Fatal(err)
 			}

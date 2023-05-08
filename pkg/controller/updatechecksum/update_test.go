@@ -6,26 +6,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	rgst "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-func boolP(b bool) *bool {
-	return &b
-}
-
-func strP(s string) *string {
-	return &s
-}
 
 func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -59,7 +52,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: boolP(true),
+						Enabled: util.BoolP(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -78,67 +71,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
-								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
-							},
-						},
-					},
-				},
-			},
-			registDownloader: &domain.MockGitHubContentFileDownloader{
-				File: &domain.GitHubContentFile{
-					String: `type: github_release
-repo_owner: cli
-repo_name: cli
-asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
-`,
-				},
-			},
-			fs: afero.NewMemMapFs(),
-			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
-			},
-			chkDL:      &download.MockChecksumDownloader{},
-			downloader: &download.Mock{},
-		},
-		{
-			name: "deep",
-			param: &config.Param{
-				PWD:  "/home/foo/workspace",
-				Deep: true,
-				All:  true,
-				GlobalConfigFilePaths: []string{
-					"/home/foo/global/aqua.yaml",
-				},
-			},
-			cfgFinder: &updatechecksum.MockConfigFinder{
-				Files: []string{
-					"/home/foo/workspace/aqua.yaml",
-				},
-			},
-			cfgReader: &reader.MockConfigReader{
-				Cfg: &aqua.Config{
-					Checksum: &aqua.Checksum{
-						Enabled: boolP(true),
-					},
-					Packages: []*aqua.Package{
-						{
-							Name:     "cli/cli",
-							Version:  "v2.17.0",
-							Registry: "standard",
-						},
-					},
-				},
-			},
-			registInstaller: &rgst.MockInstaller{
-				M: map[string]*registry.Config{
-					"standard": {
-						PackageInfos: registry.PackageInfos{
-							{
-								RepoOwner: "cli",
-								RepoName:  "cli",
-								Type:      "github_release",
-								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+								Asset:     util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 							},
 						},
 					},
@@ -180,7 +113,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: boolP(true),
+						Enabled: util.BoolP(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -199,7 +132,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
-								Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+								Asset:     util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 								Checksum: &registry.Checksum{
 									Type:       "github_release",
 									Asset:      "gh_{{trimV .Version}}_checksums.txt",

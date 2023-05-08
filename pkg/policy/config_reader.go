@@ -19,7 +19,8 @@ func NewConfigReader(fs afero.Fs) *ConfigReaderImpl {
 }
 
 type ConfigReader interface {
-	Read([]string) ([]*Config, error)
+	Read(policyConfigFiles []string) ([]*Config, error)
+	ReadFile(policyConfigFile string) (*Config, error)
 }
 
 type MockConfigReader struct {
@@ -44,6 +45,17 @@ func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 		policyCfgs[i] = policyCfg
 	}
 	return policyCfgs, nil
+}
+
+func (reader *ConfigReaderImpl) ReadFile(file string) (*Config, error) {
+	policyCfg := &Config{
+		Path: file,
+		YAML: &ConfigYAML{},
+	}
+	if err := reader.read(policyCfg); err != nil {
+		return nil, fmt.Errorf("read the policy config file: %w", err)
+	}
+	return policyCfg, nil
 }
 
 func (reader *ConfigReaderImpl) read(cfg *Config) error {

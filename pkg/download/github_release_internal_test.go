@@ -3,7 +3,8 @@ package download
 import (
 	"testing"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 )
 
 func Test_getAssetIDFromAssets(t *testing.T) {
@@ -19,7 +20,7 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 			title: "not found",
 			assets: []*github.ReleaseAsset{
 				{
-					Name: github.String("foo"),
+					Name: util.StrP("foo"),
 				},
 			},
 			assetName: "bar",
@@ -29,11 +30,11 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 			title: "found",
 			assets: []*github.ReleaseAsset{
 				{
-					Name: github.String("foo"),
+					Name: util.StrP("foo"),
 				},
 				{
-					Name: github.String("bar"),
-					ID:   github.Int64(10),
+					Name: util.StrP("bar"),
+					ID:   util.Int64P(10),
 				},
 			},
 			assetName: "bar",

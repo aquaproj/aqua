@@ -1,11 +1,13 @@
 {
   extends: [
     "config:base",
-    "github>suzuki-shunsuke/renovate-config#1.1.3-1",
-    "github>suzuki-shunsuke/renovate-config:nolimit#1.1.2",
+    "github>suzuki-shunsuke/renovate-config#2.1.0",
     "github>aquaproj/aqua-renovate-config#1.5.2",
+    "github>suzuki-shunsuke/renovate-config:nolimit#2.1.0",
     "github>aquaproj/aqua-renovate-config:file#1.5.2(tests/aqua.*\\.yaml)",
-    "github>aquaproj/aqua-renovate-config:file#1.5.2(aqua/.*\\.ya?ml)",
+    "github>suzuki-shunsuke/renovate-config:action-go-version#2.1.0",
+    "github>aquaproj/aqua-renovate-config:file#1.5.2(aqua/imports/.*\\.ya?ml)",
+    "github>aquaproj/aqua-renovate-config:installer-script#1.5.2(Dockerfile-prebuilt)"
   ],
   ignorePaths: [],
   regexManagers: [
@@ -26,8 +28,16 @@
       ],
     },
     {
-      fileMatch: ["^pkgs/cosign/version\\.go"],
+      fileMatch: ["^pkg/cosign/version\\.go"],
       depNameTemplate: "sigstore/cosign",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        'const Version = "(?<currentValue>.*)"',
+      ],
+    },
+    {
+      fileMatch: ["^pkg/slsa/version\\.go"],
+      depNameTemplate: "slsa-framework/slsa-verifier",
       datasourceTemplate: "github-releases",
       matchStrings: [
         'const Version = "(?<currentValue>.*)"',

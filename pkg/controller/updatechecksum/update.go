@@ -7,15 +7,15 @@ import (
 	"io"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -32,7 +32,6 @@ type Controller struct {
 	chkDL              download.ChecksumDownloader
 	parser             *checksum.FileParser
 	downloader         download.ClientAPI
-	deep               bool
 	prune              bool
 }
 
@@ -48,7 +47,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		chkDL:              chkDL,
 		parser:             &checksum.FileParser{},
 		downloader:         pkgDownloader,
-		deep:               param.Deep,
 		prune:              param.Prune,
 	}
 }
@@ -181,6 +179,10 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 }
 
 func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	if pkg.PackageInfo.Type == "go_install" {
+		logE.Debug("skip updating go_install package's checksum")
+		return nil
+	}
 	logE.Info("updating a package checksum")
 	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
@@ -235,10 +237,6 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 	pkgInfo := pkg.PackageInfo
 
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		if !ctrl.deep {
-			logE.Debug("chekcsum isn't supported")
-			return nil
-		}
 		if err := ctrl.dlAssetAndGetChecksum(ctx, logE, checksums, pkg, rt); err != nil {
 			return err
 		}
@@ -288,7 +286,7 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 		})
 		return nil
 	}
-	m, s, err := ctrl.parser.ParseChecksumFile(checksumFile, pkg)
+	m, s, err := ctrl.parser.ParseChecksumFile(checksumFile, pkgInfo.Checksum)
 	if err != nil {
 		return fmt.Errorf("parse a checksum file: %w", err)
 	}

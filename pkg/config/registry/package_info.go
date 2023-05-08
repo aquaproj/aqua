@@ -3,8 +3,9 @@ package registry
 import (
 	"fmt"
 	"path"
+	"strings"
 
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/iancoleman/orderedmap"
 	"github.com/invopop/jsonschema"
 )
@@ -14,41 +15,41 @@ const (
 	PkgInfoTypeGitHubContent = "github_content"
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGo            = "go"
 	PkgInfoTypeGoInstall     = "go_install"
 )
 
 type PackageInfo struct {
 	Name               string             `json:"name,omitempty" yaml:",omitempty"`
+	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
+	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 	RepoOwner          string             `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
-	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
-	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
-	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
-	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
 	Link               string             `json:"link,omitempty" yaml:",omitempty"`
-	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
+	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
+	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
+	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
+	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
-	SupportedIf        *string            `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
+	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
+	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
-	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
+	NoAsset            *bool              `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
-	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
 	Checksum           *Checksum          `json:"checksum,omitempty"`
 	Cosign             *Cosign            `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Private            bool               `json:"private,omitempty"`
+	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	ErrorMessage       string             `json:"-" yaml:"-"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
@@ -69,7 +70,6 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		FormatOverrides:    pkgInfo.FormatOverrides,
 		VersionConstraints: pkgInfo.VersionConstraints,
 		VersionOverrides:   pkgInfo.VersionOverrides,
-		SupportedIf:        pkgInfo.SupportedIf,
 		SupportedEnvs:      pkgInfo.SupportedEnvs,
 		VersionFilter:      pkgInfo.VersionFilter,
 		VersionPrefix:      pkgInfo.VersionPrefix,
@@ -82,13 +82,44 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		Cosign:             pkgInfo.Cosign,
 		SLSAProvenance:     pkgInfo.SLSAProvenance,
 		Private:            pkgInfo.Private,
+		ErrorMessage:       pkgInfo.ErrorMessage,
+		NoAsset:            pkgInfo.NoAsset,
 	}
 	return pkg
+}
+
+func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
+	switch typ {
+	case PkgInfoTypeGitHubRelease:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+	case PkgInfoTypeGitHubContent:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGitHubArchive:
+		pkgInfo.URL = nil
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+		pkgInfo.Format = ""
+	case PkgInfoTypeHTTP:
+		pkgInfo.Path = nil
+		pkgInfo.Asset = nil
+	case PkgInfoTypeGoInstall:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+		pkgInfo.WindowsExt = ""
+		pkgInfo.CompleteWindowsExt = nil
+		pkgInfo.Cosign = nil
+		pkgInfo.SLSAProvenance = nil
+		pkgInfo.Format = ""
+		pkgInfo.Rosetta2 = nil
+	}
 }
 
 func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
 	pkg := pkgInfo.Copy()
 	if child.Type != "" {
+		pkg.resetByPkgType(child.Type)
 		pkg.Type = child.Type
 	}
 	if child.RepoOwner != "" {
@@ -121,9 +152,6 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.FormatOverrides != nil {
 		pkg.FormatOverrides = child.FormatOverrides
 	}
-	if child.SupportedIf != nil {
-		pkg.SupportedIf = child.SupportedIf
-	}
 	if child.SupportedEnvs != nil {
 		pkg.SupportedEnvs = child.SupportedEnvs
 	}
@@ -154,10 +182,16 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.SLSAProvenance != nil {
 		pkg.SLSAProvenance = child.SLSAProvenance
 	}
+	if child.ErrorMessage != "" {
+		pkg.ErrorMessage = child.ErrorMessage
+	}
+	if child.NoAsset != nil {
+		pkg.NoAsset = child.NoAsset
+	}
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop
+func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
 	for _, fo := range pkgInfo.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
 			pkgInfo.Format = fo.Format
@@ -168,6 +202,11 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	ov := pkgInfo.getOverride(rt)
 	if ov == nil {
 		return
+	}
+
+	if ov.Type != "" {
+		pkgInfo.resetByPkgType(ov.Type)
+		pkgInfo.Type = ov.Type
 	}
 
 	if pkgInfo.Replacements == nil {
@@ -209,9 +248,6 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.WindowsExt != "" {
 		pkgInfo.WindowsExt = ov.WindowsExt
 	}
-	if ov.Type != "" {
-		pkgInfo.Type = ov.Type
-	}
 	if ov.Cosign != nil {
 		pkgInfo.Cosign = ov.Cosign
 	}
@@ -221,29 +257,44 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 }
 
 type VersionOverride struct {
-	Type               string            `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
-	RepoOwner          string            `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	RepoName           string            `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Asset              *string           `yaml:",omitempty" json:"asset,omitempty"`
-	Path               *string           `yaml:",omitempty" json:"path,omitempty"`
-	Format             string            `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
-	Files              []*File           `yaml:",omitempty" json:"files,omitempty"`
-	URL                *string           `yaml:",omitempty" json:"url,omitempty"`
-	Replacements       Replacements      `yaml:",omitempty" json:"replacements,omitempty"`
-	Overrides          []*Override       `yaml:",omitempty" json:"overrides,omitempty"`
-	FormatOverrides    []*FormatOverride `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	SupportedIf        *string           `yaml:"supported_if,omitempty" json:"supported_if,omitempty"`
-	SupportedEnvs      SupportedEnvs     `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
-	VersionConstraints string            `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	VersionFilter      *string           `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
-	VersionPrefix      *string           `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
-	VersionSource      string            `json:"version_source,omitempty" yaml:"version_source,omitempty"`
-	Rosetta2           *bool             `yaml:",omitempty" json:"rosetta2,omitempty"`
-	CompleteWindowsExt *bool             `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
-	WindowsExt         string            `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
-	Checksum           *Checksum         `json:"checksum,omitempty"`
-	Cosign             *Cosign           `json:"cosign,omitempty"`
-	SLSAProvenance     *SLSAProvenance   `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	VersionConstraints string          `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
+	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
+	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
+	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
+	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
+	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
+	Overrides          Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
+	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
+	SupportedEnvs      SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	VersionFilter      *string         `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix      *string         `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
+	VersionSource      string          `json:"version_source,omitempty" yaml:"version_source,omitempty"`
+	Rosetta2           *bool           `yaml:",omitempty" json:"rosetta2,omitempty"`
+	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	Checksum           *Checksum       `json:"checksum,omitempty"`
+	Cosign             *Cosign         `json:"cosign,omitempty"`
+	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
+}
+
+type FormatOverrides []*FormatOverride
+
+func (o FormatOverrides) IsZero() bool {
+	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
+	return o == nil
+}
+
+type Overrides []*Override
+
+func (o Overrides) IsZero() bool {
+	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
+	return o == nil
 }
 
 type Alias struct {
@@ -251,6 +302,11 @@ type Alias struct {
 }
 
 type Replacements map[string]string
+
+func (r Replacements) IsZero() bool {
+	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
+	return r == nil
+}
 
 func (Replacements) JSONSchema() *jsonschema.Schema {
 	Map := orderedmap.New()
@@ -332,7 +388,7 @@ func (pkgInfo *PackageInfo) GetLink() string {
 }
 
 func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == PkgInfoTypeGitHubArchive || pkgInfo.Type == PkgInfoTypeGo {
+	if pkgInfo.Type == PkgInfoTypeGitHubArchive {
 		return "tar.gz"
 	}
 	return pkgInfo.Format
@@ -377,7 +433,7 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 		return errPkgNameIsRequired
 	}
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
+	case PkgInfoTypeGitHubArchive:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
 		}
@@ -416,28 +472,34 @@ func (pkgInfo *PackageInfo) GetFiles() []*File {
 	if len(pkgInfo.Files) != 0 {
 		return pkgInfo.Files
 	}
-	if pkgInfo.HasRepo() {
+
+	if cmdName := pkgInfo.getDefaultCmdName(); cmdName != "" {
 		return []*File{
 			{
-				Name: pkgInfo.RepoName,
-			},
-		}
-	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		if pkgInfo.Asset != nil {
-			return []*File{
-				{
-					Name: *pkgInfo.Asset,
-				},
-			}
-		}
-		return []*File{
-			{
-				Name: path.Base(pkgInfo.GetPath()),
+				Name: cmdName,
 			},
 		}
 	}
 	return pkgInfo.Files
+}
+
+func (pkgInfo *PackageInfo) getDefaultCmdName() string {
+	if pkgInfo.HasRepo() {
+		if pkgInfo.Name == "" {
+			return pkgInfo.RepoName
+		}
+		if i := strings.LastIndex(pkgInfo.Name, "/"); i != -1 {
+			return pkgInfo.Name[i+1:]
+		}
+		return pkgInfo.Name
+	}
+	if pkgInfo.Type == PkgInfoTypeGoInstall {
+		if pkgInfo.Asset != nil {
+			return *pkgInfo.Asset
+		}
+		return path.Base(pkgInfo.GetPath())
+	}
+	return ""
 }
 
 func (pkgInfo *PackageInfo) SLSASourceURI() string {

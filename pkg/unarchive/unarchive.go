@@ -1,6 +1,7 @@
 package unarchive
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -19,8 +20,8 @@ type ProgressBarOpts struct {
 	Description   string
 }
 
-type Unarchiver2 interface {
-	Unarchive(fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
+type coreUnarchiver interface {
+	Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error
 }
 
 type File struct {
@@ -29,19 +30,35 @@ type File struct {
 	Type     string
 }
 
-type Unarchiver struct{}
-
-func New() *Unarchiver {
-	return &Unarchiver{}
+type UnarchiverImpl struct {
+	executor Executor
 }
 
-func (unarchiver *Unarchiver) Unarchive(src *File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *ProgressBarOpts) error {
-	arc, err := getUnarchiver(src, dest)
+type Unarchiver interface {
+	Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error
+}
+
+type MockUnarchiver struct {
+	Err error
+}
+
+func (unarchiver *MockUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+	return unarchiver.Err
+}
+
+func New(executor Executor) *UnarchiverImpl {
+	return &UnarchiverImpl{
+		executor: executor,
+	}
+}
+
+func (unarchiver *UnarchiverImpl) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string, fs afero.Fs, prgOpts *ProgressBarOpts) error {
+	arc, err := unarchiver.getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	return arc.Unarchive(fs, src.Body, prgOpts) //nolint:wrapcheck
+	return arc.Unarchive(ctx, logE, fs, src.Body, prgOpts) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
@@ -55,11 +72,17 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func getUnarchiver(src *File, dest string) (Unarchiver2, error) {
+func (unarchiver *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
 			dest: filepath.Join(dest, filename),
+		}, nil
+	}
+	if src.Type == "dmg" {
+		return &dmgUnarchiver{
+			dest:     dest,
+			executor: unarchiver.executor,
 		}, nil
 	}
 

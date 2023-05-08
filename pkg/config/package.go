@@ -8,12 +8,12 @@ import (
 	"strings"
 	texttemplate "text/template"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/template"
-	"github.com/aquaproj/aqua/pkg/unarchive"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/template"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -59,21 +59,6 @@ func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runt
 	return replace(rt.GOARCH, replacements)
 }
 
-func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
-		"Version":  pkg.Version,
-		"SemVer":   cpkg.SemVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
-	})
-}
-
 func (cpkg *Package) WindowsExt() string {
 	if cpkg.PackageInfo.WindowsExt == "" {
 		if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
@@ -97,6 +82,18 @@ func (cpkg *Package) CompleteWindowsExt(s string) string {
 	return s + cpkg.WindowsExt()
 }
 
+type FileNotFoundError struct {
+	Err error
+}
+
+func (errorFileNotFound *FileNotFoundError) Error() string {
+	return errorFileNotFound.Err.Error()
+}
+
+func (errorFileNotFound *FileNotFoundError) Unwrap() error {
+	return errorFileNotFound.Err
+}
+
 func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	s, err := cpkg.getFileSrc(file, rt)
 	if err != nil {
@@ -114,6 +111,11 @@ func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string,
 		return newName, nil
 	}
 	old := filepath.Join(pkgPath, s)
+	if _, err := fs.Stat(old); err != nil {
+		return "", &FileNotFoundError{
+			Err: err,
+		}
+	}
 	logE.WithFields(logrus.Fields{
 		"new": newPath,
 		"old": old,
@@ -159,7 +161,6 @@ const (
 	PkgInfoTypeGitHubContent = "github_content"
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGo            = "go"
 	PkgInfoTypeGoInstall     = "go_install"
 )
 
@@ -175,12 +176,12 @@ type Param struct {
 	LogColor              string
 	Dest                  string
 	HomeDir               string
+	OutTestData           string
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}
 	ExcludedTags          map[string]struct{}
 	OnlyLink              bool
-	IsTest                bool
 	All                   bool
 	Insert                bool
 	SelectVersion         bool
@@ -189,6 +190,8 @@ type Param struct {
 	SkipLink              bool
 	Pin                   bool
 	Prune                 bool
+	RequireChecksum       bool
+	DisablePolicy         bool
 	PolicyConfigFilePaths []string
 }
 
@@ -217,7 +220,7 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGo:
+	case PkgInfoTypeGitHubArchive:
 		return "", nil
 	case PkgInfoTypeGoInstall:
 		if pkgInfo.Asset != nil {
@@ -321,7 +324,7 @@ func (cpkg *Package) RenderPath() (string, error) {
 	return cpkg.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
 }
 
-func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
 	assetName, err := cpkg.RenderAsset(rt)
@@ -331,8 +334,6 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
-	case PkgInfoTypeGo:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
 		p, err := cpkg.RenderPath()
 		if err != nil {
@@ -340,6 +341,9 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 		}
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
+			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		}
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := cpkg.RenderURL(rt)

@@ -3,23 +3,21 @@ package install
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-const dirPermission os.FileMode = 0o775
 
 type Controller struct {
 	packageInstaller   installpackage.Installer
@@ -29,13 +27,15 @@ type Controller struct {
 	registryInstaller  registry.Installer
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
-	skipLink           bool
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
-	policyConfigReader policy.ConfigReader
+	policyConfigFinder policy.ConfigFinder
+	policyConfigReader policy.Reader
+	skipLink           bool
+	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.ConfigReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -48,47 +48,61 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		tags:               param.Tags,
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
+		policyConfigFinder: policyConfigFinder,
+		requireChecksum:    param.RequireChecksum,
 	}
 }
 
-func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (ctrl *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(ctrl.rootDir, "bin")
-		if err := ctrl.fs.MkdirAll(rootBin, dirPermission); err != nil {
+		if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
 			return fmt.Errorf("create the directory: %w", err)
 		}
 		if ctrl.runtime.GOOS == "windows" {
-			if err := ctrl.fs.MkdirAll(filepath.Join(ctrl.rootDir, "bat"), dirPermission); err != nil {
+			if err := util.MkdirAll(ctrl.fs, filepath.Join(ctrl.rootDir, "bat")); err != nil {
 				return fmt.Errorf("create the directory: %w", err)
 			}
 		}
-
 		if err := ctrl.packageInstaller.InstallProxy(ctx, logE); err != nil {
-			return err //nolint:wrapcheck
+			return fmt.Errorf("install aqua-proxy: %w", err)
 		}
 	}
 
-	policyCfgs, err := ctrl.policyConfigReader.Read(param.PolicyConfigFilePaths)
+	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
 
+	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
+	for _, p := range param.PolicyConfigFilePaths {
+		globalPolicyPaths[p] = struct{}{}
+	}
+
 	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+		policyCfgs, err := ctrl.policyConfigReader.Append(logE, cfgFilePath, policyCfgs, globalPolicyPaths)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
 		if err := ctrl.install(ctx, logE, cfgFilePath, policyCfgs); err != nil {
 			return err
 		}
 	}
 
-	return ctrl.installAll(ctx, logE, param, policyCfgs)
+	return ctrl.installAll(ctx, logE, param, policyCfgs, globalPolicyPaths)
 }
 
-func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfigs []*policy.Config) error {
+func (ctrl *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfigs []*policy.Config, globalPolicyPaths map[string]struct{}) error {
 	if !param.All {
 		return nil
 	}
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
 			continue
+		}
+		policyConfigs, err := ctrl.policyConfigReader.Append(logE, cfgFilePath, policyConfigs, globalPolicyPaths)
+		if err != nil {
+			return err //nolint:wrapcheck
 		}
 		if err := ctrl.install(ctx, logE, cfgFilePath, policyConfigs); err != nil {
 			return err
@@ -129,13 +143,14 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFile
 	}
 
 	return ctrl.packageInstaller.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
-		Config:         cfg,
-		Registries:     registryContents,
-		ConfigFilePath: cfgFilePath,
-		SkipLink:       ctrl.skipLink,
-		Tags:           ctrl.tags,
-		ExcludedTags:   ctrl.excludedTags,
-		PolicyConfigs:  policyConfigs,
-		Checksums:      checksums,
+		Config:          cfg,
+		Registries:      registryContents,
+		ConfigFilePath:  cfgFilePath,
+		SkipLink:        ctrl.skipLink,
+		Tags:            ctrl.tags,
+		ExcludedTags:    ctrl.excludedTags,
+		PolicyConfigs:   policyConfigs,
+		Checksums:       checksums,
+		RequireChecksum: ctrl.requireChecksum,
 	})
 }

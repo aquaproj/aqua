@@ -5,21 +5,21 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	cfgRegistry "github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -177,7 +177,6 @@ packages:
   repo_owner: suzuki-shunsuke
   repo_name: ci-info
   asset: "ci-info_{{.Arch}}-{{.OS}}.tar.gz"
-  supported_if: "false"
 - type: github_release
   repo_owner: suzuki-shunsuke
   repo_name: github-comment
@@ -242,11 +241,9 @@ packages:
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {

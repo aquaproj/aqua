@@ -3,7 +3,7 @@ package aqua_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 )
 
 func TestRegistry_Validate(t *testing.T) { //nolint:funlen

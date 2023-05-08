@@ -1,0 +1,32 @@
+title: Proposal
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposal for other than feature request.
+        For feature request, please use the template [Feature Request](https://github.com/orgs/aquaproj/discussions/new?category=feature-request).
+
+        e.g. Add a new discussion category
+
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      value:
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is the proposal needed?
+      description: Please explain the background of the proposal and the issue you want to solve
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      value: |
+        *
+    validations:
+      required: false

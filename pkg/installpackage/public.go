@@ -5,6 +5,7 @@ import (
 )
 
 type Executor interface {
-	GoBuild(ctx context.Context, exePath, src, exeDir string) (int, error)
 	GoInstall(ctx context.Context, path, gobin string) (int, error)
+	HdiutilAttach(ctx context.Context, dmgPath, mountPoint string) (int, error)
+	HdiutilDetach(ctx context.Context, mountPath string) (int, error)
 }

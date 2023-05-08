@@ -3,7 +3,7 @@ package asset_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/asset"
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 )
 
 func Test_Exclude(t *testing.T) {

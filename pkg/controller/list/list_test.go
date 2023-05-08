@@ -5,17 +5,17 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/list"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
 func TestController_List(t *testing.T) {
@@ -59,11 +59,9 @@ packages:
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
 			if err := ctrl.List(ctx, d.param, logE); err != nil {

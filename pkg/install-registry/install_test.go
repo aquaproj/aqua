@@ -5,18 +5,18 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	cfgRegistry "github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	cfgRegistry "github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
@@ -171,11 +171,9 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			registries, err := inst.InstallRegistries(ctx, logE, d.cfg, d.cfgFilePath, nil)

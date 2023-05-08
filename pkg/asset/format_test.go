@@ -3,7 +3,7 @@ package asset_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/asset"
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 )
 
 func TestGetFormat(t *testing.T) {
@@ -32,6 +32,11 @@ func TestGetFormat(t *testing.T) {
 			name:      "js",
 			assetName: "tfcmt.js",
 			exp:       "raw",
+		},
+		{
+			name:      "dmg",
+			assetName: "aws-vault-darwin-amd64.dmg",
+			exp:       "dmg",
 		},
 	}
 	for _, d := range data {

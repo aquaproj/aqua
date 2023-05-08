@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 )
@@ -47,7 +48,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				Description: "hello",
 			},
 			repo: &github.Repository{
-				Description: strP("hello."),
+				Description: util.StrP("hello."),
 			},
 		},
 		{
@@ -58,7 +59,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				RepoName:    "cli",
 				Type:        "github_release",
 				Description: "GitHub’s official command line tool",
-				Asset:       strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+				Asset:       util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 				Format:      "tar.gz",
 				Replacements: registry.Replacements{
 					"darwin": "macOS",
@@ -74,28 +75,28 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 					"linux",
 					"amd64",
 				},
-				Rosetta2: boolP(true),
+				Rosetta2: util.BoolP(true),
 			},
 			repo: &github.Repository{
-				Description: strP("GitHub’s official command line tool"),
+				Description: util.StrP("GitHub’s official command line tool"),
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: strP("v2.13.0"),
+					TagName: util.StrP("v2.13.0"),
 				},
 			},
 			assets: []*github.ReleaseAsset{
 				{
-					Name: strP("gh_2.13.0_linux_amd64.tar.gz"),
+					Name: util.StrP("gh_2.13.0_linux_amd64.tar.gz"),
 				},
 				{
-					Name: strP("gh_2.13.0_linux_arm64.tar.gz"),
+					Name: util.StrP("gh_2.13.0_linux_arm64.tar.gz"),
 				},
 				{
-					Name: strP("gh_2.13.0_macOS_amd64.tar.gz"),
+					Name: util.StrP("gh_2.13.0_macOS_amd64.tar.gz"),
 				},
 				{
-					Name: strP("gh_2.13.0_windows_amd64.zip"),
+					Name: util.StrP("gh_2.13.0_windows_amd64.zip"),
 				},
 			},
 		},
@@ -111,8 +112,8 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				Assets:   d.assets,
 				Repo:     d.repo,
 			}
-			ctrl := NewController(nil, gh)
-			pkgInfo := ctrl.getPackageInfo(ctx, logE, d.pkgName)
+			ctrl := NewController(nil, gh, nil)
+			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, true)
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}

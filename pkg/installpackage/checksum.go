@@ -2,38 +2,19 @@ package installpackage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-func (inst *InstallerImpl) extractChecksum(pkg *config.Package, assetName string, checksumFile []byte) (string, error) {
-	pkgInfo := pkg.PackageInfo
-
-	if pkgInfo.Checksum.FileFormat == "raw" {
-		return strings.TrimSpace(string(checksumFile)), nil
-	}
-
-	m, s, err := inst.checksumFileParser.ParseChecksumFile(string(checksumFile), pkg)
-	if err != nil {
-		return "", fmt.Errorf("parse a checksum file: %w", err)
-	}
-	if s != "" {
-		return s, nil
-	}
-
-	return m[assetName], nil
-}
 
 func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
 	file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, inst.runtime, pkg)
@@ -71,14 +52,7 @@ func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logru
 		}
 	}
 
-	c, err := inst.extractChecksum(pkg, assetName, b)
-	if err != nil {
-		return "", err
-	}
-	if c == "" {
-		return "", errors.New("checksum isn't found in a checksum file")
-	}
-	return c, nil
+	return inst.checksumFileParser.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
 }
 
 type ParamVerifyChecksum struct {
@@ -130,7 +104,7 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 		assetName = filepath.Base(assetName)
 	}
 	tempFilePath := filepath.Join(tempDir, assetName)
-	if assetName == "" && (pkgInfo.Type == "github_archive" || pkgInfo.Type == "go") {
+	if assetName == "" && pkgInfo.Type == "github_archive" {
 		tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
 	}
 	if err := copyAsset(inst.fs, tempFilePath, param.Body); err != nil {

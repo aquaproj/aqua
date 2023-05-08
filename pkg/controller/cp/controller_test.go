@@ -4,19 +4,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/controller/cp"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-func boolP(b bool) *bool {
-	return &b
-}
 
 func TestController_Copy(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -60,8 +57,8 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 					},
 					Config: &aqua.Config{
 						Checksum: &aqua.Checksum{
-							Enabled:         boolP(true),
-							RequireChecksum: true,
+							Enabled:         util.BoolP(true),
+							RequireChecksum: util.BoolP(true),
 						},
 					},
 					ConfigFilePath: "aqua.yaml",
@@ -76,7 +73,7 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockConfigReader{})
+			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockReader{}, policy.NewConfigFinder(d.fs))
 			if err := ctrl.Copy(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

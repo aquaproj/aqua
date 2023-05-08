@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"time"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
@@ -28,13 +29,27 @@ type Controller struct {
 	which              which.Controller
 	packageInstaller   installpackage.Installer
 	executor           Executor
-	enabledXSysExec    bool
 	fs                 afero.Fs
-	policyConfigReader policy.ConfigReader
-	policyChecker      policy.Checker
+	policyConfigReader policy.Reader
+	policyConfigFinder policy.ConfigFinder
+	enabledXSysExec    bool
+	requireChecksum    bool
 }
 
-func New(pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.ConfigReader, policyChecker policy.Checker) *Controller {
+func getEnabledXSysExec(osEnv osenv.OSEnv, goos string) bool {
+	if goos == "windows" {
+		return false
+	}
+	if osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "false" {
+		return false
+	}
+	if osEnv.Getenv("AQUA_X_SYS_EXEC") == "false" {
+		return false
+	}
+	return true
+}
+
+func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -42,10 +57,11 @@ func New(pkgInstaller installpackage.Installer, whichCtrl which.Controller, exec
 		packageInstaller:   pkgInstaller,
 		which:              whichCtrl,
 		executor:           executor,
-		enabledXSysExec:    osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "true",
+		enabledXSysExec:    getEnabledXSysExec(osEnv, runtime.GOOS),
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
-		policyChecker:      policyChecker,
+		policyConfigFinder: policyConfigFinder,
+		requireChecksum:    param.RequireChecksum,
 	}
 }
 
@@ -57,6 +73,16 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		}
 	}()
 
+	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
+	if err != nil {
+		return fmt.Errorf("read policy files: %w", err)
+	}
+
+	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
+	for _, p := range param.PolicyConfigFilePaths {
+		globalPolicyPaths[p] = struct{}{}
+	}
+
 	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -66,35 +92,20 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
 		})
-		if err := ctrl.validate(findResult.Package, param.PolicyConfigFilePaths); err != nil {
-			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"policy_files": param.PolicyConfigFilePaths,
-			})
+
+		policyCfgs, err := ctrl.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
+		if err != nil {
+			return err //nolint:wrapcheck
 		}
-		if err := ctrl.install(ctx, logE, findResult); err != nil {
+
+		if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {
 			return err
 		}
 	}
 	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
 }
 
-func (ctrl *Controller) validate(pkg *config.Package, policyConfigFilePaths []string) error {
-	policyCfgs, err := ctrl.policyConfigReader.Read(policyConfigFilePaths)
-	if err != nil {
-		return fmt.Errorf("read policy files: %w", err)
-	}
-	if err := ctrl.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
-		Pkg:           pkg,
-		PolicyConfigs: policyCfgs,
-	}); err != nil {
-		return fmt.Errorf("validate the installed package for security: %w", err)
-	}
-	return nil
-}
-
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
-	logE = logE.WithField("exe_path", findResult.ExePath)
-
+func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config) error {
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -115,7 +126,8 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
-		RequireChecksum: findResult.Config.RequireChecksum(),
+		RequireChecksum: findResult.Config.RequireChecksum(ctrl.requireChecksum),
+		PolicyConfigs:   policies,
 	}); err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -168,7 +180,6 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 }
 
 func (ctrl *Controller) execCommandWithRetry(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
-	logE = logE.WithField("exe_path", exePath)
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")
 		retried, err := ctrl.execCommand(ctx, exePath, args)

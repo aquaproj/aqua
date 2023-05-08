@@ -10,5 +10,5 @@ import (
 
 func init() {
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
-	logrus.SetOutput(colorable.NewColorableStdout())
+	logrus.SetOutput(colorable.NewColorableStderr())
 }

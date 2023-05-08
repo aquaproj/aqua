@@ -2,24 +2,26 @@ package installpackage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/unarchive"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -28,37 +30,41 @@ import (
 const proxyName = "aqua-proxy"
 
 type InstallerImpl struct {
-	rootDir            string
-	maxParallelism     int
-	downloader         download.ClientAPI
-	checksumDownloader download.ChecksumDownloader
-	checksumFileParser *checksum.FileParser
-	checksumCalculator ChecksumCalculator
-	runtime            *runtime.Runtime
-	fs                 afero.Fs
-	linker             domain.Linker
-	executor           Executor
-	unarchiver         Unarchiver
-	cosign             cosign.Verifier
-	slsaVerifier       slsa.Verifier
-	progressBar        bool
-	onlyLink           bool
-	isTest             bool
-	copyDir            string
-	policyChecker      policy.Checker
-	cosignInstaller    *Cosign
+	rootDir               string
+	maxParallelism        int
+	downloader            download.ClientAPI
+	checksumDownloader    download.ChecksumDownloader
+	checksumFileParser    *checksum.FileParser
+	checksumCalculator    ChecksumCalculator
+	runtime               *runtime.Runtime
+	fs                    afero.Fs
+	linker                domain.Linker
+	executor              Executor
+	unarchiver            unarchive.Unarchiver
+	cosign                cosign.Verifier
+	slsaVerifier          slsa.Verifier
+	progressBar           bool
+	onlyLink              bool
+	copyDir               string
+	policyChecker         *policy.Checker
+	cosignInstaller       *Cosign
+	slsaVerifierInstaller *SLSAVerifier
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	installer := newInstaller(param, downloader, rt, fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier)
 	installer.cosignInstaller = &Cosign{
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
+		mutex:     &sync.Mutex{},
+	}
+	installer.slsaVerifierInstaller = &SLSAVerifier{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, executor, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier),
 		mutex:     &sync.Mutex{},
 	}
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, policyChecker policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, executor Executor, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:            param.RootDir,
 		maxParallelism:     param.MaxParallelism,
@@ -71,7 +77,6 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		linker:             linker,
 		executor:           executor,
 		progressBar:        param.ProgressBar,
-		isTest:             param.IsTest,
 		onlyLink:           param.OnlyLink,
 		copyDir:            param.Dest,
 		unarchiver:         unarchiver,
@@ -88,14 +93,15 @@ type Installer interface {
 }
 
 type ParamInstallPackages struct {
-	ConfigFilePath string
-	Config         *aqua.Config
-	Registries     map[string]*registry.Config
-	Tags           map[string]struct{}
-	ExcludedTags   map[string]struct{}
-	SkipLink       bool
-	PolicyConfigs  []*policy.Config
-	Checksums      *checksum.Checksums
+	ConfigFilePath  string
+	Config          *aqua.Config
+	Registries      map[string]*registry.Config
+	Tags            map[string]struct{}
+	ExcludedTags    map[string]struct{}
+	PolicyConfigs   []*policy.Config
+	Checksums       *checksum.Checksums
+	SkipLink        bool
+	RequireChecksum bool
 }
 
 type ParamInstallPackage struct {
@@ -103,21 +109,10 @@ type ParamInstallPackage struct {
 	Checksums       *checksum.Checksums
 	RequireChecksum bool
 	PolicyConfigs   []*policy.Config
+	DisablePolicy   bool
 	ConfigFileDir   string
 	CosignExePath   string
 	Checksum        *checksum.Checksum
-}
-
-type Unarchiver interface {
-	Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error
-}
-
-type MockUnarchiver struct {
-	Err error
-}
-
-func (unarchiver *MockUnarchiver) Unarchive(src *unarchive.File, dest string, logE *logrus.Entry, fs afero.Fs, prgOpts *unarchive.ProgressBarOpts) error {
-	return unarchiver.Err
 }
 
 type ChecksumCalculator interface {
@@ -135,7 +130,7 @@ func (inst *InstallerImpl) SetCopyDir(copyDir string) {
 func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
 	if !param.SkipLink {
-		if failedCreateLinks := inst.createLinks(logE, pkgs); !failedCreateLinks {
+		if failedCreateLinks := inst.createLinks(logE, pkgs); failedCreateLinks {
 			failed = failedCreateLinks
 		}
 	}
@@ -187,7 +182,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 			if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
-				RequireChecksum: param.Config.RequireChecksum(),
+				RequireChecksum: param.Config.RequireChecksum(param.RequireChecksum),
 				PolicyConfigs:   param.PolicyConfigs,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
@@ -203,9 +198,8 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	return nil
 }
 
-func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop,funlen
 	pkg := param.Pkg
-	checksums := param.Checksums
 	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -214,11 +208,19 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	})
 	logE.Debug("install the package")
 
-	if err := inst.policyChecker.ValidatePackage(&policy.ParamValidatePackage{
-		Pkg:           param.Pkg,
-		PolicyConfigs: param.PolicyConfigs,
-	}); err != nil {
-		return err //nolint:wrapcheck
+	if pkgInfo.NoAsset != nil && *pkgInfo.NoAsset {
+		logE.Error(fmt.Sprintf("failed to install a package %s@%s. No asset is released in this version", pkg.Package.Name, pkg.Package.Version))
+		return errors.New("")
+	}
+	if pkgInfo.ErrorMessage != "" {
+		logE.Error(fmt.Sprintf("failed to install a package %s@%s. %s", pkg.Package.Name, pkg.Package.Version, pkgInfo.ErrorMessage))
+		return errors.New("")
+	}
+
+	if !param.DisablePolicy {
+		if err := inst.policyChecker.ValidatePackage(logE, param.Pkg, param.PolicyConfigs); err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 
 	if err := pkgInfo.Validate(); err != nil {
@@ -243,22 +245,41 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		Package:         pkg,
 		Dest:            pkgPath,
 		Asset:           assetName,
-		Checksums:       checksums,
+		Checksums:       param.Checksums,
 		RequireChecksum: param.RequireChecksum,
 		Checksum:        param.Checksum,
 	}); err != nil {
 		return err
 	}
 
+	failed := false
+	notFound := false
 	for _, file := range pkgInfo.GetFiles() {
 		file := file
 		logE := logE.WithField("file_name", file.Name)
-		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
-			if inst.isTest {
-				return fmt.Errorf("check file_src is correct: %w", err)
+		var errFileNotFound *config.FileNotFoundError
+		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
+			if errors.As(err, &errFileNotFound) {
+				notFound = true
 			}
-			logerr.WithError(logE, err).Warn("check file_src is correct")
+			failed = true
+			logerr.WithError(logE, err).Error("check file_src is correct")
 		}
+	}
+	if notFound { //nolint:nestif
+		paths, err := inst.walk(pkgPath)
+		if err != nil {
+			logerr.WithError(logE, err).Warn("traverse the content of unarchived package")
+		} else {
+			if len(paths) > 30 { //nolint:gomnd
+				logE.Errorf("executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n"))
+			} else {
+				logE.Errorf("executable files aren't found\nFiles in the unarchived package:\n%s\n ", strings.Join(paths, "\n"))
+			}
+		}
+	}
+	if failed {
+		return errors.New("check file_src is correct")
 	}
 
 	return nil
@@ -276,7 +297,7 @@ func (inst *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Packag
 				}
 				continue
 			}
-			if err := inst.createLink(filepath.Join(inst.rootDir, "bin", file.Name), proxyName, logE); err != nil {
+			if err := inst.createLink(filepath.Join(inst.rootDir, "bin", file.Name), filepath.Join("..", proxyName), logE); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue
@@ -297,42 +318,10 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
-	pkgInfo := pkg.PackageInfo
-	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
-	if isWindows(inst.runtime.GOOS) {
-		exePath += ".exe"
-	}
-	dir, err := pkg.RenderDir(file, inst.runtime)
+func (inst *InstallerImpl) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+	exePath, err := inst.checkFileSrc(pkg, file, logE)
 	if err != nil {
-		return "", fmt.Errorf("render file dir: %w", err)
-	}
-	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
-	if _, err := inst.fs.Stat(exePath); err == nil {
-		return exePath, nil
-	}
-	src := file.Src
-	if src == "" {
-		src = "."
-	}
-	logE.WithFields(logrus.Fields{
-		"exe_path":     exePath,
-		"go_src":       src,
-		"go_build_dir": exeDir,
-	}).Info("building Go tool")
-	if _, err := inst.executor.GoBuild(ctx, exePath, src, exeDir); err != nil {
-		return "", fmt.Errorf("build Go tool: %w", err)
-	}
-	return exePath, nil
-}
-
-func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
-	if err != nil {
-		if inst.isTest {
-			return fmt.Errorf("check file_src is correct: %w", err)
-		}
-		logerr.WithError(logE, err).Warn("check file_src is correct")
+		return fmt.Errorf("check file_src is correct: %w", err)
 	}
 	if inst.copyDir == "" {
 		return nil
@@ -345,11 +334,7 @@ func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Pac
 	return nil
 }
 
-func (inst *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
-	if pkg.PackageInfo.Type == "go" {
-		return inst.checkFileSrcGo(ctx, pkg, file, logE)
-	}
-
+func (inst *InstallerImpl) checkFileSrc(pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return "", fmt.Errorf("get the package install path: %w", err)
@@ -363,7 +348,9 @@ func (inst *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package
 	exePath := filepath.Join(pkgPath, fileSrc)
 	finfo, err := inst.fs.Stat(exePath)
 	if err != nil {
-		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(err, logE.Data))
+		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(&config.FileNotFoundError{
+			Err: err,
+		}, logE.Data))
 	}
 	if finfo.IsDir() {
 		return "", logerr.WithFields(errExePathIsDirectory, logE.Data) //nolint:wrapcheck

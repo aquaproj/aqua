@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )

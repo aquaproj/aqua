@@ -47,6 +47,19 @@ func GOOSList() []string {
 	return []string{"darwin", "linux", "windows"}
 }
 
+func GOOSMap() map[string]struct{} {
+	return map[string]struct{}{
+		"darwin":  {},
+		"linux":   {},
+		"windows": {},
+	}
+}
+
+func IsOS(k string) bool {
+	_, ok := GOOSMap()[k]
+	return ok
+}
+
 func GOARCHList() []string {
 	return []string{"amd64", "arm64"}
 }

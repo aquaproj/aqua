@@ -4,7 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 )
 
 const (
@@ -17,8 +17,9 @@ var (
 )
 
 type Config struct {
-	Path string
-	YAML *ConfigYAML
+	Path    string
+	Allowed bool
+	YAML    *ConfigYAML
 }
 
 type ConfigYAML struct {

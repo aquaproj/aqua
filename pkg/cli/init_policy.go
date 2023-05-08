@@ -3,17 +3,20 @@ package cli
 import (
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
 func (runner *Runner) newInitPolicyCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "init-policy",
-		Usage:     "Create a policy file if it doesn't exist",
+		Usage:     "[Deprecated] Create a policy file if it doesn't exist",
 		ArgsUsage: `[<created file path. The default value is "aqua-policy.yaml">]`,
-		Description: `Create a policy file if it doesn't exist
+		Description: `[Deprecated] Create a policy file if it doesn't exist
+
+Please use "aqua policy init" command instead.
+
 e.g.
 $ aqua init-policy # create "aqua-policy.yaml"
 $ aqua init-policy foo.yaml # create foo.yaml`,

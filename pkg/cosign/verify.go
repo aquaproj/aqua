@@ -10,16 +10,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/template"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/template"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
+
+var mutex = &sync.Mutex{} //nolint:gochecknoglobals
+
+func GetMutex() *sync.Mutex {
+	return mutex
+}
 
 type VerifierImpl struct {
 	executor      Executor
@@ -27,7 +33,6 @@ type VerifierImpl struct {
 	downloader    download.ClientAPI
 	cosignExePath string
 	disabled      bool
-	mutex         *sync.Mutex
 }
 
 func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *VerifierImpl {
@@ -42,7 +47,6 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 		}),
 		// assets for windows/arm64 aren't released.
 		disabled: rt.GOOS == "windows" && rt.GOARCH == "arm64",
-		mutex:    &sync.Mutex{},
 	}
 }
 
@@ -150,14 +154,12 @@ type ParamVerify struct {
 	CosignExePath      string
 }
 
-const tempErrMsg = "resource temporarily unavailable"
-
 var errVerify = errors.New("verify with Cosign")
 
 func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
-	verifier.mutex.Lock()
-	defer verifier.mutex.Unlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 	out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, args, envs)
 	return out, err //nolint:wrapcheck
 }
@@ -183,12 +185,8 @@ func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, pa
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
-		out, err := verifier.exec(ctx, args, envs)
-		if err == nil {
+		if _, err := verifier.exec(ctx, args, envs); err == nil {
 			return nil
-		}
-		if !strings.Contains(out, tempErrMsg) {
-			return fmt.Errorf("verify with cosign: %w", err)
 		}
 		if i == 4 { //nolint:gomnd
 			// skip last wait

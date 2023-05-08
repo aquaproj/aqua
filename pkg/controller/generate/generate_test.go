@@ -5,19 +5,19 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/generate"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/github"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/github"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
 func stringP(s string) *string {
@@ -384,11 +384,9 @@ packages:
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {

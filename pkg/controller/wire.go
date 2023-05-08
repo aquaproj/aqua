@@ -5,35 +5,40 @@ package controller
 
 import (
 	"context"
+	"io"
 	"net/http"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/cp"
-	cexec "github.com/aquaproj/aqua/pkg/controller/exec"
-	"github.com/aquaproj/aqua/pkg/controller/generate"
-	genrgst "github.com/aquaproj/aqua/pkg/controller/generate-registry"
-	"github.com/aquaproj/aqua/pkg/controller/initcmd"
-	"github.com/aquaproj/aqua/pkg/controller/initpolicy"
-	"github.com/aquaproj/aqua/pkg/controller/install"
-	"github.com/aquaproj/aqua/pkg/controller/list"
-	"github.com/aquaproj/aqua/pkg/controller/updateaqua"
-	"github.com/aquaproj/aqua/pkg/controller/updatechecksum"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	"github.com/aquaproj/aqua/pkg/github"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/link"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/controller/allowpolicy"
+	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
+	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
+	cexec "github.com/aquaproj/aqua/v2/pkg/controller/exec"
+	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
+	genrgst "github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
+	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
+	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
+	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
+	"github.com/aquaproj/aqua/v2/pkg/controller/install"
+	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
+	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/github"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/link"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+
 	"github.com/google/wire"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -72,6 +77,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -89,7 +95,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	return &list.Controller{}
 }
 
-func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
 	wire.Build(
 		genrgst.NewController,
 		wire.NewSet(
@@ -97,6 +103,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 		),
 		afero.NewOsFs,
+		wire.NewSet(
+			output.New,
+			wire.Bind(new(genrgst.TestdataOutputter), new(*output.Outputter)),
+		),
 	)
 	return &genrgst.Controller{}
 }
@@ -158,6 +168,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -217,6 +228,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -228,16 +241,25 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
-		),
-		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
+			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -292,6 +314,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -350,6 +373,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -368,16 +393,25 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
-		),
-		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
+			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -416,10 +450,12 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			exec.New,
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -434,10 +470,6 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
 		),
 		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
-		),
-		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
 		),
@@ -449,6 +481,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
+		policy.NewChecker,
 	)
 	return &updateaqua.Controller{}
 }
@@ -500,6 +533,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -518,16 +553,25 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
-		),
-		wire.NewSet(
-			policy.NewChecker,
-			wire.Bind(new(policy.Checker), new(*policy.CheckerImpl)),
+			wire.Bind(new(unarchive.Unarchiver), new(*unarchive.UnarchiverImpl)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
 			wire.Bind(new(policy.ConfigReader), new(*policy.ConfigReaderImpl)),
 		),
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+		wire.NewSet(
+			policy.NewReader,
+			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+		),
+		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -585,6 +629,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		wire.NewSet(
 			exec.New,
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -596,4 +641,36 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 	)
 	return &updatechecksum.Controller{}
+}
+
+func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
+	wire.Build(
+		allowpolicy.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+	)
+	return &allowpolicy.Controller{}
+}
+
+func InitializeDenyPolicyCommandController(ctx context.Context, param *config.Param) *denypolicy.Controller {
+	wire.Build(
+		denypolicy.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			policy.NewConfigFinder,
+			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
+		),
+		wire.NewSet(
+			policy.NewValidator,
+			wire.Bind(new(policy.Validator), new(*policy.ValidatorImpl)),
+		),
+	)
+	return &denypolicy.Controller{}
 }

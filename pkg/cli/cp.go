@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/controller"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
@@ -81,7 +81,6 @@ func (runner *Runner) cpAction(c *cli.Context) error {
 	if err := runner.setParam(c, "cp", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	param.IsTest = true
 	param.SkipLink = true
 	ctrl := controller.InitializeCopyCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
 	if err := ctrl.Copy(c.Context, runner.LogE, param); err != nil {

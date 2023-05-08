@@ -5,6 +5,9 @@ packages:
     repo_owner: suzuki-shunsuke
     repo_name: test-cosign-keyless-aqua
     asset: aqua_{{.OS}}_{{.Arch}}.tar.gz
+    files:
+      - name: test-cosign-keyless-aqua
+        src: aqua
     slsa_provenance:
       type: github_release
       asset: multiple.intoto.jsonl

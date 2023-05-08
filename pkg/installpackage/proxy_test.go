@@ -6,18 +6,18 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
 func Test_installer_InstallProxy(t *testing.T) {
@@ -44,7 +44,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "",
+				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/internal/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "",
 			},
 		},
 	}
@@ -54,11 +54,9 @@ func Test_installer_InstallProxy(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
@@ -67,7 +65,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 				}
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(d.executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallProxy(ctx, logE); err != nil {
 				if d.isErr {
 					return

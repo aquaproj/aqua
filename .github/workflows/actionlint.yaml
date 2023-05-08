@@ -5,14 +5,14 @@ on:
   pull_request:
     paths:
       - .github/workflows/*.yaml
-      - aqua/actionlint.yaml
-      - aqua/reviewdog.yaml
+      - aqua/imports/actionlint.yaml
+      - aqua/imports/reviewdog.yaml
 jobs:
   actionlint:
-    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@6196583ab88cd36f36f7260fca4e8e4b2c4c9b66 # v0.4.1
+    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@b6a5f966d4504893b2aeb60cf2b0de8946e48504 # v0.5.0
     with:
-      aqua_version: v1.33.0
-      aqua_policy_config: aqua-policy.yaml
+      aqua_version: v2.5.0
+      aqua_policy_allow: true
     permissions:
       pull-requests: write
       contents: read

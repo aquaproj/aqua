@@ -9,22 +9,23 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	execCtrl "github.com/aquaproj/aqua/pkg/controller/exec"
-	"github.com/aquaproj/aqua/pkg/controller/which"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	execCtrl "github.com/aquaproj/aqua/v2/pkg/controller/exec"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/exec"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -35,6 +36,7 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
 	data := []struct {
 		name    string
 		files   map[string]string
+		dirs    []string
 		links   map[string]string
 		env     map[string]string
 		param   *config.Param
@@ -56,6 +58,9 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
 				MaxParallelism: 5,
 			},
 			exeName: "aqua-installer",
+			dirs: []string{
+				"/home/foo/workspace/.git",
+			},
 			files: map[string]string{
 				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
@@ -71,6 +76,22 @@ packages:
   path: aqua-installer
 `,
 				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
+				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
 			},
 		},
 		{
@@ -116,11 +137,9 @@ packages:
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files, d.dirs...)
+			if err != nil {
+				t.Fatal(err)
 			}
 			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
@@ -133,8 +152,9 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockConfigReader{}, &policy.MockChecker{})
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			policyFinder := policy.NewConfigFinder(fs)
+			ctrl := execCtrl.New(d.param, pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policy.NewValidator(d.param, fs), policyFinder, policy.NewConfigReader(fs)), policyFinder)
 			if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args); err != nil {
 				if d.isErr {
 					return
@@ -169,7 +189,7 @@ func downloadTestFile(uri, tempDir string) (string, error) {
 	return filePath, nil
 }
 
-func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit,cyclop
+func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
 	data := []struct {
 		name    string
 		files   map[string]string
@@ -213,11 +233,9 @@ packages:
 			if _, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.19.0/registry.yaml", tempDir); err != nil {
 				b.Fatal(err)
 			}
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					b.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				b.Fatal(err)
 			}
 			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
@@ -230,8 +248,8 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockConfigReader{}, &policy.MockChecker{})
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := execCtrl.New(d.param, pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockReader{}, policy.NewConfigFinder(fs))
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				func() {

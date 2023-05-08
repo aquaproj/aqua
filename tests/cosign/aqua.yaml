@@ -4,9 +4,10 @@
 checksum:
   # https://aquaproj.github.io/docs/reference/checksum/
   enabled: true
+  require_checksum: false
 registries:
   - type: standard
-    ref: v3.136.1 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.1.0 # renovate: depName=aquaproj/aqua-registry
   - name: local
     type: local
     path: registry.yaml

@@ -6,11 +6,11 @@ import (
 	"io"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -99,7 +99,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with Cosign")
 		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
-			return err
+			return fmt.Errorf("install sigstore/cosign: %w", err)
 		}
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
@@ -114,6 +114,9 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	if sp := ppkg.PackageInfo.SLSAProvenance; sp.GetEnabled() {
 		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
 		logE.Info("verify a package with slsa-verifier")
+		if err := inst.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
+			return fmt.Errorf("install slsa-verifier: %w", err)
+		}
 		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
 			RepoName:  ppkg.PackageInfo.RepoName,
@@ -161,7 +164,7 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 			paramVerifyChecksum.ChecksumID = cid
 			// Even if SLSA Provenance is enabled checksum verification is run
 			paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
-			if paramVerifyChecksum.Checksum == nil && !pkgInfo.Checksum.GetEnabled() && param.RequireChecksum {
+			if paramVerifyChecksum.Checksum == nil && param.RequireChecksum {
 				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
 					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
 				})
@@ -185,11 +188,11 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		}
 	}
 
-	return inst.unarchiver.Unarchive(&unarchive.File{ //nolint:wrapcheck
+	return inst.unarchiver.Unarchive(ctx, logE, &unarchive.File{ //nolint:wrapcheck
 		Body:     readBody,
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),
-	}, param.Dest, logE, inst.fs, pOpts)
+	}, param.Dest, inst.fs, pOpts)
 }
 
 func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {

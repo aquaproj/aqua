@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sync"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -124,8 +124,6 @@ func (inst *InstallerImpl) readRegistry(p string, registry *registry.Config) err
 	return nil
 }
 
-const dirPermission os.FileMode = 0o775
-
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
 func (inst *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
@@ -145,7 +143,7 @@ func (inst *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Ent
 			"local_registry_file_path": registryFilePath,
 		})
 	}
-	if err := inst.fs.MkdirAll(filepath.Dir(registryFilePath), dirPermission); err != nil {
+	if err := util.MkdirAll(inst.fs, filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
 	return inst.getRegistry(ctx, logE, regist, registryFilePath, checksums)

@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/template"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -71,9 +71,6 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		file.Path = assetName
 		return file, nil
 	case config.PkgInfoTypeGitHubArchive:
-		return file, nil
-	case config.PkgInfoTypeGo:
-		file.Type = "github_archive"
 		return file, nil
 	case config.PkgInfoTypeHTTP:
 		uS, err := pkg.RenderURL(rt)

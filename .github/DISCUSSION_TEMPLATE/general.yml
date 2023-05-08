@@ -1,0 +1,47 @@
+title: General
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## :warning: Please use other template as much as possible
+
+        Please use this template only when other templates don't meet your requirement.
+
+  - type: textarea
+    id: free-text
+    attributes:
+      label: Free text
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: Background of the discussion
+      description: |
+        Please explain the background of the discussion.
+    validations:
+      required: false
+  - type: textarea
+    id: example-code
+    attributes:
+      label: Example Code
+      value: |
+        ```console
+        $ 
+        ```
+
+        Configuration
+
+        ```yaml
+
+        ```
+    validations:
+      required: false
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      value: |
+        *
+    validations:
+      required: false

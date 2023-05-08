@@ -6,19 +6,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
-
-func strP(s string) *string {
-	return &s
-}
 
 func TestInstaller_download(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -40,8 +38,8 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 						Type:      "github_release",
 						RepoOwner: "cli",
 						RepoName:  "cli",
-						Asset:     strP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
-						Rosetta2:  boolP(true),
+						Asset:     util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+						Rosetta2:  util.BoolP(true),
 						Checksum: &registry.Checksum{
 							Type:       "github_release",
 							Algorithm:  "sha256",
@@ -66,7 +64,7 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 				downloader: &download.Mock{
 					RC: io.NopCloser(strings.NewReader("hello")),
 				},
-				unarchiver:         &MockUnarchiver{},
+				unarchiver:         &unarchive.MockUnarchiver{},
 				checksumFileParser: &checksum.FileParser{},
 				checksumCalculator: &MockChecksumCalculator{
 					Checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",

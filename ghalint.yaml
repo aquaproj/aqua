@@ -2,7 +2,7 @@
 # https://github.com/suzuki-shunsuke/ghalint
 excludes:
   - policy_name: job_secrets
-    workflow_file_path: .github/workflows/test.yaml
+    workflow_file_path: .github/workflows/wc-integration-test.yaml
     job_name: integration-test
   - policy_name: job_secrets
     workflow_file_path: .github/workflows/windows-test.yaml

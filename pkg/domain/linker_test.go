@@ -3,7 +3,7 @@ package domain_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/spf13/afero"
 )
 

@@ -2,18 +2,14 @@ package slsa
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"time"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/template"
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/sirupsen/logrus"
-	"github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier/verify"
 	"github.com/spf13/afero"
 )
 
@@ -49,52 +45,6 @@ type ParamVerify struct {
 	// e.g. v0.1.0-7
 	SourceTag    string
 	ArtifactPath string
-}
-
-type ExecutorImpl struct{}
-
-func NewExecutor() *ExecutorImpl {
-	return &ExecutorImpl{}
-}
-
-type Executor interface {
-	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error
-}
-
-type MockExecutor struct {
-	Err error
-}
-
-func (mock *MockExecutor) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
-	return mock.Err
-}
-
-func (exe *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
-	v := verify.VerifyArtifactCommand{
-		ProvenancePath: provenancePath,
-		SourceURI:      param.SourceURI,
-		SourceTag:      &param.SourceTag,
-	}
-	for i := 0; i < 5; i++ {
-		_, err := v.Exec(ctx, []string{param.ArtifactPath})
-		if err == nil {
-			return nil
-		}
-		if e := ctx.Err(); e != nil {
-			return fmt.Errorf("run slsa-verifier's verify-artifact command: %w", err)
-		}
-		if !errors.Is(err, context.DeadlineExceeded) {
-			return fmt.Errorf("run slsa-verifier's verify-artifact command: %w", err)
-		}
-		if i == 4 { //nolint:gomnd
-			return fmt.Errorf("run slsa-verifier's verify-artifact command: %w", err)
-		}
-		logE.WithField("retry_count", i+1).Info("slsa-verifier failed. Retrying")
-		if err := util.Wait(ctx, 1*time.Second); err != nil {
-			return err //nolint:wrapcheck
-		}
-	}
-	return nil
 }
 
 func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {

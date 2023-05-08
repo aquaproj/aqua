@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"testing"
 
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 )
 
 func TestParseGlobalConfigFilePaths(t *testing.T) {
@@ -85,11 +85,9 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			configFinder := finder.NewConfigFinder(fs)
 			p, err := configFinder.Find(d.wd, d.configFilePath, d.globalConfigFilePaths...)
@@ -109,7 +107,7 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 	}
 }
 
-func Test_configFinderFinds(t *testing.T) { //nolint:funlen
+func Test_configFinderFinds(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name           string
@@ -150,7 +148,6 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 			},
 			exp: []string{
 				"/home/foo/aqua-2.yaml",
-				"/home/.aqua.yaml",
 			},
 		},
 	}
@@ -158,11 +155,9 @@ func Test_configFinderFinds(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			configFinder := finder.NewConfigFinder(fs)
 			arr := configFinder.Finds(d.wd, d.configFilePath)

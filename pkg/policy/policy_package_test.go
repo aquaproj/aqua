@@ -3,61 +3,73 @@ package policy_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/sirupsen/logrus"
 )
 
 func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		name  string
-		isErr bool
-		param *policy.ParamValidatePackage
+		name     string
+		isErr    bool
+		pkg      *config.Package
+		policies []*policy.Config
 	}{
 		{
 			name: "no policy",
-			param: &policy.ParamValidatePackage{
-				Pkg: &config.Package{},
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Name:    "suzuki-shunsuke/tfcmt",
+					Version: "v4.0.0",
+				},
+				PackageInfo: &registry.PackageInfo{},
+				Registry: &aqua.Registry{
+					Type:      "github_content",
+					Name:      registryTypeStandard,
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua-registry",
+					Path:      "registry.yaml",
+					Ref:       "v3.90.0",
+				},
 			},
 		},
 		{
 			name: "normal",
-			param: &policy.ParamValidatePackage{
-				Pkg: &config.Package{
-					Package: &aqua.Package{
-						Name:    "suzuki-shunsuke/tfcmt",
-						Version: "v4.0.0",
-					},
-					PackageInfo: &registry.PackageInfo{},
-					Registry: &aqua.Registry{
-						Type:      "github_content",
-						Name:      registryTypeStandard,
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua",
-						Path:      "registry.yaml",
-						Ref:       "v1.90.0",
-					},
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Name:    "suzuki-shunsuke/tfcmt",
+					Version: "v4.0.0",
 				},
-				PolicyConfigs: []*policy.Config{
-					{
-						YAML: &policy.ConfigYAML{
-							Packages: []*policy.Package{
-								{
-									Name: "cli/cli",
-								},
-								{
-									Name:         "suzuki-shunsuke/tfcmt",
-									Version:      `semver(">= 3.0.0")`,
-									RegistryName: "standard",
-									Registry: &policy.Registry{
-										Type:      "github_content",
-										Name:      registryTypeStandard,
-										RepoOwner: "aquaproj",
-										RepoName:  "aqua",
-										Path:      "registry.yaml",
-									},
+				PackageInfo: &registry.PackageInfo{},
+				Registry: &aqua.Registry{
+					Type:      "github_content",
+					Name:      registryTypeStandard,
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua",
+					Path:      "registry.yaml",
+					Ref:       "v1.90.0",
+				},
+			},
+			policies: []*policy.Config{
+				{
+					YAML: &policy.ConfigYAML{
+						Packages: []*policy.Package{
+							{
+								Name: "cli/cli",
+							},
+							{
+								Name:         "suzuki-shunsuke/tfcmt",
+								Version:      `semver(">= 3.0.0")`,
+								RegistryName: "standard",
+								Registry: &policy.Registry{
+									Type:      "github_content",
+									Name:      registryTypeStandard,
+									RepoOwner: "aquaproj",
+									RepoName:  "aqua",
+									Path:      "registry.yaml",
 								},
 							},
 						},
@@ -66,12 +78,13 @@ func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	checker := &policy.CheckerImpl{}
+	checker := &policy.Checker{}
+	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			if err := checker.ValidatePackage(d.param); err != nil {
+			if err := checker.ValidatePackage(logE, d.pkg, d.policies); err != nil {
 				if d.isErr {
 					return
 				}

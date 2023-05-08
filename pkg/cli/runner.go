@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	"github.com/aquaproj/aqua/pkg/log"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	"github.com/aquaproj/aqua/v2/pkg/log"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/urfave/cli/v2"
@@ -33,15 +35,15 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error {
+func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error { //nolint:funlen,cyclop
 	param.Args = c.Args().Slice()
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
 	param.ConfigFilePath = c.String("config")
 	param.Dest = c.String("o")
+	param.OutTestData = c.String("out-testdata")
 	param.OnlyLink = c.Bool("only-link")
-	param.IsTest = c.Bool("test")
 	if commandName == "generate-registry" {
 		param.InsertFile = c.String("i")
 	} else {
@@ -69,9 +71,31 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
-	param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
 	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
+
+	if a := os.Getenv("AQUA_DISABLE_POLICY"); a != "" {
+		disablePolicy, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_DISABLE_POLICY as bool: %w", err)
+		}
+		param.DisablePolicy = disablePolicy
+	}
+	if !param.DisablePolicy {
+		param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
+		for i, p := range param.PolicyConfigFilePaths {
+			if !filepath.IsAbs(p) {
+				param.PolicyConfigFilePaths[i] = filepath.Join(param.PWD, p)
+			}
+		}
+	}
+	if a := os.Getenv("AQUA_REQUIRE_CHECKSUM"); a != "" {
+		requireChecksum, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_REQUIRE_CHECKSUM as bool: %w", err)
+		}
+		param.RequireChecksum = requireChecksum
+	}
 	return nil
 }
 
@@ -123,6 +147,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		Commands: []*cli.Command{
 			runner.newInitCommand(),
 			runner.newInitPolicyCommand(),
+			runner.newPolicyCommand(),
 			runner.newInstallCommand(),
 			runner.newUpdateAquaCommand(),
 			runner.newGenerateCommand(),

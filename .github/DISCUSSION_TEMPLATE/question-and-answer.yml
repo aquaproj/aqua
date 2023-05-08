@@ -1,0 +1,41 @@
+title: Q & A
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      value:
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: Background of the question
+      description: |
+        Please explain the background of the question. Why do you have the question? What do you want to do?
+    validations:
+      required: false
+  - type: textarea
+    id: example-code
+    attributes:
+      label: Example Code
+      value: |
+        ```console
+        $ 
+        ```
+
+        Configuration
+
+        ```yaml
+
+        ```
+    validations:
+      required: false
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      value: |
+        *
+    validations:
+      required: false

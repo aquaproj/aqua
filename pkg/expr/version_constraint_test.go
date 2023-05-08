@@ -3,7 +3,7 @@ package expr_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/expr"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
 )
 
 func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
@@ -50,6 +50,13 @@ func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 			version:     "v0.3.0",
 			semver:      "v0.3.0",
 			isErr:       true,
+		},
+		{
+			title:       "commit hash",
+			constraints: `semver(">= 0.4.0")`,
+			version:     "35661968adb8fa29ab1d4a8713c0547d9a6007bb",
+			semver:      "35661968adb8fa29ab1d4a8713c0547d9a6007bb",
+			exp:         false,
 		},
 	}
 

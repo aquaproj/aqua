@@ -22,6 +22,7 @@ tasks:
   description: release the new version
   usage: release the new version
   script: |
+    set -eux
     git tag -m "chore: release {{.version}}" "{{.version}}"
     git push origin "{{.version}}"
   args:
@@ -54,6 +55,7 @@ tasks:
   usage: Validate aqua.yaml and registry.yaml with JSON Schema
   # https://ajv.js.org/packages/ajv-cli.html
   script: |
+    set -eux
     ajv --spec=draft2020 -s json-schema/aqua-yaml.json -d aqua.yaml
     ajv --spec=draft2020 -s json-schema/registry.json -d tests/main/registry.yaml
 - name: install
@@ -61,3 +63,24 @@ tasks:
   description: Build and install aqua
   usage: Build and install aqua by "go install" command
   script: go install ./cmd/aqua
+- name: run
+  description: Run aqua via go run
+  usage: Run aqua via go run
+  script: |
+    go run ./cmd/aqua {{._builtin.args_string}}
+- name: docker
+  description: |
+    Build and run a new container and attach a pseudo-TTY.
+    You can test aqua in a clean environment.
+  usage: Test aqua in a clean container
+  script: |
+    set -eux
+    {{if .latest}}
+    bash scripts/docker.sh latest
+    {{else}}
+    bash scripts/docker.sh
+    {{end}}
+  flags:
+  - name: latest
+    short: l
+    type: bool

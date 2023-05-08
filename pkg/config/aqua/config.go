@@ -61,7 +61,6 @@ const (
 	PkgInfoTypeGitHubContent = "github_content"
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGo            = "go"
 	PkgInfoTypeGoInstall     = "go_install"
 )
 

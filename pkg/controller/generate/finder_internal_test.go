@@ -3,7 +3,7 @@ package generate
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
 
 func Test_find(t *testing.T) { //nolint:funlen

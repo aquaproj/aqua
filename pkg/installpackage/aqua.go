@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/sirupsen/logrus"
 )
 
@@ -79,16 +79,16 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 		},
 	}
 
-	pkgInfo, err := pkg.PackageInfo.Override(pkg.Package.Version, inst.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, inst.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
 	pkg.PackageInfo = pkgInfo
 
 	if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
-		Checksums: checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
-		Pkg:       pkg,
-		// PolicyConfigs is nil, so the policy check is skipped
+		Checksums:     checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
+		Pkg:           pkg,
+		DisablePolicy: true,
 	}); err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package registry_test
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -207,7 +207,7 @@ func TestPackageInfo_GetReplacements(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_GetFiles(t *testing.T) {
+func TestPackageInfo_GetFiles(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -246,6 +246,20 @@ func TestPackageInfo_GetFiles(t *testing.T) {
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
+			},
+		},
+		{
+			title: "has name",
+			exp: []*registry.File{
+				{
+					Name: "cmctl",
+				},
+			},
+			pkgInfo: &registry.PackageInfo{
+				Type:      "github_release",
+				RepoOwner: "cert-manager",
+				RepoName:  "cert-manager",
+				Name:      "cert-manager/cert-manager/cmctl",
 			},
 		},
 	}

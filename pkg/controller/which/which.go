@@ -7,14 +7,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/domain"
-	rgst "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -102,18 +102,15 @@ func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param
 	}
 	return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
 		"exe_name": exeName,
+		"doc":      "https://aquaproj.github.io/docs/reference/codes/004",
 	})
 }
 
 func (ctrl *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
 	pkg := findResult.Package
-	pkgInfo := pkg.PackageInfo
 	file := findResult.File
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
-	}
-	if pkg.PackageInfo.Type == "go" {
-		return filepath.Join(ctrl.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name), nil
 	}
 	fileSrc, err := pkg.GetFileSrc(file, ctrl.runtime)
 	if err != nil {
@@ -187,7 +184,7 @@ func (ctrl *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.
 		return nil
 	}
 
-	pkgInfo, err := pkgInfo.Override(pkg.Version, ctrl.runtime)
+	pkgInfo, err := pkgInfo.Override(logE, pkg.Version, ctrl.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil

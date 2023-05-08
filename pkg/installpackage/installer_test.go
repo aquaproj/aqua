@@ -5,18 +5,19 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/config/aqua"
-	"github.com/aquaproj/aqua/pkg/config/registry"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -68,11 +69,6 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 						Registry: "standard",
 						Version:  "v2.0.3",
 					},
-					{
-						Name:     "suzuki-shunsuke/github-comment",
-						Registry: "standard",
-						Version:  "v4.1.0",
-					},
 				},
 			},
 			registries: map[string]*registry.Config{
@@ -84,13 +80,6 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 							RepoName:  "ci-info",
 							Asset:     stringP("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
 						},
-						{
-							Type:        "github_release",
-							RepoOwner:   "suzuki-shunsuke",
-							RepoName:    "github-comment",
-							Asset:       stringP("github-comment_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
-							SupportedIf: stringP("false"),
-						},
 					},
 				},
 			},
@@ -99,7 +88,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
 			},
 		},
 		{
@@ -151,7 +140,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
 			},
 		},
 		{
@@ -193,11 +182,9 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			linker := domain.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.links {
@@ -206,7 +193,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				}
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, d.executor, nil, &checksum.Calculator{}, unarchive.New(d.executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{
 				Config:         d.cfg,
 				Registries:     d.registries,
@@ -254,6 +241,14 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 					Registry: "standard",
 					Version:  "v2.0.3",
 				},
+				Registry: &aqua.Registry{
+					Name:      "standard",
+					Type:      "github_content",
+					RepoOwner: "aquaproj",
+					RepoName:  "aqua-registry",
+					Ref:       "v2.15.0",
+					Path:      "registry.yaml",
+				},
 			},
 			param: &config.Param{
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
@@ -269,14 +264,12 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files)
+			if err != nil {
+				t.Fatal(err)
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
-			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, d.executor, nil, &checksum.Calculator{}, unarchive.New(d.executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			if err := ctrl.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 				Pkg: d.pkg,
 			}); err != nil {

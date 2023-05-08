@@ -6,23 +6,23 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aquaproj/aqua/pkg/checksum"
-	"github.com/aquaproj/aqua/pkg/config"
-	finder "github.com/aquaproj/aqua/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/pkg/config-reader"
-	"github.com/aquaproj/aqua/pkg/controller/install"
-	"github.com/aquaproj/aqua/pkg/cosign"
-	"github.com/aquaproj/aqua/pkg/domain"
-	"github.com/aquaproj/aqua/pkg/download"
-	"github.com/aquaproj/aqua/pkg/exec"
-	registry "github.com/aquaproj/aqua/pkg/install-registry"
-	"github.com/aquaproj/aqua/pkg/installpackage"
-	"github.com/aquaproj/aqua/pkg/policy"
-	"github.com/aquaproj/aqua/pkg/runtime"
-	"github.com/aquaproj/aqua/pkg/slsa"
-	"github.com/aquaproj/aqua/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/controller/install"
+	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/exec"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
+	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
 func TestController_Install(t *testing.T) { //nolint:funlen
@@ -30,6 +30,7 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 	data := []struct {
 		name              string
 		files             map[string]string
+		dirs              []string
 		links             map[string]string
 		param             *config.Param
 		rt                *runtime.Runtime
@@ -56,20 +57,30 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
+				"/home/foo/workspace/aqua-policy.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- registry: standard
+`,
 				"/home/foo/workspace/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer":                                              ``,
-				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): ``,
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer":                                                       ``,
+				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/internal/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): ``,
 				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer": ``,
-				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy":     ``,
+				"/home/foo/.local/share/aquaproj-aqua/aqua-proxy":         ``,
+			},
+			dirs: []string{
+				"/home/foo/workspace/.git",
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer",
-				fmt.Sprintf("../pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
+				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer",
+				fmt.Sprintf("../internal/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
 			},
 		},
 	}
@@ -80,11 +91,9 @@ packages:
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
+			fs, err := testutil.NewFs(d.files, d.dirs...)
+			if err != nil {
+				t.Fatal(err)
 			}
 			linker := domain.NewMockLinker(fs)
 			for dest, src := range d.links {
@@ -94,8 +103,10 @@ packages:
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &exec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(), &policy.MockChecker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, &policy.MockConfigReader{})
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			policyFinder := policy.NewConfigFinder(fs)
+			policyReader := policy.NewReader(fs, &policy.MockValidator{}, policyFinder, policy.NewConfigReader(fs))
+			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader, policyFinder)
 			if err := ctrl.Install(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

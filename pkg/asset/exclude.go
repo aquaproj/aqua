@@ -3,7 +3,7 @@ package asset
 import (
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 )
 
 func Exclude(pkgName, assetName, version string) bool {

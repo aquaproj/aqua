@@ -4,23 +4,52 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aquaproj/aqua/pkg/config"
-	"github.com/aquaproj/aqua/pkg/expr"
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type ParamValidatePackage struct {
-	Pkg           *config.Package
-	PolicyConfigs []*Config
+func getDefaultPolicy() ([]*Config, error) {
+	// https://github.com/aquaproj/aqua/issues/1404
+	// If no policy file is set, only standard registry is allowed by default.
+	cfg := &Config{
+		YAML: &ConfigYAML{
+			Registries: []*Registry{
+				{
+					Type: "standard",
+				},
+			},
+			Packages: []*Package{
+				{
+					RegistryName: "standard",
+				},
+			},
+		},
+	}
+	if err := cfg.Init(); err != nil {
+		return nil, err
+	}
+	return []*Config{
+		cfg,
+	}, nil
 }
 
-func (pc *CheckerImpl) ValidatePackage(param *ParamValidatePackage) error {
-	if len(param.PolicyConfigs) == 0 {
+func (pc *Checker) ValidatePackage(logE *logrus.Entry, pkg *config.Package, policies []*Config) error {
+	if pc.disabled {
 		return nil
 	}
-	for _, policyCfg := range param.PolicyConfigs {
+	if len(policies) == 0 {
+		a, err := getDefaultPolicy()
+		if err != nil {
+			return err
+		}
+		policies = a
+	}
+	for _, policyCfg := range policies {
 		policyCfg := policyCfg
-		if err := pc.validatePackage(&paramValidatePackage{
-			Pkg:          param.Pkg,
+		if err := pc.validatePackage(logE, &paramValidatePackage{
+			Pkg:          pkg,
 			PolicyConfig: policyCfg.YAML,
 		}); err == nil {
 			return nil
@@ -34,14 +63,16 @@ type paramValidatePackage struct {
 	PolicyConfig *ConfigYAML
 }
 
-func (pc *CheckerImpl) validatePackage(param *paramValidatePackage) error {
+func (pc *Checker) validatePackage(logE *logrus.Entry, param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}
 	for _, policyPkg := range param.PolicyConfig.Packages {
 		f, err := pc.matchPkg(param.Pkg, policyPkg)
 		if err != nil {
-			return err
+			// If it fails to check if the policy matches with the package, output a debug log and treat as the policy doesn't match with the package.
+			logerr.WithError(logE, err).Debug("check if the package matches with a policy")
+			continue
 		}
 		if f {
 			return nil
@@ -50,7 +81,7 @@ func (pc *CheckerImpl) validatePackage(param *paramValidatePackage) error {
 	return errUnAllowedPackage
 }
 
-func (pc *CheckerImpl) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
+func (pc *Checker) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}
