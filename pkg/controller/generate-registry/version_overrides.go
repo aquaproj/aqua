@@ -9,6 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/hashicorp/go-version"
@@ -59,20 +60,28 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 	return pkgs
 }
 
-func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
+func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, versionFilter *expr.Program) (*registry.PackageInfo, []string) { //nolint:cyclop
 	ghReleases := ctrl.listReleases(ctx, logE, pkgInfo)
-	releases := make([]*Release, len(ghReleases))
-	for i, release := range ghReleases {
+	releases := make([]*Release, 0, len(ghReleases))
+	for _, release := range ghReleases {
 		tag := release.GetTagName()
+		if versionFilter != nil {
+			if f, err := expr.EvaluateVersionFilter(versionFilter, tag); err != nil {
+				logE.WithError(err).WithField("release_version", tag).Debug("evaluate version filter")
+				continue
+			} else if !f {
+				continue
+			}
+		}
 		v, err := version.NewVersion(tag)
 		if err != nil {
 			logE.WithField("tag_name", tag).WithError(err).Warn("parse a tag as semver")
 		}
-		releases[i] = &Release{
+		releases = append(releases, &Release{
 			ID:      release.GetID(),
 			Tag:     tag,
 			Version: v,
-		}
+		})
 	}
 	sort.Slice(releases, func(i, j int) bool {
 		r1 := releases[i]

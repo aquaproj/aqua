@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/github"
@@ -46,7 +45,7 @@ func (ctrl *Controller) getVersionFromLatestRelease(ctx context.Context, logE *l
 
 type Filter struct {
 	Prefix     string
-	Filter     *vm.Program
+	Filter     *expr.Program
 	Constraint string
 }
 

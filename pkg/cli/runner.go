@@ -52,6 +52,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.All = c.Bool("all")
 	param.Prune = c.Bool("prune")
 	param.SelectVersion = c.Bool("select-version")
+	param.VersionFilter = c.String("version-filter")
 	param.File = c.String("f")
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = runner.LDFlags.Version

@@ -177,6 +177,7 @@ type Param struct {
 	Dest                  string
 	HomeDir               string
 	OutTestData           string
+	VersionFilter         string
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}
