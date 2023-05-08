@@ -87,10 +87,10 @@ func (inst *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry)
 
 	// create a symbolic link
 	binName := proxyName
-	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), filepath.Join(pkgPath, binName))
+	a, err := filepath.Rel(inst.rootDir, filepath.Join(pkgPath, binName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return inst.createLink(filepath.Join(inst.rootDir, "bin", proxyName), a, logE)
+	return inst.createLink(filepath.Join(inst.rootDir, proxyName), a, logE)
 }
