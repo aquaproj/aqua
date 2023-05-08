@@ -88,7 +88,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
 			},
 		},
 		{
@@ -140,7 +140,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
 			},
 			links: map[string]string{
-				"aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
+				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
 			},
 		},
 		{
