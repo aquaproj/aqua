@@ -19,11 +19,19 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 			OS:   "linux",
 		},
 		{
+			Name: "unknown-linux",
+			OS:   "linux",
+		},
+		{
 			Name: "pc-windows-msvc",
 			OS:   "windows",
 		},
 		{
 			Name: "pc-windows-gnu",
+			OS:   "windows",
+		},
+		{
+			Name: "pc-windows",
 			OS:   "windows",
 		},
 		{
