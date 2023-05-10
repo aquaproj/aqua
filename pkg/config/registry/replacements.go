@@ -11,6 +11,7 @@ type Override struct {
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
+	FilesDir           *string         `yaml:"files_dir,omitempty" json:"files_dir,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
 	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`

@@ -33,6 +33,7 @@ type PackageInfo struct {
 	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
+	FilesDir           *string            `yaml:"files_dir,omitempty" json:"files_dir,omitempty"`
 	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
 	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
@@ -84,6 +85,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		Private:            pkgInfo.Private,
 		ErrorMessage:       pkgInfo.ErrorMessage,
 		NoAsset:            pkgInfo.NoAsset,
+		FilesDir:           pkgInfo.FilesDir,
 	}
 	return pkg
 }
@@ -113,6 +115,7 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
 		pkgInfo.SLSAProvenance = nil
 		pkgInfo.Format = ""
 		pkgInfo.Rosetta2 = nil
+		pkgInfo.FilesDir = nil
 	}
 }
 
@@ -139,6 +142,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.Files != nil {
 		pkg.Files = child.Files
+	}
+	if child.FilesDir != nil {
+		pkg.FilesDir = child.FilesDir
 	}
 	if child.URL != nil {
 		pkg.URL = child.URL
@@ -234,6 +240,10 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 		pkgInfo.Files = ov.Files
 	}
 
+	if ov.FilesDir != nil {
+		pkgInfo.FilesDir = ov.FilesDir
+	}
+
 	if ov.URL != nil {
 		pkgInfo.URL = ov.URL
 	}
@@ -265,6 +275,7 @@ type VersionOverride struct {
 	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
+	FilesDir           *string         `yaml:"files_dir,omitempty" json:"files_dir,omitempty"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Overrides          Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
