@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -19,6 +20,7 @@ import (
 type Package struct {
 	Info    *registry.PackageInfo
 	Version string
+	SemVer  string
 }
 
 func getString(p *string) string {
@@ -36,9 +38,10 @@ func getBool(p *bool) bool {
 }
 
 type Release struct {
-	ID      int64
-	Tag     string
-	Version *version.Version
+	ID            int64
+	Tag           string
+	Version       *version.Version
+	VersionPrefix string
 }
 
 func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
@@ -59,19 +62,38 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 	return pkgs
 }
 
+var versionPattern = regexp.MustCompile(`^(.*?)v?((?:\d+)(?:\.\d+)?(?:\.\d+)?(?:(\.|-).+)?)$`)
+
+func getVersionAndPrefix(release *github.RepositoryRelease) (*version.Version, string, error) {
+	tag := release.GetTagName()
+	if v, err := version.NewVersion(tag); err == nil {
+		return v, "", nil
+	}
+	a := versionPattern.FindStringSubmatch(tag)
+	if a == nil {
+		return nil, "", nil
+	}
+	v, err := version.NewVersion(a[2])
+	if err != nil {
+		return nil, "", err //nolint:wrapcheck
+	}
+	return v, a[1], nil
+}
+
 func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
 	ghReleases := ctrl.listReleases(ctx, logE, pkgInfo)
 	releases := make([]*Release, len(ghReleases))
 	for i, release := range ghReleases {
 		tag := release.GetTagName()
-		v, err := version.NewVersion(tag)
+		v, prefix, err := getVersionAndPrefix(release)
 		if err != nil {
 			logE.WithField("tag_name", tag).WithError(err).Warn("parse a tag as semver")
 		}
 		releases[i] = &Release{
-			ID:      release.GetID(),
-			Tag:     tag,
-			Version: v,
+			ID:            release.GetID(),
+			Tag:           tag,
+			Version:       v,
+			VersionPrefix: prefix,
 		}
 	}
 	sort.Slice(releases, func(i, j int) bool {
@@ -86,10 +108,14 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 	})
 	pkgs := make([]*Package, 0, len(releases))
 	for _, release := range releases {
+		release := release
 		pkgInfo := &registry.PackageInfo{
 			Type:      "github_release",
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
+		}
+		if release.VersionPrefix != "" {
+			pkgInfo.VersionPrefix = &release.VersionPrefix
 		}
 		assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
 		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
@@ -100,6 +126,7 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 		pkgs = append(pkgs, &Package{
 			Info:    pkgInfo,
 			Version: release.Tag,
+			SemVer:  release.Tag[len(release.VersionPrefix):],
 		})
 	}
 	p, versions := mergePackages(pkgs)
@@ -146,6 +173,12 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	if pkgInfo.WindowsExt != latestPkgInfo.WindowsExt {
 		vo.WindowsExt = pkgInfo.WindowsExt
 	}
+	if !reflect.DeepEqual(pkgInfo.VersionPrefix, latestPkgInfo.VersionPrefix) {
+		vo.VersionPrefix = pkgInfo.VersionPrefix
+		if pkgInfo.VersionPrefix == nil {
+			vo.VersionPrefix = util.StrP("")
+		}
+	}
 	if !reflect.DeepEqual(pkgInfo.Checksum, latestPkgInfo.Checksum) {
 		vo.Checksum = pkgInfo.Checksum
 		if pkgInfo.Checksum == nil {
@@ -172,25 +205,26 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 	basePkg := pkgs[0]
 	basePkgInfo := basePkg.Info
 	latestPkgInfo := basePkgInfo
-	latestVersion := basePkg.Version
-	minimumVersion := basePkg.Version
+	minimumVersion := basePkg.SemVer
+	minimumTag := basePkg.Version
 	var lastMinimumVersion string
 	vos := []*registry.VersionOverride{}
 	var lastVO *registry.VersionOverride
-	versions := []string{latestVersion}
+	versions := []string{basePkg.Version}
 	versionsM := map[string]struct{}{
-		latestVersion: {},
+		basePkg.Version: {},
 	}
 	for _, pkg := range pkgs[1:] {
 		pkg := pkg
 		pkgInfo := pkg.Info
 		if reflect.DeepEqual(basePkgInfo, pkgInfo) {
-			minimumVersion = pkg.Version
+			minimumVersion = pkg.SemVer
+			minimumTag = pkg.Version
 			continue
 		}
-		if _, ok := versionsM[minimumVersion]; !ok {
-			versions = append(versions, minimumVersion)
-			versionsM[minimumVersion] = struct{}{}
+		if _, ok := versionsM[minimumTag]; !ok {
+			versions = append(versions, minimumTag)
+			versionsM[minimumTag] = struct{}{}
 		}
 		lastMinimumVersion = strings.TrimPrefix(minimumVersion, "v")
 
@@ -198,7 +232,7 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 		if isSemver(lastMinimumVersion) {
 			versionConstraints = fmt.Sprintf(`semver(">= %s")`, lastMinimumVersion)
 		} else {
-			versionConstraints = fmt.Sprintf(`Version >= "%s"`, lastMinimumVersion)
+			versionConstraints = fmt.Sprintf(`SemVer >= "%s"`, lastMinimumVersion)
 		}
 		if lastVO == nil {
 			latestPkgInfo.VersionConstraints = versionConstraints
@@ -208,12 +242,13 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 		}
 		lastVO = getVersionOverride(latestPkgInfo, pkgInfo)
 		basePkgInfo = pkgInfo
-		minimumVersion = pkg.Version
+		minimumVersion = pkg.SemVer
+		minimumTag = pkg.Version
 	}
 	if lastMinimumVersion != "" {
-		if _, ok := versionsM[minimumVersion]; !ok {
-			versions = append(versions, minimumVersion)
-			versionsM[minimumVersion] = struct{}{}
+		if _, ok := versionsM[minimumTag]; !ok {
+			versions = append(versions, minimumTag)
+			versionsM[minimumTag] = struct{}{}
 		}
 		if isSemver(lastMinimumVersion) {
 			lastVO.VersionConstraints = fmt.Sprintf(`semver("< %s")`, lastMinimumVersion)
