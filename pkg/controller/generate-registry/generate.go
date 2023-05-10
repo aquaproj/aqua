@@ -158,53 +158,33 @@ func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.Packa
 	for assetName := range assetNames {
 		if _, ok := checksumNames[assetName+".md5"]; ok {
 			pkgInfo.Checksum = &registry.Checksum{
-				Type:       "github_release",
-				Asset:      "{{.Asset}}.md5",
-				FileFormat: "regexp",
-				Algorithm:  "md5",
-				Pattern: &registry.ChecksumPattern{
-					Checksum: `^(\b[A-Fa-f0-9]{32}\b)`,
-					File:     `^\b[A-Fa-f0-9]{32}\b\s+(\S+)$`,
-				},
+				Type:      "github_release",
+				Asset:     "{{.Asset}}.md5",
+				Algorithm: "md5",
 			}
 			break
 		}
 		if _, ok := checksumNames[assetName+".sha256"]; ok {
 			pkgInfo.Checksum = &registry.Checksum{
-				Type:       "github_release",
-				Asset:      "{{.Asset}}.sha256",
-				FileFormat: "regexp",
-				Algorithm:  "sha256",
-				Pattern: &registry.ChecksumPattern{
-					Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
-					File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
-				},
+				Type:      "github_release",
+				Asset:     "{{.Asset}}.sha256",
+				Algorithm: "sha256",
 			}
 			break
 		}
 		if _, ok := checksumNames[assetName+".sha512"]; ok {
 			pkgInfo.Checksum = &registry.Checksum{
-				Type:       "github_release",
-				Asset:      "{{.Asset}}.sha512",
-				FileFormat: "regexp",
-				Algorithm:  "sha512",
-				Pattern: &registry.ChecksumPattern{
-					Checksum: `^(\b[A-Fa-f0-9]{128}\b)`,
-					File:     `^\b[A-Fa-f0-9]{128}\b\s+(\S+)$`,
-				},
+				Type:      "github_release",
+				Asset:     "{{.Asset}}.sha512",
+				Algorithm: "sha512",
 			}
 			break
 		}
 		if _, ok := checksumNames[assetName+".sha1"]; ok {
 			pkgInfo.Checksum = &registry.Checksum{
-				Type:       "github_release",
-				Asset:      "{{.Asset}}.sha512",
-				FileFormat: "regexp",
-				Algorithm:  "sha1",
-				Pattern: &registry.ChecksumPattern{
-					Checksum: `^(\b[A-Fa-f0-9]{40}\b)`,
-					File:     `^\b[A-Fa-f0-9]{40}\b\s+(\S+)$`,
-				},
+				Type:      "github_release",
+				Asset:     "{{.Asset}}.sha512",
+				Algorithm: "sha1",
 			}
 			break
 		}
