@@ -130,7 +130,7 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 	return pkgInfo, []string{version}
 }
 
-func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, tagName string, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop
+func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop
 	if len(assets) == 0 {
 		return
 	}
