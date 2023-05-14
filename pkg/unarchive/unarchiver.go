@@ -14,17 +14,18 @@ import (
 type unarchiverWithUnarchiver struct {
 	unarchiver archiver.Unarchiver
 	dest       string
+	fs         afero.Fs
 }
 
-func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
-	f, err := afero.TempFile(fs, "", "")
+	f, err := afero.TempFile(unarchiver.fs, "", "")
 	if err != nil {
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
 	defer func() {
 		f.Close()
-		fs.Remove(f.Name()) //nolint:errcheck
+		unarchiver.fs.Remove(f.Name()) //nolint:errcheck
 	}()
 
 	var m io.Writer = f

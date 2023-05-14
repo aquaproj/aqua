@@ -16,15 +16,16 @@ import (
 
 type Decompressor struct {
 	decompressor archiver.Decompressor
+	fs           afero.Fs
 	dest         string
 }
 
-func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, fs afero.Fs, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error {
 	dest := decompressor.dest
-	if err := util.MkdirAll(fs, filepath.Dir(dest)); err != nil {
+	if err := util.MkdirAll(decompressor.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
-	f, err := fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
+	f, err := decompressor.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("open the file (%s): %w", dest, err)
 	}
