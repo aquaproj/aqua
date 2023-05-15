@@ -205,7 +205,7 @@ func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Pa
 		"gobin":           dest,
 		"go_package_path": goPkgPath,
 	}).Info("Installing a Go tool")
-	if _, err := inst.executor.GoInstall(ctx, goPkgPath, dest); err != nil {
+	if err := inst.goInstallInstaller.Install(ctx, goPkgPath, dest); err != nil {
 		return fmt.Errorf("build Go tool: %w", err)
 	}
 	return nil

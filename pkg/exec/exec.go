@@ -46,9 +46,7 @@ func (exe *Executor) ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePa
 }
 
 func (exe *Executor) GoInstall(ctx context.Context, path, gobin string) (int, error) {
-	cmd := exe.command(exec.Command("go", "install", path))
-	cmd.Env = append(os.Environ(), "GOBIN="+gobin)
-	return exe.exec(ctx, cmd)
+	return exe.ExecWithEnvs(ctx, "go", []string{"install", path}, []string{fmt.Sprintf("GOBIN=%s", gobin)})
 }
 
 func (exe *Executor) command(cmd *exec.Cmd) *exec.Cmd {
