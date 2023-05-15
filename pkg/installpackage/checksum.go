@@ -52,7 +52,7 @@ func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logru
 		}
 	}
 
-	return inst.checksumFileParser.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
+	return checksum.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
 }
 
 type ParamVerifyChecksum struct {

@@ -34,7 +34,6 @@ type InstallerImpl struct {
 	maxParallelism        int
 	downloader            download.ClientAPI
 	checksumDownloader    download.ChecksumDownloader
-	checksumFileParser    *checksum.FileParser
 	checksumCalculator    ChecksumCalculator
 	runtime               *runtime.Runtime
 	fs                    afero.Fs
@@ -70,7 +69,6 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		maxParallelism:     param.MaxParallelism,
 		downloader:         downloader,
 		checksumDownloader: chkDL,
-		checksumFileParser: &checksum.FileParser{},
 		checksumCalculator: chkCalc,
 		runtime:            rt,
 		fs:                 fs,

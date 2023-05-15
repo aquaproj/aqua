@@ -74,7 +74,6 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 					GOOS:   "darwin",
 					GOARCH: "arm64",
 				},
-				checksumFileParser: &checksum.FileParser{},
 				checksumCalculator: &MockChecksumCalculator{
 					Checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
 				},

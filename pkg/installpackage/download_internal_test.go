@@ -64,8 +64,7 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 				downloader: &download.Mock{
 					RC: io.NopCloser(strings.NewReader("hello")),
 				},
-				unarchiver:         &unarchive.MockUnarchiver{},
-				checksumFileParser: &checksum.FileParser{},
+				unarchiver: &unarchive.MockUnarchiver{},
 				checksumCalculator: &MockChecksumCalculator{
 					Checksum: "3516a4d84f7b69ea5752ca2416895a2705910af3ed6815502af789000fc7e963",
 				},

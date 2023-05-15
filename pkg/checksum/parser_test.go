@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestFileParser_ParseChecksumFile(t *testing.T) { //nolint:funlen
+func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name    string
@@ -108,12 +108,11 @@ d3e8e4d8da6b6f5e0a77335864944fc3e74c109c3d4959c976c1caec1dc1807c  ./imgpkg-windo
 			},
 		},
 	}
-	parser := &checksum.FileParser{}
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			m, s, err := parser.ParseChecksumFile(d.content, d.pkg.PackageInfo.Checksum)
+			m, s, err := checksum.ParseChecksumFile(d.content, d.pkg.PackageInfo.Checksum)
 			if err != nil {
 				if d.isErr {
 					return
