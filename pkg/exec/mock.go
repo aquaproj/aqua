@@ -10,7 +10,7 @@ type Mock struct {
 	Output   string
 }
 
-func (exe *Mock) Exec(ctx context.Context, exePath string, args []string) (int, error) {
+func (exe *Mock) Exec(ctx context.Context, exePath string, args ...string) (int, error) {
 	return exe.ExitCode, exe.Err
 }
 

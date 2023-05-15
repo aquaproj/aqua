@@ -27,7 +27,7 @@ func TestExecutorExec(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			exitCode, err := executor.Exec(ctx, d.exePath, d.args)
+			exitCode, err := executor.Exec(ctx, d.exePath, d.args...)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")

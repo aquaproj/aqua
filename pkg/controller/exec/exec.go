@@ -167,7 +167,7 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 		}
 		return false, nil
 	}
-	if exitCode, err := ctrl.executor.Exec(ctx, exePath, args); err != nil {
+	if exitCode, err := ctrl.executor.Exec(ctx, exePath, args...); err != nil {
 		// https://pkg.go.dev/os#ProcessState.ExitCode
 		// > ExitCode returns the exit code of the exited process,
 		// > or -1 if the process hasn't exited or was terminated by a signal.

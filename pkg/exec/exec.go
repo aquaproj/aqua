@@ -40,7 +40,7 @@ func (exe *Executor) exec(ctx context.Context, cmd *exec.Cmd) (int, error) {
 	return 0, nil
 }
 
-func (exe *Executor) Exec(ctx context.Context, exePath string, args []string) (int, error) {
+func (exe *Executor) Exec(ctx context.Context, exePath string, args ...string) (int, error) {
 	return exe.exec(ctx, exe.command(exec.Command(exePath, args...)))
 }
 
