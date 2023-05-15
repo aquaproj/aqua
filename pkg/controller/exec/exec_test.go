@@ -155,7 +155,7 @@ packages:
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, executor, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			policyFinder := policy.NewConfigFinder(fs)
 			ctrl := execCtrl.New(d.param, pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policy.NewValidator(d.param, fs), policyFinder, policy.NewConfigReader(fs)), policyFinder)
-			if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args); err != nil {
+			if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...); err != nil {
 				if d.isErr {
 					return
 				}
@@ -253,7 +253,7 @@ packages:
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				func() {
-					if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args); err != nil {
+					if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...); err != nil {
 						if d.isErr {
 							return
 						}

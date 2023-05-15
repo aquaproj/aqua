@@ -25,36 +25,8 @@ func New() *Executor {
 	}
 }
 
-func (exe *Executor) command(cmd *exec.Cmd) *exec.Cmd {
-	cmd.Stdin = exe.stdin
-	cmd.Stdout = exe.stdout
-	cmd.Stderr = exe.stderr
-	return cmd
-}
-
-func (exe *Executor) exec(ctx context.Context, cmd *exec.Cmd) (int, error) {
-	runner := timeout.NewRunner(0)
-	if err := runner.Run(ctx, cmd); err != nil {
-		return cmd.ProcessState.ExitCode(), err
-	}
-	return 0, nil
-}
-
 func (exe *Executor) Exec(ctx context.Context, exePath string, args ...string) (int, error) {
 	return exe.exec(ctx, exe.command(exec.Command(exePath, args...)))
-}
-
-// execAndOutputWhenFailure executes a command, and outputs the command output to standard error only when the command failed.
-func (exe *Executor) execAndOutputWhenFailure(ctx context.Context, cmd *exec.Cmd) (int, error) {
-	buf := &bytes.Buffer{}
-	cmd.Stdout = buf
-	cmd.Stderr = buf
-	runner := timeout.NewRunner(0)
-	if err := runner.Run(ctx, cmd); err != nil {
-		fmt.Fprintln(exe.stderr, buf.String())
-		return cmd.ProcessState.ExitCode(), err
-	}
-	return 0, nil
 }
 
 func (exe *Executor) ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error) {
@@ -77,4 +49,32 @@ func (exe *Executor) GoInstall(ctx context.Context, path, gobin string) (int, er
 	cmd := exe.command(exec.Command("go", "install", path))
 	cmd.Env = append(os.Environ(), "GOBIN="+gobin)
 	return exe.exec(ctx, cmd)
+}
+
+func (exe *Executor) command(cmd *exec.Cmd) *exec.Cmd {
+	cmd.Stdin = exe.stdin
+	cmd.Stdout = exe.stdout
+	cmd.Stderr = exe.stderr
+	return cmd
+}
+
+func (exe *Executor) exec(ctx context.Context, cmd *exec.Cmd) (int, error) {
+	runner := timeout.NewRunner(0)
+	if err := runner.Run(ctx, cmd); err != nil {
+		return cmd.ProcessState.ExitCode(), err
+	}
+	return 0, nil
+}
+
+// execAndOutputWhenFailure executes a command, and outputs the command output to standard error only when the command failed.
+func (exe *Executor) execAndOutputWhenFailure(ctx context.Context, cmd *exec.Cmd) (int, error) {
+	buf := &bytes.Buffer{}
+	cmd.Stdout = buf
+	cmd.Stderr = buf
+	runner := timeout.NewRunner(0)
+	if err := runner.Run(ctx, cmd); err != nil {
+		fmt.Fprintln(exe.stderr, buf.String())
+		return cmd.ProcessState.ExitCode(), err
+	}
+	return 0, nil
 }
