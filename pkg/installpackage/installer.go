@@ -30,24 +30,24 @@ import (
 const proxyName = "aqua-proxy"
 
 type InstallerImpl struct {
-	rootDir               string
-	maxParallelism        int
 	downloader            download.ClientAPI
 	checksumDownloader    download.ChecksumDownloader
 	checksumCalculator    ChecksumCalculator
-	runtime               *runtime.Runtime
-	fs                    afero.Fs
 	linker                domain.Linker
 	unarchiver            unarchive.Unarchiver
 	cosign                cosign.Verifier
 	slsaVerifier          slsa.Verifier
-	progressBar           bool
-	onlyLink              bool
-	copyDir               string
 	policyChecker         *policy.Checker
 	cosignInstaller       *Cosign
 	slsaVerifierInstaller *SLSAVerifier
 	goInstallInstaller    GoInstallInstaller
+	runtime               *runtime.Runtime
+	fs                    afero.Fs
+	rootDir               string
+	copyDir               string
+	maxParallelism        int
+	progressBar           bool
+	onlyLink              bool
 }
 
 func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller) *InstallerImpl {
