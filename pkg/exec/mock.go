@@ -33,3 +33,7 @@ func (exe *Mock) HdiutilDetach(ctx context.Context, mountPath string) (int, erro
 func (exe *Mock) HdiutilAttach(ctx context.Context, dmgPath, mountPoint string) (int, error) {
 	return exe.ExitCode, exe.Err
 }
+
+func (exe *Mock) UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error) {
+	return exe.ExitCode, exe.Err
+}

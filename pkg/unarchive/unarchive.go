@@ -89,6 +89,13 @@ func (unarchiver *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUna
 			fs:       unarchiver.fs,
 		}, nil
 	}
+	if src.Type == "pkg" {
+		return &pkgUnarchiver{
+			dest:     dest,
+			executor: unarchiver.executor,
+			fs:       unarchiver.fs,
+		}, nil
+	}
 
 	f := filename
 	if src.Type != "" {

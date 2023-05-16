@@ -23,10 +23,19 @@ jobs:
         working-directory: tests/macos
         env:
           GITHUB_TOKEN: ${{github.token}}
+
       - run: aws-vault --version
         working-directory: tests/macos
         env:
           GITHUB_TOKEN: ${{github.token}}
       - run: aqua gr 99designs/aws-vault
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+
+      - run: s3deploy -V
+        working-directory: tests/macos
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+      - run: aqua gr bep/s3deploy
         env:
           GITHUB_TOKEN: ${{github.token}}

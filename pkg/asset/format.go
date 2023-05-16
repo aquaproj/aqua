@@ -13,6 +13,9 @@ func aquaSupportFormat(assetName string) string {
 	if strings.HasSuffix(assetName, ".dmg") {
 		return "dmg"
 	}
+	if strings.HasSuffix(assetName, ".pkg") {
+		return "pkg"
+	}
 	return formatRaw
 }
 

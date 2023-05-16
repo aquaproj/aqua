@@ -92,3 +92,26 @@ packages:
         rosetta2: true
         checksum:
           enabled: false
+  - type: github_release
+    repo_owner: bep
+    repo_name: s3deploy
+    description: A simple tool to deploy static websites to Amazon S3 and CloudFront with Gzip and custom headers support (e.g. "Cache-Control")
+    asset: s3deploy_{{trimV .Version}}_{{.OS}}-{{.Arch}}.{{.Format}}
+    format: zip
+    overrides:
+      - goos: linux
+        format: tar.gz
+      - goos: darwin
+        format: pkg
+        asset: s3deploy_{{trimV .Version}}_{{.OS}}-universal.{{.Format}}
+    supported_envs:
+      - darwin
+      - amd64
+    rosetta2: true
+    files:
+      - name: s3deploy
+        src: Payload/s3deploy
+    checksum:
+      type: github_release
+      asset: s3deploy_{{trimV .Version}}_checksums.txt
+      algorithm: sha256

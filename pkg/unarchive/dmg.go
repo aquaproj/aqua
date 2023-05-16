@@ -22,6 +22,7 @@ type dmgUnarchiver struct {
 type Executor interface {
 	HdiutilAttach(ctx context.Context, dmgPath, mountPoint string) (int, error)
 	HdiutilDetach(ctx context.Context, mountPath string) (int, error)
+	UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error)
 }
 
 func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error { //nolint:cyclop

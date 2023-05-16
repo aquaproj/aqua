@@ -89,12 +89,13 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 			break
 		}
 	}
-	if assetInfo.OS == "" && strings.Contains(lowAssetName, ".exe") {
-		assetInfo.OS = "windows"
-	}
-	if assetInfo.OS == "" && strings.HasSuffix(lowAssetName, ".dmg") {
-		// other formats take precedence over DMG because DMG requires external commands.
-		assetInfo.Score = -1
-		assetInfo.OS = osDarwin
+	if assetInfo.OS == "" {
+		if strings.Contains(lowAssetName, ".exe") {
+			assetInfo.OS = "windows"
+		} else if strings.HasSuffix(lowAssetName, ".dmg") || strings.HasSuffix(lowAssetName, ".pkg") {
+			// other formats take precedence over DMG because DMG requires external commands.
+			assetInfo.Score = -1
+			assetInfo.OS = osDarwin
+		}
 	}
 }
