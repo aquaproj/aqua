@@ -30,7 +30,6 @@ type Controller struct {
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
 	chkDL              download.ChecksumDownloader
-	parser             *checksum.FileParser
 	downloader         download.ClientAPI
 	prune              bool
 }
@@ -45,7 +44,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		fs:                 fs,
 		runtime:            rt,
 		chkDL:              chkDL,
-		parser:             &checksum.FileParser{},
 		downloader:         pkgDownloader,
 		prune:              param.Prune,
 	}
@@ -286,7 +284,7 @@ func (ctrl *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, che
 		})
 		return nil
 	}
-	m, s, err := ctrl.parser.ParseChecksumFile(checksumFile, pkgInfo.Checksum)
+	m, s, err := checksum.ParseChecksumFile(checksumFile, pkgInfo.Checksum)
 	if err != nil {
 		return fmt.Errorf("parse a checksum file: %w", err)
 	}

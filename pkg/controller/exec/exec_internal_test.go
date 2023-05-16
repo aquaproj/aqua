@@ -36,7 +36,7 @@ func TestController_execCommand(t *testing.T) {
 				stderr:   os.Stderr,
 				executor: d.executor,
 			}
-			err := ctrl.execCommandWithRetry(ctx, d.exePath, d.args, logE)
+			err := ctrl.execCommandWithRetry(ctx, logE, d.exePath, d.args...)
 			if err != nil {
 				t.Fatal(err)
 			}

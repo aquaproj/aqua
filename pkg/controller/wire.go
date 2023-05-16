@@ -272,6 +272,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
+		wire.NewSet(
+			installpackage.NewGoInstallInstallerImpl,
+			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -424,6 +428,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
+		wire.NewSet(
+			installpackage.NewGoInstallInstallerImpl,
+			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -480,6 +488,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoInstallInstallerImpl,
+			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
 		policy.NewChecker,
 	)
@@ -583,6 +595,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoInstallInstallerImpl,
+			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
 	)
 	return &cp.Controller{}

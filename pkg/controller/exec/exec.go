@@ -65,7 +65,7 @@ func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl w
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args []string) (gErr error) {
+func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) {
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -102,7 +102,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 			return err
 		}
 	}
-	return ctrl.execCommandWithRetry(ctx, findResult.ExePath, args, logE)
+	return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 }
 
 func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config) error {
@@ -160,14 +160,14 @@ func wait(ctx context.Context, duration time.Duration) error {
 
 var errFailedToStartProcess = errors.New("it failed to start the process")
 
-func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []string) (bool, error) {
+func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args ...string) (bool, error) {
 	if ctrl.enabledXSysExec {
-		if err := ctrl.executor.ExecXSys(exePath, args); err != nil {
+		if err := ctrl.executor.ExecXSys(exePath, args...); err != nil {
 			return true, fmt.Errorf("call execve(2): %w", err)
 		}
 		return false, nil
 	}
-	if exitCode, err := ctrl.executor.Exec(ctx, exePath, args); err != nil {
+	if exitCode, err := ctrl.executor.Exec(ctx, exePath, args...); err != nil {
 		// https://pkg.go.dev/os#ProcessState.ExitCode
 		// > ExitCode returns the exit code of the exited process,
 		// > or -1 if the process hasn't exited or was terminated by a signal.
@@ -179,10 +179,10 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args []
 	return false, nil
 }
 
-func (ctrl *Controller) execCommandWithRetry(ctx context.Context, exePath string, args []string, logE *logrus.Entry) error {
+func (ctrl *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath string, args ...string) error {
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")
-		retried, err := ctrl.execCommand(ctx, exePath, args)
+		retried, err := ctrl.execCommand(ctx, exePath, args...)
 		if !retried {
 			return err
 		}
