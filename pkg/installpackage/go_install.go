@@ -29,5 +29,8 @@ func NewGoInstallInstallerImpl(exec Executor) *GoInstallInstallerImpl {
 
 func (inst *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin string) error {
 	_, err := inst.exec.ExecWithEnvs(ctx, "go", []string{"install", path}, []string{fmt.Sprintf("GOBIN=%s", gobin)})
-	return fmt.Errorf("install a go package: %w", err)
+	if err != nil {
+		return fmt.Errorf("install a go package: %w", err)
+	}
+	return nil
 }
