@@ -78,7 +78,10 @@ func parseDefault(content string) (map[string]string, string, error) {
 	for _, line := range lines {
 		idx := strings.Index(line, " ")
 		if idx == -1 {
-			continue
+			idx = strings.Index(line, "\t")
+			if idx == -1 {
+				continue
+			}
 		}
 		m[strings.TrimPrefix(path.Base(strings.TrimSpace(line[idx:])), "*")] = line[:idx]
 	}
