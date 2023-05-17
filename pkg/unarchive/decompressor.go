@@ -34,5 +34,5 @@ func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.En
 		return fmt.Errorf("read a file: %w", err)
 	}
 
-	return decompressor.decompressor.Decompress(body, f) //nolint:wrapcheck
+	return decompressor.decompressor.Decompress(body, src.Body.Wrap(f)) //nolint:wrapcheck
 }

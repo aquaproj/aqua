@@ -32,7 +32,7 @@ func (unarchiver *rawUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 	if err != nil {
 		return fmt.Errorf("read a file: %w", err)
 	}
-	if _, err := io.Copy(f, body); err != nil {
+	if _, err := io.Copy(src.Body.Wrap(f), body); err != nil {
 		return fmt.Errorf("copy the body to %s: %w", dest, err)
 	}
 	return nil

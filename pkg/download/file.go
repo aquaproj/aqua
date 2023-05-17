@@ -68,6 +68,13 @@ func (file *DownloadedFile) read() (io.ReadCloser, error) {
 	return f, nil
 }
 
+func (file *DownloadedFile) Wrap(w io.Writer) io.Writer {
+	if file.pb != nil && file.path == "" {
+		return io.MultiWriter(w, file.pb)
+	}
+	return w
+}
+
 func (file *DownloadedFile) copy() error {
 	tmp, err := afero.TempFile(file.fs, "", "")
 	if err != nil {
