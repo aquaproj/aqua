@@ -20,7 +20,7 @@ type Decompressor struct {
 	dest         string
 }
 
-func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, prgOpts *ProgressBarOpts) error {
 	dest := decompressor.dest
 	if err := util.MkdirAll(decompressor.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
@@ -38,6 +38,16 @@ func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.En
 			prgOpts.Description,
 		)
 		m = io.MultiWriter(f, bar)
+	}
+
+	body := src.Body
+	if src.SourceFilePath != "" {
+		f, err := decompressor.fs.Open(src.SourceFilePath)
+		if err != nil {
+			return fmt.Errorf("open a file: %w", err)
+		}
+		defer f.Close()
+		body = f
 	}
 
 	return decompressor.decompressor.Decompress(body, m) //nolint:wrapcheck

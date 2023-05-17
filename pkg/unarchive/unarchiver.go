@@ -17,7 +17,7 @@ type unarchiverWithUnarchiver struct {
 	fs         afero.Fs
 }
 
-func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
 	f, err := afero.TempFile(unarchiver.fs, "", "")
 	if err != nil {
@@ -35,6 +35,16 @@ func (unarchiver *unarchiverWithUnarchiver) Unarchive(ctx context.Context, logE 
 			prgOpts.Description,
 		)
 		m = io.MultiWriter(f, bar)
+	}
+
+	body := src.Body
+	if src.SourceFilePath != "" {
+		f, err := unarchiver.fs.Open(src.SourceFilePath)
+		if err != nil {
+			return fmt.Errorf("open a file: %w", err)
+		}
+		defer f.Close()
+		body = f
 	}
 
 	if _, err := io.Copy(m, body); err != nil {

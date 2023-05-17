@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -78,9 +79,8 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		return err //nolint:wrapcheck
 	}
 
-	var readBody io.Reader = body
 	var tempFilePath string
-	if ppkg.PackageInfo.Cosign.GetEnabled() || ppkg.PackageInfo.SLSAProvenance.GetEnabled() {
+	if ppkg.PackageInfo.Cosign.GetEnabled() || ppkg.PackageInfo.SLSAProvenance.GetEnabled() || (param.Checksum != nil || param.Checksums != nil) {
 		// create and remove a temporal file
 		f, err := afero.TempFile(inst.fs, "", "")
 		if err != nil {
@@ -89,7 +89,17 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		defer f.Close()
 		tempFilePath = f.Name()
 		defer inst.fs.Remove(tempFilePath) //nolint:errcheck
-		if _, err := io.Copy(f, readBody); err != nil {
+
+		var m io.Writer = f
+		if inst.progressBar && cl != 0 {
+			bar := progressbar.DefaultBytes(
+				cl,
+				fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
+			)
+			m = io.MultiWriter(f, bar)
+		}
+
+		if _, err := io.Copy(m, body); err != nil {
 			return fmt.Errorf("copy a package to a temporal file: %w", err)
 		}
 	}
@@ -130,28 +140,13 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		}
 	}
 
-	if tempFilePath != "" {
-		a, err := inst.fs.Open(tempFilePath)
-		if err != nil {
-			return fmt.Errorf("open a temporal file: %w", err)
-		}
-		defer a.Close()
-		readBody = a
-	}
-
 	if param.Checksum != nil || param.Checksums != nil { //nolint:nestif
-		tempDir, err := afero.TempDir(inst.fs, "", "")
-		if err != nil {
-			return fmt.Errorf("create a temporal directory: %w", err)
-		}
-		defer inst.fs.RemoveAll(tempDir) //nolint:errcheck
 		paramVerifyChecksum := &ParamVerifyChecksum{
 			Checksum:        param.Checksum,
 			Checksums:       param.Checksums,
 			Pkg:             ppkg,
 			AssetName:       param.Asset,
-			Body:            readBody,
-			TempDir:         tempDir,
+			TempFilePath:    tempFilePath,
 			SkipSetChecksum: true,
 		}
 
@@ -170,18 +165,14 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 				})
 			}
 		}
-		readFile, err := inst.verifyChecksum(ctx, logE, paramVerifyChecksum)
-		if err != nil {
+
+		if err := inst.verifyChecksum(ctx, logE, paramVerifyChecksum); err != nil {
 			return err
 		}
-		if readFile != nil {
-			defer readFile.Close()
-		}
-		readBody = readFile
 	}
 
 	var pOpts *unarchive.ProgressBarOpts
-	if inst.progressBar {
+	if inst.progressBar && cl != 0 && tempFilePath == "" {
 		pOpts = &unarchive.ProgressBarOpts{
 			ContentLength: cl,
 			Description:   fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
@@ -189,9 +180,10 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	}
 
 	return inst.unarchiver.Unarchive(ctx, logE, &unarchive.File{ //nolint:wrapcheck
-		Body:     readBody,
-		Filename: param.Asset,
-		Type:     pkgInfo.GetFormat(),
+		Body:           body,
+		SourceFilePath: tempFilePath,
+		Filename:       param.Asset,
+		Type:           pkgInfo.GetFormat(),
 	}, param.Dest, pOpts)
 }
 

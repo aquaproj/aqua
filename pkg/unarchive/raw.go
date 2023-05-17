@@ -18,7 +18,7 @@ type rawUnarchiver struct {
 	fs   afero.Fs
 }
 
-func (unarchiver *rawUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error {
+func (unarchiver *rawUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, prgOpts *ProgressBarOpts) error {
 	dest := unarchiver.dest
 	if err := util.MkdirAll(unarchiver.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
@@ -36,6 +36,16 @@ func (unarchiver *rawUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 			prgOpts.Description,
 		)
 		m = io.MultiWriter(f, bar)
+	}
+
+	body := src.Body
+	if src.SourceFilePath != "" {
+		f, err := unarchiver.fs.Open(src.SourceFilePath)
+		if err != nil {
+			return fmt.Errorf("open a file: %w", err)
+		}
+		defer f.Close()
+		body = f
 	}
 
 	if _, err := io.Copy(m, body); err != nil {

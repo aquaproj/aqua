@@ -25,32 +25,35 @@ type Executor interface {
 	UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error)
 }
 
-func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error { //nolint:cyclop
+func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, prgOpts *ProgressBarOpts) error { //nolint:cyclop
 	if err := util.MkdirAll(unarchiver.fs, unarchiver.dest); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
-	tempFile, err := afero.TempFile(unarchiver.fs, "", "")
-	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
-	}
-	defer tempFile.Close()
-	defer func() {
-		if err := unarchiver.fs.Remove(tempFile.Name()); err != nil {
-			logE.WithError(err).Warn("remove a temporal file created to unarchive a dmg file")
+
+	tempFilePath := src.SourceFilePath
+	if tempFilePath == "" {
+		tmp, err := afero.TempFile(unarchiver.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporal file: %w", err)
 		}
-	}()
-
-	var m io.Writer = tempFile
-	if prgOpts != nil {
-		bar := progressbar.DefaultBytes(
-			prgOpts.ContentLength,
-			prgOpts.Description,
-		)
-		m = io.MultiWriter(tempFile, bar)
-	}
-
-	if _, err := io.Copy(m, body); err != nil {
-		return fmt.Errorf("write a dmg file: %w", err)
+		defer tmp.Close()
+		tempFilePath = tmp.Name()
+		defer func() {
+			if err := unarchiver.fs.Remove(tempFilePath); err != nil {
+				logE.WithError(err).Warn("remove a temporal file created to unarchive a dmg file")
+			}
+		}()
+		var tempFile io.Writer = tmp
+		if prgOpts != nil {
+			bar := progressbar.DefaultBytes(
+				prgOpts.ContentLength,
+				prgOpts.Description,
+			)
+			tempFile = io.MultiWriter(tmp, bar)
+		}
+		if _, err := io.Copy(tempFile, src.Body); err != nil {
+			return fmt.Errorf("write a dmg file: %w", err)
+		}
 	}
 
 	tmpMountPoint, err := afero.TempDir(unarchiver.fs, "", "")
@@ -58,7 +61,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
 
-	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFile.Name(), tmpMountPoint); err != nil {
+	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFilePath, tmpMountPoint); err != nil {
 		if err := unarchiver.fs.Remove(tmpMountPoint); err != nil {
 			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
 		}

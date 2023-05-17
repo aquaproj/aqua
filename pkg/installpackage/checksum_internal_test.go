@@ -2,8 +2,6 @@ package installpackage
 
 import (
 	"context"
-	"io"
-	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -46,10 +44,9 @@ func TestInstallerImpl_verifyChecksum(t *testing.T) { //nolint:funlen
 						},
 					},
 				},
-				Checksums:  checksum.New(),
-				ChecksumID: "github_release/github.com/cli/cli/v2.17.0/gh_2.17.0_darwin_arm64.tar.gz",
-				TempDir:    "/tmp/verify_checksum",
-				Body:       io.NopCloser(strings.NewReader("")),
+				Checksums:    checksum.New(),
+				ChecksumID:   "github_release/github.com/cli/cli/v2.17.0/gh_2.17.0_darwin_arm64.tar.gz",
+				TempFilePath: "/tmp/verify_checksum/tempfile",
 			},
 			inst: &InstallerImpl{
 				fs: afero.NewMemMapFs(),
@@ -87,14 +84,13 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			inst := d.inst
-			rc, err := inst.verifyChecksum(ctx, logE, d.param)
-			if err != nil {
+
+			if err := inst.verifyChecksum(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return
 				}
 				t.Fatal(err)
 			}
-			defer rc.Close()
 			if d.isErr {
 				t.Fatal("error must occur")
 			}

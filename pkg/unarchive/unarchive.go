@@ -21,13 +21,14 @@ type ProgressBarOpts struct {
 }
 
 type coreUnarchiver interface {
-	Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error
+	Unarchive(ctx context.Context, logE *logrus.Entry, src *File, prgOpts *ProgressBarOpts) error
 }
 
 type File struct {
-	Body     io.Reader
-	Filename string
-	Type     string
+	Body           io.Reader
+	SourceFilePath string
+	Filename       string
+	Type           string
 }
 
 type UnarchiverImpl struct {
@@ -60,7 +61,7 @@ func (unarchiver *UnarchiverImpl) Unarchive(ctx context.Context, logE *logrus.En
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
 
-	return arc.Unarchive(ctx, logE, src.Body, prgOpts) //nolint:wrapcheck
+	return arc.Unarchive(ctx, logE, src, prgOpts) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
