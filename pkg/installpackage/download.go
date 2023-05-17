@@ -3,7 +3,6 @@ package installpackage
 import (
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -13,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -79,30 +77,19 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		return err //nolint:wrapcheck
 	}
 
-	var tempFilePath string
-	if ppkg.PackageInfo.Cosign.GetEnabled() || ppkg.PackageInfo.SLSAProvenance.GetEnabled() || (param.Checksum != nil || param.Checksums != nil) {
-		// create and remove a temporal file
-		f, err := afero.TempFile(inst.fs, "", "")
-		if err != nil {
-			return fmt.Errorf("create a temporal file: %w", err)
-		}
-		defer f.Close()
-		tempFilePath = f.Name()
-		defer inst.fs.Remove(tempFilePath) //nolint:errcheck
-
-		var m io.Writer = f
-		if inst.progressBar && cl != 0 {
-			bar := progressbar.DefaultBytes(
-				cl,
-				fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
-			)
-			m = io.MultiWriter(f, bar)
-		}
-
-		if _, err := io.Copy(m, body); err != nil {
-			return fmt.Errorf("copy a package to a temporal file: %w", err)
-		}
+	var pb *progressbar.ProgressBar
+	if inst.progressBar && cl != 0 {
+		pb = progressbar.DefaultBytes(
+			cl,
+			fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
+		)
 	}
+	bodyFile := download.NewDownloadedFile(inst.fs, body, pb)
+	defer func() {
+		if err := bodyFile.Remove(); err != nil {
+			logE.WithError(err).Warn("remove a temporal file")
+		}
+	}()
 
 	// Verify with Cosign
 	if cos := ppkg.PackageInfo.Cosign; cos.GetEnabled() {
@@ -110,6 +97,10 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		logE.Info("verify a package with Cosign")
 		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
 			return fmt.Errorf("install sigstore/cosign: %w", err)
+		}
+		tempFilePath, err := bodyFile.GetPath()
+		if err != nil {
+			return fmt.Errorf("get a temporal file path: %w", err)
 		}
 		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
@@ -127,6 +118,10 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		if err := inst.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
 			return fmt.Errorf("install slsa-verifier: %w", err)
 		}
+		tempFilePath, err := bodyFile.GetPath()
+		if err != nil {
+			return fmt.Errorf("get a temporal file path: %w", err)
+		}
 		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{
 			RepoOwner: ppkg.PackageInfo.RepoOwner,
 			RepoName:  ppkg.PackageInfo.RepoName,
@@ -141,6 +136,10 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	}
 
 	if param.Checksum != nil || param.Checksums != nil { //nolint:nestif
+		tempFilePath, err := bodyFile.GetPath()
+		if err != nil {
+			return fmt.Errorf("get a temporal file path: %w", err)
+		}
 		paramVerifyChecksum := &ParamVerifyChecksum{
 			Checksum:        param.Checksum,
 			Checksums:       param.Checksums,
@@ -171,20 +170,11 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		}
 	}
 
-	var pOpts *unarchive.ProgressBarOpts
-	if inst.progressBar && cl != 0 && tempFilePath == "" {
-		pOpts = &unarchive.ProgressBarOpts{
-			ContentLength: cl,
-			Description:   fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
-		}
-	}
-
 	return inst.unarchiver.Unarchive(ctx, logE, &unarchive.File{ //nolint:wrapcheck
-		Body:           body,
-		SourceFilePath: tempFilePath,
-		Filename:       param.Asset,
-		Type:           pkgInfo.GetFormat(),
-	}, param.Dest, pOpts)
+		Body:     bodyFile,
+		Filename: param.Asset,
+		Type:     pkgInfo.GetFormat(),
+	}, param.Dest)
 }
 
 func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
