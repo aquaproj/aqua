@@ -31,7 +31,7 @@ type Package struct {
 func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
-	return template.Execute(file.Src, map[string]interface{}{ //nolint:wrapcheck
+	s, err := template.Execute(file.Src, map[string]interface{}{
 		"Version":  pkg.Version,
 		"SemVer":   cpkg.SemVer(),
 		"GOOS":     rt.GOOS,
@@ -41,6 +41,10 @@ func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})
+	if err != nil {
+		return "", err //nolint:wrapcheck
+	}
+	return filepath.FromSlash(s), nil // FromSlash is needed for Windows. https://github.com/aquaproj/aqua/issues/2013
 }
 
 func replace(key string, replacements registry.Replacements) string {
