@@ -11,8 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type FileParser struct{}
-
 func showFileContent(logE *logrus.Entry, content string) {
 	if len(content) > 10000 { //nolint:gomnd
 		content = content[:10000]
@@ -22,8 +20,8 @@ func showFileContent(logE *logrus.Entry, content string) {
 	logE.Error(fmt.Sprintf("Checksum isn't found in a checksum file. Checksum file content:\n%s", content))
 }
 
-func (parser *FileParser) GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, checksumConfig *registry.Checksum) (string, error) {
-	m, s, err := parser.ParseChecksumFile(checksumFileContent, checksumConfig)
+func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, checksumConfig *registry.Checksum) (string, error) {
+	m, s, err := ParseChecksumFile(checksumFileContent, checksumConfig)
 	logE = logE.WithField("checksum_file_format", checksumConfig.FileFormat)
 	if checksumConfig.Pattern != nil {
 		logE = logE.WithFields(logrus.Fields{
@@ -48,8 +46,8 @@ func (parser *FileParser) GetChecksum(logE *logrus.Entry, assetName, checksumFil
 	return "", ErrNoChecksumIsFound
 }
 
-func (parser *FileParser) ParseChecksumFile(content string, checksumConfig *registry.Checksum) (map[string]string, string, error) {
-	m, s, err := parser.parseChecksumFile(content, checksumConfig)
+func ParseChecksumFile(content string, checksumConfig *registry.Checksum) (map[string]string, string, error) {
+	m, s, err := parseChecksumFile(content, checksumConfig)
 	if err != nil {
 		return nil, "", err
 	}
@@ -59,19 +57,19 @@ func (parser *FileParser) ParseChecksumFile(content string, checksumConfig *regi
 	return m, s, nil
 }
 
-func (parser *FileParser) parseChecksumFile(content string, checksumConfig *registry.Checksum) (map[string]string, string, error) {
+func parseChecksumFile(content string, checksumConfig *registry.Checksum) (map[string]string, string, error) {
 	switch checksumConfig.FileFormat {
 	case "raw":
 		return nil, strings.TrimSpace(content), nil
 	case "regexp":
-		return parser.parseRegex(content, checksumConfig.Pattern)
+		return parseRegex(content, checksumConfig.Pattern)
 	case "":
-		return parser.parseDefault(content)
+		return parseDefault(content)
 	}
 	return nil, "", errUnknownChecksumFileFormat
 }
 
-func (parser *FileParser) parseDefault(content string) (map[string]string, string, error) {
+func parseDefault(content string) (map[string]string, string, error) {
 	lines := strings.Split(strings.TrimSpace(content), "\n")
 	if len(lines) == 1 && !strings.Contains(lines[0], " ") {
 		return nil, lines[0], nil
@@ -80,7 +78,10 @@ func (parser *FileParser) parseDefault(content string) (map[string]string, strin
 	for _, line := range lines {
 		idx := strings.Index(line, " ")
 		if idx == -1 {
-			continue
+			idx = strings.Index(line, "\t")
+			if idx == -1 {
+				continue
+			}
 		}
 		m[strings.TrimPrefix(path.Base(strings.TrimSpace(line[idx:])), "*")] = line[:idx]
 	}
@@ -90,7 +91,7 @@ func (parser *FileParser) parseDefault(content string) (map[string]string, strin
 	return m, "", nil
 }
 
-func (parser *FileParser) parseRegex(content string, checksumPattern *registry.ChecksumPattern) (map[string]string, string, error) {
+func parseRegex(content string, checksumPattern *registry.ChecksumPattern) (map[string]string, string, error) {
 	checksumRegexp, err := regexp.Compile(checksumPattern.Checksum)
 	if err != nil {
 		return nil, "", fmt.Errorf("compile the checksum regular expression: %w", err)
@@ -99,7 +100,7 @@ func (parser *FileParser) parseRegex(content string, checksumPattern *registry.C
 	if checksumPattern.File == "" {
 		lines := strings.Split(content, "\n")
 		for _, line := range lines {
-			chksum := parser.extractByRegex(line, checksumRegexp)
+			chksum := extractByRegex(line, checksumRegexp)
 			if chksum == "" {
 				continue
 			}
@@ -114,11 +115,11 @@ func (parser *FileParser) parseRegex(content string, checksumPattern *registry.C
 	lines := strings.Split(content, "\n")
 	m := make(map[string]string, len(lines))
 	for _, line := range lines {
-		chksum := parser.extractByRegex(line, checksumRegexp)
+		chksum := extractByRegex(line, checksumRegexp)
 		if chksum == "" {
 			continue
 		}
-		file := parser.extractByRegex(line, fileRegexp)
+		file := extractByRegex(line, fileRegexp)
 		if file == "" {
 			continue
 		}
@@ -127,7 +128,7 @@ func (parser *FileParser) parseRegex(content string, checksumPattern *registry.C
 	return m, "", nil
 }
 
-func (parser *FileParser) extractByRegex(line string, pattern *regexp.Regexp) string {
+func extractByRegex(line string, pattern *regexp.Regexp) string {
 	if match := pattern.FindStringSubmatch(line); match != nil {
 		if len(match) > 1 {
 			return match[1]

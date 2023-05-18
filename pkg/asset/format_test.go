@@ -38,6 +38,11 @@ func TestGetFormat(t *testing.T) {
 			assetName: "aws-vault-darwin-amd64.dmg",
 			exp:       "dmg",
 		},
+		{
+			name:      "pkg",
+			assetName: "aws-vault-darwin-amd64.pkg",
+			exp:       "pkg",
+		},
 	}
 	for _, d := range data {
 		d := d

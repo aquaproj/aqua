@@ -69,7 +69,7 @@ func Test_getUnarchiver(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			unarchiver := New(d.executor)
+			unarchiver := New(d.executor, afero.NewMemMapFs())
 			coreUnarchiver, err := unarchiver.getUnarchiver(d.src, d.dest)
 			if d.isErr {
 				if err == nil {
@@ -78,7 +78,7 @@ func Test_getUnarchiver(t *testing.T) {
 				return
 			}
 			if diff := cmp.Diff(d.exp, coreUnarchiver, cmp.AllowUnexported(
-				rawUnarchiver{}, unarchiverWithUnarchiver{}, Decompressor{}, dmgUnarchiver{}), cmpopts.IgnoreUnexported(archiver.TarGz{}, archiver.Tar{}, archiver.Bz2{}, afero.MemMapFs{})); diff != "" {
+				rawUnarchiver{}, unarchiverWithUnarchiver{}, Decompressor{}, dmgUnarchiver{}), cmpopts.IgnoreUnexported(archiver.TarGz{}, archiver.Tar{}, archiver.Bz2{}, afero.MemMapFs{}, unarchiverWithUnarchiver{}, rawUnarchiver{}, Decompressor{}, dmgUnarchiver{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})
