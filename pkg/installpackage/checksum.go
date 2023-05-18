@@ -61,33 +61,17 @@ type ParamVerifyChecksum struct {
 	Checksums       *checksum.Checksums
 	Pkg             *config.Package
 	AssetName       string
-	Body            io.Reader
-	TempDir         string
+	TempFilePath    string
 	SkipSetChecksum bool
 }
 
-func copyAsset(fs afero.Fs, tempFilePath string, body io.Reader) error {
-	file, err := fs.Create(tempFilePath)
-	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", logerr.WithFields(err, logrus.Fields{
-			"temp_file": tempFilePath,
-		}))
-	}
-	defer file.Close()
-
-	if _, err := io.Copy(file, body); err != nil {
-		return err //nolint:wrapcheck
-	}
-	return nil
-}
-
-func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) (io.ReadCloser, error) { //nolint:cyclop,funlen
+func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
 	chksum := param.Checksum
 	checksumID := param.ChecksumID
-	tempDir := param.TempDir
+	tempFilePath := param.TempFilePath
 
 	// Download an asset in a temporal directory
 	// Calculate the checksum of download asset
@@ -103,19 +87,12 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 		// For github_content
 		assetName = filepath.Base(assetName)
 	}
-	tempFilePath := filepath.Join(tempDir, assetName)
-	if assetName == "" && pkgInfo.Type == "github_archive" {
-		tempFilePath = filepath.Join(tempDir, "archive.tar.gz")
-	}
-	if err := copyAsset(inst.fs, tempFilePath, param.Body); err != nil {
-		return nil, err
-	}
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
 		logE.Info("downloading a checksum file")
 		c, err := inst.dlAndExtractChecksum(ctx, logE, pkg, assetName)
 		if err != nil {
-			return nil, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"asset_name": assetName,
 			})
 		}
@@ -133,13 +110,13 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 	}
 	calculatedSum, err := inst.checksumCalculator.Calculate(inst.fs, tempFilePath, algorithm)
 	if err != nil {
-		return nil, fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
+		return fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
 			"temp_file": tempFilePath,
 		}))
 	}
 
 	if chksum != nil && !strings.EqualFold(calculatedSum, chksum.Checksum) {
-		return nil, logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
+		return logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
 			"actual_checksum":   strings.ToUpper(calculatedSum),
 			"expected_checksum": strings.ToUpper(chksum.Checksum),
 		})
@@ -159,10 +136,5 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 	if !param.SkipSetChecksum {
 		checksums.Set(checksumID, chksum)
 	}
-
-	readFile, err := inst.fs.Open(tempFilePath)
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-	return readFile, nil
+	return nil
 }

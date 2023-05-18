@@ -3,10 +3,8 @@ package unarchive
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/aquaproj/aqua/v2/pkg/util"
-	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -25,32 +23,14 @@ type Executor interface {
 	UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error)
 }
 
-func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, body io.Reader, prgOpts *ProgressBarOpts) error { //nolint:cyclop
+func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
 	if err := util.MkdirAll(unarchiver.fs, unarchiver.dest); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
-	tempFile, err := afero.TempFile(unarchiver.fs, "", "")
+
+	tempFilePath, err := src.Body.GetPath()
 	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
-	}
-	defer tempFile.Close()
-	defer func() {
-		if err := unarchiver.fs.Remove(tempFile.Name()); err != nil {
-			logE.WithError(err).Warn("remove a temporal file created to unarchive a dmg file")
-		}
-	}()
-
-	var m io.Writer = tempFile
-	if prgOpts != nil {
-		bar := progressbar.DefaultBytes(
-			prgOpts.ContentLength,
-			prgOpts.Description,
-		)
-		m = io.MultiWriter(tempFile, bar)
-	}
-
-	if _, err := io.Copy(m, body); err != nil {
-		return fmt.Errorf("write a dmg file: %w", err)
+		return fmt.Errorf("get a temporal file path: %w", err)
 	}
 
 	tmpMountPoint, err := afero.TempDir(unarchiver.fs, "", "")
@@ -58,7 +38,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
 
-	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFile.Name(), tmpMountPoint); err != nil {
+	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFilePath, tmpMountPoint); err != nil {
 		if err := unarchiver.fs.Remove(tmpMountPoint); err != nil {
 			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
 		}

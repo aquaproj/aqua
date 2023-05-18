@@ -119,9 +119,9 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			d.src.Body = body
+			d.src.Body = download.NewDownloadedFile(fs, body, nil)
 			unarchiver := unarchive.New(nil, fs)
-			if err := unarchiver.Unarchive(ctx, logE, d.src, t.TempDir(), nil); err != nil {
+			if err := unarchiver.Unarchive(ctx, logE, d.src, t.TempDir()); err != nil {
 				if d.isErr {
 					return
 				}
