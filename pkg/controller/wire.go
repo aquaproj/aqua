@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
@@ -181,6 +182,14 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			generate.NewCrateVersionSelectorImpl,
+			wire.Bind(new(generate.CrateVersionSelector), new(*generate.CrateVersionSelectorImpl)),
+		),
+		wire.NewSet(
+			cargo.NewVersionSearcherImpl,
+			wire.Bind(new(cargo.VersionSearcher), new(*cargo.VersionSearcherImpl)),
 		),
 	)
 	return &generate.Controller{}

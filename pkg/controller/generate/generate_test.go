@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
@@ -404,7 +405,9 @@ packages:
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector)
+			crateVersionSelector := &generate.MockCrateVersionSelector{}
+			cargoVersionSearcher := &cargo.MockVersionSearcher{}
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, cargoVersionSearcher, crateVersionSelector)
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
@@ -22,28 +23,32 @@ import (
 )
 
 type Controller struct {
-	stdin             io.Reader
-	github            RepositoriesService
-	registryInstaller rgst.Installer
-	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
-	fuzzyFinder       FuzzyFinder
-	versionSelector   VersionSelector
-	fs                afero.Fs
-	outputter         Outputter
+	stdin                io.Reader
+	github               RepositoriesService
+	registryInstaller    rgst.Installer
+	configFinder         ConfigFinder
+	configReader         reader.ConfigReader
+	fuzzyFinder          FuzzyFinder
+	versionSelector      VersionSelector
+	fs                   afero.Fs
+	outputter            Outputter
+	cargoVersionSearcher cargo.VersionSearcher
+	crateVersionSelector CrateVersionSelector
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoVersionSearcher cargo.VersionSearcher, crateVersionSelector CrateVersionSelector) *Controller {
 	return &Controller{
-		stdin:             os.Stdin,
-		configFinder:      configFinder,
-		configReader:      configReader,
-		registryInstaller: registInstaller,
-		github:            gh,
-		fs:                fs,
-		fuzzyFinder:       fuzzyFinder,
-		versionSelector:   versionSelector,
-		outputter:         output.New(os.Stdout, fs),
+		stdin:                os.Stdin,
+		configFinder:         configFinder,
+		configReader:         configReader,
+		registryInstaller:    registInstaller,
+		github:               gh,
+		fs:                   fs,
+		fuzzyFinder:          fuzzyFinder,
+		versionSelector:      versionSelector,
+		cargoVersionSearcher: cargoVersionSearcher,
+		crateVersionSelector: crateVersionSelector,
+		outputter:            output.New(os.Stdout, fs),
 	}
 }
 
@@ -231,10 +236,13 @@ func (ctrl *Controller) getVersion(ctx context.Context, logE *logrus.Entry, para
 	if pkg.Version != "" {
 		return pkg.Version
 	}
+	pkgInfo := pkg.PackageInfo
+	if pkgInfo.Type == "cargo" {
+		return ctrl.getCargoVersion(ctx, logE, param, pkg)
+	}
 	if ctrl.github == nil {
 		return ""
 	}
-	pkgInfo := pkg.PackageInfo
 	if pkgInfo.HasRepo() {
 		return ctrl.getVersionFromGitHub(ctx, logE, param, pkgInfo)
 	}

@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config-finder"
@@ -98,7 +99,9 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	fuzzyFinder := generate.NewFuzzyFinder()
 	versionSelector := generate.NewVersionSelector()
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector)
+	versionSearcherImpl := cargo.NewVersionSearcherImpl(httpClient)
+	crateVersionSelectorImpl := generate.NewCrateVersionSelectorImpl()
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, versionSearcherImpl, crateVersionSelectorImpl)
 	return controller
 }
 
