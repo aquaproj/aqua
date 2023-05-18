@@ -58,6 +58,9 @@ jobs:
       - run: github-compare -v
       - run: terrafmt version
 
+      - name: Test the package type "cargo"
+        run: sk --version
+
       - name: test cosign
         run: aqua i
         working-directory: tests/cosign

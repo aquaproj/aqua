@@ -41,6 +41,7 @@ type InstallerImpl struct {
 	cosignInstaller       *Cosign
 	slsaVerifierInstaller *SLSAVerifier
 	goInstallInstaller    GoInstallInstaller
+	cargoPackageInstaller CargoPackageInstaller
 	runtime               *runtime.Runtime
 	fs                    afero.Fs
 	rootDir               string
@@ -50,37 +51,38 @@ type InstallerImpl struct {
 	onlyLink              bool
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller) *InstallerImpl {
-	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller)
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
+	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, cargoPackageInstaller)
 	installer.cosignInstaller = &Cosign{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller),
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, cargoPackageInstaller),
 		mutex:     &sync.Mutex{},
 	}
 	installer.slsaVerifierInstaller = &SLSAVerifier{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller),
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, cargoPackageInstaller),
 		mutex:     &sync.Mutex{},
 	}
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller) *InstallerImpl {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
 	return &InstallerImpl{
-		rootDir:            param.RootDir,
-		maxParallelism:     param.MaxParallelism,
-		downloader:         downloader,
-		checksumDownloader: chkDL,
-		checksumCalculator: chkCalc,
-		runtime:            rt,
-		fs:                 fs,
-		linker:             linker,
-		progressBar:        param.ProgressBar,
-		onlyLink:           param.OnlyLink,
-		copyDir:            param.Dest,
-		unarchiver:         unarchiver,
-		policyChecker:      policyChecker,
-		cosign:             cosignVerifier,
-		slsaVerifier:       slsaVerifier,
-		goInstallInstaller: goInstallInstaller,
+		rootDir:               param.RootDir,
+		maxParallelism:        param.MaxParallelism,
+		downloader:            downloader,
+		checksumDownloader:    chkDL,
+		checksumCalculator:    chkCalc,
+		runtime:               rt,
+		fs:                    fs,
+		linker:                linker,
+		progressBar:           param.ProgressBar,
+		onlyLink:              param.OnlyLink,
+		copyDir:               param.Dest,
+		unarchiver:            unarchiver,
+		policyChecker:         policyChecker,
+		cosign:                cosignVerifier,
+		slsaVerifier:          slsaVerifier,
+		goInstallInstaller:    goInstallInstaller,
+		cargoPackageInstaller: cargoPackageInstaller,
 	}
 }
 
@@ -348,10 +350,10 @@ func (inst *InstallerImpl) checkFileSrc(pkg *config.Package, file *registry.File
 	if err != nil {
 		return "", fmt.Errorf("exe_path isn't found: %w", logerr.WithFields(&config.FileNotFoundError{
 			Err: err,
-		}, logE.Data))
+		}, logE.WithField("exe_path", exePath).Data))
 	}
 	if finfo.IsDir() {
-		return "", logerr.WithFields(errExePathIsDirectory, logE.Data) //nolint:wrapcheck
+		return "", logerr.WithFields(errExePathIsDirectory, logE.WithField("exe_path", exePath).Data) //nolint:wrapcheck
 	}
 
 	logE.Debug("check the permission")

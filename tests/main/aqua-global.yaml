@@ -45,3 +45,5 @@ packages:
   registry: local
 - name: kubernetes-sigs/kustomize/version_prefix@kustomize/v4.5.7
   registry: local
+- name: crates.io/skim@0.10.4
+  registry: local

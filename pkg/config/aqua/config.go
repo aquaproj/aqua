@@ -62,6 +62,7 @@ const (
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
 	PkgInfoTypeGoInstall     = "go_install"
+	PkgInfoTypeCargo         = "cargo"
 )
 
 func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {

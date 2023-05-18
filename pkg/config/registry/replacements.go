@@ -10,6 +10,7 @@ type Override struct {
 	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
+	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
 	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`

@@ -276,6 +276,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
 	)
 	return &install.Controller{}
 }
@@ -432,6 +436,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -492,6 +500,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 		policy.NewChecker,
 	)
@@ -599,6 +611,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
 	return &cp.Controller{}

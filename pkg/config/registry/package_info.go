@@ -16,6 +16,7 @@ const (
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
 	PkgInfoTypeGoInstall     = "go_install"
+	PkgInfoTypeCargo         = "cargo"
 )
 
 type PackageInfo struct {
@@ -28,6 +29,7 @@ type PackageInfo struct {
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
 	Link               string             `json:"link,omitempty" yaml:",omitempty"`
 	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
+	Crate              *string            `json:"crate,omitempty" yaml:",omitempty"`
 	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
 	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
@@ -59,6 +61,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		RepoOwner:          pkgInfo.RepoOwner,
 		RepoName:           pkgInfo.RepoName,
 		Asset:              pkgInfo.Asset,
+		Crate:              pkgInfo.Crate,
 		Path:               pkgInfo.Path,
 		Format:             pkgInfo.Format,
 		Files:              pkgInfo.Files,
@@ -93,13 +96,16 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
 	case PkgInfoTypeGitHubRelease:
 		pkgInfo.URL = nil
 		pkgInfo.Path = nil
+		pkgInfo.Crate = nil
 	case PkgInfoTypeGitHubContent:
 		pkgInfo.URL = nil
 		pkgInfo.Asset = nil
+		pkgInfo.Crate = nil
 	case PkgInfoTypeGitHubArchive:
 		pkgInfo.URL = nil
 		pkgInfo.Path = nil
 		pkgInfo.Asset = nil
+		pkgInfo.Crate = nil
 		pkgInfo.Format = ""
 	case PkgInfoTypeHTTP:
 		pkgInfo.Path = nil
@@ -107,6 +113,17 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) {
 	case PkgInfoTypeGoInstall:
 		pkgInfo.URL = nil
 		pkgInfo.Asset = nil
+		pkgInfo.Crate = nil
+		pkgInfo.WindowsExt = ""
+		pkgInfo.CompleteWindowsExt = nil
+		pkgInfo.Cosign = nil
+		pkgInfo.SLSAProvenance = nil
+		pkgInfo.Format = ""
+		pkgInfo.Rosetta2 = nil
+	case PkgInfoTypeCargo:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+		pkgInfo.Path = nil
 		pkgInfo.WindowsExt = ""
 		pkgInfo.CompleteWindowsExt = nil
 		pkgInfo.Cosign = nil
@@ -130,6 +147,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	}
 	if child.Asset != nil {
 		pkg.Asset = child.Asset
+	}
+	if child.Crate != nil {
+		pkg.Crate = child.Crate
 	}
 	if child.Path != nil {
 		pkg.Path = child.Path
@@ -230,6 +250,10 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 		pkgInfo.Asset = ov.Asset
 	}
 
+	if ov.Crate != nil {
+		pkgInfo.Crate = ov.Crate
+	}
+
 	if ov.Files != nil {
 		pkgInfo.Files = ov.Files
 	}
@@ -262,6 +286,7 @@ type VersionOverride struct {
 	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
+	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
 	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
@@ -441,6 +466,11 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 	case PkgInfoTypeGoInstall:
 		if pkgInfo.GetPath() == "" {
 			return errGoInstallRequirePath
+		}
+		return nil
+	case PkgInfoTypeCargo:
+		if pkgInfo.Crate == nil {
+			return errCargoRequireCrate
 		}
 		return nil
 	case PkgInfoTypeGitHubContent:
