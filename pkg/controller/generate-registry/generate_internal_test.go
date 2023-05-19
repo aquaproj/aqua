@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/util"
@@ -20,6 +21,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 		releases []*github.RepositoryRelease
 		repo     *github.Repository
 		assets   []*github.ReleaseAsset
+		crate    *cargo.CratePayload
 	}{
 		{
 			name:    "package name doesn't have slash",
@@ -100,6 +102,25 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				},
 			},
 		},
+		{
+			name:    "cargo",
+			pkgName: "crates.io/skim",
+			exp: &registry.PackageInfo{
+				Name:        "crates.io/skim",
+				RepoOwner:   "lotabout",
+				RepoName:    "skim",
+				Type:        "cargo",
+				Crate:       util.StrP("skim"),
+				Description: "Fuzzy Finder in rust!",
+			},
+			crate: &cargo.CratePayload{
+				Crate: &cargo.Crate{
+					Homepage:    "https://github.com/lotabout/skim",
+					Description: "Fuzzy Finder in rust!",
+					Repository:  "https://github.com/lotabout/skim",
+				},
+			},
+		},
 	}
 	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
@@ -112,7 +133,10 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				Assets:   d.assets,
 				Repo:     d.repo,
 			}
-			ctrl := NewController(nil, gh, nil)
+			cargoClient := &cargo.MockClient{
+				CratePayload: d.crate,
+			}
+			ctrl := NewController(nil, gh, nil, cargoClient)
 			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, true)
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)

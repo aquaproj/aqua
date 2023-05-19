@@ -108,6 +108,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 			output.New,
 			wire.Bind(new(genrgst.TestdataOutputter), new(*output.Outputter)),
 		),
+		wire.NewSet(
+			cargo.NewClientImpl,
+			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+		),
 	)
 	return &genrgst.Controller{}
 }
@@ -188,8 +192,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(generate.CrateVersionSelector), new(*generate.CrateVersionSelectorImpl)),
 		),
 		wire.NewSet(
-			cargo.NewVersionSearcherImpl,
-			wire.Bind(new(cargo.VersionSearcher), new(*cargo.VersionSearcherImpl)),
+			cargo.NewClientImpl,
+			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
 		),
 	)
 	return &generate.Controller{}

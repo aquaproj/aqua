@@ -67,7 +67,8 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 	fs := afero.NewOsFs()
 	repositoriesService := github.New(ctx)
 	outputter := output.New(stdout, fs)
-	controller := genrgst.NewController(fs, repositoriesService, outputter)
+	clientImpl := cargo.NewClientImpl(httpClient)
+	controller := genrgst.NewController(fs, repositoriesService, outputter, clientImpl)
 	return controller
 }
 
@@ -99,9 +100,9 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	fuzzyFinder := generate.NewFuzzyFinder()
 	versionSelector := generate.NewVersionSelector()
-	versionSearcherImpl := cargo.NewVersionSearcherImpl(httpClient)
+	clientImpl := cargo.NewClientImpl(httpClient)
 	crateVersionSelectorImpl := generate.NewCrateVersionSelectorImpl()
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, versionSearcherImpl, crateVersionSelectorImpl)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl, crateVersionSelectorImpl)
 	return controller
 }
 

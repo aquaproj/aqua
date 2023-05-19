@@ -406,8 +406,8 @@ packages:
 			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
 			crateVersionSelector := &generate.MockCrateVersionSelector{}
-			cargoVersionSearcher := &cargo.MockVersionSearcher{}
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, cargoVersionSearcher, crateVersionSelector)
+			cargoClient := &cargo.MockClient{}
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, cargoClient, crateVersionSelector)
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

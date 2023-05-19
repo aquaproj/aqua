@@ -11,7 +11,7 @@ import (
 func (ctrl *Controller) getCargoVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) string {
 	pkgInfo := pkg.PackageInfo
 	if param.SelectVersion {
-		versions, err := ctrl.cargoVersionSearcher.List(ctx, *pkgInfo.Crate)
+		versions, err := ctrl.cargoClient.ListVersions(ctx, *pkgInfo.Crate)
 		if err != nil {
 			logE.WithError(err).Warn("list versions")
 			return ""
@@ -22,7 +22,7 @@ func (ctrl *Controller) getCargoVersion(ctx context.Context, logE *logrus.Entry,
 		}
 		return versions[idx]
 	}
-	version, err := ctrl.cargoVersionSearcher.GetLatest(ctx, *pkgInfo.Crate)
+	version, err := ctrl.cargoClient.GetLatestVersion(ctx, *pkgInfo.Crate)
 	if err != nil {
 		logE.WithError(err).Warn("get a latest version")
 		return ""

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -24,18 +25,20 @@ type Controller struct {
 	fs                afero.Fs
 	github            RepositoriesService
 	testdataOutputter TestdataOutputter
+	cargoClient       cargo.Client
 }
 
 type TestdataOutputter interface {
 	Output(param *output.Param) error
 }
 
-func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter TestdataOutputter) *Controller {
+func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter TestdataOutputter, cargoClient cargo.Client) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		fs:                fs,
 		github:            gh,
 		testdataOutputter: testdataOutputter,
+		cargoClient:       cargoClient,
 	}
 }
 
@@ -90,6 +93,9 @@ func (ctrl *Controller) getRelease(ctx context.Context, repoOwner, repoName, ver
 
 func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, deep bool) (*registry.PackageInfo, []string) {
 	pkgName, version, _ := strings.Cut(arg, "@")
+	if strings.HasPrefix(pkgName, "crates.io/") {
+		return ctrl.getCargoPackageInfo(ctx, logE, pkgName)
+	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
 		Type: "github_release",
@@ -128,6 +134,32 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 		ctrl.patchRelease(logE, pkgInfo, pkgName, release.GetTagName(), assets)
 	}
 	return pkgInfo, []string{version}
+}
+
+func (ctrl *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) (*registry.PackageInfo, []string) {
+	crate := strings.TrimPrefix(pkgName, "crates.io/")
+	pkgInfo := &registry.PackageInfo{
+		Name:  pkgName,
+		Type:  "cargo",
+		Crate: &crate,
+	}
+	payload, err := ctrl.cargoClient.GetCrate(ctx, crate)
+	if err != nil {
+		logE.WithError(err).Warn("get a crate metadata by crates.io API")
+	}
+	if payload != nil && payload.Crate != nil {
+		pkgInfo.Description = payload.Crate.Description
+		if payload.Crate.Homepage != payload.Crate.Repository {
+			pkgInfo.Link = payload.Crate.Homepage
+		}
+		if repo := strings.TrimPrefix(payload.Crate.Repository, "https://github.com/"); repo != payload.Crate.Repository {
+			if repoOwner, repoName, found := strings.Cut(repo, "/"); found {
+				pkgInfo.RepoOwner = repoOwner
+				pkgInfo.RepoName = repoName
+			}
+		}
+	}
+	return pkgInfo, nil
 }
 
 func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop

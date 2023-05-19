@@ -32,11 +32,11 @@ type Controller struct {
 	versionSelector      VersionSelector
 	fs                   afero.Fs
 	outputter            Outputter
-	cargoVersionSearcher cargo.VersionSearcher
+	cargoClient          cargo.Client
 	crateVersionSelector CrateVersionSelector
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoVersionSearcher cargo.VersionSearcher, crateVersionSelector CrateVersionSelector) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoClient cargo.Client, crateVersionSelector CrateVersionSelector) *Controller {
 	return &Controller{
 		stdin:                os.Stdin,
 		configFinder:         configFinder,
@@ -46,7 +46,7 @@ func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInst
 		fs:                   fs,
 		fuzzyFinder:          fuzzyFinder,
 		versionSelector:      versionSelector,
-		cargoVersionSearcher: cargoVersionSearcher,
+		cargoClient:          cargoClient,
 		crateVersionSelector: crateVersionSelector,
 		outputter:            output.New(os.Stdout, fs),
 	}
