@@ -231,7 +231,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			download.NewDownloader,
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
@@ -402,7 +405,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
@@ -460,7 +466,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
 	wire.Build(
 		updateaqua.New,
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
@@ -578,7 +587,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
