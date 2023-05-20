@@ -60,6 +60,9 @@ jobs:
       - run: helm version
       - run: terrafmt version
 
+      - name: Test the package type "cargo"
+        run: sk --version
+
       - run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
       - run: git diff aqua.yaml
@@ -131,6 +134,9 @@ jobs:
       - run: github-compare -v
       - run: terrafmt version
       - run: helm version
+
+      - name: Test the package type "cargo"
+        run: sk --version
 
       - run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
