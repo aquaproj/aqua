@@ -256,6 +256,9 @@
         "asset": {
           "type": "string"
         },
+        "crate": {
+          "type": "string"
+        },
         "files": {
           "items": {
             "$ref": "#/$defs/File"
@@ -334,6 +337,9 @@
           "type": "string"
         },
         "asset": {
+          "type": "string"
+        },
+        "crate": {
           "type": "string"
         },
         "url": {
@@ -527,6 +533,9 @@
           "type": "string"
         },
         "asset": {
+          "type": "string"
+        },
+        "crate": {
           "type": "string"
         },
         "path": {
