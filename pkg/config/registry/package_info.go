@@ -23,7 +23,7 @@ type PackageInfo struct {
 	Name               string             `json:"name,omitempty" yaml:",omitempty"`
 	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
 	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
-	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
+	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo"`
 	RepoOwner          string             `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`

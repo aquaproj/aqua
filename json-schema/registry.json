@@ -339,7 +339,8 @@
             "github_archive",
             "http",
             "go",
-            "go_install"
+            "go_install",
+            "cargo"
           ]
         },
         "repo_owner": {
