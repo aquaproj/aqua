@@ -158,6 +158,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newCompletionCommand(),
 			runner.newVersionCommand(),
 			runner.newCpCommand(),
+			runner.newRootDirCommand(),
 			runner.newUpdateChecksumCommand(),
 		},
 	}
