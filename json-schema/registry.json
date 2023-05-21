@@ -15,6 +15,21 @@
         "name"
       ]
     },
+    "Cargo": {
+      "properties": {
+        "features": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "all_features": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "Checksum": {
       "properties": {
         "type": {
@@ -256,6 +271,12 @@
         "asset": {
           "type": "string"
         },
+        "crate": {
+          "type": "string"
+        },
+        "cargo": {
+          "$ref": "#/$defs/Cargo"
+        },
         "files": {
           "items": {
             "$ref": "#/$defs/File"
@@ -335,6 +356,12 @@
         },
         "asset": {
           "type": "string"
+        },
+        "crate": {
+          "type": "string"
+        },
+        "cargo": {
+          "$ref": "#/$defs/Cargo"
         },
         "url": {
           "type": "string"
@@ -528,6 +555,12 @@
         },
         "asset": {
           "type": "string"
+        },
+        "crate": {
+          "type": "string"
+        },
+        "cargo": {
+          "$ref": "#/$defs/Cargo"
         },
         "path": {
           "type": "string"

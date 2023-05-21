@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
@@ -107,6 +108,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 			output.New,
 			wire.Bind(new(genrgst.TestdataOutputter), new(*output.Outputter)),
 		),
+		wire.NewSet(
+			cargo.NewClientImpl,
+			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+		),
 	)
 	return &genrgst.Controller{}
 }
@@ -182,6 +187,14 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
+		wire.NewSet(
+			generate.NewCrateVersionSelectorImpl,
+			wire.Bind(new(generate.CrateVersionSelector), new(*generate.CrateVersionSelectorImpl)),
+		),
+		wire.NewSet(
+			cargo.NewClientImpl,
+			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+		),
 	)
 	return &generate.Controller{}
 }
@@ -218,7 +231,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			download.NewDownloader,
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
@@ -275,6 +291,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
 	return &install.Controller{}
@@ -385,7 +405,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
@@ -432,6 +455,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -439,7 +466,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
 	wire.Build(
 		updateaqua.New,
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
@@ -492,6 +522,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 		policy.NewChecker,
 	)
@@ -553,7 +587,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
 		),
 		osenv.New,
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(domain.Linker), new(*link.Linker)),
@@ -599,6 +636,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
 	return &cp.Controller{}

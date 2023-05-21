@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config-finder"
@@ -66,7 +67,8 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 	fs := afero.NewOsFs()
 	repositoriesService := github.New(ctx)
 	outputter := output.New(stdout, fs)
-	controller := genrgst.NewController(fs, repositoriesService, outputter)
+	clientImpl := cargo.NewClientImpl(httpClient)
+	controller := genrgst.NewController(fs, repositoriesService, outputter, clientImpl)
 	return controller
 }
 
@@ -98,7 +100,9 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	fuzzyFinder := generate.NewFuzzyFinder()
 	versionSelector := generate.NewVersionSelector()
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector)
+	clientImpl := cargo.NewClientImpl(httpClient)
+	crateVersionSelectorImpl := generate.NewCrateVersionSelectorImpl()
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl, crateVersionSelectorImpl)
 	return controller
 }
 
@@ -121,7 +125,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	unarchiverImpl := unarchive.New(executor, fs)
 	checker := policy.NewChecker(param)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
-	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
+	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, cargoPackageInstallerImpl)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
@@ -164,7 +169,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -194,7 +200,8 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, cargoPackageInstallerImpl)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installerImpl)
 	return controller
 }
@@ -214,7 +221,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)

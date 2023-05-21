@@ -58,6 +58,13 @@ jobs:
       - run: github-compare -v
       - run: terrafmt version
 
+      - name: Test the package type "cargo"
+        run: sk --version
+      - name: Test search versions of the package type "cargo"
+        run: aqua -c tests/main/aqua-global.yaml g local,crates.io/skim
+      - name: Test aqua gr cargo
+        run: aqua gr crates.io/skim
+
       - name: test cosign
         run: aqua i
         working-directory: tests/cosign

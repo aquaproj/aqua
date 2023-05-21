@@ -143,6 +143,9 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 
 func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
+	if pkgInfo.Type == "cargo" {
+		return filepath.Join("bin", file.Name), nil
+	}
 	assetName, err := cpkg.RenderAsset(rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
@@ -166,6 +169,7 @@ const (
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
 	PkgInfoTypeGoInstall     = "go_install"
+	PkgInfoTypeCargo         = "cargo"
 )
 
 type Param struct {
@@ -344,6 +348,9 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 			return "", fmt.Errorf("render Go Module Path: %w", err)
 		}
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
+	case PkgInfoTypeCargo:
+		registry := "crates.io"
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), registry, *pkgInfo.Crate, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
 			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
