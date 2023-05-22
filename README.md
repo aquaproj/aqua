@@ -20,6 +20,8 @@ Declarative CLI Version Manager written in Go.
 - Secure
 - Easy to use
 
+[![Star History Chart](https://api.star-history.com/svg?repos=aquaproj/aqua&type=Date)](https://star-history.com/#aquaproj/aqua&Date)
+
 ## License
 
 [MIT](LICENSE)
