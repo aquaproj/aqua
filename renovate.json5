@@ -2,12 +2,12 @@
   extends: [
     "config:base",
     "github>suzuki-shunsuke/renovate-config#2.1.0",
-    "github>aquaproj/aqua-renovate-config#1.5.2",
+    "github>aquaproj/aqua-renovate-config#1.6.0",
     "github>suzuki-shunsuke/renovate-config:nolimit#2.1.0",
-    "github>aquaproj/aqua-renovate-config:file#1.5.2(tests/aqua.*\\.yaml)",
+    "github>aquaproj/aqua-renovate-config:file#1.6.0(tests/aqua.*\\.yaml)",
     "github>suzuki-shunsuke/renovate-config:action-go-version#2.1.0",
-    "github>aquaproj/aqua-renovate-config:file#1.5.2(aqua/imports/.*\\.ya?ml)",
-    "github>aquaproj/aqua-renovate-config:installer-script#1.5.2(Dockerfile-prebuilt)"
+    "github>aquaproj/aqua-renovate-config:file#1.6.0(aqua/imports/.*\\.ya?ml)",
+    "github>aquaproj/aqua-renovate-config:installer-script#1.6.0(Dockerfile-prebuilt)"
   ],
   ignorePaths: [],
   regexManagers: [
