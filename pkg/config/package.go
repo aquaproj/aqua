@@ -28,6 +28,27 @@ type Package struct {
 	Registry    *aqua.Registry
 }
 
+func (cpkg *Package) renderFilesDir(rt *runtime.Runtime) (string, error) {
+	pkg := cpkg.Package
+	pkgInfo := cpkg.PackageInfo
+	if pkgInfo.FilesDir == nil {
+		return "", nil
+	}
+	s, err := template.Execute(*pkgInfo.FilesDir, map[string]interface{}{
+		"Version": pkg.Version,
+		"SemVer":  cpkg.SemVer(),
+		"GOOS":    rt.GOOS,
+		"GOARCH":  rt.GOARCH,
+		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"Format":  pkgInfo.GetFormat(),
+	})
+	if err != nil {
+		return "", err //nolint:wrapcheck
+	}
+	return filepath.FromSlash(s), nil // FromSlash is needed for Windows. https://github.com/aquaproj/aqua/issues/2013
+}
+
 func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
@@ -153,14 +174,18 @@ func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if unarchive.IsUnarchived(pkgInfo.GetFormat(), assetName) {
 		return filepath.Base(assetName), nil
 	}
+	filesDir, err := cpkg.renderFilesDir(rt)
+	if err != nil {
+		return "", fmt.Errorf("render files_dir: %w", err)
+	}
 	if file.Src == "" {
-		return file.Name, nil
+		return filepath.Join(filesDir, file.Name), nil
 	}
 	src, err := cpkg.RenderSrc(file, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
-	return src, nil
+	return filepath.Join(filesDir, src), nil
 }
 
 const (

@@ -13,6 +13,7 @@ type Override struct {
 	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
+	FilesDir           *string         `yaml:"files_dir,omitempty" json:"files_dir,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
 	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
