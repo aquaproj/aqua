@@ -130,8 +130,20 @@ func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string,
 	return newName, nil
 }
 
-func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
-	s, err := cpkg.getFileSrc(file, rt)
+func (cpkg *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgPath, err := cpkg.GetPkgPath(rootDir, rt)
+	if err != nil {
+		return "", err
+	}
+	fileSrc, err := cpkg.getFileSrc(file, rt)
+	if err != nil {
+		return "", fmt.Errorf("get a file path: %w", err)
+	}
+	return filepath.Join(pkgPath, fileSrc), nil
+}
+
+func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+	s, err := cpkg.getFileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
 	}
@@ -141,7 +153,7 @@ func (cpkg *Package) GetFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	return s, nil
 }
 
-func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	if pkgInfo.Type == "cargo" {
 		return filepath.Join("bin", file.Name), nil

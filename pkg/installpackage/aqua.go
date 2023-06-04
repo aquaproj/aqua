@@ -98,9 +98,11 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 		"package_version": pkg.Package.Version,
 	})
 
-	exePath, err := inst.getExePath(pkg)
+	exePath, err := pkg.GetExePath(inst.rootDir, &registry.File{
+		Name: "aqua",
+	}, inst.runtime)
 	if err != nil {
-		return err
+		return fmt.Errorf("get the executable file path: %w", err)
 	}
 
 	if inst.runtime.GOOS == "windows" {
@@ -114,18 +116,4 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 	}
 
 	return inst.createLink(filepath.Join(inst.rootDir, "bin", "aqua"), a, logE)
-}
-
-func (inst *InstallerImpl) getExePath(pkg *config.Package) (string, error) {
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
-	if err != nil {
-		return "", err //nolint:wrapcheck
-	}
-	fileSrc, err := pkg.GetFileSrc(&registry.File{
-		Name: "aqua",
-	}, inst.runtime)
-	if err != nil {
-		return "", fmt.Errorf("get a file path to aqua: %w", err)
-	}
-	return filepath.Join(pkgPath, fileSrc), nil
 }
