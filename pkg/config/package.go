@@ -18,84 +18,10 @@ import (
 	"github.com/spf13/afero"
 )
 
-func isWindows(goos string) bool {
-	return goos == "windows"
-}
-
 type Package struct {
 	Package     *aqua.Package
 	PackageInfo *registry.PackageInfo
 	Registry    *aqua.Registry
-}
-
-func (cpkg *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkg := cpkg.Package
-	pkgInfo := cpkg.PackageInfo
-	s, err := template.Execute(file.Src, map[string]interface{}{
-		"Version":  pkg.Version,
-		"SemVer":   cpkg.SemVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
-	})
-	if err != nil {
-		return "", err //nolint:wrapcheck
-	}
-	return filepath.FromSlash(s), nil // FromSlash is needed for Windows. https://github.com/aquaproj/aqua/issues/2013
-}
-
-func replace(key string, replacements registry.Replacements) string {
-	a := replacements[key]
-	if a == "" {
-		return key
-	}
-	return a
-}
-
-func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runtime) string {
-	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
-		// Rosetta 2
-		return replace("amd64", replacements)
-	}
-	return replace(rt.GOARCH, replacements)
-}
-
-func (cpkg *Package) WindowsExt() string {
-	if cpkg.PackageInfo.WindowsExt == "" {
-		if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
-			return ".sh"
-		}
-		return ".exe"
-	}
-	return cpkg.PackageInfo.WindowsExt
-}
-
-func (cpkg *Package) CompleteWindowsExt(s string) string {
-	if cpkg.PackageInfo.CompleteWindowsExt != nil {
-		if *cpkg.PackageInfo.CompleteWindowsExt {
-			return s + cpkg.WindowsExt()
-		}
-		return s
-	}
-	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
-		return s
-	}
-	return s + cpkg.WindowsExt()
-}
-
-type FileNotFoundError struct {
-	Err error
-}
-
-func (errorFileNotFound *FileNotFoundError) Error() string {
-	return errorFileNotFound.Err.Error()
-}
-
-func (errorFileNotFound *FileNotFoundError) Unwrap() error {
-	return errorFileNotFound.Err
 }
 
 func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -106,7 +32,7 @@ func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string,
 	if !(isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "") {
 		return s, nil
 	}
-	newName := s + cpkg.WindowsExt()
+	newName := s + cpkg.windowsExt()
 	newPath := filepath.Join(pkgPath, newName)
 	if s == newName {
 		return newName, nil
@@ -142,13 +68,170 @@ func (cpkg *Package) GetExePath(rootDir string, file *registry.File, rt *runtime
 	return filepath.Join(pkgPath, fileSrc), nil
 }
 
+func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
+	asset, err := cpkg.renderAsset(rt)
+	if err != nil {
+		return "", err
+	}
+	if asset == "" {
+		return "", nil
+	}
+	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
+		if cpkg.PackageInfo.Format == "raw" {
+			return cpkg.completeWindowsExt(asset), nil
+		}
+		if cpkg.PackageInfo.Format != "" {
+			return asset, nil
+		}
+		if util.Ext(asset, cpkg.Package.Version) == "" {
+			return cpkg.completeWindowsExt(asset), nil
+		}
+	}
+	return asset, nil
+}
+
+func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
+	pkg := cpkg.Package
+	pkgInfo := cpkg.PackageInfo
+	return &template.Artifact{
+		Version: pkg.Version,
+		SemVer:  cpkg.semVer(),
+		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
+		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		Format:  pkgInfo.GetFormat(),
+		Asset:   asset,
+	}
+}
+
+func (cpkg *Package) RenderPath() (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	return cpkg.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
+}
+
+func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
+	pkgInfo := cpkg.PackageInfo
+	pkg := cpkg.Package
+	assetName, err := cpkg.RenderAsset(rt)
+	if err != nil {
+		return "", fmt.Errorf("render the asset name: %w", err)
+	}
+	switch pkgInfo.Type {
+	case PkgInfoTypeGitHubArchive:
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+	case PkgInfoTypeGoInstall:
+		p, err := cpkg.RenderPath()
+		if err != nil {
+			return "", fmt.Errorf("render Go Module Path: %w", err)
+		}
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
+	case PkgInfoTypeCargo:
+		registry := "crates.io"
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), registry, *pkgInfo.Crate, pkg.Version), nil
+	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
+			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		}
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+	case PkgInfoTypeHTTP:
+		uS, err := cpkg.RenderURL(rt)
+		if err != nil {
+			return "", fmt.Errorf("render URL: %w", err)
+		}
+		u, err := url.Parse(uS)
+		if err != nil {
+			return "", fmt.Errorf("parse the URL: %w", err)
+		}
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), u.Host, u.Path), nil
+	}
+	return "", nil
+}
+
+func (cpkg *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
+	tpl, err := template.Compile(s)
+	if err != nil {
+		return "", fmt.Errorf("parse a template: %w", err)
+	}
+	return cpkg.renderTemplate(tpl, rt)
+}
+
+func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	s, err := cpkg.RenderTemplateString(*pkgInfo.URL, rt)
+	if err != nil {
+		return "", err
+	}
+	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
+		if cpkg.PackageInfo.Format == "raw" {
+			return cpkg.completeWindowsExt(s), nil
+		}
+		if cpkg.PackageInfo.Format != "" {
+			return s, nil
+		}
+		if util.Ext(s, cpkg.Package.Version) == "" {
+			return cpkg.completeWindowsExt(s), nil
+		}
+	}
+	return s, nil
+}
+
+type FileNotFoundError struct {
+	Err error
+}
+
+func (errorFileNotFound *FileNotFoundError) Error() string {
+	return errorFileNotFound.Err.Error()
+}
+
+func (errorFileNotFound *FileNotFoundError) Unwrap() error {
+	return errorFileNotFound.Err
+}
+
+func isWindows(goos string) bool {
+	return goos == "windows"
+}
+
+func (cpkg *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkg := cpkg.Package
+	pkgInfo := cpkg.PackageInfo
+	s, err := template.Execute(file.Src, map[string]interface{}{
+		"Version":  pkg.Version,
+		"SemVer":   cpkg.semVer(),
+		"GOOS":     rt.GOOS,
+		"GOARCH":   rt.GOARCH,
+		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"Format":   pkgInfo.GetFormat(),
+		"FileName": file.Name,
+	})
+	if err != nil {
+		return "", err //nolint:wrapcheck
+	}
+	return filepath.FromSlash(s), nil // FromSlash is needed for Windows. https://github.com/aquaproj/aqua/issues/2013
+}
+
+func replace(key string, replacements registry.Replacements) string {
+	a := replacements[key]
+	if a == "" {
+		return key
+	}
+	return a
+}
+
+func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runtime) string {
+	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
+		// Rosetta 2
+		return replace("amd64", replacements)
+	}
+	return replace(rt.GOARCH, replacements)
+}
+
 func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	s, err := cpkg.getFileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
 	}
 	if isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "" {
-		return s + cpkg.WindowsExt(), nil
+		return s + cpkg.windowsExt(), nil
 	}
 	return s, nil
 }
@@ -215,28 +298,6 @@ type Param struct {
 	PolicyConfigFilePaths []string
 }
 
-func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
-	asset, err := cpkg.renderAsset(rt)
-	if err != nil {
-		return "", err
-	}
-	if asset == "" {
-		return "", nil
-	}
-	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.CompleteWindowsExt(asset), nil
-		}
-		if cpkg.PackageInfo.Format != "" {
-			return asset, nil
-		}
-		if util.Ext(asset, cpkg.Package.Version) == "" {
-			return cpkg.CompleteWindowsExt(asset), nil
-		}
-	}
-	return asset, nil
-}
-
 func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	switch pkgInfo.Type {
@@ -269,14 +330,6 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	return "", nil
 }
 
-func (cpkg *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
-	tpl, err := template.Compile(s)
-	if err != nil {
-		return "", fmt.Errorf("parse a template: %w", err)
-	}
-	return cpkg.renderTemplate(tpl, rt)
-}
-
 func (cpkg *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	pkg := cpkg.Package
@@ -287,7 +340,7 @@ func (cpkg *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (stri
 	replacements := pkgInfo.GetChecksumReplacements()
 	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
 		"Version": pkg.Version,
-		"SemVer":  cpkg.SemVer(),
+		"SemVer":  cpkg.semVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
@@ -306,7 +359,7 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 	pkg := cpkg.Package
 	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
 		"Version": pkg.Version,
-		"SemVer":  cpkg.SemVer(),
+		"SemVer":  cpkg.semVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
@@ -319,87 +372,34 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 	return uS, nil
 }
 
-func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	s, err := cpkg.RenderTemplateString(*pkgInfo.URL, rt)
-	if err != nil {
-		return "", err
+func (cpkg *Package) windowsExt() string {
+	if cpkg.PackageInfo.WindowsExt == "" {
+		if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
+			return ".sh"
+		}
+		return ".exe"
 	}
-	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.CompleteWindowsExt(s), nil
-		}
-		if cpkg.PackageInfo.Format != "" {
-			return s, nil
-		}
-		if util.Ext(s, cpkg.Package.Version) == "" {
-			return cpkg.CompleteWindowsExt(s), nil
-		}
-	}
-	return s, nil
+	return cpkg.PackageInfo.WindowsExt
 }
 
-func (cpkg *Package) RenderPath() (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	return cpkg.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
+func (cpkg *Package) completeWindowsExt(s string) string {
+	if cpkg.PackageInfo.CompleteWindowsExt != nil {
+		if *cpkg.PackageInfo.CompleteWindowsExt {
+			return s + cpkg.windowsExt()
+		}
+		return s
+	}
+	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
+		return s
+	}
+	return s + cpkg.windowsExt()
 }
 
-func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	assetName, err := cpkg.RenderAsset(rt)
-	if err != nil {
-		return "", fmt.Errorf("render the asset name: %w", err)
-	}
-	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
-	case PkgInfoTypeGoInstall:
-		p, err := cpkg.RenderPath()
-		if err != nil {
-			return "", fmt.Errorf("render Go Module Path: %w", err)
-		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
-	case PkgInfoTypeCargo:
-		registry := "crates.io"
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), registry, *pkgInfo.Crate, pkg.Version), nil
-	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
-			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderURL(rt)
-		if err != nil {
-			return "", fmt.Errorf("render URL: %w", err)
-		}
-		u, err := url.Parse(uS)
-		if err != nil {
-			return "", fmt.Errorf("parse the URL: %w", err)
-		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), u.Host, u.Path), nil
-	}
-	return "", nil
-}
-
-func (cpkg *Package) SemVer() string {
+func (cpkg *Package) semVer() string {
 	v := cpkg.Package.Version
 	prefix := cpkg.PackageInfo.GetVersionPrefix()
 	if prefix == "" {
 		return v
 	}
 	return strings.TrimPrefix(v, prefix)
-}
-
-func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
-	pkg := cpkg.Package
-	pkgInfo := cpkg.PackageInfo
-	return &template.Artifact{
-		Version: pkg.Version,
-		SemVer:  cpkg.SemVer(),
-		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
-		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
-		Format:  pkgInfo.GetFormat(),
-		Asset:   asset,
-	}
 }
