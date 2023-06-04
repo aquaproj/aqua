@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -112,15 +111,7 @@ func (ctrl *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
 	}
-	fileSrc, err := pkg.GetFileSrc(file, ctrl.runtime)
-	if err != nil {
-		return "", fmt.Errorf("get file_src: %w", err)
-	}
-	pkgPath, err := pkg.GetPkgPath(ctrl.rootDir, ctrl.runtime)
-	if err != nil {
-		return "", fmt.Errorf("get pkg install path: %w", err)
-	}
-	return filepath.Join(pkgPath, fileSrc), nil
+	return pkg.GetExePath(ctrl.rootDir, file, ctrl.runtime) //nolint:wrapcheck
 }
 
 func (ctrl *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {

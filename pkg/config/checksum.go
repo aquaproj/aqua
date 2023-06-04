@@ -95,7 +95,7 @@ func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 	replacements := pkgInfo.GetChecksumReplacements()
 	m := map[string]interface{}{
 		"Version": pkg.Version,
-		"SemVer":  cpkg.SemVer(),
+		"SemVer":  cpkg.semVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
