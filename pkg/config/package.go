@@ -28,7 +28,7 @@ type Package struct {
 	Registry    *aqua.Registry
 }
 
-func (cpkg *Package) RenderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+func (cpkg *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := cpkg.Package
 	pkgInfo := cpkg.PackageInfo
 	s, err := template.Execute(file.Src, map[string]interface{}{
@@ -156,7 +156,7 @@ func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if file.Src == "" {
 		return file.Name, nil
 	}
-	src, err := cpkg.RenderSrc(file, rt)
+	src, err := cpkg.renderSrc(file, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
