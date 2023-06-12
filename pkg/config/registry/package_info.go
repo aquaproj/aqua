@@ -55,9 +55,51 @@ type PackageInfo struct {
 	ErrorMessage       string             `json:"-" yaml:"-"`
 }
 
-type Cargo struct {
-	Features    []string `json:"features,omitempty"`
-	AllFeatures bool     `yaml:"all_features" json:"all_features,omitempty"`
+type VersionOverride struct {
+	VersionConstraints string          `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
+	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
+	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
+	Cargo              *Cargo          `json:"cargo,omitempty"`
+	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
+	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
+	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
+	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
+	Overrides          Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
+	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
+	SupportedEnvs      SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	VersionFilter      *string         `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix      *string         `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
+	VersionSource      string          `json:"version_source,omitempty" yaml:"version_source,omitempty"`
+	Rosetta2           *bool           `yaml:",omitempty" json:"rosetta2,omitempty"`
+	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	Checksum           *Checksum       `json:"checksum,omitempty"`
+	Cosign             *Cosign         `json:"cosign,omitempty"`
+	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
+}
+
+type Override struct {
+	GOOS               string          `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
+	GOArch             string          `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=386,enum=amd64,enum=arm,enum=arm64,enum=mips,enum=mips64,enum=mips64le,enum=mipsle,enum=ppc64,enum=ppc64le,enum=riscv64,enum=s390x"`
+	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
+	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
+	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
+	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
+	Cargo              *Cargo          `json:"cargo,omitempty"`
+	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
+	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
+	Checksum           *Checksum       `json:"checksum,omitempty"`
+	Cosign             *Cosign         `json:"cosign,omitempty"`
+	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 }
 
 func (pkgInfo *PackageInfo) Copy() *PackageInfo {
@@ -296,35 +338,6 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	if ov.SLSAProvenance != nil {
 		pkgInfo.SLSAProvenance = ov.SLSAProvenance
 	}
-}
-
-type VersionOverride struct {
-	VersionConstraints string          `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
-	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
-	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
-	Cargo              *Cargo          `json:"cargo,omitempty"`
-	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
-	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
-	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
-	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
-	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	Overrides          Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
-	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
-	SupportedEnvs      SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
-	VersionFilter      *string         `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
-	VersionPrefix      *string         `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
-	VersionSource      string          `json:"version_source,omitempty" yaml:"version_source,omitempty"`
-	Rosetta2           *bool           `yaml:",omitempty" json:"rosetta2,omitempty"`
-	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
-	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
-	Checksum           *Checksum       `json:"checksum,omitempty"`
-	Cosign             *Cosign         `json:"cosign,omitempty"`
-	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
-	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
-	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 }
 
 type FormatOverrides []*FormatOverride

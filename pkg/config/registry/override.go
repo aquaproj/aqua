@@ -22,3 +22,13 @@ func (pkgInfo *PackageInfo) getOverride(rt *runtime.Runtime) *Override {
 	}
 	return nil
 }
+
+func (ov *Override) Match(rt *runtime.Runtime) bool {
+	if ov.GOOS != "" && ov.GOOS != rt.GOOS {
+		return false
+	}
+	if ov.GOArch != "" && ov.GOArch != rt.GOARCH {
+		return false
+	}
+	return true
+}
