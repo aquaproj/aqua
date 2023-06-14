@@ -1,5 +1,5 @@
 # vim: set filetype=dockerfile:
-FROM alpine:3.18.0
+FROM alpine:3.18.2
 RUN apk add curl bash sudo git vim
 RUN adduser -u 1000 -G wheel -D foo
 RUN sed -i 's|# %wheel ALL=(ALL:ALL) NOPASSWD|%wheel ALL=(ALL:ALL) NOPASSWD|' /etc/sudoers
