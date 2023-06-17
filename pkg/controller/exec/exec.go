@@ -87,7 +87,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil {
+	if findResult.Package != nil { //nolint:nestif
 		logE = logE.WithFields(logrus.Fields{
 			"package":         findResult.Package.Package.Name,
 			"package_version": findResult.Package.Package.Version,
@@ -98,6 +98,11 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 			return err //nolint:wrapcheck
 		}
 
+		if param.DisableLazyInstall {
+			if _, err := ctrl.fs.Stat(findResult.ExePath); err != nil {
+				return logerr.WithFields(errExecNotFoundDisableLazyInstall, logE.WithField("doc", "https://aquaproj.github.io/docs/reference/codes/006").Data) //nolint:wrapcheck
+			}
+		}
 		if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {
 			return err
 		}

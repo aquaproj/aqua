@@ -284,6 +284,7 @@ type Param struct {
 	Args                  []string
 	Tags                  map[string]struct{}
 	ExcludedTags          map[string]struct{}
+	DisableLazyInstall    bool
 	OnlyLink              bool
 	All                   bool
 	Insert                bool
