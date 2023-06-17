@@ -255,6 +255,10 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry,
 		Registry: pkg.RegistryName,
 		Version:  pkg.Version,
 	}
+	if param.Detail {
+		outputPkg.Link = pkg.PackageInfo.GetLink()
+		outputPkg.Description = pkg.PackageInfo.GetDescription()
+	}
 	if outputPkg.Registry == registryStandard {
 		outputPkg.Registry = ""
 	}
