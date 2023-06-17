@@ -295,6 +295,7 @@ type Param struct {
 	Prune                 bool
 	RequireChecksum       bool
 	DisablePolicy         bool
+	Detail                bool
 	PolicyConfigFilePaths []string
 }
 

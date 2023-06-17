@@ -94,6 +94,13 @@ The option "-pin" is useful to prevent the package from being updated by Renovat
 $ aqua g -pin cli/cli
 - name: cli/cli
   version: v2.2.0
+
+With -detail option, aqua outputs additional information such as description and link.
+
+$ aqua g -detail cli/cli
+- name: cli/cli@v2.2.0
+  description: GitHub’s official command line tool
+  link: https://github.com/cli/cli
 `
 
 func (runner *Runner) newGenerateCommand() *cli.Command {
@@ -116,6 +123,12 @@ func (runner *Runner) newGenerateCommand() *cli.Command {
 			&cli.BoolFlag{
 				Name:  "pin",
 				Usage: `Pin version`,
+			},
+			&cli.BoolFlag{
+				Name:    "detail",
+				Aliases: []string{"d"},
+				Usage:   `Output additional fields such as description and link`,
+				EnvVars: []string{"AQUA_GENERATE_WITH_DETAIL"},
 			},
 			&cli.StringFlag{
 				Name:  "o",
