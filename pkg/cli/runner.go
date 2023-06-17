@@ -74,6 +74,14 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
 	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
 
+	if a := os.Getenv("AQUA_DISABLE_LAZY_INSTALL"); a != "" {
+		disableLazyInstall, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_DISABLE_LAZY_INSTALL as bool: %w", err)
+		}
+		param.DisableLazyInstall = disableLazyInstall
+	}
+
 	if a := os.Getenv("AQUA_DISABLE_POLICY"); a != "" {
 		disablePolicy, err := strconv.ParseBool(a)
 		if err != nil {
