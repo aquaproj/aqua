@@ -128,6 +128,7 @@ func (runner *Runner) newGenerateCommand() *cli.Command {
 				Name:    "detail",
 				Aliases: []string{"d"},
 				Usage:   `Output additional fields such as description and link`,
+				EnvVars: []string{"AQUA_GENERATE_WITH_DETAIL"},
 			},
 			&cli.StringFlag{
 				Name:  "o",
