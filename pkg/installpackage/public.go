@@ -2,6 +2,7 @@ package installpackage
 
 import (
 	"context"
+	"os/exec"
 )
 
 type Executor interface {
@@ -9,5 +10,6 @@ type Executor interface {
 	HdiutilDetach(ctx context.Context, mountPath string) (int, error)
 	UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error)
 	Exec(ctx context.Context, exePath string, args ...string) (int, error)
+	ExecCommand(ctx context.Context, cmd *exec.Cmd) (int, error)
 	ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error)
 }

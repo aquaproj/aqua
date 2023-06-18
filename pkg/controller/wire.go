@@ -293,6 +293,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
 		wire.NewSet(
+			installpackage.NewGoBuildInstallerImpl,
+			wire.Bind(new(installpackage.GoBuildInstaller), new(*installpackage.GoBuildInstallerImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
@@ -456,6 +460,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
 		wire.NewSet(
+			installpackage.NewGoBuildInstallerImpl,
+			wire.Bind(new(installpackage.GoBuildInstaller), new(*installpackage.GoBuildInstallerImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
@@ -522,6 +530,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoBuildInstallerImpl,
+			wire.Bind(new(installpackage.GoBuildInstaller), new(*installpackage.GoBuildInstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
@@ -636,6 +648,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoBuildInstallerImpl,
+			wire.Bind(new(installpackage.GoBuildInstaller), new(*installpackage.GoBuildInstallerImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,

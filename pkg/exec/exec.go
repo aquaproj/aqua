@@ -25,6 +25,10 @@ func New() *Executor {
 	}
 }
 
+func (exe *Executor) ExecCommand(ctx context.Context, cmd *exec.Cmd) (int, error) {
+	return exe.exec(ctx, exe.command(cmd))
+}
+
 func (exe *Executor) Exec(ctx context.Context, exePath string, args ...string) (int, error) {
 	return exe.exec(ctx, exe.command(exec.Command(exePath, args...)))
 }

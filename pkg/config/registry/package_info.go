@@ -16,6 +16,7 @@ const (
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
 	PkgInfoTypeGoInstall     = "go_install"
+	PkgInfoTypeGoBuild       = "go_build"
 	PkgInfoTypeCargo         = "cargo"
 )
 
@@ -445,7 +446,7 @@ func (pkgInfo *PackageInfo) GetLink() string {
 }
 
 func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == PkgInfoTypeGitHubArchive {
+	if pkgInfo.Type == PkgInfoTypeGitHubArchive || pkgInfo.Type == PkgInfoTypeGoBuild {
 		return "tar.gz"
 	}
 	return pkgInfo.Format
@@ -490,7 +491,7 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 		return errPkgNameIsRequired
 	}
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
 		}

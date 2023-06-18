@@ -405,3 +405,18 @@ func (cpkg *Package) semVer() string {
 	}
 	return strings.TrimPrefix(v, prefix)
 }
+
+func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	pkg := cpkg.Package
+	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
+		"Version":  pkg.Version,
+		"SemVer":   cpkg.semVer(),
+		"GOOS":     rt.GOOS,
+		"GOARCH":   rt.GOARCH,
+		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"Format":   pkgInfo.GetFormat(),
+		"FileName": file.Name,
+	})
+}
