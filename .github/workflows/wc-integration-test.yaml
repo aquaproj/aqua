@@ -29,7 +29,7 @@ jobs:
         run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
 
       - name: Test version_prefix
-        run: aqua -c aqua-global.yaml g -i local,kubernetes-sigs/kustomize/version_prefix
+        run: aqua -c aqua.yaml g -i kubernetes-sigs/kustomize
         working-directory: tests/main
 
       - run: aqua list
