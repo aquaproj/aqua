@@ -231,7 +231,7 @@ func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 		return "", err
 	}
 	if isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "" {
-		return s + cpkg.windowsExt(), nil
+		return cpkg.completeWindowsExt(s), nil
 	}
 	return s, nil
 }
