@@ -14,7 +14,7 @@ packages:
     - test
     - foo
 - name: suzuki-shunsuke/github-comment@v6.0.0
-- name: cli/cli@v2.31.0
+- name: cli/cli@v2.32.0
   tags:
     - bar
     - foo
