@@ -84,19 +84,7 @@ func (cpkg *Package) completeWindowsExtToAsset(asset string) string {
 }
 
 func (cpkg *Package) completeWindowsExtToURL(url string) string {
-	if strings.HasSuffix(url, ".exe") {
-		return url
-	}
-	if cpkg.PackageInfo.Format == "raw" {
-		return cpkg.completeWindowsExt(url)
-	}
-	if cpkg.PackageInfo.Format != "" {
-		return url
-	}
-	if util.Ext(url, cpkg.Package.Version) == "" {
-		return cpkg.completeWindowsExt(url)
-	}
-	return url
+	return cpkg.completeWindowsExtToAsset(url)
 }
 
 func (cpkg *Package) completeWindowsExtToFileSrc(src string) string {
