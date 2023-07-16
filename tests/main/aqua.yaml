@@ -14,3 +14,5 @@ packages:
   version: v0.20.0 # renovate: depName=kubernetes-sigs/kind
 - null
 - name: cycloidio/terracognita@v0.8.4 # update-checksum -deep
+- name: dlvhdr/gh-dash
+  version: v3.8.0 # rename files on Windows
