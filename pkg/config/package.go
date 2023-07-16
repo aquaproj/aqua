@@ -13,47 +13,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/aquaproj/aqua/v2/pkg/util"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
 type Package struct {
 	Package     *aqua.Package
 	PackageInfo *registry.PackageInfo
 	Registry    *aqua.Registry
-}
-
-func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
-	s, err := cpkg.getFileSrc(file, rt)
-	if err != nil {
-		return "", err
-	}
-	if !(isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "") {
-		return s, nil
-	}
-	newName := s + cpkg.windowsExt()
-	newPath := filepath.Join(pkgPath, newName)
-	if s == newName {
-		return newName, nil
-	}
-	if _, err := fs.Stat(newPath); err == nil {
-		return newName, nil
-	}
-	old := filepath.Join(pkgPath, s)
-	if _, err := fs.Stat(old); err != nil {
-		return "", &FileNotFoundError{
-			Err: err,
-		}
-	}
-	logE.WithFields(logrus.Fields{
-		"new": newPath,
-		"old": old,
-	}).Info("rename a file")
-	if err := fs.Rename(old, newPath); err != nil {
-		return "", fmt.Errorf("rename a file: %w", err)
-	}
-	return newName, nil
 }
 
 func (cpkg *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -76,18 +41,10 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if asset == "" {
 		return "", nil
 	}
-	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.completeWindowsExt(asset), nil
-		}
-		if cpkg.PackageInfo.Format != "" {
-			return asset, nil
-		}
-		if util.Ext(asset, cpkg.Package.Version) == "" {
-			return cpkg.completeWindowsExt(asset), nil
-		}
+	if !isWindows(rt.GOOS) {
+		return asset, nil
 	}
-	return asset, nil
+	return cpkg.completeWindowsExtToAsset(asset), nil
 }
 
 func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
@@ -160,18 +117,10 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.completeWindowsExt(s), nil
-		}
-		if cpkg.PackageInfo.Format != "" {
-			return s, nil
-		}
-		if util.Ext(s, cpkg.Package.Version) == "" {
-			return cpkg.completeWindowsExt(s), nil
-		}
+	if !isWindows(rt.GOOS) {
+		return s, nil
 	}
-	return s, nil
+	return cpkg.completeWindowsExtToURL(s), nil
 }
 
 type FileNotFoundError struct {
@@ -184,10 +133,6 @@ func (errorFileNotFound *FileNotFoundError) Error() string {
 
 func (errorFileNotFound *FileNotFoundError) Unwrap() error {
 	return errorFileNotFound.Err
-}
-
-func isWindows(goos string) bool {
-	return goos == "windows"
 }
 
 func (cpkg *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -230,10 +175,10 @@ func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if err != nil {
 		return "", err
 	}
-	if isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "" {
-		return s + cpkg.windowsExt(), nil
+	if !isWindows(rt.GOOS) {
+		return s, nil
 	}
-	return s, nil
+	return cpkg.completeWindowsExtToFileSrc(s), nil
 }
 
 func (cpkg *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
@@ -372,29 +317,6 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 		return "", fmt.Errorf("render a template: %w", err)
 	}
 	return uS, nil
-}
-
-func (cpkg *Package) windowsExt() string {
-	if cpkg.PackageInfo.WindowsExt == "" {
-		if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
-			return ".sh"
-		}
-		return ".exe"
-	}
-	return cpkg.PackageInfo.WindowsExt
-}
-
-func (cpkg *Package) completeWindowsExt(s string) string {
-	if cpkg.PackageInfo.CompleteWindowsExt != nil {
-		if *cpkg.PackageInfo.CompleteWindowsExt {
-			return s + cpkg.windowsExt()
-		}
-		return s
-	}
-	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
-		return s
-	}
-	return s + cpkg.windowsExt()
 }
 
 func (cpkg *Package) semVer() string {
