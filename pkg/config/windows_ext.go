@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -64,4 +65,43 @@ func (cpkg *Package) completeWindowsExt(s string) string {
 		return s
 	}
 	return s + cpkg.windowsExt()
+}
+
+func (cpkg *Package) completeWindowsExtToAsset(asset string) string {
+	if strings.HasSuffix(asset, ".exe") {
+		return asset
+	}
+	if cpkg.PackageInfo.Format == "raw" {
+		return cpkg.completeWindowsExt(asset)
+	}
+	if cpkg.PackageInfo.Format != "" {
+		return asset
+	}
+	if util.Ext(asset, cpkg.Package.Version) == "" {
+		return cpkg.completeWindowsExt(asset)
+	}
+	return asset
+}
+
+func (cpkg *Package) completeWindowsExtToURL(url string) string {
+	if strings.HasSuffix(url, ".exe") {
+		return url
+	}
+	if cpkg.PackageInfo.Format == "raw" {
+		return cpkg.completeWindowsExt(url)
+	}
+	if cpkg.PackageInfo.Format != "" {
+		return url
+	}
+	if util.Ext(url, cpkg.Package.Version) == "" {
+		return cpkg.completeWindowsExt(url)
+	}
+	return url
+}
+
+func (cpkg *Package) completeWindowsExtToFileSrc(src string) string {
+	if util.Ext(src, cpkg.Package.Version) == "" {
+		return src + cpkg.windowsExt()
+	}
+	return src
 }

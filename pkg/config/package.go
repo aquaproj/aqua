@@ -13,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 )
 
 type Package struct {
@@ -42,18 +41,10 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if asset == "" {
 		return "", nil
 	}
-	if isWindows(rt.GOOS) && !strings.HasSuffix(asset, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.completeWindowsExt(asset), nil
-		}
-		if cpkg.PackageInfo.Format != "" {
-			return asset, nil
-		}
-		if util.Ext(asset, cpkg.Package.Version) == "" {
-			return cpkg.completeWindowsExt(asset), nil
-		}
+	if !isWindows(rt.GOOS) {
+		return asset, nil
 	}
-	return asset, nil
+	return cpkg.completeWindowsExtToAsset(asset), nil
 }
 
 func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
@@ -126,18 +117,10 @@ func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if isWindows(rt.GOOS) && !strings.HasSuffix(s, ".exe") {
-		if cpkg.PackageInfo.Format == "raw" {
-			return cpkg.completeWindowsExt(s), nil
-		}
-		if cpkg.PackageInfo.Format != "" {
-			return s, nil
-		}
-		if util.Ext(s, cpkg.Package.Version) == "" {
-			return cpkg.completeWindowsExt(s), nil
-		}
+	if !isWindows(rt.GOOS) {
+		return s, nil
 	}
-	return s, nil
+	return cpkg.completeWindowsExtToURL(s), nil
 }
 
 type FileNotFoundError struct {
@@ -192,10 +175,10 @@ func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (strin
 	if err != nil {
 		return "", err
 	}
-	if isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "" {
-		return s + cpkg.windowsExt(), nil
+	if !isWindows(rt.GOOS) {
+		return s, nil
 	}
-	return s, nil
+	return cpkg.completeWindowsExtToFileSrc(s), nil
 }
 
 func (cpkg *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
