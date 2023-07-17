@@ -127,39 +127,13 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 			"repo_owner": pkgInfo.RepoOwner,
 			"repo_name":  pkgInfo.RepoName,
 		}).WithError(err).Warn("get the release")
-	} else {
-		logE.WithField("version", release.GetTagName()).Debug("got the release")
-		assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
-		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
-		ctrl.patchRelease(logE, pkgInfo, pkgName, release.GetTagName(), assets)
+		return pkgInfo, []string{version}
 	}
+	logE.WithField("version", release.GetTagName()).Debug("got the release")
+	assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
+	logE.WithField("num_of_assets", len(assets)).Debug("got assets")
+	ctrl.patchRelease(logE, pkgInfo, pkgName, release.GetTagName(), assets)
 	return pkgInfo, []string{version}
-}
-
-func (ctrl *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) (*registry.PackageInfo, []string) {
-	crate := strings.TrimPrefix(pkgName, "crates.io/")
-	pkgInfo := &registry.PackageInfo{
-		Name:  pkgName,
-		Type:  "cargo",
-		Crate: &crate,
-	}
-	payload, err := ctrl.cargoClient.GetCrate(ctx, crate)
-	if err != nil {
-		logE.WithError(err).Warn("get a crate metadata by crates.io API")
-	}
-	if payload != nil && payload.Crate != nil {
-		pkgInfo.Description = payload.Crate.Description
-		if payload.Crate.Homepage != payload.Crate.Repository {
-			pkgInfo.Link = payload.Crate.Homepage
-		}
-		if repo := strings.TrimPrefix(payload.Crate.Repository, "https://github.com/"); repo != payload.Crate.Repository {
-			if repoOwner, repoName, found := strings.Cut(repo, "/"); found {
-				pkgInfo.RepoOwner = repoOwner
-				pkgInfo.RepoName = repoName
-			}
-		}
-	}
-	return pkgInfo, nil
 }
 
 func (ctrl *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop
