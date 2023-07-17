@@ -13,22 +13,27 @@ import (
 )
 
 func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
-	s, err := cpkg.getFileSrc(file, rt)
+	s, err := cpkg.getFileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
 	}
-	if !(isWindows(rt.GOOS) && util.Ext(s, cpkg.Package.Version) == "") {
+	if !isWindows(rt.GOOS) {
 		return s, nil
 	}
-	newName := s + cpkg.windowsExt()
-	newPath := filepath.Join(pkgPath, newName)
-	if s == newName {
-		return newName, nil
+	if util.Ext(s, cpkg.Package.Version) != "" {
+		return s, nil
 	}
+
+	return cpkg.renameFile(logE, fs, pkgPath, s)
+}
+
+func (cpkg *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldName string) (string, error) {
+	newName := oldName + cpkg.windowsExt()
+	newPath := filepath.Join(pkgPath, newName)
 	if _, err := fs.Stat(newPath); err == nil {
 		return newName, nil
 	}
-	old := filepath.Join(pkgPath, s)
+	old := filepath.Join(pkgPath, oldName)
 	if _, err := fs.Stat(old); err != nil {
 		return "", &FileNotFoundError{
 			Err: err,
