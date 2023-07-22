@@ -3,6 +3,8 @@ package checksum
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -16,6 +18,7 @@ type Checksums struct {
 	newM    map[string]*Checksum
 	rwmutex *sync.RWMutex
 	changed bool
+	stdout  io.Writer
 }
 
 func New() *Checksums {
@@ -23,6 +26,7 @@ func New() *Checksums {
 		m:       map[string]*Checksum{},
 		newM:    map[string]*Checksum{},
 		rwmutex: &sync.RWMutex{},
+		stdout:  os.Stdout,
 	}
 }
 
@@ -112,6 +116,7 @@ func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
 	chkJSON := &checksumsJSON{
 		Checksums: arr,
 	}
+	fmt.Fprintln(chksums.stdout, p)
 	if err := encoder.Encode(chkJSON); err != nil {
 		return fmt.Errorf("write a checksum file as JSON: %w", err)
 	}
