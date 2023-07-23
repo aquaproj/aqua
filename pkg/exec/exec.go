@@ -53,12 +53,15 @@ func (exe *Executor) command(cmd *exec.Cmd) *exec.Cmd {
 
 const waitDelay = 1000 * time.Hour
 
-func (exe *Executor) exec(cmd *exec.Cmd) (int, error) {
+func setCancel(cmd *exec.Cmd) {
 	cmd.Cancel = func() error {
 		return cmd.Process.Signal(os.Interrupt) //nolint:wrapcheck
 	}
 	cmd.WaitDelay = waitDelay
+}
 
+func (exe *Executor) exec(cmd *exec.Cmd) (int, error) {
+	setCancel(cmd)
 	if err := cmd.Run(); err != nil {
 		return cmd.ProcessState.ExitCode(), err
 	}
@@ -70,16 +73,10 @@ func (exe *Executor) execAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
 	buf := &bytes.Buffer{}
 	cmd.Stdout = buf
 	cmd.Stderr = buf
-
-	cmd.Cancel = func() error {
-		return cmd.Process.Signal(os.Interrupt) //nolint:wrapcheck
-	}
-	cmd.WaitDelay = waitDelay
-
+	setCancel(cmd)
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintln(exe.stderr, buf.String())
 		return cmd.ProcessState.ExitCode(), err
 	}
-
 	return 0, nil
 }
