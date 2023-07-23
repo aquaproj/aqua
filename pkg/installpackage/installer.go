@@ -255,7 +255,6 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	failed := false
 	notFound := false
 	for _, file := range pkgInfo.GetFiles() {
-		file := file
 		logE := logE.WithField("file_name", file.Name)
 		var errFileNotFound *config.FileNotFoundError
 		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {

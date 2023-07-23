@@ -12,7 +12,6 @@ import (
 func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
-		assetInfo := assetInfo
 		if (assetInfo.OS != goos || assetInfo.Arch != goarch) && !assetInfo.DarwinAll {
 			continue
 		}
@@ -253,7 +252,6 @@ func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key s
 func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Override) []*registry.Override {
 	ret := []*registry.Override{}
 	for _, override := range overrides {
-		override := override
 		if *override.Asset != defaultAsset {
 			ret = append(ret, override)
 			continue
@@ -269,7 +267,6 @@ func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Overri
 func getDefaultAsset(defaultFormat string, overrides []*registry.Override) string {
 	assetCounts := map[string]int{}
 	for _, override := range overrides {
-		override := override
 		if override.Format != defaultFormat {
 			continue
 		}
@@ -279,7 +276,6 @@ func getDefaultAsset(defaultFormat string, overrides []*registry.Override) strin
 	var maxCnt int
 	var defaultAsset string
 	for asset, cnt := range assetCounts {
-		asset := asset
 		if cnt > maxCnt {
 			defaultAsset = asset
 			maxCnt = cnt
