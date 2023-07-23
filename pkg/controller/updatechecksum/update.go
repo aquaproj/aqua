@@ -84,6 +84,7 @@ func (ctrl *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, 
 	}
 
 	checksums := checksum.New()
+	checksums.EnableOutput()
 	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck

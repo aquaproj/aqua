@@ -26,8 +26,11 @@ func New() *Checksums {
 		m:       map[string]*Checksum{},
 		newM:    map[string]*Checksum{},
 		rwmutex: &sync.RWMutex{},
-		stdout:  os.Stdout,
 	}
+}
+
+func (chksums *Checksums) EnableOutput() {
+	chksums.stdout = os.Stdout
 }
 
 func (chksums *Checksums) Get(key string) *Checksum {
@@ -116,7 +119,9 @@ func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
 	chkJSON := &checksumsJSON{
 		Checksums: arr,
 	}
-	fmt.Fprintln(chksums.stdout, p)
+	if chksums.stdout != nil {
+		fmt.Fprintln(chksums.stdout, p)
+	}
 	if err := encoder.Encode(chkJSON); err != nil {
 		return fmt.Errorf("write a checksum file as JSON: %w", err)
 	}
