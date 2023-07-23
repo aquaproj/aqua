@@ -197,7 +197,6 @@ func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, ch
 	}
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
-		rt := rt
 		env := rt.Env()
 		logE := logE.WithFields(logrus.Fields{
 			"checksum_env": env,

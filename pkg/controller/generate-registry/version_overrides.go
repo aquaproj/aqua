@@ -107,7 +107,6 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 	})
 	pkgs := make([]*Package, 0, len(releases))
 	for _, release := range releases {
-		release := release
 		pkgInfo := &registry.PackageInfo{
 			Type:      "github_release",
 			RepoOwner: pkgInfo.RepoOwner,
@@ -214,7 +213,6 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 		basePkg.Version: {},
 	}
 	for _, pkg := range pkgs[1:] {
-		pkg := pkg
 		pkgInfo := pkg.Info
 		if reflect.DeepEqual(basePkgInfo, pkgInfo) {
 			minimumVersion = pkg.SemVer

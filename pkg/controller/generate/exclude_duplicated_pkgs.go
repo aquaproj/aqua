@@ -11,12 +11,10 @@ func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Pa
 	ret := make([]*aqua.Package, 0, len(pkgs))
 	m := make(map[string]*aqua.Package, len(cfg.Packages))
 	for _, pkg := range cfg.Packages {
-		pkg := pkg
 		m[pkg.Registry+","+pkg.Name+"@"+pkg.Version] = pkg
 		m[pkg.Registry+","+pkg.Name] = pkg
 	}
 	for _, pkg := range pkgs {
-		pkg := pkg
 		var keyV string
 		var key string
 		registry := registryStandard
