@@ -71,7 +71,7 @@ func parseChecksumFile(content string, checksumConfig *registry.Checksum) (map[s
 
 func parseDefault(content string) (map[string]string, string, error) {
 	lines := strings.Split(strings.TrimSpace(content), "\n")
-	if len(lines) == 1 && !strings.Contains(lines[0], " ") {
+	if len(lines) == 1 && !strings.Contains(lines[0], " ") && !strings.Contains(lines[0], "\t") {
 		return nil, lines[0], nil
 	}
 	m := make(map[string]string, len(lines))
