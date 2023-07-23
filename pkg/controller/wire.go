@@ -20,6 +20,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
+	"github.com/aquaproj/aqua/v2/pkg/controller/info"
 	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
@@ -730,4 +731,16 @@ func InitializeDenyPolicyCommandController(ctx context.Context, param *config.Pa
 		),
 	)
 	return &denypolicy.Controller{}
+}
+
+func InitializeInfoCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *info.Controller {
+	wire.Build(
+		info.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(info.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		afero.NewOsFs,
+	)
+	return &info.Controller{}
 }
