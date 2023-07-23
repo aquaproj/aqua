@@ -38,11 +38,10 @@ body:
         aqua.yaml should be not partial but complete configuration.
         Please remove unneeded configuration to reproduce the issue.
       value: |
-        OS (Windows, Linux, macOS, etc):
-        CPU Architecture (amd64, arm64, etc):
+        :warning: `aqua info` requires `aqua >= v2.10.0`.
 
         ```console
-        $ aqua -v
+        $ aqua info
 
         ```
 

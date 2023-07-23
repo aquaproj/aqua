@@ -1,29 +1,38 @@
 title: Support Request
 body:
   - type: textarea
-    id: aqua-version
+    id: aqua-info
     attributes:
-      label: aqua version
-      description: Please use the latest version.
+      label: aqua info
+      description: |
+        Please use the latest version.
+        If you checked multiple versions, please write the result too.
+        e.g. This issue occurs with aqua v2.5.0 too, but doesn't occur with aqua v2.4.0.
       value: |
+        #### aqua info
+
+        :warning: `aqua info` requires `aqua >= v2.10.0`.
+
+        ```console
+        $ aqua info
+
+        ```
+
+        #### aqua -v (aqua < v2.10.0)
+
+        If it is difficult to upgrade aqua, please run `aqua -v` instead of `aqua info`.
+
         ```console
         $ aqua -v
 
         ```
+
+        OS (Windows, Linux, macOS, etc):
+        CPU Architecture (amd64, arm64, etc):
+
     validations:
       required: true
-  - type: textarea
-    id: environment
-    attributes:
-      label: Environment
-      description: |
-        * OS (Windows, Linux, macOS, etc)
-        * CPU Architecture (amd64, arm64, etc)
-      value: |
-        * OS:
-        * CPU Architecture:
-    validations:
-      required: true
+
   - type: textarea
     id: overview
     attributes:
