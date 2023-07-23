@@ -19,21 +19,18 @@ body:
       label: aqua info
       description: |
         Please use the latest version.
+        Please run `aqua info` command and paste the result.
+        `aqua info` requires `aqua >= v2.10.0`.
+        If you use `aqua < v2.10.0`, please run `aqua -v` and write OS and CPU architecture instead.
         If you checked multiple versions, please write the result too.
         e.g. This issue occurs with aqua v2.5.0 too, but doesn't occur with aqua v2.4.0.
       value: |
-        #### aqua info
-
-        :warning: `aqua info` requires `aqua >= v2.10.0`.
-
         ```console
         $ aqua info
 
         ```
 
-        #### aqua -v (aqua < v2.10.0)
-
-        If it is difficult to upgrade aqua, please run `aqua -v` instead of `aqua info`.
+        #### aqua < v2.10.0
 
         ```console
         $ aqua -v
