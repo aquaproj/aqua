@@ -56,6 +56,7 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.File = c.String("f")
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = runner.LDFlags.Version
+	param.AquaCommitHash = runner.LDFlags.Commit
 	param.RootDir = config.GetRootDir(osenv.New())
 	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
@@ -155,6 +156,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			runner.newInitCommand(),
+			runner.newInfoCommand(),
 			runner.newInitPolicyCommand(),
 			runner.newPolicyCommand(),
 			runner.newInstallCommand(),

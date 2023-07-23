@@ -218,6 +218,7 @@ type Param struct {
 	LogLevel              string
 	File                  string
 	AQUAVersion           string
+	AquaCommitHash        string
 	RootDir               string
 	PWD                   string
 	InsertFile            string
