@@ -7,8 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-
-	"github.com/suzuki-shunsuke/go-timeout/timeout"
+	"time"
 )
 
 type Executor struct {
@@ -26,22 +25,22 @@ func New() *Executor {
 }
 
 func (exe *Executor) Exec(ctx context.Context, exePath string, args ...string) (int, error) {
-	return exe.exec(ctx, exe.command(exec.Command(exePath, args...)))
+	return exe.exec(exe.command(exec.CommandContext(ctx, exePath, args...)))
 }
 
 func (exe *Executor) ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error) {
-	cmd := exec.Command(exePath, args...)
+	cmd := exec.CommandContext(ctx, exePath, args...)
 	cmd.Env = append(os.Environ(), envs...)
-	return exe.exec(ctx, exe.command(cmd))
+	return exe.exec(exe.command(cmd))
 }
 
 func (exe *Executor) ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error) {
-	cmd := exe.command(exec.Command(exePath, args...))
+	cmd := exe.command(exec.CommandContext(ctx, exePath, args...))
 	cmd.Env = append(os.Environ(), envs...)
 	out := &bytes.Buffer{}
 	cmd.Stdout = io.MultiWriter(exe.stdout, out)
 	cmd.Stderr = io.MultiWriter(exe.stderr, out)
-	code, err := exe.exec(ctx, cmd)
+	code, err := exe.exec(cmd)
 	return out.String(), code, err
 }
 
@@ -52,23 +51,35 @@ func (exe *Executor) command(cmd *exec.Cmd) *exec.Cmd {
 	return cmd
 }
 
-func (exe *Executor) exec(ctx context.Context, cmd *exec.Cmd) (int, error) {
-	runner := timeout.NewRunner(0)
-	if err := runner.Run(ctx, cmd); err != nil {
+const waitDelay = 1000 * time.Hour
+
+func (exe *Executor) exec(cmd *exec.Cmd) (int, error) {
+	cmd.Cancel = func() error {
+		return cmd.Process.Signal(os.Interrupt) //nolint:wrapcheck
+	}
+	cmd.WaitDelay = waitDelay
+
+	if err := cmd.Run(); err != nil {
 		return cmd.ProcessState.ExitCode(), err
 	}
 	return 0, nil
 }
 
 // execAndOutputWhenFailure executes a command, and outputs the command output to standard error only when the command failed.
-func (exe *Executor) execAndOutputWhenFailure(ctx context.Context, cmd *exec.Cmd) (int, error) {
+func (exe *Executor) execAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
 	buf := &bytes.Buffer{}
 	cmd.Stdout = buf
 	cmd.Stderr = buf
-	runner := timeout.NewRunner(0)
-	if err := runner.Run(ctx, cmd); err != nil {
+
+	cmd.Cancel = func() error {
+		return cmd.Process.Signal(os.Interrupt) //nolint:wrapcheck
+	}
+	cmd.WaitDelay = waitDelay
+
+	if err := cmd.Run(); err != nil {
 		fmt.Fprintln(exe.stderr, buf.String())
 		return cmd.ProcessState.ExitCode(), err
 	}
+
 	return 0, nil
 }
