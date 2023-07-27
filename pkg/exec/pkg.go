@@ -6,6 +6,5 @@ import (
 )
 
 func (exe *Executor) UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error) {
-	cmd := exe.command(exec.Command("pkgutil", "--expand-full", pkgFilePath, dest))
-	return exe.execAndOutputWhenFailure(ctx, cmd)
+	return exe.execAndOutputWhenFailure(exe.command(exec.CommandContext(ctx, "pkgutil", "--expand-full", pkgFilePath, dest)))
 }
