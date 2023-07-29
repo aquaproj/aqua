@@ -26,6 +26,10 @@ func (exe *Mock) ExecXSys(exePath string, args ...string) error {
 	return exe.Err
 }
 
+func (exe *Mock) ExecXSysWithEnvs(exePath string, args, envs []string) error {
+	return exe.Err
+}
+
 func (exe *Mock) HdiutilDetach(ctx context.Context, mountPath string) (int, error) {
 	return exe.ExitCode, exe.Err
 }
