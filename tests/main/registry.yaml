@@ -144,3 +144,11 @@ packages:
     crate: skim
     files:
       - name: sk
+
+  - type: go_build
+    repo_owner: suzuki-shunsuke
+    repo_name: github-comment
+    files:
+      - name: github-comment
+        src: ./cmd/github-comment
+        dir: github-comment-{{trimV .Version}}

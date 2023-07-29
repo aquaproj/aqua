@@ -174,6 +174,17 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		pkgInfo.SLSAProvenance = nil
 		pkgInfo.Format = ""
 		pkgInfo.Rosetta2 = nil
+	case PkgInfoTypeGoBuild:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+		pkgInfo.Crate = nil
+		pkgInfo.Cargo = nil
+		pkgInfo.WindowsExt = ""
+		pkgInfo.CompleteWindowsExt = nil
+		pkgInfo.Cosign = nil
+		pkgInfo.SLSAProvenance = nil
+		pkgInfo.Format = ""
+		pkgInfo.Rosetta2 = nil
 	case PkgInfoTypeCargo:
 		pkgInfo.URL = nil
 		pkgInfo.Asset = nil

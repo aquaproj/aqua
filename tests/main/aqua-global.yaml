@@ -45,3 +45,5 @@ packages:
   registry: local
 - name: crates.io/skim@0.10.4
   registry: local
+- name: suzuki-shunsuke/github-comment@v4.0.0
+  registry: local

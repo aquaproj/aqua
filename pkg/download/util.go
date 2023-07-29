@@ -70,7 +70,8 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 	case config.PkgInfoTypeGitHubContent:
 		file.Path = assetName
 		return file, nil
-	case config.PkgInfoTypeGitHubArchive:
+	case config.PkgInfoTypeGitHubArchive, config.PkgInfoTypeGoBuild:
+		file.Type = config.PkgInfoTypeGitHubArchive
 		return file, nil
 	case config.PkgInfoTypeHTTP:
 		uS, err := pkg.RenderURL(rt)
