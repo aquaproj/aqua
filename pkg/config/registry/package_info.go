@@ -460,6 +460,12 @@ func (pkgInfo *PackageInfo) GetName() string {
 	if pkgInfo.Name != "" {
 		return pkgInfo.Name
 	}
+	if pkgInfo.Type == PkgInfoTypePip {
+		return fmt.Sprintf("pypi.org/" + *pkgInfo.PipName)
+	}
+	if pkgInfo.Type == PkgInfoTypeCargo {
+		return fmt.Sprintf("crates.io/" + *pkgInfo.Crate)
+	}
 	if pkgInfo.HasRepo() {
 		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
@@ -550,6 +556,11 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 			return errCargoRequireCrate
 		}
 		return nil
+	case PkgInfoTypePip:
+		if pkgInfo.PipName == nil {
+			return errPipRequirePipName
+		}
+		return nil
 	case PkgInfoTypeGitHubContent:
 		if !pkgInfo.HasRepo() {
 			return errRepoRequired
@@ -606,7 +617,7 @@ func (pkgInfo *PackageInfo) getDefaultCmdName() string {
 		}
 		return path.Base(pkgInfo.GetPath())
 	}
-	return ""
+	return path.Base(pkgInfo.GetName())
 }
 
 func (pkgInfo *PackageInfo) SLSASourceURI() string {

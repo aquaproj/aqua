@@ -47,3 +47,5 @@ packages:
   registry: local
 - name: suzuki-shunsuke/github-comment@v4.0.0
   registry: local
+- name: pypi.org/pre-commit@v3.3.3
+  registry: local
