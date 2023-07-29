@@ -10,6 +10,6 @@ type Executor interface {
 	HdiutilDetach(ctx context.Context, mountPath string) (int, error)
 	UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error)
 	Exec(ctx context.Context, exePath string, args ...string) (int, error)
-	ExecCommand(ctx context.Context, cmd *exec.Cmd) (int, error)
+	ExecCommand(cmd *exec.Cmd) (int, error)
 	ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error)
 }
