@@ -22,6 +22,11 @@ type Package struct {
 }
 
 func (cpkg *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	if pkgInfo.Type == "go_build" {
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, cpkg.Package.Version, "bin", file.Name), nil
+	}
+
 	pkgPath, err := cpkg.GetPkgPath(rootDir, rt)
 	if err != nil {
 		return "", err
@@ -75,6 +80,8 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+	case PkgInfoTypeGoBuild:
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
 		p, err := cpkg.RenderPath()
 		if err != nil {
@@ -209,6 +216,7 @@ const (
 	PkgInfoTypeGitHubArchive = "github_archive"
 	PkgInfoTypeHTTP          = "http"
 	PkgInfoTypeGoInstall     = "go_install"
+	PkgInfoTypeGoBuild       = "go_build"
 	PkgInfoTypeCargo         = "cargo"
 )
 
@@ -249,7 +257,7 @@ type Param struct {
 func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := cpkg.PackageInfo
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		return "", nil
 	case PkgInfoTypeGoInstall:
 		if pkgInfo.Asset != nil {
@@ -327,4 +335,19 @@ func (cpkg *Package) semVer() string {
 		return v
 	}
 	return strings.TrimPrefix(v, prefix)
+}
+
+func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	pkg := cpkg.Package
+	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
+		"Version":  pkg.Version,
+		"SemVer":   cpkg.semVer(),
+		"GOOS":     rt.GOOS,
+		"GOARCH":   rt.GOARCH,
+		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"Format":   pkgInfo.GetFormat(),
+		"FileName": file.Name,
+	})
 }

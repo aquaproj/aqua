@@ -41,6 +41,7 @@ type InstallerImpl struct {
 	cosignInstaller       *Cosign
 	slsaVerifierInstaller *SLSAVerifier
 	goInstallInstaller    GoInstallInstaller
+	goBuildInstaller      GoBuildInstaller
 	cargoPackageInstaller CargoPackageInstaller
 	runtime               *runtime.Runtime
 	fs                    afero.Fs
@@ -51,20 +52,20 @@ type InstallerImpl struct {
 	onlyLink              bool
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
-	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, cargoPackageInstaller)
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
+	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller)
 	installer.cosignInstaller = &Cosign{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, cargoPackageInstaller),
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
 		mutex:     &sync.Mutex{},
 	}
 	installer.slsaVerifierInstaller = &SLSAVerifier{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, cargoPackageInstaller),
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, policyChecker, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
 		mutex:     &sync.Mutex{},
 	}
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, policyChecker *policy.Checker, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
@@ -82,6 +83,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		cosign:                cosignVerifier,
 		slsaVerifier:          slsaVerifier,
 		goInstallInstaller:    goInstallInstaller,
+		goBuildInstaller:      goBuildInstaller,
 		cargoPackageInstaller: cargoPackageInstaller,
 	}
 }
@@ -257,7 +259,7 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	for _, file := range pkgInfo.GetFiles() {
 		logE := logE.WithField("file_name", file.Name)
 		var errFileNotFound *config.FileNotFoundError
-		if err := inst.checkAndCopyFile(pkg, file, logE); err != nil {
+		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
 			if errors.As(err, &errFileNotFound) {
 				notFound = true
 			}
@@ -317,8 +319,8 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *InstallerImpl) checkAndCopyFile(pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	exePath, err := inst.checkFileSrc(pkg, file, logE)
+func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
 	if err != nil {
 		return fmt.Errorf("check file_src is correct: %w", err)
 	}
@@ -333,7 +335,40 @@ func (inst *InstallerImpl) checkAndCopyFile(pkg *config.Package, file *registry.
 	return nil
 }
 
-func (inst *InstallerImpl) checkFileSrc(pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (inst *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+	pkgInfo := pkg.PackageInfo
+	exePath := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
+	if isWindows(inst.runtime.GOOS) {
+		exePath += ".exe"
+	}
+	dir, err := pkg.RenderDir(file, inst.runtime)
+	if err != nil {
+		return "", fmt.Errorf("render file dir: %w", err)
+	}
+	exeDir := filepath.Join(inst.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
+	if _, err := inst.fs.Stat(exePath); err == nil {
+		return exePath, nil
+	}
+	src := file.Src
+	if src == "" {
+		src = "."
+	}
+	logE.WithFields(logrus.Fields{
+		"exe_path":     exePath,
+		"go_src":       src,
+		"go_build_dir": exeDir,
+	}).Info("building Go tool")
+	if err := inst.goBuildInstaller.Install(ctx, exePath, exeDir, src); err != nil {
+		return "", fmt.Errorf("build Go tool: %w", err)
+	}
+	return exePath, nil
+}
+
+func (inst *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+	if pkg.PackageInfo.Type == "go_build" {
+		return inst.checkFileSrcGo(ctx, pkg, file, logE)
+	}
+
 	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
 	if err != nil {
 		return "", fmt.Errorf("get the package install path: %w", err)
