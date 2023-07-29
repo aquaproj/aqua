@@ -67,6 +67,13 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		return inst.downloadCargo(ctx, logE, ppkg, param.Dest)
 	}
 
+	if pkgInfo.Type == "pip" {
+		if err := inst.pipInstaller.Install(ctx, *pkgInfo.PipName, param.Dest); err != nil {
+			return fmt.Errorf("install a pip package: %w", err)
+		}
+		return nil
+	}
+
 	logE.Info("download and unarchive the package")
 
 	file, err := download.ConvertPackageToFile(ppkg, param.Asset, inst.runtime)

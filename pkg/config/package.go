@@ -91,6 +91,9 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	case PkgInfoTypeCargo:
 		registry := "crates.io"
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), registry, *pkgInfo.Crate, pkg.Version), nil
+	case PkgInfoTypePip:
+		registry := "pypi.org"
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), registry, *pkgInfo.PipName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
 			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
@@ -193,6 +196,9 @@ func (cpkg *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtim
 	if pkgInfo.Type == "cargo" {
 		return filepath.Join("bin", file.Name), nil
 	}
+	if pkgInfo.Type == "pip" {
+		return filepath.Join("bin", file.Name), nil
+	}
 	assetName, err := cpkg.RenderAsset(rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
@@ -218,6 +224,7 @@ const (
 	PkgInfoTypeGoInstall     = "go_install"
 	PkgInfoTypeGoBuild       = "go_build"
 	PkgInfoTypeCargo         = "cargo"
+	PkgInfoTypePip           = "pip"
 )
 
 type Param struct {

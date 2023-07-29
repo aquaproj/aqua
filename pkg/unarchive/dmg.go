@@ -53,7 +53,7 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 		}
 	}()
 
-	if err := cpDirWrap(unarchiver.fs, tmpMountPoint, unarchiver.dest); err != nil {
+	if err := util.Copy(unarchiver.fs, tmpMountPoint, unarchiver.dest); err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
 	}
 

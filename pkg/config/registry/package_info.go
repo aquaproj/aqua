@@ -18,6 +18,7 @@ const (
 	PkgInfoTypeGoInstall     = "go_install"
 	PkgInfoTypeGoBuild       = "go_build"
 	PkgInfoTypeCargo         = "cargo"
+	PkgInfoTypePip           = "pip"
 )
 
 type PackageInfo struct {
@@ -34,6 +35,7 @@ type PackageInfo struct {
 	Cargo              *Cargo             `json:"cargo,omitempty"`
 	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
+	PipName            *string            `json:"pip_name,omitempty" yaml:"pip_name,omitempty"`
 	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
@@ -66,6 +68,7 @@ type VersionOverride struct {
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	PipName            *string         `json:"pip_name,omitempty" yaml:"pip_name,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
@@ -93,6 +96,7 @@ type Override struct {
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
 	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
+	PipName            *string         `json:"pip_name,omitempty" yaml:"pip_name,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
 	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
@@ -113,6 +117,7 @@ func (pkgInfo *PackageInfo) Copy() *PackageInfo {
 		Crate:              pkgInfo.Crate,
 		Cargo:              pkgInfo.Cargo,
 		Path:               pkgInfo.Path,
+		PipName:            pkgInfo.PipName,
 		Format:             pkgInfo.Format,
 		Files:              pkgInfo.Files,
 		URL:                pkgInfo.URL,
@@ -145,15 +150,18 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	switch typ {
 	case PkgInfoTypeGitHubRelease:
 		pkgInfo.URL = nil
+		pkgInfo.PipName = nil
 		pkgInfo.Path = nil
 		pkgInfo.Crate = nil
 		pkgInfo.Cargo = nil
 	case PkgInfoTypeGitHubContent:
 		pkgInfo.URL = nil
+		pkgInfo.PipName = nil
 		pkgInfo.Asset = nil
 		pkgInfo.Crate = nil
 		pkgInfo.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
+		pkgInfo.PipName = nil
 		pkgInfo.URL = nil
 		pkgInfo.Path = nil
 		pkgInfo.Asset = nil
@@ -161,10 +169,14 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		pkgInfo.Cargo = nil
 		pkgInfo.Format = ""
 	case PkgInfoTypeHTTP:
+		pkgInfo.PipName = nil
 		pkgInfo.Path = nil
 		pkgInfo.Asset = nil
+		pkgInfo.Crate = nil
+		pkgInfo.Cargo = nil
 	case PkgInfoTypeGoInstall:
 		pkgInfo.URL = nil
+		pkgInfo.PipName = nil
 		pkgInfo.Asset = nil
 		pkgInfo.Crate = nil
 		pkgInfo.Cargo = nil
@@ -176,6 +188,7 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		pkgInfo.Rosetta2 = nil
 	case PkgInfoTypeGoBuild:
 		pkgInfo.URL = nil
+		pkgInfo.PipName = nil
 		pkgInfo.Asset = nil
 		pkgInfo.Crate = nil
 		pkgInfo.Cargo = nil
@@ -187,6 +200,7 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		pkgInfo.Rosetta2 = nil
 	case PkgInfoTypeCargo:
 		pkgInfo.URL = nil
+		pkgInfo.PipName = nil
 		pkgInfo.Asset = nil
 		pkgInfo.Path = nil
 		pkgInfo.WindowsExt = ""
@@ -195,6 +209,19 @@ func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		pkgInfo.SLSAProvenance = nil
 		pkgInfo.Format = ""
 		pkgInfo.Rosetta2 = nil
+	case PkgInfoTypePip:
+		pkgInfo.URL = nil
+		pkgInfo.Asset = nil
+		pkgInfo.Path = nil
+		pkgInfo.WindowsExt = ""
+		pkgInfo.CompleteWindowsExt = nil
+		pkgInfo.Cosign = nil
+		pkgInfo.SLSAProvenance = nil
+		pkgInfo.Checksum = nil
+		pkgInfo.Format = ""
+		pkgInfo.Rosetta2 = nil
+		pkgInfo.Crate = nil
+		pkgInfo.Cargo = nil
 	}
 }
 
@@ -276,6 +303,9 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.NoAsset != nil {
 		pkg.NoAsset = child.NoAsset
 	}
+	if child.PipName != nil {
+		pkg.PipName = child.PipName
+	}
 	return pkg
 }
 
@@ -349,6 +379,9 @@ func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cy
 	}
 	if ov.SLSAProvenance != nil {
 		pkgInfo.SLSAProvenance = ov.SLSAProvenance
+	}
+	if ov.PipName != nil {
+		pkgInfo.PipName = ov.PipName
 	}
 }
 
