@@ -365,7 +365,7 @@ func (inst *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Packa
 }
 
 func (inst *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
-	if pkg.PackageInfo.Type == "go" {
+	if pkg.PackageInfo.Type == "go_build" {
 		return inst.checkFileSrcGo(ctx, pkg, file, logE)
 	}
 
