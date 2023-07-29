@@ -56,7 +56,6 @@ func (reader *ConfigReaderImpl) Read(configFilePath string, cfg *aqua.Config) er
 	}
 	var configFileDir string
 	for _, rgst := range cfg.Registries {
-		rgst := rgst
 		if rgst.Type == "local" {
 			if strings.HasPrefix(rgst.Path, homePrefix) {
 				if reader.homeDir == "" {

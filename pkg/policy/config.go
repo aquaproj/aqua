@@ -46,7 +46,6 @@ type Package struct {
 func (cfg *Config) Init() error {
 	m := make(map[string]*Registry, len(cfg.YAML.Registries))
 	for _, rgst := range cfg.YAML.Registries {
-		rgst := rgst
 		if rgst.Type == registryTypeStandard {
 			rgst.Type = "github_content"
 			rgst.RepoOwner = "aquaproj"
@@ -67,7 +66,6 @@ func (cfg *Config) Init() error {
 		m[rgst.Name] = rgst
 	}
 	for _, pkg := range cfg.YAML.Packages {
-		pkg := pkg
 		if pkg.RegistryName == "" {
 			pkg.RegistryName = registryTypeStandard
 		}

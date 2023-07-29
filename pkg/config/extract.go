@@ -21,7 +21,6 @@ func ListPackagesNotOverride(logE *logrus.Entry, cfg *aqua.Config, registries ma
 	// registry -> package name -> pkgInfo
 	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
 	for _, pkg := range cfg.Packages {
-		pkg := pkg
 		if pkg.Name == "" {
 			logE.Error("ignore a package because the package name is empty")
 			failed = true
@@ -70,7 +69,6 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 	m := make(map[string]map[string]*registry.PackageInfo, len(registries))
 	env := rt.Env()
 	for _, pkg := range cfg.Packages {
-		pkg := pkg
 		if pkg.Name == "" {
 			logE.Error("ignore a package because the package name is empty")
 			failed = true

@@ -64,8 +64,7 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 
 var versionPattern = regexp.MustCompile(`^(.*?)v?((?:\d+)(?:\.\d+)?(?:\.\d+)?(?:(\.|-).+)?)$`)
 
-func getVersionAndPrefix(release *github.RepositoryRelease) (*version.Version, string, error) {
-	tag := release.GetTagName()
+func getVersionAndPrefix(tag string) (*version.Version, string, error) {
 	if v, err := version.NewVersion(tag); err == nil {
 		return v, "", nil
 	}
@@ -85,7 +84,7 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 	releases := make([]*Release, len(ghReleases))
 	for i, release := range ghReleases {
 		tag := release.GetTagName()
-		v, prefix, err := getVersionAndPrefix(release)
+		v, prefix, err := getVersionAndPrefix(tag)
 		if err != nil {
 			logE.WithField("tag_name", tag).WithError(err).Warn("parse a tag as semver")
 		}
@@ -108,7 +107,6 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 	})
 	pkgs := make([]*Package, 0, len(releases))
 	for _, release := range releases {
-		release := release
 		pkgInfo := &registry.PackageInfo{
 			Type:      "github_release",
 			RepoOwner: pkgInfo.RepoOwner,
@@ -215,7 +213,6 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 		basePkg.Version: {},
 	}
 	for _, pkg := range pkgs[1:] {
-		pkg := pkg
 		pkgInfo := pkg.Info
 		if reflect.DeepEqual(basePkgInfo, pkgInfo) {
 			minimumVersion = pkg.SemVer

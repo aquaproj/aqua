@@ -47,7 +47,6 @@ func (pc *Checker) ValidatePackage(logE *logrus.Entry, pkg *config.Package, poli
 		policies = a
 	}
 	for _, policyCfg := range policies {
-		policyCfg := policyCfg
 		if err := pc.validatePackage(logE, &paramValidatePackage{
 			Pkg:          pkg,
 			PolicyConfig: policyCfg.YAML,
