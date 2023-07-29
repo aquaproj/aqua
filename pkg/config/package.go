@@ -22,6 +22,11 @@ type Package struct {
 }
 
 func (cpkg *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := cpkg.PackageInfo
+	if pkgInfo.Type == "go_build" {
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, cpkg.Package.Version, "bin", file.Name), nil
+	}
+
 	pkgPath, err := cpkg.GetPkgPath(rootDir, rt)
 	if err != nil {
 		return "", err
@@ -73,8 +78,10 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
+	case PkgInfoTypeGitHubArchive:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+	case PkgInfoTypeGoBuild:
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
 		p, err := cpkg.RenderPath()
 		if err != nil {

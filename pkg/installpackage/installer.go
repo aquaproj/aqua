@@ -358,7 +358,7 @@ func (inst *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Packa
 		"go_src":       src,
 		"go_build_dir": exeDir,
 	}).Info("building Go tool")
-	if err := inst.goBuildInstaller.Install(ctx, exePath, src, exeDir); err != nil {
+	if err := inst.goBuildInstaller.Install(ctx, exePath, exeDir, src); err != nil {
 		return "", fmt.Errorf("build Go tool: %w", err)
 	}
 	return exePath, nil
