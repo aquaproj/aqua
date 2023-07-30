@@ -21,10 +21,6 @@ func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo 
 	return pkgInfos.toMap(logE, logrus.DebugLevel)
 }
 
-func (pkgInfos *PackageInfos) ToMapWarn(logE *logrus.Entry) map[string]*PackageInfo {
-	return pkgInfos.toMap(logE, logrus.WarnLevel)
-}
-
 func (pkgInfos *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[string]*PackageInfo {
 	m := make(map[string]*PackageInfo, len(*pkgInfos))
 	logE = logE.WithField("package_name", "")
