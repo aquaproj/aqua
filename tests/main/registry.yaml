@@ -153,6 +153,5 @@ packages:
         src: ./cmd/github-comment
         dir: github-comment-{{trimV .Version}}
 
-  - type: pip
-    pip_name: pre-commit
-    
+  - type: pypi
+    pypi_name: pre-commit
