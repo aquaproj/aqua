@@ -91,6 +91,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	if findResult.Package == nil {
 		return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args, nil)
 	}
+
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    findResult.Package.Package.Name,
 		"package_version": findResult.Package.Package.Version,

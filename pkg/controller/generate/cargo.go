@@ -16,12 +16,7 @@ func (ctrl *Controller) getCargoVersion(ctx context.Context, logE *logrus.Entry,
 			return ""
 		}
 
-		versions := make([]*Version, len(versionStrings))
-		for i, v := range versionStrings {
-			versions[i] = &Version{
-				Version: v,
-			}
-		}
+		versions := convertStringsToVersions(versionStrings)
 
 		idx, err := ctrl.versionSelector.Find(versions, false)
 		if err != nil {

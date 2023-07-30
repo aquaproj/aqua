@@ -79,3 +79,13 @@ func getVersionPreview(version *Version, i, w int) string {
 	}
 	return s
 }
+
+func convertStringsToVersions(arr []string) []*Version {
+	versions := make([]*Version, len(arr))
+	for i, a := range arr {
+		versions[i] = &Version{
+			Version: a,
+		}
+	}
+	return versions
+}
