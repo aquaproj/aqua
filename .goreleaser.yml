@@ -41,7 +41,7 @@ brews:
   # same kind. We will probably unify this in the next major version like it is done with scoop.
 
   # GitHub/GitLab repository to push the formula to
-  tap:
+  repository:
     owner: aquaproj
     name: homebrew-aqua
     token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
