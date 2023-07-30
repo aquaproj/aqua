@@ -6,14 +6,14 @@ import (
 )
 
 type PypiInstaller interface {
-	Install(ctx context.Context, pkgName, target string) error
+	Install(ctx context.Context, pkgName, version, target string) error
 }
 
 type MockPypiInstaller struct {
 	Err error
 }
 
-func (mock *MockPypiInstaller) Install(ctx context.Context, pkgName, target string) error {
+func (mock *MockPypiInstaller) Install(ctx context.Context, pkgName, version, target string) error {
 	return mock.Err
 }
 
@@ -27,8 +27,9 @@ func NewPypiInstallerImpl(exec Executor) *PypiInstallerImpl {
 	}
 }
 
-func (inst *PypiInstallerImpl) Install(ctx context.Context, pkgName, target string) error {
-	if _, err := inst.exec.Exec(ctx, "pip", "install", "--target", target, pkgName); err != nil {
+func (inst *PypiInstallerImpl) Install(ctx context.Context, pkgName, version, target string) error {
+	// https://stackoverflow.com/questions/50821312/what-is-the-effect-of-using-python-m-pip-instead-of-just-pip
+	if _, err := inst.exec.Exec(ctx, "python", "-m", "pip", "install", "--target", target, fmt.Sprintf("%s==%s", pkgName, version)); err != nil {
 		return fmt.Errorf("pip install: %w", err)
 	}
 	return nil

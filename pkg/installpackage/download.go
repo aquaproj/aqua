@@ -68,7 +68,8 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	}
 
 	if pkgInfo.Type == "pypi" {
-		if err := inst.pypiInstaller.Install(ctx, *pkgInfo.PypiName, param.Dest); err != nil {
+		logE.Info("installing a pypi package")
+		if err := inst.pypiInstaller.Install(ctx, *pkgInfo.PypiName, pkg.Version, param.Dest); err != nil {
 			return fmt.Errorf("install a pypi package: %w", err)
 		}
 		return nil
