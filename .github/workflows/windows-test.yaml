@@ -1,6 +1,14 @@
 ---
 name: Integration Test on Windows
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      aqua_version:
+        required: false
+      pr_number:
+        required: false
+      ref:
+        required: false
 
 env:
   AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
@@ -19,12 +27,26 @@ jobs:
       GITHUB_TOKEN: ${{github.token}}
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          ref: ${{inputs.ref}}
+      - run: gh pr checkout "${{inputs.pr_number}}"
+        if: inputs.pr_number != ''
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+
+      - uses: aquaproj/aqua-installer@36dc5833b04eb63f06e3bb818aa6b7a6e6db99a9 # v2.1.2
+        if: inputs.aqua_version != ''
+        with:
+          aqua_version: ${{inputs.aqua_version}}
+
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        if: inputs.aqua_version == ''
         with:
           go-version: 1.20.6
           cache: true
-
       - run: go install ./cmd/aqua
+        if: inputs.aqua_version == ''
+
       - run: echo "$HOME/AppData/Local/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
       - run: echo "AQUA_GLOBAL_CONFIG=$PWD/tests/main/aqua-global.yaml:$PWD/tests/main/aqua-global-2.yaml" >> "$GITHUB_ENV"
@@ -92,12 +114,26 @@ jobs:
       GITHUB_TOKEN: ${{github.token}}
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          ref: ${{inputs.ref}}
+      - run: gh pr checkout "${{inputs.pr_number}}"
+        if: inputs.pr_number != ''
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+
+      - uses: aquaproj/aqua-installer@36dc5833b04eb63f06e3bb818aa6b7a6e6db99a9 # v2.1.2
+        if: inputs.aqua_version != ''
+        with:
+          aqua_version: ${{inputs.aqua_version}}
+
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        if: inputs.aqua_version == ''
         with:
           go-version: 1.20.6
           cache: true
-
       - run: go install ./cmd/aqua
+        if: inputs.aqua_version == ''
+
       - run: aqua policy allow
       - run: echo "$HOME\AppData\Local\aquaproj-aqua\bat" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: echo "AQUA_GLOBAL_CONFIG=$PWD\tests\main\aqua-global.yaml;$PWD\tests\main\aqua-global-2.yaml" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append

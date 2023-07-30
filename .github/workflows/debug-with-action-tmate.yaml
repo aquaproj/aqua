@@ -8,12 +8,17 @@ on:
         default: windows-latest
       pr_number:
         required: false
+      ref:
+        required: false
 permissions: {}
 jobs:
   action-tmate:
     runs-on: ${{inputs.runs-on}}
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          ref: ${{inputs.ref}}
+
       - run: gh pr checkout "${{inputs.pr_number}}"
         if: inputs.pr_number != ''
         env:
