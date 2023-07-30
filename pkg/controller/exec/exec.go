@@ -92,7 +92,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	}
 
 	logE = logE.WithFields(logrus.Fields{
-		"package":         findResult.Package.Package.Name,
+		"package_name":    findResult.Package.Package.Name,
 		"package_version": findResult.Package.Package.Version,
 	})
 
