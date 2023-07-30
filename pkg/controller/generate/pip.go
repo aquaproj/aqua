@@ -2,7 +2,6 @@ package generate
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -17,14 +16,15 @@ func (ctrl *Controller) getPipVersion(ctx context.Context, logE *logrus.Entry, p
 			logE.WithError(err).Warn("list versions")
 			return ""
 		}
+
 		versions := make([]*Version, len(versionStrings))
 		for i, v := range versionStrings {
 			versions[i] = &Version{
 				Version: v,
-				URL:     fmt.Sprintf("https://pypi.org/project/%s/%s/", pipName, v),
 			}
 		}
-		idx, err := ctrl.versionSelector.Find(versions)
+
+		idx, err := ctrl.versionSelector.Find(versions, false)
 		if err != nil {
 			return ""
 		}

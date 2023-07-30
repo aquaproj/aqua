@@ -23,7 +23,7 @@ func (ctrl *Controller) selectVersionFromReleases(ctx context.Context, logE *log
 			URL:         release.GetHTMLURL(),
 		}
 	}
-	idx, err := ctrl.versionSelector.Find(versions)
+	idx, err := ctrl.versionSelector.Find(versions, true)
 	if err != nil {
 		return ""
 	}

@@ -14,7 +14,7 @@ type Version struct {
 }
 
 type VersionSelector interface {
-	Find(versions []*Version) (int, error)
+	Find(versions []*Version, hasPreview bool) (int, error)
 }
 
 type versionSelector struct{}
@@ -35,20 +35,25 @@ type mockVersionSelector struct {
 	err error
 }
 
-func (selector *mockVersionSelector) Find(versions []*Version) (int, error) {
+func (selector *mockVersionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
 	return selector.idx, selector.err
 }
 
-func (selector *versionSelector) Find(versions []*Version) (int, error) {
+func (selector *versionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
+	if hasPreview {
+		return fuzzyfinder.Find(versions, func(i int) string { //nolint:wrapcheck
+			return getVersionItem(versions[i])
+		},
+			fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+				if i < 0 {
+					return "No version matches"
+				}
+				return getVersionPreview(versions[i], i, w)
+			}))
+	}
 	return fuzzyfinder.Find(versions, func(i int) string { //nolint:wrapcheck
 		return getVersionItem(versions[i])
-	},
-		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
-			if i < 0 {
-				return "No version matches"
-			}
-			return getVersionPreview(versions[i], i, w)
-		}))
+	})
 }
 
 func getVersionItem(version *Version) string {

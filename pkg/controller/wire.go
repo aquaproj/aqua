@@ -190,10 +190,6 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 		wire.NewSet(
-			generate.NewCrateVersionSelectorImpl,
-			wire.Bind(new(generate.CrateVersionSelector), new(*generate.CrateVersionSelectorImpl)),
-		),
-		wire.NewSet(
 			cargo.NewClientImpl,
 			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
 		),
