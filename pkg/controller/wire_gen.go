@@ -35,6 +35,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
+	"github.com/aquaproj/aqua/v2/pkg/pip"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -103,7 +104,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	versionSelector := generate.NewVersionSelector()
 	clientImpl := cargo.NewClientImpl(httpClient)
 	crateVersionSelectorImpl := generate.NewCrateVersionSelectorImpl()
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl, crateVersionSelectorImpl)
+	pipClientImpl := pip.NewClientImpl(httpClient)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl, crateVersionSelectorImpl, pipClientImpl)
 	return controller
 }
 

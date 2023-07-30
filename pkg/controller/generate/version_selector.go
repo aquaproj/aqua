@@ -45,7 +45,7 @@ func (selector *versionSelector) Find(versions []*Version) (int, error) {
 	},
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
 			if i < 0 {
-				return "No package matches"
+				return "No version matches"
 			}
 			return getVersionPreview(versions[i], i, w)
 		}))
@@ -60,7 +60,7 @@ func getVersionPreview(version *Version, i, w int) string {
 		return ""
 	}
 	s := version.Version
-	if version.Name != version.Version {
+	if version.Name != "" && version.Name != version.Version {
 		s += fmt.Sprintf(" (%s)", version.Name)
 	}
 	if version.URL != "" || version.Description != "" {

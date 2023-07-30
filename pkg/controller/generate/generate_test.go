@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/pip"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
@@ -407,7 +408,8 @@ packages:
 			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
 			crateVersionSelector := &generate.MockCrateVersionSelector{}
 			cargoClient := &cargo.MockClient{}
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, cargoClient, crateVersionSelector)
+			pipClient := &pip.MockClient{}
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, cargoClient, crateVersionSelector, pipClient)
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

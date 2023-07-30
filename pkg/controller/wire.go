@@ -36,6 +36,7 @@ import (
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
+	"github.com/aquaproj/aqua/v2/pkg/pip"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -195,6 +196,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			cargo.NewClientImpl,
 			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+		),
+		wire.NewSet(
+			pip.NewClientImpl,
+			wire.Bind(new(pip.Client), new(*pip.ClientImpl)),
 		),
 	)
 	return &generate.Controller{}
