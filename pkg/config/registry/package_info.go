@@ -489,6 +489,9 @@ func (pkgInfo *PackageInfo) GetLink() string {
 	if pkgInfo.Link != "" {
 		return pkgInfo.Link
 	}
+	if pkgInfo.Type == PkgInfoTypePip {
+		return fmt.Sprintf("https://pypi.org/project/%s/", *pkgInfo.PipName)
+	}
 	if pkgInfo.HasRepo() {
 		return "https://github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
 	}
