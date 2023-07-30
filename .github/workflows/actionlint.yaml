@@ -13,7 +13,7 @@ jobs:
     with:
       aqua_version: v2.10.1
       aqua_policy_allow: true
-      actionlint_options: -ignore 'invalid activity type "started" for "watch" Webhook event\\. available types are "starred"'
+      actionlint_options: -ignore 'invalid activity type "started" for "watch" Webhook event'
     permissions:
       pull-requests: write
       contents: read
