@@ -277,6 +277,9 @@
         "cargo": {
           "$ref": "#/$defs/Cargo"
         },
+        "pypi_name": {
+          "type": "string"
+        },
         "files": {
           "items": {
             "$ref": "#/$defs/File"
@@ -368,6 +371,9 @@
           "type": "string"
         },
         "path": {
+          "type": "string"
+        },
+        "pypi_name": {
           "type": "string"
         },
         "format": {
@@ -567,6 +573,9 @@
           "type": "string"
         },
         "url": {
+          "type": "string"
+        },
+        "pypi_name": {
           "type": "string"
         },
         "files": {
