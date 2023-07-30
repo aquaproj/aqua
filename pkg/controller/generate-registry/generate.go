@@ -99,6 +99,7 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 	}
 	if strings.HasPrefix(pkgName, "pypi.org/") {
 		return &registry.PackageInfo{
+			Name:     pkgName, // For compatibility. aqua < v2.11.0 doesn't support pypi packages so name is needed to suppress the warning.
 			Type:     "pypi",
 			PypiName: util.StrP(strings.TrimPrefix(pkgName, "pypi.org/")),
 		}, nil
