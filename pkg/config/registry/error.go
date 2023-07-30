@@ -8,7 +8,7 @@ var (
 	errGitHubContentRequirePath = errors.New("github_content package requires path")
 	errGoInstallRequirePath     = errors.New("go_install package requires path")
 	errCargoRequireCrate        = errors.New("cargo package requires crate")
-	errPipRequirePipName        = errors.New("pip package requires pip_name")
+	errPypiRequirePypiName      = errors.New("pypi package requires pypi_name")
 	errAssetRequired            = errors.New("github_release package requires asset")
 	errURLRequired              = errors.New("http package requires url")
 	errInvalidPackageType       = errors.New("package type is invalid")

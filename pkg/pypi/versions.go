@@ -1,4 +1,4 @@
-package pip
+package pypi
 
 import (
 	"context"

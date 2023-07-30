@@ -16,7 +16,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
-	"github.com/aquaproj/aqua/v2/pkg/pip"
+	"github.com/aquaproj/aqua/v2/pkg/pypi"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -34,10 +34,10 @@ type Controller struct {
 	fs                afero.Fs
 	outputter         Outputter
 	cargoClient       cargo.Client
-	pipClient         pip.Client
+	pypiClient        pypi.Client
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoClient cargo.Client, pipClient pip.Client) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoClient cargo.Client, pypiClient pypi.Client) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
@@ -48,7 +48,7 @@ func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInst
 		fuzzyFinder:       fuzzyFinder,
 		versionSelector:   versionSelector,
 		cargoClient:       cargoClient,
-		pipClient:         pipClient,
+		pypiClient:        pypiClient,
 		outputter:         output.New(os.Stdout, fs),
 	}
 }
@@ -241,8 +241,8 @@ func (ctrl *Controller) getVersion(ctx context.Context, logE *logrus.Entry, para
 	if pkgInfo.Type == "cargo" {
 		return ctrl.getCargoVersion(ctx, logE, param, pkg)
 	}
-	if pkgInfo.Type == "pip" {
-		return ctrl.getPipVersion(ctx, logE, param, pkg)
+	if pkgInfo.Type == "pypi" {
+		return ctrl.getPypiVersion(ctx, logE, param, pkg)
 	}
 	if ctrl.github == nil {
 		return ""

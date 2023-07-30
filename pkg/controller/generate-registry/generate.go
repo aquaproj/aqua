@@ -99,8 +99,8 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 	}
 	if strings.HasPrefix(pkgName, "pypi.org/") {
 		return &registry.PackageInfo{
-			Type:    "pip",
-			PipName: util.StrP(strings.TrimPrefix(pkgName, "pypi.org/")),
+			Type:     "pypi",
+			PypiName: util.StrP(strings.TrimPrefix(pkgName, "pypi.org/")),
 		}, nil
 	}
 	splitPkgNames := strings.Split(pkgName, "/")

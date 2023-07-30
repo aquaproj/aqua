@@ -7,11 +7,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) getPipVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) string {
+func (ctrl *Controller) getPypiVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) string {
 	pkgInfo := pkg.PackageInfo
-	pipName := *pkgInfo.PipName
+	pypiName := *pkgInfo.PypiName
 	if param.SelectVersion {
-		versionStrings, err := ctrl.pipClient.ListVersions(ctx, pipName)
+		versionStrings, err := ctrl.pypiClient.ListVersions(ctx, pypiName)
 		if err != nil {
 			logE.WithError(err).Warn("list versions")
 			return ""
@@ -30,7 +30,7 @@ func (ctrl *Controller) getPipVersion(ctx context.Context, logE *logrus.Entry, p
 		}
 		return versions[idx].Version
 	}
-	version, err := ctrl.pipClient.GetLatestVersion(ctx, pipName)
+	version, err := ctrl.pypiClient.GetLatestVersion(ctx, pypiName)
 	if err != nil {
 		logE.WithError(err).Warn("get a latest version")
 		return ""

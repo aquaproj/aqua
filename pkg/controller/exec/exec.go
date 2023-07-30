@@ -110,7 +110,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		return err
 	}
 	var envs []string
-	if findResult.Package.PackageInfo.Type == "pip" {
+	if findResult.Package.PackageInfo.Type == "pypi" {
 		pkgPath := filepath.Dir(filepath.Dir(findResult.ExePath))
 		if pythonPath, ok := os.LookupEnv("PYTHONPATH"); ok {
 			envs = []string{fmt.Sprintf("PYTHONPATH=%s:%s", pkgPath, pythonPath)}
