@@ -121,6 +121,15 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				},
 			},
 		},
+		{
+			name:    "pypi",
+			pkgName: "pypi.org/pre-commit",
+			exp: &registry.PackageInfo{
+				Name:     "pypi.org/pre-commit",
+				Type:     "pypi",
+				PypiName: util.StrP("pre-commit"),
+			},
+		},
 	}
 	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
