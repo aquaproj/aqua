@@ -65,6 +65,15 @@ jobs:
       - name: Test aqua gr cargo
         run: aqua gr crates.io/skim
 
+      - name: aqua which pip
+        run: aqua which pre-commit
+      - name: Test the package type "pip"
+        run: pre-commit --version
+      - name: Test search versions of the package type "pip"
+        run: aqua -c tests/main/aqua-global.yaml g local,pypi.org/pre-commit
+      - name: Test aqua gr pip
+        run: aqua gr pypi.org/pre-commit
+
       - name: test cosign
         run: aqua i
         working-directory: tests/cosign
