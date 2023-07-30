@@ -573,7 +573,7 @@ func (pkgInfo *PackageInfo) getDefaultCmdName() string {
 		}
 		return path.Base(pkgInfo.GetPath())
 	}
-	return ""
+	return path.Base(pkgInfo.GetName())
 }
 
 func (pkgInfo *PackageInfo) SLSASourceURI() string {

@@ -87,25 +87,27 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if findResult.Package != nil { //nolint:nestif
-		logE = logE.WithFields(logrus.Fields{
-			"package":         findResult.Package.Package.Name,
-			"package_version": findResult.Package.Package.Version,
-		})
+	if findResult.Package == nil {
+		return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+	}
 
-		policyCfgs, err := ctrl.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
+	logE = logE.WithFields(logrus.Fields{
+		"package":         findResult.Package.Package.Name,
+		"package_version": findResult.Package.Package.Version,
+	})
 
-		if param.DisableLazyInstall {
-			if _, err := ctrl.fs.Stat(findResult.ExePath); err != nil {
-				return logerr.WithFields(errExecNotFoundDisableLazyInstall, logE.WithField("doc", "https://aquaproj.github.io/docs/reference/codes/006").Data) //nolint:wrapcheck
-			}
+	policyCfgs, err = ctrl.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+
+	if param.DisableLazyInstall {
+		if _, err := ctrl.fs.Stat(findResult.ExePath); err != nil {
+			return logerr.WithFields(errExecNotFoundDisableLazyInstall, logE.WithField("doc", "https://aquaproj.github.io/docs/reference/codes/006").Data) //nolint:wrapcheck
 		}
-		if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {
-			return err
-		}
+	}
+	if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {
+		return err
 	}
 	return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 }

@@ -97,11 +97,10 @@ func (ctrl *Controller) selectVersionFromGitHubTag(ctx context.Context, logE *lo
 	versions := make([]*Version, len(tags))
 	for i, tag := range tags {
 		versions[i] = &Version{
-			Name:    tag.GetName(),
 			Version: tag.GetName(),
 		}
 	}
-	idx, err := ctrl.versionSelector.Find(versions)
+	idx, err := ctrl.versionSelector.Find(versions, false)
 	if err != nil {
 		return ""
 	}

@@ -102,8 +102,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	fuzzyFinder := generate.NewFuzzyFinder()
 	versionSelector := generate.NewVersionSelector()
 	clientImpl := cargo.NewClientImpl(httpClient)
-	crateVersionSelectorImpl := generate.NewCrateVersionSelectorImpl()
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl, crateVersionSelectorImpl)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl)
 	return controller
 }
 

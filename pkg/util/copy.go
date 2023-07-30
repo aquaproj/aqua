@@ -1,36 +1,15 @@
-package unarchive
+package util
 
 import (
 	"fmt"
 	"io"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/otiai10/copy"
 	"github.com/spf13/afero"
 )
 
-func cpFile(fs afero.Fs, src, dst string) error {
-	srcFile, err := fs.Open(src)
-	if err != nil {
-		return fmt.Errorf("open a file: %w", err)
-	}
-	defer srcFile.Close()
-
-	dstFile, err := fs.Create(dst)
-	if err != nil {
-		return fmt.Errorf("create a file: %w", err)
-	}
-	defer dstFile.Close()
-
-	if _, err = io.Copy(dstFile, srcFile); err != nil {
-		return fmt.Errorf("copy a file: %w", err)
-	}
-
-	return nil
-}
-
-func cpDirWrap(fs afero.Fs, src, dst string) error {
+func Copy(fs afero.Fs, src, dst string) error {
 	if _, ok := fs.(*afero.OsFs); ok {
 		return copy.Copy(src, dst) //nolint:wrapcheck
 	}
@@ -48,7 +27,7 @@ func cpDir(fs afero.Fs, src, dst string) error {
 		dstPath := filepath.Join(dst, fileInfo.Name())
 
 		if fileInfo.IsDir() {
-			if err := util.MkdirAll(fs, dstPath); err != nil {
+			if err := MkdirAll(fs, dstPath); err != nil {
 				return fmt.Errorf("create a directory: %w", err)
 			}
 			if err := cpDir(fs, srcPath, dstPath); err != nil {
@@ -59,6 +38,26 @@ func cpDir(fs afero.Fs, src, dst string) error {
 				return fmt.Errorf("copy a file: %w", err)
 			}
 		}
+	}
+
+	return nil
+}
+
+func cpFile(fs afero.Fs, src, dst string) error {
+	srcFile, err := fs.Open(src)
+	if err != nil {
+		return fmt.Errorf("open a file: %w", err)
+	}
+	defer srcFile.Close()
+
+	dstFile, err := fs.Create(dst)
+	if err != nil {
+		return fmt.Errorf("create a file: %w", err)
+	}
+	defer dstFile.Close()
+
+	if _, err = io.Copy(dstFile, srcFile); err != nil {
+		return fmt.Errorf("copy a file: %w", err)
 	}
 
 	return nil
