@@ -59,7 +59,7 @@ func (searcher *ClientImpl) GetLatestVersion(ctx context.Context, crate string) 
 	if len(versions) == 0 {
 		return "", err
 	}
-	return versions[len(versions)-1], err
+	return versions[0], err
 }
 
 func listInstallableVersions(ctx context.Context, client *http.Client, uri string) ([]string, int, error) {
