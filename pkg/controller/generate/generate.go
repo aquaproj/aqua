@@ -165,7 +165,7 @@ func (ctrl *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Ent
 func (ctrl *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*registry.Config, m map[string]*FindingPackage) {
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
-		for pkgName, pkg := range registryContent.PackageInfos.ToMapWarn(logE) {
+		for pkgName, pkg := range registryContent.PackageInfos.ToMap(logE) {
 			pkg := pkg
 			logE := logE.WithField("package_name", pkgName)
 			m[registryName+","+pkgName] = &FindingPackage{
