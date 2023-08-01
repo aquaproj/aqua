@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
@@ -49,7 +47,7 @@ func (inst *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.E
 	}
 }
 
-func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop,gocognit
+func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
 	ppkg := param.Package
 	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{
@@ -95,48 +93,12 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		}
 	}()
 
-	// Verify with Cosign
-	if cos := ppkg.PackageInfo.Cosign; cos.GetEnabled() {
-		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
-		logE.Info("verify a package with Cosign")
-		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
-			return fmt.Errorf("install sigstore/cosign: %w", err)
-		}
-		tempFilePath, err := bodyFile.GetPath()
-		if err != nil {
-			return fmt.Errorf("get a temporal file path: %w", err)
-		}
-		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
-			RepoOwner: ppkg.PackageInfo.RepoOwner,
-			RepoName:  ppkg.PackageInfo.RepoName,
-			Version:   ppkg.Package.Version,
-		}, cos, art, tempFilePath); err != nil {
-			return fmt.Errorf("verify a package with Cosign: %w", err)
-		}
+	if err := inst.verifyWithCosign(ctx, logE, bodyFile, param); err != nil {
+		return err
 	}
 
-	// Verify with SLSA Provenance
-	if sp := ppkg.PackageInfo.SLSAProvenance; sp.GetEnabled() {
-		art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
-		logE.Info("verify a package with slsa-verifier")
-		if err := inst.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
-			return fmt.Errorf("install slsa-verifier: %w", err)
-		}
-		tempFilePath, err := bodyFile.GetPath()
-		if err != nil {
-			return fmt.Errorf("get a temporal file path: %w", err)
-		}
-		if err := inst.slsaVerifier.Verify(ctx, logE, inst.runtime, sp, art, &download.File{
-			RepoOwner: ppkg.PackageInfo.RepoOwner,
-			RepoName:  ppkg.PackageInfo.RepoName,
-			Version:   ppkg.Package.Version,
-		}, &slsa.ParamVerify{
-			SourceURI:    pkgInfo.SLSASourceURI(),
-			SourceTag:    ppkg.Package.Version,
-			ArtifactPath: tempFilePath,
-		}); err != nil {
-			return fmt.Errorf("verify a package with slsa-verifier: %w", err)
-		}
+	if err := inst.verifyWithSLSA(ctx, logE, bodyFile, param); err != nil {
+		return err
 	}
 
 	if param.Checksum != nil || param.Checksums != nil { //nolint:nestif
