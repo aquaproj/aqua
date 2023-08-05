@@ -136,7 +136,7 @@ func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findRes
 		RequireChecksum: findResult.Config.RequireChecksum(ctrl.requireChecksum),
 		PolicyConfigs:   policies,
 	}); err != nil {
-		return err //nolint:wrapcheck
+		return fmt.Errorf("install the package: %w", err)
 	}
 	for i := 0; i < 10; i++ {
 		logE.Debug("check if exec file exists")

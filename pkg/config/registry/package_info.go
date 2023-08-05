@@ -467,6 +467,10 @@ func (pkgInfo *PackageInfo) GetDescription() string {
 	return pkgInfo.Description
 }
 
+func (pkgInfo *PackageInfo) IsNoAsset() bool {
+	return pkgInfo.NoAsset != nil && *pkgInfo.NoAsset
+}
+
 func (pkgInfo *PackageInfo) GetType() string {
 	return pkgInfo.Type
 }

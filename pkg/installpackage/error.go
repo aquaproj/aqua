@@ -9,4 +9,5 @@ var (
 	errGoInstallForbidLatest = errors.New(`the version "latest" is forbidden. Please specify Git tag or commit sha`)
 	errInvalidChecksum       = errors.New("checksum is invalid")
 	errChecksumIsRequired    = errors.New("checksum is required")
+	errNoAsset               = errors.New("no asset is released for this version")
 )

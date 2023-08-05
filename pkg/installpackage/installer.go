@@ -2,7 +2,6 @@ package installpackage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -207,37 +206,17 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	return nil
 }
 
-func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error { //nolint:cyclop
+func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
 	pkg := param.Pkg
-	pkgInfo := pkg.PackageInfo
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
 		"package_version": pkg.Package.Version,
 		"registry":        pkg.Package.Registry,
 	})
-	logE.Debug("install the package")
+	logE.Debug("installing the package")
 
-	if pkgInfo.NoAsset != nil && *pkgInfo.NoAsset {
-		logE.Error(fmt.Sprintf("failed to install a package %s@%s. No asset is released in this version", pkg.Package.Name, pkg.Package.Version))
-		return errors.New("")
-	}
-	if pkgInfo.ErrorMessage != "" {
-		logE.Error(fmt.Sprintf("failed to install a package %s@%s. %s", pkg.Package.Name, pkg.Package.Version, pkgInfo.ErrorMessage))
-		return errors.New("")
-	}
-
-	if !param.DisablePolicy {
-		if err := inst.policyChecker.ValidatePackage(logE, param.Pkg, param.PolicyConfigs); err != nil {
-			return err //nolint:wrapcheck
-		}
-	}
-
-	if err := pkgInfo.Validate(); err != nil {
-		return fmt.Errorf("invalid package: %w", err)
-	}
-
-	if pkgInfo.Type == "go_install" && pkg.Package.Version == "latest" {
-		return errGoInstallForbidLatest
+	if err := inst.validatePackage(logE, param); err != nil {
+		return err
 	}
 
 	assetName, err := pkg.RenderAsset(inst.runtime)
