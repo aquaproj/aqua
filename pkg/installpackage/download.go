@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/schollz/progressbar/v3"
@@ -110,38 +109,4 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),
 	}, param.Dest)
-}
-
-func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
-	p, err := pkg.RenderPath()
-	if err != nil {
-		return fmt.Errorf("render Go Module Path: %w", err)
-	}
-	goPkgPath := p + "@" + pkg.Package.Version
-	logE.WithFields(logrus.Fields{
-		"gobin":           dest,
-		"go_package_path": goPkgPath,
-	}).Info("Installing a Go tool")
-	if err := inst.goInstallInstaller.Install(ctx, goPkgPath, dest); err != nil {
-		return fmt.Errorf("build Go tool: %w", err)
-	}
-	return nil
-}
-
-func (inst *InstallerImpl) downloadCargo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, root string) error {
-	cargoOpts := pkg.PackageInfo.Cargo
-	if cargoOpts != nil {
-		if cargoOpts.AllFeatures {
-			logE = logE.WithField("cargo_all_features", true)
-		} else if len(cargoOpts.Features) != 0 {
-			logE = logE.WithField("cargo_features", strings.Join(cargoOpts.Features, ","))
-		}
-	}
-	logE.Info("Installing a crate")
-	crate := *pkg.PackageInfo.Crate
-	version := pkg.Package.Version
-	if err := inst.cargoPackageInstaller.Install(ctx, logE, crate, version, root, cargoOpts); err != nil {
-		return fmt.Errorf("cargo install: %w", err)
-	}
-	return nil
 }
