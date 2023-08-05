@@ -286,28 +286,6 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	return nil
 }
 
-func (inst *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
-	failed := false
-	for _, pkg := range pkgs {
-		pkgInfo := pkg.PackageInfo
-		for _, file := range pkgInfo.GetFiles() {
-			if isWindows(inst.runtime.GOOS) {
-				if err := inst.createProxyWindows(file.Name, logE); err != nil {
-					logerr.WithError(logE, err).Error("create the proxy file")
-					failed = true
-				}
-				continue
-			}
-			if err := inst.createLink(filepath.Join(inst.rootDir, "bin", file.Name), filepath.Join("..", proxyName), logE); err != nil {
-				logerr.WithError(logE, err).Error("create the symbolic link")
-				failed = true
-				continue
-			}
-		}
-	}
-	return failed
-}
-
 const maxRetryDownload = 1
 
 type DownloadParam struct {
