@@ -101,39 +101,8 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		return err
 	}
 
-	if param.Checksum != nil || param.Checksums != nil { //nolint:nestif
-		tempFilePath, err := bodyFile.GetPath()
-		if err != nil {
-			return fmt.Errorf("get a temporal file path: %w", err)
-		}
-		paramVerifyChecksum := &ParamVerifyChecksum{
-			Checksum:        param.Checksum,
-			Checksums:       param.Checksums,
-			Pkg:             ppkg,
-			AssetName:       param.Asset,
-			TempFilePath:    tempFilePath,
-			SkipSetChecksum: true,
-		}
-
-		if param.Checksum == nil {
-			paramVerifyChecksum.SkipSetChecksum = false
-			cid, err := ppkg.GetChecksumID(inst.runtime)
-			if err != nil {
-				return err //nolint:wrapcheck
-			}
-			paramVerifyChecksum.ChecksumID = cid
-			// Even if SLSA Provenance is enabled checksum verification is run
-			paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
-			if paramVerifyChecksum.Checksum == nil && param.RequireChecksum {
-				return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
-					"doc": "https://aquaproj.github.io/docs/reference/codes/001",
-				})
-			}
-		}
-
-		if err := inst.verifyChecksum(ctx, logE, paramVerifyChecksum); err != nil {
-			return err
-		}
+	if err := inst.verifyChecksumWrap(ctx, logE, param, bodyFile); err != nil {
+		return err
 	}
 
 	return inst.unarchiver.Unarchive(ctx, logE, &unarchive.File{ //nolint:wrapcheck

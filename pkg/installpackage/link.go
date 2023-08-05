@@ -6,9 +6,33 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
+
+func (inst *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
+	failed := false
+	for _, pkg := range pkgs {
+		pkgInfo := pkg.PackageInfo
+		for _, file := range pkgInfo.GetFiles() {
+			if isWindows(inst.runtime.GOOS) {
+				if err := inst.createProxyWindows(file.Name, logE); err != nil {
+					logerr.WithError(logE, err).Error("create the proxy file")
+					failed = true
+				}
+				continue
+			}
+			if err := inst.createLink(filepath.Join(inst.rootDir, "bin", file.Name), filepath.Join("..", proxyName), logE); err != nil {
+				logerr.WithError(logE, err).Error("create the symbolic link")
+				failed = true
+				continue
+			}
+		}
+	}
+	return failed
+}
 
 func (inst *InstallerImpl) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	if fileInfo, err := inst.linker.Lstat(linkPath); err == nil {

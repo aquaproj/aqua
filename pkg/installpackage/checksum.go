@@ -65,6 +65,46 @@ type ParamVerifyChecksum struct {
 	SkipSetChecksum bool
 }
 
+func (inst *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry, param *DownloadParam, bodyFile *download.DownloadedFile) error {
+	if param.Checksum == nil && param.Checksums == nil {
+		return nil
+	}
+	ppkg := param.Package
+	tempFilePath, err := bodyFile.GetPath()
+	if err != nil {
+		return fmt.Errorf("get a temporal file path: %w", err)
+	}
+	paramVerifyChecksum := &ParamVerifyChecksum{
+		Checksum:        param.Checksum,
+		Checksums:       param.Checksums,
+		Pkg:             ppkg,
+		AssetName:       param.Asset,
+		TempFilePath:    tempFilePath,
+		SkipSetChecksum: true,
+	}
+
+	if param.Checksum == nil {
+		paramVerifyChecksum.SkipSetChecksum = false
+		cid, err := ppkg.GetChecksumID(inst.runtime)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		paramVerifyChecksum.ChecksumID = cid
+		// Even if SLSA Provenance is enabled checksum verification is run
+		paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
+		if paramVerifyChecksum.Checksum == nil && param.RequireChecksum {
+			return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
+				"doc": "https://aquaproj.github.io/docs/reference/codes/001",
+			})
+		}
+	}
+
+	if err := inst.verifyChecksum(ctx, logE, paramVerifyChecksum); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
