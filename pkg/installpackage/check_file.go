@@ -2,8 +2,10 @@ package installpackage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -11,6 +13,42 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
+
+func (inst *InstallerImpl) checkFilesWrap(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage, pkgPath string) error {
+	pkg := param.Pkg
+	pkgInfo := pkg.PackageInfo
+
+	failed := false
+	notFound := false
+	for _, file := range pkgInfo.GetFiles() {
+		logE := logE.WithField("file_name", file.Name)
+		var errFileNotFound *config.FileNotFoundError
+		if err := inst.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
+			if errors.As(err, &errFileNotFound) {
+				notFound = true
+			}
+			failed = true
+			logerr.WithError(logE, err).Error("check file_src is correct")
+		}
+	}
+	if notFound { //nolint:nestif
+		paths, err := inst.walk(pkgPath)
+		if err != nil {
+			logerr.WithError(logE, err).Warn("traverse the content of unarchived package")
+		} else {
+			if len(paths) > 30 { //nolint:gomnd
+				logE.Errorf("executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n"))
+			} else {
+				logE.Errorf("executable files aren't found\nFiles in the unarchived package:\n%s\n ", strings.Join(paths, "\n"))
+			}
+		}
+	}
+	if failed {
+		return errors.New("check file_src is correct")
+	}
+
+	return nil
+}
 
 func (inst *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	exePath, err := inst.checkFileSrc(ctx, pkg, file, logE)
