@@ -3,6 +3,9 @@ package installpackage
 import (
 	"context"
 	"fmt"
+
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/sirupsen/logrus"
 )
 
 type GoInstallInstaller interface {
@@ -31,6 +34,22 @@ func (inst *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin str
 	_, err := inst.exec.ExecWithEnvs(ctx, "go", []string{"install", path}, []string{fmt.Sprintf("GOBIN=%s", gobin)})
 	if err != nil {
 		return fmt.Errorf("install a go package: %w", err)
+	}
+	return nil
+}
+
+func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
+	p, err := pkg.RenderPath()
+	if err != nil {
+		return fmt.Errorf("render Go Module Path: %w", err)
+	}
+	goPkgPath := p + "@" + pkg.Package.Version
+	logE.WithFields(logrus.Fields{
+		"gobin":           dest,
+		"go_package_path": goPkgPath,
+	}).Info("Installing a Go tool")
+	if err := inst.goInstallInstaller.Install(ctx, goPkgPath, dest); err != nil {
+		return fmt.Errorf("build Go tool: %w", err)
 	}
 	return nil
 }
