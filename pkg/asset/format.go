@@ -60,7 +60,7 @@ func GetFormat(assetName string) string { //nolint:funlen,cyclop
 		}
 		return "tar.xz"
 	case *archiver.TarZstd:
-		return "tar.zsd"
+		return "tar.zst"
 	case *archiver.Zip:
 		return "zip"
 	case *archiver.Gz:
