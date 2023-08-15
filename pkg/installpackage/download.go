@@ -64,6 +64,14 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 		return inst.downloadCargo(ctx, logE, ppkg, param.Dest)
 	}
 
+	if pkgInfo.Type == "pypi" {
+		logE.Info("installing a pypi package")
+		if err := inst.pypiInstaller.Install(ctx, *pkgInfo.PypiName, pkg.Version, param.Dest); err != nil {
+			return fmt.Errorf("install a pypi package: %w", err)
+		}
+		return nil
+	}
+
 	logE.Info("download and unarchive the package")
 
 	file, err := download.ConvertPackageToFile(ppkg, param.Asset, inst.runtime)

@@ -179,7 +179,7 @@ func (ctrl *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, c
 
 func (ctrl *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
 	switch pkg.PackageInfo.Type {
-	case "go_install", "cargo":
+	case "go_install", "cargo", "pypi":
 		logE.WithField("package_type", pkg.PackageInfo.Type).Debug("skip updating the package's checksum")
 		return nil
 	}

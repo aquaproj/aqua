@@ -37,6 +37,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/pypi"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
@@ -192,6 +193,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			cargo.NewClientImpl,
 			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
 		),
+		wire.NewSet(
+			pypi.NewClientImpl,
+			wire.Bind(new(pypi.Client), new(*pypi.ClientImpl)),
+		),
 	)
 	return &generate.Controller{}
 }
@@ -296,6 +301,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewPypiInstallerImpl,
+			wire.Bind(new(installpackage.PypiInstaller), new(*installpackage.PypiInstallerImpl)),
 		),
 	)
 	return &install.Controller{}
@@ -464,6 +473,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
+		wire.NewSet(
+			installpackage.NewPypiInstallerImpl,
+			wire.Bind(new(installpackage.PypiInstaller), new(*installpackage.PypiInstallerImpl)),
+		),
 	)
 	return &cexec.Controller{}
 }
@@ -535,6 +548,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewPypiInstallerImpl,
+			wire.Bind(new(installpackage.PypiInstaller), new(*installpackage.PypiInstallerImpl)),
 		),
 		policy.NewChecker,
 	)
@@ -653,6 +670,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewPypiInstallerImpl,
+			wire.Bind(new(installpackage.PypiInstaller), new(*installpackage.PypiInstallerImpl)),
 		),
 	)
 	return &cp.Controller{}

@@ -36,6 +36,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/pypi"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
@@ -102,7 +103,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	fuzzyFinder := generate.NewFuzzyFinder()
 	versionSelector := generate.NewVersionSelector()
 	clientImpl := cargo.NewClientImpl(httpClient)
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl)
+	pypiClientImpl := pypi.NewClientImpl(httpClient)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl, pypiClientImpl)
 	return controller
 }
 
@@ -126,8 +128,9 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	checker := policy.NewChecker(param)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
+	pypiInstallerImpl := installpackage.NewPypiInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, pypiInstallerImpl, cargoPackageInstallerImpl)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	policyConfigReaderImpl := policy.NewConfigReader(fs)
@@ -171,8 +174,9 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
+	pypiInstallerImpl := installpackage.NewPypiInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, pypiInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -203,8 +207,9 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
+	pypiInstallerImpl := installpackage.NewPypiInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, pypiInstallerImpl, cargoPackageInstallerImpl)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installerImpl)
 	return controller
 }
@@ -225,8 +230,9 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
+	pypiInstallerImpl := installpackage.NewPypiInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiverImpl, checker, verifierImpl, slsaVerifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, pypiInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)

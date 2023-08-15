@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -65,7 +66,7 @@ func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl w
 	}
 }
 
-func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) {
+func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) { //nolint:cyclop
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -88,7 +89,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		return err //nolint:wrapcheck
 	}
 	if findResult.Package == nil {
-		return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+		return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args, nil)
 	}
 
 	logE = logE.WithFields(logrus.Fields{
@@ -109,7 +110,16 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 	if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {
 		return err
 	}
-	return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+	var envs []string
+	if findResult.Package.PackageInfo.Type == "pypi" {
+		pkgPath := filepath.Dir(filepath.Dir(findResult.ExePath))
+		if pythonPath, ok := os.LookupEnv("PYTHONPATH"); ok {
+			envs = []string{fmt.Sprintf("PYTHONPATH=%s:%s", pkgPath, pythonPath)}
+		} else {
+			envs = []string{fmt.Sprintf("PYTHONPATH=%s", pkgPath)}
+		}
+	}
+	return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args, envs)
 }
 
 func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config) error {
@@ -167,14 +177,14 @@ func wait(ctx context.Context, duration time.Duration) error {
 
 var errFailedToStartProcess = errors.New("it failed to start the process")
 
-func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args ...string) (bool, error) {
+func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args, envs []string) (bool, error) {
 	if ctrl.enabledXSysExec {
-		if err := ctrl.executor.ExecXSys(exePath, args...); err != nil {
+		if err := ctrl.executor.ExecXSysWithEnvs(exePath, args, envs); err != nil {
 			return true, fmt.Errorf("call execve(2): %w", err)
 		}
 		return false, nil
 	}
-	if exitCode, err := ctrl.executor.Exec(ctx, exePath, args...); err != nil {
+	if exitCode, err := ctrl.executor.ExecWithEnvs(ctx, exePath, args, envs); err != nil {
 		// https://pkg.go.dev/os#ProcessState.ExitCode
 		// > ExitCode returns the exit code of the exited process,
 		// > or -1 if the process hasn't exited or was terminated by a signal.
@@ -186,10 +196,10 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args ..
 	return false, nil
 }
 
-func (ctrl *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath string, args ...string) error {
+func (ctrl *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath string, args, envs []string) error {
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")
-		retried, err := ctrl.execCommand(ctx, exePath, args...)
+		retried, err := ctrl.execCommand(ctx, exePath, args, envs)
 		if !retried {
 			return err
 		}

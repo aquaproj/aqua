@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/forPelevin/gomoji"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
@@ -95,6 +96,13 @@ func (ctrl *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, 
 	pkgName, version, _ := strings.Cut(arg, "@")
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return ctrl.getCargoPackageInfo(ctx, logE, pkgName)
+	}
+	if strings.HasPrefix(pkgName, "pypi.org/") {
+		return &registry.PackageInfo{
+			Name:     pkgName, // For compatibility. aqua < v2.11.0 doesn't support pypi packages so name is needed to suppress the warning.
+			Type:     "pypi",
+			PypiName: util.StrP(strings.TrimPrefix(pkgName, "pypi.org/")),
+		}, nil
 	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{

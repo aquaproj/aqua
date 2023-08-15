@@ -69,7 +69,7 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 			}
 			ctrl := installpackage.New(d.param, &download.Mock{
 				RC: io.NopCloser(strings.NewReader("xxx")),
-			}, d.rt, fs, domain.NewMockLinker(fs), d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{})
+			}, d.rt, fs, domain.NewMockLinker(fs), d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &policy.Checker{}, &cosign.MockVerifier{}, &slsa.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockPypiInstaller{}, &installpackage.MockCargoPackageInstaller{})
 			if err := ctrl.InstallAqua(ctx, logE, d.version); err != nil {
 				if d.isErr {
 					return
