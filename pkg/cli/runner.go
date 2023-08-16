@@ -165,6 +165,7 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 			runner.newWhichCommand(),
 			runner.newExecCommand(),
 			runner.newListCommand(),
+			runner.newLintRegistryCommand(),
 			runner.newGenerateRegistryCommand(),
 			runner.newCompletionCommand(),
 			runner.newVersionCommand(),
