@@ -14,8 +14,8 @@ type MockGoBuildInstaller struct {
 	Err error
 }
 
-func (mock *MockGoBuildInstaller) Install(ctx context.Context, exePath, exeDir, src string) error {
-	return mock.Err
+func (m *MockGoBuildInstaller) Install(ctx context.Context, exePath, exeDir, src string) error {
+	return m.Err
 }
 
 type GoBuildInstallerImpl struct {
