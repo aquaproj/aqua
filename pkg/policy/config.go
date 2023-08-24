@@ -43,9 +43,9 @@ type Package struct {
 	Registry     *Registry `yaml:"-" json:"-"`
 }
 
-func (cfg *Config) Init() error {
-	m := make(map[string]*Registry, len(cfg.YAML.Registries))
-	for _, rgst := range cfg.YAML.Registries {
+func (c *Config) Init() error {
+	m := make(map[string]*Registry, len(c.YAML.Registries))
+	for _, rgst := range c.YAML.Registries {
 		if rgst.Type == registryTypeStandard {
 			rgst.Type = "github_content"
 			rgst.RepoOwner = "aquaproj"
@@ -61,11 +61,11 @@ func (cfg *Config) Init() error {
 			if rgst.Path == "" {
 				return errLocalPathIsRequired
 			}
-			rgst.Path = util.Abs(filepath.Dir(cfg.Path), rgst.Path)
+			rgst.Path = util.Abs(filepath.Dir(c.Path), rgst.Path)
 		}
 		m[rgst.Name] = rgst
 	}
-	for _, pkg := range cfg.YAML.Packages {
+	for _, pkg := range c.YAML.Packages {
 		if pkg.RegistryName == "" {
 			pkg.RegistryName = registryTypeStandard
 		}

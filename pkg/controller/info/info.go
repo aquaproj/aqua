@@ -50,14 +50,14 @@ func maskUser(s, username string) string {
 	return strings.ReplaceAll(s, username, "(USER)")
 }
 
-func (ctrl *Controller) Info(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string) error { //nolint:funlen
+func (c *Controller) Info(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string) error { //nolint:funlen
 	currentUser, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("get a current user: %w", err)
 	}
 	userName := currentUser.Username
 
-	filePaths := ctrl.finder.Finds(param.PWD, param.ConfigFilePath)
+	filePaths := c.finder.Finds(param.PWD, param.ConfigFilePath)
 	cfgs := make([]*Config, len(filePaths))
 	for i, filePath := range filePaths {
 		cfgs[i] = &Config{
@@ -76,11 +76,11 @@ func (ctrl *Controller) Info(ctx context.Context, logE *logrus.Entry, param *con
 		Env:         map[string]string{},
 	}
 
-	if ctrl.rt.GOOS != runtime.GOOS {
-		info.AquaGOOS = ctrl.rt.GOOS
+	if c.rt.GOOS != runtime.GOOS {
+		info.AquaGOOS = c.rt.GOOS
 	}
-	if ctrl.rt.GOARCH != runtime.GOARCH {
-		info.AquaGOARCH = ctrl.rt.GOARCH
+	if c.rt.GOARCH != runtime.GOARCH {
+		info.AquaGOARCH = c.rt.GOARCH
 	}
 
 	envs := []string{

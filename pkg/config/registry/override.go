@@ -5,8 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (pkgInfo *PackageInfo) Override(logE *logrus.Entry, v string, rt *runtime.Runtime) (*PackageInfo, error) {
-	pkg, err := pkgInfo.SetVersion(logE, v)
+func (p *PackageInfo) Override(logE *logrus.Entry, v string, rt *runtime.Runtime) (*PackageInfo, error) {
+	pkg, err := p.SetVersion(logE, v)
 	if err != nil {
 		return nil, err
 	}
@@ -14,8 +14,8 @@ func (pkgInfo *PackageInfo) Override(logE *logrus.Entry, v string, rt *runtime.R
 	return pkg, nil
 }
 
-func (pkgInfo *PackageInfo) getOverride(rt *runtime.Runtime) *Override {
-	for _, ov := range pkgInfo.Overrides {
+func (p *PackageInfo) getOverride(rt *runtime.Runtime) *Override {
+	for _, ov := range p.Overrides {
 		if ov.Match(rt) {
 			return ov
 		}

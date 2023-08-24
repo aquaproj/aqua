@@ -12,10 +12,10 @@ import (
 
 const proxyName = "aqua-proxy"
 
-func (ctrl *ControllerImpl) lookPath(envPath, exeName string) string {
+func (c *ControllerImpl) lookPath(envPath, exeName string) string {
 	for _, p := range filepath.SplitList(envPath) {
 		bin := filepath.Join(p, exeName)
-		finfo, err := ctrl.readLink(bin)
+		finfo, err := c.readLink(bin)
 		if err != nil {
 			continue
 		}
@@ -30,8 +30,8 @@ func (ctrl *ControllerImpl) lookPath(envPath, exeName string) string {
 	return ""
 }
 
-func (ctrl *ControllerImpl) readLink(p string) (os.FileInfo, error) {
-	finfo, err := ctrl.linker.Lstat(p)
+func (c *ControllerImpl) readLink(p string) (os.FileInfo, error) {
+	finfo, err := c.linker.Lstat(p)
 	if err != nil {
 		return nil, fmt.Errorf("get a file stat (%s): %w", p, err)
 	}
@@ -39,14 +39,14 @@ func (ctrl *ControllerImpl) readLink(p string) (os.FileInfo, error) {
 		return finfo, nil
 	}
 	if finfo.Mode()&fs.ModeSymlink != 0 {
-		s, err := ctrl.linker.Readlink(p)
+		s, err := c.linker.Readlink(p)
 		if err != nil {
 			return nil, fmt.Errorf("read a symbolic link (%s): %w", p, err)
 		}
 		if filepath.IsAbs(s) {
-			return ctrl.readLink(s)
+			return c.readLink(s)
 		}
-		return ctrl.readLink(filepath.Join(filepath.Dir(p), s))
+		return c.readLink(filepath.Join(filepath.Dir(p), s))
 	}
 	return finfo, nil
 }

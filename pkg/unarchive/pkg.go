@@ -18,8 +18,8 @@ type pkgUnarchiver struct {
 	fs       afero.Fs
 }
 
-func (unarchiver *pkgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
-	if err := util.MkdirAll(unarchiver.fs, filepath.Dir(unarchiver.dest)); err != nil {
+func (u *pkgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+	if err := util.MkdirAll(u.fs, filepath.Dir(u.dest)); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 
@@ -28,7 +28,7 @@ func (unarchiver *pkgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 		return fmt.Errorf("get a temporal file path: %w", err)
 	}
 
-	if _, err := unarchiver.executor.UnarchivePkg(ctx, tempFilePath, unarchiver.dest); err != nil {
+	if _, err := u.executor.UnarchivePkg(ctx, tempFilePath, u.dest); err != nil {
 		return fmt.Errorf("unarchive a pkg format file: %w", err)
 	}
 

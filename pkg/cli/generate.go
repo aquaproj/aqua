@@ -103,14 +103,14 @@ $ aqua g -detail cli/cli
   link: https://github.com/cli/cli
 `
 
-func (runner *Runner) newGenerateCommand() *cli.Command {
+func (r *Runner) newGenerateCommand() *cli.Command {
 	return &cli.Command{
 		Name:        "generate",
 		Aliases:     []string{"g"},
 		Usage:       "Search packages in registries and output the configuration interactively",
 		ArgsUsage:   `[<registry name>,<package name> ...]`,
 		Description: generateDescription,
-		Action:      runner.generateAction,
+		Action:      r.generateAction,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "f",
@@ -143,7 +143,7 @@ func (runner *Runner) newGenerateCommand() *cli.Command {
 	}
 }
 
-func (runner *Runner) generateAction(c *cli.Context) error {
+func (r *Runner) generateAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -157,9 +157,9 @@ func (runner *Runner) generateAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "generate", param); err != nil {
+	if err := r.setParam(c, "generate", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
-	return ctrl.Generate(c.Context, runner.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
+	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	return ctrl.Generate(c.Context, r.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
 }

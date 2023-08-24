@@ -18,12 +18,12 @@ type Decompressor struct {
 	dest         string
 }
 
-func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
-	dest := decompressor.dest
-	if err := util.MkdirAll(decompressor.fs, filepath.Dir(dest)); err != nil {
+func (d *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+	dest := d.dest
+	if err := util.MkdirAll(d.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
-	f, err := decompressor.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
+	f, err := d.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("open the file (%s): %w", dest, err)
 	}
@@ -34,5 +34,5 @@ func (decompressor *Decompressor) Unarchive(ctx context.Context, logE *logrus.En
 		return fmt.Errorf("read a file: %w", err)
 	}
 
-	return decompressor.decompressor.Decompress(body, src.Body.Wrap(f)) //nolint:wrapcheck
+	return d.decompressor.Decompress(body, src.Body.Wrap(f)) //nolint:wrapcheck
 }

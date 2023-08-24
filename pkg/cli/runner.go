@@ -35,7 +35,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func (runner *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error { //nolint:funlen,cyclop
+func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error { //nolint:funlen,cyclop
 	param.Args = c.Args().Slice()
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
@@ -55,12 +55,12 @@ func (runner *Runner) setParam(c *cli.Context, commandName string, param *config
 	param.SelectVersion = c.Bool("select-version")
 	param.File = c.String("f")
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
-	param.AQUAVersion = runner.LDFlags.Version
-	param.AquaCommitHash = runner.LDFlags.Commit
+	param.AQUAVersion = r.LDFlags.Version
+	param.AquaCommitHash = r.LDFlags.Commit
 	param.RootDir = config.GetRootDir(osenv.New())
 	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
-	logE := runner.LogE
+	logE := r.LogE
 	log.SetLevel(param.LogLevel, logE)
 	log.SetColor(param.LogColor, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
@@ -121,15 +121,15 @@ func parseTags(tags []string) map[string]struct{} {
 	return tagsM
 }
 
-func (runner *Runner) Run(ctx context.Context, args ...string) error {
-	compiledDate, err := time.Parse(time.RFC3339, runner.LDFlags.Date)
+func (r *Runner) Run(ctx context.Context, args ...string) error {
+	compiledDate, err := time.Parse(time.RFC3339, r.LDFlags.Date)
 	if err != nil {
 		compiledDate = time.Now()
 	}
 	app := cli.App{
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
-		Version:        runner.LDFlags.Version + " (" + runner.LDFlags.Commit + ")",
+		Version:        r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
 		Compiled:       compiledDate,
 		ExitErrHandler: exitErrHandlerFunc,
 		Flags: []cli.Flag{
@@ -155,22 +155,22 @@ func (runner *Runner) Run(ctx context.Context, args ...string) error {
 		},
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
-			runner.newInitCommand(),
-			runner.newInfoCommand(),
-			runner.newInitPolicyCommand(),
-			runner.newPolicyCommand(),
-			runner.newInstallCommand(),
-			runner.newUpdateAquaCommand(),
-			runner.newGenerateCommand(),
-			runner.newWhichCommand(),
-			runner.newExecCommand(),
-			runner.newListCommand(),
-			runner.newGenerateRegistryCommand(),
-			runner.newCompletionCommand(),
-			runner.newVersionCommand(),
-			runner.newCpCommand(),
-			runner.newRootDirCommand(),
-			runner.newUpdateChecksumCommand(),
+			r.newInitCommand(),
+			r.newInfoCommand(),
+			r.newInitPolicyCommand(),
+			r.newPolicyCommand(),
+			r.newInstallCommand(),
+			r.newUpdateAquaCommand(),
+			r.newGenerateCommand(),
+			r.newWhichCommand(),
+			r.newExecCommand(),
+			r.newListCommand(),
+			r.newGenerateRegistryCommand(),
+			r.newCompletionCommand(),
+			r.newVersionCommand(),
+			r.newCpCommand(),
+			r.newRootDirCommand(),
+			r.newUpdateChecksumCommand(),
 		},
 	}
 

@@ -45,11 +45,11 @@ func New(fs afero.Fs) *Controller {
 	}
 }
 
-func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
+func (c *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua-policy.yaml"
 	}
-	if _, err := ctrl.fs.Stat(cfgFilePath); err == nil {
+	if _, err := c.fs.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.
 		logE.WithFields(logrus.Fields{
 			"policy_file_path": cfgFilePath,
@@ -57,7 +57,7 @@ func (ctrl *Controller) Init(ctx context.Context, cfgFilePath string, logE *logr
 		return nil
 	}
 
-	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(configTemplate), util.FilePermission); err != nil {
+	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(configTemplate), util.FilePermission); err != nil {
 		return fmt.Errorf("write a policy file: %w", logerr.WithFields(err, logrus.Fields{
 			"policy_file_path": cfgFilePath,
 		}))

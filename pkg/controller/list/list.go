@@ -33,35 +33,35 @@ func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, 
 	}
 }
 
-func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error { //nolint:cyclop
+func (c *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error { //nolint:cyclop
 	cfg := &aqua.Config{}
-	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 
 	var checksums *checksum.Checksums
 	if cfg.ChecksumEnabled() {
 		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
-		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+		if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
 			return fmt.Errorf("read a checksum JSON: %w", err)
 		}
 		defer func() {
-			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+			if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
 				logE.WithError(err).Error("update a checksum file")
 			}
 		}()
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -71,7 +71,7 @@ func (ctrl *Controller) List(ctx context.Context, param *config.Param, logE *log
 				logE.Debug("ignore a package because the package name is empty")
 				continue
 			}
-			fmt.Fprintln(ctrl.stdout, registryName+","+pkgName)
+			fmt.Fprintln(c.stdout, registryName+","+pkgName)
 		}
 	}
 

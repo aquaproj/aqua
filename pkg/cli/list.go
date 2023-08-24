@@ -9,11 +9,11 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newListCommand() *cli.Command {
+func (r *Runner) newListCommand() *cli.Command {
 	return &cli.Command{
 		Name:   "list",
 		Usage:  "List packages in Registries",
-		Action: runner.listAction,
+		Action: r.listAction,
 		Description: `Output the list of packages in registries.
 The output format is <registry name>,<package name>
 
@@ -27,7 +27,7 @@ standard,abs-lang/abs
 	}
 }
 
-func (runner *Runner) listAction(c *cli.Context) error {
+func (r *Runner) listAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -41,9 +41,9 @@ func (runner *Runner) listAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "list", param); err != nil {
+	if err := r.setParam(c, "list", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
-	return ctrl.List(c.Context, param, runner.LogE) //nolint:wrapcheck
+	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	return ctrl.List(c.Context, param, r.LogE) //nolint:wrapcheck
 }

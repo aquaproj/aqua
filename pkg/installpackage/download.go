@@ -12,7 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (inst *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+func (is *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    param.Package.Package.Name,
 		"package_version": param.Package.Package.Version,
@@ -21,10 +21,10 @@ func (inst *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.E
 	retryCount := 0
 	for {
 		logE.Debug("check if the package is already installed")
-		finfo, err := inst.fs.Stat(param.Dest)
+		finfo, err := is.fs.Stat(param.Dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := inst.download(ctx, logE, param); err != nil {
+			if err := is.download(ctx, logE, param); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err
@@ -46,7 +46,7 @@ func (inst *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.E
 	}
 }
 
-func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
+func (is *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
 	ppkg := param.Package
 	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{
@@ -57,20 +57,20 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	pkgInfo := param.Package.PackageInfo
 
 	if pkgInfo.Type == "go_install" {
-		return inst.downloadGoInstall(ctx, ppkg, param.Dest, logE)
+		return is.downloadGoInstall(ctx, ppkg, param.Dest, logE)
 	}
 
 	if pkgInfo.Type == "cargo" {
-		return inst.downloadCargo(ctx, logE, ppkg, param.Dest)
+		return is.downloadCargo(ctx, logE, ppkg, param.Dest)
 	}
 
 	logE.Info("download and unarchive the package")
 
-	file, err := download.ConvertPackageToFile(ppkg, param.Asset, inst.runtime)
+	file, err := download.ConvertPackageToFile(ppkg, param.Asset, is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	body, cl, err := inst.downloader.GetReadCloser(ctx, logE, file)
+	body, cl, err := is.downloader.GetReadCloser(ctx, logE, file)
 	if body != nil {
 		defer body.Close()
 	}
@@ -79,32 +79,32 @@ func (inst *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, par
 	}
 
 	var pb *progressbar.ProgressBar
-	if inst.progressBar && cl != 0 {
+	if is.progressBar && cl != 0 {
 		pb = progressbar.DefaultBytes(
 			cl,
 			fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
 		)
 	}
-	bodyFile := download.NewDownloadedFile(inst.fs, body, pb)
+	bodyFile := download.NewDownloadedFile(is.fs, body, pb)
 	defer func() {
 		if err := bodyFile.Remove(); err != nil {
 			logE.WithError(err).Warn("remove a temporal file")
 		}
 	}()
 
-	if err := inst.verifyWithCosign(ctx, logE, bodyFile, param); err != nil {
+	if err := is.verifyWithCosign(ctx, logE, bodyFile, param); err != nil {
 		return err
 	}
 
-	if err := inst.verifyWithSLSA(ctx, logE, bodyFile, param); err != nil {
+	if err := is.verifyWithSLSA(ctx, logE, bodyFile, param); err != nil {
 		return err
 	}
 
-	if err := inst.verifyChecksumWrap(ctx, logE, param, bodyFile); err != nil {
+	if err := is.verifyChecksumWrap(ctx, logE, param, bodyFile); err != nil {
 		return err
 	}
 
-	return inst.unarchiver.Unarchive(ctx, logE, &unarchive.File{ //nolint:wrapcheck
+	return is.unarchiver.Unarchive(ctx, logE, &unarchive.File{ //nolint:wrapcheck
 		Body:     bodyFile,
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),

@@ -6,7 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newCompletionCommand() *cli.Command {
+func (r *Runner) newCompletionCommand() *cli.Command {
 	// https://github.com/aquaproj/aqua/pull/859
 	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
@@ -27,21 +27,21 @@ if command -v aqua &> /dev/null; then source <(aqua completion zsh); fi
 			{
 				Name:   "bash",
 				Usage:  "Output shell completion script for bash",
-				Action: runner.bashCompletionAction,
+				Action: r.bashCompletionAction,
 			},
 			{
 				Name:   "zsh",
 				Usage:  "Output shell completion script for zsh",
-				Action: runner.zshCompletionAction,
+				Action: r.zshCompletionAction,
 			},
 		},
 	}
 }
 
-func (runner *Runner) bashCompletionAction(c *cli.Context) error {
+func (r *Runner) bashCompletionAction(c *cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/bash_autocomplete
 	// https://github.com/urfave/cli/blob/c3f51bed6fffdf84227c5b59bd3f2e90683314df/autocomplete/bash_autocomplete#L5-L20
-	fmt.Fprintln(runner.Stdout, `
+	fmt.Fprintln(r.Stdout, `
 _cli_bash_autocomplete() {
   if [[ "${COMP_WORDS[0]}" != "source" ]]; then
     local cur opts base
@@ -61,10 +61,10 @@ complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
 	return nil
 }
 
-func (runner *Runner) zshCompletionAction(c *cli.Context) error {
+func (r *Runner) zshCompletionAction(c *cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
-	fmt.Fprintln(runner.Stdout, `
+	fmt.Fprintln(r.Stdout, `
 #compdef aqua
 
 _cli_zsh_autocomplete() {

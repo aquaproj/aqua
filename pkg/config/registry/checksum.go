@@ -17,33 +17,33 @@ type ChecksumPattern struct {
 	File     string `json:"file,omitempty"`
 }
 
-func (chk *Checksum) GetReplacements() Replacements {
-	if chk == nil {
+func (c *Checksum) GetReplacements() Replacements {
+	if c == nil {
 		return nil
 	}
-	return chk.Replacements
+	return c.Replacements
 }
 
-func (chk *Checksum) GetEnabled() bool {
-	if chk == nil {
+func (c *Checksum) GetEnabled() bool {
+	if c == nil {
 		return false
 	}
-	if chk.Enabled == nil {
+	if c.Enabled == nil {
 		return true
 	}
-	return *chk.Enabled
+	return *c.Enabled
 }
 
-func (chk *Checksum) GetAlgorithm() string {
-	if !chk.GetEnabled() {
+func (c *Checksum) GetAlgorithm() string {
+	if !c.GetEnabled() {
 		return "sha512"
 	}
-	return chk.Algorithm
+	return c.Algorithm
 }
 
-func (chk *Checksum) GetCosign() *Cosign {
-	if chk == nil {
+func (c *Checksum) GetCosign() *Cosign {
+	if c == nil {
 		return nil
 	}
-	return chk.Cosign
+	return c.Cosign
 }

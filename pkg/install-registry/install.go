@@ -52,21 +52,21 @@ type MockInstaller struct {
 	Err error
 }
 
-func (inst *MockInstaller) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
-	return inst.M, inst.Err
+func (m *MockInstaller) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
+	return m.M, m.Err
 }
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
 
-func (inst *InstallerImpl) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
+func (is *InstallerImpl) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
 	var failed bool
-	if inst.param.MaxParallelism <= 0 {
+	if is.param.MaxParallelism <= 0 {
 		return nil, errMaxParallelismMustBeGreaterThanZero
 	}
-	maxInstallChan := make(chan struct{}, inst.param.MaxParallelism)
+	maxInstallChan := make(chan struct{}, is.param.MaxParallelism)
 	registryContents := make(map[string]*registry.Config, len(cfg.Registries)+1)
 
 	for _, registry := range cfg.Registries {
@@ -81,7 +81,7 @@ func (inst *InstallerImpl) InstallRegistries(ctx context.Context, logE *logrus.E
 				return
 			}
 			maxInstallChan <- struct{}{}
-			registryContent, err := inst.installRegistry(ctx, logE, registry, cfgFilePath, checksums)
+			registryContent, err := is.installRegistry(ctx, logE, registry, cfgFilePath, checksums)
 			if err != nil {
 				<-maxInstallChan
 				logerr.WithError(logE, err).WithFields(logrus.Fields{
@@ -106,8 +106,8 @@ func (inst *InstallerImpl) InstallRegistries(ctx context.Context, logE *logrus.E
 	return registryContents, nil
 }
 
-func (inst *InstallerImpl) readRegistry(p string, registry *registry.Config) error {
-	f, err := inst.fs.Open(p)
+func (is *InstallerImpl) readRegistry(p string, registry *registry.Config) error {
+	f, err := is.fs.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
 	}
@@ -126,14 +126,14 @@ func (inst *InstallerImpl) readRegistry(p string, registry *registry.Config) err
 
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (inst *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
-	registryFilePath, err := regist.GetFilePath(inst.param.RootDir, cfgFilePath)
+func (is *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+	registryFilePath, err := regist.GetFilePath(is.param.RootDir, cfgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
 	}
-	if _, err := inst.fs.Stat(registryFilePath); err == nil {
+	if _, err := is.fs.Stat(registryFilePath); err == nil {
 		registryContent := &registry.Config{}
-		if err := inst.readRegistry(registryFilePath, registryContent); err != nil {
+		if err := is.readRegistry(registryFilePath, registryContent); err != nil {
 			return nil, err
 		}
 		return registryContent, nil
@@ -143,26 +143,26 @@ func (inst *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Ent
 			"local_registry_file_path": registryFilePath,
 		})
 	}
-	if err := util.MkdirAll(inst.fs, filepath.Dir(registryFilePath)); err != nil {
+	if err := util.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
-	return inst.getRegistry(ctx, logE, regist, registryFilePath, checksums)
+	return is.getRegistry(ctx, logE, regist, registryFilePath, checksums)
 }
 
 // getRegistry downloads and installs the registry file.
-func (inst *InstallerImpl) getRegistry(ctx context.Context, logE *logrus.Entry, registry *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *InstallerImpl) getRegistry(ctx context.Context, logE *logrus.Entry, registry *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	// TODO checksum verification
 	// TODO download checksum file
 	if registry.Type == aqua.RegistryTypeGitHubContent {
-		return inst.getGitHubContentRegistry(ctx, logE, registry, registryFilePath, checksums)
+		return is.getGitHubContentRegistry(ctx, logE, registry, registryFilePath, checksums)
 	}
 	return nil, errUnsupportedRegistryType
 }
 
 const registryFilePermission = 0o600
 
-func (inst *InstallerImpl) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
-	ghContentFile, err := inst.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
+func (is *InstallerImpl) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+	ghContentFile, err := is.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
 		Ref:       regist.Ref,
@@ -184,13 +184,13 @@ func (inst *InstallerImpl) getGitHubContentRegistry(ctx context.Context, logE *l
 		}
 	}
 
-	file, err := inst.fs.Create(registryFilePath)
+	file, err := is.fs.Create(registryFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("create a registry file: %w", err)
 	}
 	defer file.Close()
 
-	if err := afero.WriteFile(inst.fs, registryFilePath, content, registryFilePermission); err != nil {
+	if err := afero.WriteFile(is.fs, registryFilePath, content, registryFilePermission); err != nil {
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
 	registryContent := &registry.Config{}

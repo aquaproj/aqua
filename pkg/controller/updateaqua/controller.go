@@ -32,20 +32,20 @@ func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, gh RepositoriesS
 	}
 }
 
-func (ctrl *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	rootBin := filepath.Join(ctrl.rootDir, "bin")
-	if err := util.MkdirAll(ctrl.fs, rootBin); err != nil {
+func (c *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+	rootBin := filepath.Join(c.rootDir, "bin")
+	if err := util.MkdirAll(c.fs, rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	version, err := ctrl.getVersion(ctx, param)
+	version, err := c.getVersion(ctx, param)
 	if err != nil {
 		return err
 	}
 
 	logE = logE.WithField("new_version", version)
 
-	if err := ctrl.installer.InstallAqua(ctx, logE, version); err != nil {
+	if err := c.installer.InstallAqua(ctx, logE, version); err != nil {
 		return fmt.Errorf("download aqua: %w", logerr.WithFields(err, logrus.Fields{
 			"new_version": version,
 		}))
@@ -53,10 +53,10 @@ func (ctrl *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, para
 	return nil
 }
 
-func (ctrl *Controller) getVersion(ctx context.Context, param *config.Param) (string, error) {
+func (c *Controller) getVersion(ctx context.Context, param *config.Param) (string, error) {
 	switch len(param.Args) {
 	case 0:
-		release, _, err := ctrl.github.GetLatestRelease(ctx, "aquaproj", "aqua")
+		release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua")
 		if err != nil {
 			return "", fmt.Errorf("get the latest version of aqua: %w", err)
 		}

@@ -4,15 +4,15 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newVersionCommand() *cli.Command {
+func (r *Runner) newVersionCommand() *cli.Command {
 	return &cli.Command{
 		Name:   "version",
 		Usage:  "Show version",
-		Action: runner.versionAction,
+		Action: r.versionAction,
 	}
 }
 
-func (runner *Runner) versionAction(c *cli.Context) error {
+func (r *Runner) versionAction(c *cli.Context) error {
 	cli.ShowVersion(c)
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newUpdateChecksumCommand() *cli.Command {
+func (r *Runner) newUpdateChecksumCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "update-checksum",
 		Usage: "Create or Update aqua-checksums.json",
@@ -44,11 +44,11 @@ If -prune option is set, aqua unused checksums would be removed.
 
 $ aqua update-checksum -prune
 `,
-		Action: runner.updateChecksumAction,
+		Action: r.updateChecksumAction,
 	}
 }
 
-func (runner *Runner) updateChecksumAction(c *cli.Context) error {
+func (r *Runner) updateChecksumAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -62,9 +62,9 @@ func (runner *Runner) updateChecksumAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "update-checksum", param); err != nil {
+	if err := r.setParam(c, "update-checksum", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeUpdateChecksumCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
-	return ctrl.UpdateChecksum(c.Context, runner.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeUpdateChecksumCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	return ctrl.UpdateChecksum(c.Context, r.LogE, param) //nolint:wrapcheck
 }

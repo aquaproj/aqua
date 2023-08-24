@@ -12,20 +12,20 @@ import (
 
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
-func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
-	assetName, err := cpkg.RenderAsset(rt)
+func (p *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
+	assetName, err := p.RenderAsset(rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderURL(rt)
+		uS, err := p.RenderURL(rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -38,13 +38,13 @@ func (cpkg *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 	return "", nil
 }
 
-func (cpkg *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error) {
-	rts, err := runtime.GetRuntimesFromEnvs(cpkg.PackageInfo.SupportedEnvs)
+func (p *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error) {
+	rts, err := runtime.GetRuntimesFromEnvs(p.PackageInfo.SupportedEnvs)
 	if err != nil {
 		return nil, fmt.Errorf("get supported runtimes from supported_envs: %w", err)
 	}
 	for _, rt := range rts {
-		a, err := cpkg.RenderAsset(rt)
+		a, err := p.RenderAsset(rt)
 		if err != nil {
 			return nil, err
 		}
@@ -55,47 +55,47 @@ func (cpkg *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error)
 	return nil, nil //nolint:nilnil
 }
 
-func (cpkg *Package) GetChecksumIDFromAsset(asset string) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
+func (p *Package) GetChecksumIDFromAsset(asset string) (string, error) {
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
 	case PkgInfoTypeHTTP:
-		rt, err := cpkg.getRuntimeFromAsset(asset)
+		rt, err := p.getRuntimeFromAsset(asset)
 		if err != nil {
 			return "", fmt.Errorf("get a runtime from an asset: %w", err)
 		}
 		if rt == nil {
 			return "", nil
 		}
-		return cpkg.GetChecksumID(rt)
+		return p.GetChecksumID(rt)
 	}
 	return "", nil
 }
 
-func (cpkg *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
+func (p *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
 	switch pkgInfo.Checksum.Type { //nolint:gocritic
 	case PkgInfoTypeGitHubRelease:
-		asset, err := cpkg.RenderAsset(rt)
+		asset, err := p.RenderAsset(rt)
 		if err != nil {
 			return "", err
 		}
-		return cpkg.renderChecksumFile(asset, rt)
+		return p.renderChecksumFile(asset, rt)
 	}
 	return "", errUnknownChecksumFileType
 }
 
-func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
+func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
 	replacements := pkgInfo.GetChecksumReplacements()
 	m := map[string]interface{}{
 		"Version": pkg.Version,
-		"SemVer":  cpkg.semVer(),
+		"SemVer":  p.semVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
@@ -103,23 +103,23 @@ func (cpkg *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 		"Format":  pkgInfo.GetFormat(),
 	}
 	if pkgInfo.Type == "http" {
-		u, err := cpkg.RenderURL(rt)
+		u, err := p.RenderURL(rt)
 		if err != nil {
 			return "", err
 		}
 		m["AssetURL"] = u
 	}
 
-	return template.Execute(cpkg.PackageInfo.Checksum.URL, m) //nolint:wrapcheck
+	return template.Execute(p.PackageInfo.Checksum.URL, m) //nolint:wrapcheck
 }
 
-func (cpkg *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
+func (p *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
 	switch pkgInfo.Checksum.Type {
 	case PkgInfoTypeGitHubRelease:
-		return cpkg.RenderChecksumFileName(rt)
+		return p.RenderChecksumFileName(rt)
 	case PkgInfoTypeHTTP:
-		return cpkg.RenderChecksumURL(rt)
+		return p.RenderChecksumURL(rt)
 	}
 	return "", errUnknownChecksumFileType
 }

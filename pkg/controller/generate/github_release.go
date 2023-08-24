@@ -12,8 +12,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	releases := ctrl.listReleases(ctx, logE, pkgInfo)
+func (c *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+	releases := c.listReleases(ctx, logE, pkgInfo)
 	versions := make([]*Version, len(releases))
 	for i, release := range releases {
 		versions[i] = &Version{
@@ -23,17 +23,17 @@ func (ctrl *Controller) selectVersionFromReleases(ctx context.Context, logE *log
 			URL:         release.GetHTMLURL(),
 		}
 	}
-	idx, err := ctrl.versionSelector.Find(versions, true)
+	idx, err := c.versionSelector.Find(versions, true)
 	if err != nil {
 		return ""
 	}
 	return versions[idx].Version
 }
 
-func (ctrl *Controller) getVersionFromLatestRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+func (c *Controller) getVersionFromLatestRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
-	release, _, err := ctrl.github.GetLatestRelease(ctx, repoOwner, repoName)
+	release, _, err := c.github.GetLatestRelease(ctx, repoOwner, repoName)
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
 			"repo_owner": repoOwner,
@@ -88,7 +88,7 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 	return filters, nil
 }
 
-func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
+func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -102,7 +102,7 @@ func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pk
 	}
 
 	for i := 0; i < 10; i++ {
-		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -123,7 +123,7 @@ func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pk
 	return arr
 }
 
-func (ctrl *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+func (c *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -136,7 +136,7 @@ func (ctrl *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entr
 	}
 
 	for {
-		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,

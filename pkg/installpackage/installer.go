@@ -122,8 +122,8 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (inst *InstallerImpl) SetCopyDir(copyDir string) {
-	inst.copyDir = copyDir
+func (is *InstallerImpl) SetCopyDir(copyDir string) {
+	is.copyDir = copyDir
 }
 
 type DownloadParam struct {
@@ -135,15 +135,15 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
-	pkgs, failed := config.ListPackages(logE, param.Config, inst.runtime, param.Registries)
+func (is *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
+	pkgs, failed := config.ListPackages(logE, param.Config, is.runtime, param.Registries)
 	if !param.SkipLink {
-		if failedCreateLinks := inst.createLinks(logE, pkgs); failedCreateLinks {
+		if failedCreateLinks := is.createLinks(logE, pkgs); failedCreateLinks {
 			failed = failedCreateLinks
 		}
 	}
 
-	if inst.onlyLink {
+	if is.onlyLink {
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
 		}).Debug("skip downloading the package")
@@ -163,7 +163,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	var wg sync.WaitGroup
 	wg.Add(len(pkgs))
 	var flagMutex sync.Mutex
-	maxInstallChan := make(chan struct{}, inst.maxParallelism)
+	maxInstallChan := make(chan struct{}, is.maxParallelism)
 
 	handleFailure := func() {
 		flagMutex.Lock()
@@ -187,7 +187,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 				logE.Debug("skip installing the package because package tags are unmatched")
 				return
 			}
-			if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
+			if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
 				RequireChecksum: param.Config.RequireChecksum(param.RequireChecksum),
@@ -206,7 +206,7 @@ func (inst *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Ent
 	return nil
 }
 
-func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
+func (is *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
 	pkg := param.Pkg
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
@@ -215,21 +215,21 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 	})
 	logE.Debug("installing the package")
 
-	if err := inst.validatePackage(logE, param); err != nil {
+	if err := is.validatePackage(logE, param); err != nil {
 		return err
 	}
 
-	assetName, err := pkg.RenderAsset(inst.runtime)
+	assetName, err := pkg.RenderAsset(is.runtime)
 	if err != nil {
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
+	pkgPath, err := pkg.GetPkgPath(is.rootDir, is.runtime)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
+	if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
 		Package:         pkg,
 		Dest:            pkgPath,
 		Asset:           assetName,
@@ -240,5 +240,5 @@ func (inst *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entr
 		return err
 	}
 
-	return inst.checkFilesWrap(ctx, logE, param, pkgPath)
+	return is.checkFilesWrap(ctx, logE, param, pkgPath)
 }

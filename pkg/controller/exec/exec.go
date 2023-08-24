@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"os"
-	"runtime"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -16,56 +13,11 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
-	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-type Controller struct {
-	stdin              io.Reader
-	stdout             io.Writer
-	stderr             io.Writer
-	which              which.Controller
-	packageInstaller   installpackage.Installer
-	executor           Executor
-	fs                 afero.Fs
-	policyConfigReader policy.Reader
-	policyConfigFinder policy.ConfigFinder
-	enabledXSysExec    bool
-	requireChecksum    bool
-}
-
-func getEnabledXSysExec(osEnv osenv.OSEnv, goos string) bool {
-	if goos == "windows" {
-		return false
-	}
-	if osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "false" {
-		return false
-	}
-	if osEnv.Getenv("AQUA_X_SYS_EXEC") == "false" {
-		return false
-	}
-	return true
-}
-
-func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
-	return &Controller{
-		stdin:              os.Stdin,
-		stdout:             os.Stdout,
-		stderr:             os.Stderr,
-		packageInstaller:   pkgInstaller,
-		which:              whichCtrl,
-		executor:           executor,
-		enabledXSysExec:    getEnabledXSysExec(osEnv, runtime.GOOS),
-		fs:                 fs,
-		policyConfigReader: policyConfigReader,
-		policyConfigFinder: policyConfigFinder,
-		requireChecksum:    param.RequireChecksum,
-	}
-}
-
-func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) {
+func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) {
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -73,7 +25,7 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		}
 	}()
 
-	policyCfgs, err := ctrl.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
+	policyCfgs, err := c.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
@@ -83,12 +35,12 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		globalPolicyPaths[p] = struct{}{}
 	}
 
-	findResult, err := ctrl.which.Which(ctx, logE, param, exeName)
+	findResult, err := c.which.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 	if findResult.Package == nil {
-		return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+		return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 	}
 
 	logE = logE.WithFields(logrus.Fields{
@@ -96,51 +48,51 @@ func (ctrl *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *con
 		"package_version": findResult.Package.Package.Version,
 	})
 
-	policyCfgs, err = ctrl.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
+	policyCfgs, err = c.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
 	if param.DisableLazyInstall {
-		if _, err := ctrl.fs.Stat(findResult.ExePath); err != nil {
+		if _, err := c.fs.Stat(findResult.ExePath); err != nil {
 			return logerr.WithFields(errExecNotFoundDisableLazyInstall, logE.WithField("doc", "https://aquaproj.github.io/docs/reference/codes/006").Data) //nolint:wrapcheck
 		}
 	}
-	if err := ctrl.install(ctx, logE, findResult, policyCfgs); err != nil {
+	if err := c.install(ctx, logE, findResult, policyCfgs); err != nil {
 		return err
 	}
-	return ctrl.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 }
 
-func (ctrl *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config) error {
+func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config) error {
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, findResult.ConfigFilePath)
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, findResult.ConfigFilePath)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
-		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+		if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
 			return fmt.Errorf("read a checksum JSON: %w", err)
 		}
 		defer func() {
-			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+			if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
 				logE.WithError(err).Error("update a checksum file")
 			}
 		}()
 	}
 
-	if err := ctrl.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
+	if err := c.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
-		RequireChecksum: findResult.Config.RequireChecksum(ctrl.requireChecksum),
+		RequireChecksum: findResult.Config.RequireChecksum(c.requireChecksum),
 		PolicyConfigs:   policies,
 	}); err != nil {
 		return fmt.Errorf("install the package: %w", err)
 	}
 	for i := 0; i < 10; i++ {
 		logE.Debug("check if exec file exists")
-		if fi, err := ctrl.fs.Stat(findResult.ExePath); err == nil {
+		if fi, err := c.fs.Stat(findResult.ExePath); err == nil {
 			if util.IsOwnerExecutable(fi.Mode()) {
 				break
 			}
@@ -167,14 +119,14 @@ func wait(ctx context.Context, duration time.Duration) error {
 
 var errFailedToStartProcess = errors.New("it failed to start the process")
 
-func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args ...string) (bool, error) {
-	if ctrl.enabledXSysExec {
-		if err := ctrl.executor.ExecXSys(exePath, args...); err != nil {
+func (c *Controller) execCommand(ctx context.Context, exePath string, args ...string) (bool, error) {
+	if c.enabledXSysExec {
+		if err := c.executor.ExecXSys(exePath, args...); err != nil {
 			return true, fmt.Errorf("call execve(2): %w", err)
 		}
 		return false, nil
 	}
-	if exitCode, err := ctrl.executor.Exec(ctx, exePath, args...); err != nil {
+	if exitCode, err := c.executor.Exec(ctx, exePath, args...); err != nil {
 		// https://pkg.go.dev/os#ProcessState.ExitCode
 		// > ExitCode returns the exit code of the exited process,
 		// > or -1 if the process hasn't exited or was terminated by a signal.
@@ -186,10 +138,10 @@ func (ctrl *Controller) execCommand(ctx context.Context, exePath string, args ..
 	return false, nil
 }
 
-func (ctrl *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath string, args ...string) error {
+func (c *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath string, args ...string) error {
 	for i := 0; i < 10; i++ {
 		logE.Debug("execute the command")
-		retried, err := ctrl.execCommand(ctx, exePath, args...)
+		retried, err := c.execCommand(ctx, exePath, args...)
 		if !retried {
 			return err
 		}

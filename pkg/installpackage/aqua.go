@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
+func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
 	assetTemplate := `aqua_{{.OS}}_{{.Arch}}.tar.gz`
 	provTemplate := "multiple.intoto.jsonl"
 	disabled := false
@@ -79,13 +79,13 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 		},
 	}
 
-	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, inst.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, is.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
 	pkg.PackageInfo = pkgInfo
 
-	if err := inst.InstallPackage(ctx, logE, &ParamInstallPackage{
+	if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums:     checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:           pkg,
 		DisablePolicy: true,
@@ -98,22 +98,22 @@ func (inst *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, 
 		"package_version": pkg.Package.Version,
 	})
 
-	exePath, err := pkg.GetExePath(inst.rootDir, &registry.File{
+	exePath, err := pkg.GetExePath(is.rootDir, &registry.File{
 		Name: "aqua",
-	}, inst.runtime)
+	}, is.runtime)
 	if err != nil {
 		return fmt.Errorf("get the executable file path: %w", err)
 	}
 
-	if inst.runtime.GOOS == "windows" {
-		return inst.Copy(filepath.Join(inst.rootDir, "bin", "aqua.exe"), exePath)
+	if is.runtime.GOOS == "windows" {
+		return is.Copy(filepath.Join(is.rootDir, "bin", "aqua.exe"), exePath)
 	}
 
 	// create a symbolic link
-	a, err := filepath.Rel(filepath.Join(inst.rootDir, "bin"), exePath)
+	a, err := filepath.Rel(filepath.Join(is.rootDir, "bin"), exePath)
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return inst.createLink(filepath.Join(inst.rootDir, "bin", "aqua"), a, logE)
+	return is.createLink(filepath.Join(is.rootDir, "bin", "aqua"), a, logE)
 }

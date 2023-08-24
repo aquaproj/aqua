@@ -43,8 +43,8 @@ type MockChecksumDownloader struct {
 	Err  error
 }
 
-func (chkDL *MockChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
-	return io.NopCloser(strings.NewReader(chkDL.Body)), chkDL.Code, chkDL.Err
+func (dl *MockChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
+	return io.NopCloser(strings.NewReader(dl.Body)), dl.Code, dl.Err
 }
 
 func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {

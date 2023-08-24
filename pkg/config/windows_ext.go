@@ -12,23 +12,23 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (cpkg *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
-	s, err := cpkg.getFileSrcWithoutWindowsExt(file, rt)
+func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
+	s, err := p.getFileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
 	}
 	if !isWindows(rt.GOOS) {
 		return s, nil
 	}
-	if util.Ext(s, cpkg.Package.Version) != "" {
+	if util.Ext(s, p.Package.Version) != "" {
 		return s, nil
 	}
 
-	return cpkg.renameFile(logE, fs, pkgPath, s)
+	return p.renameFile(logE, fs, pkgPath, s)
 }
 
-func (cpkg *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldName string) (string, error) {
-	newName := oldName + cpkg.windowsExt()
+func (p *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldName string) (string, error) {
+	newName := oldName + p.windowsExt()
 	newPath := filepath.Join(pkgPath, newName)
 	if _, err := fs.Stat(newPath); err == nil {
 		return newName, nil
@@ -49,52 +49,52 @@ func (cpkg *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldNam
 	return newName, nil
 }
 
-func (cpkg *Package) windowsExt() string {
-	if cpkg.PackageInfo.WindowsExt == "" {
-		if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
+func (p *Package) windowsExt() string {
+	if p.PackageInfo.WindowsExt == "" {
+		if p.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || p.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
 			return ".sh"
 		}
 		return ".exe"
 	}
-	return cpkg.PackageInfo.WindowsExt
+	return p.PackageInfo.WindowsExt
 }
 
-func (cpkg *Package) completeWindowsExt(s string) string {
-	if cpkg.PackageInfo.CompleteWindowsExt != nil {
-		if *cpkg.PackageInfo.CompleteWindowsExt {
-			return s + cpkg.windowsExt()
+func (p *Package) completeWindowsExt(s string) string {
+	if p.PackageInfo.CompleteWindowsExt != nil {
+		if *p.PackageInfo.CompleteWindowsExt {
+			return s + p.windowsExt()
 		}
 		return s
 	}
-	if cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || cpkg.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
+	if p.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || p.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
 		return s
 	}
-	return s + cpkg.windowsExt()
+	return s + p.windowsExt()
 }
 
-func (cpkg *Package) completeWindowsExtToAsset(asset string) string {
+func (p *Package) completeWindowsExtToAsset(asset string) string {
 	if strings.HasSuffix(asset, ".exe") {
 		return asset
 	}
-	if cpkg.PackageInfo.Format == "raw" {
-		return cpkg.completeWindowsExt(asset)
+	if p.PackageInfo.Format == "raw" {
+		return p.completeWindowsExt(asset)
 	}
-	if cpkg.PackageInfo.Format != "" {
+	if p.PackageInfo.Format != "" {
 		return asset
 	}
-	if util.Ext(asset, cpkg.Package.Version) == "" {
-		return cpkg.completeWindowsExt(asset)
+	if util.Ext(asset, p.Package.Version) == "" {
+		return p.completeWindowsExt(asset)
 	}
 	return asset
 }
 
-func (cpkg *Package) completeWindowsExtToURL(url string) string {
-	return cpkg.completeWindowsExtToAsset(url)
+func (p *Package) completeWindowsExtToURL(url string) string {
+	return p.completeWindowsExtToAsset(url)
 }
 
-func (cpkg *Package) completeWindowsExtToFileSrc(src string) string {
-	if util.Ext(src, cpkg.Package.Version) == "" {
-		return src + cpkg.windowsExt()
+func (p *Package) completeWindowsExtToFileSrc(src string) string {
+	if util.Ext(src, p.Package.Version) == "" {
+		return src + p.windowsExt()
 	}
 	return src
 }

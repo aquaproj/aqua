@@ -17,12 +17,12 @@ type rawUnarchiver struct {
 	fs   afero.Fs
 }
 
-func (unarchiver *rawUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
-	dest := unarchiver.dest
-	if err := util.MkdirAll(unarchiver.fs, filepath.Dir(dest)); err != nil {
+func (u *rawUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+	dest := u.dest
+	if err := util.MkdirAll(u.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
-	f, err := unarchiver.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
+	f, err := u.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("open the file (%s): %w", dest, err)
 	}

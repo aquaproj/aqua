@@ -15,6 +15,6 @@ type MockInstaller struct {
 	Err error
 }
 
-func (inst *MockInstaller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	return inst.Err
+func (is *MockInstaller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+	return is.Err
 }

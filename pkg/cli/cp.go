@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newCpCommand() *cli.Command {
+func (r *Runner) newCpCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "cp",
 		Usage:     "Copy executable files in a directory",
@@ -60,11 +60,11 @@ e.g.
 $ aqua cp -t foo # Copy only packages having a tag "foo"
 $ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 `,
-		Action: runner.cpAction,
+		Action: r.cpAction,
 	}
 }
 
-func (runner *Runner) cpAction(c *cli.Context) error {
+func (r *Runner) cpAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -78,12 +78,12 @@ func (runner *Runner) cpAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "cp", param); err != nil {
+	if err := r.setParam(c, "cp", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl := controller.InitializeCopyCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
-	if err := ctrl.Copy(c.Context, runner.LogE, param); err != nil {
+	ctrl := controller.InitializeCopyCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	if err := ctrl.Copy(c.Context, r.LogE, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

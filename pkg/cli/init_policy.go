@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newInitPolicyCommand() *cli.Command {
+func (r *Runner) newInitPolicyCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "init-policy",
 		Usage:     "[Deprecated] Create a policy file if it doesn't exist",
@@ -20,11 +20,11 @@ Please use "aqua policy init" command instead.
 e.g.
 $ aqua init-policy # create "aqua-policy.yaml"
 $ aqua init-policy foo.yaml # create foo.yaml`,
-		Action: runner.initPolicyAction,
+		Action: r.initPolicyAction,
 	}
 }
 
-func (runner *Runner) initPolicyAction(c *cli.Context) error {
+func (r *Runner) initPolicyAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -38,9 +38,9 @@ func (runner *Runner) initPolicyAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "init-policy", param); err != nil {
+	if err := r.setParam(c, "init-policy", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitPolicyCommandController(c.Context)
-	return ctrl.Init(c.Context, c.Args().First(), runner.LogE) //nolint:wrapcheck
+	return ctrl.Init(c.Context, c.Args().First(), r.LogE) //nolint:wrapcheck
 }

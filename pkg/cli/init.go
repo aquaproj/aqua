@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newInitCommand() *cli.Command {
+func (r *Runner) newInitCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "init",
 		Usage:     "Create a configuration file if it doesn't exist",
@@ -17,11 +17,11 @@ func (runner *Runner) newInitCommand() *cli.Command {
 e.g.
 $ aqua init # create "aqua.yaml"
 $ aqua init foo.yaml # create foo.yaml`,
-		Action: runner.initAction,
+		Action: r.initAction,
 	}
 }
 
-func (runner *Runner) initAction(c *cli.Context) error {
+func (r *Runner) initAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -35,9 +35,9 @@ func (runner *Runner) initAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "init", param); err != nil {
+	if err := r.setParam(c, "init", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(c.Context, param)
-	return ctrl.Init(c.Context, c.Args().First(), runner.LogE) //nolint:wrapcheck
+	return ctrl.Init(c.Context, c.Args().First(), r.LogE) //nolint:wrapcheck
 }

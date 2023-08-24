@@ -16,9 +16,9 @@ type Package struct {
 	Link        string   `yaml:",omitempty" json:"link,omitempty"`
 }
 
-func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (p *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type alias Package
-	a := alias(*pkg)
+	a := alias(*p)
 	if err := unmarshal(&a); err != nil {
 		return err
 	}
@@ -29,9 +29,9 @@ func (pkg *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if version != "" {
 		a.Version = version
 	}
-	*pkg = Package(a)
-	if pkg.Registry == "" {
-		pkg.Registry = RegistryTypeStandard
+	*p = Package(a)
+	if p.Registry == "" {
+		p.Registry = RegistryTypeStandard
 	}
 
 	return nil
@@ -67,7 +67,7 @@ const (
 	PkgInfoTypeCargo         = "cargo"
 )
 
-func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (r *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	arr := []*Registry{}
 	if err := unmarshal(&arr); err != nil {
 		return err
@@ -79,6 +79,6 @@ func (registries *Registries) UnmarshalYAML(unmarshal func(interface{}) error) e
 		}
 		m[registry.Name] = registry
 	}
-	*registries = m
+	*r = m
 	return nil
 }

@@ -35,8 +35,8 @@ type MockVerifier struct {
 	err error
 }
 
-func (mock *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
-	return mock.err
+func (m *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
+	return m.err
 }
 
 type ParamVerify struct {
@@ -47,26 +47,26 @@ type ParamVerify struct {
 	ArtifactPath string
 }
 
-func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
+func (v *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
 	f, err := download.ConvertDownloadedFileToFile(sp.ToDownloadedFile(), file, rt, art)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	rc, _, err := verifier.downloader.GetReadCloser(ctx, logE, f)
+	rc, _, err := v.downloader.GetReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("download a SLSA Provenance: %w", err)
 	}
 	defer rc.Close()
 
-	provenanceFile, err := afero.TempFile(verifier.fs, "", "")
+	provenanceFile, err := afero.TempFile(v.fs, "", "")
 	if err != nil {
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
 	defer provenanceFile.Close()
-	defer verifier.fs.Remove(provenanceFile.Name()) //nolint:errcheck
+	defer v.fs.Remove(provenanceFile.Name()) //nolint:errcheck
 	if _, err := io.Copy(provenanceFile, rc); err != nil {
 		return fmt.Errorf("copy a provenance to a temporal file: %w", err)
 	}
 
-	return verifier.exe.Verify(ctx, logE, param, provenanceFile.Name()) //nolint:wrapcheck
+	return v.exe.Verify(ctx, logE, param, provenanceFile.Name()) //nolint:wrapcheck
 }

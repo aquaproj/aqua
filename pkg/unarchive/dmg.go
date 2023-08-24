@@ -23,8 +23,8 @@ type Executor interface {
 	UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error)
 }
 
-func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
-	if err := util.MkdirAll(unarchiver.fs, unarchiver.dest); err != nil {
+func (u *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+	if err := util.MkdirAll(u.fs, u.dest); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 
@@ -33,27 +33,27 @@ func (unarchiver *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Ent
 		return fmt.Errorf("get a temporal file path: %w", err)
 	}
 
-	tmpMountPoint, err := afero.TempDir(unarchiver.fs, "", "")
+	tmpMountPoint, err := afero.TempDir(u.fs, "", "")
 	if err != nil {
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
 
-	if _, err := unarchiver.executor.HdiutilAttach(ctx, tempFilePath, tmpMountPoint); err != nil {
-		if err := unarchiver.fs.Remove(tmpMountPoint); err != nil {
+	if _, err := u.executor.HdiutilAttach(ctx, tempFilePath, tmpMountPoint); err != nil {
+		if err := u.fs.Remove(tmpMountPoint); err != nil {
 			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
 		}
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 	defer func() {
-		if _, err := unarchiver.executor.HdiutilDetach(ctx, tmpMountPoint); err != nil {
+		if _, err := u.executor.HdiutilDetach(ctx, tmpMountPoint); err != nil {
 			logE.WithError(err).Warn("detach a DMG file")
 		}
-		if err := unarchiver.fs.Remove(tmpMountPoint); err != nil {
+		if err := u.fs.Remove(tmpMountPoint); err != nil {
 			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
 		}
 	}()
 
-	if err := util.Copy(unarchiver.fs, tmpMountPoint, unarchiver.dest); err != nil {
+	if err := util.Copy(u.fs, tmpMountPoint, u.dest); err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
 	}
 
