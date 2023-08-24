@@ -28,10 +28,10 @@ func NewGoBuildInstallerImpl(exec Executor) *GoBuildInstallerImpl {
 	}
 }
 
-func (inst *GoBuildInstallerImpl) Install(ctx context.Context, exePath, exeDir, src string) error {
+func (is *GoBuildInstallerImpl) Install(ctx context.Context, exePath, exeDir, src string) error {
 	cmd := exec.CommandContext(ctx, "go", "build", "-o", exePath, src)
 	cmd.Dir = exeDir
-	if _, err := inst.exec.ExecCommand(cmd); err != nil {
+	if _, err := is.exec.ExecCommand(cmd); err != nil {
 		return fmt.Errorf("build a go package: %w", err)
 	}
 	return nil

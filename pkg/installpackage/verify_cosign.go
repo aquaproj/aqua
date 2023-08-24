@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *InstallerImpl) verifyWithCosign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
+func (is *InstallerImpl) verifyWithCosign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
 	ppkg := param.Package
 
 	cos := ppkg.PackageInfo.Cosign
@@ -17,16 +17,16 @@ func (inst *InstallerImpl) verifyWithCosign(ctx context.Context, logE *logrus.En
 		return nil
 	}
 
-	art := ppkg.GetTemplateArtifact(inst.runtime, param.Asset)
+	art := ppkg.GetTemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with Cosign")
-	if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
+	if err := is.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
 		return fmt.Errorf("install sigstore/cosign: %w", err)
 	}
 	tempFilePath, err := bodyFile.GetPath()
 	if err != nil {
 		return fmt.Errorf("get a temporal file path: %w", err)
 	}
-	if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
+	if err := is.cosign.Verify(ctx, logE, is.runtime, &download.File{
 		RepoOwner: ppkg.PackageInfo.RepoOwner,
 		RepoName:  ppkg.PackageInfo.RepoName,
 		Version:   ppkg.Package.Version,

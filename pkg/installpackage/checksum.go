@@ -16,8 +16,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
-	file, _, err := inst.checksumDownloader.DownloadChecksum(ctx, logE, inst.runtime, pkg)
+func (is *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
+	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logE, is.runtime, pkg)
 	if err != nil {
 		return "", fmt.Errorf("download a checksum file: %w", err)
 	}
@@ -29,21 +29,21 @@ func (inst *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logru
 	}
 
 	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() {
-		f, err := afero.TempFile(inst.fs, "", "")
+		f, err := afero.TempFile(is.fs, "", "")
 		if err != nil {
 			return "", fmt.Errorf("create a temporal file: %w", err)
 		}
 		defer f.Close()
-		defer inst.fs.Remove(f.Name()) //nolint:errcheck
+		defer is.fs.Remove(f.Name()) //nolint:errcheck
 		if _, err := f.Write(b); err != nil {
 			return "", fmt.Errorf("write a checksum to a temporal file: %w", err)
 		}
-		art := pkg.GetTemplateArtifact(inst.runtime, assetName)
+		art := pkg.GetTemplateArtifact(is.runtime, assetName)
 		logE.Info("verify a checksum file with Cosign")
-		if err := inst.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
+		if err := is.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
 			return "", err
 		}
-		if err := inst.cosign.Verify(ctx, logE, inst.runtime, &download.File{
+		if err := is.cosign.Verify(ctx, logE, is.runtime, &download.File{
 			RepoOwner: pkg.PackageInfo.RepoOwner,
 			RepoName:  pkg.PackageInfo.RepoName,
 			Version:   pkg.Package.Version,
@@ -65,7 +65,7 @@ type ParamVerifyChecksum struct {
 	SkipSetChecksum bool
 }
 
-func (inst *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry, param *DownloadParam, bodyFile *download.DownloadedFile) error {
+func (is *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry, param *DownloadParam, bodyFile *download.DownloadedFile) error {
 	if param.Checksum == nil && param.Checksums == nil {
 		return nil
 	}
@@ -85,7 +85,7 @@ func (inst *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.
 
 	if param.Checksum == nil {
 		paramVerifyChecksum.SkipSetChecksum = false
-		cid, err := ppkg.GetChecksumID(inst.runtime)
+		cid, err := ppkg.GetChecksumID(is.runtime)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
@@ -99,13 +99,13 @@ func (inst *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.
 		}
 	}
 
-	if err := inst.verifyChecksum(ctx, logE, paramVerifyChecksum); err != nil {
+	if err := is.verifyChecksum(ctx, logE, paramVerifyChecksum); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop,funlen
+func (is *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
@@ -130,7 +130,7 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
 		logE.Info("downloading a checksum file")
-		c, err := inst.dlAndExtractChecksum(ctx, logE, pkg, assetName)
+		c, err := is.dlAndExtractChecksum(ctx, logE, pkg, assetName)
 		if err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"asset_name": assetName,
@@ -148,7 +148,7 @@ func (inst *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entr
 	if chksum != nil {
 		algorithm = chksum.Algorithm
 	}
-	calculatedSum, err := inst.checksumCalculator.Calculate(inst.fs, tempFilePath, algorithm)
+	calculatedSum, err := is.checksumCalculator.Calculate(is.fs, tempFilePath, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
 			"temp_file": tempFilePath,

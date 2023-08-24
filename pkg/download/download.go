@@ -50,14 +50,14 @@ type Mock struct {
 	Err  error
 }
 
-func (mock *Mock) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
-	return mock.RC, mock.Code, mock.Err
+func (m *Mock) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
+	return m.RC, m.Code, m.Err
 }
 
-func (downloader *Downloader) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
+func (dl *Downloader) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
 	switch file.Type {
 	case config.PkgInfoTypeGitHubRelease:
-		return downloader.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
+		return dl.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
 			RepoOwner: file.RepoOwner,
 			RepoName:  file.RepoName,
 			Version:   file.Version,
@@ -65,7 +65,7 @@ func (downloader *Downloader) GetReadCloser(ctx context.Context, logE *logrus.En
 			Private:   file.Private,
 		})
 	case config.PkgInfoTypeGitHubContent:
-		file, err := downloader.ghContent.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
+		file, err := dl.ghContent.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 			RepoOwner: file.RepoOwner,
 			RepoName:  file.RepoName,
 			Ref:       file.Version,
@@ -80,9 +80,9 @@ func (downloader *Downloader) GetReadCloser(ctx context.Context, logE *logrus.En
 		}
 		return io.NopCloser(strings.NewReader(file.String)), 0, nil
 	case config.PkgInfoTypeGitHubArchive:
-		return downloader.getReadCloserFromGitHubArchive(ctx, file)
+		return dl.getReadCloserFromGitHubArchive(ctx, file)
 	case config.PkgInfoTypeHTTP:
-		rc, code, err := downloader.http.Download(ctx, file.URL)
+		rc, code, err := dl.http.Download(ctx, file.URL)
 		if err != nil {
 			return rc, code, fmt.Errorf("download a package: %w", logerr.WithFields(err, logrus.Fields{
 				"download_url": file.URL,

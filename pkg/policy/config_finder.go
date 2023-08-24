@@ -17,8 +17,8 @@ type MockConfigFinder struct {
 	err  error
 }
 
-func (finder *MockConfigFinder) Find(policyFilePath, wd string) (string, error) {
-	return finder.path, finder.err
+func (f *MockConfigFinder) Find(policyFilePath, wd string) (string, error) {
+	return f.path, f.err
 }
 
 type ConfigFinderImpl struct {
@@ -40,9 +40,9 @@ func configFileNames() []string {
 	}
 }
 
-func (finder *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
+func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 	if policyFilePath != "" {
-		f, err := afero.Exists(finder.fs, policyFilePath)
+		f, err := afero.Exists(f.fs, policyFilePath)
 		if err != nil {
 			return "", fmt.Errorf("check if a policy file exists: %w", err)
 		}
@@ -55,13 +55,13 @@ func (finder *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) 
 		return filepath.Join(wd, policyFilePath), nil
 	}
 
-	gitDir := findconfig.Find(wd, finder.exist, ".git")
+	gitDir := findconfig.Find(wd, f.exist, ".git")
 	if gitDir == "" {
 		return "", nil
 	}
 	gitParentDir := filepath.Dir(gitDir)
 	for _, p := range configFileNames() {
-		if _, err := finder.fs.Stat(filepath.Join(gitParentDir, p)); err != nil {
+		if _, err := f.fs.Stat(filepath.Join(gitParentDir, p)); err != nil {
 			continue
 		}
 		return filepath.Join(gitParentDir, p), nil
@@ -69,8 +69,8 @@ func (finder *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) 
 	return "", nil
 }
 
-func (finder *ConfigFinderImpl) exist(p string) bool {
-	b, err := afero.IsDir(finder.fs, p)
+func (f *ConfigFinderImpl) exist(p string) bool {
+	b, err := afero.IsDir(f.fs, p)
 	if err != nil {
 		return false
 	}

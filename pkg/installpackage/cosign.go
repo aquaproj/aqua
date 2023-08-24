@@ -18,9 +18,9 @@ type Cosign struct {
 	mutex     *sync.Mutex
 }
 
-func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, version string) error {
-	cos.mutex.Lock()
-	defer cos.mutex.Unlock()
+func (c *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, version string) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	assetTemplate := `cosign-{{.OS}}-{{.Arch}}`
 	pkg := &config.Package{
 		Package: &aqua.Package{
@@ -40,13 +40,13 @@ func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, versio
 		},
 	}
 
-	chksum := cosign.Checksums()[cos.installer.runtime.Env()]
+	chksum := cosign.Checksums()[c.installer.runtime.Env()]
 
-	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, cos.installer.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, c.installer.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
-	supported, err := pkgInfo.CheckSupported(cos.installer.runtime, cos.installer.runtime.Env())
+	supported, err := pkgInfo.CheckSupported(c.installer.runtime, c.installer.runtime.Env())
 	if err != nil {
 		return fmt.Errorf("check if cosign is supported: %w", err)
 	}
@@ -57,7 +57,7 @@ func (cos *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, versio
 
 	pkg.PackageInfo = pkgInfo
 
-	if err := cos.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
+	if err := c.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums: checksum.New(), // Check cosign's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 		Checksum: &checksum.Checksum{

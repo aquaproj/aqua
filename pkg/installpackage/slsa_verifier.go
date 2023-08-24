@@ -18,9 +18,9 @@ type SLSAVerifier struct {
 	mutex     *sync.Mutex
 }
 
-func (slsaVerifier *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE *logrus.Entry, version string) error {
-	slsaVerifier.mutex.Lock()
-	defer slsaVerifier.mutex.Unlock()
+func (sv *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE *logrus.Entry, version string) error {
+	sv.mutex.Lock()
+	defer sv.mutex.Unlock()
 	assetTemplate := `slsa-verifier-{{.OS}}-{{.Arch}}`
 	pkg := &config.Package{
 		Package: &aqua.Package{
@@ -35,13 +35,13 @@ func (slsaVerifier *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE 
 		},
 	}
 
-	chksum := slsa.Checksums()[slsaVerifier.installer.runtime.Env()]
+	chksum := slsa.Checksums()[sv.installer.runtime.Env()]
 
-	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, slsaVerifier.installer.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, sv.installer.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
-	supported, err := pkgInfo.CheckSupported(slsaVerifier.installer.runtime, slsaVerifier.installer.runtime.Env())
+	supported, err := pkgInfo.CheckSupported(sv.installer.runtime, sv.installer.runtime.Env())
 	if err != nil {
 		return fmt.Errorf("check if slsa-verifier is supported: %w", err)
 	}
@@ -52,7 +52,7 @@ func (slsaVerifier *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE 
 
 	pkg.PackageInfo = pkgInfo
 
-	if err := slsaVerifier.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
+	if err := sv.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums: checksum.New(), // Check slsa-verifier's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 		Checksum: &checksum.Checksum{

@@ -42,8 +42,8 @@ type MockExecutor struct {
 	Err error
 }
 
-func (mock *MockExecutor) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
-	return mock.Err
+func (m *MockExecutor) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
+	return m.Err
 }
 
 func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
@@ -59,17 +59,17 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	return nil
 }
 
-func (exe *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) {
+func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) {
 	mutex := cosign.GetMutex()
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := exe.executor.ExecWithEnvsAndGetCombinedOutput(ctx, exe.verifierExePath, args, nil)
+	out, _, err := e.executor.ExecWithEnvsAndGetCombinedOutput(ctx, e.verifierExePath, args, nil)
 	return out, err //nolint:wrapcheck
 }
 
 var errVerify = errors.New("verify with slsa-verifier")
 
-func (exe *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
+func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
 	args := []string{
 		"verify-artifact",
 		param.ArtifactPath,
@@ -81,7 +81,7 @@ func (exe *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *
 		param.SourceTag,
 	}
 	for i := 0; i < 5; i++ {
-		if _, err := exe.exec(ctx, args); err == nil {
+		if _, err := e.exec(ctx, args); err == nil {
 			return nil
 		}
 		if i == 4 { //nolint:gomnd

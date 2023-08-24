@@ -14,7 +14,7 @@ func containPath(p string) bool {
 	return true
 }
 
-func (inst *InstallerImpl) walk(pkgPath string) ([]string, error) {
+func (is *InstallerImpl) walk(pkgPath string) ([]string, error) {
 	paths := []string{}
 	if err := filepath.WalkDir(pkgPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {

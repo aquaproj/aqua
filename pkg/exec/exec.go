@@ -24,34 +24,34 @@ func New() *Executor {
 	}
 }
 
-func (exe *Executor) ExecCommand(cmd *exec.Cmd) (int, error) {
-	return exe.exec(exe.command(cmd))
+func (e *Executor) ExecCommand(cmd *exec.Cmd) (int, error) {
+	return e.exec(e.command(cmd))
 }
 
-func (exe *Executor) Exec(ctx context.Context, exePath string, args ...string) (int, error) {
-	return exe.exec(exe.command(exec.CommandContext(ctx, exePath, args...)))
+func (e *Executor) Exec(ctx context.Context, exePath string, args ...string) (int, error) {
+	return e.exec(e.command(exec.CommandContext(ctx, exePath, args...)))
 }
 
-func (exe *Executor) ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error) {
+func (e *Executor) ExecWithEnvs(ctx context.Context, exePath string, args, envs []string) (int, error) {
 	cmd := exec.CommandContext(ctx, exePath, args...)
 	cmd.Env = append(os.Environ(), envs...)
-	return exe.exec(exe.command(cmd))
+	return e.exec(e.command(cmd))
 }
 
-func (exe *Executor) ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error) {
-	cmd := exe.command(exec.CommandContext(ctx, exePath, args...))
+func (e *Executor) ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error) {
+	cmd := e.command(exec.CommandContext(ctx, exePath, args...))
 	cmd.Env = append(os.Environ(), envs...)
 	out := &bytes.Buffer{}
-	cmd.Stdout = io.MultiWriter(exe.stdout, out)
-	cmd.Stderr = io.MultiWriter(exe.stderr, out)
-	code, err := exe.exec(cmd)
+	cmd.Stdout = io.MultiWriter(e.stdout, out)
+	cmd.Stderr = io.MultiWriter(e.stderr, out)
+	code, err := e.exec(cmd)
 	return out.String(), code, err
 }
 
-func (exe *Executor) command(cmd *exec.Cmd) *exec.Cmd {
-	cmd.Stdin = exe.stdin
-	cmd.Stdout = exe.stdout
-	cmd.Stderr = exe.stderr
+func (e *Executor) command(cmd *exec.Cmd) *exec.Cmd {
+	cmd.Stdin = e.stdin
+	cmd.Stdout = e.stdout
+	cmd.Stderr = e.stderr
 	return cmd
 }
 
@@ -64,7 +64,7 @@ func setCancel(cmd *exec.Cmd) {
 	cmd.WaitDelay = waitDelay
 }
 
-func (exe *Executor) exec(cmd *exec.Cmd) (int, error) {
+func (e *Executor) exec(cmd *exec.Cmd) (int, error) {
 	setCancel(cmd)
 	if err := cmd.Run(); err != nil {
 		return cmd.ProcessState.ExitCode(), err
@@ -73,13 +73,13 @@ func (exe *Executor) exec(cmd *exec.Cmd) (int, error) {
 }
 
 // execAndOutputWhenFailure executes a command, and outputs the command output to standard error only when the command failed.
-func (exe *Executor) execAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
+func (e *Executor) execAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
 	buf := &bytes.Buffer{}
 	cmd.Stdout = buf
 	cmd.Stderr = buf
 	setCancel(cmd)
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintln(exe.stderr, buf.String())
+		fmt.Fprintln(e.stderr, buf.String())
 		return cmd.ProcessState.ExitCode(), err
 	}
 	return 0, nil

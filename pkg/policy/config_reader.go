@@ -28,18 +28,18 @@ type MockConfigReader struct {
 	Err  error
 }
 
-func (reader *MockConfigReader) Read(files []string) ([]*Config, error) {
-	return reader.Cfgs, reader.Err
+func (r *MockConfigReader) Read(files []string) ([]*Config, error) {
+	return r.Cfgs, r.Err
 }
 
-func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
+func (r *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 	policyCfgs := make([]*Config, len(files))
 	for i, cfgFilePath := range files {
 		policyCfg := &Config{
 			Path: cfgFilePath,
 			YAML: &ConfigYAML{},
 		}
-		if err := reader.read(policyCfg); err != nil {
+		if err := r.read(policyCfg); err != nil {
 			return nil, fmt.Errorf("read the policy config file: %w", err)
 		}
 		policyCfgs[i] = policyCfg
@@ -47,19 +47,19 @@ func (reader *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 	return policyCfgs, nil
 }
 
-func (reader *ConfigReaderImpl) ReadFile(file string) (*Config, error) {
+func (r *ConfigReaderImpl) ReadFile(file string) (*Config, error) {
 	policyCfg := &Config{
 		Path: file,
 		YAML: &ConfigYAML{},
 	}
-	if err := reader.read(policyCfg); err != nil {
+	if err := r.read(policyCfg); err != nil {
 		return nil, fmt.Errorf("read the policy config file: %w", err)
 	}
 	return policyCfg, nil
 }
 
-func (reader *ConfigReaderImpl) read(cfg *Config) error {
-	file, err := reader.fs.Open(cfg.Path)
+func (r *ConfigReaderImpl) read(cfg *Config) error {
+	file, err := r.fs.Open(cfg.Path)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

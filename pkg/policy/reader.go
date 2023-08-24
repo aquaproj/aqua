@@ -21,13 +21,13 @@ type MockReader struct {
 	Err     error
 }
 
-func (reader *MockReader) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
-	allowCfgs(reader.Configs)
-	return reader.Configs, reader.Err
+func (r *MockReader) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
+	allowCfgs(r.Configs)
+	return r.Configs, r.Err
 }
 
-func (reader *MockReader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
-	return reader.Configs, reader.Err
+func (r *MockReader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+	return r.Configs, r.Err
 }
 
 type ReaderImpl struct {
@@ -50,16 +50,16 @@ func NewReader(fs afero.Fs, validator Validator, finder ConfigFinder, reader Con
 	}
 }
 
-func (reader *ReaderImpl) get(p string) *Config {
-	reader.mutex.RLock()
-	defer reader.mutex.RUnlock()
-	return reader.policies[p]
+func (r *ReaderImpl) get(p string) *Config {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	return r.policies[p]
 }
 
-func (reader *ReaderImpl) set(p string, cfg *Config) {
-	reader.mutex.Lock()
-	defer reader.mutex.Unlock()
-	reader.policies[p] = cfg
+func (r *ReaderImpl) set(p string, cfg *Config) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	r.policies[p] = cfg
 }
 
 func allowCfgs(cfgs []*Config) {
@@ -68,8 +68,8 @@ func allowCfgs(cfgs []*Config) {
 	}
 }
 
-func (reader *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
-	cfgs, err := reader.reader.Read(policyFilePaths)
+func (r *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
+	cfgs, err := r.reader.Read(policyFilePaths)
 	if err != nil {
 		return nil, fmt.Errorf("read policies from the environment variable: %w", err)
 	}
@@ -77,31 +77,31 @@ func (reader *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, erro
 	return cfgs, nil
 }
 
-func (reader *ReaderImpl) read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
-	if cfg := reader.get(policyFilePath); cfg != nil {
+func (r *ReaderImpl) read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
+	if cfg := r.get(policyFilePath); cfg != nil {
 		if cfg.Allowed {
 			return cfg, nil
 		}
 		return nil, nil //nolint:nilnil
 	}
-	if err := reader.validator.Validate(policyFilePath); err != nil {
-		reader.set(policyFilePath, &Config{})
-		if err := reader.validator.Warn(logE, policyFilePath, errors.Is(err, errPolicyUpdated)); err != nil {
+	if err := r.validator.Validate(policyFilePath); err != nil {
+		r.set(policyFilePath, &Config{})
+		if err := r.validator.Warn(logE, policyFilePath, errors.Is(err, errPolicyUpdated)); err != nil {
 			logE.WithError(err).Warn("warn an denied policy file")
 		}
 		return nil, nil //nolint:nilnil
 	}
-	cfg, err := reader.reader.ReadFile(policyFilePath)
+	cfg, err := r.reader.ReadFile(policyFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("read a policy file: %w", err)
 	}
 	cfg.Allowed = true
-	reader.set(policyFilePath, cfg)
+	r.set(policyFilePath, cfg)
 	return cfg, nil
 }
 
-func (reader *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
-	policyFilePath, err := reader.finder.Find("", filepath.Dir(aquaYAMLPath))
+func (r *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+	policyFilePath, err := r.finder.Find("", filepath.Dir(aquaYAMLPath))
 	if err != nil {
 		return nil, fmt.Errorf("find a policy file: %w", err)
 	}
@@ -111,7 +111,7 @@ func (reader *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, polici
 	if _, ok := globalPolicyPaths[policyFilePath]; ok {
 		return policies, nil
 	}
-	policyCfg, err := reader.read(logE, policyFilePath)
+	policyCfg, err := r.read(logE, policyFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("read a policy file: %w", err)
 	}

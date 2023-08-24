@@ -23,69 +23,69 @@ func NewDownloadedFile(fs afero.Fs, body io.ReadCloser, pb *progressbar.Progress
 	}
 }
 
-func (file *DownloadedFile) Close() error {
-	return file.body.Close() //nolint:wrapcheck
+func (f *DownloadedFile) Close() error {
+	return f.body.Close() //nolint:wrapcheck
 }
 
-func (file *DownloadedFile) Remove() error {
-	if file.path == "" {
+func (f *DownloadedFile) Remove() error {
+	if f.path == "" {
 		return nil
 	}
-	return file.fs.Remove(file.path) //nolint:wrapcheck //nolint:errcheck
+	return f.fs.Remove(f.path) //nolint:wrapcheck //nolint:errcheck
 }
 
-func (file *DownloadedFile) GetPath() (string, error) {
-	if file.path != "" {
-		return file.path, nil
+func (f *DownloadedFile) GetPath() (string, error) {
+	if f.path != "" {
+		return f.path, nil
 	}
-	if err := file.copy(); err != nil {
+	if err := f.copy(); err != nil {
 		return "", err
 	}
-	return file.path, nil
+	return f.path, nil
 }
 
-func (file *DownloadedFile) Read() (io.ReadCloser, error) {
-	if file.path == "" {
-		if err := file.copy(); err != nil {
+func (f *DownloadedFile) Read() (io.ReadCloser, error) {
+	if f.path == "" {
+		if err := f.copy(); err != nil {
 			return nil, err
 		}
 	}
-	return file.read()
+	return f.read()
 }
 
-func (file *DownloadedFile) ReadLast() (io.ReadCloser, error) {
-	if file.path == "" {
-		return file.body, nil
+func (f *DownloadedFile) ReadLast() (io.ReadCloser, error) {
+	if f.path == "" {
+		return f.body, nil
 	}
-	return file.read()
+	return f.read()
 }
 
-func (file *DownloadedFile) read() (io.ReadCloser, error) {
-	f, err := file.fs.Open(file.path)
+func (f *DownloadedFile) read() (io.ReadCloser, error) {
+	file, err := f.fs.Open(f.path)
 	if err != nil {
 		return nil, fmt.Errorf("open a file: %w", err)
 	}
-	return f, nil
+	return file, nil
 }
 
-func (file *DownloadedFile) Wrap(w io.Writer) io.Writer {
-	if file.pb != nil && file.path == "" {
-		return io.MultiWriter(w, file.pb)
+func (f *DownloadedFile) Wrap(w io.Writer) io.Writer {
+	if f.pb != nil && f.path == "" {
+		return io.MultiWriter(w, f.pb)
 	}
 	return w
 }
 
-func (file *DownloadedFile) copy() error {
-	tmp, err := afero.TempFile(file.fs, "", "")
+func (f *DownloadedFile) copy() error {
+	tmp, err := afero.TempFile(f.fs, "", "")
 	if err != nil {
 		return fmt.Errorf("create a temporal file: %w", err)
 	}
-	file.path = tmp.Name()
+	f.path = tmp.Name()
 	var w io.Writer = tmp
-	if file.pb != nil {
-		w = io.MultiWriter(tmp, file.pb)
+	if f.pb != nil {
+		w = io.MultiWriter(tmp, f.pb)
 	}
-	if _, err := io.Copy(w, file.body); err != nil {
+	if _, err := io.Copy(w, f.body); err != nil {
 		return fmt.Errorf("copy a file: %w", err)
 	}
 	return nil

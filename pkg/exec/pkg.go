@@ -5,6 +5,6 @@ import (
 	"os/exec"
 )
 
-func (exe *Executor) UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error) {
-	return exe.execAndOutputWhenFailure(exe.command(exec.CommandContext(ctx, "pkgutil", "--expand-full", pkgFilePath, dest)))
+func (e *Executor) UnarchivePkg(ctx context.Context, pkgFilePath, dest string) (int, error) {
+	return e.execAndOutputWhenFailure(e.command(exec.CommandContext(ctx, "pkgutil", "--expand-full", pkgFilePath, dest)))
 }
