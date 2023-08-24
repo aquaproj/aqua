@@ -10,8 +10,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -93,7 +93,7 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 	for i := 0; i < 10; i++ {
 		logE.Debug("check if exec file exists")
 		if fi, err := c.fs.Stat(findResult.ExePath); err == nil {
-			if util.IsOwnerExecutable(fi.Mode()) {
+			if osfile.IsOwnerExecutable(fi.Mode()) {
 				break
 			}
 		}

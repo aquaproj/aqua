@@ -3,8 +3,8 @@ package policy_test
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/spf13/afero"
 )
 
@@ -62,7 +62,7 @@ func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 				}
 			}
 			for name := range d.dirs {
-				if err := util.MkdirAll(fs, name); err != nil {
+				if err := osfile.MkdirAll(fs, name); err != nil {
 					t.Fatal(err)
 				}
 			}

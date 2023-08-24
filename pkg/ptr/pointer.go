@@ -1,4 +1,4 @@
-package util
+package ptr
 
 func StrP(a string) *string {
 	return &a

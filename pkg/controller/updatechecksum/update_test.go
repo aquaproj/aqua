@@ -14,8 +14,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -52,7 +52,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: util.BoolP(true),
+						Enabled: ptr.BoolP(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -71,7 +71,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
-								Asset:     util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+								Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 							},
 						},
 					},
@@ -113,7 +113,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: util.BoolP(true),
+						Enabled: ptr.BoolP(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -132,7 +132,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
-								Asset:     util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+								Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 								Checksum: &registry.Checksum{
 									Type:       "github_release",
 									Asset:      "gh_{{trimV .Version}}_checksums.txt",

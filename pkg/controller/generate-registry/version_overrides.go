@@ -11,7 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -165,7 +165,7 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	if getBool(pkgInfo.Rosetta2) != getBool(latestPkgInfo.Rosetta2) {
 		vo.Rosetta2 = pkgInfo.Rosetta2
 		if pkgInfo.Rosetta2 == nil {
-			vo.Rosetta2 = util.BoolP(false)
+			vo.Rosetta2 = ptr.BoolP(false)
 		}
 	}
 	if pkgInfo.WindowsExt != latestPkgInfo.WindowsExt {
@@ -174,14 +174,14 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	if !reflect.DeepEqual(pkgInfo.VersionPrefix, latestPkgInfo.VersionPrefix) {
 		vo.VersionPrefix = pkgInfo.VersionPrefix
 		if pkgInfo.VersionPrefix == nil {
-			vo.VersionPrefix = util.StrP("")
+			vo.VersionPrefix = ptr.StrP("")
 		}
 	}
 	if !reflect.DeepEqual(pkgInfo.Checksum, latestPkgInfo.Checksum) {
 		vo.Checksum = pkgInfo.Checksum
 		if pkgInfo.Checksum == nil {
 			vo.Checksum = &registry.Checksum{
-				Enabled: util.BoolP(false),
+				Enabled: ptr.BoolP(false),
 			}
 		}
 	}

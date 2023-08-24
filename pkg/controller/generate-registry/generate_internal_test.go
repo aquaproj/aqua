@@ -7,7 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 )
@@ -50,7 +50,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				Description: "hello",
 			},
 			repo: &github.Repository{
-				Description: util.StrP("hello."),
+				Description: ptr.StrP("hello."),
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				RepoName:    "cli",
 				Type:        "github_release",
 				Description: "GitHub’s official command line tool",
-				Asset:       util.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+				Asset:       ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 				Format:      "tar.gz",
 				Replacements: registry.Replacements{
 					"darwin": "macOS",
@@ -77,28 +77,28 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 					"linux",
 					"amd64",
 				},
-				Rosetta2: util.BoolP(true),
+				Rosetta2: ptr.BoolP(true),
 			},
 			repo: &github.Repository{
-				Description: util.StrP("GitHub’s official command line tool"),
+				Description: ptr.StrP("GitHub’s official command line tool"),
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: util.StrP("v2.13.0"),
+					TagName: ptr.StrP("v2.13.0"),
 				},
 			},
 			assets: []*github.ReleaseAsset{
 				{
-					Name: util.StrP("gh_2.13.0_linux_amd64.tar.gz"),
+					Name: ptr.StrP("gh_2.13.0_linux_amd64.tar.gz"),
 				},
 				{
-					Name: util.StrP("gh_2.13.0_linux_arm64.tar.gz"),
+					Name: ptr.StrP("gh_2.13.0_linux_arm64.tar.gz"),
 				},
 				{
-					Name: util.StrP("gh_2.13.0_macOS_amd64.tar.gz"),
+					Name: ptr.StrP("gh_2.13.0_macOS_amd64.tar.gz"),
 				},
 				{
-					Name: util.StrP("gh_2.13.0_windows_amd64.zip"),
+					Name: ptr.StrP("gh_2.13.0_windows_amd64.zip"),
 				},
 			},
 		},
@@ -110,7 +110,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				RepoOwner:   "lotabout",
 				RepoName:    "skim",
 				Type:        "cargo",
-				Crate:       util.StrP("skim"),
+				Crate:       ptr.StrP("skim"),
 				Description: "Fuzzy Finder in rust!",
 			},
 			crate: &cargo.CratePayload{

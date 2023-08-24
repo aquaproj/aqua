@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
 )
 
@@ -34,7 +34,7 @@ func TestCalculator_Calculate(t *testing.T) {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()
-			if err := afero.WriteFile(fs, d.filename, []byte(d.content), util.FilePermission); err != nil {
+			if err := afero.WriteFile(fs, d.filename, []byte(d.content), osfile.FilePermission); err != nil {
 				t.Fatal(err)
 			}
 			c, err := calculator.Calculate(fs, d.filename, d.algorithm)

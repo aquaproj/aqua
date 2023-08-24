@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -19,7 +19,7 @@ type pkgUnarchiver struct {
 }
 
 func (u *pkgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
-	if err := util.MkdirAll(u.fs, filepath.Dir(u.dest)); err != nil {
+	if err := osfile.MkdirAll(u.fs, filepath.Dir(u.dest)); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 

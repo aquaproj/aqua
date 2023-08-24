@@ -9,7 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -122,9 +122,9 @@ func (is *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package, 
 	}
 
 	logE.Debug("check the permission")
-	if mode := finfo.Mode().Perm(); !util.IsOwnerExecutable(mode) {
+	if mode := finfo.Mode().Perm(); !osfile.IsOwnerExecutable(mode) {
 		logE.Debug("add the permission to execute the command")
-		if err := is.fs.Chmod(exePath, util.AllowOwnerExec(mode)); err != nil {
+		if err := is.fs.Chmod(exePath, osfile.AllowOwnerExec(mode)); err != nil {
 			return "", logerr.WithFields(errChmod, logE.Data) //nolint:wrapcheck
 		}
 	}

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -20,7 +20,7 @@ func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, fi
 	if !isWindows(rt.GOOS) {
 		return s, nil
 	}
-	if util.Ext(s, p.Package.Version) != "" {
+	if osfile.Ext(s, p.Package.Version) != "" {
 		return s, nil
 	}
 
@@ -82,7 +82,7 @@ func (p *Package) completeWindowsExtToAsset(asset string) string {
 	if p.PackageInfo.Format != "" {
 		return asset
 	}
-	if util.Ext(asset, p.Package.Version) == "" {
+	if osfile.Ext(asset, p.Package.Version) == "" {
 		return p.completeWindowsExt(asset)
 	}
 	return asset
@@ -93,7 +93,7 @@ func (p *Package) completeWindowsExtToURL(url string) string {
 }
 
 func (p *Package) completeWindowsExtToFileSrc(src string) string {
-	if util.Ext(src, p.Package.Version) == "" {
+	if osfile.Ext(src, p.Package.Version) == "" {
 		return src + p.windowsExt()
 	}
 	return src
