@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newAllowPolicyCommand() *cli.Command {
+func (r *Runner) newAllowPolicyCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "allow",
 		Usage: "Allow a policy file",
@@ -16,11 +16,11 @@ func (runner *Runner) newAllowPolicyCommand() *cli.Command {
 e.g.
 $ aqua policy allow [<policy file path>]
 `,
-		Action: runner.allowPolicyAction,
+		Action: r.allowPolicyAction,
 	}
 }
 
-func (runner *Runner) allowPolicyAction(c *cli.Context) error {
+func (r *Runner) allowPolicyAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -34,9 +34,9 @@ func (runner *Runner) allowPolicyAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "allow-policy", param); err != nil {
+	if err := r.setParam(c, "allow-policy", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeAllowPolicyCommandController(c.Context, param)
-	return ctrl.Allow(c.Context, runner.LogE, param, c.Args().First()) //nolint:wrapcheck
+	return ctrl.Allow(c.Context, r.LogE, param, c.Args().First()) //nolint:wrapcheck
 }

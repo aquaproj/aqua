@@ -4,56 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
-	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
-	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-type Controller struct {
-	stdin             io.Reader
-	github            RepositoriesService
-	registryInstaller rgst.Installer
-	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
-	fuzzyFinder       FuzzyFinder
-	versionSelector   VersionSelector
-	fs                afero.Fs
-	outputter         Outputter
-	cargoClient       cargo.Client
-}
-
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoClient cargo.Client) *Controller {
-	return &Controller{
-		stdin:             os.Stdin,
-		configFinder:      configFinder,
-		configReader:      configReader,
-		registryInstaller: registInstaller,
-		github:            gh,
-		fs:                fs,
-		fuzzyFinder:       fuzzyFinder,
-		versionSelector:   versionSelector,
-		cargoClient:       cargoClient,
-		outputter:         output.New(os.Stdout, fs),
-	}
-}
 
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
+func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
 	// Find and read a configuration file (aqua.yaml).
 	// Install registries
 	// List outputted packages
@@ -68,17 +34,17 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 	//       merge version with package name
 	//       set default value
 	//   Output to Stdout or Update aqua.yaml (-i)
-	cfgFilePath, err := ctrl.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
 	cfg := &aqua.Config{}
-	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	list, err := ctrl.listPkgs(ctx, logE, param, cfg, cfgFilePath, args...)
+	list, err := c.listPkgs(ctx, logE, param, cfg, cfgFilePath, args...)
 	if err != nil {
 		return err
 	}
@@ -87,7 +53,7 @@ func (ctrl *Controller) Generate(ctx context.Context, logE *logrus.Entry, param 
 		return nil
 	}
 
-	return ctrl.outputter.Output(&output.Param{ //nolint:wrapcheck
+	return c.outputter.Output(&output.Param{ //nolint:wrapcheck
 		Insert:         param.Insert,
 		Dest:           param.Dest,
 		List:           list,
@@ -101,37 +67,37 @@ type FindingPackage struct {
 	Version      string
 }
 
-func (ctrl *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
+func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
 	var checksums *checksum.Checksums
 	if cfg.ChecksumEnabled() {
 		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}
-		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+		if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
 			return nil, fmt.Errorf("read a checksum JSON: %w", err)
 		}
 		defer func() {
-			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+			if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
 				logE.WithError(err).Error("update a checksum file")
 			}
 		}()
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
 	if param.File != "" || len(args) != 0 {
-		return ctrl.listPkgsWithoutFinder(ctx, logE, param, registryContents, args...)
+		return c.listPkgsWithoutFinder(ctx, logE, param, registryContents, args...)
 	}
 
-	return ctrl.listPkgsWithFinder(ctx, logE, param, registryContents)
+	return c.listPkgsWithFinder(ctx, logE, param, registryContents)
 }
 
-func (ctrl *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*aqua.Package, error) {
+func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*aqua.Package, error) {
 	// maps the package and the registry
 	var pkgs []*FindingPackage
 	for registryName, registryContent := range registryContents {
@@ -144,7 +110,7 @@ func (ctrl *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Ent
 	}
 
 	// Launch the fuzzy finder
-	idxes, err := ctrl.fuzzyFinder.Find(pkgs)
+	idxes, err := c.fuzzyFinder.Find(pkgs)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil, nil
@@ -153,13 +119,13 @@ func (ctrl *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Ent
 	}
 	arr := make([]*aqua.Package, len(idxes))
 	for i, idx := range idxes {
-		arr[i] = ctrl.getOutputtedPkg(ctx, logE, param, pkgs[idx])
+		arr[i] = c.getOutputtedPkg(ctx, logE, param, pkgs[idx])
 	}
 
 	return arr, nil
 }
 
-func (ctrl *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*registry.Config, m map[string]*FindingPackage) {
+func (c *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*registry.Config, m map[string]*FindingPackage) {
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
 		for pkgName, pkg := range registryContent.PackageInfos.ToMap(logE) {
@@ -190,9 +156,9 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (ctrl *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
+func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
 	m := map[string]*FindingPackage{}
-	ctrl.setPkgMap(logE, registryContents, m)
+	c.setPkgMap(logE, registryContents, m)
 
 	outputPkgs := []*aqua.Package{}
 	for _, pkgName := range pkgNames {
@@ -203,12 +169,12 @@ func (ctrl *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": pkgName}) //nolint:wrapcheck
 		}
 		findingPkg.Version = version
-		outputPkg := ctrl.getOutputtedPkg(ctx, logE, param, findingPkg)
+		outputPkg := c.getOutputtedPkg(ctx, logE, param, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 
 	if param.File != "" {
-		pkgs, err := ctrl.readGeneratedPkgsFromFile(ctx, logE, param, outputPkgs, m)
+		pkgs, err := c.readGeneratedPkgsFromFile(ctx, logE, param, outputPkgs, m)
 		if err != nil {
 			return nil, err
 		}
@@ -217,37 +183,37 @@ func (ctrl *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.
 	return outputPkgs, nil
 }
 
-func (ctrl *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
+func (c *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
 	if pkgInfo.VersionSource == "github_tag" {
-		return ctrl.getVersionFromGitHubTag(ctx, logE, param, pkgInfo)
+		return c.getVersionFromGitHubTag(ctx, logE, param, pkgInfo)
 	}
 	if param.SelectVersion {
-		return ctrl.selectVersionFromReleases(ctx, logE, pkgInfo)
+		return c.selectVersionFromReleases(ctx, logE, pkgInfo)
 	}
 	if pkgInfo.VersionFilter != nil || pkgInfo.VersionPrefix != nil {
-		return ctrl.listAndGetTagName(ctx, logE, pkgInfo)
+		return c.listAndGetTagName(ctx, logE, pkgInfo)
 	}
-	return ctrl.getVersionFromLatestRelease(ctx, logE, pkgInfo)
+	return c.getVersionFromLatestRelease(ctx, logE, pkgInfo)
 }
 
-func (ctrl *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) string {
+func (c *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) string {
 	if pkg.Version != "" {
 		return pkg.Version
 	}
 	pkgInfo := pkg.PackageInfo
 	if pkgInfo.Type == "cargo" {
-		return ctrl.getCargoVersion(ctx, logE, param, pkg)
+		return c.getCargoVersion(ctx, logE, param, pkg)
 	}
-	if ctrl.github == nil {
+	if c.github == nil {
 		return ""
 	}
 	if pkgInfo.HasRepo() {
-		return ctrl.getVersionFromGitHub(ctx, logE, param, pkgInfo)
+		return c.getVersionFromGitHub(ctx, logE, param, pkgInfo)
 	}
 	return ""
 }
 
-func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) *aqua.Package {
+func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) *aqua.Package {
 	outputPkg := &aqua.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,
@@ -261,7 +227,7 @@ func (ctrl *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry,
 		outputPkg.Registry = ""
 	}
 	if outputPkg.Version == "" {
-		version := ctrl.getVersion(ctx, logE, param, pkg)
+		version := c.getVersion(ctx, logE, param, pkg)
 		if version == "" {
 			outputPkg.Version = "[SET PACKAGE VERSION]"
 			return outputPkg

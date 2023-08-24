@@ -20,7 +20,7 @@ func parseExecArgs(args []string) (string, []string, error) {
 	return filepath.Base(args[0]), args[1:], nil
 }
 
-func (runner *Runner) newExecCommand() *cli.Command {
+func (r *Runner) newExecCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "exec",
 		Usage: "Execute tool",
@@ -31,12 +31,12 @@ e.g.
 $ aqua exec -- gh version
 gh version 2.4.0 (2021-12-21)
 https://github.com/cli/cli/releases/tag/v2.4.0`,
-		Action:    runner.execAction,
+		Action:    r.execAction,
 		ArgsUsage: `<executed command> [<arg> ...]`,
 	}
 }
 
-func (runner *Runner) execAction(c *cli.Context) error {
+func (r *Runner) execAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -50,13 +50,13 @@ func (runner *Runner) execAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "exec", param); err != nil {
+	if err := r.setParam(c, "exec", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
+	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, r.Runtime)
 	exeName, args, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
-	return ctrl.Exec(c.Context, runner.LogE, param, exeName, args...) //nolint:wrapcheck
+	return ctrl.Exec(c.Context, r.LogE, param, exeName, args...) //nolint:wrapcheck
 }

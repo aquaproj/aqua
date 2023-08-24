@@ -103,103 +103,103 @@ type Override struct {
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 }
 
-func (pkgInfo *PackageInfo) Copy() *PackageInfo {
+func (p *PackageInfo) Copy() *PackageInfo {
 	pkg := &PackageInfo{
-		Name:               pkgInfo.Name,
-		Type:               pkgInfo.Type,
-		RepoOwner:          pkgInfo.RepoOwner,
-		RepoName:           pkgInfo.RepoName,
-		Asset:              pkgInfo.Asset,
-		Crate:              pkgInfo.Crate,
-		Cargo:              pkgInfo.Cargo,
-		Path:               pkgInfo.Path,
-		Format:             pkgInfo.Format,
-		Files:              pkgInfo.Files,
-		URL:                pkgInfo.URL,
-		Description:        pkgInfo.Description,
-		Link:               pkgInfo.Link,
-		Replacements:       pkgInfo.Replacements,
-		Overrides:          pkgInfo.Overrides,
-		FormatOverrides:    pkgInfo.FormatOverrides,
-		VersionConstraints: pkgInfo.VersionConstraints,
-		VersionOverrides:   pkgInfo.VersionOverrides,
-		SupportedEnvs:      pkgInfo.SupportedEnvs,
-		VersionFilter:      pkgInfo.VersionFilter,
-		VersionPrefix:      pkgInfo.VersionPrefix,
-		Rosetta2:           pkgInfo.Rosetta2,
-		Aliases:            pkgInfo.Aliases,
-		VersionSource:      pkgInfo.VersionSource,
-		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
-		WindowsExt:         pkgInfo.WindowsExt,
-		Checksum:           pkgInfo.Checksum,
-		Cosign:             pkgInfo.Cosign,
-		SLSAProvenance:     pkgInfo.SLSAProvenance,
-		Private:            pkgInfo.Private,
-		ErrorMessage:       pkgInfo.ErrorMessage,
-		NoAsset:            pkgInfo.NoAsset,
+		Name:               p.Name,
+		Type:               p.Type,
+		RepoOwner:          p.RepoOwner,
+		RepoName:           p.RepoName,
+		Asset:              p.Asset,
+		Crate:              p.Crate,
+		Cargo:              p.Cargo,
+		Path:               p.Path,
+		Format:             p.Format,
+		Files:              p.Files,
+		URL:                p.URL,
+		Description:        p.Description,
+		Link:               p.Link,
+		Replacements:       p.Replacements,
+		Overrides:          p.Overrides,
+		FormatOverrides:    p.FormatOverrides,
+		VersionConstraints: p.VersionConstraints,
+		VersionOverrides:   p.VersionOverrides,
+		SupportedEnvs:      p.SupportedEnvs,
+		VersionFilter:      p.VersionFilter,
+		VersionPrefix:      p.VersionPrefix,
+		Rosetta2:           p.Rosetta2,
+		Aliases:            p.Aliases,
+		VersionSource:      p.VersionSource,
+		CompleteWindowsExt: p.CompleteWindowsExt,
+		WindowsExt:         p.WindowsExt,
+		Checksum:           p.Checksum,
+		Cosign:             p.Cosign,
+		SLSAProvenance:     p.SLSAProvenance,
+		Private:            p.Private,
+		ErrorMessage:       p.ErrorMessage,
+		NoAsset:            p.NoAsset,
 	}
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
+func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	switch typ {
 	case PkgInfoTypeGitHubRelease:
-		pkgInfo.URL = nil
-		pkgInfo.Path = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
+		p.URL = nil
+		p.Path = nil
+		p.Crate = nil
+		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
+		p.URL = nil
+		p.Asset = nil
+		p.Crate = nil
+		p.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
-		pkgInfo.URL = nil
-		pkgInfo.Path = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
-		pkgInfo.Format = ""
+		p.URL = nil
+		p.Path = nil
+		p.Asset = nil
+		p.Crate = nil
+		p.Cargo = nil
+		p.Format = ""
 	case PkgInfoTypeHTTP:
-		pkgInfo.Path = nil
-		pkgInfo.Asset = nil
+		p.Path = nil
+		p.Asset = nil
 	case PkgInfoTypeGoInstall:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
-		pkgInfo.WindowsExt = ""
-		pkgInfo.CompleteWindowsExt = nil
-		pkgInfo.Cosign = nil
-		pkgInfo.SLSAProvenance = nil
-		pkgInfo.Format = ""
-		pkgInfo.Rosetta2 = nil
+		p.URL = nil
+		p.Asset = nil
+		p.Crate = nil
+		p.Cargo = nil
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Format = ""
+		p.Rosetta2 = nil
 	case PkgInfoTypeGoBuild:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
-		pkgInfo.WindowsExt = ""
-		pkgInfo.CompleteWindowsExt = nil
-		pkgInfo.Cosign = nil
-		pkgInfo.SLSAProvenance = nil
-		pkgInfo.Format = ""
-		pkgInfo.Rosetta2 = nil
+		p.URL = nil
+		p.Asset = nil
+		p.Crate = nil
+		p.Cargo = nil
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Format = ""
+		p.Rosetta2 = nil
 	case PkgInfoTypeCargo:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Path = nil
-		pkgInfo.WindowsExt = ""
-		pkgInfo.CompleteWindowsExt = nil
-		pkgInfo.Cosign = nil
-		pkgInfo.SLSAProvenance = nil
-		pkgInfo.Format = ""
-		pkgInfo.Rosetta2 = nil
+		p.URL = nil
+		p.Asset = nil
+		p.Path = nil
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Format = ""
+		p.Rosetta2 = nil
 	}
 }
 
-func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
-	pkg := pkgInfo.Copy()
+func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
+	pkg := p.Copy()
 	if child.Type != "" {
 		pkg.resetByPkgType(child.Type)
 		pkg.Type = child.Type
@@ -279,76 +279,76 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
-	for _, fo := range pkgInfo.FormatOverrides {
+func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
+	for _, fo := range p.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
-			pkgInfo.Format = fo.Format
+			p.Format = fo.Format
 			break
 		}
 	}
 
-	ov := pkgInfo.getOverride(rt)
+	ov := p.getOverride(rt)
 	if ov == nil {
 		return
 	}
 
 	if ov.Type != "" {
-		pkgInfo.resetByPkgType(ov.Type)
-		pkgInfo.Type = ov.Type
+		p.resetByPkgType(ov.Type)
+		p.Type = ov.Type
 	}
 
-	if pkgInfo.Replacements == nil {
-		pkgInfo.Replacements = ov.Replacements
+	if p.Replacements == nil {
+		p.Replacements = ov.Replacements
 	} else {
-		replacements := make(Replacements, len(pkgInfo.Replacements))
-		for k, v := range pkgInfo.Replacements {
+		replacements := make(Replacements, len(p.Replacements))
+		for k, v := range p.Replacements {
 			replacements[k] = v
 		}
 		for k, v := range ov.Replacements {
 			replacements[k] = v
 		}
-		pkgInfo.Replacements = replacements
+		p.Replacements = replacements
 	}
 
 	if ov.Format != "" {
-		pkgInfo.Format = ov.Format
+		p.Format = ov.Format
 	}
 
 	if ov.Asset != nil {
-		pkgInfo.Asset = ov.Asset
+		p.Asset = ov.Asset
 	}
 
 	if ov.Crate != nil {
-		pkgInfo.Crate = ov.Crate
+		p.Crate = ov.Crate
 	}
 
 	if ov.Cargo != nil {
-		pkgInfo.Cargo = ov.Cargo
+		p.Cargo = ov.Cargo
 	}
 
 	if ov.Files != nil {
-		pkgInfo.Files = ov.Files
+		p.Files = ov.Files
 	}
 
 	if ov.URL != nil {
-		pkgInfo.URL = ov.URL
+		p.URL = ov.URL
 	}
 
 	if ov.Checksum != nil {
-		pkgInfo.Checksum = ov.Checksum
+		p.Checksum = ov.Checksum
 	}
 
 	if ov.CompleteWindowsExt != nil {
-		pkgInfo.CompleteWindowsExt = ov.CompleteWindowsExt
+		p.CompleteWindowsExt = ov.CompleteWindowsExt
 	}
 	if ov.WindowsExt != "" {
-		pkgInfo.WindowsExt = ov.WindowsExt
+		p.WindowsExt = ov.WindowsExt
 	}
 	if ov.Cosign != nil {
-		pkgInfo.Cosign = ov.Cosign
+		p.Cosign = ov.Cosign
 	}
 	if ov.SLSAProvenance != nil {
-		pkgInfo.SLSAProvenance = ov.SLSAProvenance
+		p.SLSAProvenance = ov.SLSAProvenance
 	}
 }
 
@@ -415,80 +415,80 @@ func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 	}
 }
 
-func (pkgInfo *PackageInfo) GetRosetta2() bool {
-	return pkgInfo.Rosetta2 != nil && *pkgInfo.Rosetta2
+func (p *PackageInfo) GetRosetta2() bool {
+	return p.Rosetta2 != nil && *p.Rosetta2
 }
 
-func (pkgInfo *PackageInfo) HasRepo() bool {
-	return pkgInfo.RepoOwner != "" && pkgInfo.RepoName != ""
+func (p *PackageInfo) HasRepo() bool {
+	return p.RepoOwner != "" && p.RepoName != ""
 }
 
-func (pkgInfo *PackageInfo) GetName() string {
-	if pkgInfo.Name != "" {
-		return pkgInfo.Name
+func (p *PackageInfo) GetName() string {
+	if p.Name != "" {
+		return p.Name
 	}
-	if pkgInfo.HasRepo() {
-		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
+	if p.HasRepo() {
+		return p.RepoOwner + "/" + p.RepoName
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall && pkgInfo.Path != nil {
-		return *pkgInfo.Path
+	if p.Type == PkgInfoTypeGoInstall && p.Path != nil {
+		return *p.Path
 	}
 	return ""
 }
 
-func (pkgInfo *PackageInfo) GetPath() string {
-	if pkgInfo.Path != nil {
-		return *pkgInfo.Path
+func (p *PackageInfo) GetPath() string {
+	if p.Path != nil {
+		return *p.Path
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall && pkgInfo.HasRepo() {
-		return "github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
-	}
-	return ""
-}
-
-func (pkgInfo *PackageInfo) GetLink() string {
-	if pkgInfo.Link != "" {
-		return pkgInfo.Link
-	}
-	if pkgInfo.HasRepo() {
-		return "https://github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
+	if p.Type == PkgInfoTypeGoInstall && p.HasRepo() {
+		return "github.com/" + p.RepoOwner + "/" + p.RepoName
 	}
 	return ""
 }
 
-func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == PkgInfoTypeGitHubArchive || pkgInfo.Type == PkgInfoTypeGoBuild {
+func (p *PackageInfo) GetLink() string {
+	if p.Link != "" {
+		return p.Link
+	}
+	if p.HasRepo() {
+		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
+	}
+	return ""
+}
+
+func (p *PackageInfo) GetFormat() string {
+	if p.Type == PkgInfoTypeGitHubArchive || p.Type == PkgInfoTypeGoBuild {
 		return "tar.gz"
 	}
-	return pkgInfo.Format
+	return p.Format
 }
 
-func (pkgInfo *PackageInfo) GetDescription() string {
-	return pkgInfo.Description
+func (p *PackageInfo) GetDescription() string {
+	return p.Description
 }
 
-func (pkgInfo *PackageInfo) IsNoAsset() bool {
-	return pkgInfo.NoAsset != nil && *pkgInfo.NoAsset
+func (p *PackageInfo) IsNoAsset() bool {
+	return p.NoAsset != nil && *p.NoAsset
 }
 
-func (pkgInfo *PackageInfo) GetType() string {
-	return pkgInfo.Type
+func (p *PackageInfo) GetType() string {
+	return p.Type
 }
 
-func (pkgInfo *PackageInfo) GetReplacements() Replacements {
-	return pkgInfo.Replacements
+func (p *PackageInfo) GetReplacements() Replacements {
+	return p.Replacements
 }
 
-func (pkgInfo *PackageInfo) GetChecksumReplacements() Replacements {
-	cr := pkgInfo.Checksum.GetReplacements()
+func (p *PackageInfo) GetChecksumReplacements() Replacements {
+	cr := p.Checksum.GetReplacements()
 	if cr == nil {
-		return pkgInfo.Replacements
+		return p.Replacements
 	}
 	if len(cr) == 0 {
 		return cr
 	}
 	m := Replacements{}
-	for k, v := range pkgInfo.Replacements {
+	for k, v := range p.Replacements {
 		m[k] = v
 	}
 	for k, v := range cr {
@@ -497,48 +497,48 @@ func (pkgInfo *PackageInfo) GetChecksumReplacements() Replacements {
 	return m
 }
 
-func (pkgInfo *PackageInfo) GetAsset() *string {
-	return pkgInfo.Asset
+func (p *PackageInfo) GetAsset() *string {
+	return p.Asset
 }
 
-func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
-	if pkgInfo.GetName() == "" {
+func (p *PackageInfo) Validate() error { //nolint:cyclop
+	if p.GetName() == "" {
 		return errPkgNameIsRequired
 	}
-	switch pkgInfo.Type {
+	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
-		if !pkgInfo.HasRepo() {
+		if !p.HasRepo() {
 			return errRepoRequired
 		}
 		return nil
 	case PkgInfoTypeGoInstall:
-		if pkgInfo.GetPath() == "" {
+		if p.GetPath() == "" {
 			return errGoInstallRequirePath
 		}
 		return nil
 	case PkgInfoTypeCargo:
-		if pkgInfo.Crate == nil {
+		if p.Crate == nil {
 			return errCargoRequireCrate
 		}
 		return nil
 	case PkgInfoTypeGitHubContent:
-		if !pkgInfo.HasRepo() {
+		if !p.HasRepo() {
 			return errRepoRequired
 		}
-		if pkgInfo.Path == nil {
+		if p.Path == nil {
 			return errGitHubContentRequirePath
 		}
 		return nil
 	case PkgInfoTypeGitHubRelease:
-		if !pkgInfo.HasRepo() {
+		if !p.HasRepo() {
 			return errRepoRequired
 		}
-		if pkgInfo.Asset == nil {
+		if p.Asset == nil {
 			return errAssetRequired
 		}
 		return nil
 	case PkgInfoTypeHTTP:
-		if pkgInfo.URL == nil {
+		if p.URL == nil {
 			return errURLRequired
 		}
 		return nil
@@ -546,42 +546,42 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 	return errInvalidPackageType
 }
 
-func (pkgInfo *PackageInfo) GetFiles() []*File {
-	if len(pkgInfo.Files) != 0 {
-		return pkgInfo.Files
+func (p *PackageInfo) GetFiles() []*File {
+	if len(p.Files) != 0 {
+		return p.Files
 	}
 
-	if cmdName := pkgInfo.getDefaultCmdName(); cmdName != "" {
+	if cmdName := p.getDefaultCmdName(); cmdName != "" {
 		return []*File{
 			{
 				Name: cmdName,
 			},
 		}
 	}
-	return pkgInfo.Files
+	return p.Files
 }
 
-func (pkgInfo *PackageInfo) getDefaultCmdName() string {
-	if pkgInfo.HasRepo() {
-		if pkgInfo.Name == "" {
-			return pkgInfo.RepoName
+func (p *PackageInfo) getDefaultCmdName() string {
+	if p.HasRepo() {
+		if p.Name == "" {
+			return p.RepoName
 		}
-		if i := strings.LastIndex(pkgInfo.Name, "/"); i != -1 {
-			return pkgInfo.Name[i+1:]
+		if i := strings.LastIndex(p.Name, "/"); i != -1 {
+			return p.Name[i+1:]
 		}
-		return pkgInfo.Name
+		return p.Name
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		if pkgInfo.Asset != nil {
-			return *pkgInfo.Asset
+	if p.Type == PkgInfoTypeGoInstall {
+		if p.Asset != nil {
+			return *p.Asset
 		}
-		return path.Base(pkgInfo.GetPath())
+		return path.Base(p.GetPath())
 	}
-	return path.Base(pkgInfo.GetName())
+	return path.Base(p.GetName())
 }
 
-func (pkgInfo *PackageInfo) SLSASourceURI() string {
-	sp := pkgInfo.SLSAProvenance
+func (p *PackageInfo) SLSASourceURI() string {
+	sp := p.SLSAProvenance
 	if sp == nil {
 		return ""
 	}
@@ -591,16 +591,16 @@ func (pkgInfo *PackageInfo) SLSASourceURI() string {
 	repoOwner := sp.RepoOwner
 	repoName := sp.RepoName
 	if repoOwner == "" {
-		repoOwner = pkgInfo.RepoOwner
+		repoOwner = p.RepoOwner
 	}
 	if repoName == "" {
-		repoName = pkgInfo.RepoName
+		repoName = p.RepoName
 	}
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }
 
-func (pkgInfo *PackageInfo) GetVersionPrefix() string {
-	prefix := pkgInfo.VersionPrefix
+func (p *PackageInfo) GetVersionPrefix() string {
+	prefix := p.VersionPrefix
 	if prefix == nil {
 		return ""
 	}

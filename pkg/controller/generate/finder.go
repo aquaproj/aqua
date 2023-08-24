@@ -29,11 +29,11 @@ type mockFuzzyFinder struct {
 	err  error
 }
 
-func (finder *mockFuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
-	return finder.idxs, finder.err
+func (f *mockFuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
+	return f.idxs, f.err
 }
 
-func (finder *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
+func (f *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
 	return fuzzyfinder.FindMulti(pkgs, func(i int) string { //nolint:wrapcheck
 		return find(pkgs[i])
 	},

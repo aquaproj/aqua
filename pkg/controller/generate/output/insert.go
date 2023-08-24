@@ -13,8 +13,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (out *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
-	b, err := afero.ReadFile(out.fs, cfgFilePath)
+func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
+	b, err := afero.ReadFile(o.fs, cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
@@ -33,11 +33,11 @@ func (out *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) e
 		return err
 	}
 
-	stat, err := out.fs.Stat(cfgFilePath)
+	stat, err := o.fs.Stat(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(out.fs, cfgFilePath, []byte(file.String()), stat.Mode()); err != nil {
+	if err := afero.WriteFile(o.fs, cfgFilePath, []byte(file.String()), stat.Mode()); err != nil {
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil

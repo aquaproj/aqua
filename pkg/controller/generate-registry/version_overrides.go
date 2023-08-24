@@ -79,8 +79,8 @@ func getVersionAndPrefix(tag string) (*version.Version, string, error) {
 	return v, a[1], nil
 }
 
-func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
-	ghReleases := ctrl.listReleases(ctx, logE, pkgInfo)
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
+	ghReleases := c.listReleases(ctx, logE, pkgInfo)
 	releases := make([]*Release, len(ghReleases))
 	for i, release := range ghReleases {
 		tag := release.GetTagName()
@@ -115,12 +115,12 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 		if release.VersionPrefix != "" {
 			pkgInfo.VersionPrefix = &release.VersionPrefix
 		}
-		assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
+		assets := c.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
 		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
 		if len(assets) == 0 {
 			continue
 		}
-		ctrl.patchRelease(logE, pkgInfo, pkgName, release.Tag, assets)
+		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, assets)
 		pkgs = append(pkgs, &Package{
 			Info:    pkgInfo,
 			Version: release.Tag,
@@ -260,7 +260,7 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 	return latestPkgInfo, versions
 }
 
-func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
+func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -269,7 +269,7 @@ func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pk
 	var arr []*github.RepositoryRelease
 
 	for i := 0; i < 10; i++ {
-		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,

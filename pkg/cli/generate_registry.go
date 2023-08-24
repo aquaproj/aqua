@@ -61,14 +61,14 @@ e.g.
 $ aqua gr --out-testdata testdata.yaml suzuki-shunsuke/tfcmt
 `
 
-func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
+func (r *Runner) newGenerateRegistryCommand() *cli.Command {
 	return &cli.Command{
 		Name:        "generate-registry",
 		Aliases:     []string{"gr"},
 		Usage:       "Generate a registry's package configuration",
 		ArgsUsage:   `<package name>`,
 		Description: generateRegistryDescription,
-		Action:      runner.generateRegistryAction,
+		Action:      r.generateRegistryAction,
 		// TODO support "i" option
 		Flags: []cli.Flag{
 			// 	&cli.StringFlag{
@@ -87,7 +87,7 @@ func (runner *Runner) newGenerateRegistryCommand() *cli.Command {
 	}
 }
 
-func (runner *Runner) generateRegistryAction(c *cli.Context) error {
+func (r *Runner) generateRegistryAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -101,9 +101,9 @@ func (runner *Runner) generateRegistryAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "generate-registry", param); err != nil {
+	if err := r.setParam(c, "generate-registry", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient, os.Stdout)
-	return ctrl.GenerateRegistry(c.Context, param, runner.LogE, c.Args().Slice()...) //nolint:wrapcheck
+	return ctrl.GenerateRegistry(c.Context, param, r.LogE, c.Args().Slice()...) //nolint:wrapcheck
 }

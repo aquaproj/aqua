@@ -21,25 +21,25 @@ type Package struct {
 	Registry    *aqua.Registry
 }
 
-func (cpkg *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
+func (p *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
 	if pkgInfo.Type == "go_build" {
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, cpkg.Package.Version, "bin", file.Name), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, p.Package.Version, "bin", file.Name), nil
 	}
 
-	pkgPath, err := cpkg.GetPkgPath(rootDir, rt)
+	pkgPath, err := p.GetPkgPath(rootDir, rt)
 	if err != nil {
 		return "", err
 	}
-	fileSrc, err := cpkg.getFileSrc(file, rt)
+	fileSrc, err := p.getFileSrc(file, rt)
 	if err != nil {
 		return "", fmt.Errorf("get a file path: %w", err)
 	}
 	return filepath.Join(pkgPath, fileSrc), nil
 }
 
-func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
-	asset, err := cpkg.renderAsset(rt)
+func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
+	asset, err := p.renderAsset(rt)
 	if err != nil {
 		return "", err
 	}
@@ -49,15 +49,15 @@ func (cpkg *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if !isWindows(rt.GOOS) {
 		return asset, nil
 	}
-	return cpkg.completeWindowsExtToAsset(asset), nil
+	return p.completeWindowsExtToAsset(asset), nil
 }
 
-func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
-	pkg := cpkg.Package
-	pkgInfo := cpkg.PackageInfo
+func (p *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
+	pkg := p.Package
+	pkgInfo := p.PackageInfo
 	return &template.Artifact{
 		Version: pkg.Version,
-		SemVer:  cpkg.semVer(),
+		SemVer:  p.semVer(),
 		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
 		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
 		Format:  pkgInfo.GetFormat(),
@@ -65,15 +65,15 @@ func (cpkg *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *tem
 	}
 }
 
-func (cpkg *Package) RenderPath() (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	return cpkg.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
+func (p *Package) RenderPath() (string, error) {
+	pkgInfo := p.PackageInfo
+	return p.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
 }
 
-func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
-	assetName, err := cpkg.RenderAsset(rt)
+func (p *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
+	assetName, err := p.RenderAsset(rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
@@ -83,7 +83,7 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	case PkgInfoTypeGoBuild:
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
-		p, err := cpkg.RenderPath()
+		p, err := p.RenderPath()
 		if err != nil {
 			return "", fmt.Errorf("render Go Module Path: %w", err)
 		}
@@ -97,7 +97,7 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 		}
 		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderURL(rt)
+		uS, err := p.RenderURL(rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -110,44 +110,44 @@ func (cpkg *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, er
 	return "", nil
 }
 
-func (cpkg *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
+func (p *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
 	tpl, err := template.Compile(s)
 	if err != nil {
 		return "", fmt.Errorf("parse a template: %w", err)
 	}
-	return cpkg.renderTemplate(tpl, rt)
+	return p.renderTemplate(tpl, rt)
 }
 
-func (cpkg *Package) RenderURL(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	s, err := cpkg.RenderTemplateString(*pkgInfo.URL, rt)
+func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
+	s, err := p.RenderTemplateString(*pkgInfo.URL, rt)
 	if err != nil {
 		return "", err
 	}
 	if !isWindows(rt.GOOS) {
 		return s, nil
 	}
-	return cpkg.completeWindowsExtToURL(s), nil
+	return p.completeWindowsExtToURL(s), nil
 }
 
 type FileNotFoundError struct {
 	Err error
 }
 
-func (errorFileNotFound *FileNotFoundError) Error() string {
-	return errorFileNotFound.Err.Error()
+func (e *FileNotFoundError) Error() string {
+	return e.Err.Error()
 }
 
-func (errorFileNotFound *FileNotFoundError) Unwrap() error {
-	return errorFileNotFound.Err
+func (e *FileNotFoundError) Unwrap() error {
+	return e.Err
 }
 
-func (cpkg *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkg := cpkg.Package
-	pkgInfo := cpkg.PackageInfo
+func (p *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkg := p.Package
+	pkgInfo := p.PackageInfo
 	s, err := template.Execute(file.Src, map[string]interface{}{
 		"Version":  pkg.Version,
-		"SemVer":   cpkg.semVer(),
+		"SemVer":   p.semVer(),
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
 		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
@@ -177,23 +177,23 @@ func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runt
 	return replace(rt.GOARCH, replacements)
 }
 
-func (cpkg *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
-	s, err := cpkg.getFileSrcWithoutWindowsExt(file, rt)
+func (p *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+	s, err := p.getFileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
 	}
 	if !isWindows(rt.GOOS) {
 		return s, nil
 	}
-	return cpkg.completeWindowsExtToFileSrc(s), nil
+	return p.completeWindowsExtToFileSrc(s), nil
 }
 
-func (cpkg *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
+func (p *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
 	if pkgInfo.Type == "cargo" {
 		return filepath.Join("bin", file.Name), nil
 	}
-	assetName, err := cpkg.RenderAsset(rt)
+	assetName, err := p.RenderAsset(rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
@@ -203,7 +203,7 @@ func (cpkg *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtim
 	if file.Src == "" {
 		return file.Name, nil
 	}
-	src, err := cpkg.renderSrc(file, rt)
+	src, err := p.renderSrc(file, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
@@ -254,8 +254,8 @@ type Param struct {
 	PolicyConfigFilePaths []string
 }
 
-func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
+func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		return "", nil
@@ -265,15 +265,15 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 		}
 		return path.Base(pkgInfo.GetPath()), nil
 	case PkgInfoTypeGitHubContent:
-		s, err := cpkg.RenderTemplateString(*pkgInfo.Path, rt)
+		s, err := p.RenderTemplateString(*pkgInfo.Path, rt)
 		if err != nil {
 			return "", fmt.Errorf("render a package path: %w", err)
 		}
 		return s, nil
 	case PkgInfoTypeGitHubRelease:
-		return cpkg.RenderTemplateString(*pkgInfo.Asset, rt)
+		return p.RenderTemplateString(*pkgInfo.Asset, rt)
 	case PkgInfoTypeHTTP:
-		uS, err := cpkg.RenderURL(rt)
+		uS, err := p.RenderURL(rt)
 		if err != nil {
 			return "", fmt.Errorf("render URL: %w", err)
 		}
@@ -286,9 +286,9 @@ func (cpkg *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	return "", nil
 }
 
-func (cpkg *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
+func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
 	tpl, err := template.Compile(pkgInfo.Checksum.Asset)
 	if err != nil {
 		return "", fmt.Errorf("parse a template: %w", err)
@@ -296,7 +296,7 @@ func (cpkg *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (stri
 	replacements := pkgInfo.GetChecksumReplacements()
 	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
 		"Version": pkg.Version,
-		"SemVer":  cpkg.semVer(),
+		"SemVer":  p.semVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
@@ -310,12 +310,12 @@ func (cpkg *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (stri
 	return uS, nil
 }
 
-func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
+func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
 	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
 		"Version": pkg.Version,
-		"SemVer":  cpkg.semVer(),
+		"SemVer":  p.semVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
@@ -328,21 +328,21 @@ func (cpkg *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runt
 	return uS, nil
 }
 
-func (cpkg *Package) semVer() string {
-	v := cpkg.Package.Version
-	prefix := cpkg.PackageInfo.GetVersionPrefix()
+func (p *Package) semVer() string {
+	v := p.Package.Version
+	prefix := p.PackageInfo.GetVersionPrefix()
 	if prefix == "" {
 		return v
 	}
 	return strings.TrimPrefix(v, prefix)
 }
 
-func (cpkg *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := cpkg.PackageInfo
-	pkg := cpkg.Package
+func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
 	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
 		"Version":  pkg.Version,
-		"SemVer":   cpkg.semVer(),
+		"SemVer":   p.semVer(),
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
 		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),

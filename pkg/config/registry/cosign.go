@@ -24,19 +24,19 @@ type DownloadedFile struct {
 	URL       *string `json:"url,omitempty" yaml:",omitempty"`
 }
 
-func (cos *Cosign) GetEnabled() bool {
-	if cos == nil {
+func (c *Cosign) GetEnabled() bool {
+	if c == nil {
 		return false
 	}
-	if cos.Enabled != nil {
-		return *cos.Enabled
+	if c.Enabled != nil {
+		return *c.Enabled
 	}
-	return len(cos.Opts) != 0 || cos.Signature != nil || cos.Certificate != nil || cos.Key != nil || cos.CosignExperimental
+	return len(c.Opts) != 0 || c.Signature != nil || c.Certificate != nil || c.Key != nil || c.CosignExperimental
 }
 
-func (cos *Cosign) RenderOpts(rt *runtime.Runtime, art *template.Artifact) ([]string, error) {
-	opts := make([]string, len(cos.Opts))
-	for i, opt := range cos.Opts {
+func (c *Cosign) RenderOpts(rt *runtime.Runtime, art *template.Artifact) ([]string, error) {
+	opts := make([]string, len(c.Opts))
+	for i, opt := range c.Opts {
 		s, err := template.Render(opt, art, rt)
 		if err != nil {
 			return nil, fmt.Errorf("render a cosign option: %w", err)

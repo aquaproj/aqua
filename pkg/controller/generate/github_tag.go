@@ -21,7 +21,7 @@ func filterTag(tag *github.RepositoryTag, filters []*Filter) bool {
 }
 
 // listTags lists GitHub Tags by GitHub API and filter them with `version_filter`.
-func (ctrl *Controller) listTags(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryTag {
+func (c *Controller) listTags(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryTag {
 	// List GitHub Tags by GitHub API
 	// Filter tags with version_filter
 	repoOwner := pkgInfo.RepoOwner
@@ -37,7 +37,7 @@ func (ctrl *Controller) listTags(ctx context.Context, logE *logrus.Entry, pkgInf
 
 	var arr []*github.RepositoryTag
 	for i := 0; i < 10; i++ {
-		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
+		tags, _, err := c.github.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -58,7 +58,7 @@ func (ctrl *Controller) listTags(ctx context.Context, logE *logrus.Entry, pkgInf
 	return arr
 }
 
-func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+func (c *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
 	// List GitHub Tags by GitHub API
 	// Filter tags with version_filter
 	// Get a tag
@@ -72,7 +72,7 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logr
 		return ""
 	}
 	for {
-		tags, _, err := ctrl.github.ListTags(ctx, repoOwner, repoName, opt)
+		tags, _, err := c.github.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -92,24 +92,24 @@ func (ctrl *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logr
 	}
 }
 
-func (ctrl *Controller) selectVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	tags := ctrl.listTags(ctx, logE, pkgInfo)
+func (c *Controller) selectVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+	tags := c.listTags(ctx, logE, pkgInfo)
 	versions := make([]*Version, len(tags))
 	for i, tag := range tags {
 		versions[i] = &Version{
 			Version: tag.GetName(),
 		}
 	}
-	idx, err := ctrl.versionSelector.Find(versions, false)
+	idx, err := c.versionSelector.Find(versions, false)
 	if err != nil {
 		return ""
 	}
 	return versions[idx].Version
 }
 
-func (ctrl *Controller) getVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
+func (c *Controller) getVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
 	if param.SelectVersion {
-		return ctrl.selectVersionFromGitHubTag(ctx, logE, pkgInfo)
+		return c.selectVersionFromGitHubTag(ctx, logE, pkgInfo)
 	}
-	return ctrl.listAndGetTagNameFromTag(ctx, logE, pkgInfo)
+	return c.listAndGetTagNameFromTag(ctx, logE, pkgInfo)
 }

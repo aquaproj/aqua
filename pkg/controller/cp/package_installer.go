@@ -17,21 +17,21 @@ type PackageInstaller interface {
 
 type MockPackageInstaller struct{}
 
-func (inst *MockPackageInstaller) InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error {
+func (is *MockPackageInstaller) InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error {
 	return nil
 }
 
-func (inst *MockPackageInstaller) InstallPackages(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackages) error {
+func (is *MockPackageInstaller) InstallPackages(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackages) error {
 	return nil
 }
 
-func (inst *MockPackageInstaller) SetCopyDir(copyDir string) {
+func (is *MockPackageInstaller) SetCopyDir(copyDir string) {
 }
 
-func (inst *MockPackageInstaller) Copy(dest, src string) error {
+func (is *MockPackageInstaller) Copy(dest, src string) error {
 	return nil
 }
 
-func (inst *MockPackageInstaller) WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
+func (is *MockPackageInstaller) WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
 	return nil
 }

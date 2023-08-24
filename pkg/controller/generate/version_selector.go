@@ -35,11 +35,11 @@ type mockVersionSelector struct {
 	err error
 }
 
-func (selector *mockVersionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
-	return selector.idx, selector.err
+func (s *mockVersionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
+	return s.idx, s.err
 }
 
-func (selector *versionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
+func (s *versionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
 	if hasPreview {
 		return fuzzyfinder.Find(versions, func(i int) string { //nolint:wrapcheck
 			return getVersionItem(versions[i])

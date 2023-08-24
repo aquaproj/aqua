@@ -29,23 +29,23 @@ type Param struct {
 	ConfigFilePath string
 }
 
-func (out *Outputter) Output(param *Param) error {
+func (o *Outputter) Output(param *Param) error {
 	if !param.Insert && param.Dest == "" {
-		if err := yaml.NewEncoder(out.stdout).Encode(param.List); err != nil {
+		if err := yaml.NewEncoder(o.stdout).Encode(param.List); err != nil {
 			return fmt.Errorf("output generated package configuration: %w", err)
 		}
 		return nil
 	}
 
 	if param.Dest == "" {
-		return out.generateInsert(param.ConfigFilePath, param.List)
+		return o.generateInsert(param.ConfigFilePath, param.List)
 	}
 
-	if _, err := out.fs.Stat(param.Dest); err == nil {
-		return out.generateInsert(param.Dest, param.List)
+	if _, err := o.fs.Stat(param.Dest); err == nil {
+		return o.generateInsert(param.Dest, param.List)
 	}
 
-	f, err := out.fs.Create(param.Dest)
+	f, err := o.fs.Create(param.Dest)
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)
 	}

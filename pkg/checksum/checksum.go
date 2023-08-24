@@ -20,7 +20,7 @@ func NewCalculator() *Calculator {
 
 type Calculator struct{}
 
-func (calc *Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
+func (*Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return "", fmt.Errorf("open a file to calculate the checksum: %w", err)

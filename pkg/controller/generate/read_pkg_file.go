@@ -13,12 +13,12 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkgs []*aqua.Package, m map[string]*FindingPackage) ([]*aqua.Package, error) {
+func (c *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkgs []*aqua.Package, m map[string]*FindingPackage) ([]*aqua.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
-		file = ctrl.stdin
+		file = c.stdin
 	} else {
-		f, err := ctrl.fs.Open(param.File)
+		f, err := c.fs.Open(param.File)
 		if err != nil {
 			return nil, fmt.Errorf("open the package list file: %w", err)
 		}
@@ -34,7 +34,7 @@ func (ctrl *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *log
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
 		}
 		findingPkg.Version = version
-		outputPkg := ctrl.getOutputtedPkg(ctx, logE, param, findingPkg)
+		outputPkg := c.getOutputtedPkg(ctx, logE, param, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 	if err := scanner.Err(); err != nil {

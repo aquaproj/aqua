@@ -55,8 +55,8 @@ type MockController struct {
 	Err        error
 }
 
-func (ctrl *MockController) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
-	return ctrl.FindResult, ctrl.Err
+func (c *MockController) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
+	return c.FindResult, c.Err
 }
 
 type FindResult struct {
@@ -68,9 +68,9 @@ type FindResult struct {
 	EnableChecksum bool
 }
 
-func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
-	for _, cfgFilePath := range ctrl.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		findResult, err := ctrl.findExecFile(ctx, logE, cfgFilePath, exeName)
+func (c *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
+	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+		findResult, err := c.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -82,10 +82,10 @@ func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		logE := logE.WithField("config_file_path", cfgFilePath)
 		logE.Debug("checking a global configuration file")
-		if _, err := ctrl.fs.Stat(cfgFilePath); err != nil {
+		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		findResult, err := ctrl.findExecFile(ctx, logE, cfgFilePath, exeName)
+		findResult, err := c.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param
 		}
 	}
 
-	if exePath := ctrl.lookPath(ctrl.osenv.Getenv("PATH"), exeName); exePath != "" {
+	if exePath := c.lookPath(c.osenv.Getenv("PATH"), exeName); exePath != "" {
 		return &FindResult{
 			ExePath: exePath,
 		}, nil
@@ -105,44 +105,44 @@ func (ctrl *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param
 	})
 }
 
-func (ctrl *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
+func (c *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
 	pkg := findResult.Package
 	file := findResult.File
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
 	}
-	return pkg.GetExePath(ctrl.rootDir, file, ctrl.runtime) //nolint:wrapcheck
+	return pkg.GetExePath(c.rootDir, file, c.runtime) //nolint:wrapcheck
 }
 
-func (ctrl *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {
+func (c *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {
 	cfg := &aqua.Config{}
-	if err := ctrl.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
 	var checksums *checksum.Checksums
 	if cfg.ChecksumEnabled() {
 		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(ctrl.fs, cfgFilePath)
+		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}
-		if err := checksums.ReadFile(ctrl.fs, checksumFilePath); err != nil {
+		if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
 			return nil, fmt.Errorf("read a checksum JSON: %w", err)
 		}
 		defer func() {
-			if err := checksums.UpdateFile(ctrl.fs, checksumFilePath); err != nil {
+			if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
 				logE.WithError(err).Error("update a checksum file")
 			}
 		}()
 	}
 
-	registryContents, err := ctrl.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
-		if findResult := ctrl.findExecFileFromPkg(registryContents, exeName, pkg, logE); findResult != nil {
+		if findResult := c.findExecFileFromPkg(registryContents, exeName, pkg, logE); findResult != nil {
 			findResult.Config = cfg
 			findResult.ConfigFilePath = cfgFilePath
 			findResult.Package.Registry = cfg.Registries[pkg.Registry]
@@ -152,7 +152,7 @@ func (ctrl *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry
 	return nil, nil //nolint:nilnil
 }
 
-func (ctrl *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *FindResult { //nolint:cyclop
+func (c *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *FindResult { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil
@@ -175,13 +175,13 @@ func (ctrl *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.
 		return nil
 	}
 
-	pkgInfo, err := pkgInfo.Override(logE, pkg.Version, ctrl.runtime)
+	pkgInfo, err := pkgInfo.Override(logE, pkg.Version, c.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil
 	}
 
-	supported, err := pkgInfo.CheckSupported(ctrl.runtime, ctrl.runtime.GOOS+"/"+ctrl.runtime.GOARCH)
+	supported, err := pkgInfo.CheckSupported(c.runtime, c.runtime.GOOS+"/"+c.runtime.GOARCH)
 	if err != nil {
 		logerr.WithError(logE, err).Error("check if the package is supported")
 		return nil
@@ -200,7 +200,7 @@ func (ctrl *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.
 				},
 				File: file,
 			}
-			exePath, err := ctrl.getExePath(findResult)
+			exePath, err := c.getExePath(findResult)
 			if err != nil {
 				logE.WithError(err).Error("get the execution file path")
 				return nil

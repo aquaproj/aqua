@@ -8,16 +8,16 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (pkgInfo *PackageInfo) setTopVersion(logE *logrus.Entry, v string) *PackageInfo {
+func (p *PackageInfo) setTopVersion(logE *logrus.Entry, v string) *PackageInfo {
 	sv := v
-	if pkgInfo.VersionPrefix != nil {
-		prefix := *pkgInfo.VersionPrefix
+	if p.VersionPrefix != nil {
+		prefix := *p.VersionPrefix
 		if !strings.HasPrefix(v, prefix) {
 			return nil
 		}
 		sv = strings.TrimPrefix(v, prefix)
 	}
-	a, err := expr.EvaluateVersionConstraints(pkgInfo.VersionConstraints, v, sv)
+	a, err := expr.EvaluateVersionConstraints(p.VersionConstraints, v, sv)
 	if err != nil {
 		// If it fails to evaluate version_constraint, output a debug log and treats as version_constraint is false.
 		logerr.WithError(logE, err).Debug("evaluate the version_constraint")
@@ -25,33 +25,33 @@ func (pkgInfo *PackageInfo) setTopVersion(logE *logrus.Entry, v string) *Package
 	}
 	if a {
 		logE.WithFields(logrus.Fields{
-			"version_constraint": pkgInfo.VersionConstraints,
+			"version_constraint": p.VersionConstraints,
 			"package_version":    v,
 			"package_semver":     sv,
 		}).Debug("match the version_constraint")
-		return pkgInfo.Copy()
+		return p.Copy()
 	}
 	return nil
 }
 
-func (pkgInfo *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageInfo, error) {
-	if pkgInfo.VersionConstraints == "" {
+func (p *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageInfo, error) {
+	if p.VersionConstraints == "" {
 		logE.Debug("no version_constraint")
-		return pkgInfo, nil
-	}
-
-	if p := pkgInfo.setTopVersion(logE, v); p != nil {
 		return p, nil
 	}
 
-	for _, vo := range pkgInfo.VersionOverrides {
+	if p2 := p.setTopVersion(logE, v); p2 != nil {
+		return p2, nil
+	}
+
+	for _, vo := range p.VersionOverrides {
 		sv := v
-		p := pkgInfo.VersionPrefix
+		vp := p.VersionPrefix
 		if vo.VersionPrefix != nil {
-			p = vo.VersionPrefix
+			vp = vo.VersionPrefix
 		}
-		if p != nil {
-			prefix := *p
+		if vp != nil {
+			prefix := *vp
 			if !strings.HasPrefix(v, prefix) {
 				continue
 			}
@@ -65,16 +65,16 @@ func (pkgInfo *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageIn
 		}
 		if a {
 			logE.WithFields(logrus.Fields{
-				"version_constraint": pkgInfo.VersionConstraints,
+				"version_constraint": p.VersionConstraints,
 				"package_version":    v,
 				"package_semver":     sv,
 			}).Debug("match the version_constraint")
-			return pkgInfo.overrideVersion(vo), nil
+			return p.overrideVersion(vo), nil
 		}
 	}
 	logE.WithFields(logrus.Fields{
-		"version_constraint": pkgInfo.VersionConstraints,
+		"version_constraint": p.VersionConstraints,
 		"package_version":    v,
 	}).Debug("no version_constraint matches")
-	return pkgInfo.Copy(), nil
+	return p.Copy(), nil
 }

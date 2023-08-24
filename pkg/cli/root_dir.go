@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newRootDirCommand() *cli.Command {
+func (r *Runner) newRootDirCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "root-dir",
 		Usage: "Output the aqua root directory (AQUA_ROOT_DIR)",
@@ -20,11 +20,11 @@ $ aqua root-dir
 
 $ export "PATH=$(aqua root-dir)/bin:PATH"
 `,
-		Action: runner.rootDirAction,
+		Action: r.rootDirAction,
 	}
 }
 
-func (runner *Runner) rootDirAction(c *cli.Context) error {
+func (r *Runner) rootDirAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -37,6 +37,6 @@ func (runner *Runner) rootDirAction(c *cli.Context) error {
 	}
 	defer cpuProfiler.Stop()
 
-	fmt.Fprintln(runner.Stdout, config.GetRootDir(osenv.New()))
+	fmt.Fprintln(r.Stdout, config.GetRootDir(osenv.New()))
 	return nil
 }
