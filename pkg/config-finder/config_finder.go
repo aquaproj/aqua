@@ -4,7 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 )
@@ -53,7 +53,7 @@ func configFileNames() []string {
 
 func (f *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
 	if configFilePath != "" {
-		return util.Abs(wd, configFilePath), nil
+		return osfile.Abs(wd, configFilePath), nil
 	}
 	configFilePath = findconfig.Find(wd, f.exist, configFileNames()...)
 	if configFilePath != "" {
@@ -72,7 +72,7 @@ func (f *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
 		return findconfig.Finds(wd, f.exist, configFileNames()...)
 	}
-	return []string{util.Abs(wd, configFilePath)}
+	return []string{osfile.Abs(wd, configFilePath)}
 }
 
 func (f *ConfigFinder) exist(p string) bool {

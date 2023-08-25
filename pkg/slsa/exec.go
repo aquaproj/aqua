@@ -10,7 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/sirupsen/logrus"
 )
 
@@ -53,7 +53,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
 	}).Info("Verification by slsa-verifier failed temporarily, retring")
-	if err := util.Wait(ctx, waitTime); err != nil {
+	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running slsa-verifier: %w", err)
 	}
 	return nil

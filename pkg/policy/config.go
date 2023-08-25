@@ -4,7 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 )
 
 const (
@@ -61,7 +61,7 @@ func (c *Config) Init() error {
 			if rgst.Path == "" {
 				return errLocalPathIsRequired
 			}
-			rgst.Path = util.Abs(filepath.Dir(c.Path), rgst.Path)
+			rgst.Path = osfile.Abs(filepath.Dir(c.Path), rgst.Path)
 		}
 		m[rgst.Name] = rgst
 	}

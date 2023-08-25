@@ -12,9 +12,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -56,11 +56,11 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.Dest == "" { //nolint:nestif
 		rootBin := filepath.Join(c.rootDir, "bin")
-		if err := util.MkdirAll(c.fs, rootBin); err != nil {
+		if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
 			return fmt.Errorf("create the directory: %w", err)
 		}
 		if c.runtime.GOOS == "windows" {
-			if err := util.MkdirAll(c.fs, filepath.Join(c.rootDir, "bat")); err != nil {
+			if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bat")); err != nil {
 				return fmt.Errorf("create the directory: %w", err)
 			}
 		}

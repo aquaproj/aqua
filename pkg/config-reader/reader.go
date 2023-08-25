@@ -10,7 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
@@ -66,7 +66,7 @@ func (r *ConfigReaderImpl) Read(configFilePath string, cfg *aqua.Config) error {
 			if configFileDir == "" {
 				configFileDir = filepath.Dir(configFilePath)
 			}
-			rgst.Path = util.Abs(configFileDir, rgst.Path)
+			rgst.Path = osfile.Abs(configFileDir, rgst.Path)
 		}
 	}
 	if err := r.readImports(configFilePath, cfg); err != nil {

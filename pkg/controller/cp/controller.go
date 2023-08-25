@@ -8,9 +8,9 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -49,7 +49,7 @@ type ConfigFinder interface {
 var errCopyFailure = errors.New("it failed to copy some tools")
 
 func (c *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if err := util.MkdirAll(c.fs, param.Dest); err != nil {
+	if err := osfile.MkdirAll(c.fs, param.Dest); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	if len(param.Args) == 0 {

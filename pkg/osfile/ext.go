@@ -1,4 +1,4 @@
-package util
+package osfile
 
 import (
 	"path/filepath"

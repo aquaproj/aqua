@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/errors"
 )
 
 type Payload struct {
@@ -93,7 +93,7 @@ func getCrate(ctx context.Context, client *http.Client, uri string) (*CratePaylo
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 { //nolint:gomnd
-		return nil, resp.StatusCode, util.ErrHTTPStatusCodeIsGreaterEqualThan300
+		return nil, resp.StatusCode, errors.ErrHTTPStatusCodeIsGreaterEqualThan300
 	}
 	payload := &CratePayload{}
 	if err := json.NewDecoder(resp.Body).Decode(payload); err != nil {
@@ -113,7 +113,7 @@ func listInstallableVersions(ctx context.Context, client *http.Client, uri strin
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 { //nolint:gomnd
-		return nil, resp.StatusCode, util.ErrHTTPStatusCodeIsGreaterEqualThan300
+		return nil, resp.StatusCode, errors.ErrHTTPStatusCodeIsGreaterEqualThan300
 	}
 	payload := &Payload{}
 	if err := json.NewDecoder(resp.Body).Decode(payload); err != nil {

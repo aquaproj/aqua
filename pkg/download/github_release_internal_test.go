@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 )
 
 func Test_getAssetIDFromAssets(t *testing.T) {
@@ -20,7 +20,7 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 			title: "not found",
 			assets: []*github.ReleaseAsset{
 				{
-					Name: util.StrP("foo"),
+					Name: ptr.String("foo"),
 				},
 			},
 			assetName: "bar",
@@ -30,11 +30,11 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 			title: "found",
 			assets: []*github.ReleaseAsset{
 				{
-					Name: util.StrP("foo"),
+					Name: ptr.String("foo"),
 				},
 				{
-					Name: util.StrP("bar"),
-					ID:   util.Int64P(10),
+					Name: ptr.String("bar"),
+					ID:   ptr.Int64(10),
 				},
 			},
 			assetName: "bar",

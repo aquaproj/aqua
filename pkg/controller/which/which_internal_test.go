@@ -7,8 +7,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 )
@@ -40,7 +40,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 					PackageInfo: &registry.PackageInfo{
 						Type: "http",
 						Name: "kubernetes/kubectl",
-						URL:  util.StrP("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
+						URL:  ptr.String("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
 						Files: []*registry.File{
 							{
 								Name: "kubectl",
@@ -59,7 +59,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 						&registry.PackageInfo{
 							Type: "http",
 							Name: "kubernetes/kubectl",
-							URL:  util.StrP("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
+							URL:  ptr.String("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
 							Files: []*registry.File{
 								{
 									Name: "kubectl",

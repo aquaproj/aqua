@@ -14,9 +14,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -143,7 +143,7 @@ func (is *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Entry
 			"local_registry_file_path": registryFilePath,
 		})
 	}
-	if err := util.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
+	if err := osfile.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
 		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 	}
 	return is.getRegistry(ctx, logE, regist, registryFilePath, checksums)

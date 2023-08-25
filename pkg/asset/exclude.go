@@ -3,7 +3,7 @@ package asset
 import (
 	"strings"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 )
 
 func Exclude(pkgName, assetName, version string) bool {
@@ -15,7 +15,7 @@ func Exclude(pkgName, assetName, version string) bool {
 		".py":  {},
 	}
 	if format := GetFormat(assetName); format == formatRaw {
-		ext := util.Ext(assetName, version)
+		ext := osfile.Ext(assetName, version)
 		if len(ext) > 0 && len(ext) < 6 {
 			if _, ok := allowedExts[ext]; !ok {
 				return true

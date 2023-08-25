@@ -3,7 +3,7 @@ package aqua
 import (
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -85,7 +85,7 @@ func (r *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func (r *Registry) GetFilePath(rootDir, cfgFilePath string) (string, error) {
 	switch r.Type {
 	case RegistryTypeLocal:
-		return util.Abs(filepath.Dir(cfgFilePath), r.Path), nil
+		return osfile.Abs(filepath.Dir(cfgFilePath), r.Path), nil
 	case RegistryTypeGitHubContent:
 		return filepath.Join(rootDir, "registries", r.Type, "github.com", r.RepoOwner, r.RepoName, r.Ref, r.Path), nil
 	}
