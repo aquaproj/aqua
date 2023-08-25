@@ -29,7 +29,7 @@ func TestInstallerImpl_verifyChecksum(t *testing.T) { //nolint:funlen
 				Pkg: &config.Package{
 					PackageInfo: &registry.PackageInfo{
 						Type:     "github_release",
-						Rosetta2: ptr.BoolP(true),
+						Rosetta2: ptr.Bool(true),
 						Checksum: &registry.Checksum{
 							Type:       "github_release",
 							Algorithm:  "sha256",

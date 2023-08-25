@@ -24,7 +24,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					Type: "github_content",
-					Path: ptr.StrP("foo"),
+					Path: ptr.String("foo"),
 				},
 				Package: &aqua.Package{
 					Version: "v1.0.0",
@@ -39,7 +39,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua",
-					Asset:     ptr.StrP("aqua.{{.Format}}"),
+					Asset:     ptr.String("aqua.{{.Format}}"),
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
@@ -58,7 +58,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua",
-					Asset:     ptr.StrP("aqua.{{.Format}}"),
+					Asset:     ptr.String("aqua.{{.Format}}"),
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
@@ -78,7 +78,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Format:    "zip",
 				},
 				Package: &aqua.Package{
@@ -101,7 +101,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Format:    "zip",
 				},
 				Package: &aqua.Package{
@@ -125,7 +125,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Format:    "zip",
 				},
 				Package: &aqua.Package{
@@ -150,7 +150,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_content",
 					RepoOwner: "aelsabbahy",
 					RepoName:  "goss",
-					Path:      ptr.StrP("extras/dcgoss/dcgoss"),
+					Path:      ptr.String("extras/dcgoss/dcgoss"),
 				},
 				Package: &aqua.Package{
 					Version: "v0.7.7",

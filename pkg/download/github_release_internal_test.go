@@ -20,7 +20,7 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 			title: "not found",
 			assets: []*github.ReleaseAsset{
 				{
-					Name: ptr.StrP("foo"),
+					Name: ptr.String("foo"),
 				},
 			},
 			assetName: "bar",
@@ -30,11 +30,11 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 			title: "found",
 			assets: []*github.ReleaseAsset{
 				{
-					Name: ptr.StrP("foo"),
+					Name: ptr.String("foo"),
 				},
 				{
-					Name: ptr.StrP("bar"),
-					ID:   ptr.Int64P(10),
+					Name: ptr.String("bar"),
+					ID:   ptr.Int64(10),
 				},
 			},
 			assetName: "bar",

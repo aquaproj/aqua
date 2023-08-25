@@ -52,7 +52,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     ptr.StrP("multiple.intoto.jsonl"),
+				Asset:     ptr.String("multiple.intoto.jsonl"),
 			},
 			art: &template.Artifact{
 				Version: "v1.6.0",

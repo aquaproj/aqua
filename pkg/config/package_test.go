@@ -36,7 +36,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 				},
 				PackageInfo: &registry.PackageInfo{
 					Type: "github_content",
-					Path: ptr.StrP("foo"),
+					Path: ptr.String("foo"),
 				},
 			},
 		},
@@ -46,7 +46,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "github_release",
-					Asset:  ptr.StrP("foo-{{trimV .Version}}.{{.Format}}"),
+					Asset:  ptr.String("foo-{{trimV .Version}}.{{.Format}}"),
 					Format: "zip",
 				},
 				Package: &aqua.Package{
@@ -60,7 +60,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "http",
-					URL:    ptr.StrP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+					URL:    ptr.String("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 					Format: "zip",
 				},
 				Package: &aqua.Package{
@@ -74,7 +74,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "github_release",
-					Asset:  ptr.StrP("foo-{{.OS}}-{{.Arch}}"),
+					Asset:  ptr.String("foo-{{.OS}}-{{.Arch}}"),
 					Format: "raw",
 				},
 				Package: &aqua.Package{
@@ -92,7 +92,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:  "github_release",
-					Asset: ptr.StrP("foo-{{.OS}}-{{.Arch}}"),
+					Asset: ptr.String("foo-{{.OS}}-{{.Arch}}"),
 				},
 				Package: &aqua.Package{
 					Version: "v1.0.0",
@@ -109,7 +109,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:  "github_release",
-					Asset: ptr.StrP("foo-{{.OS}}-{{.Arch}}.tar.gz"),
+					Asset: ptr.String("foo-{{.OS}}-{{.Arch}}.tar.gz"),
 				},
 				Package: &aqua.Package{
 					Version: "v1.0.0",
@@ -168,7 +168,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
-					Path:      ptr.StrP("aqua-installer"),
+					Path:      ptr.String("aqua-installer"),
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-installer",
 				},
@@ -185,7 +185,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
-					Asset:     ptr.StrP("ci-info.{{.Format}}"),
+					Asset:     ptr.String("ci-info.{{.Format}}"),
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
@@ -199,7 +199,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "http",
-					URL:    ptr.StrP("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+					URL:    ptr.String("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
 					Format: "zip",
 				},
 				Package: &aqua.Package{

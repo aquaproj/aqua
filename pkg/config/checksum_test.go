@@ -44,7 +44,7 @@ func TestPackage_GetChecksumID(t *testing.T) { //nolint:funlen
 					Type:      "github_content",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-installer",
-					Path:      ptr.StrP("aqua-installer"),
+					Path:      ptr.String("aqua-installer"),
 				},
 			},
 			rt:         &runtime.Runtime{},
@@ -60,7 +60,7 @@ func TestPackage_GetChecksumID(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Format:    "tar.gz",
 					Replacements: map[string]string{
 						"darwin": "macOS",
@@ -83,7 +83,7 @@ func TestPackage_GetChecksumID(t *testing.T) { //nolint:funlen
 					Type:      "http",
 					RepoOwner: "hashicorp",
 					RepoName:  "terrafrom",
-					URL:       ptr.StrP("https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip"),
+					URL:       ptr.String("https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip"),
 				},
 			},
 			rt: &runtime.Runtime{
@@ -177,7 +177,7 @@ func TestPackage_GetChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 					Type:      "http",
 					RepoOwner: "hashicorp",
 					RepoName:  "terrafrom",
-					URL:       ptr.StrP("https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip"),
+					URL:       ptr.String("https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip"),
 				},
 			},
 			checksumID: "http/releases.hashicorp.com/terraform/1.3.0/terraform_1.3.0_darwin_amd64.zip",
@@ -224,7 +224,7 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 					Checksum: &registry.Checksum{
 						Type:  "github_release",
 						Asset: "gh_{{trimV .Version}}_checksums.txt",
@@ -278,7 +278,7 @@ func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
 					Type:      "http",
 					RepoOwner: "helm",
 					RepoName:  "helm",
-					URL:       ptr.StrP("https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz"),
+					URL:       ptr.String("https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz"),
 					Checksum: &registry.Checksum{
 						Type: "http",
 						URL:  "https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz.sha256sum",

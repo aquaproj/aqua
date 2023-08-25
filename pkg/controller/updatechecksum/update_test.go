@@ -52,7 +52,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: ptr.BoolP(true),
+						Enabled: ptr.Bool(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -71,7 +71,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
-								Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+								Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 							},
 						},
 					},
@@ -113,7 +113,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: ptr.BoolP(true),
+						Enabled: ptr.Bool(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -132,7 +132,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
-								Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+								Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
 								Checksum: &registry.Checksum{
 									Type:       "github_release",
 									Asset:      "gh_{{trimV .Version}}_checksums.txt",

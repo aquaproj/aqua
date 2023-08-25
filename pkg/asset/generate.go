@@ -93,7 +93,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 					GOArch:       assetInfo.Arch,
 					Format:       assetInfo.Format,
 					Replacements: assetInfo.Replacements,
-					Asset:        ptr.StrP(assetInfo.Template),
+					Asset:        ptr.String(assetInfo.Template),
 				})
 				if goos == osDarwin && goarch == "amd64" {
 					supportedEnvs = append(supportedEnvs, osDarwin)
@@ -130,7 +130,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	}
 
 	if checkRosetta2(assetInfos) {
-		pkgInfo.Rosetta2 = ptr.BoolP(true)
+		pkgInfo.Rosetta2 = ptr.Bool(true)
 	}
 
 	pkgInfo.SupportedEnvs = normalizeSupportedEnvs(pkgInfo.SupportedEnvs)
@@ -347,7 +347,7 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 		if strings.HasSuffix(assetInfo.Template, ".exe") {
 			assetInfo.Template = strings.TrimSuffix(assetInfo.Template, ".exe")
 		} else {
-			assetInfo.CompleteWindowsExt = ptr.BoolP(false)
+			assetInfo.CompleteWindowsExt = ptr.Bool(false)
 		}
 	}
 	return assetInfo

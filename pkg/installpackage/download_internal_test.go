@@ -38,8 +38,8 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 						Type:      "github_release",
 						RepoOwner: "cli",
 						RepoName:  "cli",
-						Asset:     ptr.StrP("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
-						Rosetta2:  ptr.BoolP(true),
+						Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+						Rosetta2:  ptr.Bool(true),
 						Checksum: &registry.Checksum{
 							Type:       "github_release",
 							Algorithm:  "sha256",

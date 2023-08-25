@@ -57,8 +57,8 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 					},
 					Config: &aqua.Config{
 						Checksum: &aqua.Checksum{
-							Enabled:         ptr.BoolP(true),
-							RequireChecksum: ptr.BoolP(true),
+							Enabled:         ptr.Bool(true),
+							RequireChecksum: ptr.Bool(true),
 						},
 					},
 					ConfigFilePath: "aqua.yaml",

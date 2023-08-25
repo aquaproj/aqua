@@ -40,7 +40,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 					PackageInfo: &registry.PackageInfo{
 						Type: "http",
 						Name: "kubernetes/kubectl",
-						URL:  ptr.StrP("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
+						URL:  ptr.String("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
 						Files: []*registry.File{
 							{
 								Name: "kubectl",
@@ -59,7 +59,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 						&registry.PackageInfo{
 							Type: "http",
 							Name: "kubernetes/kubectl",
-							URL:  ptr.StrP("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
+							URL:  ptr.String("https://storage.googleapis.com/kubernetes-release/release/{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl"),
 							Files: []*registry.File{
 								{
 									Name: "kubectl",

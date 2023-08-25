@@ -165,7 +165,7 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	if getBool(pkgInfo.Rosetta2) != getBool(latestPkgInfo.Rosetta2) {
 		vo.Rosetta2 = pkgInfo.Rosetta2
 		if pkgInfo.Rosetta2 == nil {
-			vo.Rosetta2 = ptr.BoolP(false)
+			vo.Rosetta2 = ptr.Bool(false)
 		}
 	}
 	if pkgInfo.WindowsExt != latestPkgInfo.WindowsExt {
@@ -174,14 +174,14 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 	if !reflect.DeepEqual(pkgInfo.VersionPrefix, latestPkgInfo.VersionPrefix) {
 		vo.VersionPrefix = pkgInfo.VersionPrefix
 		if pkgInfo.VersionPrefix == nil {
-			vo.VersionPrefix = ptr.StrP("")
+			vo.VersionPrefix = ptr.String("")
 		}
 	}
 	if !reflect.DeepEqual(pkgInfo.Checksum, latestPkgInfo.Checksum) {
 		vo.Checksum = pkgInfo.Checksum
 		if pkgInfo.Checksum == nil {
 			vo.Checksum = &registry.Checksum{
-				Enabled: ptr.BoolP(false),
+				Enabled: ptr.Bool(false),
 			}
 		}
 	}

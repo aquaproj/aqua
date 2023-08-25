@@ -99,15 +99,15 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				CosignExperimental: true,
 				Signature: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: ptr.StrP("aqua-installer.sig"),
+					Asset: ptr.String("aqua-installer.sig"),
 				},
 				Certificate: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: ptr.StrP("aqua-installer.pem"),
+					Asset: ptr.String("aqua-installer.pem"),
 				},
 				Key: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: ptr.StrP("aqua-installer.key"),
+					Asset: ptr.String("aqua-installer.key"),
 				},
 			},
 			art: &template.Artifact{
