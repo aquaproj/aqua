@@ -21,7 +21,7 @@ func (is *InstallerImpl) verifyWithSLSA(ctx context.Context, logE *logrus.Entry,
 	if err := is.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
 		return fmt.Errorf("install slsa-verifier: %w", err)
 	}
-	tempFilePath, err := bodyFile.GetPath()
+	tempFilePath, err := bodyFile.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporal file path: %w", err)
 	}

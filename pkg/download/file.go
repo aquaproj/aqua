@@ -34,7 +34,7 @@ func (f *DownloadedFile) Remove() error {
 	return f.fs.Remove(f.path) //nolint:wrapcheck //nolint:errcheck
 }
 
-func (f *DownloadedFile) GetPath() (string, error) {
+func (f *DownloadedFile) Path() (string, error) {
 	if f.path != "" {
 		return f.path, nil
 	}
