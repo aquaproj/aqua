@@ -1,9 +1,5 @@
 package expr
 
-import (
-	"strings"
-)
-
 func emptySemver(s string) bool {
 	return false
 }
@@ -14,7 +10,6 @@ func EvaluateVersionConstraints(constraint, v, semver string) (bool, error) {
 		"SemVer":            "",
 		"semver":            emptySemver,
 		"semverWithVersion": compare,
-		"trimPrefix":        strings.TrimPrefix,
 	}, map[string]interface{}{
 		"Version": v,
 
@@ -22,7 +17,5 @@ func EvaluateVersionConstraints(constraint, v, semver string) (bool, error) {
 
 		"semver":            getCompareFunc(semver),
 		"semverWithVersion": compare,
-
-		"trimPrefix": strings.TrimPrefix,
 	})
 }
