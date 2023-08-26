@@ -10,8 +10,8 @@ import (
 
 func (p *PackageInfo) setTopVersion(logE *logrus.Entry, v string) *PackageInfo {
 	sv := v
-	if p.VersionPrefix != nil {
-		prefix := *p.VersionPrefix
+	if p.VersionPrefix != "" {
+		prefix := p.VersionPrefix
 		if !strings.HasPrefix(v, prefix) {
 			return nil
 		}
@@ -48,10 +48,10 @@ func (p *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageInfo, er
 		sv := v
 		vp := p.VersionPrefix
 		if vo.VersionPrefix != nil {
-			vp = vo.VersionPrefix
+			vp = *vo.VersionPrefix
 		}
-		if vp != nil {
-			prefix := *vp
+		if vp != "" {
+			prefix := vp
 			if !strings.HasPrefix(v, prefix) {
 				continue
 			}

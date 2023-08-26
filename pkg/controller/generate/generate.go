@@ -190,7 +190,7 @@ func (c *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.Entr
 	if param.SelectVersion {
 		return c.selectVersionFromReleases(ctx, logE, pkgInfo)
 	}
-	if pkgInfo.VersionFilter != "" || pkgInfo.VersionPrefix != nil {
+	if pkgInfo.VersionFilter != "" || pkgInfo.VersionPrefix != "" {
 		return c.listAndGetTagName(ctx, logE, pkgInfo)
 	}
 	return c.getVersionFromLatestRelease(ctx, logE, pkgInfo)

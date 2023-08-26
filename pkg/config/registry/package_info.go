@@ -41,7 +41,7 @@ type PackageInfo struct {
 	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      string             `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
-	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
+	VersionPrefix      string             `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
 	NoAsset            *bool              `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
@@ -247,7 +247,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 		pkg.VersionFilter = *child.VersionFilter
 	}
 	if child.VersionPrefix != nil {
-		pkg.VersionPrefix = child.VersionPrefix
+		pkg.VersionPrefix = *child.VersionPrefix
 	}
 	if child.Rosetta2 != nil {
 		pkg.Rosetta2 = child.Rosetta2
@@ -597,12 +597,4 @@ func (p *PackageInfo) SLSASourceURI() string {
 		repoName = p.RepoName
 	}
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
-}
-
-func (p *PackageInfo) GetVersionPrefix() string {
-	prefix := p.VersionPrefix
-	if prefix == nil {
-		return ""
-	}
-	return *prefix
 }

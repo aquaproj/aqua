@@ -330,7 +330,7 @@ func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime
 
 func (p *Package) semVer() string {
 	v := p.Package.Version
-	prefix := p.PackageInfo.GetVersionPrefix()
+	prefix := p.PackageInfo.VersionPrefix
 	if prefix == "" {
 		return v
 	}
