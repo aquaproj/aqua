@@ -348,7 +348,7 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Ent
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	file, _, err := c.downloader.GetReadCloser(ctx, logE, f)
+	file, _, err := c.downloader.ReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("download an asset: %w", err)
 	}

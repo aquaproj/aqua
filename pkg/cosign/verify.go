@@ -200,7 +200,7 @@ func (v *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *Pa
 }
 
 func (v *VerifierImpl) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
-	rc, _, err := v.downloader.GetReadCloser(ctx, logE, f)
+	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("get a readcloser: %w", err)
 	}
