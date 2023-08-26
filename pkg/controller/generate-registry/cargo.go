@@ -8,14 +8,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) (*registry.PackageInfo, []string) {
+func (c *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) (*registry.PackageInfo, []string) {
 	crate := strings.TrimPrefix(pkgName, "crates.io/")
 	pkgInfo := &registry.PackageInfo{
 		Name:  pkgName,
 		Type:  "cargo",
-		Crate: &crate,
+		Crate: crate,
 	}
-	payload, err := ctrl.cargoClient.GetCrate(ctx, crate)
+	payload, err := c.cargoClient.GetCrate(ctx, crate)
 	if err != nil {
 		logE.WithError(err).Warn("get a crate metadata by crates.io API")
 	}

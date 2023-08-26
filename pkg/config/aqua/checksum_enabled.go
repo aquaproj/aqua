@@ -1,8 +1,8 @@
 package aqua
 
-func (chk *Checksum) GetEnabled() bool {
-	if chk == nil || chk.Enabled == nil {
+func (c *Checksum) GetEnabled() bool {
+	if c == nil || c.Enabled == nil {
 		return false
 	}
-	return *chk.Enabled
+	return *c.Enabled
 }

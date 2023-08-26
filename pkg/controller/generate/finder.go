@@ -29,11 +29,11 @@ type mockFuzzyFinder struct {
 	err  error
 }
 
-func (finder *mockFuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
-	return finder.idxs, finder.err
+func (f *mockFuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
+	return f.idxs, f.err
 }
 
-func (finder *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
+func (f *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
 	return fuzzyfinder.FindMulti(pkgs, func(i int) string { //nolint:wrapcheck
 		return find(pkgs[i])
 	},
@@ -86,7 +86,7 @@ func getPreview(pkg *FindingPackage, i, w int) string {
 	return fmt.Sprintf("%s\n\n%s\n%s",
 		pkg.PackageInfo.GetName(),
 		pkg.PackageInfo.GetLink(),
-		formatDescription(pkg.PackageInfo.GetDescription(), w/2-8)) //nolint:gomnd
+		formatDescription(pkg.PackageInfo.Description, w/2-8)) //nolint:gomnd
 }
 
 func formatLine(line string, w int) string {

@@ -8,10 +8,10 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -52,7 +52,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     util.StrP("multiple.intoto.jsonl"),
+				Asset:     ptr.String("multiple.intoto.jsonl"),
 			},
 			art: &template.Artifact{
 				Version: "v1.6.0",

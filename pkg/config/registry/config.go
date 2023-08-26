@@ -17,14 +17,14 @@ type File struct {
 	Dir  string `json:"dir,omitempty" yaml:",omitempty"`
 }
 
-func (pkgInfos *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {
-	return pkgInfos.toMap(logE, logrus.DebugLevel)
+func (p *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {
+	return p.toMap(logE, logrus.DebugLevel)
 }
 
-func (pkgInfos *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[string]*PackageInfo {
-	m := make(map[string]*PackageInfo, len(*pkgInfos))
+func (p *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[string]*PackageInfo {
+	m := make(map[string]*PackageInfo, len(*p))
 	logE = logE.WithField("package_name", "")
-	for _, pkgInfo := range *pkgInfos {
+	for _, pkgInfo := range *p {
 		logE := logE
 		pkgInfo := pkgInfo
 		if pkgInfo == nil {

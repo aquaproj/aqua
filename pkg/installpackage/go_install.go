@@ -16,8 +16,8 @@ type MockGoInstallInstaller struct {
 	Err error
 }
 
-func (mock *MockGoInstallInstaller) Install(ctx context.Context, path, gobin string) error {
-	return mock.Err
+func (m *MockGoInstallInstaller) Install(ctx context.Context, path, gobin string) error {
+	return m.Err
 }
 
 type GoInstallInstallerImpl struct {
@@ -30,15 +30,15 @@ func NewGoInstallInstallerImpl(exec Executor) *GoInstallInstallerImpl {
 	}
 }
 
-func (inst *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin string) error {
-	_, err := inst.exec.ExecWithEnvs(ctx, "go", []string{"install", path}, []string{fmt.Sprintf("GOBIN=%s", gobin)})
+func (is *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin string) error {
+	_, err := is.exec.ExecWithEnvs(ctx, "go", []string{"install", path}, []string{fmt.Sprintf("GOBIN=%s", gobin)})
 	if err != nil {
 		return fmt.Errorf("install a go package: %w", err)
 	}
 	return nil
 }
 
-func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
+func (is *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
 	p, err := pkg.RenderPath()
 	if err != nil {
 		return fmt.Errorf("render Go Module Path: %w", err)
@@ -48,7 +48,7 @@ func (inst *InstallerImpl) downloadGoInstall(ctx context.Context, pkg *config.Pa
 		"gobin":           dest,
 		"go_package_path": goPkgPath,
 	}).Info("Installing a Go tool")
-	if err := inst.goInstallInstaller.Install(ctx, goPkgPath, dest); err != nil {
+	if err := is.goInstallInstaller.Install(ctx, goPkgPath, dest); err != nil {
 		return fmt.Errorf("build Go tool: %w", err)
 	}
 	return nil

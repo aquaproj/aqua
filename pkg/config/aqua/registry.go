@@ -3,7 +3,7 @@ package aqua
 import (
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -24,42 +24,42 @@ const (
 	RegistryTypeStandard      = "standard"
 )
 
-func (registry *Registry) Validate() error {
-	switch registry.Type {
+func (r *Registry) Validate() error {
+	switch r.Type {
 	case RegistryTypeLocal:
-		return registry.validateLocal()
+		return r.validateLocal()
 	case RegistryTypeGitHubContent:
-		return registry.validateGitHubContent()
+		return r.validateGitHubContent()
 	default:
 		return logerr.WithFields(errInvalidRegistryType, logrus.Fields{ //nolint:wrapcheck
-			"registry_type": registry.Type,
+			"registry_type": r.Type,
 		})
 	}
 }
 
-func (registry *Registry) validateLocal() error {
-	if registry.Path == "" {
+func (r *Registry) validateLocal() error {
+	if r.Path == "" {
 		return errPathIsRequired
 	}
 	return nil
 }
 
-func (registry *Registry) validateGitHubContent() error {
-	if registry.RepoOwner == "" {
+func (r *Registry) validateGitHubContent() error {
+	if r.RepoOwner == "" {
 		return errRepoOwnerIsRequired
 	}
-	if registry.RepoName == "" {
+	if r.RepoName == "" {
 		return errRepoNameIsRequired
 	}
-	if registry.Ref == "" {
+	if r.Ref == "" {
 		return errRefIsRequired
 	}
 	return nil
 }
 
-func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (r *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type alias Registry
-	a := alias(*registry)
+	a := alias(*r)
 	if err := unmarshal(&a); err != nil {
 		return err
 	}
@@ -78,16 +78,16 @@ func (registry *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error
 			a.Path = "registry.yaml"
 		}
 	}
-	*registry = Registry(a)
+	*r = Registry(a)
 	return nil
 }
 
-func (registry *Registry) GetFilePath(rootDir, cfgFilePath string) (string, error) {
-	switch registry.Type {
+func (r *Registry) GetFilePath(rootDir, cfgFilePath string) (string, error) {
+	switch r.Type {
 	case RegistryTypeLocal:
-		return util.Abs(filepath.Dir(cfgFilePath), registry.Path), nil
+		return osfile.Abs(filepath.Dir(cfgFilePath), r.Path), nil
 	case RegistryTypeGitHubContent:
-		return filepath.Join(rootDir, "registries", registry.Type, "github.com", registry.RepoOwner, registry.RepoName, registry.Ref, registry.Path), nil
+		return filepath.Join(rootDir, "registries", r.Type, "github.com", r.RepoOwner, r.RepoName, r.Ref, r.Path), nil
 	}
 	return "", errInvalidRegistryType
 }

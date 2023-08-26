@@ -22,27 +22,27 @@ type GitHubContentFile struct {
 	String     string
 }
 
-func (file *GitHubContentFile) Reader() io.Reader {
-	if file.String != "" {
-		return strings.NewReader(file.String)
+func (f *GitHubContentFile) Reader() io.Reader {
+	if f.String != "" {
+		return strings.NewReader(f.String)
 	}
-	return file.ReadCloser
+	return f.ReadCloser
 }
 
-func (file *GitHubContentFile) Byte() ([]byte, error) {
-	if file.String != "" {
-		return []byte(file.String), nil
+func (f *GitHubContentFile) Byte() ([]byte, error) {
+	if f.String != "" {
+		return []byte(f.String), nil
 	}
-	cnt, err := io.ReadAll(file.ReadCloser)
+	cnt, err := io.ReadAll(f.ReadCloser)
 	if err != nil {
 		return nil, fmt.Errorf("read the registry configuration file: %w", err)
 	}
 	return cnt, nil
 }
 
-func (file *GitHubContentFile) Close() error {
-	if file.ReadCloser != nil {
-		return file.ReadCloser.Close() //nolint:wrapcheck
+func (f *GitHubContentFile) Close() error {
+	if f.ReadCloser != nil {
+		return f.ReadCloser.Close() //nolint:wrapcheck
 	}
 	return nil
 }
@@ -56,6 +56,6 @@ type MockGitHubContentFileDownloader struct {
 	Err  error
 }
 
-func (mock *MockGitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *GitHubContentFileParam) (*GitHubContentFile, error) {
-	return mock.File, mock.Err
+func (m *MockGitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *GitHubContentFileParam) (*GitHubContentFile, error) {
+	return m.File, m.Err
 }

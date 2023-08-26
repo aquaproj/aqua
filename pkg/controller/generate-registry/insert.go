@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (ctrl *Controller) insert(cfgFilePath string, pkgs interface{}) error {
-	b, err := afero.ReadFile(ctrl.fs, cfgFilePath)
+func (c *Controller) insert(cfgFilePath string, pkgs interface{}) error {
+	b, err := afero.ReadFile(c.fs, cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
@@ -22,11 +22,11 @@ func (ctrl *Controller) insert(cfgFilePath string, pkgs interface{}) error {
 		return fmt.Errorf("update an AST file: %w", err)
 	}
 
-	stat, err := ctrl.fs.Stat(cfgFilePath)
+	stat, err := c.fs.Stat(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(ctrl.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
+	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil

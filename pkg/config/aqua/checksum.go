@@ -2,18 +2,18 @@ package aqua
 
 import "github.com/aquaproj/aqua/v2/pkg/config/registry"
 
-func (cfg *Config) ChecksumEnabled() bool {
-	if cfg == nil {
+func (c *Config) ChecksumEnabled() bool {
+	if c == nil {
 		return false
 	}
-	return cfg.Checksum.GetEnabled()
+	return c.Checksum.GetEnabled()
 }
 
-func (cfg *Config) RequireChecksum(defValue bool) bool {
-	if cfg == nil || cfg.Checksum == nil || cfg.Checksum.RequireChecksum == nil {
+func (c *Config) RequireChecksum(defValue bool) bool {
+	if c == nil || c.Checksum == nil || c.Checksum.RequireChecksum == nil {
 		return defValue
 	}
-	return *cfg.Checksum.RequireChecksum
+	return *c.Checksum.RequireChecksum
 }
 
 type Checksum struct {

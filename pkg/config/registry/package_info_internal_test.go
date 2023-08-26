@@ -3,15 +3,12 @@ package registry
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 )
 
 const proxyName = "aqua-proxy"
-
-func stringP(s string) *string {
-	return &s
-}
 
 func TestPackageInfo_overrideVersion(t *testing.T) {
 	t.Parallel()
@@ -28,7 +25,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
-				Asset:       stringP("colima-amd64"),
+				Asset:       ptr.String("colima-amd64"),
 				Files: []*File{
 					{
 						Name: proxyName,
@@ -37,7 +34,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 			},
 			child: &VersionOverride{
 				Type: PkgInfoTypeGitHubContent,
-				Path: stringP("colima"),
+				Path: "colima",
 			},
 			exp: &PackageInfo{
 				Type:        PkgInfoTypeGitHubContent,
@@ -49,7 +46,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 						Name: proxyName,
 					},
 				},
-				Path: stringP("colima"),
+				Path: "colima",
 			},
 		},
 	}
@@ -77,23 +74,23 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 			title: "no version constraint",
 			exp: &PackageInfo{
 				Type: "github_content",
-				Path: stringP("foo"),
+				Path: "foo",
 			},
 			pkgInfo: &PackageInfo{
 				Type: "github_content",
-				Path: stringP("foo"),
+				Path: "foo",
 			},
 		},
 		{
 			title: "version constraint",
 			exp: &PackageInfo{
 				Type:               "github_content",
-				Path:               stringP("foo"),
+				Path:               "foo",
 				VersionConstraints: `semver(">= 0.4.0")`,
 			},
 			pkgInfo: &PackageInfo{
 				Type:               "github_content",
-				Path:               stringP("foo"),
+				Path:               "foo",
 				VersionConstraints: `semver(">= 0.4.0")`,
 			},
 			version: "v0.5.0",
@@ -102,23 +99,23 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 			title: "child version constraint",
 			exp: &PackageInfo{
 				Type:               "github_content",
-				Path:               stringP("bar"),
+				Path:               "bar",
 				VersionConstraints: `semver(">= 0.4.0")`,
 				VersionOverrides: []*VersionOverride{
 					{
 						VersionConstraints: `semver("< 0.4.0")`,
-						Path:               stringP("bar"),
+						Path:               "bar",
 					},
 				},
 			},
 			pkgInfo: &PackageInfo{
 				Type:               "github_content",
-				Path:               stringP("foo"),
+				Path:               "foo",
 				VersionConstraints: `semver(">= 0.4.0")`,
 				VersionOverrides: []*VersionOverride{
 					{
 						VersionConstraints: `semver("< 0.4.0")`,
-						Path:               stringP("bar"),
+						Path:               "bar",
 					},
 				},
 			},

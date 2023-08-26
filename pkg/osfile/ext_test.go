@@ -1,9 +1,9 @@
-package util_test
+package osfile_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 )
 
 func TestExt(t *testing.T) {
@@ -25,7 +25,7 @@ func TestExt(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ext := util.Ext(d.s, d.version)
+			ext := osfile.Ext(d.s, d.version)
 			if ext != d.ext {
 				t.Fatalf("wanted %s, got %s", d.ext, ext)
 			}

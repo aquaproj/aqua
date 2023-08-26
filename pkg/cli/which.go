@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newWhichCommand() *cli.Command {
+func (r *Runner) newWhichCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "which",
 		Usage:     "Output the absolute file path of the given command",
@@ -30,11 +30,11 @@ If the command isn't found, exits with non zero exit code.
 $ aqua which foo
 FATA[0000] aqua failed                                   aqua_version=0.8.6 error="command is not found" exe_name=foo program=aqua
 `,
-		Action: runner.whichAction,
+		Action: r.whichAction,
 	}
 }
 
-func (runner *Runner) whichAction(c *cli.Context) error {
+func (r *Runner) whichAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -48,15 +48,15 @@ func (runner *Runner) whichAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "which", param); err != nil {
+	if err := r.setParam(c, "which", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
+	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, r.Runtime)
 	exeName, _, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
-	which, err := ctrl.Which(c.Context, runner.LogE, param, exeName)
+	which, err := ctrl.Which(c.Context, r.LogE, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

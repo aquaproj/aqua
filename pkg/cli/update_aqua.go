@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) newUpdateAquaCommand() *cli.Command {
+func (r *Runner) newUpdateAquaCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "update-aqua",
 		Usage: "Update aqua",
@@ -25,11 +25,11 @@ e.g.
 $ aqua update-aqua # Install the latest version
 $ aqua update-aqua v1.20.0 # Install v1.20.0
 `,
-		Action: runner.updaetAquaAction,
+		Action: r.updaetAquaAction,
 	}
 }
 
-func (runner *Runner) updaetAquaAction(c *cli.Context) error {
+func (r *Runner) updaetAquaAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -43,9 +43,9 @@ func (runner *Runner) updaetAquaAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := runner.setParam(c, "update-aqua", param); err != nil {
+	if err := r.setParam(c, "update-aqua", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeUpdateAquaCommandController(c.Context, param, http.DefaultClient, runner.Runtime)
-	return ctrl.UpdateAqua(c.Context, runner.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeUpdateAquaCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	return ctrl.UpdateAqua(c.Context, r.LogE, param) //nolint:wrapcheck
 }

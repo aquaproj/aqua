@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -29,7 +28,7 @@ func TestInstallerImpl_verifyChecksum(t *testing.T) { //nolint:funlen
 				Pkg: &config.Package{
 					PackageInfo: &registry.PackageInfo{
 						Type:     "github_release",
-						Rosetta2: util.BoolP(true),
+						Rosetta2: true,
 						Checksum: &registry.Checksum{
 							Type:       "github_release",
 							Algorithm:  "sha256",

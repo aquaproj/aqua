@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/errors"
 )
 
 type Payload struct {
@@ -39,19 +39,19 @@ type MockClient struct {
 	CratePayload *CratePayload
 }
 
-func (mock *MockClient) ListVersions(ctx context.Context, crate string) ([]string, error) {
-	return mock.Versions, mock.Err
+func (m *MockClient) ListVersions(ctx context.Context, crate string) ([]string, error) {
+	return m.Versions, m.Err
 }
 
-func (mock *MockClient) GetLatestVersion(ctx context.Context, crate string) (string, error) {
-	if len(mock.Versions) == 0 {
-		return "", mock.Err
+func (m *MockClient) GetLatestVersion(ctx context.Context, crate string) (string, error) {
+	if len(m.Versions) == 0 {
+		return "", m.Err
 	}
-	return mock.Versions[0], mock.Err
+	return m.Versions[0], m.Err
 }
 
-func (mock *MockClient) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
-	return mock.CratePayload, mock.Err
+func (m *MockClient) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
+	return m.CratePayload, m.Err
 }
 
 type ClientImpl struct {
@@ -64,21 +64,21 @@ func NewClientImpl(client *http.Client) *ClientImpl {
 	}
 }
 
-func (searcher *ClientImpl) ListVersions(ctx context.Context, crate string) ([]string, error) {
-	versions, _, err := listInstallableVersions(ctx, searcher.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s/versions", crate))
+func (c *ClientImpl) ListVersions(ctx context.Context, crate string) ([]string, error) {
+	versions, _, err := listInstallableVersions(ctx, c.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s/versions", crate))
 	return versions, err
 }
 
-func (searcher *ClientImpl) GetLatestVersion(ctx context.Context, crate string) (string, error) {
-	versions, err := searcher.ListVersions(ctx, crate)
+func (c *ClientImpl) GetLatestVersion(ctx context.Context, crate string) (string, error) {
+	versions, err := c.ListVersions(ctx, crate)
 	if len(versions) == 0 {
 		return "", err
 	}
 	return versions[0], err
 }
 
-func (searcher *ClientImpl) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
-	payload, _, err := getCrate(ctx, searcher.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s", crate))
+func (c *ClientImpl) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
+	payload, _, err := getCrate(ctx, c.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s", crate))
 	return payload, err
 }
 
@@ -93,7 +93,7 @@ func getCrate(ctx context.Context, client *http.Client, uri string) (*CratePaylo
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 { //nolint:gomnd
-		return nil, resp.StatusCode, util.ErrHTTPStatusCodeIsGreaterEqualThan300
+		return nil, resp.StatusCode, errors.ErrHTTPStatusCodeIsGreaterEqualThan300
 	}
 	payload := &CratePayload{}
 	if err := json.NewDecoder(resp.Body).Decode(payload); err != nil {
@@ -113,7 +113,7 @@ func listInstallableVersions(ctx context.Context, client *http.Client, uri strin
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 { //nolint:gomnd
-		return nil, resp.StatusCode, util.ErrHTTPStatusCodeIsGreaterEqualThan300
+		return nil, resp.StatusCode, errors.ErrHTTPStatusCodeIsGreaterEqualThan300
 	}
 	payload := &Payload{}
 	if err := json.NewDecoder(resp.Body).Decode(payload); err != nil {

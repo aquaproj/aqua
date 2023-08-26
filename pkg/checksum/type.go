@@ -29,40 +29,40 @@ func New() *Checksums {
 	}
 }
 
-func (chksums *Checksums) EnableOutput() {
-	chksums.stdout = os.Stdout
+func (c *Checksums) EnableOutput() {
+	c.stdout = os.Stdout
 }
 
-func (chksums *Checksums) Get(key string) *Checksum {
-	chksums.rwmutex.Lock()
-	chk := chksums.m[key]
+func (c *Checksums) Get(key string) *Checksum {
+	c.rwmutex.Lock()
+	chk := c.m[key]
 	if chk != nil {
-		chksums.newM[key] = chk
+		c.newM[key] = chk
 	}
-	chksums.rwmutex.Unlock()
+	c.rwmutex.Unlock()
 	return chk
 }
 
-func (chksums *Checksums) Set(key string, chk *Checksum) {
+func (c *Checksums) Set(key string, chk *Checksum) {
 	chk.Checksum = strings.ToUpper(chk.Checksum)
-	chksums.rwmutex.Lock()
-	if _, ok := chksums.m[key]; !ok {
-		chksums.m[key] = chk
-		chksums.changed = true
+	c.rwmutex.Lock()
+	if _, ok := c.m[key]; !ok {
+		c.m[key] = chk
+		c.changed = true
 	}
-	if _, ok := chksums.newM[key]; !ok {
-		chksums.newM[key] = chk
+	if _, ok := c.newM[key]; !ok {
+		c.newM[key] = chk
 	}
-	chksums.rwmutex.Unlock()
+	c.rwmutex.Unlock()
 }
 
-func (chksums *Checksums) Prune() {
-	chksums.rwmutex.Lock()
-	if len(chksums.m) != len(chksums.newM) {
-		chksums.changed = true
+func (c *Checksums) Prune() {
+	c.rwmutex.Lock()
+	if len(c.m) != len(c.newM) {
+		c.changed = true
 	}
-	chksums.m = chksums.newM
-	chksums.rwmutex.Unlock()
+	c.m = c.newM
+	c.rwmutex.Unlock()
 }
 
 type checksumsJSON struct {
@@ -75,7 +75,7 @@ type Checksum struct {
 	Algorithm string `json:"algorithm"`
 }
 
-func (chksums *Checksums) ReadFile(fs afero.Fs, p string) error {
+func (c *Checksums) ReadFile(fs afero.Fs, p string) error {
 	if f, err := afero.Exists(fs, p); err != nil {
 		return fmt.Errorf("check if checksum file exists: %w", err)
 	} else if !f {
@@ -94,12 +94,12 @@ func (chksums *Checksums) ReadFile(fs afero.Fs, p string) error {
 	for _, chk := range chkJSON.Checksums {
 		m[chk.ID] = chk
 	}
-	chksums.m = m
+	c.m = m
 	return nil
 }
 
-func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
-	if !chksums.changed {
+func (c *Checksums) UpdateFile(fs afero.Fs, p string) error {
+	if !c.changed {
 		return nil
 	}
 	f, err := fs.Create(p)
@@ -109,8 +109,8 @@ func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
 	defer f.Close()
 	encoder := json.NewEncoder(f)
 	encoder.SetIndent("", "  ")
-	arr := make([]*Checksum, 0, len(chksums.m))
-	for _, chk := range chksums.m {
+	arr := make([]*Checksum, 0, len(c.m))
+	for _, chk := range c.m {
 		arr = append(arr, chk)
 	}
 	sort.Slice(arr, func(i, j int) bool {
@@ -119,8 +119,8 @@ func (chksums *Checksums) UpdateFile(fs afero.Fs, p string) error {
 	chkJSON := &checksumsJSON{
 		Checksums: arr,
 	}
-	if chksums.stdout != nil {
-		fmt.Fprintln(chksums.stdout, p)
+	if c.stdout != nil {
+		fmt.Fprintln(c.stdout, p)
 	}
 	if err := encoder.Encode(chkJSON); err != nil {
 		return fmt.Errorf("write a checksum file as JSON: %w", err)

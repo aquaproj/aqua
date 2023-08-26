@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (inst *InstallerImpl) validatePackage(logE *logrus.Entry, param *ParamInstallPackage) error {
+func (is *InstallerImpl) validatePackage(logE *logrus.Entry, param *ParamInstallPackage) error {
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 
@@ -15,7 +15,7 @@ func (inst *InstallerImpl) validatePackage(logE *logrus.Entry, param *ParamInsta
 		return fmt.Errorf("invalid package: %w", err)
 	}
 
-	if pkgInfo.IsNoAsset() {
+	if pkgInfo.NoAsset {
 		return errNoAsset
 	}
 	if pkgInfo.ErrorMessage != "" {
@@ -24,7 +24,7 @@ func (inst *InstallerImpl) validatePackage(logE *logrus.Entry, param *ParamInsta
 	}
 
 	if !param.DisablePolicy {
-		if err := inst.policyChecker.ValidatePackage(logE, param.Pkg, param.PolicyConfigs); err != nil {
+		if err := is.policyChecker.ValidatePackage(logE, param.Pkg, param.PolicyConfigs); err != nil {
 			return err //nolint:wrapcheck
 		}
 	}

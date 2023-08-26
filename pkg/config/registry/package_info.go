@@ -30,20 +30,20 @@ type PackageInfo struct {
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
 	Link               string             `json:"link,omitempty" yaml:",omitempty"`
 	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
-	Crate              *string            `json:"crate,omitempty" yaml:",omitempty"`
+	Crate              string             `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo             `json:"cargo,omitempty"`
-	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
-	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
+	URL                string             `json:"url,omitempty" yaml:",omitempty"`
+	Path               string             `json:"path,omitempty" yaml:",omitempty"`
 	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
 	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
-	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
-	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
-	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
-	NoAsset            *bool              `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
+	VersionFilter      string             `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix      string             `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
+	Rosetta2           bool               `yaml:",omitempty" json:"rosetta2,omitempty"`
+	NoAsset            bool               `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
@@ -62,10 +62,10 @@ type VersionOverride struct {
 	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
-	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
+	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
-	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
-	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	Path               string          `yaml:",omitempty" json:"path,omitempty"`
+	URL                string          `yaml:",omitempty" json:"url,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
@@ -91,10 +91,10 @@ type Override struct {
 	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
-	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
+	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
-	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	URL                string          `yaml:",omitempty" json:"url,omitempty"`
 	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
@@ -103,103 +103,103 @@ type Override struct {
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 }
 
-func (pkgInfo *PackageInfo) Copy() *PackageInfo {
+func (p *PackageInfo) Copy() *PackageInfo {
 	pkg := &PackageInfo{
-		Name:               pkgInfo.Name,
-		Type:               pkgInfo.Type,
-		RepoOwner:          pkgInfo.RepoOwner,
-		RepoName:           pkgInfo.RepoName,
-		Asset:              pkgInfo.Asset,
-		Crate:              pkgInfo.Crate,
-		Cargo:              pkgInfo.Cargo,
-		Path:               pkgInfo.Path,
-		Format:             pkgInfo.Format,
-		Files:              pkgInfo.Files,
-		URL:                pkgInfo.URL,
-		Description:        pkgInfo.Description,
-		Link:               pkgInfo.Link,
-		Replacements:       pkgInfo.Replacements,
-		Overrides:          pkgInfo.Overrides,
-		FormatOverrides:    pkgInfo.FormatOverrides,
-		VersionConstraints: pkgInfo.VersionConstraints,
-		VersionOverrides:   pkgInfo.VersionOverrides,
-		SupportedEnvs:      pkgInfo.SupportedEnvs,
-		VersionFilter:      pkgInfo.VersionFilter,
-		VersionPrefix:      pkgInfo.VersionPrefix,
-		Rosetta2:           pkgInfo.Rosetta2,
-		Aliases:            pkgInfo.Aliases,
-		VersionSource:      pkgInfo.VersionSource,
-		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
-		WindowsExt:         pkgInfo.WindowsExt,
-		Checksum:           pkgInfo.Checksum,
-		Cosign:             pkgInfo.Cosign,
-		SLSAProvenance:     pkgInfo.SLSAProvenance,
-		Private:            pkgInfo.Private,
-		ErrorMessage:       pkgInfo.ErrorMessage,
-		NoAsset:            pkgInfo.NoAsset,
+		Name:               p.Name,
+		Type:               p.Type,
+		RepoOwner:          p.RepoOwner,
+		RepoName:           p.RepoName,
+		Asset:              p.Asset,
+		Crate:              p.Crate,
+		Cargo:              p.Cargo,
+		Path:               p.Path,
+		Format:             p.Format,
+		Files:              p.Files,
+		URL:                p.URL,
+		Description:        p.Description,
+		Link:               p.Link,
+		Replacements:       p.Replacements,
+		Overrides:          p.Overrides,
+		FormatOverrides:    p.FormatOverrides,
+		VersionConstraints: p.VersionConstraints,
+		VersionOverrides:   p.VersionOverrides,
+		SupportedEnvs:      p.SupportedEnvs,
+		VersionFilter:      p.VersionFilter,
+		VersionPrefix:      p.VersionPrefix,
+		Rosetta2:           p.Rosetta2,
+		Aliases:            p.Aliases,
+		VersionSource:      p.VersionSource,
+		CompleteWindowsExt: p.CompleteWindowsExt,
+		WindowsExt:         p.WindowsExt,
+		Checksum:           p.Checksum,
+		Cosign:             p.Cosign,
+		SLSAProvenance:     p.SLSAProvenance,
+		Private:            p.Private,
+		ErrorMessage:       p.ErrorMessage,
+		NoAsset:            p.NoAsset,
 	}
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
+func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	switch typ {
 	case PkgInfoTypeGitHubRelease:
-		pkgInfo.URL = nil
-		pkgInfo.Path = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
+		p.URL = ""
+		p.Path = ""
+		p.Crate = ""
+		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
+		p.URL = ""
+		p.Asset = nil
+		p.Crate = ""
+		p.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
-		pkgInfo.URL = nil
-		pkgInfo.Path = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
-		pkgInfo.Format = ""
+		p.URL = ""
+		p.Path = ""
+		p.Asset = nil
+		p.Crate = ""
+		p.Cargo = nil
+		p.Format = ""
 	case PkgInfoTypeHTTP:
-		pkgInfo.Path = nil
-		pkgInfo.Asset = nil
+		p.Path = ""
+		p.Asset = nil
 	case PkgInfoTypeGoInstall:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
-		pkgInfo.WindowsExt = ""
-		pkgInfo.CompleteWindowsExt = nil
-		pkgInfo.Cosign = nil
-		pkgInfo.SLSAProvenance = nil
-		pkgInfo.Format = ""
-		pkgInfo.Rosetta2 = nil
+		p.URL = ""
+		p.Asset = nil
+		p.Crate = ""
+		p.Cargo = nil
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Format = ""
+		p.Rosetta2 = false
 	case PkgInfoTypeGoBuild:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Crate = nil
-		pkgInfo.Cargo = nil
-		pkgInfo.WindowsExt = ""
-		pkgInfo.CompleteWindowsExt = nil
-		pkgInfo.Cosign = nil
-		pkgInfo.SLSAProvenance = nil
-		pkgInfo.Format = ""
-		pkgInfo.Rosetta2 = nil
+		p.URL = ""
+		p.Asset = nil
+		p.Crate = ""
+		p.Cargo = nil
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Format = ""
+		p.Rosetta2 = false
 	case PkgInfoTypeCargo:
-		pkgInfo.URL = nil
-		pkgInfo.Asset = nil
-		pkgInfo.Path = nil
-		pkgInfo.WindowsExt = ""
-		pkgInfo.CompleteWindowsExt = nil
-		pkgInfo.Cosign = nil
-		pkgInfo.SLSAProvenance = nil
-		pkgInfo.Format = ""
-		pkgInfo.Rosetta2 = nil
+		p.URL = ""
+		p.Asset = nil
+		p.Path = ""
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Format = ""
+		p.Rosetta2 = false
 	}
 }
 
-func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
-	pkg := pkgInfo.Copy()
+func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
+	pkg := p.Copy()
 	if child.Type != "" {
 		pkg.resetByPkgType(child.Type)
 		pkg.Type = child.Type
@@ -213,13 +213,13 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.Asset != nil {
 		pkg.Asset = child.Asset
 	}
-	if child.Crate != nil {
+	if child.Crate != "" {
 		pkg.Crate = child.Crate
 	}
 	if child.Cargo != nil {
 		pkg.Cargo = child.Cargo
 	}
-	if child.Path != nil {
+	if child.Path != "" {
 		pkg.Path = child.Path
 	}
 	if child.Format != "" {
@@ -228,7 +228,7 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 	if child.Files != nil {
 		pkg.Files = child.Files
 	}
-	if child.URL != nil {
+	if child.URL != "" {
 		pkg.URL = child.URL
 	}
 	if child.Replacements != nil {
@@ -244,13 +244,13 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 		pkg.SupportedEnvs = child.SupportedEnvs
 	}
 	if child.VersionFilter != nil {
-		pkg.VersionFilter = child.VersionFilter
+		pkg.VersionFilter = *child.VersionFilter
 	}
 	if child.VersionPrefix != nil {
-		pkg.VersionPrefix = child.VersionPrefix
+		pkg.VersionPrefix = *child.VersionPrefix
 	}
 	if child.Rosetta2 != nil {
-		pkg.Rosetta2 = child.Rosetta2
+		pkg.Rosetta2 = *child.Rosetta2
 	}
 	if child.VersionSource != "" {
 		pkg.VersionSource = child.VersionSource
@@ -274,81 +274,81 @@ func (pkgInfo *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo
 		pkg.ErrorMessage = child.ErrorMessage
 	}
 	if child.NoAsset != nil {
-		pkg.NoAsset = child.NoAsset
+		pkg.NoAsset = *child.NoAsset
 	}
 	return pkg
 }
 
-func (pkgInfo *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
-	for _, fo := range pkgInfo.FormatOverrides {
+func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
+	for _, fo := range p.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
-			pkgInfo.Format = fo.Format
+			p.Format = fo.Format
 			break
 		}
 	}
 
-	ov := pkgInfo.getOverride(rt)
+	ov := p.getOverride(rt)
 	if ov == nil {
 		return
 	}
 
 	if ov.Type != "" {
-		pkgInfo.resetByPkgType(ov.Type)
-		pkgInfo.Type = ov.Type
+		p.resetByPkgType(ov.Type)
+		p.Type = ov.Type
 	}
 
-	if pkgInfo.Replacements == nil {
-		pkgInfo.Replacements = ov.Replacements
+	if p.Replacements == nil {
+		p.Replacements = ov.Replacements
 	} else {
-		replacements := make(Replacements, len(pkgInfo.Replacements))
-		for k, v := range pkgInfo.Replacements {
+		replacements := make(Replacements, len(p.Replacements))
+		for k, v := range p.Replacements {
 			replacements[k] = v
 		}
 		for k, v := range ov.Replacements {
 			replacements[k] = v
 		}
-		pkgInfo.Replacements = replacements
+		p.Replacements = replacements
 	}
 
 	if ov.Format != "" {
-		pkgInfo.Format = ov.Format
+		p.Format = ov.Format
 	}
 
 	if ov.Asset != nil {
-		pkgInfo.Asset = ov.Asset
+		p.Asset = ov.Asset
 	}
 
-	if ov.Crate != nil {
-		pkgInfo.Crate = ov.Crate
+	if ov.Crate != "" {
+		p.Crate = ov.Crate
 	}
 
 	if ov.Cargo != nil {
-		pkgInfo.Cargo = ov.Cargo
+		p.Cargo = ov.Cargo
 	}
 
 	if ov.Files != nil {
-		pkgInfo.Files = ov.Files
+		p.Files = ov.Files
 	}
 
-	if ov.URL != nil {
-		pkgInfo.URL = ov.URL
+	if ov.URL != "" {
+		p.URL = ov.URL
 	}
 
 	if ov.Checksum != nil {
-		pkgInfo.Checksum = ov.Checksum
+		p.Checksum = ov.Checksum
 	}
 
 	if ov.CompleteWindowsExt != nil {
-		pkgInfo.CompleteWindowsExt = ov.CompleteWindowsExt
+		p.CompleteWindowsExt = ov.CompleteWindowsExt
 	}
 	if ov.WindowsExt != "" {
-		pkgInfo.WindowsExt = ov.WindowsExt
+		p.WindowsExt = ov.WindowsExt
 	}
 	if ov.Cosign != nil {
-		pkgInfo.Cosign = ov.Cosign
+		p.Cosign = ov.Cosign
 	}
 	if ov.SLSAProvenance != nil {
-		pkgInfo.SLSAProvenance = ov.SLSAProvenance
+		p.SLSAProvenance = ov.SLSAProvenance
 	}
 }
 
@@ -415,80 +415,60 @@ func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 	}
 }
 
-func (pkgInfo *PackageInfo) GetRosetta2() bool {
-	return pkgInfo.Rosetta2 != nil && *pkgInfo.Rosetta2
+func (p *PackageInfo) HasRepo() bool {
+	return p.RepoOwner != "" && p.RepoName != ""
 }
 
-func (pkgInfo *PackageInfo) HasRepo() bool {
-	return pkgInfo.RepoOwner != "" && pkgInfo.RepoName != ""
-}
-
-func (pkgInfo *PackageInfo) GetName() string {
-	if pkgInfo.Name != "" {
-		return pkgInfo.Name
+func (p *PackageInfo) GetName() string {
+	if p.Name != "" {
+		return p.Name
 	}
-	if pkgInfo.HasRepo() {
-		return pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
+	if p.HasRepo() {
+		return p.RepoOwner + "/" + p.RepoName
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall && pkgInfo.Path != nil {
-		return *pkgInfo.Path
+	if p.Type == PkgInfoTypeGoInstall && p.Path != "" {
+		return p.Path
 	}
 	return ""
 }
 
-func (pkgInfo *PackageInfo) GetPath() string {
-	if pkgInfo.Path != nil {
-		return *pkgInfo.Path
+func (p *PackageInfo) GetPath() string {
+	if p.Path != "" {
+		return p.Path
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall && pkgInfo.HasRepo() {
-		return "github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
-	}
-	return ""
-}
-
-func (pkgInfo *PackageInfo) GetLink() string {
-	if pkgInfo.Link != "" {
-		return pkgInfo.Link
-	}
-	if pkgInfo.HasRepo() {
-		return "https://github.com/" + pkgInfo.RepoOwner + "/" + pkgInfo.RepoName
+	if p.Type == PkgInfoTypeGoInstall && p.HasRepo() {
+		return "github.com/" + p.RepoOwner + "/" + p.RepoName
 	}
 	return ""
 }
 
-func (pkgInfo *PackageInfo) GetFormat() string {
-	if pkgInfo.Type == PkgInfoTypeGitHubArchive || pkgInfo.Type == PkgInfoTypeGoBuild {
+func (p *PackageInfo) GetLink() string {
+	if p.Link != "" {
+		return p.Link
+	}
+	if p.HasRepo() {
+		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
+	}
+	return ""
+}
+
+func (p *PackageInfo) GetFormat() string {
+	if p.Type == PkgInfoTypeGitHubArchive || p.Type == PkgInfoTypeGoBuild {
 		return "tar.gz"
 	}
-	return pkgInfo.Format
+	return p.Format
 }
 
-func (pkgInfo *PackageInfo) GetDescription() string {
-	return pkgInfo.Description
-}
-
-func (pkgInfo *PackageInfo) IsNoAsset() bool {
-	return pkgInfo.NoAsset != nil && *pkgInfo.NoAsset
-}
-
-func (pkgInfo *PackageInfo) GetType() string {
-	return pkgInfo.Type
-}
-
-func (pkgInfo *PackageInfo) GetReplacements() Replacements {
-	return pkgInfo.Replacements
-}
-
-func (pkgInfo *PackageInfo) GetChecksumReplacements() Replacements {
-	cr := pkgInfo.Checksum.GetReplacements()
+func (p *PackageInfo) GetChecksumReplacements() Replacements {
+	cr := p.Checksum.GetReplacements()
 	if cr == nil {
-		return pkgInfo.Replacements
+		return p.Replacements
 	}
 	if len(cr) == 0 {
 		return cr
 	}
 	m := Replacements{}
-	for k, v := range pkgInfo.Replacements {
+	for k, v := range p.Replacements {
 		m[k] = v
 	}
 	for k, v := range cr {
@@ -497,48 +477,44 @@ func (pkgInfo *PackageInfo) GetChecksumReplacements() Replacements {
 	return m
 }
 
-func (pkgInfo *PackageInfo) GetAsset() *string {
-	return pkgInfo.Asset
-}
-
-func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
-	if pkgInfo.GetName() == "" {
+func (p *PackageInfo) Validate() error { //nolint:cyclop
+	if p.GetName() == "" {
 		return errPkgNameIsRequired
 	}
-	switch pkgInfo.Type {
+	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
-		if !pkgInfo.HasRepo() {
+		if !p.HasRepo() {
 			return errRepoRequired
 		}
 		return nil
 	case PkgInfoTypeGoInstall:
-		if pkgInfo.GetPath() == "" {
+		if p.GetPath() == "" {
 			return errGoInstallRequirePath
 		}
 		return nil
 	case PkgInfoTypeCargo:
-		if pkgInfo.Crate == nil {
+		if p.Crate == "" {
 			return errCargoRequireCrate
 		}
 		return nil
 	case PkgInfoTypeGitHubContent:
-		if !pkgInfo.HasRepo() {
+		if !p.HasRepo() {
 			return errRepoRequired
 		}
-		if pkgInfo.Path == nil {
+		if p.Path == "" {
 			return errGitHubContentRequirePath
 		}
 		return nil
 	case PkgInfoTypeGitHubRelease:
-		if !pkgInfo.HasRepo() {
+		if !p.HasRepo() {
 			return errRepoRequired
 		}
-		if pkgInfo.Asset == nil {
+		if p.Asset == nil {
 			return errAssetRequired
 		}
 		return nil
 	case PkgInfoTypeHTTP:
-		if pkgInfo.URL == nil {
+		if p.URL == "" {
 			return errURLRequired
 		}
 		return nil
@@ -546,42 +522,42 @@ func (pkgInfo *PackageInfo) Validate() error { //nolint:cyclop
 	return errInvalidPackageType
 }
 
-func (pkgInfo *PackageInfo) GetFiles() []*File {
-	if len(pkgInfo.Files) != 0 {
-		return pkgInfo.Files
+func (p *PackageInfo) GetFiles() []*File {
+	if len(p.Files) != 0 {
+		return p.Files
 	}
 
-	if cmdName := pkgInfo.getDefaultCmdName(); cmdName != "" {
+	if cmdName := p.getDefaultCmdName(); cmdName != "" {
 		return []*File{
 			{
 				Name: cmdName,
 			},
 		}
 	}
-	return pkgInfo.Files
+	return p.Files
 }
 
-func (pkgInfo *PackageInfo) getDefaultCmdName() string {
-	if pkgInfo.HasRepo() {
-		if pkgInfo.Name == "" {
-			return pkgInfo.RepoName
+func (p *PackageInfo) getDefaultCmdName() string {
+	if p.HasRepo() {
+		if p.Name == "" {
+			return p.RepoName
 		}
-		if i := strings.LastIndex(pkgInfo.Name, "/"); i != -1 {
-			return pkgInfo.Name[i+1:]
+		if i := strings.LastIndex(p.Name, "/"); i != -1 {
+			return p.Name[i+1:]
 		}
-		return pkgInfo.Name
+		return p.Name
 	}
-	if pkgInfo.Type == PkgInfoTypeGoInstall {
-		if pkgInfo.Asset != nil {
-			return *pkgInfo.Asset
+	if p.Type == PkgInfoTypeGoInstall {
+		if p.Asset != nil {
+			return *p.Asset
 		}
-		return path.Base(pkgInfo.GetPath())
+		return path.Base(p.GetPath())
 	}
-	return path.Base(pkgInfo.GetName())
+	return path.Base(p.GetName())
 }
 
-func (pkgInfo *PackageInfo) SLSASourceURI() string {
-	sp := pkgInfo.SLSAProvenance
+func (p *PackageInfo) SLSASourceURI() string {
+	sp := p.SLSAProvenance
 	if sp == nil {
 		return ""
 	}
@@ -591,18 +567,10 @@ func (pkgInfo *PackageInfo) SLSASourceURI() string {
 	repoOwner := sp.RepoOwner
 	repoName := sp.RepoName
 	if repoOwner == "" {
-		repoOwner = pkgInfo.RepoOwner
+		repoOwner = p.RepoOwner
 	}
 	if repoName == "" {
-		repoName = pkgInfo.RepoName
+		repoName = p.RepoName
 	}
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
-}
-
-func (pkgInfo *PackageInfo) GetVersionPrefix() string {
-	prefix := pkgInfo.VersionPrefix
-	if prefix == nil {
-		return ""
-	}
-	return *prefix
 }

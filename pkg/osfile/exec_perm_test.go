@@ -1,10 +1,10 @@
-package util_test
+package osfile_test
 
 import (
 	"os"
 	"testing"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 )
 
 func TestIsOwnerExecutable(t *testing.T) {
@@ -29,7 +29,7 @@ func TestIsOwnerExecutable(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			f := util.IsOwnerExecutable(d.mode)
+			f := osfile.IsOwnerExecutable(d.mode)
 			if f != d.exp {
 				t.Fatalf("watnted %v, got %v", d.exp, f)
 			}
@@ -59,7 +59,7 @@ func TestAllowOwnerExec(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			mode := util.AllowOwnerExec(d.mode)
+			mode := osfile.AllowOwnerExec(d.mode)
 			if mode != d.exp {
 				t.Fatalf("watnted %v, got %v", d.exp, mode)
 			}

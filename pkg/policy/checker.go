@@ -21,15 +21,3 @@ func NewChecker(param *config.Param) *Checker {
 		disabled: param.DisablePolicy,
 	}
 }
-
-// type Checker interface {
-// 	ValidatePackage(pkg *config.Package, policies []*Config) error
-// }
-//
-// type MockChecker struct {
-// 	Err error
-// }
-//
-// func (pc *MockChecker) ValidatePackage(pkg *config.Package, policies []*Config) error {
-// 	return pc.Err
-// }

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 )
@@ -51,16 +51,16 @@ func configFileNames() []string {
 	}
 }
 
-func (finder *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
+func (f *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
 	if configFilePath != "" {
-		return util.Abs(wd, configFilePath), nil
+		return osfile.Abs(wd, configFilePath), nil
 	}
-	configFilePath = findconfig.Find(wd, finder.exist, configFileNames()...)
+	configFilePath = findconfig.Find(wd, f.exist, configFileNames()...)
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
 	for _, p := range globalConfigFilePaths {
-		if _, err := finder.fs.Stat(p); err != nil {
+		if _, err := f.fs.Stat(p); err != nil {
 			continue
 		}
 		return p, nil
@@ -68,15 +68,15 @@ func (finder *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePath
 	return "", ErrConfigFileNotFound
 }
 
-func (finder *ConfigFinder) Finds(wd, configFilePath string) []string {
+func (f *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
-		return findconfig.Finds(wd, finder.exist, configFileNames()...)
+		return findconfig.Finds(wd, f.exist, configFileNames()...)
 	}
-	return []string{util.Abs(wd, configFilePath)}
+	return []string{osfile.Abs(wd, configFilePath)}
 }
 
-func (finder *ConfigFinder) exist(p string) bool {
-	b, err := afero.Exists(finder.fs, p)
+func (f *ConfigFinder) exist(p string) bool {
+	b, err := afero.Exists(f.fs, p)
 	if err != nil {
 		return false
 	}

@@ -1,4 +1,4 @@
-package util
+package osfile
 
 import "github.com/spf13/afero"
 

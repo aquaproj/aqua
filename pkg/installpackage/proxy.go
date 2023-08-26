@@ -25,8 +25,8 @@ func ProxyChecksums() map[string]string {
 	}
 }
 
-func (inst *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
-	if isWindows(inst.runtime.GOOS) {
+func (is *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
+	if isWindows(is.runtime.GOOS) {
 		return nil
 	}
 	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
@@ -54,21 +54,21 @@ func (inst *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry)
 	})
 
 	logE.Debug("install the proxy")
-	assetName, err := pkg.RenderAsset(inst.runtime)
+	assetName, err := pkg.RenderAsset(is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	pkgPath, err := pkg.GetPkgPath(inst.rootDir, inst.runtime)
+	pkgPath, err := pkg.GetPkgPath(is.rootDir, is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 	logE.Debug("check if aqua-proxy is already installed")
-	finfo, err := inst.fs.Stat(pkgPath)
+	finfo, err := is.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
-		chksum := ProxyChecksums()[inst.runtime.Env()]
-		if err := inst.downloadWithRetry(ctx, logE, &DownloadParam{
+		chksum := ProxyChecksums()[is.runtime.Env()]
+		if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
 			Package: pkg,
 			Dest:    pkgPath,
 			Asset:   assetName,
@@ -87,10 +87,10 @@ func (inst *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry)
 
 	// create a symbolic link
 	binName := proxyName
-	a, err := filepath.Rel(inst.rootDir, filepath.Join(pkgPath, binName))
+	a, err := filepath.Rel(is.rootDir, filepath.Join(pkgPath, binName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return inst.createLink(filepath.Join(inst.rootDir, proxyName), a, logE)
+	return is.createLink(filepath.Join(is.rootDir, proxyName), a, logE)
 }

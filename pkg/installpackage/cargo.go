@@ -19,8 +19,8 @@ type MockCargoPackageInstaller struct {
 	Err error
 }
 
-func (mock *MockCargoPackageInstaller) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
-	return mock.Err
+func (m *MockCargoPackageInstaller) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
+	return m.Err
 }
 
 type CargoPackageInstallerImpl struct {
@@ -51,13 +51,13 @@ func getCargoArgs(version string, opts *registry.Cargo) []string {
 	return args
 }
 
-func (inst *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
+func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
 	args := getCargoArgs(version, opts)
-	if _, err := inst.exec.Exec(ctx, "cargo", append(args, "--root", root, crate)...); err != nil {
+	if _, err := is.exec.Exec(ctx, "cargo", append(args, "--root", root, crate)...); err != nil {
 		// Clean up root
 		logE := logE.WithField("install_dir", root)
 		logE.Info("removing the install directory because the installation failed")
-		if err := inst.cleaner.RemoveAll(root); err != nil {
+		if err := is.cleaner.RemoveAll(root); err != nil {
 			logE.WithError(err).Error("aqua tried to remove the install directory because the installation failed, but it failed")
 		}
 		return fmt.Errorf("install a crate: %w", logerr.WithFields(err, logrus.Fields{
@@ -68,7 +68,7 @@ func (inst *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus
 	return nil
 }
 
-func (inst *InstallerImpl) downloadCargo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, root string) error {
+func (is *InstallerImpl) downloadCargo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, root string) error {
 	cargoOpts := pkg.PackageInfo.Cargo
 	if cargoOpts != nil {
 		if cargoOpts.AllFeatures {
@@ -78,9 +78,9 @@ func (inst *InstallerImpl) downloadCargo(ctx context.Context, logE *logrus.Entry
 		}
 	}
 	logE.Info("Installing a crate")
-	crate := *pkg.PackageInfo.Crate
+	crate := pkg.PackageInfo.Crate
 	version := pkg.Package.Version
-	if err := inst.cargoPackageInstaller.Install(ctx, logE, crate, version, root, cargoOpts); err != nil {
+	if err := is.cargoPackageInstaller.Install(ctx, logE, crate, version, root, cargoOpts); err != nil {
 		return fmt.Errorf("cargo install: %w", err)
 	}
 	return nil

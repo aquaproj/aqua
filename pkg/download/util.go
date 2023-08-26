@@ -57,13 +57,13 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Runtime) (*File, error) {
 	pkgInfo := pkg.PackageInfo
 	file := &File{
-		Type:      pkgInfo.GetType(),
+		Type:      pkgInfo.Type,
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
 		Version:   pkg.Package.Version,
 		Private:   pkgInfo.Private,
 	}
-	switch pkgInfo.GetType() {
+	switch pkgInfo.Type {
 	case config.PkgInfoTypeGitHubRelease:
 		file.Asset = assetName
 		return file, nil
@@ -82,7 +82,7 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		return file, nil
 	default:
 		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
-			"package_type": pkgInfo.GetType(),
+			"package_type": pkgInfo.Type,
 		})
 	}
 }

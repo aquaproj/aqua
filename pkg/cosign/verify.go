@@ -15,7 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -58,12 +58,12 @@ type MockVerifier struct {
 	err error
 }
 
-func (mock *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
-	return mock.err
+func (v *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
+	return v.err
 }
 
-func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
-	if verifier.disabled {
+func (v *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
+	if v.disabled {
 		logE.Debug("verification with cosign is disabled")
 		return nil
 	}
@@ -73,63 +73,63 @@ func (verifier *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt
 	}
 
 	if cos.Signature != nil {
-		sigFile, err := afero.TempFile(verifier.fs, "", "")
+		sigFile, err := afero.TempFile(v.fs, "", "")
 		if err != nil {
 			return fmt.Errorf("create a temporal file: %w", err)
 		}
-		defer verifier.fs.Remove(sigFile.Name()) //nolint:errcheck
+		defer v.fs.Remove(sigFile.Name()) //nolint:errcheck
 
 		f, err := download.ConvertDownloadedFileToFile(cos.Signature, file, rt, art)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
 
-		if err := verifier.downloadCosignFile(ctx, logE, f, sigFile); err != nil {
+		if err := v.downloadCosignFile(ctx, logE, f, sigFile); err != nil {
 			return fmt.Errorf("download a signature: %w", err)
 		}
 		opts = append(opts, "--signature", sigFile.Name())
 	}
 	if cos.Key != nil {
-		keyFile, err := afero.TempFile(verifier.fs, "", "")
+		keyFile, err := afero.TempFile(v.fs, "", "")
 		if err != nil {
 			return fmt.Errorf("create a temporal file: %w", err)
 		}
-		defer verifier.fs.Remove(keyFile.Name()) //nolint:errcheck
+		defer v.fs.Remove(keyFile.Name()) //nolint:errcheck
 
 		f, err := download.ConvertDownloadedFileToFile(cos.Key, file, rt, art)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
 
-		if err := verifier.downloadCosignFile(ctx, logE, f, keyFile); err != nil {
+		if err := v.downloadCosignFile(ctx, logE, f, keyFile); err != nil {
 			return fmt.Errorf("download a signature: %w", err)
 		}
 
 		opts = append(opts, "--key", keyFile.Name())
 	}
 	if cos.Certificate != nil {
-		certFile, err := afero.TempFile(verifier.fs, "", "")
+		certFile, err := afero.TempFile(v.fs, "", "")
 		if err != nil {
 			return fmt.Errorf("create a temporal file: %w", err)
 		}
-		defer verifier.fs.Remove(certFile.Name()) //nolint:errcheck
+		defer v.fs.Remove(certFile.Name()) //nolint:errcheck
 
 		f, err := download.ConvertDownloadedFileToFile(cos.Certificate, file, rt, art)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
 
-		if err := verifier.downloadCosignFile(ctx, logE, f, certFile); err != nil {
+		if err := v.downloadCosignFile(ctx, logE, f, certFile); err != nil {
 			return fmt.Errorf("download a signature: %w", err)
 		}
 
-		if err := verifier.downloadCosignFile(ctx, logE, f, certFile); err != nil {
+		if err := v.downloadCosignFile(ctx, logE, f, certFile); err != nil {
 			return fmt.Errorf("download a certificate: %w", err)
 		}
 		opts = append(opts, "--certificate", certFile.Name())
 	}
 
-	if err := verifier.verify(ctx, logE, &ParamVerify{
+	if err := v.verify(ctx, logE, &ParamVerify{
 		Opts:               opts,
 		CosignExperimental: cos.CosignExperimental,
 		Target:             verifiedFilePath,
@@ -156,11 +156,11 @@ type ParamVerify struct {
 
 var errVerify = errors.New("verify with Cosign")
 
-func (verifier *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
+func (v *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := verifier.executor.ExecWithEnvsAndGetCombinedOutput(ctx, verifier.cosignExePath, args, envs)
+	out, _, err := v.executor.ExecWithEnvsAndGetCombinedOutput(ctx, v.cosignExePath, args, envs)
 	return out, err //nolint:wrapcheck
 }
 
@@ -171,13 +171,13 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
 	}).Info("Verification by Cosign failed temporarily, retring")
-	if err := util.Wait(ctx, waitTime); err != nil {
+	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running Cosign: %w", err)
 	}
 	return nil
 }
 
-func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
+func (v *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	envs := []string{}
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
@@ -185,7 +185,7 @@ func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, pa
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
-		if _, err := verifier.exec(ctx, args, envs); err == nil {
+		if _, err := v.exec(ctx, args, envs); err == nil {
 			return nil
 		}
 		if i == 4 { //nolint:gomnd
@@ -199,8 +199,8 @@ func (verifier *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, pa
 	return errVerify
 }
 
-func (verifier *VerifierImpl) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
-	rc, _, err := verifier.downloader.GetReadCloser(ctx, logE, f)
+func (v *VerifierImpl) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
+	rc, _, err := v.downloader.GetReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("get a readcloser: %w", err)
 	}

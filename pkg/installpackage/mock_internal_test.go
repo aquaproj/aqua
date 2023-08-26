@@ -7,6 +7,6 @@ type MockChecksumCalculator struct {
 	Err      error
 }
 
-func (calc *MockChecksumCalculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
-	return calc.Checksum, calc.Err
+func (m *MockChecksumCalculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
+	return m.Checksum, m.Err
 }

@@ -44,8 +44,8 @@ type MockUnarchiver struct {
 	Err error
 }
 
-func (unarchiver *MockUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
-	return unarchiver.Err
+func (u *MockUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
+	return u.Err
 }
 
 func New(executor Executor, fs afero.Fs) *UnarchiverImpl {
@@ -55,8 +55,8 @@ func New(executor Executor, fs afero.Fs) *UnarchiverImpl {
 	}
 }
 
-func (unarchiver *UnarchiverImpl) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
-	arc, err := unarchiver.getUnarchiver(src, dest)
+func (u *UnarchiverImpl) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
+	arc, err := u.getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
@@ -75,26 +75,26 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func (unarchiver *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
+func (u *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
 			dest: filepath.Join(dest, filename),
-			fs:   unarchiver.fs,
+			fs:   u.fs,
 		}, nil
 	}
 	if src.Type == "dmg" {
 		return &dmgUnarchiver{
 			dest:     dest,
-			executor: unarchiver.executor,
-			fs:       unarchiver.fs,
+			executor: u.executor,
+			fs:       u.fs,
 		}, nil
 	}
 	if src.Type == "pkg" {
 		return &pkgUnarchiver{
 			dest:     dest,
-			executor: unarchiver.executor,
-			fs:       unarchiver.fs,
+			executor: u.executor,
+			fs:       u.fs,
 		}, nil
 	}
 
@@ -112,13 +112,13 @@ func (unarchiver *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUna
 		return &unarchiverWithUnarchiver{
 			unarchiver: t,
 			dest:       dest,
-			fs:         unarchiver.fs,
+			fs:         u.fs,
 		}, nil
 	case archiver.Decompressor:
 		return &Decompressor{
 			decompressor: t,
 			dest:         filepath.Join(dest, strings.TrimSuffix(filename, filepath.Ext(filename))),
-			fs:           unarchiver.fs,
+			fs:           u.fs,
 		}, nil
 	}
 	return nil, errUnsupportedFileFormat

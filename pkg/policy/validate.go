@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -25,20 +25,20 @@ type MockValidator struct {
 	Err error
 }
 
-func (validator *MockValidator) Allow(p string) error {
-	return validator.Err
+func (v *MockValidator) Allow(p string) error {
+	return v.Err
 }
 
-func (validator *MockValidator) Deny(p string) error {
-	return validator.Err
+func (v *MockValidator) Deny(p string) error {
+	return v.Err
 }
 
-func (validator *MockValidator) Validate(p string) error {
-	return validator.Err
+func (v *MockValidator) Validate(p string) error {
+	return v.Err
 }
 
-func (validator *MockValidator) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
-	return validator.Err
+func (v *MockValidator) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
+	return v.Err
 }
 
 type ValidatorImpl struct {
@@ -71,12 +71,12 @@ func normalizePath(p string) string {
 	return p
 }
 
-func (validator *ValidatorImpl) Allow(p string) error {
+func (v *ValidatorImpl) Allow(p string) error {
 	normalizedP := normalizePath(p)
-	policyPath := filepath.Join(validator.rootDir, "policies", normalizedP)
+	policyPath := filepath.Join(v.rootDir, "policies", normalizedP)
 	dir := filepath.Dir(policyPath)
-	fs := validator.fs
-	if err := util.MkdirAll(fs, dir); err != nil {
+	fs := v.fs
+	if err := osfile.MkdirAll(fs, dir); err != nil {
 		return fmt.Errorf("create a directory where the policy file is stored: %w", err)
 	}
 	f1, err := fs.Open(p)
@@ -92,7 +92,7 @@ func (validator *ValidatorImpl) Allow(p string) error {
 	if _, err := io.Copy(f2, f1); err != nil {
 		return fmt.Errorf("copy a policy file: %w", err)
 	}
-	warnFilePath := filepath.Join(validator.rootDir, "policy-warnings", normalizedP)
+	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizedP)
 	warnExist, err := afero.Exists(fs, warnFilePath)
 	if err != nil {
 		return fmt.Errorf("check if a warn file exists: %w", err)
@@ -106,10 +106,10 @@ func (validator *ValidatorImpl) Allow(p string) error {
 	return nil
 }
 
-func (validator *ValidatorImpl) Deny(p string) error {
+func (v *ValidatorImpl) Deny(p string) error {
 	normalizedP := normalizePath(p)
-	policyPath := filepath.Join(validator.rootDir, "policies", normalizedP)
-	fs := validator.fs
+	policyPath := filepath.Join(v.rootDir, "policies", normalizedP)
+	fs := v.fs
 
 	// remove allow file
 	policyExist, err := afero.Exists(fs, policyPath)
@@ -122,12 +122,12 @@ func (validator *ValidatorImpl) Deny(p string) error {
 		}
 	}
 
-	warnFilePath := filepath.Join(validator.rootDir, "policy-warnings", normalizedP)
+	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizedP)
 	warnFileDir := filepath.Dir(warnFilePath)
-	if err := util.MkdirAll(fs, warnFileDir); err != nil {
+	if err := osfile.MkdirAll(fs, warnFileDir); err != nil {
 		return fmt.Errorf("create a directory where the policy warning file is stored: %w", err)
 	}
-	warnFile, err := validator.fs.Create(warnFilePath)
+	warnFile, err := v.fs.Create(warnFilePath)
 	if err != nil {
 		return fmt.Errorf("create a policy warn file: %w", err)
 	}
@@ -135,9 +135,9 @@ func (validator *ValidatorImpl) Deny(p string) error {
 	return nil
 }
 
-func (validator *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
-	warnFilePath := filepath.Join(validator.rootDir, "policy-warnings", normalizePath(policyFilePath))
-	fs := validator.fs
+func (v *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
+	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizePath(policyFilePath))
+	fs := v.fs
 	f, err := afero.Exists(fs, warnFilePath)
 	if err != nil {
 		return fmt.Errorf("find a policy warning file: %w", err)
@@ -164,23 +164,23 @@ $ aqua policy deny "%s"
 	return nil
 }
 
-func (validator *ValidatorImpl) Validate(p string) error {
-	if validator.disabled {
+func (v *ValidatorImpl) Validate(p string) error {
+	if v.disabled {
 		return nil
 	}
-	policyPath := filepath.Join(validator.rootDir, "policies", normalizePath(p))
-	f, err := afero.Exists(validator.fs, policyPath)
+	policyPath := filepath.Join(v.rootDir, "policies", normalizePath(p))
+	f, err := afero.Exists(v.fs, policyPath)
 	if err != nil {
 		return fmt.Errorf("find a policy file: %w", err)
 	}
 	if !f {
 		return errPolicyNotFound
 	}
-	b1, err := afero.ReadFile(validator.fs, p)
+	b1, err := afero.ReadFile(v.fs, p)
 	if err != nil {
 		return fmt.Errorf("read a policy file: %w", err)
 	}
-	b2, err := afero.ReadFile(validator.fs, policyPath)
+	b2, err := afero.ReadFile(v.fs, policyPath)
 	if err != nil {
 		return fmt.Errorf("read a policy file: %w", err)
 	}

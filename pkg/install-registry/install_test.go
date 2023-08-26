@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
@@ -19,10 +20,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
-
-func stringP(s string) *string {
-	return &s
-}
 
 func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -82,7 +79,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 							Type:      "github_content",
 							RepoOwner: "aquaproj",
 							RepoName:  "aqua-installer",
-							Path:      stringP("aqua-installer"),
+							Path:      "aqua-installer",
 						},
 					},
 				},
@@ -92,7 +89,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "ci-info",
-							Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
+							Asset:     ptr.String("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
 						},
 					},
 				},
@@ -102,7 +99,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "github-comment",
-							Asset:     stringP("github-comment_{{.Arch}}-{{.OS}}.tar.gz"),
+							Asset:     ptr.String("github-comment_{{.Arch}}-{{.OS}}.tar.gz"),
 						},
 					},
 				},

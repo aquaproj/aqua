@@ -4,12 +4,9 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
 )
-
-func stringP(s string) *string {
-	return &s
-}
 
 func TestPackageInfo_GetName(t *testing.T) {
 	t.Parallel()
@@ -42,32 +39,6 @@ func TestPackageInfo_GetName(t *testing.T) {
 			t.Parallel()
 			if name := d.pkgInfo.GetName(); name != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, name)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetType(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *registry.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "github_release",
-			pkgInfo: &registry.PackageInfo{
-				Type: "github_release",
-			},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if typ := d.pkgInfo.GetType(); typ != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, typ)
 			}
 		})
 	}
@@ -109,37 +80,6 @@ func TestPackageInfo_GetLink(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_GetDescription(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     string
-		pkgInfo *registry.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp:   "hello world",
-			pkgInfo: &registry.PackageInfo{
-				Description: "hello world",
-			},
-		},
-		{
-			title:   "empty",
-			exp:     "",
-			pkgInfo: &registry.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if desc := d.pkgInfo.GetDescription(); desc != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, desc)
-			}
-		})
-	}
-}
-
 func TestPackageInfo_GetFormat(t *testing.T) {
 	t.Parallel()
 	data := []struct {
@@ -166,42 +106,6 @@ func TestPackageInfo_GetFormat(t *testing.T) {
 			t.Parallel()
 			if format := d.pkgInfo.GetFormat(); format != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, format)
-			}
-		})
-	}
-}
-
-func TestPackageInfo_GetReplacements(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title   string
-		exp     registry.Replacements
-		pkgInfo *registry.PackageInfo
-	}{
-		{
-			title: "normal",
-			exp: registry.Replacements{
-				"amd64": "x86_64",
-			},
-			pkgInfo: &registry.PackageInfo{
-				Replacements: registry.Replacements{
-					"amd64": "x86_64",
-				},
-			},
-		},
-		{
-			title:   "empty",
-			exp:     nil,
-			pkgInfo: &registry.PackageInfo{},
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			replacements := d.pkgInfo.GetReplacements()
-			if diff := cmp.Diff(d.exp, replacements); diff != "" {
-				t.Fatal(diff)
 			}
 		})
 	}
@@ -324,7 +228,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 				Type:      registry.PkgInfoTypeGitHubContent,
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Path:      stringP("bin/ci-info"),
+				Path:      "bin/ci-info",
 			},
 		},
 		{
@@ -349,7 +253,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 				Type:      registry.PkgInfoTypeGitHubRelease,
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Asset:     stringP("ci-info.tar.gz"),
+				Asset:     ptr.String("ci-info.tar.gz"),
 			},
 		},
 		{
@@ -364,7 +268,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 			pkgInfo: &registry.PackageInfo{
 				Type: registry.PkgInfoTypeHTTP,
 				Name: "suzuki-shunsuke/ci-info",
-				URL:  stringP("http://example.com"),
+				URL:  "http://example.com",
 			},
 		},
 	}

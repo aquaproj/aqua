@@ -11,7 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/util"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -26,13 +26,6 @@ type Package struct {
 func getString(p *string) string {
 	if p == nil {
 		return ""
-	}
-	return *p
-}
-
-func getBool(p *bool) bool {
-	if p == nil {
-		return false
 	}
 	return *p
 }
@@ -79,8 +72,8 @@ func getVersionAndPrefix(tag string) (*version.Version, string, error) {
 	return v, a[1], nil
 }
 
-func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
-	ghReleases := ctrl.listReleases(ctx, logE, pkgInfo)
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
+	ghReleases := c.listReleases(ctx, logE, pkgInfo)
 	releases := make([]*Release, len(ghReleases))
 	for i, release := range ghReleases {
 		tag := release.GetTagName()
@@ -113,14 +106,14 @@ func (ctrl *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, 
 			RepoName:  pkgInfo.RepoName,
 		}
 		if release.VersionPrefix != "" {
-			pkgInfo.VersionPrefix = &release.VersionPrefix
+			pkgInfo.VersionPrefix = release.VersionPrefix
 		}
-		assets := ctrl.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
+		assets := c.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
 		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
 		if len(assets) == 0 {
 			continue
 		}
-		ctrl.patchRelease(logE, pkgInfo, pkgName, release.Tag, assets)
+		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, assets)
 		pkgs = append(pkgs, &Package{
 			Info:    pkgInfo,
 			Version: release.Tag,
@@ -162,26 +155,23 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 			vo.SupportedEnvs = []string{}
 		}
 	}
-	if getBool(pkgInfo.Rosetta2) != getBool(latestPkgInfo.Rosetta2) {
-		vo.Rosetta2 = pkgInfo.Rosetta2
-		if pkgInfo.Rosetta2 == nil {
-			vo.Rosetta2 = util.BoolP(false)
-		}
+	if pkgInfo.Rosetta2 != latestPkgInfo.Rosetta2 {
+		vo.Rosetta2 = &pkgInfo.Rosetta2
 	}
 	if pkgInfo.WindowsExt != latestPkgInfo.WindowsExt {
 		vo.WindowsExt = pkgInfo.WindowsExt
 	}
 	if !reflect.DeepEqual(pkgInfo.VersionPrefix, latestPkgInfo.VersionPrefix) {
-		vo.VersionPrefix = pkgInfo.VersionPrefix
-		if pkgInfo.VersionPrefix == nil {
-			vo.VersionPrefix = util.StrP("")
+		vo.VersionPrefix = &pkgInfo.VersionPrefix
+		if pkgInfo.VersionPrefix == "" {
+			vo.VersionPrefix = ptr.String("")
 		}
 	}
 	if !reflect.DeepEqual(pkgInfo.Checksum, latestPkgInfo.Checksum) {
 		vo.Checksum = pkgInfo.Checksum
 		if pkgInfo.Checksum == nil {
 			vo.Checksum = &registry.Checksum{
-				Enabled: util.BoolP(false),
+				Enabled: ptr.Bool(false),
 			}
 		}
 	}
@@ -260,7 +250,7 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 	return latestPkgInfo, versions
 }
 
-func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
+func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -269,7 +259,7 @@ func (ctrl *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pk
 	var arr []*github.RepositoryRelease
 
 	for i := 0; i < 10; i++ {
-		releases, _, err := ctrl.github.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
