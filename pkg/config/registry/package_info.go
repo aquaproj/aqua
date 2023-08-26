@@ -40,7 +40,7 @@ type PackageInfo struct {
 	Files              []*File            `json:"files,omitempty" yaml:",omitempty"`
 	Replacements       Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
-	VersionFilter      *string            `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionFilter      string             `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      *string            `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
 	NoAsset            *bool              `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
@@ -244,7 +244,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 		pkg.SupportedEnvs = child.SupportedEnvs
 	}
 	if child.VersionFilter != nil {
-		pkg.VersionFilter = child.VersionFilter
+		pkg.VersionFilter = *child.VersionFilter
 	}
 	if child.VersionPrefix != nil {
 		pkg.VersionPrefix = child.VersionPrefix
