@@ -53,8 +53,8 @@ type Filter struct {
 func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 	filters := make([]*Filter, 0, 1+len(pkgInfo.VersionOverrides))
 	topFilter := &Filter{}
-	if pkgInfo.VersionFilter != nil {
-		f, err := expr.CompileVersionFilter(*pkgInfo.VersionFilter)
+	if pkgInfo.VersionFilter != "" {
+		f, err := expr.CompileVersionFilter(pkgInfo.VersionFilter)
 		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}
