@@ -31,7 +31,7 @@ type UnarchiverImpl struct {
 }
 
 type DownloadedFile interface {
-	GetPath() (string, error)
+	Path() (string, error)
 	ReadLast() (io.ReadCloser, error)
 	Wrap(w io.Writer) io.Writer
 }

@@ -22,7 +22,7 @@ func (is *InstallerImpl) verifyWithCosign(ctx context.Context, logE *logrus.Entr
 	if err := is.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
 		return fmt.Errorf("install sigstore/cosign: %w", err)
 	}
-	tempFilePath, err := bodyFile.GetPath()
+	tempFilePath, err := bodyFile.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporal file path: %w", err)
 	}

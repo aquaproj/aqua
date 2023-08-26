@@ -23,7 +23,7 @@ func (u *pkgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *
 		return fmt.Errorf("create a directory: %w", err)
 	}
 
-	tempFilePath, err := src.Body.GetPath()
+	tempFilePath, err := src.Body.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporal file path: %w", err)
 	}

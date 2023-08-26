@@ -70,7 +70,7 @@ func (is *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.En
 		return nil
 	}
 	ppkg := param.Package
-	tempFilePath, err := bodyFile.GetPath()
+	tempFilePath, err := bodyFile.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporal file path: %w", err)
 	}
