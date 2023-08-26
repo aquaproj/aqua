@@ -12,7 +12,7 @@ import (
 
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
-func (p *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
+func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 	assetName, err := p.RenderAsset(rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
@@ -71,7 +71,7 @@ func (p *Package) GetChecksumIDFromAsset(asset string) (string, error) {
 		if rt == nil {
 			return "", nil
 		}
-		return p.GetChecksumID(rt)
+		return p.ChecksumID(rt)
 	}
 	return "", nil
 }

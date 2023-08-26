@@ -10,7 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-func TestPackage_GetChecksumID(t *testing.T) { //nolint:funlen
+func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name       string
@@ -97,7 +97,7 @@ func TestPackage_GetChecksumID(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			checksumID, err := d.pkg.GetChecksumID(d.rt)
+			checksumID, err := d.pkg.ChecksumID(d.rt)
 			if err != nil {
 				if d.isErr {
 					return

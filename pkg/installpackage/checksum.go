@@ -85,7 +85,7 @@ func (is *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.En
 
 	if param.Checksum == nil {
 		paramVerifyChecksum.SkipSetChecksum = false
-		cid, err := ppkg.GetChecksumID(is.runtime)
+		cid, err := ppkg.ChecksumID(is.runtime)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}

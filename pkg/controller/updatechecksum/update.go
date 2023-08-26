@@ -242,7 +242,7 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 		return nil
 	}
 
-	checksumID, err := pkg.GetChecksumID(rt)
+	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
 		return fmt.Errorf("get a checksum id: %w", err)
 	}
@@ -323,7 +323,7 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 }
 
 func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (gErr error) {
-	checksumID, err := pkg.GetChecksumID(rt)
+	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
 		return fmt.Errorf("get a checksum id: %w", err)
 	}
