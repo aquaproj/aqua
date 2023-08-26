@@ -221,7 +221,7 @@ func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, pa
 	}
 	if param.Detail {
 		outputPkg.Link = pkg.PackageInfo.GetLink()
-		outputPkg.Description = pkg.PackageInfo.GetDescription()
+		outputPkg.Description = pkg.PackageInfo.Description
 	}
 	if outputPkg.Registry == registryStandard {
 		outputPkg.Registry = ""

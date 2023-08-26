@@ -463,20 +463,8 @@ func (p *PackageInfo) GetFormat() string {
 	return p.Format
 }
 
-func (p *PackageInfo) GetDescription() string {
-	return p.Description
-}
-
 func (p *PackageInfo) IsNoAsset() bool {
 	return p.NoAsset != nil && *p.NoAsset
-}
-
-func (p *PackageInfo) GetType() string {
-	return p.Type
-}
-
-func (p *PackageInfo) GetReplacements() Replacements {
-	return p.Replacements
 }
 
 func (p *PackageInfo) GetChecksumReplacements() Replacements {
@@ -495,10 +483,6 @@ func (p *PackageInfo) GetChecksumReplacements() Replacements {
 		m[k] = v
 	}
 	return m
-}
-
-func (p *PackageInfo) GetAsset() *string {
-	return p.Asset
 }
 
 func (p *PackageInfo) Validate() error { //nolint:cyclop

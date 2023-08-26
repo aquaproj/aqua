@@ -21,9 +21,9 @@ func (p *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 	pkg := p.Package
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
-		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {
@@ -33,7 +33,7 @@ func (p *Package) GetChecksumID(rt *runtime.Runtime) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("parse the URL: %w", err)
 		}
-		return path.Join(pkgInfo.GetType(), u.Host, u.Path), nil
+		return path.Join(pkgInfo.Type, u.Host, u.Path), nil
 	}
 	return "", nil
 }
@@ -60,9 +60,9 @@ func (p *Package) GetChecksumIDFromAsset(asset string) (string, error) {
 	pkg := p.Package
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
-		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return path.Join(pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
+		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
 	case PkgInfoTypeHTTP:
 		rt, err := p.getRuntimeFromAsset(asset)
 		if err != nil {

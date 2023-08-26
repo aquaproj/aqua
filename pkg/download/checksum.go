@@ -75,7 +75,7 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *lo
 		return rc, code, nil
 	default:
 		return nil, 0, logerr.WithFields(errUnknownChecksumFileType, logrus.Fields{ //nolint:wrapcheck
-			"package_type": pkgInfo.GetType(),
+			"package_type": pkgInfo.Type,
 		})
 	}
 }
