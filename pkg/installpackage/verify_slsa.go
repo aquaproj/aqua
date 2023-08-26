@@ -16,7 +16,7 @@ func (is *InstallerImpl) verifyWithSLSA(ctx context.Context, logE *logrus.Entry,
 	if !sp.GetEnabled() {
 		return nil
 	}
-	art := ppkg.GetTemplateArtifact(is.runtime, param.Asset)
+	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with slsa-verifier")
 	if err := is.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
 		return fmt.Errorf("install slsa-verifier: %w", err)

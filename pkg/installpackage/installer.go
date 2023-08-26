@@ -224,7 +224,7 @@ func (is *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry,
 		return fmt.Errorf("render the asset name: %w", err)
 	}
 
-	pkgPath, err := pkg.GetPkgPath(is.rootDir, is.runtime)
+	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}

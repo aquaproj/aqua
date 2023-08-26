@@ -9,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
+func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title string
@@ -173,7 +173,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 			if d.rt == nil {
 				d.rt = rt
 			}
-			asset, err := d.pkg.getFileSrc(d.file, d.rt)
+			asset, err := d.pkg.fileSrc(d.file, d.rt)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -98,7 +98,7 @@ func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, ve
 		"package_version": pkg.Package.Version,
 	})
 
-	exePath, err := pkg.GetExePath(is.rootDir, &registry.File{
+	exePath, err := pkg.ExePath(is.rootDir, &registry.File{
 		Name: "aqua",
 	}, is.runtime)
 	if err != nil {

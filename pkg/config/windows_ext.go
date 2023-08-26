@@ -13,7 +13,7 @@ import (
 )
 
 func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
-	s, err := p.getFileSrcWithoutWindowsExt(file, rt)
+	s, err := p.fileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
 	}

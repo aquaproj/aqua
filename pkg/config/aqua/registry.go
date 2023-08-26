@@ -82,7 +82,7 @@ func (r *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-func (r *Registry) GetFilePath(rootDir, cfgFilePath string) (string, error) {
+func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 	switch r.Type {
 	case RegistryTypeLocal:
 		return osfile.Abs(filepath.Dir(cfgFilePath), r.Path), nil
