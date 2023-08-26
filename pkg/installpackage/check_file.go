@@ -68,7 +68,7 @@ func (is *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Packa
 
 func (is *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	pkgInfo := pkg.PackageInfo
-	exePath := filepath.Join(is.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
+	exePath := filepath.Join(is.rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if isWindows(is.runtime.GOOS) {
 		exePath += ".exe"
 	}
@@ -76,7 +76,7 @@ func (is *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Package
 	if err != nil {
 		return "", fmt.Errorf("render file dir: %w", err)
 	}
-	exeDir := filepath.Join(is.rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
+	exeDir := filepath.Join(is.rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
 	if _, err := is.fs.Stat(exePath); err == nil {
 		return exePath, nil
 	}

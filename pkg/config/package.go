@@ -24,7 +24,7 @@ type Package struct {
 func (p *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	if pkgInfo.Type == "go_build" {
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, p.Package.Version, "bin", file.Name), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, p.Package.Version, "bin", file.Name), nil
 	}
 
 	pkgPath, err := p.GetPkgPath(rootDir, rt)
@@ -58,8 +58,8 @@ func (p *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *templa
 	return &template.Artifact{
 		Version: pkg.Version,
 		SemVer:  p.semVer(),
-		OS:      replace(rt.GOOS, pkgInfo.GetReplacements()),
-		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		OS:      replace(rt.GOOS, pkgInfo.Replacements),
+		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
 		Format:  pkgInfo.GetFormat(),
 		Asset:   asset,
 	}
@@ -79,23 +79,23 @@ func (p *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error
 	}
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGoBuild:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
 		p, err := p.RenderPath()
 		if err != nil {
 			return "", fmt.Errorf("render Go Module Path: %w", err)
 		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), p, pkg.Version, "bin"), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, p, pkg.Version, "bin"), nil
 	case PkgInfoTypeCargo:
 		registry := "crates.io"
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), registry, pkgInfo.Crate, pkg.Version), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, registry, pkgInfo.Crate, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
-			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {
@@ -105,7 +105,7 @@ func (p *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error
 		if err != nil {
 			return "", fmt.Errorf("parse the URL: %w", err)
 		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.GetType(), u.Host, u.Path), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, u.Host, u.Path), nil
 	}
 	return "", nil
 }
@@ -150,8 +150,8 @@ func (p *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, e
 		"SemVer":   p.semVer(),
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})
@@ -318,8 +318,8 @@ func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime
 		"SemVer":  p.semVer(),
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
-		"OS":      replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"OS":      replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
@@ -345,8 +345,8 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 		"SemVer":   p.semVer(),
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.GetReplacements()),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.GetReplacements(), rt),
+		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})
