@@ -21,17 +21,17 @@ type Package struct {
 	Registry    *aqua.Registry
 }
 
-func (p *Package) GetExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
+func (p *Package) ExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	if pkgInfo.Type == "go_build" {
 		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, p.Package.Version, "bin", file.Name), nil
 	}
 
-	pkgPath, err := p.GetPkgPath(rootDir, rt)
+	pkgPath, err := p.PkgPath(rootDir, rt)
 	if err != nil {
 		return "", err
 	}
-	fileSrc, err := p.getFileSrc(file, rt)
+	fileSrc, err := p.fileSrc(file, rt)
 	if err != nil {
 		return "", fmt.Errorf("get a file path: %w", err)
 	}
@@ -52,7 +52,7 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	return p.completeWindowsExtToAsset(asset), nil
 }
 
-func (p *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
+func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
 	return &template.Artifact{
@@ -70,7 +70,7 @@ func (p *Package) RenderPath() (string, error) {
 	return p.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
 }
 
-func (p *Package) GetPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
+func (p *Package) PkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
 	assetName, err := p.RenderAsset(rt)
@@ -177,8 +177,8 @@ func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runt
 	return replace(rt.GOARCH, replacements)
 }
 
-func (p *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
-	s, err := p.getFileSrcWithoutWindowsExt(file, rt)
+func (p *Package) fileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+	s, err := p.fileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
 	}
@@ -188,7 +188,7 @@ func (p *Package) getFileSrc(file *registry.File, rt *runtime.Runtime) (string, 
 	return p.completeWindowsExtToFileSrc(s), nil
 }
 
-func (p *Package) getFileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
+func (p *Package) fileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	if pkgInfo.Type == "cargo" {
 		return filepath.Join("bin", file.Name), nil

@@ -92,7 +92,7 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestRegistry_GetFilePath(t *testing.T) {
+func TestRegistry_FilePath(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title       string
@@ -131,7 +131,7 @@ func TestRegistry_GetFilePath(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			p, err := d.registry.GetFilePath(d.rootDir, d.cfgFilePath)
+			p, err := d.registry.FilePath(d.rootDir, d.cfgFilePath)
 			if err != nil {
 				if d.isErr {
 					return

@@ -38,7 +38,7 @@ func (is *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logrus.
 		if _, err := f.Write(b); err != nil {
 			return "", fmt.Errorf("write a checksum to a temporal file: %w", err)
 		}
-		art := pkg.GetTemplateArtifact(is.runtime, assetName)
+		art := pkg.TemplateArtifact(is.runtime, assetName)
 		logE.Info("verify a checksum file with Cosign")
 		if err := is.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
 			return "", err

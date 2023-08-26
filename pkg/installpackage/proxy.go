@@ -59,7 +59,7 @@ func (is *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) e
 		return err //nolint:wrapcheck
 	}
 
-	pkgPath, err := pkg.GetPkgPath(is.rootDir, is.runtime)
+	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

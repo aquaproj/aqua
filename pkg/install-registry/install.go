@@ -127,7 +127,7 @@ func (is *InstallerImpl) readRegistry(p string, registry *registry.Config) error
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
 func (is *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
-	registryFilePath, err := regist.GetFilePath(is.param.RootDir, cfgFilePath)
+	registryFilePath, err := regist.FilePath(is.param.RootDir, cfgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
 	}

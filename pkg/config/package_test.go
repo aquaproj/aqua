@@ -140,7 +140,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
+func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	rootDir := "/tmp/aqua"
 	data := []struct {
@@ -213,7 +213,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgPath, err := d.pkg.GetPkgPath(rootDir, rt)
+			pkgPath, err := d.pkg.PkgPath(rootDir, rt)
 			if err != nil {
 				t.Fatal(err)
 			}

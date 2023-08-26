@@ -111,7 +111,7 @@ func (c *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
 	}
-	return pkg.GetExePath(c.rootDir, file, c.runtime) //nolint:wrapcheck
+	return pkg.ExePath(c.rootDir, file, c.runtime) //nolint:wrapcheck
 }
 
 func (c *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {
