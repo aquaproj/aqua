@@ -1,8 +1,6 @@
 package expr
 
 import (
-	"strings"
-
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 )
@@ -12,7 +10,6 @@ func CompileVersionFilter(versionFilter string) (*vm.Program, error) {
 		"Version":           "",
 		"semver":            emptySemver,
 		"semverWithVersion": compare,
-		"trimPrefix":        strings.TrimPrefix,
 	}))
 }
 
@@ -21,7 +18,6 @@ func CompileVersionFilterForTest(versionFilter string) *vm.Program {
 		"Version":           "",
 		"semver":            emptySemver,
 		"semverWithVersion": compare,
-		"trimPrefix":        strings.TrimPrefix,
 	}))
 	if err != nil {
 		panic(err)
@@ -34,6 +30,5 @@ func EvaluateVersionFilter(prog *vm.Program, v string) (bool, error) {
 		"Version":           v,
 		"semver":            getCompareFunc(v),
 		"semverWithVersion": compare,
-		"trimPrefix":        strings.TrimPrefix,
 	})
 }
