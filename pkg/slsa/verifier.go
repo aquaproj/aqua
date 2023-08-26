@@ -52,7 +52,7 @@ func (v *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runti
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	rc, _, err := v.downloader.GetReadCloser(ctx, logE, f)
+	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("download a SLSA Provenance: %w", err)
 	}

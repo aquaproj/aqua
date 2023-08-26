@@ -41,7 +41,7 @@ func NewDownloader(gh github.RepositoriesService, httpDownloader HTTPDownloader)
 }
 
 type ClientAPI interface {
-	GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error)
+	ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error)
 }
 
 type Mock struct {
@@ -50,11 +50,11 @@ type Mock struct {
 	Err  error
 }
 
-func (m *Mock) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
+func (m *Mock) ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
 	return m.RC, m.Code, m.Err
 }
 
-func (dl *Downloader) GetReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
+func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
 	switch file.Type {
 	case config.PkgInfoTypeGitHubRelease:
 		return dl.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck

@@ -70,7 +70,7 @@ func (is *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, param
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	body, cl, err := is.downloader.GetReadCloser(ctx, logE, file)
+	body, cl, err := is.downloader.ReadCloser(ctx, logE, file)
 	if body != nil {
 		defer body.Close()
 	}
