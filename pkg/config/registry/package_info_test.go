@@ -361,7 +361,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 			pkgInfo: &registry.PackageInfo{
 				Type: registry.PkgInfoTypeHTTP,
 				Name: "suzuki-shunsuke/ci-info",
-				URL:  ptr.String("http://example.com"),
+				URL:  "http://example.com",
 			},
 		},
 	}

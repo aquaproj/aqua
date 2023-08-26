@@ -60,7 +60,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "http",
-					URL:    ptr.String("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+					URL:    "https://example.com/foo-{{trimV .Version}}.{{.Format}}",
 					Format: "zip",
 				},
 				Package: &aqua.Package{
@@ -199,7 +199,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "http",
-					URL:    ptr.String("https://example.com/foo-{{trimV .Version}}.{{.Format}}"),
+					URL:    "https://example.com/foo-{{trimV .Version}}.{{.Format}}",
 					Format: "zip",
 				},
 				Package: &aqua.Package{

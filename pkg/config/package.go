@@ -120,7 +120,7 @@ func (p *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, e
 
 func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
-	s, err := p.RenderTemplateString(*pkgInfo.URL, rt)
+	s, err := p.RenderTemplateString(pkgInfo.URL, rt)
 	if err != nil {
 		return "", err
 	}

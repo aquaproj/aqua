@@ -32,7 +32,7 @@ type PackageInfo struct {
 	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
 	Crate              string             `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo             `json:"cargo,omitempty"`
-	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
+	URL                string             `json:"url,omitempty" yaml:",omitempty"`
 	Path               string             `json:"path,omitempty" yaml:",omitempty"`
 	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
@@ -65,7 +65,7 @@ type VersionOverride struct {
 	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Path               string          `yaml:",omitempty" json:"path,omitempty"`
-	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	URL                string          `yaml:",omitempty" json:"url,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	FormatOverrides    FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
@@ -94,7 +94,7 @@ type Override struct {
 	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
-	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
+	URL                string          `yaml:",omitempty" json:"url,omitempty"`
 	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
@@ -144,17 +144,17 @@ func (p *PackageInfo) Copy() *PackageInfo {
 func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	switch typ {
 	case PkgInfoTypeGitHubRelease:
-		p.URL = nil
+		p.URL = ""
 		p.Path = ""
 		p.Crate = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
-		p.URL = nil
+		p.URL = ""
 		p.Asset = nil
 		p.Crate = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
-		p.URL = nil
+		p.URL = ""
 		p.Path = ""
 		p.Asset = nil
 		p.Crate = ""
@@ -164,7 +164,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Path = ""
 		p.Asset = nil
 	case PkgInfoTypeGoInstall:
-		p.URL = nil
+		p.URL = ""
 		p.Asset = nil
 		p.Crate = ""
 		p.Cargo = nil
@@ -175,7 +175,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Format = ""
 		p.Rosetta2 = nil
 	case PkgInfoTypeGoBuild:
-		p.URL = nil
+		p.URL = ""
 		p.Asset = nil
 		p.Crate = ""
 		p.Cargo = nil
@@ -186,7 +186,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Format = ""
 		p.Rosetta2 = nil
 	case PkgInfoTypeCargo:
-		p.URL = nil
+		p.URL = ""
 		p.Asset = nil
 		p.Path = ""
 		p.WindowsExt = ""
@@ -228,7 +228,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.Files != nil {
 		pkg.Files = child.Files
 	}
-	if child.URL != nil {
+	if child.URL != "" {
 		pkg.URL = child.URL
 	}
 	if child.Replacements != nil {
@@ -330,7 +330,7 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 		p.Files = ov.Files
 	}
 
-	if ov.URL != nil {
+	if ov.URL != "" {
 		p.URL = ov.URL
 	}
 
@@ -538,7 +538,7 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 		}
 		return nil
 	case PkgInfoTypeHTTP:
-		if p.URL == nil {
+		if p.URL == "" {
 			return errURLRequired
 		}
 		return nil
