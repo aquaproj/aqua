@@ -305,7 +305,7 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 		if _, ok := assetNames[assetName]; !ok {
 			continue
 		}
-		checksumID, err := pkg.GetChecksumIDFromAsset(assetName)
+		checksumID, err := pkg.ChecksumIDFromAsset(assetName)
 		if err != nil {
 			return fmt.Errorf("get a checksum id from asset: %w", err)
 		}
