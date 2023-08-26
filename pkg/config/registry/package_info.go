@@ -43,7 +43,7 @@ type PackageInfo struct {
 	VersionFilter      string             `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      string             `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
-	NoAsset            *bool              `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
+	NoAsset            bool               `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
@@ -274,7 +274,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 		pkg.ErrorMessage = child.ErrorMessage
 	}
 	if child.NoAsset != nil {
-		pkg.NoAsset = child.NoAsset
+		pkg.NoAsset = *child.NoAsset
 	}
 	return pkg
 }
@@ -461,10 +461,6 @@ func (p *PackageInfo) GetFormat() string {
 		return "tar.gz"
 	}
 	return p.Format
-}
-
-func (p *PackageInfo) IsNoAsset() bool {
-	return p.NoAsset != nil && *p.NoAsset
 }
 
 func (p *PackageInfo) GetChecksumReplacements() Replacements {

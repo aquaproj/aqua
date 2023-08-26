@@ -15,7 +15,7 @@ func (is *InstallerImpl) validatePackage(logE *logrus.Entry, param *ParamInstall
 		return fmt.Errorf("invalid package: %w", err)
 	}
 
-	if pkgInfo.IsNoAsset() {
+	if pkgInfo.NoAsset {
 		return errNoAsset
 	}
 	if pkgInfo.ErrorMessage != "" {
