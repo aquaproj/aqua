@@ -113,7 +113,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 			RepoName:  pkgInfo.RepoName,
 		}
 		if release.VersionPrefix != "" {
-			pkgInfo.VersionPrefix = &release.VersionPrefix
+			pkgInfo.VersionPrefix = release.VersionPrefix
 		}
 		assets := c.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
 		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
@@ -172,8 +172,8 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 		vo.WindowsExt = pkgInfo.WindowsExt
 	}
 	if !reflect.DeepEqual(pkgInfo.VersionPrefix, latestPkgInfo.VersionPrefix) {
-		vo.VersionPrefix = pkgInfo.VersionPrefix
-		if pkgInfo.VersionPrefix == nil {
+		vo.VersionPrefix = &pkgInfo.VersionPrefix
+		if pkgInfo.VersionPrefix == "" {
 			vo.VersionPrefix = ptr.String("")
 		}
 	}

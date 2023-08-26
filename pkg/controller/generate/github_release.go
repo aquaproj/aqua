@@ -61,8 +61,8 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 		topFilter.Filter = f
 	}
 	topFilter.Constraint = pkgInfo.VersionConstraints
-	if pkgInfo.VersionPrefix != nil {
-		topFilter.Prefix = *pkgInfo.VersionPrefix
+	if pkgInfo.VersionPrefix != "" {
+		topFilter.Prefix = pkgInfo.VersionPrefix
 	}
 	filters = append(filters, topFilter)
 

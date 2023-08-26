@@ -86,8 +86,8 @@ func (pc *Checker) matchPkg(pkg *config.Package, policyPkg *Package) (bool, erro
 	}
 	if policyPkg.Version != "" {
 		sv := pkg.Package.Version
-		if pkg.PackageInfo.VersionPrefix != nil {
-			sv = strings.TrimPrefix(pkg.Package.Version, *pkg.PackageInfo.VersionPrefix)
+		if pkg.PackageInfo.VersionPrefix != "" {
+			sv = strings.TrimPrefix(pkg.Package.Version, pkg.PackageInfo.VersionPrefix)
 		}
 		matched, err := expr.EvaluateVersionConstraints(policyPkg.Version, pkg.Package.Version, sv)
 		if err != nil {
