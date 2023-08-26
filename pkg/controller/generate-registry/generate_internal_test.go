@@ -110,7 +110,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				RepoOwner:   "lotabout",
 				RepoName:    "skim",
 				Type:        "cargo",
-				Crate:       ptr.String("skim"),
+				Crate:       "skim",
 				Description: "Fuzzy Finder in rust!",
 			},
 			crate: &cargo.CratePayload{

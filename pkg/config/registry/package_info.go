@@ -30,7 +30,7 @@ type PackageInfo struct {
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
 	Link               string             `json:"link,omitempty" yaml:",omitempty"`
 	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
-	Crate              *string            `json:"crate,omitempty" yaml:",omitempty"`
+	Crate              string             `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo             `json:"cargo,omitempty"`
 	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
 	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
@@ -62,7 +62,7 @@ type VersionOverride struct {
 	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
-	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
+	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
@@ -91,7 +91,7 @@ type Override struct {
 	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
-	Crate              *string         `json:"crate,omitempty" yaml:",omitempty"`
+	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
@@ -146,18 +146,18 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	case PkgInfoTypeGitHubRelease:
 		p.URL = nil
 		p.Path = nil
-		p.Crate = nil
+		p.Crate = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
 		p.URL = nil
 		p.Asset = nil
-		p.Crate = nil
+		p.Crate = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
 		p.URL = nil
 		p.Path = nil
 		p.Asset = nil
-		p.Crate = nil
+		p.Crate = ""
 		p.Cargo = nil
 		p.Format = ""
 	case PkgInfoTypeHTTP:
@@ -166,7 +166,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	case PkgInfoTypeGoInstall:
 		p.URL = nil
 		p.Asset = nil
-		p.Crate = nil
+		p.Crate = ""
 		p.Cargo = nil
 		p.WindowsExt = ""
 		p.CompleteWindowsExt = nil
@@ -177,7 +177,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	case PkgInfoTypeGoBuild:
 		p.URL = nil
 		p.Asset = nil
-		p.Crate = nil
+		p.Crate = ""
 		p.Cargo = nil
 		p.WindowsExt = ""
 		p.CompleteWindowsExt = nil
@@ -213,7 +213,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.Asset != nil {
 		pkg.Asset = child.Asset
 	}
-	if child.Crate != nil {
+	if child.Crate != "" {
 		pkg.Crate = child.Crate
 	}
 	if child.Cargo != nil {
@@ -318,7 +318,7 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 		p.Asset = ov.Asset
 	}
 
-	if ov.Crate != nil {
+	if ov.Crate != "" {
 		p.Crate = ov.Crate
 	}
 
@@ -517,7 +517,7 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 		}
 		return nil
 	case PkgInfoTypeCargo:
-		if p.Crate == nil {
+		if p.Crate == "" {
 			return errCargoRequireCrate
 		}
 		return nil
