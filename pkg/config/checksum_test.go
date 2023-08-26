@@ -83,7 +83,7 @@ func TestPackage_GetChecksumID(t *testing.T) { //nolint:funlen
 					Type:      "http",
 					RepoOwner: "hashicorp",
 					RepoName:  "terrafrom",
-					URL:       ptr.String("https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip"),
+					URL:       "https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
 				},
 			},
 			rt: &runtime.Runtime{
@@ -177,7 +177,7 @@ func TestPackage_GetChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 					Type:      "http",
 					RepoOwner: "hashicorp",
 					RepoName:  "terrafrom",
-					URL:       ptr.String("https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip"),
+					URL:       "https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
 				},
 			},
 			checksumID: "http/releases.hashicorp.com/terraform/1.3.0/terraform_1.3.0_darwin_amd64.zip",
@@ -205,7 +205,7 @@ func TestPackage_GetChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
+func TestPackage_RenderChecksumFileName(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name             string
@@ -259,7 +259,7 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 	}
 }
 
-func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
+func TestPackage_RenderChecksumURL(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name  string
@@ -278,7 +278,7 @@ func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
 					Type:      "http",
 					RepoOwner: "helm",
 					RepoName:  "helm",
-					URL:       ptr.String("https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz"),
+					URL:       "https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz",
 					Checksum: &registry.Checksum{
 						Type: "http",
 						URL:  "https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz.sha256sum",
