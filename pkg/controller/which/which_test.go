@@ -23,10 +23,6 @@ import (
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-func stringP(s string) *string {
-	return &s
-}
-
 func Test_controller_Which(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
@@ -79,7 +75,7 @@ packages:
 						Type:      "github_content",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-installer",
-						Path:      stringP("aqua-installer"),
+						Path:      "aqua-installer",
 					},
 					Registry: &aqua.Registry{
 						Name: "standard",
@@ -198,7 +194,7 @@ packages:
 						Type:      "github_content",
 						RepoOwner: "aquaproj",
 						RepoName:  "aqua-installer",
-						Path:      stringP("aqua-installer"),
+						Path:      "aqua-installer",
 					},
 					Registry: &aqua.Registry{
 						Name: "standard",
