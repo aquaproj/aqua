@@ -4,12 +4,9 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
 )
-
-func stringP(s string) *string {
-	return &s
-}
 
 func TestPackageInfo_GetName(t *testing.T) {
 	t.Parallel()
@@ -324,7 +321,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 				Type:      registry.PkgInfoTypeGitHubContent,
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Path:      stringP("bin/ci-info"),
+				Path:      "bin/ci-info",
 			},
 		},
 		{
@@ -349,7 +346,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 				Type:      registry.PkgInfoTypeGitHubRelease,
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Asset:     stringP("ci-info.tar.gz"),
+				Asset:     ptr.String("ci-info.tar.gz"),
 			},
 		},
 		{
@@ -364,7 +361,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 			pkgInfo: &registry.PackageInfo{
 				Type: registry.PkgInfoTypeHTTP,
 				Name: "suzuki-shunsuke/ci-info",
-				URL:  stringP("http://example.com"),
+				URL:  ptr.String("http://example.com"),
 			},
 		},
 	}

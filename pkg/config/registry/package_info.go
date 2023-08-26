@@ -33,7 +33,7 @@ type PackageInfo struct {
 	Crate              string             `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo             `json:"cargo,omitempty"`
 	URL                *string            `json:"url,omitempty" yaml:",omitempty"`
-	Path               *string            `json:"path,omitempty" yaml:",omitempty"`
+	Path               string             `json:"path,omitempty" yaml:",omitempty"`
 	Format             string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	Overrides          []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
 	FormatOverrides    []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
@@ -64,7 +64,7 @@ type VersionOverride struct {
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
 	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
-	Path               *string         `yaml:",omitempty" json:"path,omitempty"`
+	Path               string          `yaml:",omitempty" json:"path,omitempty"`
 	URL                *string         `yaml:",omitempty" json:"url,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
@@ -145,7 +145,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	switch typ {
 	case PkgInfoTypeGitHubRelease:
 		p.URL = nil
-		p.Path = nil
+		p.Path = ""
 		p.Crate = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
@@ -155,13 +155,13 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
 		p.URL = nil
-		p.Path = nil
+		p.Path = ""
 		p.Asset = nil
 		p.Crate = ""
 		p.Cargo = nil
 		p.Format = ""
 	case PkgInfoTypeHTTP:
-		p.Path = nil
+		p.Path = ""
 		p.Asset = nil
 	case PkgInfoTypeGoInstall:
 		p.URL = nil
@@ -188,7 +188,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	case PkgInfoTypeCargo:
 		p.URL = nil
 		p.Asset = nil
-		p.Path = nil
+		p.Path = ""
 		p.WindowsExt = ""
 		p.CompleteWindowsExt = nil
 		p.Cosign = nil
@@ -219,7 +219,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.Cargo != nil {
 		pkg.Cargo = child.Cargo
 	}
-	if child.Path != nil {
+	if child.Path != "" {
 		pkg.Path = child.Path
 	}
 	if child.Format != "" {
@@ -430,15 +430,15 @@ func (p *PackageInfo) GetName() string {
 	if p.HasRepo() {
 		return p.RepoOwner + "/" + p.RepoName
 	}
-	if p.Type == PkgInfoTypeGoInstall && p.Path != nil {
-		return *p.Path
+	if p.Type == PkgInfoTypeGoInstall && p.Path != "" {
+		return p.Path
 	}
 	return ""
 }
 
 func (p *PackageInfo) GetPath() string {
-	if p.Path != nil {
-		return *p.Path
+	if p.Path != "" {
+		return p.Path
 	}
 	if p.Type == PkgInfoTypeGoInstall && p.HasRepo() {
 		return "github.com/" + p.RepoOwner + "/" + p.RepoName
@@ -525,7 +525,7 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 		if !p.HasRepo() {
 			return errRepoRequired
 		}
-		if p.Path == nil {
+		if p.Path == "" {
 			return errGitHubContentRequirePath
 		}
 		return nil

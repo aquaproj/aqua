@@ -265,7 +265,7 @@ func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 		}
 		return path.Base(pkgInfo.GetPath()), nil
 	case PkgInfoTypeGitHubContent:
-		s, err := p.RenderTemplateString(*pkgInfo.Path, rt)
+		s, err := p.RenderTemplateString(pkgInfo.Path, rt)
 		if err != nil {
 			return "", fmt.Errorf("render a package path: %w", err)
 		}

@@ -44,7 +44,7 @@ func TestPackage_GetChecksumID(t *testing.T) { //nolint:funlen
 					Type:      "github_content",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-installer",
-					Path:      ptr.String("aqua-installer"),
+					Path:      "aqua-installer",
 				},
 			},
 			rt:         &runtime.Runtime{},

@@ -24,7 +24,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					Type: "github_content",
-					Path: ptr.String("foo"),
+					Path: "foo",
 				},
 				Package: &aqua.Package{
 					Version: "v1.0.0",
@@ -150,7 +150,7 @@ func TestPackage_getFileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_content",
 					RepoOwner: "aelsabbahy",
 					RepoName:  "goss",
-					Path:      ptr.String("extras/dcgoss/dcgoss"),
+					Path:      "extras/dcgoss/dcgoss",
 				},
 				Package: &aqua.Package{
 					Version: "v0.7.7",

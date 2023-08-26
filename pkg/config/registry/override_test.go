@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
+				Asset:     ptr.String("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
 				},
@@ -43,7 +44,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
+				Asset:     ptr.String("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
 				},
@@ -69,7 +70,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
+				Asset:     ptr.String("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
 				},
@@ -87,7 +88,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Asset:     stringP("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
+				Asset:     ptr.String("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-gnu",
 				},

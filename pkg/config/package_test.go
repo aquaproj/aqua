@@ -36,7 +36,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 				},
 				PackageInfo: &registry.PackageInfo{
 					Type: "github_content",
-					Path: ptr.String("foo"),
+					Path: "foo",
 				},
 			},
 		},
@@ -168,7 +168,7 @@ func TestPackageInfo_GetPkgPath(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
-					Path:      ptr.String("aqua-installer"),
+					Path:      "aqua-installer",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua-installer",
 				},
