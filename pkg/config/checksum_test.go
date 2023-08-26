@@ -205,7 +205,7 @@ func TestPackage_GetChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
+func TestPackage_RenderChecksumFileName(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name             string
@@ -259,7 +259,7 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 	}
 }
 
-func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
+func TestPackage_RenderChecksumURL(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name  string
