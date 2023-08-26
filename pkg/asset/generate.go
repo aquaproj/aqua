@@ -130,7 +130,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	}
 
 	if checkRosetta2(assetInfos) {
-		pkgInfo.Rosetta2 = ptr.Bool(true)
+		pkgInfo.Rosetta2 = true
 	}
 
 	pkgInfo.SupportedEnvs = normalizeSupportedEnvs(pkgInfo.SupportedEnvs)

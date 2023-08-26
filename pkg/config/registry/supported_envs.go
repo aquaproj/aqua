@@ -15,7 +15,7 @@ func (p *PackageInfo) CheckSupportedEnvs(goos, goarch, env string) bool {
 	if p.SupportedEnvs == nil {
 		return true
 	}
-	if goos == "darwin" && goarch == "arm64" && p.GetRosetta2() {
+	if goos == "darwin" && goarch == "arm64" && p.Rosetta2 {
 		return true
 	}
 	for _, supportedEnv := range p.SupportedEnvs {

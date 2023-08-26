@@ -59,7 +59,7 @@ func (p *Package) GetTemplateArtifact(rt *runtime.Runtime, asset string) *templa
 		Version: pkg.Version,
 		SemVer:  p.semVer(),
 		OS:      replace(rt.GOOS, pkgInfo.Replacements),
-		Arch:    getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
+		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
 		Format:  pkgInfo.GetFormat(),
 		Asset:   asset,
 	}
@@ -151,7 +151,7 @@ func (p *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, e
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
 		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
+		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})
@@ -300,7 +300,7 @@ func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string,
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
-		"Arch":    getArch(pkgInfo.GetRosetta2(), replacements, rt),
+		"Arch":    getArch(pkgInfo.Rosetta2, replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 		"Asset":   asset,
 	})
@@ -319,7 +319,7 @@ func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":    getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
+		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
@@ -346,7 +346,7 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
 		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":     getArch(pkgInfo.GetRosetta2(), pkgInfo.Replacements, rt),
+		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})

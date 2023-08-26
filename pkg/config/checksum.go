@@ -99,7 +99,7 @@ func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
-		"Arch":    getArch(pkgInfo.GetRosetta2(), replacements, rt),
+		"Arch":    getArch(pkgInfo.Rosetta2, replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 	}
 	if pkgInfo.Type == "http" {
