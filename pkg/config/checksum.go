@@ -55,7 +55,7 @@ func (p *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func (p *Package) GetChecksumIDFromAsset(asset string) (string, error) {
+func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
 	switch pkgInfo.Type {

@@ -114,7 +114,7 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestPackage_GetChecksumIDFromAsset(t *testing.T) { //nolint:funlen
+func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name       string
@@ -188,7 +188,7 @@ func TestPackage_GetChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			checksumID, err := d.pkg.GetChecksumIDFromAsset(d.asset)
+			checksumID, err := d.pkg.ChecksumIDFromAsset(d.asset)
 			if err != nil {
 				if d.isErr {
 					return
