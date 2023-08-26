@@ -77,7 +77,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 					"linux",
 					"amd64",
 				},
-				Rosetta2: ptr.Bool(true),
+				Rosetta2: true,
 			},
 			repo: &github.Repository{
 				Description: ptr.String("GitHub’s official command line tool"),

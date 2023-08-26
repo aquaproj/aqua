@@ -30,13 +30,6 @@ func getString(p *string) string {
 	return *p
 }
 
-func getBool(p *bool) bool {
-	if p == nil {
-		return false
-	}
-	return *p
-}
-
 type Release struct {
 	ID            int64
 	Tag           string
@@ -162,11 +155,8 @@ func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.
 			vo.SupportedEnvs = []string{}
 		}
 	}
-	if getBool(pkgInfo.Rosetta2) != getBool(latestPkgInfo.Rosetta2) {
-		vo.Rosetta2 = pkgInfo.Rosetta2
-		if pkgInfo.Rosetta2 == nil {
-			vo.Rosetta2 = ptr.Bool(false)
-		}
+	if pkgInfo.Rosetta2 != latestPkgInfo.Rosetta2 {
+		vo.Rosetta2 = &pkgInfo.Rosetta2
 	}
 	if pkgInfo.WindowsExt != latestPkgInfo.WindowsExt {
 		vo.WindowsExt = pkgInfo.WindowsExt

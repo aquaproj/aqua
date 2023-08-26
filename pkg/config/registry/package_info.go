@@ -42,7 +42,7 @@ type PackageInfo struct {
 	SupportedEnvs      SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	VersionFilter      string             `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix      string             `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
-	Rosetta2           *bool              `yaml:",omitempty" json:"rosetta2,omitempty"`
+	Rosetta2           bool               `yaml:",omitempty" json:"rosetta2,omitempty"`
 	NoAsset            bool               `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	VersionSource      string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
 	CompleteWindowsExt *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
@@ -173,7 +173,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Format = ""
-		p.Rosetta2 = nil
+		p.Rosetta2 = false
 	case PkgInfoTypeGoBuild:
 		p.URL = ""
 		p.Asset = nil
@@ -184,7 +184,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Format = ""
-		p.Rosetta2 = nil
+		p.Rosetta2 = false
 	case PkgInfoTypeCargo:
 		p.URL = ""
 		p.Asset = nil
@@ -194,7 +194,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Format = ""
-		p.Rosetta2 = nil
+		p.Rosetta2 = false
 	}
 }
 
@@ -250,7 +250,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 		pkg.VersionPrefix = *child.VersionPrefix
 	}
 	if child.Rosetta2 != nil {
-		pkg.Rosetta2 = child.Rosetta2
+		pkg.Rosetta2 = *child.Rosetta2
 	}
 	if child.VersionSource != "" {
 		pkg.VersionSource = child.VersionSource
@@ -413,10 +413,6 @@ func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 			Enum: s,
 		},
 	}
-}
-
-func (p *PackageInfo) GetRosetta2() bool {
-	return p.Rosetta2 != nil && *p.Rosetta2
 }
 
 func (p *PackageInfo) HasRepo() bool {
