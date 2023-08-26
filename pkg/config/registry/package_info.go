@@ -81,7 +81,7 @@ type VersionOverride struct {
 	Checksum           *Checksum       `json:"checksum,omitempty"`
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
-	ErrorMessage       string          `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	ErrorMessage       *string         `json:"error_message,omitempty" yaml:"error_message,omitempty"`
 	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 }
 
@@ -270,8 +270,8 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.SLSAProvenance != nil {
 		pkg.SLSAProvenance = child.SLSAProvenance
 	}
-	if child.ErrorMessage != "" {
-		pkg.ErrorMessage = child.ErrorMessage
+	if child.ErrorMessage != nil {
+		pkg.ErrorMessage = *child.ErrorMessage
 	}
 	if child.NoAsset != nil {
 		pkg.NoAsset = *child.NoAsset
