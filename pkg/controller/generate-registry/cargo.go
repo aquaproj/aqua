@@ -13,7 +13,7 @@ func (c *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry
 	pkgInfo := &registry.PackageInfo{
 		Name:  pkgName,
 		Type:  "cargo",
-		Crate: &crate,
+		Crate: crate,
 	}
 	payload, err := c.cargoClient.GetCrate(ctx, crate)
 	if err != nil {

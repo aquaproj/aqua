@@ -78,7 +78,7 @@ func (is *InstallerImpl) downloadCargo(ctx context.Context, logE *logrus.Entry, 
 		}
 	}
 	logE.Info("Installing a crate")
-	crate := *pkg.PackageInfo.Crate
+	crate := pkg.PackageInfo.Crate
 	version := pkg.Package.Version
 	if err := is.cargoPackageInstaller.Install(ctx, logE, crate, version, root, cargoOpts); err != nil {
 		return fmt.Errorf("cargo install: %w", err)
