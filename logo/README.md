@@ -1,7 +1,10 @@
 # About Logo
 
 <p align="center" width="100%">
-<img src="./aqua_horizontal.svg" width="400">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./aqua_horizontal_white.svg">
+    <img src="./aqua_horizontal.svg" alt="logo" width="400">
+  </picture>
 </p>
 
 [#403](https://github.com/aquaproj/aqua/pull/403)

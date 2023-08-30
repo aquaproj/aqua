@@ -1,5 +1,8 @@
 <p align="center" width="100%">
-<img src="./logo/aqua_horizontal.svg" width="400">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo/aqua_horizontal_white.svg">
+    <img src="./logo/aqua_horizontal.svg" alt="logo" width="400">
+  </picture>
 </p>
 
 #
