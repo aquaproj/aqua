@@ -11,10 +11,8 @@ func EvaluateVersionConstraints(constraint, v, semver string) (bool, error) {
 		"semver":            emptySemver,
 		"semverWithVersion": compare,
 	}, map[string]interface{}{
-		"Version": v,
-
-		"SemVer": semver,
-
+		"Version":           v,
+		"SemVer":            semver,
 		"semver":            getCompareFunc(semver),
 		"semverWithVersion": compare,
 	})

@@ -65,7 +65,7 @@ func (p *PackageInfo) SetVersion(logE *logrus.Entry, v string) (*PackageInfo, er
 		}
 		if a {
 			logE.WithFields(logrus.Fields{
-				"version_constraint": p.VersionConstraints,
+				"version_constraint": vo.VersionConstraints,
 				"package_version":    v,
 				"package_semver":     sv,
 			}).Debug("match the version_constraint")
