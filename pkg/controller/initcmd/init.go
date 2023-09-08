@@ -49,7 +49,7 @@ func (c *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.
 		return nil
 	}
 
-	registryVersion := "v4.44.3" // renovate: depName=aquaproj/aqua-registry
+	registryVersion := "v4.45.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
