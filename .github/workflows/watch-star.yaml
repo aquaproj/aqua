@@ -5,17 +5,11 @@ on:
     types:
       - started
 jobs:
-  test:
+  watch-star:
     runs-on: ubuntu-latest
     permissions:
       issues: write
     steps:
-      # https://github.com/aquaproj/aqua/issues/2139
-      - run: gh -R "$GITHUB_REPOSITORY" issue comment 2139 --body "$BODY"
-        env:
-          PAYLOAD: ${{toJSON(github)}}
-          BODY: |
-            [${{github.event.sender.login}}](${{github.event.sender.html_url}}) starred (${{github.event.repository.stargazers_count}}) :star:
-
-            <img width="32" alt="image" src="${{github.event.sender.avatar_url}}">
-          GITHUB_TOKEN: ${{github.token}}
+      - uses: suzuki-shunsuke/watch-star-action@2b3d259ce2ea06d53270dfe33a66d5642c8010ca # v0.1.1
+        with:
+          number: 2139 # https://github.com/aquaproj/aqua/issues/2139
