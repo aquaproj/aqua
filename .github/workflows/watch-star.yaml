@@ -5,7 +5,7 @@ on:
     types:
       - started
 jobs:
-  test:
+  watch-star:
     runs-on: ubuntu-latest
     permissions:
       issues: write
