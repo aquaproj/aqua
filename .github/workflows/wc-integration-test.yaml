@@ -138,11 +138,15 @@ jobs:
 
       - run: aqua update-checksum -a
 
+      - name: Test rm
+        run: aqua rm x-motemen/ghq bats-core/bats-core
+
+      - name: Test rm --all
+        run: aqua rm -a
+
       # Test if global configuration files are read in `aqua list` and `aqua g`
       - run: aqua list
         working-directory: /tmp
 
       - name: Test update-aqua
         run: aqua update-aqua
-
-      - run: aqua-installer -v v0.8.1 -i /tmp/aqua

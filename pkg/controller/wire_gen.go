@@ -25,6 +25,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
@@ -280,5 +281,22 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	controller := info.New(fs, configFinder, rt)
+	return controller
+}
+
+func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *remove.Controller {
+	fs := afero.NewOsFs()
+	configFinder := finder.NewConfigFinder(fs)
+	configReaderImpl := reader.New(fs, param)
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	executor := exec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifierImpl := cosign.NewVerifier(executor, fs, downloader, param)
+	executorImpl := slsa.NewExecutor(executor, param)
+	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
+	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
+	controller := remove.New(param, fs, rt, configFinder, configReaderImpl, installerImpl)
 	return controller
 }
