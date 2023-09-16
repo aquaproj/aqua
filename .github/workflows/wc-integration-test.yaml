@@ -145,4 +145,8 @@ jobs:
       - name: Test update-aqua
         run: aqua update-aqua
 
-      - run: aqua-installer -v v0.8.1 -i /tmp/aqua
+      - name: Test rm
+        run: aqua rm x-motemen/ghq bats-core/bats-core
+
+      - name: Test rm --all
+        run: aqua rm -a

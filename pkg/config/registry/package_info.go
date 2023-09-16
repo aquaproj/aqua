@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -554,6 +555,18 @@ func (p *PackageInfo) getDefaultCmdName() string {
 		return path.Base(p.GetPath())
 	}
 	return path.Base(p.GetName())
+}
+
+func (p *PackageInfo) PkgPath() string {
+	switch p.Type {
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		return filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)
+	case PkgInfoTypeCargo:
+		return filepath.Join(p.Type, "crates.io", p.Crate)
+	case PkgInfoTypeGoInstall, PkgInfoTypeHTTP:
+		return ""
+	}
+	return ""
 }
 
 func (p *PackageInfo) SLSASourceURI() string {

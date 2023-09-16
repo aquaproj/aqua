@@ -25,6 +25,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/rm"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
@@ -755,4 +756,55 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 		afero.NewOsFs,
 	)
 	return &info.Controller{}
+}
+
+func InitializeRmCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *rm.Controller {
+	wire.Build(
+		rm.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(rm.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+		),
+		afero.NewOsFs,
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+	)
+	return &rm.Controller{}
 }
