@@ -9,9 +9,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newRmCommand() *cli.Command {
+func (r *Runner) newRemoveCommand() *cli.Command {
 	return &cli.Command{
-		Name:      "rm",
+		Name:      "remove",
+		Aliases:   []string{"rm"},
 		Usage:     "Uninstall packages",
 		ArgsUsage: `[<registry name>,]<package name> [...]`,
 		Flags: []cli.Flag{
@@ -35,11 +36,11 @@ $ aqua rm foo,suzuki-shunsuke/foo
 Limitation:
 "http" and "go_install" packages can't be removed.
 `,
-		Action: r.rmAction,
+		Action: r.removeAction,
 	}
 }
 
-func (r *Runner) rmAction(c *cli.Context) error {
+func (r *Runner) removeAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -53,11 +54,11 @@ func (r *Runner) rmAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "rm", param); err != nil {
+	if err := r.setParam(c, "remove", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl := controller.InitializeRmCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	ctrl := controller.InitializeRemoveCommandController(c.Context, param, http.DefaultClient, r.Runtime)
 	if err := ctrl.Remove(c.Context, r.LogE, param); err != nil {
 		return err //nolint:wrapcheck
 	}

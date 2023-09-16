@@ -25,7 +25,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
-	"github.com/aquaproj/aqua/v2/pkg/controller/rm"
+	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
@@ -758,12 +758,12 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return &info.Controller{}
 }
 
-func InitializeRmCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *rm.Controller {
+func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *remove.Controller {
 	wire.Build(
-		rm.New,
+		remove.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
-			wire.Bind(new(rm.ConfigFinder), new(*finder.ConfigFinder)),
+			wire.Bind(new(remove.ConfigFinder), new(*finder.ConfigFinder)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -806,5 +806,5 @@ func InitializeRmCommandController(ctx context.Context, param *config.Param, htt
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
-	return &rm.Controller{}
+	return &remove.Controller{}
 }

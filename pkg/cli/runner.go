@@ -171,7 +171,7 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 			r.newCpCommand(),
 			r.newRootDirCommand(),
 			r.newUpdateChecksumCommand(),
-			r.newRmCommand(),
+			r.newRemoveCommand(),
 		},
 	}
 

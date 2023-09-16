@@ -1,4 +1,4 @@
-package rm
+package remove
 
 import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
