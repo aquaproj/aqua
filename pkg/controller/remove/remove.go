@@ -63,7 +63,7 @@ func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *conf
 func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) error {
 	for _, pkgName := range param.Args {
 		logE := logE.WithField("package_name", pkgName)
-		pkg, err := c.findPkg(pkgName, registryContents)
+		pkg, err := findPkg(pkgName, registryContents)
 		if err != nil {
 			return fmt.Errorf("find a package from registries: %w", logerr.WithFields(err, logrus.Fields{
 				"package_name": pkgName,
@@ -93,7 +93,7 @@ func parsePkgName(pkgName string) (string, string) {
 	return "standard", registryName
 }
 
-func (c *Controller) findPkg(pkgName string, registryContents map[string]*registry.Config) (*registry.PackageInfo, error) {
+func findPkg(pkgName string, registryContents map[string]*registry.Config) (*registry.PackageInfo, error) {
 	registryName, pkgName := parsePkgName(pkgName)
 	rgCfg, ok := registryContents[registryName]
 	if !ok {
