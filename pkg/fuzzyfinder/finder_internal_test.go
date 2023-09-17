@@ -1,4 +1,4 @@
-package generate
+package fuzzyfinder
 
 import (
 	"testing"
@@ -10,12 +10,12 @@ func Test_find(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name string
-		pkg  *FindingPackage
+		pkg  *Package
 		exp  string
 	}{
 		{
 			name: "normal",
-			pkg: &FindingPackage{
+			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
@@ -26,7 +26,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words",
-			pkg: &FindingPackage{
+			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -38,7 +38,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, registry",
-			pkg: &FindingPackage{
+			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -50,7 +50,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, alias, registry",
-			pkg: &FindingPackage{
+			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -67,7 +67,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, alias, command, registry",
-			pkg: &FindingPackage{
+			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -107,14 +107,14 @@ func Test_getPreview(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name string
-		pkg  *FindingPackage
+		pkg  *Package
 		i    int
 		w    int
 		exp  string
 	}{
 		{
 			name: "normal",
-			pkg: &FindingPackage{
+			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",

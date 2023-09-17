@@ -5,6 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -94,9 +95,9 @@ func (c *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logrus.
 
 func (c *Controller) selectVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
 	tags := c.listTags(ctx, logE, pkgInfo)
-	versions := make([]*Version, len(tags))
+	versions := make([]*fuzzyfinder.Version, len(tags))
 	for i, tag := range tags {
-		versions[i] = &Version{
+		versions[i] = &fuzzyfinder.Version{
 			Version: tag.GetName(),
 		}
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/spf13/afero"
 )
@@ -22,6 +23,14 @@ type Controller struct {
 	fs                afero.Fs
 	outputter         Outputter
 	cargoClient       cargo.Client
+}
+
+type VersionSelector interface {
+	Find(versions []*fuzzyfinder.Version, hasPreview bool) (int, error)
+}
+
+type FuzzyFinder interface {
+	Find(pkgs []*fuzzyfinder.Package) ([]int, error)
 }
 
 func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoClient cargo.Client) *Controller {

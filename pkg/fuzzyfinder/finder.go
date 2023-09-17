@@ -1,39 +1,44 @@
-package generate
+package fuzzyfinder
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/ktr0731/go-fuzzyfinder"
 )
 
-type FuzzyFinder interface {
-	Find(pkgs []*FindingPackage) ([]int, error)
+var ErrAbort = fuzzyfinder.ErrAbort
+
+type Package struct {
+	PackageInfo  *registry.PackageInfo
+	RegistryName string
+	Version      string
 }
 
-type fuzzyFinder struct{}
+type Finder struct{}
 
-func NewFuzzyFinder() FuzzyFinder {
-	return &fuzzyFinder{}
+func New() *Finder {
+	return &Finder{}
 }
 
-func NewMockFuzzyFinder(idxs []int, err error) FuzzyFinder {
-	return &mockFuzzyFinder{
+func NewMock(idxs []int, err error) *MockFuzzyFinder {
+	return &MockFuzzyFinder{
 		idxs: idxs,
 		err:  err,
 	}
 }
 
-type mockFuzzyFinder struct {
+type MockFuzzyFinder struct {
 	idxs []int
 	err  error
 }
 
-func (f *mockFuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
+func (f *MockFuzzyFinder) Find(pkgs []*Package) ([]int, error) {
 	return f.idxs, f.err
 }
 
-func (f *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
+func (f *Finder) Find(pkgs []*Package) ([]int, error) {
 	return fuzzyfinder.FindMulti(pkgs, func(i int) string { //nolint:wrapcheck
 		return find(pkgs[i])
 	},
@@ -45,7 +50,7 @@ func (f *fuzzyFinder) Find(pkgs []*FindingPackage) ([]int, error) {
 		}))
 }
 
-func find(pkg *FindingPackage) string {
+func find(pkg *Package) string {
 	files := pkg.PackageInfo.GetFiles()
 	fileNames := make([]string, 0, len(files))
 	for _, file := range files {
@@ -79,7 +84,7 @@ func find(pkg *FindingPackage) string {
 	return item
 }
 
-func getPreview(pkg *FindingPackage, i, w int) string {
+func getPreview(pkg *Package, i, w int) string {
 	if i < 0 {
 		return ""
 	}

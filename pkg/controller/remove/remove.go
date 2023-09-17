@@ -11,17 +11,18 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.All {
 		logE.Info("removing all packages")
 		return c.removeAll(param.RootDir)
 	}
 
-	if len(param.Args) == 0 {
+	if len(param.Args) == 0 && !param.Insert {
 		return nil
 	}
 
@@ -60,7 +61,43 @@ func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *conf
 	return c.removePackages(logE, param, registryContents)
 }
 
+func (c *Controller) removePackagesInteractively(logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) error {
+	var pkgs []*fuzzyfinder.Package
+	for registryName, registryContent := range registryContents {
+		for _, pkg := range registryContent.PackageInfos {
+			pkgs = append(pkgs, &fuzzyfinder.Package{
+				PackageInfo:  pkg,
+				RegistryName: registryName,
+			})
+		}
+	}
+
+	// Launch the fuzzy finder
+	idxes, err := c.fuzzyFinder.Find(pkgs)
+	if err != nil {
+		if errors.Is(err, fuzzyfinder.ErrAbort) {
+			return nil
+		}
+		return fmt.Errorf("find the package: %w", err)
+	}
+	for _, idx := range idxes {
+		pkg := pkgs[idx]
+		pkgName := pkg.PackageInfo.GetName()
+		logE := logE.WithField("package_name", pkgName)
+		if err := c.removePackage(logE, param.RootDir, pkg.PackageInfo); err != nil {
+			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
+				"package_name": pkgName,
+			}))
+		}
+	}
+	return nil
+}
+
 func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) error {
+	if param.Insert {
+		return c.removePackagesInteractively(logE, param, registryContents)
+	}
+
 	for _, pkgName := range param.Args {
 		logE := logE.WithField("package_name", pkgName)
 		pkg, err := findPkg(pkgName, registryContents)
@@ -69,18 +106,25 @@ func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, reg
 				"package_name": pkgName,
 			}))
 		}
-		path := pkg.PkgPath()
-		if path == "" {
-			logE.WithField("package_type", pkg.Type).Warn("this package type can't be removed")
-			continue
-		}
-		pkgPath := filepath.Join(param.RootDir, "pkgs", path)
-		logE.Info("removing a package")
-		if err := c.fs.RemoveAll(pkgPath); err != nil {
+		if err := c.removePackage(logE, param.RootDir, pkg); err != nil {
 			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
 				"package_name": pkgName,
 			}))
 		}
+	}
+	return nil
+}
+
+func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
+	path := pkg.PkgPath()
+	if path == "" {
+		logE.WithField("package_type", pkg.Type).Warn("this package type can't be removed")
+		return nil
+	}
+	pkgPath := filepath.Join(rootDir, "pkgs", path)
+	logE.Info("removing a package")
+	if err := c.fs.RemoveAll(pkgPath); err != nil {
+		return fmt.Errorf("remove directories: %w", err)
 	}
 	return nil
 }

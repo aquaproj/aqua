@@ -33,6 +33,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
@@ -164,8 +165,14 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		afero.NewOsFs,
-		generate.NewFuzzyFinder,
-		generate.NewVersionSelector,
+		wire.NewSet(
+			fuzzyfinder.New,
+			wire.Bind(new(generate.FuzzyFinder), new(*fuzzyfinder.Finder)),
+		),
+		wire.NewSet(
+			fuzzyfinder.NewVersionSelector,
+			wire.Bind(new(generate.VersionSelector), new(*fuzzyfinder.VersionSelector)),
+		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -804,6 +811,10 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		wire.NewSet(
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			fuzzyfinder.New,
+			wire.Bind(new(remove.FuzzyFinder), new(*fuzzyfinder.Finder)),
 		),
 	)
 	return &remove.Controller{}
