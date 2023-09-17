@@ -11,7 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
-	"github.com/ktr0731/go-fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -61,12 +61,6 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	})
 }
 
-type FindingPackage struct {
-	PackageInfo  *registry.PackageInfo
-	RegistryName string
-	Version      string
-}
-
 func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
 	var checksums *checksum.Checksums
 	if cfg.ChecksumEnabled() {
@@ -99,10 +93,10 @@ func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *co
 
 func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*aqua.Package, error) {
 	// maps the package and the registry
-	var pkgs []*FindingPackage
+	var pkgs []*fuzzyfinder.Package
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
-			pkgs = append(pkgs, &FindingPackage{
+			pkgs = append(pkgs, &fuzzyfinder.Package{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
 			})
@@ -125,13 +119,13 @@ func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry,
 	return arr, nil
 }
 
-func (c *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*registry.Config, m map[string]*FindingPackage) {
+func (c *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*registry.Config, m map[string]*fuzzyfinder.Package) {
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
 		for pkgName, pkg := range registryContent.PackageInfos.ToMap(logE) {
 			pkg := pkg
 			logE := logE.WithField("package_name", pkgName)
-			m[registryName+","+pkgName] = &FindingPackage{
+			m[registryName+","+pkgName] = &fuzzyfinder.Package{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
 			}
@@ -140,7 +134,7 @@ func (c *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*
 					logE.Warn("ignore a package alias because the alias is empty")
 					continue
 				}
-				m[registryName+","+alias.Name] = &FindingPackage{
+				m[registryName+","+alias.Name] = &fuzzyfinder.Package{
 					PackageInfo:  pkg,
 					RegistryName: registryName,
 				}
@@ -157,7 +151,7 @@ func getGeneratePkg(s string) string {
 }
 
 func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
-	m := map[string]*FindingPackage{}
+	m := map[string]*fuzzyfinder.Package{}
 	c.setPkgMap(logE, registryContents, m)
 
 	outputPkgs := []*aqua.Package{}
@@ -196,7 +190,7 @@ func (c *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.Entr
 	return c.getVersionFromLatestRelease(ctx, logE, pkgInfo)
 }
 
-func (c *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) string {
+func (c *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) string {
 	if pkg.Version != "" {
 		return pkg.Version
 	}
@@ -213,7 +207,7 @@ func (c *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *
 	return ""
 }
 
-func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *FindingPackage) *aqua.Package {
+func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) *aqua.Package {
 	outputPkg := &aqua.Package{
 		Name:     pkg.PackageInfo.GetName(),
 		Registry: pkg.RegistryName,

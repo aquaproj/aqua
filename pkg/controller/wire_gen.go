@@ -32,6 +32,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
@@ -100,10 +101,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
-	fuzzyFinder := generate.NewFuzzyFinder()
-	versionSelector := generate.NewVersionSelector()
+	fuzzyfinderFinder := fuzzyfinder.New()
+	versionSelector := fuzzyfinder.NewVersionSelector()
 	clientImpl := cargo.NewClientImpl(httpClient)
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyFinder, versionSelector, clientImpl)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, versionSelector, clientImpl)
 	return controller
 }
 
@@ -297,6 +298,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
-	controller := remove.New(param, fs, rt, configFinder, configReaderImpl, installerImpl)
+	fuzzyfinderFinder := fuzzyfinder.New()
+	controller := remove.New(param, fs, rt, configFinder, configReaderImpl, installerImpl, fuzzyfinderFinder)
 	return controller
 }

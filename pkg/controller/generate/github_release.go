@@ -7,6 +7,7 @@ import (
 	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -14,9 +15,9 @@ import (
 
 func (c *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
 	releases := c.listReleases(ctx, logE, pkgInfo)
-	versions := make([]*Version, len(releases))
+	versions := make([]*fuzzyfinder.Version, len(releases))
 	for i, release := range releases {
-		versions[i] = &Version{
+		versions[i] = &fuzzyfinder.Version{
 			Name:        release.GetName(),
 			Version:     release.GetTagName(),
 			Description: release.GetBody(),

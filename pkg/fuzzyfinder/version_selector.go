@@ -1,4 +1,4 @@
-package generate
+package fuzzyfinder
 
 import (
 	"fmt"
@@ -13,33 +13,29 @@ type Version struct {
 	URL         string
 }
 
-type VersionSelector interface {
-	Find(versions []*Version, hasPreview bool) (int, error)
+type VersionSelector struct{}
+
+func NewVersionSelector() *VersionSelector {
+	return &VersionSelector{}
 }
 
-type versionSelector struct{}
-
-func NewVersionSelector() VersionSelector {
-	return &versionSelector{}
-}
-
-func NewMockVersionSelector(idx int, err error) VersionSelector {
-	return &mockVersionSelector{
+func NewMockVersionSelector(idx int, err error) *MockVersionSelector {
+	return &MockVersionSelector{
 		idx: idx,
 		err: err,
 	}
 }
 
-type mockVersionSelector struct {
+type MockVersionSelector struct {
 	idx int
 	err error
 }
 
-func (s *mockVersionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
+func (s *MockVersionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
 	return s.idx, s.err
 }
 
-func (s *versionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
+func (s *VersionSelector) Find(versions []*Version, hasPreview bool) (int, error) {
 	if hasPreview {
 		return fuzzyfinder.Find(versions, func(i int) string { //nolint:wrapcheck
 			return getVersionItem(versions[i])
@@ -80,7 +76,7 @@ func getVersionPreview(version *Version, i, w int) string {
 	return s
 }
 
-func convertStringsToVersions(arr []string) []*Version {
+func ConvertStringsToVersions(arr []string) []*Version {
 	versions := make([]*Version, len(arr))
 	for i, a := range arr {
 		versions[i] = &Version{

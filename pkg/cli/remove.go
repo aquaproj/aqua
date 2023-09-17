@@ -21,6 +21,10 @@ func (r *Runner) newRemoveCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "uninstall all packages",
 			},
+			&cli.BoolFlag{
+				Name:  "i",
+				Usage: "Select packages with a Fuzzy Finder",
+			},
 		},
 		Description: `Uninstall packages.
 

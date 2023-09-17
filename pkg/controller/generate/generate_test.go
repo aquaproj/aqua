@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -403,8 +404,8 @@ packages:
 			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			configReader := reader.New(fs, d.param)
-			fuzzyFinder := generate.NewMockFuzzyFinder(d.idxs, d.fuzzyFinderErr)
-			versionSelector := generate.NewMockVersionSelector(d.idx, d.versionSelectorErr)
+			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
+			versionSelector := fuzzyfinder.NewMockVersionSelector(d.idx, d.versionSelectorErr)
 			cargoClient := &cargo.MockClient{}
 			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, cargoClient)
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
