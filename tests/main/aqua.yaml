@@ -4,7 +4,7 @@ checksum:
 registries:
 - type: standard
   type: standard # duplicated keys
-  ref: v4.52.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.52.1 # renovate: depName=aquaproj/aqua-registry
 - null
 
 packages:
