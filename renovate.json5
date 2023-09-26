@@ -7,7 +7,7 @@
     "github>aquaproj/aqua-renovate-config:file#1.10.0(tests/aqua.*\\.yaml)",
     "github>suzuki-shunsuke/renovate-config:action-go-version#2.1.0",
     "github>aquaproj/aqua-renovate-config:file#1.10.0(aqua/imports/.*\\.ya?ml)",
-    "github>aquaproj/aqua-renovate-config:installer-script#1.10.0(Dockerfile-prebuilt)"
+    "github>aquaproj/aqua-renovate-config:installer-script#1.11.0(Dockerfile-prebuilt)"
   ],
   ignorePaths: [],
   regexManagers: [
