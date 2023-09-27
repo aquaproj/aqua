@@ -528,7 +528,7 @@ func (p *PackageInfo) GetFiles() []*File {
 		return p.Files
 	}
 
-	if cmdName := p.getDefaultCmdName(); cmdName != "" {
+	if cmdName := p.defaultCmdName(); cmdName != "" {
 		return []*File{
 			{
 				Name: cmdName,
@@ -538,7 +538,7 @@ func (p *PackageInfo) GetFiles() []*File {
 	return p.Files
 }
 
-func (p *PackageInfo) getDefaultCmdName() string {
+func (p *PackageInfo) defaultCmdName() string {
 	if p.HasRepo() {
 		if p.Name == "" {
 			return p.RepoName
