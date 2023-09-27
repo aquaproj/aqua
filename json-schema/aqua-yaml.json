@@ -65,6 +65,12 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "description": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
