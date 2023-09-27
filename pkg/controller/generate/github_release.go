@@ -15,7 +15,7 @@ import (
 
 func (c *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
 	releases := c.listReleases(ctx, logE, pkgInfo)
-	versions := make([]*fuzzyfinder.Version, len(releases))
+	versions := make([]fuzzyfinder.Item, len(releases))
 	for i, release := range releases {
 		versions[i] = &fuzzyfinder.Version{
 			Name:        release.GetName(),
@@ -24,11 +24,11 @@ func (c *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus
 			URL:         release.GetHTMLURL(),
 		}
 	}
-	idx, err := c.versionSelector.Find(versions, true)
+	idx, err := c.fuzzyFinder.Find(versions, true)
 	if err != nil {
 		return ""
 	}
-	return versions[idx].Version
+	return versions[idx].(*fuzzyfinder.Version).Version //nolint:forcetypeassert
 }
 
 func (c *Controller) getVersionFromLatestRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {

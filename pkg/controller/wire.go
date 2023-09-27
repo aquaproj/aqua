@@ -169,10 +169,6 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			fuzzyfinder.New,
 			wire.Bind(new(generate.FuzzyFinder), new(*fuzzyfinder.Finder)),
 		),
-		wire.NewSet(
-			fuzzyfinder.NewVersionSelector,
-			wire.Bind(new(generate.VersionSelector), new(*fuzzyfinder.VersionSelector)),
-		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,

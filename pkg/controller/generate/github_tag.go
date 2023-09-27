@@ -95,17 +95,17 @@ func (c *Controller) listAndGetTagNameFromTag(ctx context.Context, logE *logrus.
 
 func (c *Controller) selectVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
 	tags := c.listTags(ctx, logE, pkgInfo)
-	versions := make([]*fuzzyfinder.Version, len(tags))
+	versions := make([]fuzzyfinder.Item, len(tags))
 	for i, tag := range tags {
 		versions[i] = &fuzzyfinder.Version{
 			Version: tag.GetName(),
 		}
 	}
-	idx, err := c.versionSelector.Find(versions, false)
+	idx, err := c.fuzzyFinder.Find(versions, false)
 	if err != nil {
 		return ""
 	}
-	return versions[idx].Version
+	return versions[idx].(*fuzzyfinder.Version).Version //nolint:forcetypeassert
 }
 
 func (c *Controller) getVersionFromGitHubTag(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {

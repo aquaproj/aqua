@@ -18,11 +18,11 @@ func (c *Controller) getCargoVersion(ctx context.Context, logE *logrus.Entry, pa
 		}
 		versions := fuzzyfinder.ConvertStringsToVersions(versionStrings)
 
-		idx, err := c.versionSelector.Find(versions, false)
+		idx, err := c.fuzzyFinder.Find(versions, false)
 		if err != nil {
 			return ""
 		}
-		return versions[idx].Version
+		return versions[idx].(*fuzzyfinder.Version).Version //nolint:forcetypeassert
 	}
 	version, err := c.cargoClient.GetLatestVersion(ctx, pkgInfo.Crate)
 	if err != nil {

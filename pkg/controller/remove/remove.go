@@ -62,7 +62,7 @@ func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *conf
 }
 
 func (c *Controller) removePackagesInteractively(logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) error {
-	var pkgs []*fuzzyfinder.Package
+	var pkgs []fuzzyfinder.Item
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
 			pkgs = append(pkgs, &fuzzyfinder.Package{
@@ -73,7 +73,7 @@ func (c *Controller) removePackagesInteractively(logE *logrus.Entry, param *conf
 	}
 
 	// Launch the fuzzy finder
-	idxes, err := c.fuzzyFinder.Find(pkgs)
+	idxes, err := c.fuzzyFinder.FindMulti(pkgs, true)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil
@@ -81,7 +81,7 @@ func (c *Controller) removePackagesInteractively(logE *logrus.Entry, param *conf
 		return fmt.Errorf("find the package: %w", err)
 	}
 	for _, idx := range idxes {
-		pkg := pkgs[idx]
+		pkg := pkgs[idx].(*fuzzyfinder.Package) //nolint:forcetypeassert
 		pkgName := pkg.PackageInfo.GetName()
 		logE := logE.WithField("package_name", pkgName)
 		if err := c.removePackage(logE, param.RootDir, pkg.PackageInfo); err != nil {

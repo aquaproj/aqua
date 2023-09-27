@@ -38,7 +38,6 @@ func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
 		rt                 *runtime.Runtime
 		isErr              bool
 		idxs               []int
-		idx                int
 		fuzzyFinderErr     error
 		versionSelectorErr error
 		releases           []*github.RepositoryRelease
@@ -232,7 +231,7 @@ packages:
 				MaxParallelism: 5,
 				SelectVersion:  true,
 			},
-			idx: 1,
+			idxs: []int{1},
 			files: map[string]string{
 				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
@@ -272,7 +271,7 @@ packages:
 				MaxParallelism: 5,
 				SelectVersion:  true,
 			},
-			idx: 1,
+			idxs: []int{1},
 			files: map[string]string{
 				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
@@ -405,9 +404,8 @@ packages:
 			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
-			versionSelector := fuzzyfinder.NewMockVersionSelector(d.idx, d.versionSelectorErr)
 			cargoClient := &cargo.MockClient{}
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versionSelector, cargoClient)
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, cargoClient)
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

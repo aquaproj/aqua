@@ -1,21 +1,22 @@
-package fuzzyfinder
+package fuzzyfinder_test
 
 import (
 	"testing"
+
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 )
 
-func Test_getVersionPreview(t *testing.T) {
+func TestVersion_Preview(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name    string
-		version *Version
-		i       int
+		version *fuzzyfinder.Version
 		w       int
 		exp     string
 	}{
 		{
 			name: "tag",
-			version: &Version{
+			version: &fuzzyfinder.Version{
 				Version: "v1.0.0",
 				Name:    "v1.0.0",
 			},
@@ -24,7 +25,7 @@ func Test_getVersionPreview(t *testing.T) {
 		},
 		{
 			name: "release",
-			version: &Version{
+			version: &fuzzyfinder.Version{
 				Version: "v1.0.0",
 				Name:    "Major",
 				URL:     "https://github.com/suzuki-shunsuke/tfcmt/releases/v1.0.0",
@@ -43,7 +44,7 @@ bar`,
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			s := getVersionPreview(d.version, d.i, d.w)
+			s := d.version.Preview(d.w)
 			if s != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, s)
 			}
