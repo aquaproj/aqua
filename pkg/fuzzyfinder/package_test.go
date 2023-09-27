@@ -1,21 +1,24 @@
-package fuzzyfinder
+package fuzzyfinder_test
 
 import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 )
 
-func Test_find(t *testing.T) { //nolint:funlen
+const registryStandard = "standard"
+
+func TestPackage_Item(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name string
-		pkg  *Package
+		pkg  *fuzzyfinder.Package
 		exp  string
 	}{
 		{
 			name: "normal",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
@@ -26,7 +29,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -38,7 +41,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, registry",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -50,7 +53,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, alias, registry",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -67,7 +70,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, alias, command, registry",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -95,45 +98,7 @@ func Test_find(t *testing.T) { //nolint:funlen
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			s := find(d.pkg)
-			if s != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, s)
-			}
-		})
-	}
-}
-
-func Test_getPreview(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		name string
-		pkg  *Package
-		i    int
-		w    int
-		exp  string
-	}{
-		{
-			name: "normal",
-			pkg: &Package{
-				PackageInfo: &registry.PackageInfo{
-					RepoOwner:   "suzuki-shunsuke",
-					RepoName:    "ci-info",
-					Description: "CLI tool to get CI related information",
-				},
-				RegistryName: registryStandard,
-			},
-			w: 100,
-			exp: `suzuki-shunsuke/ci-info
-
-https://github.com/suzuki-shunsuke/ci-info
-CLI tool to get CI related information`,
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.name, func(t *testing.T) {
-			t.Parallel()
-			s := getPreview(d.pkg, d.i, d.w)
+			s := d.pkg.Item()
 			if s != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, s)
 			}
