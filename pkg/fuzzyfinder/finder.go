@@ -10,10 +10,26 @@ import (
 
 var ErrAbort = fuzzyfinder.ErrAbort
 
+type Item interface {
+	Item() string
+	Preview(w int) string
+}
+
 type Package struct {
 	PackageInfo  *registry.PackageInfo
 	RegistryName string
 	Version      string
+}
+
+func (p *Package) Preview(w int) string {
+	return fmt.Sprintf("%s\n\n%s\n%s",
+		p.PackageInfo.GetName(),
+		p.PackageInfo.GetLink(),
+		formatDescription(p.PackageInfo.Description, w/2-8)) //nolint:gomnd
+}
+
+func (p *Package) Item() string {
+	return find(p)
 }
 
 type Finder struct{}
@@ -34,20 +50,46 @@ type MockFuzzyFinder struct {
 	err  error
 }
 
-func (f *MockFuzzyFinder) Find(pkgs []*Package) ([]int, error) {
+func (f *MockFuzzyFinder) Find(items []Item, hasPreview bool) (int, error) {
+	return f.idxs[0], f.err
+}
+
+func (f *MockFuzzyFinder) FindMulti(items []Item, hasPreview bool) ([]int, error) {
 	return f.idxs, f.err
 }
 
-func (f *Finder) Find(pkgs []*Package) ([]int, error) {
-	return fuzzyfinder.FindMulti(pkgs, func(i int) string { //nolint:wrapcheck
-		return find(pkgs[i])
-	},
-		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
-			if i < 0 {
-				return "No package matches"
-			}
-			return getPreview(pkgs[i], i, w)
-		}))
+func (f *Finder) Find(items []Item, hasPreview bool) (int, error) {
+	var opts []fuzzyfinder.Option
+	if hasPreview {
+		opts = []fuzzyfinder.Option{
+			fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+				if i < 0 {
+					return "No item matches"
+				}
+				return items[i].Preview(w)
+			}),
+		}
+	}
+	return fuzzyfinder.Find(items, func(i int) string { //nolint:wrapcheck
+		return items[i].Item()
+	}, opts...)
+}
+
+func (f *Finder) FindMulti(items []Item, hasPreview bool) ([]int, error) {
+	var opts []fuzzyfinder.Option
+	if hasPreview {
+		opts = []fuzzyfinder.Option{
+			fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+				if i < 0 {
+					return "No item matches"
+				}
+				return items[i].Preview(w)
+			}),
+		}
+	}
+	return fuzzyfinder.FindMulti(items, func(i int) string { //nolint:wrapcheck
+		return items[i].Item()
+	}, opts...)
 }
 
 func find(pkg *Package) string {

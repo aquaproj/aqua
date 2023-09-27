@@ -19,7 +19,6 @@ type Controller struct {
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
 	fuzzyFinder       FuzzyFinder
-	versionSelector   VersionSelector
 	fs                afero.Fs
 	outputter         Outputter
 	cargoClient       cargo.Client
@@ -30,10 +29,11 @@ type VersionSelector interface {
 }
 
 type FuzzyFinder interface {
-	Find(pkgs []*fuzzyfinder.Package) ([]int, error)
+	Find(items []fuzzyfinder.Item, hasPreview bool) (int, error)
+	FindMulti(items []fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, versionSelector VersionSelector, cargoClient cargo.Client) *Controller {
+func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, cargoClient cargo.Client) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
@@ -42,7 +42,6 @@ func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInst
 		github:            gh,
 		fs:                fs,
 		fuzzyFinder:       fuzzyFinder,
-		versionSelector:   versionSelector,
 		cargoClient:       cargoClient,
 		outputter:         output.New(os.Stdout, fs),
 	}

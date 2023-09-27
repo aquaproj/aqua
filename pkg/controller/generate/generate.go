@@ -93,7 +93,7 @@ func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *co
 
 func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*aqua.Package, error) {
 	// maps the package and the registry
-	var pkgs []*fuzzyfinder.Package
+	var pkgs []fuzzyfinder.Item
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
 			pkgs = append(pkgs, &fuzzyfinder.Package{
@@ -104,7 +104,7 @@ func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry,
 	}
 
 	// Launch the fuzzy finder
-	idxes, err := c.fuzzyFinder.Find(pkgs)
+	idxes, err := c.fuzzyFinder.FindMulti(pkgs, true)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil, nil
@@ -113,7 +113,7 @@ func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry,
 	}
 	arr := make([]*aqua.Package, len(idxes))
 	for i, idx := range idxes {
-		arr[i] = c.getOutputtedPkg(ctx, logE, param, pkgs[idx])
+		arr[i] = c.getOutputtedPkg(ctx, logE, param, pkgs[idx].(*fuzzyfinder.Package)) //nolint:forcetypeassert
 	}
 
 	return arr, nil

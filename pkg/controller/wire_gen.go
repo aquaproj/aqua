@@ -102,9 +102,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
-	versionSelector := fuzzyfinder.NewVersionSelector()
 	clientImpl := cargo.NewClientImpl(httpClient)
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, versionSelector, clientImpl)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, clientImpl)
 	return controller
 }
 
