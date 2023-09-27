@@ -9,13 +9,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
-
-func stringP(s string) *string {
-	return &s
-}
 
 func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -73,7 +70,7 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 			exp: "foo",
 			github: &github.MockRepositoriesService{
 				Content: &github.RepositoryContent{
-					Content: stringP("foo"),
+					Content: ptr.String("foo"),
 				},
 			},
 			httpClient: &http.Client{

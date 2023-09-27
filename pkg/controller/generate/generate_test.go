@@ -16,15 +16,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/sirupsen/logrus"
 )
-
-func stringP(s string) *string {
-	return &s
-}
 
 func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
@@ -72,7 +69,7 @@ packages:
 			idxs: []int{0},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: stringP("v1.0.0"),
+					TagName: ptr.String("v1.0.0"),
 				},
 			},
 		},
@@ -107,7 +104,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: stringP("v1.0.0"),
+					TagName: ptr.String("v1.0.0"),
 				},
 			},
 		},
@@ -141,7 +138,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: stringP("v1.0.0"),
+					TagName: ptr.String("v1.0.0"),
 				},
 			},
 		},
@@ -175,10 +172,10 @@ packages:
 			args: []string{"kubernetes-sigs/kustomize"},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: stringP("v4.0.0"),
+					TagName: ptr.String("v4.0.0"),
 				},
 				{
-					TagName: stringP("kustomize/v4.2.0"),
+					TagName: ptr.String("kustomize/v4.2.0"),
 				},
 			},
 		},
@@ -214,7 +211,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: stringP("v1.0.0"),
+					TagName: ptr.String("v1.0.0"),
 				},
 			},
 		},
@@ -251,10 +248,10 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: stringP("v1.1.0"),
+					TagName: ptr.String("v1.1.0"),
 				},
 				{
-					TagName: stringP("v1.0.0"),
+					TagName: ptr.String("v1.0.0"),
 				},
 			},
 		},
@@ -292,10 +289,10 @@ packages:
 			},
 			tags: []*github.RepositoryTag{
 				{
-					Name: stringP("v1.1.0"),
+					Name: ptr.String("v1.1.0"),
 				},
 				{
-					Name: stringP("v1.0.0"),
+					Name: ptr.String("v1.0.0"),
 				},
 			},
 		},
@@ -331,10 +328,10 @@ packages:
 			},
 			tags: []*github.RepositoryTag{
 				{
-					Name: stringP("v1.1.0"),
+					Name: ptr.String("v1.1.0"),
 				},
 				{
-					Name: stringP("go1.0.0"),
+					Name: ptr.String("go1.0.0"),
 				},
 			},
 		},
@@ -371,10 +368,10 @@ packages:
 			},
 			tags: []*github.RepositoryTag{
 				{
-					Name: stringP("v1.1.0"),
+					Name: ptr.String("v1.1.0"),
 				},
 				{
-					Name: stringP("go1.0.0"),
+					Name: ptr.String("go1.0.0"),
 				},
 			},
 		},

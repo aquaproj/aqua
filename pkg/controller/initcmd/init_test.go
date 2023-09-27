@@ -7,13 +7,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/sirupsen/logrus"
 )
-
-func stringP(s string) *string {
-	return &s
-}
 
 func TestController_Init(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -48,7 +45,7 @@ packages:
 			files: map[string]string{},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: stringP("v2.16.0"),
+					TagName: ptr.String("v2.16.0"),
 				},
 			},
 		},
