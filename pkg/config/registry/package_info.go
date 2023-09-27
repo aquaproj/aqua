@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/iancoleman/orderedmap"
 	"github.com/invopop/jsonschema"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 const (
@@ -379,7 +379,7 @@ func (r Replacements) IsZero() bool {
 }
 
 func (Replacements) JSONSchema() *jsonschema.Schema {
-	Map := orderedmap.New()
+	Map := orderedmap.New[string, *jsonschema.Schema]()
 	for _, value := range append(runtime.GOOSList(), runtime.GOARCHList()...) {
 		Map.Set(value, &jsonschema.Schema{
 			Type: "string",
