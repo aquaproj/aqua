@@ -1,21 +1,24 @@
-package fuzzyfinder
+package fuzzyfinder_test
 
 import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 )
+
+const registryStandard = "standard"
 
 func TestPackage_Item(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name string
-		pkg  *Package
+		pkg  *fuzzyfinder.Package
 		exp  string
 	}{
 		{
 			name: "normal",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
@@ -26,7 +29,7 @@ func TestPackage_Item(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -38,7 +41,7 @@ func TestPackage_Item(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, registry",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -50,7 +53,7 @@ func TestPackage_Item(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, alias, registry",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",
@@ -67,7 +70,7 @@ func TestPackage_Item(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "search words, alias, command, registry",
-			pkg: &Package{
+			pkg: &fuzzyfinder.Package{
 				PackageInfo: &registry.PackageInfo{
 					RepoOwner:   "suzuki-shunsuke",
 					RepoName:    "ci-info",

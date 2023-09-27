@@ -1,7 +1,6 @@
 package fuzzyfinder
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/ktr0731/go-fuzzyfinder"
@@ -52,16 +51,6 @@ func (f *Finder) FindMulti(items []Item, hasPreview bool) ([]int, error) {
 	return fuzzyfinder.FindMulti(items, func(i int) string { //nolint:wrapcheck
 		return items[i].Item()
 	}, opts...)
-}
-
-func getPreview(pkg *Package, i, w int) string {
-	if i < 0 {
-		return ""
-	}
-	return fmt.Sprintf("%s\n\n%s\n%s",
-		pkg.PackageInfo.GetName(),
-		pkg.PackageInfo.GetLink(),
-		formatDescription(pkg.PackageInfo.Description, w/2-8)) //nolint:gomnd
 }
 
 func formatLine(line string, w int) string {
