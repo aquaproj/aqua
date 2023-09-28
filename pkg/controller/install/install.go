@@ -8,61 +8,22 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
-type Controller struct {
-	packageInstaller   installpackage.Installer
-	rootDir            string
-	configFinder       ConfigFinder
-	configReader       reader.ConfigReader
-	registryInstaller  registry.Installer
-	fs                 afero.Fs
-	runtime            *runtime.Runtime
-	tags               map[string]struct{}
-	excludedTags       map[string]struct{}
-	policyConfigFinder policy.ConfigFinder
-	policyConfigReader policy.Reader
-	skipLink           bool
-	requireChecksum    bool
-}
-
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
-	return &Controller{
-		rootDir:            param.RootDir,
-		configFinder:       configFinder,
-		configReader:       configReader,
-		registryInstaller:  registInstaller,
-		packageInstaller:   pkgInstaller,
-		fs:                 fs,
-		runtime:            rt,
-		skipLink:           param.SkipLink,
-		tags:               param.Tags,
-		excludedTags:       param.ExcludedTags,
-		policyConfigReader: policyConfigReader,
-		policyConfigFinder: policyConfigFinder,
-		requireChecksum:    param.RequireChecksum,
-	}
-}
-
-func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
-	if param.Dest == "" { //nolint:nestif
-		rootBin := filepath.Join(c.rootDir, "bin")
-		if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
-			return fmt.Errorf("create the directory: %w", err)
-		}
-		if c.runtime.GOOS == "windows" {
-			if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bat")); err != nil {
-				return fmt.Errorf("create the directory: %w", err)
-			}
+// Install is a main method of "install" command.
+// This method is also called by "cp" command.
+func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+	if param.Dest == "" {
+		// Create "bin" and "bat" directories and install aqua-proxy in advance.
+		// If param.Dest isn't empty, this means this method is called by "copy" command.
+		// If the command is "copy", this block is skipped.
+		if err := c.mkBinBatDir(); err != nil {
+			return err
 		}
 		if err := c.packageInstaller.InstallProxy(ctx, logE); err != nil {
 			return fmt.Errorf("install aqua-proxy: %w", err)
@@ -90,6 +51,19 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 	}
 
 	return c.installAll(ctx, logE, param, policyCfgs, globalPolicyPaths)
+}
+
+func (c *Controller) mkBinBatDir() error {
+	rootBin := filepath.Join(c.rootDir, "bin")
+	if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
+		return fmt.Errorf("create the directory: %w", err)
+	}
+	if c.runtime.GOOS == "windows" {
+		if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bat")); err != nil {
+			return fmt.Errorf("create the directory: %w", err)
+		}
+	}
+	return nil
 }
 
 func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfigs []*policy.Config, globalPolicyPaths map[string]struct{}) error {

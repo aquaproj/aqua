@@ -50,6 +50,36 @@ func NewReader(fs afero.Fs, validator Validator, finder ConfigFinder, reader Con
 	}
 }
 
+func (r *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
+	cfgs, err := r.reader.Read(policyFilePaths)
+	if err != nil {
+		return nil, fmt.Errorf("read policies from the environment variable: %w", err)
+	}
+	allowCfgs(cfgs)
+	return cfgs, nil
+}
+
+func (r *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+	policyFilePath, err := r.finder.Find("", filepath.Dir(aquaYAMLPath))
+	if err != nil {
+		return nil, fmt.Errorf("find a policy file: %w", err)
+	}
+	if policyFilePath == "" {
+		return policies, nil
+	}
+	if _, ok := globalPolicyPaths[policyFilePath]; ok {
+		return policies, nil
+	}
+	policyCfg, err := r.read(logE, policyFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("read a policy file: %w", err)
+	}
+	if policyCfg == nil {
+		return policies, nil
+	}
+	return append(policies, policyCfg), nil
+}
+
 func (r *ReaderImpl) get(p string) *Config {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
@@ -66,15 +96,6 @@ func allowCfgs(cfgs []*Config) {
 	for _, cfg := range cfgs {
 		cfg.Allowed = true
 	}
-}
-
-func (r *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
-	cfgs, err := r.reader.Read(policyFilePaths)
-	if err != nil {
-		return nil, fmt.Errorf("read policies from the environment variable: %w", err)
-	}
-	allowCfgs(cfgs)
-	return cfgs, nil
 }
 
 func (r *ReaderImpl) read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
@@ -98,25 +119,4 @@ func (r *ReaderImpl) read(logE *logrus.Entry, policyFilePath string) (*Config, e
 	cfg.Allowed = true
 	r.set(policyFilePath, cfg)
 	return cfg, nil
-}
-
-func (r *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
-	policyFilePath, err := r.finder.Find("", filepath.Dir(aquaYAMLPath))
-	if err != nil {
-		return nil, fmt.Errorf("find a policy file: %w", err)
-	}
-	if policyFilePath == "" {
-		return policies, nil
-	}
-	if _, ok := globalPolicyPaths[policyFilePath]; ok {
-		return policies, nil
-	}
-	policyCfg, err := r.read(logE, policyFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("read a policy file: %w", err)
-	}
-	if policyCfg == nil {
-		return policies, nil
-	}
-	return append(policies, policyCfg), nil
 }
