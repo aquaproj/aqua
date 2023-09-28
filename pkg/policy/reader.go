@@ -11,7 +11,7 @@ import (
 )
 
 type Reader interface {
-	ReadFromEnv(policyFilePaths []string) ([]*Config, error)
+	Read(policyFilePaths []string) ([]*Config, error)
 	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error)
 }
 
@@ -21,7 +21,7 @@ type MockReader struct {
 	Err     error
 }
 
-func (r *MockReader) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
+func (r *MockReader) Read(policyFilePaths []string) ([]*Config, error) {
 	allowCfgs(r.Configs)
 	return r.Configs, r.Err
 }
@@ -50,7 +50,7 @@ func NewReader(fs afero.Fs, validator Validator, finder ConfigFinder, reader Con
 	}
 }
 
-func (r *ReaderImpl) ReadFromEnv(policyFilePaths []string) ([]*Config, error) {
+func (r *ReaderImpl) Read(policyFilePaths []string) ([]*Config, error) {
 	cfgs, err := r.reader.Read(policyFilePaths)
 	if err != nil {
 		return nil, fmt.Errorf("read policies from the environment variable: %w", err)
