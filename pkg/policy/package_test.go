@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
+func TestValidatePackage(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -78,13 +78,12 @@ func TestChecker_ValidatePackage(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	checker := &policy.Checker{}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			if err := checker.ValidatePackage(logE, d.pkg, d.policies); err != nil {
+			if err := policy.ValidatePackage(logE, d.pkg, d.policies); err != nil {
 				if d.isErr {
 					return
 				}

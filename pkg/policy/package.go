@@ -5,40 +5,13 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func getDefaultPolicy() ([]*Config, error) {
-	// https://github.com/aquaproj/aqua/issues/1404
-	// If no policy file is set, only standard registry is allowed by default.
-	cfg := &Config{
-		YAML: &ConfigYAML{
-			Registries: []*Registry{
-				{
-					Type: "standard",
-				},
-			},
-			Packages: []*Package{
-				{
-					RegistryName: "standard",
-				},
-			},
-		},
-	}
-	if err := cfg.Init(); err != nil {
-		return nil, err
-	}
-	return []*Config{
-		cfg,
-	}, nil
-}
-
-func (pc *Checker) ValidatePackage(logE *logrus.Entry, pkg *config.Package, policies []*Config) error {
-	if pc.disabled {
-		return nil
-	}
+func ValidatePackage(logE *logrus.Entry, pkg *config.Package, policies []*Config) error {
 	if len(policies) == 0 {
 		a, err := getDefaultPolicy()
 		if err != nil {
@@ -47,7 +20,7 @@ func (pc *Checker) ValidatePackage(logE *logrus.Entry, pkg *config.Package, poli
 		policies = a
 	}
 	for _, policyCfg := range policies {
-		if err := pc.validatePackage(logE, &paramValidatePackage{
+		if err := validatePackage(logE, &paramValidatePackage{
 			Pkg:          pkg,
 			PolicyConfig: policyCfg.YAML,
 		}); err == nil {
@@ -62,12 +35,12 @@ type paramValidatePackage struct {
 	PolicyConfig *ConfigYAML
 }
 
-func (pc *Checker) validatePackage(logE *logrus.Entry, param *paramValidatePackage) error {
+func validatePackage(logE *logrus.Entry, param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}
 	for _, policyPkg := range param.PolicyConfig.Packages {
-		f, err := pc.matchPkg(param.Pkg, policyPkg)
+		f, err := matchPkg(param.Pkg, policyPkg)
 		if err != nil {
 			// If it fails to check if the policy matches with the package, output a debug log and treat as the policy doesn't match with the package.
 			logerr.WithError(logE, err).Debug("check if the package matches with a policy")
@@ -80,7 +53,7 @@ func (pc *Checker) validatePackage(logE *logrus.Entry, param *paramValidatePacka
 	return errUnAllowedPackage
 }
 
-func (pc *Checker) matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
+func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}
@@ -97,5 +70,32 @@ func (pc *Checker) matchPkg(pkg *config.Package, policyPkg *Package) (bool, erro
 			return false, nil
 		}
 	}
-	return pc.matchRegistry(pkg.Registry, policyPkg.Registry)
+	return matchRegistry(pkg.Registry, policyPkg.Registry)
+}
+
+func matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
+	if rgst.Type != rgstPolicy.Type {
+		return false, nil
+	}
+	if rgst.Type == "local" {
+		return rgst.Path == rgstPolicy.Path, nil
+	}
+	if rgst.RepoOwner != rgstPolicy.RepoOwner {
+		return false, nil
+	}
+	if rgst.RepoName != rgstPolicy.RepoName {
+		return false, nil
+	}
+	if rgst.Path != rgstPolicy.Path {
+		return false, nil
+	}
+
+	if rgstPolicy.Ref != "" {
+		matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Ref, rgst.Ref, rgst.Ref)
+		if err != nil {
+			return false, fmt.Errorf("evaluate the version constraint of registry: %w", err)
+		}
+		return matched, nil
+	}
+	return true, nil
 }

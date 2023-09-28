@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,7 +25,7 @@ func (is *InstallerImpl) validatePackage(logE *logrus.Entry, param *ParamInstall
 	}
 
 	if !param.DisablePolicy {
-		if err := is.policyChecker.ValidatePackage(logE, param.Pkg, param.PolicyConfigs); err != nil {
+		if err := policy.ValidatePackage(logE, pkg, param.PolicyConfigs); err != nil {
 			return err //nolint:wrapcheck
 		}
 	}
