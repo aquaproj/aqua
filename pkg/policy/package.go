@@ -30,6 +30,11 @@ func ValidatePackage(logE *logrus.Entry, pkg *config.Package, policies []*Config
 	return errUnAllowedPackage
 }
 
+type paramValidatePackage struct {
+	Pkg          *config.Package
+	PolicyConfig *ConfigYAML
+}
+
 func validatePackage(logE *logrus.Entry, param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil

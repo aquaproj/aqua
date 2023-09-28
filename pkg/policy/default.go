@@ -1,9 +1,5 @@
 package policy
 
-import (
-	"github.com/aquaproj/aqua/v2/pkg/config"
-)
-
 func getDefaultPolicy() ([]*Config, error) {
 	// https://github.com/aquaproj/aqua/issues/1404
 	// If no policy file is set, only standard registry is allowed by default.
@@ -27,9 +23,4 @@ func getDefaultPolicy() ([]*Config, error) {
 	return []*Config{
 		cfg,
 	}, nil
-}
-
-type paramValidatePackage struct {
-	Pkg          *config.Package
-	PolicyConfig *ConfigYAML
 }
