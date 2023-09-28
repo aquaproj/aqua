@@ -30,7 +30,7 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 		}
 	}
 
-	policyCfgs, err := c.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
+	policyCfgs, err := c.policyConfigReader.Read(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}

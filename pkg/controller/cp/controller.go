@@ -69,7 +69,7 @@ func (c *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *config
 
 	c.packageInstaller.SetCopyDir("")
 
-	policyCfgs, err := c.policyConfigReader.ReadFromEnv(param.PolicyConfigFilePaths)
+	policyCfgs, err := c.policyConfigReader.Read(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
