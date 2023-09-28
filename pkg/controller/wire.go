@@ -276,7 +276,6 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			policy.NewReader,
 			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
 		),
-		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -443,7 +442,6 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			policy.NewReader,
 			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
 		),
-		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
@@ -540,7 +538,6 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
-		policy.NewChecker,
 	)
 	return &updateaqua.Controller{}
 }
@@ -633,7 +630,6 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			policy.NewReader,
 			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
 		),
-		policy.NewChecker,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
