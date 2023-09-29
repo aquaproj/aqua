@@ -1,4 +1,4 @@
-FROM alpine:3.18.3
+FROM alpine:3.18.4
 COPY dist/aqua-docker /usr/local/bin/aqua
 RUN apk add curl bash sudo git vim
 RUN adduser -u 1000 -G wheel -D foo
