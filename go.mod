@@ -13,7 +13,7 @@ require (
 	github.com/google/go-github/v55 v55.0.0
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.6.0
-	github.com/invopop/jsonschema v0.10.0
+	github.com/invopop/jsonschema v0.11.0
 	github.com/ktr0731/go-fuzzyfinder v0.7.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mholt/archiver/v3 v3.5.1
