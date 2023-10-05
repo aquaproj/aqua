@@ -9,7 +9,7 @@ jobs:
     uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@8e5a34c2b4e3c2a7d5e22346ef8328d2c3d0713e # v0.4.3
     with:
       homebrew: true
-      go-version: 1.21.1
+      go-version: 1.21.2
       aqua_policy_allow: true
       aqua_version: v2.12.1
     secrets:
