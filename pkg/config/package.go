@@ -47,11 +47,6 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 		return "", nil
 	}
 
-	format := p.PackageInfo.Format
-	if p.PackageInfo.GetAppendFormat() {
-		asset = appendExt(asset, format)
-	}
-
 	if !isWindows(rt.GOOS) {
 		return asset, nil
 	}
@@ -131,11 +126,6 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	s, err := p.RenderTemplateString(pkgInfo.URL, rt)
 	if err != nil {
 		return "", err
-	}
-
-	format := p.PackageInfo.Format
-	if p.PackageInfo.GetAppendFormat() {
-		s = appendExt(s, format)
 	}
 
 	if !isWindows(rt.GOOS) {
@@ -269,28 +259,6 @@ type Param struct {
 	DisablePolicy         bool
 	Detail                bool
 	PolicyConfigFilePaths []string
-}
-
-func appendExt(s, format string) string {
-	aliases := unarchive.GetFormatAliases()
-	alias := ""
-	for k, v := range aliases {
-		if format == k {
-			alias = v
-		} else if format == v {
-			alias = k
-		}
-	}
-	if format == formatRaw || format == "" {
-		return s
-	}
-	if strings.HasSuffix(s, fmt.Sprintf(".%s", format)) {
-		return s
-	}
-	if alias != "" && strings.HasSuffix(s, fmt.Sprintf(".%s", alias)) {
-		return s
-	}
-	return fmt.Sprintf("%s.%s", s, format)
 }
 
 func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
