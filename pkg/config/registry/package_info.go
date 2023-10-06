@@ -96,6 +96,7 @@ type Override struct {
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
 	URL                string          `yaml:",omitempty" json:"url,omitempty"`
+	Path               string          `yaml:",omitempty" json:"path,omitempty"`
 	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
@@ -298,6 +299,34 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 		p.Type = ov.Type
 	}
 
+	if ov.Asset != nil {
+		p.Asset = ov.Asset
+	}
+
+	if ov.Crate != "" {
+		p.Crate = ov.Crate
+	}
+
+	if ov.Cargo != nil {
+		p.Cargo = ov.Cargo
+	}
+
+	if ov.URL != "" {
+		p.URL = ov.URL
+	}
+
+	if ov.Path != "" {
+		p.Path = ov.Path
+	}
+
+	if ov.Format != "" {
+		p.Format = ov.Format
+	}
+
+	if ov.Files != nil {
+		p.Files = ov.Files
+	}
+
 	if p.Replacements == nil {
 		p.Replacements = ov.Replacements
 	} else {
@@ -311,43 +340,22 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 		p.Replacements = replacements
 	}
 
-	if ov.Format != "" {
-		p.Format = ov.Format
+	if ov.CompleteWindowsExt != nil {
+		p.CompleteWindowsExt = ov.CompleteWindowsExt
 	}
 
-	if ov.Asset != nil {
-		p.Asset = ov.Asset
-	}
-
-	if ov.Crate != "" {
-		p.Crate = ov.Crate
-	}
-
-	if ov.Cargo != nil {
-		p.Cargo = ov.Cargo
-	}
-
-	if ov.Files != nil {
-		p.Files = ov.Files
-	}
-
-	if ov.URL != "" {
-		p.URL = ov.URL
+	if ov.WindowsExt != "" {
+		p.WindowsExt = ov.WindowsExt
 	}
 
 	if ov.Checksum != nil {
 		p.Checksum = ov.Checksum
 	}
 
-	if ov.CompleteWindowsExt != nil {
-		p.CompleteWindowsExt = ov.CompleteWindowsExt
-	}
-	if ov.WindowsExt != "" {
-		p.WindowsExt = ov.WindowsExt
-	}
 	if ov.Cosign != nil {
 		p.Cosign = ov.Cosign
 	}
+
 	if ov.SLSAProvenance != nil {
 		p.SLSAProvenance = ov.SLSAProvenance
 	}
