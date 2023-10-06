@@ -257,7 +257,8 @@
             "github_archive",
             "http",
             "go",
-            "go_install"
+            "go_install",
+            "go_build"
           ]
         },
         "format": {
@@ -343,7 +344,8 @@
             "http",
             "go",
             "go_install",
-            "cargo"
+            "cargo",
+            "go_build"
           ]
         },
         "repo_owner": {
@@ -548,7 +550,8 @@
             "github_archive",
             "http",
             "go",
-            "go_install"
+            "go_install",
+            "go_build"
           ]
         },
         "repo_owner": {
