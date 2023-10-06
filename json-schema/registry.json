@@ -286,6 +286,9 @@
         "url": {
           "type": "string"
         },
+        "path": {
+          "type": "string"
+        },
         "complete_windows_ext": {
           "type": "boolean"
         },
