@@ -46,6 +46,12 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if asset == "" {
 		return "", nil
 	}
+
+	format := p.PackageInfo.Format
+	if p.PackageInfo.GetAppendFormat() {
+		asset = appendExt(asset, format)
+	}
+
 	if !isWindows(rt.GOOS) {
 		return asset, nil
 	}
@@ -55,13 +61,15 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
+	format := pkgInfo.GetFormat()
 	return &template.Artifact{
-		Version: pkg.Version,
-		SemVer:  p.semVer(),
-		OS:      replace(rt.GOOS, pkgInfo.Replacements),
-		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
-		Format:  pkgInfo.GetFormat(),
-		Asset:   asset,
+		Version:         pkg.Version,
+		SemVer:          p.semVer(),
+		OS:              replace(rt.GOOS, pkgInfo.Replacements),
+		Arch:            getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		Format:          format,
+		Asset:           asset,
+		AssetWithoutExt: getAssetWithoutExt(asset, format),
 	}
 }
 
@@ -124,6 +132,12 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	format := p.PackageInfo.Format
+	if p.PackageInfo.GetAppendFormat() {
+		s = appendExt(s, format)
+	}
+
 	if !isWindows(rt.GOOS) {
 		return s, nil
 	}
@@ -142,18 +156,21 @@ func (e *FileNotFoundError) Unwrap() error {
 	return e.Err
 }
 
-func (p *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
+	format := pkgInfo.GetFormat()
 	s, err := template.Execute(file.Src, map[string]interface{}{
-		"Version":  pkg.Version,
-		"SemVer":   p.semVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
+		"Version":         pkg.Version,
+		"SemVer":          p.semVer(),
+		"GOOS":            rt.GOOS,
+		"GOARCH":          rt.GOARCH,
+		"OS":              replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":            getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		"Format":          format,
+		"FileName":        file.Name,
+		"Asset":           assetName,
+		"AssetWithoutExt": getAssetWithoutExt(assetName, format),
 	})
 	if err != nil {
 		return "", err //nolint:wrapcheck
@@ -203,7 +220,7 @@ func (p *Package) fileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runt
 	if file.Src == "" {
 		return file.Name, nil
 	}
-	src, err := p.renderSrc(file, rt)
+	src, err := p.renderSrc(assetName, file, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
@@ -252,6 +269,28 @@ type Param struct {
 	DisablePolicy         bool
 	Detail                bool
 	PolicyConfigFilePaths []string
+}
+
+func appendExt(s, format string) string {
+	aliases := unarchive.GetFormatAliases()
+	alias := ""
+	for k, v := range aliases {
+		if format == k {
+			alias = v
+		} else if format == v {
+			alias = k
+		}
+	}
+	if format == formatRaw || format == "" {
+		return s
+	}
+	if strings.HasSuffix(s, fmt.Sprintf(".%s", format)) {
+		return s
+	}
+	if alias != "" && strings.HasSuffix(s, fmt.Sprintf(".%s", alias)) {
+		return s
+	}
+	return fmt.Sprintf("%s.%s", s, format)
 }
 
 func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
@@ -350,4 +389,11 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})
+}
+
+func getAssetWithoutExt(asset, format string) string {
+	if format == "raw" {
+		return asset
+	}
+	return strings.TrimSuffix(asset, fmt.Sprintf(".%s", format))
 }

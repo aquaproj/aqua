@@ -75,6 +75,17 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
+func GetFormatAliases() map[string]string {
+	return map[string]string{
+		"tbr":  "tar.br",
+		"tbz":  "tar.bz2",
+		"tgz":  "tar.gz",
+		"tlz4": "tar.lz4",
+		"tsz":  "tar.sz",
+		"txz":  "tar.xz",
+	}
+}
+
 func (u *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
@@ -100,7 +111,11 @@ func (u *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, 
 
 	f := filename
 	if src.Type != "" {
-		f = "." + src.Type
+		if a, ok := GetFormatAliases()[src.Type]; ok {
+			f = "." + a
+		} else {
+			f = "." + src.Type
+		}
 	}
 	arc, err := archiver.ByExtension(f)
 	if err != nil {
