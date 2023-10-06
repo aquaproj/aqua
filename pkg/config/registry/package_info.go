@@ -25,7 +25,7 @@ type PackageInfo struct {
 	Name               string             `json:"name,omitempty" yaml:",omitempty"`
 	Aliases            []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
 	SearchWords        []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
-	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo"`
+	Type               string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
 	RepoOwner          string             `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
@@ -59,7 +59,7 @@ type PackageInfo struct {
 
 type VersionOverride struct {
 	VersionConstraints string          `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
+	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=go_build"`
 	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
@@ -89,7 +89,7 @@ type VersionOverride struct {
 type Override struct {
 	GOOS               string          `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
 	GOArch             string          `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=386,enum=amd64,enum=arm,enum=arm64,enum=mips,enum=mips64,enum=mips64le,enum=mipsle,enum=ppc64,enum=ppc64le,enum=riscv64,enum=s390x"`
-	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install"`
+	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=go_build"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
 	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
