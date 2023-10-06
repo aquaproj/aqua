@@ -64,7 +64,7 @@ func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.
 		Arch:            getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
 		Format:          format,
 		Asset:           asset,
-		AssetWithoutExt: getAssetWithoutExt(asset, format),
+		AssetWithoutExt: removeExtFromAsset(asset, format),
 	}
 }
 
@@ -160,7 +160,7 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 		"Format":          format,
 		"FileName":        file.Name,
 		"Asset":           assetName,
-		"AssetWithoutExt": getAssetWithoutExt(assetName, format),
+		"AssetWithoutExt": removeExtFromAsset(assetName, format),
 	})
 	if err != nil {
 		return "", err //nolint:wrapcheck
@@ -359,7 +359,7 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 	})
 }
 
-func getAssetWithoutExt(asset, format string) string {
+func removeExtFromAsset(asset, format string) string {
 	if format == "raw" {
 		return asset
 	}
