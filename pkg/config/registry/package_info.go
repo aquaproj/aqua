@@ -578,9 +578,6 @@ func (p *PackageInfo) defaultCmdName() string {
 		return p.Name
 	}
 	if p.Type == PkgInfoTypeGoInstall {
-		if p.Asset != "" {
-			return p.Asset
-		}
 		return path.Base(p.GetPath())
 	}
 	return path.Base(p.GetName())
