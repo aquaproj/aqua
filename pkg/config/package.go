@@ -57,13 +57,12 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
-	format := pkgInfo.GetFormat()
 	return &template.Artifact{
 		Version: pkg.Version,
 		SemVer:  p.semVer(),
 		OS:      replace(rt.GOOS, pkgInfo.Replacements),
 		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
-		Format:  format,
+		Format:  pkgInfo.GetFormat(),
 		Asset:   asset,
 	}
 }
@@ -358,11 +357,4 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})
-}
-
-func removeExtFromAsset(asset, format string) string {
-	if format == "raw" {
-		return asset
-	}
-	return strings.TrimSuffix(asset, fmt.Sprintf(".%s", format))
 }
