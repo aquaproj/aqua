@@ -8,6 +8,7 @@ import (
 	"strings"
 	texttemplate "text/template"
 
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -46,6 +47,7 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	if asset == "" {
 		return "", nil
 	}
+
 	if !isWindows(rt.GOOS) {
 		return asset, nil
 	}
@@ -124,6 +126,7 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if !isWindows(rt.GOOS) {
 		return s, nil
 	}
@@ -142,18 +145,22 @@ func (e *FileNotFoundError) Unwrap() error {
 	return e.Err
 }
 
-func (p *Package) renderSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
+func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
+	format := pkgInfo.GetFormat()
+	assetWithoutExt, _ := asset.RemoveExtFromAsset(assetName)
 	s, err := template.Execute(file.Src, map[string]interface{}{
-		"Version":  pkg.Version,
-		"SemVer":   p.semVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
+		"Version":         pkg.Version,
+		"SemVer":          p.semVer(),
+		"GOOS":            rt.GOOS,
+		"GOARCH":          rt.GOARCH,
+		"OS":              replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":            getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		"Format":          format,
+		"FileName":        file.Name,
+		"Asset":           assetName,
+		"AssetWithoutExt": assetWithoutExt,
 	})
 	if err != nil {
 		return "", err //nolint:wrapcheck
@@ -203,7 +210,7 @@ func (p *Package) fileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runt
 	if file.Src == "" {
 		return file.Name, nil
 	}
-	src, err := p.renderSrc(file, rt)
+	src, err := p.renderSrc(assetName, file, rt)
 	if err != nil {
 		return "", fmt.Errorf("render the template file.src: %w", err)
 	}
