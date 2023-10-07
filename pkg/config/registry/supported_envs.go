@@ -8,7 +8,7 @@ func (p *PackageInfo) CheckSupported(rt *runtime.Runtime, env string) (bool, err
 	if p.CheckSupportedEnvs(rt.GOOS, rt.GOARCH, env) {
 		return true, nil
 	}
-	if p.Build == nil {
+	if !p.Build.CheckEnabled() {
 		return false, nil
 	}
 	if p.checkExcludedEnvs(rt.GOOS, rt.GOARCH, env) {
@@ -28,9 +28,6 @@ func (p *PackageInfo) CheckSupportedEnvs(goos, goarch, env string) bool {
 func (p *PackageInfo) checkExcludedEnvs(goos, goarch, env string) bool {
 	if p.Build.ExcludedEnvs == nil {
 		return true
-	}
-	if p.Build.Enabled != nil && !*p.Build.Enabled {
-		return false
 	}
 	return !matchEnvs(p.Build.ExcludedEnvs, goos, goarch, env, p.Rosetta2)
 }

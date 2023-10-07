@@ -68,6 +68,16 @@ type Build struct {
 	Enabled      *bool         `json:"enabled,omitempty" yaml:",omitempty"`
 }
 
+func (b *Build) CheckEnabled() bool {
+	if b == nil {
+		return false
+	}
+	if b.Enabled == nil {
+		return true
+	}
+	return *b.Enabled
+}
+
 func (p *PackageInfo) GetAppendExt() bool {
 	if p.AppendExt == nil {
 		return true
