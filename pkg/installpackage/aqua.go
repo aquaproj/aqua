@@ -13,7 +13,6 @@ import (
 )
 
 func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
-	assetTemplate := `aqua_{{.OS}}_{{.Arch}}.tar.gz`
 	provTemplate := "multiple.intoto.jsonl"
 	disabled := false
 	pkg := &config.Package{
@@ -25,7 +24,7 @@ func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, ve
 			Type:      "github_release",
 			RepoOwner: "aquaproj",
 			RepoName:  "aqua",
-			Asset:     &assetTemplate,
+			Asset:     "aqua_{{.OS}}_{{.Arch}}.tar.gz",
 			Files: []*registry.File{
 				{
 					Name: "aqua",

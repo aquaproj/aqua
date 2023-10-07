@@ -23,13 +23,6 @@ type Package struct {
 	SemVer  string
 }
 
-func getString(p *string) string {
-	if p == nil {
-		return ""
-	}
-	return *p
-}
-
 type Release struct {
 	ID            int64
 	Tag           string
@@ -131,7 +124,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 
 func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.VersionOverride { //nolint:cyclop
 	vo := &registry.VersionOverride{}
-	if getString(pkgInfo.Asset) != getString(latestPkgInfo.Asset) {
+	if pkgInfo.Asset != latestPkgInfo.Asset {
 		vo.Asset = pkgInfo.Asset
 	}
 	if pkgInfo.Format != latestPkgInfo.Format {

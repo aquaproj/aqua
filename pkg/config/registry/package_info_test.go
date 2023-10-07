@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -253,7 +252,7 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 				Type:      registry.PkgInfoTypeGitHubRelease,
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
-				Asset:     ptr.String("ci-info.tar.gz"),
+				Asset:     "ci-info.tar.gz",
 			},
 		},
 		{

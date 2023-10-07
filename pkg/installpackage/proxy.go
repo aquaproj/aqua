@@ -29,7 +29,6 @@ func (is *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) e
 	if isWindows(is.runtime.GOOS) {
 		return nil
 	}
-	proxyAssetTemplate := `aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz`
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    proxyName,
@@ -39,7 +38,7 @@ func (is *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) e
 			Type:      "github_release",
 			RepoOwner: "aquaproj",
 			RepoName:  proxyName,
-			Asset:     &proxyAssetTemplate,
+			Asset:     "aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz",
 			Files: []*registry.File{
 				{
 					Name: proxyName,

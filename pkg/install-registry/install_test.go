@@ -12,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
@@ -89,7 +88,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "ci-info",
-							Asset:     ptr.String("ci-info_{{.Arch}}-{{.OS}}.tar.gz"),
+							Asset:     "ci-info_{{.Arch}}-{{.OS}}.tar.gz",
 						},
 					},
 				},
@@ -99,7 +98,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "github-comment",
-							Asset:     ptr.String("github-comment_{{.Arch}}-{{.OS}}.tar.gz"),
+							Asset:     "github-comment_{{.Arch}}-{{.OS}}.tar.gz",
 						},
 					},
 				},

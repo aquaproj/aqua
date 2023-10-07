@@ -5,7 +5,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -39,7 +38,7 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua",
-					Asset:     ptr.String("aqua.{{.Format}}"),
+					Asset:     "aqua.{{.Format}}",
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
@@ -58,7 +57,7 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "aquaproj",
 					RepoName:  "aqua",
-					Asset:     ptr.String("aqua.{{.Format}}"),
+					Asset:     "aqua.{{.Format}}",
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
@@ -78,7 +77,7 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 					Format:    "zip",
 				},
 				Package: &aqua.Package{
@@ -101,7 +100,7 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 					Format:    "zip",
 				},
 				Package: &aqua.Package{
@@ -125,7 +124,7 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 					Format:    "zip",
 				},
 				Package: &aqua.Package{

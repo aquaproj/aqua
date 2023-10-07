@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
@@ -38,7 +37,7 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 						Type:      "github_release",
 						RepoOwner: "cli",
 						RepoName:  "cli",
-						Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+						Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 						Rosetta2:  true,
 						Checksum: &registry.Checksum{
 							Type:       "github_release",

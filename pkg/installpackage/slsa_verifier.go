@@ -21,7 +21,6 @@ type SLSAVerifier struct {
 func (sv *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE *logrus.Entry, version string) error {
 	sv.mutex.Lock()
 	defer sv.mutex.Unlock()
-	assetTemplate := `slsa-verifier-{{.OS}}-{{.Arch}}`
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    "slsa-framework/slsa-verifier",
@@ -31,7 +30,7 @@ func (sv *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE *logrus.En
 			Type:      "github_release",
 			RepoOwner: "slsa-framework",
 			RepoName:  "slsa-verifier",
-			Asset:     &assetTemplate,
+			Asset:     "slsa-verifier-{{.OS}}-{{.Arch}}",
 		},
 	}
 

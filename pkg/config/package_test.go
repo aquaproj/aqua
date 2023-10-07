@@ -6,7 +6,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -46,7 +45,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "github_release",
-					Asset:  ptr.String("foo-{{trimV .Version}}.{{.Format}}"),
+					Asset:  "foo-{{trimV .Version}}.{{.Format}}",
 					Format: "zip",
 				},
 				Package: &aqua.Package{
@@ -74,7 +73,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "github_release",
-					Asset:  ptr.String("foo-{{.OS}}-{{.Arch}}"),
+					Asset:  "foo-{{.OS}}-{{.Arch}}",
 					Format: "raw",
 				},
 				Package: &aqua.Package{
@@ -92,7 +91,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:  "github_release",
-					Asset: ptr.String("foo-{{.OS}}-{{.Arch}}"),
+					Asset: "foo-{{.OS}}-{{.Arch}}",
 				},
 				Package: &aqua.Package{
 					Version: "v1.0.0",
@@ -109,7 +108,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:  "github_release",
-					Asset: ptr.String("foo-{{.OS}}-{{.Arch}}.tar.gz"),
+					Asset: "foo-{{.OS}}-{{.Arch}}.tar.gz",
 				},
 				Package: &aqua.Package{
 					Version: "v1.0.0",
@@ -185,7 +184,7 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
-					Asset:     ptr.String("ci-info.{{.Format}}"),
+					Asset:     "ci-info.{{.Format}}",
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
