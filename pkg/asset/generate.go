@@ -339,7 +339,7 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 			assetInfo.DarwinAll = true
 		}
 	}
-	assetInfo.Format = GetFormat(assetName)
+	assetInfo.Format = getFormat(assetName)
 	if assetInfo.Format != formatRaw {
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
 	}
