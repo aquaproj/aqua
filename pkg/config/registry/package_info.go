@@ -55,7 +55,7 @@ type PackageInfo struct {
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 	ErrorMessage       string             `json:"-" yaml:"-"`
-	AppendExt          *bool              `json:"append_ext" yaml:"append_ext"`
+	AppendExt          *bool              `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
 }
 
 func (p *PackageInfo) GetAppendExt() bool {
@@ -92,7 +92,7 @@ type VersionOverride struct {
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	ErrorMessage       *string         `json:"error_message,omitempty" yaml:"error_message,omitempty"`
 	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
-	AppendExt          *bool           `json:"append_ext" yaml:"append_ext"`
+	AppendExt          *bool           `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
 }
 
 type Override struct {
@@ -112,7 +112,7 @@ type Override struct {
 	Checksum           *Checksum       `json:"checksum,omitempty"`
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
-	AppendExt          *bool           `json:"append_ext" yaml:"append_ext"`
+	AppendExt          *bool           `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
 }
 
 func (p *PackageInfo) Copy() *PackageInfo {
