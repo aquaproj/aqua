@@ -48,9 +48,8 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 		return "", nil
 	}
 
-	format := p.PackageInfo.Format
 	if p.PackageInfo.GetAppendFormat() {
-		asset = appendExt(asset, format)
+		asset = appendExt(asset, p.PackageInfo.Format)
 	}
 
 	if !isWindows(rt.GOOS) {
@@ -132,9 +131,8 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 		return "", err
 	}
 
-	format := p.PackageInfo.Format
 	if p.PackageInfo.GetAppendFormat() {
-		s = appendExt(s, format)
+		s = appendExt(s, p.PackageInfo.Format)
 	}
 
 	if !isWindows(rt.GOOS) {
