@@ -8,6 +8,7 @@ import (
 	"strings"
 	texttemplate "text/template"
 
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -58,13 +59,12 @@ func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.
 	pkgInfo := p.PackageInfo
 	format := pkgInfo.GetFormat()
 	return &template.Artifact{
-		Version:         pkg.Version,
-		SemVer:          p.semVer(),
-		OS:              replace(rt.GOOS, pkgInfo.Replacements),
-		Arch:            getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
-		Format:          format,
-		Asset:           asset,
-		AssetWithoutExt: removeExtFromAsset(asset, format),
+		Version: pkg.Version,
+		SemVer:  p.semVer(),
+		OS:      replace(rt.GOOS, pkgInfo.Replacements),
+		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		Format:  format,
+		Asset:   asset,
 	}
 }
 
@@ -150,6 +150,7 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
 	format := pkgInfo.GetFormat()
+	assetWithoutExt, _ := asset.RemoveExtFromAsset(assetName)
 	s, err := template.Execute(file.Src, map[string]interface{}{
 		"Version":         pkg.Version,
 		"SemVer":          p.semVer(),
@@ -160,7 +161,7 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 		"Format":          format,
 		"FileName":        file.Name,
 		"Asset":           assetName,
-		"AssetWithoutExt": removeExtFromAsset(assetName, format),
+		"AssetWithoutExt": assetWithoutExt,
 	})
 	if err != nil {
 		return "", err //nolint:wrapcheck
