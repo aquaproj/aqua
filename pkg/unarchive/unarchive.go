@@ -102,7 +102,7 @@ func (u *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, 
 	if src.Type != "" {
 		f = "." + src.Type
 	}
-	arc, err := archiver.ByExtension(f)
+	arc, err := byExtension(f)
 	if err != nil {
 		return nil, fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
 	}
@@ -122,4 +122,22 @@ func (u *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, 
 		}, nil
 	}
 	return nil, errUnsupportedFileFormat
+}
+
+func byExtension(filename string) (interface{}, error) {
+	formats := map[string]interface{}{
+		"tbr":  archiver.NewTarBrotli(),
+		"tbz":  archiver.NewTarBz2(),
+		"tbz2": archiver.NewTarBz2(),
+		"tgz":  archiver.NewTarGz(),
+		"tlz4": archiver.NewTarLz4(),
+		"tsz":  archiver.NewTarSz(),
+		"txz":  archiver.NewTarXz(),
+	}
+	for format, arc := range formats {
+		if strings.HasSuffix(filename, "."+format) {
+			return arc, nil
+		}
+	}
+	return archiver.ByExtension(filename) //nolint:wrapcheck
 }

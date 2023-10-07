@@ -14,7 +14,7 @@ func Exclude(pkgName, assetName, version string) bool {
 		".jar": {},
 		".py":  {},
 	}
-	if format := GetFormat(assetName); format == formatRaw {
+	if format := getFormat(assetName); format == formatRaw {
 		ext := osfile.Ext(assetName, version)
 		if len(ext) > 0 && len(ext) < 6 {
 			if _, ok := allowedExts[ext]; !ok {
