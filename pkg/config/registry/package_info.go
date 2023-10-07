@@ -55,14 +55,14 @@ type PackageInfo struct {
 	VersionConstraints string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides   []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 	ErrorMessage       string             `json:"-" yaml:"-"`
-	AppendFormat       *bool              `json:"append_format" yaml:"append_format"`
+	AppendExt          *bool              `json:"append_ext" yaml:"append_ext"`
 }
 
-func (p *PackageInfo) GetAppendFormat() bool {
-	if p.AppendFormat == nil {
+func (p *PackageInfo) GetAppendExt() bool {
+	if p.AppendExt == nil {
 		return true
 	}
-	return *p.AppendFormat
+	return *p.AppendExt
 }
 
 type VersionOverride struct {
@@ -92,7 +92,7 @@ type VersionOverride struct {
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	ErrorMessage       *string         `json:"error_message,omitempty" yaml:"error_message,omitempty"`
 	NoAsset            *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
-	AppendFormat       *bool           `json:"append_format" yaml:"append_format"`
+	AppendExt          *bool           `json:"append_ext" yaml:"append_ext"`
 }
 
 type Override struct {
@@ -112,7 +112,7 @@ type Override struct {
 	Checksum           *Checksum       `json:"checksum,omitempty"`
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
-	AppendFormat       *bool           `json:"append_format" yaml:"append_format"`
+	AppendExt          *bool           `json:"append_ext" yaml:"append_ext"`
 }
 
 func (p *PackageInfo) Copy() *PackageInfo {
@@ -149,7 +149,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		Private:            p.Private,
 		ErrorMessage:       p.ErrorMessage,
 		NoAsset:            p.NoAsset,
-		AppendFormat:       p.AppendFormat,
+		AppendExt:          p.AppendExt,
 	}
 	return pkg
 }
@@ -187,7 +187,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Format = ""
 		p.Rosetta2 = false
-		p.AppendFormat = nil
+		p.AppendExt = nil
 	case PkgInfoTypeGoBuild:
 		p.URL = ""
 		p.Asset = nil
@@ -199,7 +199,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Format = ""
 		p.Rosetta2 = false
-		p.AppendFormat = nil
+		p.AppendExt = nil
 	case PkgInfoTypeCargo:
 		p.URL = ""
 		p.Asset = nil
@@ -210,7 +210,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Format = ""
 		p.Rosetta2 = false
-		p.AppendFormat = nil
+		p.AppendExt = nil
 	}
 }
 
@@ -292,8 +292,8 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.NoAsset != nil {
 		pkg.NoAsset = *child.NoAsset
 	}
-	if child.AppendFormat != nil {
-		pkg.AppendFormat = child.AppendFormat
+	if child.AppendExt != nil {
+		pkg.AppendExt = child.AppendExt
 	}
 	return pkg
 }
@@ -377,8 +377,8 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 		p.SLSAProvenance = ov.SLSAProvenance
 	}
 
-	if ov.AppendFormat != nil {
-		p.AppendFormat = ov.AppendFormat
+	if ov.AppendExt != nil {
+		p.AppendExt = ov.AppendExt
 	}
 }
 

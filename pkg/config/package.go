@@ -48,7 +48,7 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 		return "", nil
 	}
 
-	if p.PackageInfo.GetAppendFormat() {
+	if p.PackageInfo.GetAppendExt() {
 		asset = appendExt(asset, p.PackageInfo.Format)
 	}
 
@@ -131,7 +131,7 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 		return "", err
 	}
 
-	if p.PackageInfo.GetAppendFormat() {
+	if p.PackageInfo.GetAppendExt() {
 		s = appendExt(s, p.PackageInfo.Format)
 	}
 

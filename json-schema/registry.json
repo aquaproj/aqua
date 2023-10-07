@@ -307,10 +307,16 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
+        },
+        "append_ext": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "append_ext"
+      ]
     },
     "Overrides": {
       "items": {
@@ -452,12 +458,16 @@
             "$ref": "#/$defs/VersionOverride"
           },
           "type": "array"
+        },
+        "append_ext": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "type"
+        "type",
+        "append_ext"
       ]
     },
     "PackageInfos": {
@@ -633,10 +643,16 @@
         },
         "no_asset": {
           "type": "boolean"
+        },
+        "append_ext": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "append_ext"
+      ]
     }
   }
 }
