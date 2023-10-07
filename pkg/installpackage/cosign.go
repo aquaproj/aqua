@@ -21,7 +21,6 @@ type Cosign struct {
 func (c *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, version string) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	assetTemplate := `cosign-{{.OS}}-{{.Arch}}`
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    "sigstore/cosign",
@@ -31,7 +30,7 @@ func (c *Cosign) installCosign(ctx context.Context, logE *logrus.Entry, version 
 			Type:      "github_release",
 			RepoOwner: "sigstore",
 			RepoName:  "cosign",
-			Asset:     &assetTemplate,
+			Asset:     "cosign-{{.OS}}-{{.Arch}}",
 			SupportedEnvs: []string{
 				"darwin",
 				"linux",

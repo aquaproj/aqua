@@ -93,7 +93,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 					GOArch:       assetInfo.Arch,
 					Format:       assetInfo.Format,
 					Replacements: assetInfo.Replacements,
-					Asset:        ptr.String(assetInfo.Template),
+					Asset:        assetInfo.Template,
 				})
 				if goos == osDarwin && goarch == "amd64" {
 					supportedEnvs = append(supportedEnvs, osDarwin)
@@ -107,7 +107,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 			supportedEnvs = []string{goos}
 			asset1 := overrides[0]
 			asset2 := overrides[1]
-			if asset1.Format == asset2.Format && *asset1.Asset == *asset2.Asset {
+			if asset1.Format == asset2.Format && asset1.Asset == asset2.Asset {
 				// format and asset are equal
 				replacements, ok := mergeReplacements(goos, overrides[0].Replacements, overrides[1].Replacements)
 				if ok {
@@ -139,9 +139,9 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 
 	// Decide default Asset
 	defaultAsset := getDefaultAsset(pkgInfo.Format, pkgInfo.Overrides)
-	pkgInfo.Asset = &defaultAsset
+	pkgInfo.Asset = defaultAsset
 
-	pkgInfo.Overrides = normalizeOverridesByAsset(*pkgInfo.Asset, pkgInfo.Overrides)
+	pkgInfo.Overrides = normalizeOverridesByAsset(pkgInfo.Asset, pkgInfo.Overrides)
 
 	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo)
 
@@ -222,7 +222,7 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 				}
 			}
 		}
-		if override.Replacements != nil || override.Format != "" || override.Asset != nil {
+		if override.Replacements != nil || override.Format != "" || override.Asset != "" {
 			ret = append(ret, override)
 		}
 	}
@@ -232,10 +232,10 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key string) bool {
 	isOS := runtime.IsOS(key)
 	var asset string
-	if override.Asset != nil {
-		asset = *override.Asset
+	if override.Asset != "" {
+		asset = override.Asset
 	} else {
-		asset = *pkgInfo.Asset
+		asset = pkgInfo.Asset
 	}
 	var checksumAsset string
 	if override.Checksum != nil {
@@ -252,11 +252,11 @@ func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key s
 func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Override) []*registry.Override {
 	ret := []*registry.Override{}
 	for _, override := range overrides {
-		if *override.Asset != defaultAsset {
+		if override.Asset != defaultAsset {
 			ret = append(ret, override)
 			continue
 		}
-		override.Asset = nil
+		override.Asset = ""
 		if override.Format != "" || len(override.Replacements) != 0 {
 			ret = append(ret, override)
 		}
@@ -271,7 +271,7 @@ func getDefaultAsset(defaultFormat string, overrides []*registry.Override) strin
 			continue
 		}
 		override.Format = ""
-		assetCounts[*override.Asset]++
+		assetCounts[override.Asset]++
 	}
 	var maxCnt int
 	var defaultAsset string

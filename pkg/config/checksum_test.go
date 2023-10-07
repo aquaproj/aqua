@@ -6,7 +6,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -60,7 +59,7 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 					Format:    "tar.gz",
 					Replacements: map[string]string{
 						"darwin": "macOS",
@@ -205,7 +204,7 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestPackage_RenderChecksumFileName(t *testing.T) {
+func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name             string
@@ -224,7 +223,7 @@ func TestPackage_RenderChecksumFileName(t *testing.T) {
 					Type:      "github_release",
 					RepoOwner: "cli",
 					RepoName:  "cli",
-					Asset:     ptr.String("gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}"),
+					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 					Checksum: &registry.Checksum{
 						Type:  "github_release",
 						Asset: "gh_{{trimV .Version}}_checksums.txt",
@@ -259,7 +258,7 @@ func TestPackage_RenderChecksumFileName(t *testing.T) {
 	}
 }
 
-func TestPackage_RenderChecksumURL(t *testing.T) {
+func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name  string

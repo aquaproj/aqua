@@ -30,7 +30,7 @@ type PackageInfo struct {
 	RepoName           string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Description        string             `json:"description,omitempty" yaml:",omitempty"`
 	Link               string             `json:"link,omitempty" yaml:",omitempty"`
-	Asset              *string            `json:"asset,omitempty" yaml:",omitempty"`
+	Asset              string             `json:"asset,omitempty" yaml:",omitempty"`
 	Crate              string             `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo             `json:"cargo,omitempty"`
 	URL                string             `json:"url,omitempty" yaml:",omitempty"`
@@ -70,7 +70,7 @@ type VersionOverride struct {
 	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=go_build"`
 	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
+	Asset              string          `yaml:",omitempty" json:"asset,omitempty"`
 	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Path               string          `yaml:",omitempty" json:"path,omitempty"`
@@ -100,7 +100,7 @@ type Override struct {
 	GOArch             string          `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=386,enum=amd64,enum=arm,enum=arm64,enum=mips,enum=mips64,enum=mips64le,enum=mipsle,enum=ppc64,enum=ppc64le,enum=riscv64,enum=s390x"`
 	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=go_build"`
 	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
-	Asset              *string         `yaml:",omitempty" json:"asset,omitempty"`
+	Asset              string          `yaml:",omitempty" json:"asset,omitempty"`
 	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
 	Cargo              *Cargo          `json:"cargo,omitempty"`
 	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
@@ -163,22 +163,22 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
 		p.URL = ""
-		p.Asset = nil
+		p.Asset = ""
 		p.Crate = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
 		p.URL = ""
 		p.Path = ""
-		p.Asset = nil
+		p.Asset = ""
 		p.Crate = ""
 		p.Cargo = nil
 		p.Format = ""
 	case PkgInfoTypeHTTP:
 		p.Path = ""
-		p.Asset = nil
+		p.Asset = ""
 	case PkgInfoTypeGoInstall:
 		p.URL = ""
-		p.Asset = nil
+		p.Asset = ""
 		p.Crate = ""
 		p.Cargo = nil
 		p.WindowsExt = ""
@@ -190,7 +190,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.AppendExt = nil
 	case PkgInfoTypeGoBuild:
 		p.URL = ""
-		p.Asset = nil
+		p.Asset = ""
 		p.Crate = ""
 		p.Cargo = nil
 		p.WindowsExt = ""
@@ -202,7 +202,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.AppendExt = nil
 	case PkgInfoTypeCargo:
 		p.URL = ""
-		p.Asset = nil
+		p.Asset = ""
 		p.Path = ""
 		p.WindowsExt = ""
 		p.CompleteWindowsExt = nil
@@ -226,7 +226,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.RepoName != "" {
 		pkg.RepoName = child.RepoName
 	}
-	if child.Asset != nil {
+	if child.Asset != "" {
 		pkg.Asset = child.Asset
 	}
 	if child.Crate != "" {
@@ -316,7 +316,7 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 		p.Type = ov.Type
 	}
 
-	if ov.Asset != nil {
+	if ov.Asset != "" {
 		p.Asset = ov.Asset
 	}
 
@@ -539,7 +539,7 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 		if !p.HasRepo() {
 			return errRepoRequired
 		}
-		if p.Asset == nil {
+		if p.Asset == "" {
 			return errAssetRequired
 		}
 		return nil
@@ -578,8 +578,8 @@ func (p *PackageInfo) defaultCmdName() string {
 		return p.Name
 	}
 	if p.Type == PkgInfoTypeGoInstall {
-		if p.Asset != nil {
-			return *p.Asset
+		if p.Asset != "" {
+			return p.Asset
 		}
 		return path.Base(p.GetPath())
 	}

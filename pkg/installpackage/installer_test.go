@@ -13,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
@@ -74,7 +73,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "ci-info",
-							Asset:     ptr.String("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+							Asset:     "ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz",
 						},
 					},
 				},
@@ -126,7 +125,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 							Type:      "github_release",
 							RepoOwner: "suzuki-shunsuke",
 							RepoName:  "ci-info",
-							Asset:     ptr.String("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+							Asset:     "ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz",
 						},
 					},
 				},
@@ -230,7 +229,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 					Type:      "github_release",
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
-					Asset:     ptr.String("ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz"),
+					Asset:     "ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz",
 				},
 				Package: &aqua.Package{
 					Name:     "suzuki-shunsuke/ci-info",

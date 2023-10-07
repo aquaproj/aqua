@@ -3,7 +3,6 @@ package registry
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 )
@@ -25,7 +24,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 				RepoOwner:   "abiosoft",
 				RepoName:    "colima",
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
-				Asset:       ptr.String("colima-amd64"),
+				Asset:       "colima-amd64",
 				Files: []*File{
 					{
 						Name: proxyName,
