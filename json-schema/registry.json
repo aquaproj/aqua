@@ -41,10 +41,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "type"
-      ]
+      "type": "object"
     },
     "Cargo": {
       "properties": {
