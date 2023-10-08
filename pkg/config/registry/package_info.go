@@ -61,7 +61,7 @@ type PackageInfo struct {
 }
 
 type Build struct {
-	Type         string        `validate:"required" json:"type" jsonschema:"enum=enum=go_install,enum=go_build"`
+	Type         string        `json:"type,omitempty" yaml:",omitempty" jsonschema:"enum=enum=go_install,enum=go_build"`
 	Path         string        `json:"path,omitempty" yaml:",omitempty"`
 	Files        []*File       `json:"files,omitempty" yaml:",omitempty"`
 	ExcludedEnvs SupportedEnvs `yaml:"excluded_envs,omitempty" json:"excluded_envs,omitempty"`
