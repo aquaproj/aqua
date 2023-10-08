@@ -30,5 +30,10 @@ func (ov *Override) Match(rt *runtime.Runtime) bool {
 	if ov.GOArch != "" && ov.GOArch != rt.GOARCH {
 		return false
 	}
+	if ov.Envs != nil {
+		if !matchEnvs(ov.Envs, rt.GOOS, rt.GOARCH, rt.GOOS+"/"+rt.GOARCH, false) {
+			return false
+		}
+	}
 	return true
 }

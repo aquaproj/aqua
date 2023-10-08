@@ -134,6 +134,7 @@ type Override struct {
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	AppendExt          *bool           `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
+	Envs               SupportedEnvs   `yaml:",omitempty" json:"envs,omitempty"`
 }
 
 func (p *PackageInfo) Copy() *PackageInfo {

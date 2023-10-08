@@ -341,6 +341,9 @@
         },
         "append_ext": {
           "type": "boolean"
+        },
+        "envs": {
+          "$ref": "#/$defs/SupportedEnvs"
         }
       },
       "additionalProperties": false,
