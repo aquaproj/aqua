@@ -409,7 +409,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 }
 
 func (p *PackageInfo) OverrideByBuild() {
-	p.Type = p.Build.Type
+	if p.Type != p.Build.Type {
+		p.resetByPkgType(p.Build.Type)
+		p.Type = p.Build.Type
+	}
 	if p.Build.Path != "" {
 		p.Path = p.Build.Path
 	}
