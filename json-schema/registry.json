@@ -15,6 +15,37 @@
         "name"
       ]
     },
+    "Build": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "enum=go_install",
+            "go_build"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
+        "excluded_envs": {
+          "$ref": "#/$defs/SupportedEnvs"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ]
+    },
     "Cargo": {
       "properties": {
         "features": {
@@ -447,6 +478,12 @@
         "private": {
           "type": "boolean"
         },
+        "build": {
+          "$ref": "#/$defs/Build"
+        },
+        "append_ext": {
+          "type": "boolean"
+        },
         "version_constraint": {
           "type": "string"
         },
@@ -455,9 +492,6 @@
             "$ref": "#/$defs/VersionOverride"
           },
           "type": "array"
-        },
-        "append_ext": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -642,6 +676,9 @@
         },
         "append_ext": {
           "type": "boolean"
+        },
+        "build": {
+          "$ref": "#/$defs/Build"
         }
       },
       "additionalProperties": false,
