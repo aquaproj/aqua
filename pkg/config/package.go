@@ -288,10 +288,7 @@ func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		return "", nil
 	case PkgInfoTypeGoInstall:
-		if pkgInfo.Asset != "" {
-			return pkgInfo.Asset, nil
-		}
-		return path.Base(pkgInfo.GetPath()), nil
+		return path.Base(pkgInfo.GetFiles()[0].Name), nil
 	case PkgInfoTypeGitHubContent:
 		s, err := p.RenderTemplateString(pkgInfo.Path, rt)
 		if err != nil {
