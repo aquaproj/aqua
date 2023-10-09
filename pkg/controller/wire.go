@@ -26,6 +26,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
+	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
@@ -711,6 +712,61 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 	)
 	return &updatechecksum.Controller{}
+}
+
+func InitializeUpdateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
+	wire.Build(
+		update.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(update.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+		),
+		// wire.NewSet(
+		// 	download.NewChecksumDownloader,
+		// 	wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
+		// ),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
+		),
+		afero.NewOsFs,
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+	)
+	return &update.Controller{}
 }
 
 func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
