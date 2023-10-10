@@ -736,6 +736,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(update.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(

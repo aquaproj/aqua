@@ -259,10 +259,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 }
 
 func InitializeUpdateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
+	repositoriesService := github.New(ctx)
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReaderImpl := reader.New(fs, param)
-	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := exec.New()
@@ -271,7 +271,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
-	controller := update.New(param, configFinder, configReaderImpl, installerImpl, fs, rt)
+	controller := update.New(param, repositoriesService, configFinder, configReaderImpl, installerImpl, fs, rt)
 	return controller
 }
 

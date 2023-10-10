@@ -12,7 +12,7 @@ import (
 )
 
 type Controller struct {
-	github            RepositoriesService
+	gh                RepositoriesService
 	rootDir           string
 	configFinder      ConfigFinder
 	configReader      reader.ConfigReader
@@ -28,8 +28,9 @@ type RepositoriesService interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime) *Controller {
+func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime) *Controller {
 	return &Controller{
+		gh:                gh,
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,

@@ -14,7 +14,7 @@ func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry,
 	}
 
 	logE.Debug("getting the latest release")
-	release, _, err := c.github.GetLatestRelease(ctx, rgst.RepoOwner, rgst.RepoName)
+	release, _, err := c.gh.GetLatestRelease(ctx, rgst.RepoOwner, rgst.RepoName)
 	if err != nil {
 		return "", fmt.Errorf("get the latest release by GitHub API: %w", err)
 	}
