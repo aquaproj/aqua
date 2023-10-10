@@ -42,7 +42,7 @@ jobs:
       - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         if: inputs.aqua_version == ''
         with:
-          go-version: 1.21.2
+          go-version: 1.21.3
           cache: true
       - run: go install ./cmd/aqua
         if: inputs.aqua_version == ''
@@ -129,7 +129,7 @@ jobs:
       - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         if: inputs.aqua_version == ''
         with:
-          go-version: 1.21.2
+          go-version: 1.21.3
           cache: true
       - run: go install ./cmd/aqua
         if: inputs.aqua_version == ''
