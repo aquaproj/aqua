@@ -58,7 +58,7 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, cfgFilePath
 		return fmt.Errorf("parse configuration file as YAML: %w", err)
 	}
 
-	if err := ast.UpdateRegistries(file, newVersions); err != nil {
+	if err := ast.UpdateRegistries(logE, file, newVersions); err != nil {
 		return fmt.Errorf("parse a configuration as YAML to update registries: %w", err)
 	}
 
