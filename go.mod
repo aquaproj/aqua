@@ -9,7 +9,7 @@ require (
 	github.com/codingsince1985/checksum v1.3.0
 	github.com/forPelevin/gomoji v1.1.8
 	github.com/goccy/go-yaml v1.11.2
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v55 v55.0.0
 	github.com/google/wire v0.5.0
 	github.com/hashicorp/go-version v1.6.0
