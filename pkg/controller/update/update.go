@@ -58,6 +58,8 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, cfgFilePath
 		return fmt.Errorf("parse configuration file as YAML: %w", err)
 	}
 
+	// TODO consider how to update commit hashes
+
 	if err := ast.UpdateRegistries(logE, file, newVersions); err != nil {
 		return fmt.Errorf("parse a configuration as YAML to update registries: %w", err)
 	}
@@ -87,11 +89,11 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, cfgFilePath
 		}()
 	}
 	// install registries
-	_, err = c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	registryConfigs, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
 	// update packages
-	return c.updatePackages(ctx, logE)
+	return c.updatePackages(ctx, logE, cfgFilePath, registryConfigs)
 }

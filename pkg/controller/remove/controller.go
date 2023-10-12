@@ -20,7 +20,7 @@ type Controller struct {
 }
 
 type FuzzyFinder interface {
-	FindMulti(pkgs []fuzzyfinder.Item, hasPreview bool) ([]int, error)
+	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
 func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader reader.ConfigReader, registryInstaller rgst.Installer, fuzzyFinder FuzzyFinder) *Controller {

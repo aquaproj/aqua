@@ -93,18 +93,24 @@ func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *co
 
 func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*aqua.Package, error) {
 	// maps the package and the registry
-	var pkgs []fuzzyfinder.Item
+	var items []*fuzzyfinder.Item
+	var pkgs []*fuzzyfinder.Package
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
-			pkgs = append(pkgs, &fuzzyfinder.Package{
+			p := &fuzzyfinder.Package{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
+			}
+			pkgs = append(pkgs, p)
+			items = append(items, &fuzzyfinder.Item{
+				Item:    p.Item(),
+				Preview: fuzzyfinder.PreviewPackage(p),
 			})
 		}
 	}
 
 	// Launch the fuzzy finder
-	idxes, err := c.fuzzyFinder.FindMulti(pkgs, true)
+	idxes, err := c.fuzzyFinder.FindMulti(items, true)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil, nil
@@ -113,7 +119,7 @@ func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry,
 	}
 	arr := make([]*aqua.Package, len(idxes))
 	for i, idx := range idxes {
-		arr[i] = c.getOutputtedPkg(ctx, logE, param, pkgs[idx].(*fuzzyfinder.Package)) //nolint:forcetypeassert
+		arr[i] = c.getOutputtedPkg(ctx, logE, param, pkgs[idx])
 	}
 
 	return arr, nil
@@ -175,36 +181,6 @@ func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Ent
 		outputPkgs = pkgs
 	}
 	return outputPkgs, nil
-}
-
-func (c *Controller) getVersionFromGitHub(ctx context.Context, logE *logrus.Entry, param *config.Param, pkgInfo *registry.PackageInfo) string {
-	if pkgInfo.VersionSource == "github_tag" {
-		return c.getVersionFromGitHubTag(ctx, logE, param, pkgInfo)
-	}
-	if param.SelectVersion {
-		return c.selectVersionFromReleases(ctx, logE, pkgInfo)
-	}
-	if pkgInfo.VersionFilter != "" || pkgInfo.VersionPrefix != "" {
-		return c.listAndGetTagName(ctx, logE, pkgInfo)
-	}
-	return c.getVersionFromLatestRelease(ctx, logE, pkgInfo)
-}
-
-func (c *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) string {
-	if pkg.Version != "" {
-		return pkg.Version
-	}
-	pkgInfo := pkg.PackageInfo
-	if pkgInfo.Type == "cargo" {
-		return c.getCargoVersion(ctx, logE, param, pkg)
-	}
-	if c.github == nil {
-		return ""
-	}
-	if pkgInfo.HasRepo() {
-		return c.getVersionFromGitHub(ctx, logE, param, pkgInfo)
-	}
-	return ""
 }
 
 func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) *aqua.Package {

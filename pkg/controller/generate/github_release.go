@@ -1,49 +1,48 @@
 package generate
 
 import (
-	"context"
 	"strings"
 
 	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
-	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	releases := c.listReleases(ctx, logE, pkgInfo)
-	versions := make([]fuzzyfinder.Item, len(releases))
-	for i, release := range releases {
-		versions[i] = &fuzzyfinder.Version{
-			Name:        release.GetName(),
-			Version:     release.GetTagName(),
-			Description: release.GetBody(),
-			URL:         release.GetHTMLURL(),
-		}
-	}
-	idx, err := c.fuzzyFinder.Find(versions, true)
-	if err != nil {
-		return ""
-	}
-	return versions[idx].(*fuzzyfinder.Version).Version //nolint:forcetypeassert
-}
+// func (c *Controller) selectVersionFromReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+// 	releases := c.listReleases(ctx, logE, pkgInfo)
+// 	items := make([]*fuzzyfinder.Item, len(releases))
+// 	for i, release := range releases {
+// 		items[i] = &fuzzyfinder.Item{
+// 			Item: release.GetTagName(),
+// 			Preview: fuzzyfinder.PreviewVersion(&fuzzyfinder.Version{
+// 				Name:        release.GetName(),
+// 				Version:     release.GetTagName(),
+// 				Description: release.GetBody(),
+// 				URL:         release.GetHTMLURL(),
+// 			}),
+// 		}
+// 	}
+// 	idx, err := c.fuzzyFinder.Find(items, true)
+// 	if err != nil {
+// 		return ""
+// 	}
+// 	return items[idx].Item
+// }
 
-func (c *Controller) getVersionFromLatestRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	release, _, err := c.github.GetLatestRelease(ctx, repoOwner, repoName)
-	if err != nil {
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"repo_owner": repoOwner,
-			"repo_name":  repoName,
-		}).Warn("get the latest release")
-		return ""
-	}
-	return release.GetTagName()
-}
+// func (c *Controller) getVersionFromLatestRelease(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+// 	repoOwner := pkgInfo.RepoOwner
+// 	repoName := pkgInfo.RepoName
+// 	release, _, err := c.github.GetLatestRelease(ctx, repoOwner, repoName)
+// 	if err != nil {
+// 		logerr.WithError(logE, err).WithFields(logrus.Fields{
+// 			"repo_owner": repoOwner,
+// 			"repo_name":  repoName,
+// 		}).Warn("get the latest release")
+// 		return ""
+// 	}
+// 	return release.GetTagName()
+// }
 
 type Filter struct {
 	Prefix     string
@@ -89,73 +88,73 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 	return filters, nil
 }
 
-func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 100, //nolint:gomnd
-	}
-	var arr []*github.RepositoryRelease
+// func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
+// 	repoOwner := pkgInfo.RepoOwner
+// 	repoName := pkgInfo.RepoName
+// 	opt := &github.ListOptions{
+// 		PerPage: 100, //nolint:gomnd
+// 	}
+// 	var arr []*github.RepositoryRelease
+//
+// 	filters, err := createFilters(pkgInfo)
+// 	if err != nil {
+// 		return nil
+// 	}
+//
+// 	for i := 0; i < 10; i++ {
+// 		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
+// 		if err != nil {
+// 			logerr.WithError(logE, err).WithFields(logrus.Fields{
+// 				"repo_owner": repoOwner,
+// 				"repo_name":  repoName,
+// 			}).Warn("list releases")
+// 			return arr
+// 		}
+// 		for _, release := range releases {
+// 			if filterRelease(release, filters) {
+// 				arr = append(arr, release)
+// 			}
+// 		}
+// 		if len(releases) != opt.PerPage {
+// 			return arr
+// 		}
+// 		opt.Page++
+// 	}
+// 	return arr
+// }
 
-	filters, err := createFilters(pkgInfo)
-	if err != nil {
-		return nil
-	}
-
-	for i := 0; i < 10; i++ {
-		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return arr
-		}
-		for _, release := range releases {
-			if filterRelease(release, filters) {
-				arr = append(arr, release)
-			}
-		}
-		if len(releases) != opt.PerPage {
-			return arr
-		}
-		opt.Page++
-	}
-	return arr
-}
-
-func (c *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
-	repoOwner := pkgInfo.RepoOwner
-	repoName := pkgInfo.RepoName
-	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
-	}
-
-	filters, err := createFilters(pkgInfo)
-	if err != nil {
-		return ""
-	}
-
-	for {
-		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
-			return ""
-		}
-		for _, release := range releases {
-			if filterRelease(release, filters) {
-				return release.GetTagName()
-			}
-		}
-		if len(releases) != opt.PerPage {
-			return ""
-		}
-		opt.Page++
-	}
-}
+// func (c *Controller) listAndGetTagName(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) string {
+// 	repoOwner := pkgInfo.RepoOwner
+// 	repoName := pkgInfo.RepoName
+// 	opt := &github.ListOptions{
+// 		PerPage: 30, //nolint:gomnd
+// 	}
+//
+// 	filters, err := createFilters(pkgInfo)
+// 	if err != nil {
+// 		return ""
+// 	}
+//
+// 	for {
+// 		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
+// 		if err != nil {
+// 			logerr.WithError(logE, err).WithFields(logrus.Fields{
+// 				"repo_owner": repoOwner,
+// 				"repo_name":  repoName,
+// 			}).Warn("list releases")
+// 			return ""
+// 		}
+// 		for _, release := range releases {
+// 			if filterRelease(release, filters) {
+// 				return release.GetTagName()
+// 			}
+// 		}
+// 		if len(releases) != opt.PerPage {
+// 			return ""
+// 		}
+// 		opt.Page++
+// 	}
+// }
 
 func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
 	if release.GetPrerelease() {

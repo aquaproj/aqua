@@ -25,12 +25,12 @@ type Controller struct {
 }
 
 type VersionSelector interface {
-	Find(versions []*fuzzyfinder.Version, hasPreview bool) (int, error)
+	Find(versions []*fuzzyfinder.Item, hasPreview bool) (int, error)
 }
 
 type FuzzyFinder interface {
-	Find(items []fuzzyfinder.Item, hasPreview bool) (int, error)
-	FindMulti(items []fuzzyfinder.Item, hasPreview bool) ([]int, error)
+	Find(items []*fuzzyfinder.Item, hasPreview bool) (int, error)
+	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
 func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, cargoClient cargo.Client) *Controller {
