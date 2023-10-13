@@ -43,6 +43,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 
 	"github.com/google/wire"
 	"github.com/spf13/afero"
@@ -152,6 +153,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -169,6 +172,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			fuzzyfinder.New,
 			wire.Bind(new(generate.FuzzyFinder), new(*fuzzyfinder.Finder)),
+			wire.Bind(new(versiongetter.FuzzyFinder), new(*fuzzyfinder.Finder)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -196,7 +200,16 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			cargo.NewClientImpl,
 			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+			wire.Bind(new(versiongetter.CargoClient), new(*cargo.ClientImpl)),
 		),
+		wire.NewSet(
+			versiongetter.NewFuzzy,
+			wire.Bind(new(generate.FuzzyGetter), new(*versiongetter.FuzzyGetter)),
+		),
+		versiongetter.NewGenerator,
+		versiongetter.NewCargo,
+		versiongetter.NewGitHubRelease,
+		versiongetter.NewGitHubTag,
 	)
 	return &generate.Controller{}
 }

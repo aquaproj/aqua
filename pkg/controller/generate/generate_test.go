@@ -20,6 +20,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/sirupsen/logrus"
 )
 
@@ -402,7 +403,7 @@ packages:
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
 			cargoClient := &cargo.MockClient{}
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, cargoClient)
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, cargoClient, versiongetter.NewMockFuzzyGetter(""))
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

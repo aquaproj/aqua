@@ -42,6 +42,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
@@ -104,7 +105,12 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	clientImpl := cargo.NewClientImpl(httpClient)
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, clientImpl)
+	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
+	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
+	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
+	versionGetterGenerator := versiongetter.NewGenerator(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, versionGetterGenerator)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, clientImpl, fuzzyGetter)
 	return controller
 }
 

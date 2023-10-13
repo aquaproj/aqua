@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
 )
 
 type VersionGetter interface {
@@ -179,59 +177,28 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 // 	return c.getVersionFromLatestRelease(ctx, logE, pkgInfo)
 // }
 
-func (c *Controller) versionGetter(pkg *registry.PackageInfo) VersionGetter {
-	if pkg.Type == "cargo" {
-		return &CargoVersionGetter{
-			client: c.cargoClient,
-		}
-	}
-	if c.github == nil {
-		return nil
-	}
-	if !pkg.HasRepo() {
-		return nil
-	}
-	if pkg.VersionSource == "github_tag" {
-		return &GitHubTagVersionGetter{
-			gh: c.github,
-		}
-	}
-	return &GitHubReleaseVersionGetter{
-		gh: c.github,
-	}
-}
+// func (c *Controller) versionGetter(pkg *registry.PackageInfo) VersionGetter {
+// 	if pkg.Type == "cargo" {
+// 		return &CargoVersionGetter{
+// 			client: c.cargoClient,
+// 		}
+// 	}
+// 	if c.github == nil {
+// 		return nil
+// 	}
+// 	if !pkg.HasRepo() {
+// 		return nil
+// 	}
+// 	if pkg.VersionSource == "github_tag" {
+// 		return &GitHubTagVersionGetter{
+// 			gh: c.github,
+// 		}
+// 	}
+// 	return &GitHubReleaseVersionGetter{
+// 		gh: c.github,
+// 	}
+// }
 
-func (c *Controller) getVersion(ctx context.Context, _ *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) string {
-	if pkg.Version != "" {
-		return pkg.Version
-	}
-	pkgInfo := pkg.PackageInfo
-
-	filters, err := createFilters(pkgInfo)
-	if err != nil {
-		return ""
-	}
-
-	versionGetter := c.versionGetter(pkgInfo)
-	if versionGetter == nil {
-		return ""
-	}
-
-	if param.SelectVersion {
-		versions, err := versionGetter.List(ctx, pkgInfo, filters)
-		if err != nil {
-			return ""
-		}
-		idx, err := c.fuzzyFinder.Find(versions, true)
-		if err != nil {
-			return ""
-		}
-		return versions[idx].Item
-	}
-
-	version, err := versionGetter.Get(ctx, pkgInfo, filters)
-	if err != nil {
-		return ""
-	}
-	return version
-}
+// func (c *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) string {
+// 	return c.fuzzyGetter.Get(ctx, logE, param, pkg)
+// }
