@@ -40,6 +40,13 @@ func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName
 	if refNode.Value == newVersion {
 		return false
 	}
+	if commitHashPattern.MatchString(refNode.Value) {
+		logE.WithFields(logrus.Fields{
+			"registry_name":   rgstName,
+			"current_version": refNode.Value,
+		}).Debug("skip updating a commit hash")
+		return false
+	}
 	logE.WithFields(logrus.Fields{
 		"old_version":   refNode.Value,
 		"new_version":   newVersion,

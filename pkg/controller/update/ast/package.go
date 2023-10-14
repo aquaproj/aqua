@@ -33,7 +33,7 @@ func UpdatePackages(logE *logrus.Entry, file *ast.File, newVersions map[string]s
 	return updated, nil
 }
 
-func parsePackageNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:cyclop
+func parsePackageNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:cyclop,funlen
 	mvs, err := normalizeMappingValueNodes(node)
 	if err != nil {
 		return false, err
@@ -79,6 +79,13 @@ func parsePackageNode(logE *logrus.Entry, node ast.Node, newVersions map[string]
 	}
 	if pkgVersion == newVersion {
 		logE.Debug("already latest")
+		return false, nil
+	}
+	if commitHashPattern.MatchString(pkgVersion) {
+		logE.WithFields(logrus.Fields{
+			"current_version": pkgVersion,
+			"package_name":    pkgName,
+		}).Debug("skip updating a commit hash")
 		return false, nil
 	}
 	logE.WithFields(logrus.Fields{

@@ -25,9 +25,13 @@ func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry,
 	return release.GetTagName(), nil
 }
 
-func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config) error {
+func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config) error { //nolint:cyclop
 	newVersions := map[string]string{}
 	for _, rgst := range cfg.Registries {
+		if commitHashPattern.MatchString(rgst.Ref) {
+			// Skip updating commit hashes
+			continue
+		}
 		newVersion, err := c.newRegistryVersion(ctx, logE, rgst)
 		if err != nil {
 			return err

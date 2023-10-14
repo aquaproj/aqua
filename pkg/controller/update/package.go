@@ -22,17 +22,21 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, par
 		if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 			return fmt.Errorf("read a configuration file: %w", err)
 		}
-		items := make([]*fuzzyfinder.Item, len(cfg.Packages))
-		for i, pkg := range cfg.Packages {
-			if pkg.Registry != "standard" {
-				items[i] = &fuzzyfinder.Item{
-					Item: fmt.Sprintf("%s,%s@%s", pkg.Registry, pkg.Name, pkg.Version),
-				}
+		items := make([]*fuzzyfinder.Item, 0, len(cfg.Packages))
+		for _, pkg := range cfg.Packages {
+			if commitHashPattern.MatchString(pkg.Version) {
+				// Skip updating commit hashes
 				continue
 			}
-			items[i] = &fuzzyfinder.Item{
-				Item: fmt.Sprintf("%s@%s", pkg.Name, pkg.Version),
+			var item string
+			if pkg.Registry != "standard" {
+				item = fmt.Sprintf("%s,%s@%s", pkg.Registry, pkg.Name, pkg.Version)
+			} else {
+				item = fmt.Sprintf("%s@%s", pkg.Name, pkg.Version)
 			}
+			items = append(items, &fuzzyfinder.Item{
+				Item: item,
+			})
 		}
 		idxs, err := c.fuzzyFinder.FindMulti(items, false)
 		if err != nil {
