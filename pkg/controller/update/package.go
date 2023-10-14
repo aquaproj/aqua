@@ -27,7 +27,11 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, par
 			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
 			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
 		}
-		if err := c.updateFile(logE, cfgFilePath, newVersions); err != nil {
+		filePath := cfgFilePath
+		if pkg.Package.FilePath != "" {
+			filePath = pkg.Package.FilePath
+		}
+		if err := c.updateFile(logE, filePath, newVersions); err != nil {
 			return fmt.Errorf("update a package: %w", err)
 		}
 	}
