@@ -86,6 +86,15 @@ This command doesn't update packages if the field 'version' is used.
       version: v0.118.0 # Doesn't update
 
 So if you don't want to update specific packages, the field 'version' is useful.
+
+You can specify packages with command names. aqua finds packages that have these commands and updates them.
+
+  $ aqua update <command name> [<command name> ...]
+
+e.g.
+
+  # Update cli/cli
+  $ aqua update gh
 `
 
 func (r *Runner) updateAction(c *cli.Context) error {
