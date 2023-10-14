@@ -11,14 +11,10 @@ import (
 
 func (r *Runner) newUpdateCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "update",
-		Usage: "Update tools",
-		Description: `Update tools.
-
-e.g.
-$ aqua update
-`,
-		Action: r.updateAction,
+		Name:        "update",
+		Usage:       "Update registries and packages",
+		Description: updateDescription,
+		Action:      r.updateAction,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:  "i",
@@ -42,6 +38,54 @@ $ aqua update
 		},
 	}
 }
+
+const updateDescription = `Update registries and packages.
+If no argument is passed, all registries and packages are updated to the latest.
+
+  # Update all packages and registries to the latest versions
+  $ aqua update
+
+This command gets the latest version from GitHub Releases, GitHub Tags, and crates.io and updates aqua.yaml.
+This command doesn't install packages.
+This command updates only a nearest aqua.yaml from the current directory.
+If this command finds a aqua.yaml, it ignores other aqua.yaml including global configuration files ($AQUA_GLOBAL_CONFIG).
+
+So if you want to update other files, please change the current directory or specify the configuration file path with the option '-c'.
+
+  $ aqua -c foo/aqua.yaml update
+
+If you want to update only registries, please use the --only-registry [-r] option.
+
+  # Update only registries
+  $ aqua update -r
+
+If you want to update only packages, please use the --only-package [-p] option.
+
+  # Update only packages
+  $ aqua update -p
+
+If you want to update only specific packages, please use the -i option.
+You can select packages with the fuzzy finder.
+If -i option is used, registries aren't updated.
+
+  # Select updated packages with fuzzy finder
+  $ aqua update -i
+
+If you want to select versions, please use the --select-version [-s] option.
+You can select versions with the fuzzy finder. You can not only update but also downgrade packages.
+
+  # Select updated packages and versions with fuzzy finder
+  $ aqua update -i -s
+
+This command doesn't update packages if the field 'version' is used.
+
+  packages:
+    - name: cli/cli@v2.0.0 # Update
+    - name: gohugoio/hugo
+      version: v0.118.0 # Doesn't update
+
+So if you don't want to update specific packages, the field 'version' is useful.
+`
 
 func (r *Runner) updateAction(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
