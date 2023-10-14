@@ -46,6 +46,10 @@ If no argument is passed, all registries and packages are updated to the latest.
   # Update all packages and registries to the latest versions
   $ aqua update
 
+This command has an alias "up"
+
+  $ aqua up
+
 This command gets the latest version from GitHub Releases, GitHub Tags, and crates.io and updates aqua.yaml.
 This command doesn't update commit hashes.
 This command doesn't install packages.
