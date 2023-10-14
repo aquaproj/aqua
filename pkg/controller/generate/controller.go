@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
-	"github.com/aquaproj/aqua/v2/pkg/config"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
@@ -29,7 +28,7 @@ type Controller struct {
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) string
+	Get(ctx context.Context, logE *logrus.Entry, pkg *fuzzyfinder.Package, useFinder bool) string
 }
 
 type VersionSelector interface {

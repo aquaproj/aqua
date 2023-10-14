@@ -36,9 +36,9 @@ func findMappingValueFromNode(body ast.Node, key string) (*ast.MappingValueNode,
 	return findMappingValue(values, key), nil
 }
 
-func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName, newVersion string) {
+func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName, newVersion string) bool {
 	if refNode.Value == newVersion {
-		return
+		return false
 	}
 	logE.WithFields(logrus.Fields{
 		"old_version":   refNode.Value,
@@ -46,12 +46,13 @@ func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName
 		"registry_name": rgstName,
 	}).Info("updating a registry")
 	refNode.Value = newVersion
+	return true
 }
 
-func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) error { //nolint:gocognit,cyclop,funlen
+func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:gocognit,cyclop,funlen
 	mvs, err := normalizeMappingValueNodes(node)
 	if err != nil {
-		return err
+		return false, err
 	}
 	var refNode *ast.StringNode
 	var newVersion string
@@ -61,18 +62,17 @@ func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string
 		case "ref":
 			sn, ok := mvn.Value.(*ast.StringNode)
 			if !ok {
-				return errors.New("ref must be a string")
+				return false, errors.New("ref must be a string")
 			}
 			if newVersion == "" {
 				refNode = sn
 				continue
 			}
-			updateRegistryVersion(logE, sn, rgstName, newVersion)
-			return nil
+			return updateRegistryVersion(logE, sn, rgstName, newVersion), nil
 		case "type":
 			sn, ok := mvn.Value.(*ast.StringNode)
 			if !ok {
-				return errors.New("type must be a string")
+				return false, errors.New("type must be a string")
 			}
 			if sn.Value != typeStandard && sn.Value != "github_content" {
 				break
@@ -87,49 +87,52 @@ func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string
 		case "name":
 			sn, ok := mvn.Value.(*ast.StringNode)
 			if !ok {
-				return errors.New("name must be a string")
+				return false, errors.New("name must be a string")
 			}
 			version, ok := newVersions[sn.Value]
 			if !ok {
-				return nil
+				return false, nil
 			}
 			if refNode == nil {
 				rgstName = sn.Value
 				newVersion = version
 				continue
 			}
-			updateRegistryVersion(logE, refNode, sn.Value, version)
-			return nil
+			return updateRegistryVersion(logE, refNode, sn.Value, version), nil
 		default:
 			continue // Ignore unknown fields
 		}
 	}
 	if refNode == nil || rgstName == "" {
-		return nil
+		return false, nil
 	}
 	version, ok := newVersions[rgstName]
 	if !ok {
-		return nil
+		return false, nil
 	}
-	updateRegistryVersion(logE, refNode, rgstName, version)
-	return nil
+	return updateRegistryVersion(logE, refNode, rgstName, version), nil
 }
 
-func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string]string) error {
+func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string]string) (bool, error) {
 	body := file.Docs[0].Body // DocumentNode
 	mv, err := findMappingValueFromNode(body, "registries")
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	seq, ok := mv.Value.(*ast.SequenceNode)
 	if !ok {
-		return errors.New("the value must be a sequence node")
+		return false, errors.New("the value must be a sequence node")
 	}
+	updated := false
 	for _, value := range seq.Values {
-		if err := parseRegistryNode(logE, value, newVersions); err != nil {
-			return err
+		up, err := parseRegistryNode(logE, value, newVersions)
+		if err != nil {
+			return false, err
+		}
+		if up {
+			updated = true
 		}
 	}
-	return nil
+	return updated, nil
 }

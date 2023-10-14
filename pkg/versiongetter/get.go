@@ -3,7 +3,6 @@ package versiongetter
 import (
 	"context"
 
-	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
 )
@@ -30,7 +29,7 @@ func NewMockFuzzyGetter(s string) *MockFuzzyGetter {
 	}
 }
 
-func (g *MockFuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) string {
+func (g *MockFuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *fuzzyfinder.Package, useFinder bool) string {
 	return g.s
 }
 
@@ -39,10 +38,7 @@ type FuzzyFinder interface {
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) string {
-	if pkg.Version != "" {
-		return pkg.Version
-	}
+func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *fuzzyfinder.Package, useFinder bool) string {
 	pkgInfo := pkg.PackageInfo
 
 	filters, err := createFilters(pkgInfo)
@@ -55,7 +51,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, param *config.Pa
 		return ""
 	}
 
-	if param.SelectVersion {
+	if useFinder {
 		versions, err := versionGetter.List(ctx, pkgInfo, filters)
 		if err != nil {
 			return ""

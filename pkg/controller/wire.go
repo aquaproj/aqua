@@ -737,6 +737,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		wire.NewSet(
 			reader.New,
 			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(update.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
 		// wire.NewSet(
 		// 	download.NewChecksumDownloader,
@@ -751,6 +752,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(update.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -778,6 +781,23 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		wire.NewSet(
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			versiongetter.NewFuzzy,
+			wire.Bind(new(update.FuzzyGetter), new(*versiongetter.FuzzyGetter)),
+		),
+		wire.NewSet(
+			fuzzyfinder.New,
+			wire.Bind(new(versiongetter.FuzzyFinder), new(*fuzzyfinder.Finder)),
+		),
+		versiongetter.NewGenerator,
+		versiongetter.NewCargo,
+		versiongetter.NewGitHubRelease,
+		versiongetter.NewGitHubTag,
+		wire.NewSet(
+			cargo.NewClientImpl,
+			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+			wire.Bind(new(versiongetter.CargoClient), new(*cargo.ClientImpl)),
 		),
 	)
 	return &update.Controller{}

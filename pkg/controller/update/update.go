@@ -59,17 +59,19 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, cfgFilePath
 	}
 
 	// TODO consider how to update commit hashes
-
-	if err := ast.UpdateRegistries(logE, file, newVersions); err != nil {
+	updated, err := ast.UpdateRegistries(logE, file, newVersions)
+	if err != nil {
 		return fmt.Errorf("parse a configuration as YAML to update registries: %w", err)
 	}
 
-	stat, err := c.fs.Stat(cfgFilePath)
-	if err != nil {
-		return fmt.Errorf("get configuration file stat: %w", err)
-	}
-	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()), stat.Mode()); err != nil {
-		return fmt.Errorf("write the configuration file: %w", err)
+	if updated {
+		stat, err := c.fs.Stat(cfgFilePath)
+		if err != nil {
+			return fmt.Errorf("get configuration file stat: %w", err)
+		}
+		if err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()), stat.Mode()); err != nil {
+			return fmt.Errorf("write the configuration file: %w", err)
+		}
 	}
 
 	var checksums *checksum.Checksums
