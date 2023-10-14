@@ -733,6 +733,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		wire.NewSet(
 			finder.NewConfigFinder,
 			wire.Bind(new(update.ConfigFinder), new(*finder.ConfigFinder)),
+			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -796,6 +797,15 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
 			wire.Bind(new(versiongetter.CargoClient), new(*cargo.ClientImpl)),
 		),
+		wire.NewSet(
+			which.New,
+			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		osenv.New,
 	)
 	return &update.Controller{}
 }

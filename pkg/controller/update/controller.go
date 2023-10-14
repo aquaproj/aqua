@@ -5,6 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
@@ -24,6 +25,7 @@ type Controller struct {
 	requireChecksum   bool
 	fuzzyGetter       FuzzyGetter
 	fuzzyFinder       FuzzyFinder
+	which             which.Controller
 }
 
 type FuzzyFinder interface {
@@ -46,7 +48,7 @@ type RepositoriesService interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder) *Controller {
+func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
 	return &Controller{
 		gh:                gh,
 		rootDir:           param.RootDir,
@@ -58,6 +60,7 @@ func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder,
 		requireChecksum:   param.RequireChecksum,
 		fuzzyGetter:       fuzzyGetter,
 		fuzzyFinder:       fuzzyFinder,
+		which:             whichController,
 	}
 }
 

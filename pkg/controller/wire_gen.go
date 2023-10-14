@@ -284,7 +284,10 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
 	generator := versiongetter.NewGenerator(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generator)
-	controller := update.New(param, repositoriesService, configFinder, configReaderImpl, installerImpl, fs, rt, fuzzyGetter, fuzzyfinderFinder)
+	osEnv := osenv.New()
+	linker := link.New()
+	controllerImpl := which.New(param, configFinder, configReaderImpl, installerImpl, rt, osEnv, fs, linker)
+	controller := update.New(param, repositoriesService, configFinder, configReaderImpl, installerImpl, fs, rt, fuzzyGetter, fuzzyfinderFinder, controllerImpl)
 	return controller
 }
 

@@ -15,7 +15,25 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, rgstCfgs map[string]*registry.Config) error {
+func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, rgstCfgs map[string]*registry.Config) error { //nolint:cyclop
+	newVersions := map[string]string{}
+	for _, arg := range param.Args {
+		findResult, err := c.which.Which(ctx, logE, param, arg)
+		if err != nil {
+			return fmt.Errorf("find a command: %w", err)
+		}
+		pkg := findResult.Package
+		if newVersion := c.getPackageNewVersion(ctx, logE, param, nil, pkg); newVersion != "" {
+			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
+			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
+		}
+		if err := c.updateFile(logE, cfgFilePath, newVersions); err != nil {
+			return fmt.Errorf("update a package: %w", err)
+		}
+	}
+	if len(param.Args) != 0 {
+		return nil
+	}
 	updatedPkgs := map[string]struct{}{}
 	if param.Insert {
 		pkgs, err := c.selectPackages(logE, cfgFilePath)
@@ -33,7 +51,6 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, par
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 	cfgs[cfgFilePath] = cfg
-	newVersions := map[string]string{}
 	for cfgPath, cfg := range cfgs {
 		if err := c.updatePackagesInFile(ctx, logE, param, cfgPath, cfg, rgstCfgs, updatedPkgs, newVersions); err != nil {
 			return err
