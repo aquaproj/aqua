@@ -17,7 +17,7 @@ import (
 
 func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, rgstCfgs map[string]*registry.Config) error { //nolint:cyclop,funlen,gocognit
 	updatedPkgs := map[string]struct{}{}
-	if param.Insert {
+	if param.Insert { //nolint:nestif
 		cfg := &aqua.Config{}
 		if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 			return fmt.Errorf("read a configuration file: %w", err)
@@ -36,6 +36,9 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, par
 		}
 		idxs, err := c.fuzzyFinder.FindMulti(items, false)
 		if err != nil {
+			if errors.Is(err, fuzzyfinder.ErrAbort) {
+				return nil
+			}
 			return fmt.Errorf("select updated packages with fuzzy finder: %w", err)
 		}
 		for _, idx := range idxs {
@@ -78,7 +81,7 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, par
 				PackageInfo:  pkg.PackageInfo,
 				RegistryName: pkg.Package.Registry,
 				Version:      pkg.Package.Version,
-			}, false)
+			}, param.SelectVersion)
 			if newVersion != "" {
 				newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
 				newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion

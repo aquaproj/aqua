@@ -79,7 +79,7 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 					URL:         release.GetHTMLURL(),
 				}
 				items = append(items, &fuzzyfinder.Item{
-					Item:    release.GetName(),
+					Item:    release.GetTagName(),
 					Preview: fuzzyfinder.PreviewVersion(v),
 				})
 			}
