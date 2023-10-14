@@ -91,6 +91,7 @@ packages:
 						Name:     "aquaproj/aqua-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
+						FilePath: "/home/workspace/foo/aqua-installer.yaml",
 					},
 				},
 			},
