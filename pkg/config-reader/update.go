@@ -29,7 +29,7 @@ func (r *ConfigReaderImpl) ReadToUpdate(configFilePath string, cfg *aqua.Config)
 				if r.homeDir == "" {
 					return nil, errHomeDirEmpty
 				}
-				rgst.Path = filepath.Join(r.homeDir, rgst.Path[6:])
+				rgst.Path = filepath.Join(r.homeDir, rgst.Path[6:]) // 6: "$HOME/"
 			}
 			if configFileDir == "" {
 				configFileDir = filepath.Dir(configFilePath)
