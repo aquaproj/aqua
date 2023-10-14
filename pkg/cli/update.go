@@ -46,6 +46,7 @@ If no argument is passed, all registries and packages are updated to the latest.
   $ aqua update
 
 This command gets the latest version from GitHub Releases, GitHub Tags, and crates.io and updates aqua.yaml.
+This command doesn't update commit hashes.
 This command doesn't install packages.
 This command updates only a nearest aqua.yaml from the current directory.
 If this command finds a aqua.yaml, it ignores other aqua.yaml including global configuration files ($AQUA_GLOBAL_CONFIG).

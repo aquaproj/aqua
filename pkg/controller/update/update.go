@@ -31,7 +31,7 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
-	if !param.Insert && !param.OnlyPackage {
+	if !param.Insert && !param.OnlyPackage && len(param.Args) == 0 {
 		if err := c.updateRegistries(ctx, logE, cfgFilePath, cfg); err != nil {
 			return fmt.Errorf("update registries: %w", err)
 		}
@@ -57,12 +57,11 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 			}
 		}()
 	}
-	// install registries
+
 	registryConfigs, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	// update packages
 	return c.updatePackages(ctx, logE, param, cfgFilePath, registryConfigs)
 }
