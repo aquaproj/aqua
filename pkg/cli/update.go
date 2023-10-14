@@ -12,6 +12,7 @@ import (
 func (r *Runner) newUpdateCommand() *cli.Command {
 	return &cli.Command{
 		Name:        "update",
+		Aliases:     []string{"up"},
 		Usage:       "Update registries and packages",
 		Description: updateDescription,
 		Action:      r.updateAction,
