@@ -5,28 +5,12 @@ import (
 
 	"github.com/antonmedv/expr/vm"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
-	"github.com/aquaproj/aqua/v2/pkg/github"
 )
 
 type Filter struct {
 	Prefix     string
 	Filter     *vm.Program
 	Constraint string
-}
-
-func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
-	if release.GetPrerelease() {
-		return false
-	}
-
-	tagName := release.GetTagName()
-
-	for _, filter := range filters {
-		if filterTagByFilter(tagName, filter) {
-			return true
-		}
-	}
-	return false
 }
 
 func filterTagByFilter(tagName string, filter *Filter) bool {
