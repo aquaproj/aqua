@@ -67,6 +67,8 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = c.Bool("deep")
 	param.Pin = c.Bool("pin")
+	param.OnlyPackage = c.Bool("only-package")
+	param.OnlyRegistry = c.Bool("only-registry")
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)

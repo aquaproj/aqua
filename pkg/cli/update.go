@@ -24,6 +24,16 @@ $ aqua update
 				Name:  "i",
 				Usage: `Select packages with fuzzy finder`,
 			},
+			&cli.BoolFlag{
+				Name:    "only-registry",
+				Aliases: []string{"r"},
+				Usage:   `Update only registries`,
+			},
+			&cli.BoolFlag{
+				Name:    "only-package",
+				Aliases: []string{"p"},
+				Usage:   `Update only packages`,
+			},
 		},
 	}
 }

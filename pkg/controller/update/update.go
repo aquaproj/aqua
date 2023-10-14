@@ -22,7 +22,7 @@ func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *conf
 	return nil
 }
 
-func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string) error {
+func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string) error { //nolint:cyclop
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -31,10 +31,14 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
-	if !param.Insert {
+	if !param.Insert && !param.OnlyPackage {
 		if err := c.updateRegistries(ctx, logE, cfgFilePath, cfg); err != nil {
 			return fmt.Errorf("update registries: %w", err)
 		}
+	}
+
+	if param.OnlyRegistry {
+		return nil
 	}
 
 	var checksums *checksum.Checksums
