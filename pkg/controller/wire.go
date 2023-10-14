@@ -788,6 +788,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			fuzzyfinder.New,
+			wire.Bind(new(update.FuzzyFinder), new(*fuzzyfinder.Finder)),
 			wire.Bind(new(versiongetter.FuzzyFinder), new(*fuzzyfinder.Finder)),
 		),
 		versiongetter.NewGenerator,

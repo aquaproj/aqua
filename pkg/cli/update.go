@@ -19,7 +19,12 @@ e.g.
 $ aqua update
 `,
 		Action: r.updateAction,
-		Flags:  []cli.Flag{},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "i",
+				Usage: `Select packages with fuzzy finder`,
+			},
+		},
 	}
 }
 

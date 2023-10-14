@@ -23,6 +23,12 @@ type Controller struct {
 	runtime           *runtime.Runtime
 	requireChecksum   bool
 	fuzzyGetter       FuzzyGetter
+	fuzzyFinder       FuzzyFinder
+}
+
+type FuzzyFinder interface {
+	Find(items []*fuzzyfinder.Item, hasPreview bool) (int, error)
+	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
 type ConfigReader interface {
@@ -40,7 +46,7 @@ type RepositoriesService interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter) *Controller {
+func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder) *Controller {
 	return &Controller{
 		gh:                gh,
 		rootDir:           param.RootDir,
@@ -51,6 +57,7 @@ func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder,
 		runtime:           rt,
 		requireChecksum:   param.RequireChecksum,
 		fuzzyGetter:       fuzzyGetter,
+		fuzzyFinder:       fuzzyFinder,
 	}
 }
 

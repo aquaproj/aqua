@@ -15,7 +15,33 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, cfgFilePath string, rgstCfgs map[string]*registry.Config) error {
+func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, rgstCfgs map[string]*registry.Config) error { //nolint:cyclop,funlen,gocognit
+	updatedPkgs := map[string]struct{}{}
+	if param.Insert {
+		cfg := &aqua.Config{}
+		if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+			return fmt.Errorf("read a configuration file: %w", err)
+		}
+		items := make([]*fuzzyfinder.Item, len(cfg.Packages))
+		for i, pkg := range cfg.Packages {
+			if pkg.Registry != "standard" {
+				items[i] = &fuzzyfinder.Item{
+					Item: fmt.Sprintf("%s,%s@%s", pkg.Registry, pkg.Name, pkg.Version),
+				}
+				continue
+			}
+			items[i] = &fuzzyfinder.Item{
+				Item: fmt.Sprintf("%s@%s", pkg.Name, pkg.Version),
+			}
+		}
+		idxs, err := c.fuzzyFinder.FindMulti(items, false)
+		if err != nil {
+			return fmt.Errorf("select updated packages with fuzzy finder: %w", err)
+		}
+		for _, idx := range idxs {
+			updatedPkgs[items[idx].Item] = struct{}{}
+		}
+	}
 	cfg := &aqua.Config{}
 	cfgs, err := c.configReader.ReadToUpdate(cfgFilePath, cfg)
 	if err != nil {
@@ -37,6 +63,17 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, cfg
 				"package_version": pkg.Package.Version,
 				"registry":        pkg.Package.Registry,
 			})
+			if len(updatedPkgs) != 0 {
+				var item string
+				if pkg.Package.Registry != "standard" {
+					item = fmt.Sprintf("%s,%s@%s", pkg.Package.Registry, pkg.Package.Name, pkg.Package.Version)
+				} else {
+					item = fmt.Sprintf("%s@%s", pkg.Package.Name, pkg.Package.Version)
+				}
+				if _, ok := updatedPkgs[item]; !ok {
+					continue
+				}
+			}
 			newVersion := c.fuzzyGetter.Get(ctx, logE, &fuzzyfinder.Package{
 				PackageInfo:  pkg.PackageInfo,
 				RegistryName: pkg.Package.Registry,
