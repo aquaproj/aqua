@@ -739,10 +739,6 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
 			wire.Bind(new(update.ConfigReader), new(*reader.ConfigReaderImpl)),
 		),
-		// wire.NewSet(
-		// 	download.NewChecksumDownloader,
-		// 	wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
-		// ),
 		wire.NewSet(
 			registry.New,
 			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
