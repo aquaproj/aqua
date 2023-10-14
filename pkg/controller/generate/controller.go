@@ -31,10 +31,6 @@ type FuzzyGetter interface {
 	Get(ctx context.Context, logE *logrus.Entry, pkg *fuzzyfinder.Package, useFinder bool) string
 }
 
-type VersionSelector interface {
-	Find(versions []*fuzzyfinder.Item, hasPreview bool) (int, error)
-}
-
 type FuzzyFinder interface {
 	Find(items []*fuzzyfinder.Item, hasPreview bool) (int, error)
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
