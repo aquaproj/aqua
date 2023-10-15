@@ -79,11 +79,7 @@ func (c *Controller) getPackageNewVersion(ctx context.Context, logE *logrus.Entr
 			return ""
 		}
 	}
-	return c.fuzzyGetter.Get(ctx, logE, &fuzzyfinder.Package{
-		PackageInfo:  pkg.PackageInfo,
-		RegistryName: pkg.Package.Registry,
-		Version:      pkg.Package.Version,
-	}, param.SelectVersion)
+	return c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, param.SelectVersion)
 }
 
 func (c *Controller) selectPackages(logE *logrus.Entry, cfgFilePath string) (map[string]struct{}, error) {

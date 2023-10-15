@@ -5,10 +5,11 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -19,7 +20,7 @@ type Controller struct {
 	rootDir           string
 	configFinder      ConfigFinder
 	configReader      ConfigReader
-	registryInstaller registry.Installer
+	registryInstaller rgst.Installer
 	fs                afero.Fs
 	runtime           *runtime.Runtime
 	requireChecksum   bool
@@ -39,7 +40,7 @@ type ConfigReader interface {
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logE *logrus.Entry, pkg *fuzzyfinder.Package, useFinder bool) string
+	Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, useFinder bool) string
 }
 
 type RepositoriesService interface {
@@ -48,7 +49,7 @@ type RepositoriesService interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
+func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller rgst.Installer, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
 	return &Controller{
 		gh:                gh,
 		rootDir:           param.RootDir,

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
@@ -28,7 +29,7 @@ type Controller struct {
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logE *logrus.Entry, pkg *fuzzyfinder.Package, useFinder bool) string
+	Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, useFinder bool) string
 }
 
 type FuzzyFinder interface {
