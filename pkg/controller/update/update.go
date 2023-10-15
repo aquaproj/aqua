@@ -12,7 +12,7 @@ import (
 )
 
 func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if err := c.findCommand(ctx, logE, param); err != nil {
+	if err := c.updateCommand(ctx, logE, param); err != nil {
 		return err
 	}
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath)
@@ -28,7 +28,7 @@ func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *conf
 	return nil
 }
 
-func (c *Controller) findCommand(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	newVersions := map[string]string{}
 	for _, arg := range param.Args {
 		findResult, err := c.which.Which(ctx, logE, param, arg)
