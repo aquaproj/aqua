@@ -137,10 +137,10 @@ packages:
 				t.Fatal("error must be returned")
 			}
 			if diff := cmp.Diff(d.cfg, cfg); diff != "" {
-				t.Fatal(diff)
+				t.Fatal("cfg:", diff)
 			}
 			if diff := cmp.Diff(d.cfgs, cfgs); diff != "" {
-				t.Fatal(diff)
+				t.Fatal("cfgs:", diff)
 			}
 		})
 	}

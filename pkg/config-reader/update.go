@@ -63,11 +63,15 @@ func (r *ConfigReaderImpl) readImportsToUpdate(configFilePath string, cfg *aqua.
 		sort.Strings(filePaths)
 		for _, filePath := range filePaths {
 			subCfg := &aqua.Config{}
-			if err := r.Read(filePath, subCfg); err != nil {
+			subCfgs, err := r.ReadToUpdate(filePath, subCfg)
+			if err != nil {
 				return nil, err
 			}
 			subCfg.Registries = cfg.Registries
 			cfgs[filePath] = subCfg
+			for k, subCfg := range subCfgs {
+				cfgs[k] = subCfg
+			}
 		}
 	}
 	cfg.Packages = pkgs

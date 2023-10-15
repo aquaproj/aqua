@@ -30,6 +30,10 @@ func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, c
 	for _, rgst := range cfg.Registries {
 		if commitHashPattern.MatchString(rgst.Ref) {
 			// Skip updating commit hashes
+			logE.WithFields(logrus.Fields{
+				"registry_name":    rgst.Name,
+				"registry_version": rgst.Ref,
+			}).Debug("skip a registry whose version is a commit hash")
 			continue
 		}
 		newVersion, err := c.newRegistryVersion(ctx, logE, rgst)
