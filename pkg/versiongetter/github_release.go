@@ -65,21 +65,27 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 		PerPage: 30, //nolint:gomnd
 	}
 	var items []*fuzzyfinder.Item
+	tags := map[string]struct{}{}
 	for {
 		releases, _, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, release := range releases {
+			tagName := release.GetTagName()
+			if _, ok := tags[tagName]; ok {
+				continue
+			}
+			tags[tagName] = struct{}{}
 			if filterRelease(release, filters) {
 				v := &fuzzyfinder.Version{
 					Name:        release.GetName(),
-					Version:     release.GetTagName(),
+					Version:     tagName,
 					Description: release.GetBody(),
 					URL:         release.GetHTMLURL(),
 				}
 				items = append(items, &fuzzyfinder.Item{
-					Item:    release.GetTagName(),
+					Item:    tagName,
 					Preview: fuzzyfinder.PreviewVersion(v),
 				})
 			}

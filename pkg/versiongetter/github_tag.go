@@ -53,14 +53,20 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 		PerPage: 30, //nolint:gomnd
 	}
 	var versions []string
+	tagNames := map[string]struct{}{}
 	for {
 		tags, _, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {
+			tagName := tag.GetName()
+			if _, ok := tagNames[tagName]; ok {
+				continue
+			}
+			tagNames[tagName] = struct{}{}
 			if filterTag(tag, filters) {
-				versions = append(versions, tag.GetName())
+				versions = append(versions, tagName)
 			}
 		}
 		if len(tags) != opt.PerPage {
