@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestUpdateRegistries(t *testing.T) {
+func TestUpdateRegistries(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name        string
