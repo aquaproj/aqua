@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestController_Update(t *testing.T) { //nolint:funlen
+func TestController_Update(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name           string
@@ -173,6 +173,40 @@ packages:
 				},
 			},
 			files: map[string]string{
+				"/workspace/aqua.yaml": `checksum:
+  enabled: true
+registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v3.0.0
+- name: cli/cli@v2.0.0
+`,
+			},
+			expFiles: map[string]string{
+				"/workspace/aqua.yaml": `checksum:
+  enabled: true
+registries:
+- type: standard
+  ref: v4.60.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v4.0.0
+- name: cli/cli@v2.30.0
+`,
+			},
+			releases: []*github.RepositoryRelease{
+				{
+					TagName: ptr.String("v4.60.0"),
+				},
+			},
+		},
+		{
+			name: "only registry",
+			param: &config.Param{
+				PWD:          "/workspace",
+				OnlyRegistry: true,
+			},
+			files: map[string]string{
 				"/workspace/aqua.yaml": `registries:
 - type: standard
   ref: v4.0.0
@@ -186,14 +220,129 @@ packages:
 - type: standard
   ref: v4.60.0
 packages:
-- name: suzuki-shunsuke/tfcmt@v4.0.0
-- name: cli/cli@v2.30.0
+- name: suzuki-shunsuke/tfcmt@v3.0.0
+- name: cli/cli@v2.0.0
 `,
 			},
 			releases: []*github.RepositoryRelease{
 				{
 					TagName: ptr.String("v4.60.0"),
 				},
+			},
+		},
+		{
+			name: "only package",
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			param: &config.Param{
+				PWD:         "/workspace",
+				OnlyPackage: true,
+			},
+			versions: map[string]string{
+				"suzuki-shunsuke/tfcmt": "v4.0.0",
+				"cli/cli":               "v2.30.0",
+			},
+			registries: map[string]*registry.Config{
+				"standard": {
+					PackageInfos: registry.PackageInfos{
+						{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "tfcmt",
+							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
+						{
+							Type:      "github_release",
+							RepoOwner: "cli",
+							RepoName:  "cli",
+							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Files: []*registry.File{
+								{
+									Name: "gh",
+									Src:  "{{.AssetWithoutExt}}/bin/gh",
+								},
+							},
+						},
+					},
+				},
+			},
+			files: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v3.0.0
+- name: cli/cli@v2.0.0
+`,
+			},
+			expFiles: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v4.0.0
+- name: cli/cli@v2.30.0
+`,
+			},
+		},
+		{
+			name: "select packages",
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			param: &config.Param{
+				PWD:    "/workspace",
+				Insert: true,
+			},
+			versions: map[string]string{
+				"suzuki-shunsuke/tfcmt": "v4.0.0",
+				"cli/cli":               "v2.30.0",
+			},
+			registries: map[string]*registry.Config{
+				"standard": {
+					PackageInfos: registry.PackageInfos{
+						{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "tfcmt",
+							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
+						{
+							Type:      "github_release",
+							RepoOwner: "cli",
+							RepoName:  "cli",
+							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Files: []*registry.File{
+								{
+									Name: "gh",
+									Src:  "{{.AssetWithoutExt}}/bin/gh",
+								},
+							},
+						},
+					},
+				},
+			},
+			idxs: []int{1}, // cli/cli
+			files: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v3.0.0
+- name: cli/cli@v2.0.0
+`,
+			},
+			expFiles: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v3.0.0
+- name: cli/cli@v2.30.0
+`,
 			},
 		},
 	}
