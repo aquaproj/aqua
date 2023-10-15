@@ -15,12 +15,12 @@ func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *conf
 	if err := c.updateCommand(ctx, logE, param); err != nil {
 		return err
 	}
+	if len(param.Args) != 0 {
+		return nil
+	}
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath)
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)
-	}
-	if len(param.Args) != 0 {
-		return nil
 	}
 	if err := c.update(ctx, logE, param, cfgFilePath); err != nil {
 		return err
