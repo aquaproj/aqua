@@ -33,7 +33,7 @@ jobs:
           go-version: 1.21.3
 
       # The default vim doesn't work well, so we install the latest vim ourselves.
-      - uses: rhysd/action-setup-vim@015df8c5b8dabdca7febe31bb66c156c0d780374 # v1.2.15
+      - uses: rhysd/action-setup-vim@7da6ebc0a6968029b289c2ebeab34c5ca34cea3f # v1.3.0
 
       - uses: mxschmitt/action-tmate@1005f9c9db5f1b055a495e72c6e589764984baf6 # v3.14
         with:
