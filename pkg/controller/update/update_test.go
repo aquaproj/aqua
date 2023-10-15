@@ -345,6 +345,71 @@ packages:
 `,
 			},
 		},
+		{
+			name: "ignore commit hash",
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			param: &config.Param{
+				PWD: "/workspace",
+			},
+			versions: map[string]string{
+				"suzuki-shunsuke/tfcmt": "v4.0.0",
+				"cli/cli":               "v2.30.0",
+			},
+			registries: map[string]*registry.Config{
+				"standard": {
+					PackageInfos: registry.PackageInfos{
+						{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "tfcmt",
+							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
+						{
+							Type:      "github_release",
+							RepoOwner: "cli",
+							RepoName:  "cli",
+							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Files: []*registry.File{
+								{
+									Name: "gh",
+									Src:  "{{.AssetWithoutExt}}/bin/gh",
+								},
+							},
+						},
+					},
+				},
+			},
+			files: map[string]string{
+				"/workspace/aqua.yaml": `checksum:
+  enabled: true
+registries:
+- type: standard
+  ref: 4da26b32f72963f42a04b099d03604dab32c6844
+packages:
+- name: suzuki-shunsuke/tfcmt@4da26b32f72963f42a04b099d03604dab32c6844
+- name: cli/cli@v2.0.0
+`,
+			},
+			expFiles: map[string]string{
+				"/workspace/aqua.yaml": `checksum:
+  enabled: true
+registries:
+- type: standard
+  ref: 4da26b32f72963f42a04b099d03604dab32c6844
+packages:
+- name: suzuki-shunsuke/tfcmt@4da26b32f72963f42a04b099d03604dab32c6844
+- name: cli/cli@v2.30.0
+`,
+			},
+			releases: []*github.RepositoryRelease{
+				{
+					TagName: ptr.String("v4.60.0"),
+				},
+			},
+		},
 	}
 	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
