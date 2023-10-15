@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
@@ -108,6 +109,12 @@ packages:
 							RepoOwner: "cli",
 							RepoName:  "cli",
 							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Files: []*registry.File{
+								{
+									Name: "gh",
+									Src:  "{{.AssetWithoutExt}}/bin/gh",
+								},
+							},
 						},
 						Registry: &aqua.Registry{
 							Name:      "standard",
@@ -125,6 +132,67 @@ packages:
 					Config:         &aqua.Config{},
 					ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/cli/cli/v2.0.0/gh_2.0.0_macOS_arm64.zip/gh_2.0.0_macOS_arm64/bin/gh",
 					ConfigFilePath: "/workspace/aqua.yaml",
+				},
+			},
+		},
+		{
+			name: "no arg",
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			param: &config.Param{
+				PWD: "/workspace",
+			},
+			versions: map[string]string{
+				"suzuki-shunsuke/tfcmt": "v4.0.0",
+				"cli/cli":               "v2.30.0",
+			},
+			registries: map[string]*registry.Config{
+				"standard": {
+					PackageInfos: registry.PackageInfos{
+						{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "tfcmt",
+							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
+						{
+							Type:      "github_release",
+							RepoOwner: "cli",
+							RepoName:  "cli",
+							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Files: []*registry.File{
+								{
+									Name: "gh",
+									Src:  "{{.AssetWithoutExt}}/bin/gh",
+								},
+							},
+						},
+					},
+				},
+			},
+			files: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v3.0.0
+- name: cli/cli@v2.0.0
+`,
+			},
+			expFiles: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.60.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v4.0.0
+- name: cli/cli@v2.30.0
+`,
+			},
+			releases: []*github.RepositoryRelease{
+				{
+					TagName: ptr.String("v4.60.0"),
 				},
 			},
 		},

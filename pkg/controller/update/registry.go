@@ -29,7 +29,6 @@ func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, c
 	newVersions := map[string]string{}
 	for _, rgst := range cfg.Registries {
 		if commitHashPattern.MatchString(rgst.Ref) {
-			// Skip updating commit hashes
 			logE.WithFields(logrus.Fields{
 				"registry_name":    rgst.Name,
 				"registry_version": rgst.Ref,
