@@ -197,7 +197,7 @@ func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, pa
 		outputPkg.Registry = ""
 	}
 	if outputPkg.Version == "" {
-		version := c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, param.SelectVersion)
+		version := c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, "", param.SelectVersion)
 		if version == "" {
 			outputPkg.Version = "[SET PACKAGE VERSION]"
 			return outputPkg

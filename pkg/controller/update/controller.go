@@ -40,7 +40,7 @@ type ConfigReader interface {
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, useFinder bool) string
+	Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool) string
 }
 
 type RepositoriesService interface {
