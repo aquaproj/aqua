@@ -403,7 +403,7 @@ packages:
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
 			cargoClient := &cargo.MockClient{}
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, cargoClient, versiongetter.NewMockFuzzyGetter(""))
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, cargoClient, versiongetter.NewMockFuzzyGetter(map[string]string{}))
 			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

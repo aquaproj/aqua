@@ -22,17 +22,17 @@ func NewFuzzy(finder FuzzyFinder, gen *Generator) *FuzzyGetter {
 }
 
 type MockFuzzyGetter struct {
-	s string
+	versions map[string]string
 }
 
-func NewMockFuzzyGetter(s string) *MockFuzzyGetter {
+func NewMockFuzzyGetter(versions map[string]string) *MockFuzzyGetter {
 	return &MockFuzzyGetter{
-		s: s,
+		versions: versions,
 	}
 }
 
 func (g *MockFuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool) string {
-	return g.s
+	return g.versions[pkg.GetName()]
 }
 
 type FuzzyFinder interface {
