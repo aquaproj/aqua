@@ -8,7 +8,7 @@ import (
 	"github.com/goccy/go-yaml/ast"
 )
 
-func UpdateASTFile(file *ast.File, pkgs interface{}) error {
+func UpdateASTFile(file *ast.File, pkgs interface{}) error { //nolint:cyclop
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)
@@ -20,7 +20,11 @@ func UpdateASTFile(file *ast.File, pkgs interface{}) error {
 			continue
 		}
 		for _, mapValue := range body.Values {
-			if mapValue.Key.String() != "packages" {
+			key, ok := mapValue.Key.(*ast.StringNode)
+			if !ok {
+				continue
+			}
+			if key.Value != "packages" {
 				continue
 			}
 			switch mapValue.Value.Type() {

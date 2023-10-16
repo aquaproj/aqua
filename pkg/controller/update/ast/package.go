@@ -43,7 +43,11 @@ func parsePackageNode(logE *logrus.Entry, node ast.Node, newVersions map[string]
 	var pkgVersion string
 	var nameNode *ast.StringNode
 	for _, mvn := range mvs {
-		switch mvn.Key.String() {
+		key, ok := mvn.Key.(*ast.StringNode)
+		if !ok {
+			continue
+		}
+		switch key.Value {
 		case "registry":
 			sn, ok := mvn.Value.(*ast.StringNode)
 			if !ok {
