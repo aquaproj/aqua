@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestFuzzyGetter_Get(t *testing.T) {
+func TestFuzzyGetter_Get(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name           string
