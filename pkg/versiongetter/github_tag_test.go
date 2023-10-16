@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestGitHubTagVersionGetter_Get(t *testing.T) {
+func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name    string
