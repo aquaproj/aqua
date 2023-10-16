@@ -59,6 +59,25 @@ If --out-testdata is set, aqua inserts testdata into the specified file.
 e.g.
 
 $ aqua gr --out-testdata testdata.yaml suzuki-shunsuke/tfcmt
+
+If -cmd is set, aqua sets files.
+
+e.g.
+
+$ aqua gr -cmd gh cli/cli
+
+  files:
+	  - name: gh
+
+You can specify multiple commands with commas ",".
+
+e.g.
+
+$ aqua gr -cmd age,age-keygen FiloSottile/age
+
+  files:
+	  - name: age
+	  - name: age-keygen
 `
 
 func (r *Runner) newGenerateRegistryCommand() *cli.Command {
