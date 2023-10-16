@@ -45,7 +45,11 @@ func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) err
 
 func getPkgsAST(values []*ast.MappingValueNode) *ast.MappingValueNode {
 	for _, mapValue := range values {
-		if mapValue.Key.String() != "packages" {
+		key, ok := mapValue.Key.(*ast.StringNode)
+		if !ok {
+			continue
+		}
+		if key.Value != "packages" {
 			continue
 		}
 		return mapValue
