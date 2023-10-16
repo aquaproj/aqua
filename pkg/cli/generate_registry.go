@@ -76,9 +76,10 @@ func (r *Runner) newGenerateRegistryCommand() *cli.Command {
 			// 		Usage: "Insert a registry to configuration file",
 			// 	},
 			&cli.StringFlag{
-				Name:  "type",
-				Usage: "package type",
-				Value: "github_release",
+				Name:    "type",
+				Aliases: []string{"t"},
+				Usage:   "package type",
+				Value:   "github_release",
 			},
 			&cli.StringFlag{
 				Name:  "out-testdata",
