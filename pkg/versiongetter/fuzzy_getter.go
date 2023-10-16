@@ -11,28 +11,14 @@ import (
 
 type FuzzyGetter struct {
 	fuzzyFinder FuzzyFinder
-	gen         *Generator
+	getter      VersionGetter
 }
 
-func NewFuzzy(finder FuzzyFinder, gen *Generator) *FuzzyGetter {
+func NewFuzzy(finder FuzzyFinder, getter VersionGetter) *FuzzyGetter {
 	return &FuzzyGetter{
 		fuzzyFinder: finder,
-		gen:         gen,
+		getter:      getter,
 	}
-}
-
-type MockFuzzyGetter struct {
-	versions map[string]string
-}
-
-func NewMockFuzzyGetter(versions map[string]string) *MockFuzzyGetter {
-	return &MockFuzzyGetter{
-		versions: versions,
-	}
-}
-
-func (g *MockFuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool) string {
-	return g.versions[pkg.GetName()]
 }
 
 type FuzzyFinder interface {
@@ -46,14 +32,12 @@ func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.Pa
 		return ""
 	}
 
-	versionGetter := g.gen.Get(pkg)
-	if versionGetter == nil {
-		return ""
-	}
-
 	if useFinder { //nolint:nestif
-		versions, err := versionGetter.List(ctx, pkg, filters)
+		versions, err := g.getter.List(ctx, pkg, filters)
 		if err != nil {
+			return ""
+		}
+		if versions == nil {
 			return ""
 		}
 		currentVersionIndex := 0
@@ -76,7 +60,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.Pa
 		return versions[idx].Item
 	}
 
-	version, err := versionGetter.Get(ctx, pkg, filters)
+	version, err := g.getter.Get(ctx, pkg, filters)
 	if err != nil {
 		return ""
 	}

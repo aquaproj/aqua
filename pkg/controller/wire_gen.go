@@ -108,8 +108,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
-	generator := versiongetter.NewGenerator(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
-	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generator)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, clientImpl, fuzzyGetter)
 	return controller
 }
@@ -282,8 +282,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
-	generator := versiongetter.NewGenerator(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
-	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generator)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()
 	controllerImpl := which.New(param, configFinder, configReaderImpl, installerImpl, rt, osEnv, fs, linker)
