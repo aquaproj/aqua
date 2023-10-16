@@ -136,6 +136,34 @@ jobs:
         run: aqua cp --exclude-tags test -t foo
         working-directory: tests/tag
 
+      - name: update only registrires
+        run: |
+          aqua update -r
+          git diff .
+          git checkout -- .
+        working-directory: tests/update
+
+      - name: update only packages
+        run: |
+          aqua up -p
+          git diff .
+          git checkout -- .
+        working-directory: tests/update
+
+      - name: update all registries and packages
+        run: |
+          aqua update
+          git diff .
+          git checkout -- .
+        working-directory: tests/update
+
+      - name: update only specific command
+        run: |
+          aqua update tfcmt ci-info
+          git diff .
+          git checkout -- .
+        working-directory: tests/update
+
       - run: aqua update-checksum -a
 
       - name: Test rm
