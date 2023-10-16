@@ -60,16 +60,6 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
-	if !param.Insert && !param.OnlyPackage && len(param.Args) == 0 {
-		if err := c.updateRegistries(ctx, logE, cfgFilePath, cfg); err != nil {
-			return fmt.Errorf("update registries: %w", err)
-		}
-	}
-
-	if param.OnlyRegistry {
-		return nil
-	}
-
 	var checksums *checksum.Checksums
 	if cfg.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -87,10 +77,25 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 		}()
 	}
 
-	registryConfigs, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
-	if err != nil {
-		return err //nolint:wrapcheck
+	// Update packages before registries because if registries are updated before packages the function needs to install new registries then checksums of new registrires aren't added to aqua-checksums.json.
+
+	if !param.OnlyRegistry {
+		registryConfigs, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+
+		if err := c.updatePackages(ctx, logE, param, cfgFilePath, registryConfigs); err != nil {
+			return err
+		}
 	}
 
-	return c.updatePackages(ctx, logE, param, cfgFilePath, registryConfigs)
+	if param.Insert || param.OnlyPackage || len(param.Args) != 0 {
+		return nil
+	}
+
+	if err := c.updateRegistries(ctx, logE, cfgFilePath, cfg); err != nil {
+		return fmt.Errorf("update registries: %w", err)
+	}
+	return nil
 }
