@@ -11,7 +11,10 @@ import (
 
 func (r *Runner) newUpdateAquaCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "update-aqua",
+		Name: "update-aqua",
+		Aliases: []string{
+			"upa",
+		},
 		Usage: "Update aqua",
 		Description: `Update aqua.
 
