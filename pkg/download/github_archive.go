@@ -18,7 +18,7 @@ func (dl *Downloader) getReadCloserFromGitHubArchive(ctx context.Context, file *
 	}
 	u, _, err := dl.github.GetArchiveLink(ctx, file.RepoOwner, file.RepoName, github.Tarball, &github.RepositoryContentGetOptions{
 		Ref: file.Version,
-	}, true)
+	}, 2) //nolint:gomnd
 	if err != nil {
 		return nil, 0, fmt.Errorf("git an archive link with GitHub API: %w", err)
 	}
