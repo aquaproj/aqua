@@ -30,11 +30,16 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, pkg *registry.Pack
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 
+	release, _, err := g.gh.GetLatestRelease(ctx, repoOwner, repoName)
+	if err != nil {
+		return "", fmt.Errorf("get the latest GitHub Release: %w", err)
+	}
+
 	if len(filters) == 0 {
-		release, _, err := g.gh.GetLatestRelease(ctx, repoOwner, repoName)
-		if err != nil {
-			return "", fmt.Errorf("get the latest GitHub Release: %w", err)
-		}
+		return release.GetTagName(), nil
+	}
+
+	if filterRelease(release, filters) {
 		return release.GetTagName(), nil
 	}
 
