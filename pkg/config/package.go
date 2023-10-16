@@ -269,6 +269,7 @@ type Param struct {
 	OnlyPackage           bool
 	OnlyRegistry          bool
 	PolicyConfigFilePaths []string
+	Commands              []string
 }
 
 func appendExt(s, format string) string {

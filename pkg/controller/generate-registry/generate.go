@@ -56,6 +56,15 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 
 func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
 	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param.Deep)
+	if len(param.Commands) != 0 {
+		files := make([]*registry.File, len(param.Commands))
+		for i, cmd := range param.Commands {
+			files[i] = &registry.File{
+				Name: cmd,
+			}
+		}
+		pkgInfo.Files = files
+	}
 	if param.OutTestData != "" {
 		if err := c.testdataOutputter.Output(&output.Param{
 			List: listPkgsFromVersions(pkgName, versions),

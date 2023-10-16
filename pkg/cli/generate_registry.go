@@ -79,6 +79,10 @@ func (r *Runner) newGenerateRegistryCommand() *cli.Command {
 				Name:  "out-testdata",
 				Usage: "A file path where the testdata is outputted",
 			},
+			&cli.StringFlag{
+				Name:  "cmd",
+				Usage: "A list of commands joined with single quotes ','",
+			},
 			&cli.BoolFlag{
 				Name:  "deep",
 				Usage: "Resolve version_overrides",
