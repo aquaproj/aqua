@@ -14,6 +14,7 @@ type Package struct {
 	Tags        []string `yaml:",omitempty" json:"tags,omitempty"`
 	Description string   `yaml:",omitempty" json:"description,omitempty"`
 	Link        string   `yaml:",omitempty" json:"link,omitempty"`
+	FilePath    string   `json:"-" yaml:"-"`
 }
 
 func (p *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {

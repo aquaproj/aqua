@@ -96,7 +96,10 @@ func (r *ConfigReaderImpl) readImports(configFilePath string, cfg *aqua.Config) 
 			if err := r.Read(filePath, subCfg); err != nil {
 				return err
 			}
-			pkgs = append(pkgs, subCfg.Packages...)
+			for _, pkg := range subCfg.Packages {
+				pkg.FilePath = filePath
+				pkgs = append(pkgs, pkg)
+			}
 		}
 	}
 	cfg.Packages = pkgs

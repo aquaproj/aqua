@@ -8,9 +8,9 @@ import (
 
 var ErrAbort = fuzzyfinder.ErrAbort
 
-type Item interface {
-	Item() string
-	Preview(w int) string
+type Item struct {
+	Item    string
+	Preview string
 }
 
 type Finder struct{}
@@ -19,7 +19,7 @@ func New() *Finder {
 	return &Finder{}
 }
 
-func (f *Finder) Find(items []Item, hasPreview bool) (int, error) {
+func (f *Finder) Find(items []*Item, hasPreview bool) (int, error) {
 	var opts []fuzzyfinder.Option
 	if hasPreview {
 		opts = []fuzzyfinder.Option{
@@ -27,16 +27,16 @@ func (f *Finder) Find(items []Item, hasPreview bool) (int, error) {
 				if i < 0 {
 					return "No item matches"
 				}
-				return items[i].Preview(w)
+				return formatPreview(items[i].Preview, w)
 			}),
 		}
 	}
 	return fuzzyfinder.Find(items, func(i int) string { //nolint:wrapcheck
-		return items[i].Item()
+		return items[i].Item
 	}, opts...)
 }
 
-func (f *Finder) FindMulti(items []Item, hasPreview bool) ([]int, error) {
+func (f *Finder) FindMulti(items []*Item, hasPreview bool) ([]int, error) {
 	var opts []fuzzyfinder.Option
 	if hasPreview {
 		opts = []fuzzyfinder.Option{
@@ -44,12 +44,12 @@ func (f *Finder) FindMulti(items []Item, hasPreview bool) ([]int, error) {
 				if i < 0 {
 					return "No item matches"
 				}
-				return items[i].Preview(w)
+				return formatPreview(items[i].Preview, w)
 			}),
 		}
 	}
 	return fuzzyfinder.FindMulti(items, func(i int) string { //nolint:wrapcheck
-		return items[i].Item()
+		return items[i].Item
 	}, opts...)
 }
 
@@ -70,7 +70,7 @@ func formatLine(line string, w int) string {
 	return strings.Join(descArr, "\n")
 }
 
-func formatDescription(desc string, w int) string {
+func formatPreview(desc string, w int) string {
 	lines := strings.Split(desc, "\n")
 	arr := make([]string, len(lines))
 	for i, line := range lines {

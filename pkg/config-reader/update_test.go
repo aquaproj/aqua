@@ -10,11 +10,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_configReader_Read(t *testing.T) { //nolint:funlen
+func Test_configReader_ReadToUpdate(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name           string
-		exp            *aqua.Config
+		cfg            *aqua.Config
+		cfgs           map[string]*aqua.Config
 		isErr          bool
 		files          map[string]string
 		configFilePath string
@@ -36,7 +37,7 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
 packages:`,
 			},
 			configFilePath: "/home/workspace/foo/aqua.yaml",
-			exp: &aqua.Config{
+			cfg: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {
 						Type:      "github_content",
@@ -54,6 +55,7 @@ packages:`,
 				},
 				Packages: []*aqua.Package{},
 			},
+			cfgs: map[string]*aqua.Config{},
 		},
 		{
 			name: "import package",
@@ -70,7 +72,7 @@ packages:
 `,
 			},
 			configFilePath: "/home/workspace/foo/aqua.yaml",
-			exp: &aqua.Config{
+			cfg: &aqua.Config{
 				Registries: aqua.Registries{
 					"standard": {
 						Type:      "github_content",
@@ -87,11 +89,26 @@ packages:
 						Registry: "standard",
 						Version:  "v1.0.0",
 					},
-					{
-						Name:     "aquaproj/aqua-installer",
-						Registry: "standard",
-						Version:  "v1.0.0",
-						FilePath: "/home/workspace/foo/aqua-installer.yaml",
+				},
+			},
+			cfgs: map[string]*aqua.Config{
+				"/home/workspace/foo/aqua-installer.yaml": {
+					Packages: []*aqua.Package{
+						{
+							Name:     "aquaproj/aqua-installer",
+							Registry: "standard",
+							Version:  "v1.0.0",
+						},
+					},
+					Registries: aqua.Registries{
+						"standard": {
+							Type:      "github_content",
+							Name:      "standard",
+							Ref:       "v2.5.0",
+							RepoOwner: "aquaproj",
+							RepoName:  "aqua-registry",
+							Path:      "registry.yaml",
+						},
 					},
 				},
 			},
@@ -109,7 +126,8 @@ packages:
 				HomeDir: d.homeDir,
 			})
 			cfg := &aqua.Config{}
-			if err := reader.Read(d.configFilePath, cfg); err != nil {
+			cfgs, err := reader.ReadToUpdate(d.configFilePath, cfg)
+			if err != nil {
 				if d.isErr {
 					return
 				}
@@ -118,8 +136,11 @@ packages:
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if diff := cmp.Diff(d.exp, cfg); diff != "" {
-				t.Fatal(diff)
+			if diff := cmp.Diff(d.cfg, cfg); diff != "" {
+				t.Fatal("cfg:", diff)
+			}
+			if diff := cmp.Diff(d.cfgs, cfgs); diff != "" {
+				t.Fatal("cfgs:", diff)
 			}
 		})
 	}

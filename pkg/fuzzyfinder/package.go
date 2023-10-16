@@ -13,11 +13,18 @@ type Package struct {
 	Version      string
 }
 
+func PreviewPackage(p *Package) string {
+	return fmt.Sprintf("%s\n\n%s\n%s",
+		p.PackageInfo.GetName(),
+		p.PackageInfo.GetLink(),
+		p.PackageInfo.Description)
+}
+
 func (p *Package) Preview(w int) string {
 	return fmt.Sprintf("%s\n\n%s\n%s",
 		p.PackageInfo.GetName(),
 		p.PackageInfo.GetLink(),
-		formatDescription(p.PackageInfo.Description, w/2-8)) //nolint:gomnd
+		formatPreview(p.PackageInfo.Description, w/2-8)) //nolint:gomnd
 }
 
 func (p *Package) Item() string {

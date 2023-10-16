@@ -9,7 +9,9 @@
     "github>aquaproj/aqua-renovate-config:file#1.11.0(aqua/imports/.*\\.ya?ml)",
     "github>aquaproj/aqua-renovate-config:installer-script#1.11.0(Dockerfile-prebuilt)"
   ],
-  ignorePaths: [],
+  ignorePaths: [
+    "tests/update/**",
+  ],
   regexManagers: [
     {
       fileMatch: [".*\\.go"],

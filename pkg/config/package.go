@@ -266,6 +266,8 @@ type Param struct {
 	RequireChecksum       bool
 	DisablePolicy         bool
 	Detail                bool
+	OnlyPackage           bool
+	OnlyRegistry          bool
 	PolicyConfigFilePaths []string
 }
 

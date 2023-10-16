@@ -26,6 +26,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
+	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
@@ -42,6 +43,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 
 	"github.com/google/wire"
 	"github.com/spf13/afero"
@@ -151,6 +153,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
 			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesServiceImpl)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -168,6 +172,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			fuzzyfinder.New,
 			wire.Bind(new(generate.FuzzyFinder), new(*fuzzyfinder.Finder)),
+			wire.Bind(new(versiongetter.FuzzyFinder), new(*fuzzyfinder.Finder)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -195,7 +200,19 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		wire.NewSet(
 			cargo.NewClientImpl,
 			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+			wire.Bind(new(versiongetter.CargoClient), new(*cargo.ClientImpl)),
 		),
+		wire.NewSet(
+			versiongetter.NewFuzzy,
+			wire.Bind(new(generate.FuzzyGetter), new(*versiongetter.FuzzyGetter)),
+		),
+		wire.NewSet(
+			versiongetter.NewGeneralVersionGetter,
+			wire.Bind(new(versiongetter.VersionGetter), new(*versiongetter.GeneralVersionGetter)),
+		),
+		versiongetter.NewCargo,
+		versiongetter.NewGitHubRelease,
+		versiongetter.NewGitHubTag,
 	)
 	return &generate.Controller{}
 }
@@ -711,6 +728,92 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 	)
 	return &updatechecksum.Controller{}
+}
+
+func InitializeUpdateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
+	wire.Build(
+		update.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(update.ConfigFinder), new(*finder.ConfigFinder)),
+			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(update.ConfigReader), new(*reader.ConfigReaderImpl)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(update.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesServiceImpl)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
+		),
+		afero.NewOsFs,
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(cosign.Verifier), new(*cosign.VerifierImpl)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(slsa.Verifier), new(*slsa.VerifierImpl)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			versiongetter.NewFuzzy,
+			wire.Bind(new(update.FuzzyGetter), new(*versiongetter.FuzzyGetter)),
+		),
+		wire.NewSet(
+			fuzzyfinder.New,
+			wire.Bind(new(update.FuzzyFinder), new(*fuzzyfinder.Finder)),
+			wire.Bind(new(versiongetter.FuzzyFinder), new(*fuzzyfinder.Finder)),
+		),
+		wire.NewSet(
+			versiongetter.NewGeneralVersionGetter,
+			wire.Bind(new(versiongetter.VersionGetter), new(*versiongetter.GeneralVersionGetter)),
+		),
+		versiongetter.NewCargo,
+		versiongetter.NewGitHubRelease,
+		versiongetter.NewGitHubTag,
+		wire.NewSet(
+			cargo.NewClientImpl,
+			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+			wire.Bind(new(versiongetter.CargoClient), new(*cargo.ClientImpl)),
+		),
+		wire.NewSet(
+			which.New,
+			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
+		),
+		osenv.New,
+	)
+	return &update.Controller{}
 }
 
 func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {

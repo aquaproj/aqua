@@ -26,6 +26,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
+	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
@@ -41,6 +42,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
@@ -103,7 +105,12 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	clientImpl := cargo.NewClientImpl(httpClient)
-	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, clientImpl)
+	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
+	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
+	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
+	controller := generate.New(configFinder, configReaderImpl, installerImpl, repositoriesService, fs, fuzzyfinderFinder, clientImpl, fuzzyGetter)
 	return controller
 }
 
@@ -254,6 +261,33 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	controller := updatechecksum.New(param, configFinder, configReaderImpl, installerImpl, fs, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader)
+	return controller
+}
+
+func InitializeUpdateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
+	repositoriesService := github.New(ctx)
+	fs := afero.NewOsFs()
+	configFinder := finder.NewConfigFinder(fs)
+	configReaderImpl := reader.New(fs, param)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	executor := exec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifierImpl := cosign.NewVerifier(executor, fs, downloader, param)
+	executorImpl := slsa.NewExecutor(executor, param)
+	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
+	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
+	fuzzyfinderFinder := fuzzyfinder.New()
+	clientImpl := cargo.NewClientImpl(httpClient)
+	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
+	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
+	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
+	osEnv := osenv.New()
+	linker := link.New()
+	controllerImpl := which.New(param, configFinder, configReaderImpl, installerImpl, rt, osEnv, fs, linker)
+	controller := update.New(param, repositoriesService, configFinder, configReaderImpl, installerImpl, fs, rt, fuzzyGetter, fuzzyfinderFinder, controllerImpl)
 	return controller
 }
 
