@@ -73,7 +73,7 @@ func (m *MockRepositoriesService) ListTags(ctx context.Context, owner string, re
 	return m.Tags, nil, nil
 }
 
-func (m *MockRepositoriesService) GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, followRedirects bool) (*url.URL, *github.Response, error) {
+func (m *MockRepositoriesService) GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error) {
 	if m.URL == nil {
 		return nil, nil, errGetTar
 	}
