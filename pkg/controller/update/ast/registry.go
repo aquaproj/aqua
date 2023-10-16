@@ -11,7 +11,11 @@ const typeStandard = "standard"
 
 func findMappingValue(values []*ast.MappingValueNode, key string) *ast.MappingValueNode {
 	for _, value := range values {
-		if value.Key.String() == key {
+		sn, ok := value.Key.(*ast.StringNode)
+		if !ok {
+			continue
+		}
+		if sn.Value == key {
 			return value
 		}
 	}
@@ -65,7 +69,11 @@ func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string
 	var newVersion string
 	var rgstName string
 	for _, mvn := range mvs {
-		switch mvn.Key.String() {
+		key, ok := mvn.Key.(*ast.StringNode)
+		if !ok {
+			continue
+		}
+		switch key.Value {
 		case "ref":
 			sn, ok := mvn.Value.(*ast.StringNode)
 			if !ok {
