@@ -249,6 +249,7 @@ type Param struct {
 	Dest                  string
 	HomeDir               string
 	OutTestData           string
+	Type                  string
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}

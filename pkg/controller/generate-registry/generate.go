@@ -55,7 +55,7 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 }
 
 func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
-	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param.Deep)
+	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param)
 	if param.OutTestData != "" {
 		if err := c.testdataOutputter.Output(&output.Param{
 			List: listPkgsFromVersions(pkgName, versions),
@@ -91,14 +91,14 @@ func (c *Controller) getRelease(ctx context.Context, repoOwner, repoName, versio
 	return release, err //nolint:wrapcheck
 }
 
-func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, deep bool) (*registry.PackageInfo, []string) {
+func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, param *config.Param) (*registry.PackageInfo, []string) {
 	pkgName, version, _ := strings.Cut(arg, "@")
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return c.getCargoPackageInfo(ctx, logE, pkgName)
 	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
-		Type: "github_release",
+		Type: param.Type,
 	}
 	if len(splitPkgNames) == 1 {
 		pkgInfo.Name = pkgName
@@ -118,7 +118,7 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	} else {
 		pkgInfo.Description = strings.TrimRight(strings.TrimSpace(gomoji.RemoveEmojis(repo.GetDescription())), ".!?")
 	}
-	if deep && version == "" {
+	if param.Deep && version == "" {
 		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo)
 	}
 	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)

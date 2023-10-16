@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
@@ -137,7 +138,10 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				CratePayload: d.crate,
 			}
 			ctrl := NewController(nil, gh, nil, cargoClient)
-			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, true)
+			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, &config.Param{
+				Type: "github_release",
+				Deep: true,
+			})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}
