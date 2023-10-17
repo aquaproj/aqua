@@ -250,7 +250,7 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 		PerPage: 100, //nolint:gomnd
 	}
 
-	if limit < 100 { //nolint:gomnd
+	if limit != 0 && limit < 100 {
 		opt.PerPage = limit
 	}
 

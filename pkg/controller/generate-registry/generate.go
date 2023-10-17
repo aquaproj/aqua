@@ -2,6 +2,7 @@ package genrgst
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -42,9 +43,14 @@ func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter Testda
 	}
 }
 
+var errLimitMustBeGreaterEqualThanZero = errors.New("limit must be greater equal than zero")
+
 func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
 	if len(args) == 0 {
 		return nil
+	}
+	if param.Limit < 0 {
+		return errLimitMustBeGreaterEqualThanZero
 	}
 	for _, arg := range args {
 		if err := c.genRegistry(ctx, param, logE, arg); err != nil {
