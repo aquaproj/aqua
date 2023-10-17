@@ -54,6 +54,9 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	param.Prune = c.Bool("prune")
 	param.SelectVersion = c.Bool("select-version")
 	param.File = c.String("f")
+	if cmd := c.String("cmd"); cmd != "" {
+		param.Commands = strings.Split(cmd, ",")
+	}
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = r.LDFlags.Version
 	param.AquaCommitHash = r.LDFlags.Commit
