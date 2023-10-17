@@ -65,8 +65,8 @@ func getVersionAndPrefix(tag string) (*version.Version, string, error) {
 	return v, a[1], nil
 }
 
-func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo) (*registry.PackageInfo, []string) {
-	ghReleases := c.listReleases(ctx, logE, pkgInfo)
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int) (*registry.PackageInfo, []string) {
+	ghReleases := c.listReleases(ctx, logE, pkgInfo, limit)
 	releases := make([]*Release, len(ghReleases))
 	for i, release := range ghReleases {
 		tag := release.GetTagName()
@@ -243,12 +243,17 @@ func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint
 	return latestPkgInfo, versions
 }
 
-func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo) []*github.RepositoryRelease {
+func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, limit int) []*github.RepositoryRelease {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
 		PerPage: 100, //nolint:gomnd
 	}
+
+	if limit != 0 && limit < 100 {
+		opt.PerPage = limit
+	}
+
 	var arr []*github.RepositoryRelease
 
 	for i := 0; i < 10; i++ {
@@ -261,6 +266,9 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 			return arr
 		}
 		arr = append(arr, releases...)
+		if limit > 0 && len(releases) >= limit {
+			return arr
+		}
 		if len(releases) != opt.PerPage {
 			return arr
 		}

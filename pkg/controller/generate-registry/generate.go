@@ -2,6 +2,7 @@ package genrgst
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -42,9 +43,14 @@ func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter Testda
 	}
 }
 
+var errLimitMustBeGreaterEqualThanZero = errors.New("limit must be greater equal than zero")
+
 func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
 	if len(args) == 0 {
 		return nil
+	}
+	if param.Limit < 0 {
+		return errLimitMustBeGreaterEqualThanZero
 	}
 	for _, arg := range args {
 		if err := c.genRegistry(ctx, param, logE, arg); err != nil {
@@ -55,7 +61,7 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 }
 
 func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
-	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param.Deep)
+	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param.Limit)
 	if len(param.Commands) != 0 {
 		files := make([]*registry.File, len(param.Commands))
 		for i, cmd := range param.Commands {
@@ -100,7 +106,7 @@ func (c *Controller) getRelease(ctx context.Context, repoOwner, repoName, versio
 	return release, err //nolint:wrapcheck
 }
 
-func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, deep bool) (*registry.PackageInfo, []string) {
+func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, limit int) (*registry.PackageInfo, []string) {
 	pkgName, version, _ := strings.Cut(arg, "@")
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return c.getCargoPackageInfo(ctx, logE, pkgName)
@@ -127,8 +133,8 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	} else {
 		pkgInfo.Description = strings.TrimRight(strings.TrimSpace(gomoji.RemoveEmojis(repo.GetDescription())), ".!?")
 	}
-	if deep && version == "" {
-		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo)
+	if limit != 1 && version == "" {
+		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit)
 	}
 	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {
