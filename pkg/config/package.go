@@ -250,6 +250,7 @@ type Param struct {
 	HomeDir               string
 	OutTestData           string
 	Type                  string
+	Limit                 int
 	MaxParallelism        int
 	Args                  []string
 	Tags                  map[string]struct{}
@@ -270,6 +271,7 @@ type Param struct {
 	OnlyPackage           bool
 	OnlyRegistry          bool
 	PolicyConfigFilePaths []string
+	Commands              []string
 }
 
 func appendExt(s, format string) string {

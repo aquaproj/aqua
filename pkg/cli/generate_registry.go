@@ -44,21 +44,37 @@ e.g.
 
 $ aqua gr cli/cli@v2.0.0
 
-By default, aqua gr doesn't generate version_overrides.
-If --deep is set, aqua generates version_overrides.
+By default, aqua gr gets all GitHub Releases to generate version_overrides.
+You can limit the number of GitHub Releases by --limit.
 
 e.g.
 
-$ aqua gr --deep suzuki-shunsuke/tfcmt
-
-Note that if --deep is set, GitHub API is called per GitHub Release.
-This may cause GitHub API rate limiting.
+$ aqua gr --limit 100 suzuki-shunsuke/tfcmt
 
 If --out-testdata is set, aqua inserts testdata into the specified file.
 
 e.g.
 
 $ aqua gr --out-testdata testdata.yaml suzuki-shunsuke/tfcmt
+
+If -cmd is set, aqua sets files.
+
+e.g.
+
+$ aqua gr -cmd gh cli/cli
+
+  files:
+	  - name: gh
+
+You can specify multiple commands with commas ",".
+
+e.g.
+
+$ aqua gr -cmd age,age-keygen FiloSottile/age
+
+  files:
+	  - name: age
+	  - name: age-keygen
 `
 
 func (r *Runner) newGenerateRegistryCommand() *cli.Command {
@@ -85,9 +101,18 @@ func (r *Runner) newGenerateRegistryCommand() *cli.Command {
 				Name:  "out-testdata",
 				Usage: "A file path where the testdata is outputted",
 			},
+			&cli.StringFlag{
+				Name:  "cmd",
+				Usage: "A list of commands joined with single quotes ','",
+			},
+			&cli.IntFlag{
+				Name:    "limit",
+				Aliases: []string{"l"},
+				Usage:   "the maximum number of versions",
+			},
 			&cli.BoolFlag{
 				Name:  "deep",
-				Usage: "Resolve version_overrides",
+				Usage: "This flag was deprecated and had no meaning from aqua v2.15.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/2351",
 			},
 		},
 	}

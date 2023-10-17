@@ -2,6 +2,7 @@ package genrgst
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -42,9 +43,14 @@ func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter Testda
 	}
 }
 
+var errLimitMustBeGreaterEqualThanZero = errors.New("limit must be greater equal than zero")
+
 func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
 	if len(args) == 0 {
 		return nil
+	}
+	if param.Limit < 0 {
+		return errLimitMustBeGreaterEqualThanZero
 	}
 	for _, arg := range args {
 		if err := c.genRegistry(ctx, param, logE, arg); err != nil {
@@ -56,6 +62,15 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 
 func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
 	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param)
+	if len(param.Commands) != 0 {
+		files := make([]*registry.File, len(param.Commands))
+		for i, cmd := range param.Commands {
+			files[i] = &registry.File{
+				Name: cmd,
+			}
+		}
+		pkgInfo.Files = files
+	}
 	if param.OutTestData != "" {
 		if err := c.testdataOutputter.Output(&output.Param{
 			List: listPkgsFromVersions(pkgName, versions),
@@ -118,8 +133,8 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	} else {
 		pkgInfo.Description = strings.TrimRight(strings.TrimSpace(gomoji.RemoveEmojis(repo.GetDescription())), ".!?")
 	}
-	if param.Deep && version == "" {
-		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo)
+	if param.Limit != 1 && version == "" {
+		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, param.Limit)
 	}
 	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {
