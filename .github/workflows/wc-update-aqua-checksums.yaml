@@ -10,7 +10,7 @@ on:
 jobs:
   update-aqua-checksums:
     # Update aqua-checksums.json and push a commit
-    uses: aquaproj/update-checksum-workflow/.github/workflows/update-checksum.yaml@01a3dfca0b401e2fa1ff11f2b840d227806deca1 # v0.1.7
+    uses: aquaproj/update-checksum-workflow/.github/workflows/update-checksum.yaml@9ccbd9ade4e8b92b0dd5757cacf6cd3ebcf7d876 # v0.1.8
     permissions:
       contents: read
     with:
