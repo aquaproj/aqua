@@ -26,6 +26,22 @@ func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *conf
 		return nil
 	}
 
+	cmds := make([]string, 0, len(param.Args))
+	pkgs := make([]string, 0, len(param.Args))
+	for _, arg := range param.Args {
+		if strings.Contains(arg, "/") {
+			pkgs = append(pkgs, arg)
+			continue
+		}
+		cmds = append(cmds, arg)
+	}
+
+	if err := c.removeCommands(ctx, logE, param, cmds); err != nil {
+		return err
+	}
+
+	param.Args = pkgs
+
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)
@@ -115,6 +131,23 @@ func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, reg
 		if err := c.removePackage(logE, param.RootDir, pkg); err != nil {
 			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
 				"package_name": pkgName,
+			}))
+		}
+	}
+	return nil
+}
+
+func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, param *config.Param, cmds []string) error {
+	for _, cmd := range cmds {
+		logE := logE.WithField("exe_name", cmd)
+		findResult, err := c.which.Which(ctx, logE, param, cmd)
+		if err != nil {
+			return fmt.Errorf("find a command: %w", err)
+		}
+		logE = logE.WithField("package_name", findResult.Package.Package.Name)
+		if err := c.removePackage(logE, param.RootDir, findResult.Package.PackageInfo); err != nil {
+			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
+				"package_name": findResult.Package.Package.Name,
 			}))
 		}
 	}

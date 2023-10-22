@@ -328,6 +328,9 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 	slsaVerifierImpl := slsa.New(downloader, fs, executorImpl)
 	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifierImpl, slsaVerifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
-	controller := remove.New(param, fs, rt, configFinder, configReaderImpl, installerImpl, fuzzyfinderFinder)
+	osEnv := osenv.New()
+	linker := link.New()
+	controllerImpl := which.New(param, configFinder, configReaderImpl, installerImpl, rt, osEnv, fs, linker)
+	controller := remove.New(param, fs, rt, configFinder, configReaderImpl, installerImpl, fuzzyfinderFinder, controllerImpl)
 	return controller
 }
