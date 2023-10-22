@@ -3,6 +3,7 @@ package remove
 import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -17,13 +18,14 @@ type Controller struct {
 	configReader      reader.ConfigReader
 	registryInstaller rgst.Installer
 	fuzzyFinder       FuzzyFinder
+	which             which.Controller
 }
 
 type FuzzyFinder interface {
 	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader reader.ConfigReader, registryInstaller rgst.Installer, fuzzyFinder FuzzyFinder) *Controller {
+func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader reader.ConfigReader, registryInstaller rgst.Installer, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		fs:                fs,
@@ -32,6 +34,7 @@ func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder Con
 		configReader:      configReader,
 		registryInstaller: registryInstaller,
 		fuzzyFinder:       fuzzyFinder,
+		which:             whichController,
 	}
 }
 

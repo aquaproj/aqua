@@ -866,6 +866,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		wire.NewSet(
 			finder.NewConfigFinder,
 			wire.Bind(new(remove.ConfigFinder), new(*finder.ConfigFinder)),
+			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -910,6 +911,15 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		wire.NewSet(
 			fuzzyfinder.New,
 			wire.Bind(new(remove.FuzzyFinder), new(*fuzzyfinder.Finder)),
+		),
+		wire.NewSet(
+			which.New,
+			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+		),
+		osenv.New,
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(domain.Linker), new(*link.Linker)),
 		),
 	)
 	return &remove.Controller{}
