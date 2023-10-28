@@ -17,61 +17,121 @@ jobs:
           go-version: 1.21.3
           cache: true
 
+      - uses: suzuki-shunsuke/github-token-action@04d633c696e9d09e958c8b815c75db9606d6d927 # v0.2.0
+        id: token
+        with:
+          github_app_id: ${{secrets.APP_ID}}
+          github_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
+          default_github_token: ${{github.token}}
+
       - run: go install ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
       - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: echo "x-motemen/ghq" | aqua g -f -
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/main/aqua-global.yaml g -f -
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua g x-motemen/ghq aquaproj/aqua-installer
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: Test -pin
         run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: Test version_prefix
         run: aqua -c aqua.yaml g -i kubernetes-sigs/kustomize
         working-directory: tests/main
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - run: aqua list
       - run: aqua update-checksum
         working-directory: tests/main
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua update-checksum -prune
         working-directory: tests/main
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua i -l -a
         working-directory: tests/main
       - run: aqua i
         working-directory: tests/main
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua which go
       - run: kind version
         working-directory: tests/main
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: kind version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: restic version
         env:
           AQUA_PROGRESS_BAR: "true"
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: migrate -version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: ghq -version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: gh version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: tfenv --version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: bats -v
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: helm version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: github-compare -v
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: terrafmt version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: Test the package type "cargo"
         run: sk --version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: Test search versions of the package type "cargo"
         run: aqua -c tests/main/aqua-global.yaml g local,crates.io/skim
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: Test aqua gr cargo
         run: aqua gr crates.io/skim
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test cosign
         run: aqua i
         working-directory: tests/cosign
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test SLSA
         run: aqua i
         working-directory: tests/slsa
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: output bash completion
         run: aqua completion bash
@@ -80,61 +140,91 @@ jobs:
 
       - run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: add duplicated package
         run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: git diff aqua.yaml
         working-directory: tests/main
 
       - name: "Test generate-registry"
-        run: aqua gr cli/cli
-      - name: "Test generate-registry (emoji)"
-        run: aqua gr hmarr/codeowners
-      - name: "Test generate-registry (rust)"
-        run: aqua gr XAMPPRocky/tokei
+        run: aqua gr suzuki-shunsuke/mkghtag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: Test generate-registry (specify version)
         run: aqua gr suzuki-shunsuke/tfcmt@v3.2.4
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test aqua cp
         run: aqua cp actionlint
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test aqua cp
         run: dist/actionlint -version
       - name: test aqua cp
         run: aqua cp
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test aqua cp -a
         run: aqua cp -a
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test tags
         run: aqua i
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i -t test
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i -t foo,bar
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i --exclude-tags test
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i --exclude-tags test -t foo
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test tags
         run: aqua cp
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp -t test
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp -t foo,bar
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp --exclude-tags test
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp --exclude-tags test -t foo
         working-directory: tests/tag
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: update only registrires
         run: |
@@ -149,6 +239,8 @@ jobs:
           git diff .
           git checkout -- .
         working-directory: tests/update
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: update all registries and packages
         run: |
@@ -156,6 +248,8 @@ jobs:
           git diff .
           git checkout -- .
         working-directory: tests/update
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: update only specific command
         run: |
@@ -163,8 +257,12 @@ jobs:
           git diff .
           git checkout -- .
         working-directory: tests/update
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - run: aqua update-checksum -a
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: Test rm
         run: aqua rm x-motemen/ghq bats-core/bats-core
@@ -178,3 +276,5 @@ jobs:
 
       - name: Test update-aqua
         run: aqua update-aqua
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}

@@ -1,74 +1,92 @@
 ---
 project_name: aqua
+
 archives:
-- name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
-  format_overrides:
-  - goos: windows
-    format: zip
+  - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
 builds:
-- binary: aqua
-  main: cmd/aqua/main.go
-  env:
-  - CGO_ENABLED=0
-  goos:
-  - windows
-  - darwin
-  - linux
-  goarch:
-  - amd64
-  - arm64
+  - binary: aqua
+    main: cmd/aqua/main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
 release:
   prerelease: true
   header: |
     [Pull Requests](https://github.com/aquaproj/aqua/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/aquaproj/aqua/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/aquaproj/aqua/compare/{{.PreviousTag}}...{{.Tag}}
+
 signs:
-- cmd: cosign
-  artifacts: checksum
-  signature: ${artifact}.sig
-  certificate: ${artifact}.pem
-  output: true
-  env:
-  - COSIGN_EXPERIMENTAL=1
-  args:
-  - sign-blob
-  - --output-signature
-  - ${signature}
-  - --output-certificate
-  - ${certificate}
-  - --oidc-provider
-  - github
-  - ${artifact}
+  - cmd: cosign
+    artifacts: checksum
+    signature: ${artifact}.sig
+    certificate: ${artifact}.pem
+    output: true
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    args:
+      - sign-blob
+      - --output-signature
+      - ${signature}
+      - --output-certificate
+      - ${certificate}
+      - --oidc-provider
+      - github
+      - ${artifact}
+
 brews:
--
-  # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
-  # same kind. We will probably unify this in the next major version like it is done with scoop.
+  -
+    # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
+    # same kind. We will probably unify this in the next major version like it is done with scoop.
 
-  # GitHub/GitLab repository to push the formula to
-  repository:
-    owner: aquaproj
-    name: homebrew-aqua
-    token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-  # The project name and current git tag are used in the format string.
-  commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-  # Your app's homepage.
-  # Default is empty.
-  homepage: https://github.com/aquaproj/aqua
+    # GitHub/GitLab repository to push the formula to
+    repository:
+      owner: aquaproj
+      name: homebrew-aqua
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    # The project name and current git tag are used in the format string.
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    # Your app's homepage.
+    # Default is empty.
+    homepage: https://github.com/aquaproj/aqua
 
-  # Template of your app's description.
-  # Default is empty.
-  description: |
-    Declarative CLI Version manager. Support Lazy Install and Sharable configuration mechanism named Registry. Switch versions seamlessly
-  license: MIT
+    # Template of your app's description.
+    # Default is empty.
+    description: |
+      Declarative CLI Version manager. Support Lazy Install and Sharable configuration mechanism named Registry. Switch versions seamlessly
+    license: MIT
 
-  # Setting this will prevent goreleaser to actually try to commit the updated
-  # formula - instead, the formula file will be stored on the dist folder only,
-  # leaving the responsibility of publishing it to the user.
-  # If set to auto, the release will not be uploaded to the homebrew tap
-  # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
-  # Default is false.
-  skip_upload: auto
+    # Setting this will prevent goreleaser to actually try to commit the updated
+    # formula - instead, the formula file will be stored on the dist folder only,
+    # leaving the responsibility of publishing it to the user.
+    # If set to auto, the release will not be uploaded to the homebrew tap
+    # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
+    # Default is false.
+    skip_upload: auto
 
-  # So you can `brew test` your formula.
-  # Default is empty.
-  test: |
-    system "#{bin}/aqua --version"
+    # So you can `brew test` your formula.
+    # Default is empty.
+    test: |
+      system "#{bin}/aqua --version"
+
+scoops:
+  -
+    description: |
+      Declarative CLI Version manager written in Go.
+      Support Lazy Install, Registry, and continuous update by Renovate.
+      CLI version is switched seamlessly
+    license: MIT
+    skip_upload: auto
+    repository:
+      owner: aquaproj
+      name: scoop-bucket
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"

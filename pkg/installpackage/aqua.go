@@ -60,7 +60,7 @@ func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, ve
 			// 		},
 			// 	},
 			// },
-			VersionConstraints: `semver(">= 2.16.2")`,
+			VersionConstraints: `semver(">= 2.17.0")`,
 			VersionOverrides: []*registry.VersionOverride{
 				{
 					VersionConstraints: `semver(">= 1.26.0")`,
