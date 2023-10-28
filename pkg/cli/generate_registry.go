@@ -97,7 +97,7 @@ func (r *Runner) newGenerateRegistryCommand() *cli.Command {
 			},
 			&cli.StringFlag{
 				Name:  "cmd",
-				Usage: "A list of commands joined with single quotes ','",
+				Usage: "A list of commands joined with commas ','",
 			},
 			&cli.IntFlag{
 				Name:    "limit",
