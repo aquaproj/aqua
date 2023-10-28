@@ -1,7 +1,9 @@
 ---
 project_name: aqua
+
 archives:
   - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+
 builds:
   - binary: aqua
     main: cmd/aqua/main.go
@@ -14,10 +16,12 @@ builds:
     goarch:
       - amd64
       - arm64
+
 release:
   prerelease: true
   header: |
     [Pull Requests](https://github.com/aquaproj/aqua/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/aquaproj/aqua/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/aquaproj/aqua/compare/{{.PreviousTag}}...{{.Tag}}
+
 signs:
   - cmd: cosign
     artifacts: checksum
@@ -35,6 +39,7 @@ signs:
       - --oidc-provider
       - github
       - ${artifact}
+
 brews:
   -
     # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
@@ -69,3 +74,16 @@ brews:
     # Default is empty.
     test: |
       system "#{bin}/aqua --version"
+
+scoops:
+  -
+    description: |
+      Declarative CLI Version manager written in Go.
+      Support Lazy Install, Registry, and continuous update by Renovate.
+      CLI version is switched seamlessly
+    license: MIT
+    skip_upload: auto
+    repository:
+      owner: aquaproj
+      name: scoop-bucket
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
