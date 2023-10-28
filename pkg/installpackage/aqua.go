@@ -24,7 +24,14 @@ func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, ve
 			Type:      "github_release",
 			RepoOwner: "aquaproj",
 			RepoName:  "aqua",
-			Asset:     "aqua_{{.OS}}_{{.Arch}}.tar.gz",
+			Asset:     "aqua_{{.OS}}_{{.Arch}}.{{.Format}}",
+			Format:    "tar.gz",
+			Overrides: []*registry.Override{
+				{
+					GOOS:   "windows",
+					Format: "zip",
+				},
+			},
 			Files: []*registry.File{
 				{
 					Name: "aqua",
@@ -53,10 +60,31 @@ func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, ve
 			// 		},
 			// 	},
 			// },
-			VersionConstraints: `semver(">= 1.26.0")`,
+			VersionConstraints: `semver(">= 2.16.2")`,
 			VersionOverrides: []*registry.VersionOverride{
 				{
-					VersionConstraints: "true",
+					VersionConstraints: `semver(">= 1.26.0")`,
+					SLSAProvenance: &registry.SLSAProvenance{
+						Enabled: &disabled,
+					},
+					Overrides: []*registry.Override{},
+					Checksum: &registry.Checksum{
+						Type:       "github_release",
+						Asset:      "aqua_{{trimV .Version}}_checksums.txt",
+						FileFormat: "regexp",
+						Algorithm:  "sha256",
+						Pattern: &registry.ChecksumPattern{
+							Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+							File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+						},
+						Cosign: &registry.Cosign{
+							Opts: []string{},
+						},
+					},
+				},
+				{
+					VersionConstraints: `semver("< 1.26.0")`,
+					Overrides:          []*registry.Override{},
 					SLSAProvenance: &registry.SLSAProvenance{
 						Enabled: &disabled,
 					},
