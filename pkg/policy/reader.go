@@ -25,7 +25,7 @@ func (r *MockReader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []
 	return r.Configs, r.Err
 }
 
-type ReaderImpl struct {
+type Reader struct {
 	mutex     *sync.RWMutex
 	policies  map[string]*Config
 	fs        afero.Fs
@@ -34,8 +34,8 @@ type ReaderImpl struct {
 	reader    ConfigReader
 }
 
-func NewReader(fs afero.Fs, validator Validator, finder ConfigFinder, reader ConfigReader) *ReaderImpl {
-	return &ReaderImpl{
+func NewReader(fs afero.Fs, validator Validator, finder ConfigFinder, reader ConfigReader) *Reader {
+	return &Reader{
 		mutex:     &sync.RWMutex{},
 		policies:  map[string]*Config{},
 		fs:        fs,
@@ -45,7 +45,7 @@ func NewReader(fs afero.Fs, validator Validator, finder ConfigFinder, reader Con
 	}
 }
 
-func (r *ReaderImpl) Read(policyFilePaths []string) ([]*Config, error) {
+func (r *Reader) Read(policyFilePaths []string) ([]*Config, error) {
 	cfgs, err := r.reader.Read(policyFilePaths)
 	if err != nil {
 		return nil, fmt.Errorf("read policies from the environment variable: %w", err)
@@ -54,7 +54,7 @@ func (r *ReaderImpl) Read(policyFilePaths []string) ([]*Config, error) {
 	return cfgs, nil
 }
 
-func (r *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+func (r *Reader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
 	policyFilePath, err := r.finder.Find("", filepath.Dir(aquaYAMLPath))
 	if err != nil {
 		return nil, fmt.Errorf("find a policy file: %w", err)
@@ -75,13 +75,13 @@ func (r *ReaderImpl) Append(logE *logrus.Entry, aquaYAMLPath string, policies []
 	return append(policies, policyCfg), nil
 }
 
-func (r *ReaderImpl) get(p string) *Config {
+func (r *Reader) get(p string) *Config {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 	return r.policies[p]
 }
 
-func (r *ReaderImpl) set(p string, cfg *Config) {
+func (r *Reader) set(p string, cfg *Config) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	r.policies[p] = cfg
@@ -93,7 +93,7 @@ func allowCfgs(cfgs []*Config) {
 	}
 }
 
-func (r *ReaderImpl) read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
+func (r *Reader) read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
 	if cfg := r.get(policyFilePath); cfg != nil {
 		if cfg.Allowed {
 			return cfg, nil
