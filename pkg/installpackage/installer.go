@@ -3,18 +3,18 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/cosign"
-	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
+	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -30,12 +30,12 @@ type InstallerImpl struct {
 	downloader            download.ClientAPI
 	checksumDownloader    download.ChecksumDownloader
 	checksumCalculator    ChecksumCalculator
-	linker                domain.Linker
-	unarchiver            unarchive.Unarchiver
-	cosign                cosign.Verifier
-	slsaVerifier          slsa.Verifier
+	linker                Linker
+	unarchiver            Unarchiver
+	cosign                CosignVerifier
+	slsaVerifier          SLSAVerifier
 	cosignInstaller       *Cosign
-	slsaVerifierInstaller *SLSAVerifier
+	slsaVerifierInstaller *SLSAVerifierInstaller
 	goInstallInstaller    GoInstallInstaller
 	goBuildInstaller      GoBuildInstaller
 	cargoPackageInstaller CargoPackageInstaller
@@ -48,20 +48,20 @@ type InstallerImpl struct {
 	onlyLink              bool
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
 	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller)
 	installer.cosignInstaller = &Cosign{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
 		mutex:     &sync.Mutex{},
 	}
-	installer.slsaVerifierInstaller = &SLSAVerifier{
+	installer.slsaVerifierInstaller = &SLSAVerifierInstaller{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
 		mutex:     &sync.Mutex{},
 	}
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker domain.Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver unarchive.Unarchiver, cosignVerifier cosign.Verifier, slsaVerifier slsa.Verifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
 	return &InstallerImpl{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
@@ -81,6 +81,24 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		goBuildInstaller:      goBuildInstaller,
 		cargoPackageInstaller: cargoPackageInstaller,
 	}
+}
+
+type Linker interface {
+	Lstat(s string) (os.FileInfo, error)
+	Symlink(dest, src string) error
+	Readlink(src string) (string, error)
+}
+
+type SLSAVerifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *slsa.ParamVerify) error
+}
+
+type CosignVerifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
+}
+
+type Unarchiver interface {
+	Unarchive(ctx context.Context, logE *logrus.Entry, src *unarchive.File, dest string) error
 }
 
 type Installer interface {

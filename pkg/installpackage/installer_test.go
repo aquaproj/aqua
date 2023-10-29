@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
-	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -181,7 +180,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			if err != nil {
 				t.Fatal(err)
 			}
-			linker := domain.NewMockLinker(afero.NewMemMapFs())
+			linker := installpackage.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

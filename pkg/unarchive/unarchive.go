@@ -25,7 +25,7 @@ type File struct {
 	Type     string
 }
 
-type UnarchiverImpl struct {
+type Unarchiver struct {
 	executor Executor
 	fs       afero.Fs
 }
@@ -36,10 +36,6 @@ type DownloadedFile interface {
 	Wrap(w io.Writer) io.Writer
 }
 
-type Unarchiver interface {
-	Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error
-}
-
 type MockUnarchiver struct {
 	Err error
 }
@@ -48,14 +44,14 @@ func (u *MockUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src 
 	return u.Err
 }
 
-func New(executor Executor, fs afero.Fs) *UnarchiverImpl {
-	return &UnarchiverImpl{
+func New(executor Executor, fs afero.Fs) *Unarchiver {
+	return &Unarchiver{
 		executor: executor,
 		fs:       fs,
 	}
 }
 
-func (u *UnarchiverImpl) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
+func (u *Unarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
 	arc, err := u.getUnarchiver(src, dest)
 	if err != nil {
 		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
@@ -75,7 +71,7 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func (u *UnarchiverImpl) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
+func (u *Unarchiver) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{

@@ -2,7 +2,7 @@ package install
 
 import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
@@ -14,7 +14,7 @@ type Controller struct {
 	packageInstaller   installpackage.Installer
 	rootDir            string
 	configFinder       ConfigFinder
-	configReader       reader.ConfigReader
+	configReader       ConfigReader
 	registryInstaller  registry.Installer
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
@@ -26,7 +26,7 @@ type Controller struct {
 	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -42,4 +42,8 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		policyConfigFinder: policyConfigFinder,
 		requireChecksum:    param.RequireChecksum,
 	}
+}
+
+type ConfigReader interface {
+	Read(configFilePath string, cfg *aqua.Config) error
 }

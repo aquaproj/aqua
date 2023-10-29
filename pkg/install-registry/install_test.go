@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	cfgRegistry "github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
-	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -26,7 +25,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 		name        string
 		files       map[string]string
 		param       *config.Param
-		downloader  domain.GitHubContentFileDownloader
+		downloader  registry.GitHubContentFileDownloader
 		cfg         *aqua.Config
 		cfgFilePath string
 		isErr       bool

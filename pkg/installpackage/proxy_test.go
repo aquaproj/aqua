@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
-	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -57,7 +56,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			linker := domain.NewMockLinker(fs)
+			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

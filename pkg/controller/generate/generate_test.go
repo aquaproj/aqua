@@ -11,11 +11,11 @@ import (
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
-	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -387,7 +387,7 @@ packages:
 			if err != nil {
 				t.Fatal(err)
 			}
-			linker := domain.NewMockLinker(fs)
+			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

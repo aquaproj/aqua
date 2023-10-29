@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
@@ -20,12 +20,16 @@ type Controller struct {
 	github            RepositoriesService
 	registryInstaller rgst.Installer
 	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
+	configReader      ConfigReader
 	fuzzyFinder       FuzzyFinder
 	fs                afero.Fs
 	outputter         Outputter
 	cargoClient       cargo.Client
 	fuzzyGetter       FuzzyGetter
+}
+
+type ConfigReader interface {
+	Read(configFilePath string, cfg *aqua.Config) error
 }
 
 type FuzzyGetter interface {
@@ -37,7 +41,7 @@ type FuzzyFinder interface {
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, cargoClient cargo.Client, fuzzyGetter FuzzyGetter) *Controller {
+func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, cargoClient cargo.Client, fuzzyGetter FuzzyGetter) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,

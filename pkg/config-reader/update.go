@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func (r *ConfigReaderImpl) ReadToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
+func (r *ConfigReader) ReadToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
 	file, err := r.fs.Open(configFilePath)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
@@ -44,7 +44,7 @@ func (r *ConfigReaderImpl) ReadToUpdate(configFilePath string, cfg *aqua.Config)
 	return cfgs, nil
 }
 
-func (r *ConfigReaderImpl) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
+func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
 	cfgs := map[string]*aqua.Config{}
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {

@@ -2,7 +2,7 @@ package remove
 
 import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
@@ -15,17 +15,21 @@ type Controller struct {
 	fs                afero.Fs
 	runtime           *runtime.Runtime
 	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
+	configReader      ConfigReader
 	registryInstaller rgst.Installer
 	fuzzyFinder       FuzzyFinder
 	which             which.Controller
+}
+
+type ConfigReader interface {
+	Read(configFilePath string, cfg *aqua.Config) error
 }
 
 type FuzzyFinder interface {
 	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader reader.ConfigReader, registryInstaller rgst.Installer, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
+func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller rgst.Installer, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		fs:                fs,

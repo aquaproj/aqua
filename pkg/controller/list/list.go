@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/sirupsen/logrus"
@@ -18,12 +17,12 @@ import (
 type Controller struct {
 	stdout            io.Writer
 	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
+	configReader      ConfigReader
 	registryInstaller registry.Installer
 	fs                afero.Fs
 }
 
-func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs) *Controller {
+func NewController(configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
@@ -31,6 +30,10 @@ func NewController(configFinder ConfigFinder, configReader reader.ConfigReader, 
 		registryInstaller: registInstaller,
 		fs:                fs,
 	}
+}
+
+type ConfigReader interface {
+	Read(configFilePath string, cfg *aqua.Config) error
 }
 
 func (c *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error { //nolint:cyclop

@@ -1,4 +1,4 @@
-package domain
+package installpackage
 
 import (
 	"errors"
@@ -7,12 +7,6 @@ import (
 
 	"github.com/spf13/afero"
 )
-
-type Linker interface {
-	Lstat(s string) (os.FileInfo, error)
-	Symlink(dest, src string) error
-	Readlink(src string) (string, error)
-}
 
 type mockLinker struct {
 	files map[string]*mockFileInfo

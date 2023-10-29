@@ -1,9 +1,9 @@
-package domain_test
+package installpackage_test
 
 import (
 	"testing"
 
-	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/spf13/afero"
 )
 
@@ -33,7 +33,7 @@ func TestMockLinker_Lstat(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			linker := domain.NewMockLinker(afero.NewMemMapFs())
+			linker := installpackage.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.files {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)
@@ -81,7 +81,7 @@ func TestMockLinker_Readlink(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			linker := domain.NewMockLinker(afero.NewMemMapFs())
+			linker := installpackage.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.files {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

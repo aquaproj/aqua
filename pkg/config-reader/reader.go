@@ -17,20 +17,16 @@ import (
 
 var errHomeDirEmpty = errors.New("failed to get a user home directory")
 
-type ConfigReaderImpl struct {
+type ConfigReader struct {
 	fs      afero.Fs
 	homeDir string
 }
 
-func New(fs afero.Fs, param *config.Param) *ConfigReaderImpl {
-	return &ConfigReaderImpl{
+func New(fs afero.Fs, param *config.Param) *ConfigReader {
+	return &ConfigReader{
 		fs:      fs,
 		homeDir: param.HomeDir,
 	}
-}
-
-type ConfigReader interface {
-	Read(configFilePath string, cfg *aqua.Config) error
 }
 
 type MockConfigReader struct {
@@ -45,7 +41,7 @@ func (r *MockConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
 
 const homePrefix = "$HOME" + string(os.PathSeparator)
 
-func (r *ConfigReaderImpl) Read(configFilePath string, cfg *aqua.Config) error {
+func (r *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
 	file, err := r.fs.Open(configFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -75,7 +71,7 @@ func (r *ConfigReaderImpl) Read(configFilePath string, cfg *aqua.Config) error {
 	return nil
 }
 
-func (r *ConfigReaderImpl) readImports(configFilePath string, cfg *aqua.Config) error {
+func (r *ConfigReader) readImports(configFilePath string, cfg *aqua.Config) error {
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg == nil {
