@@ -72,8 +72,8 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 	fs := afero.NewOsFs()
 	repositoriesService := github.New(ctx)
 	outputter := output.New(stdout, fs)
-	clientImpl := cargo.NewClientImpl(httpClient)
-	controller := genrgst.NewController(fs, repositoriesService, outputter, clientImpl)
+	client := cargo.NewClient(httpClient)
+	controller := genrgst.NewController(fs, repositoriesService, outputter, client)
 	return controller
 }
 
@@ -104,13 +104,13 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
-	clientImpl := cargo.NewClientImpl(httpClient)
-	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
+	client := cargo.NewClient(httpClient)
+	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
-	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyfinderFinder, clientImpl, fuzzyGetter)
+	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyfinderFinder, fuzzyGetter)
 	return controller
 }
 
@@ -278,8 +278,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
-	clientImpl := cargo.NewClientImpl(httpClient)
-	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
+	client := cargo.NewClient(httpClient)
+	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)

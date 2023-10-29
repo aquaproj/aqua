@@ -17,12 +17,6 @@ type PayloadVersion struct {
 	Num string `json:"num"`
 }
 
-type Client interface {
-	ListVersions(ctx context.Context, crate string) ([]string, error)
-	GetLatestVersion(ctx context.Context, crate string) (string, error)
-	GetCrate(ctx context.Context, crate string) (*CratePayload, error)
-}
-
 type CratePayload struct {
 	Crate *Crate `json:"crate"`
 }
@@ -54,22 +48,22 @@ func (m *MockClient) GetCrate(ctx context.Context, crate string) (*CratePayload,
 	return m.CratePayload, m.Err
 }
 
-type ClientImpl struct {
+type Client struct {
 	client *http.Client
 }
 
-func NewClientImpl(client *http.Client) *ClientImpl {
-	return &ClientImpl{
+func NewClient(client *http.Client) *Client {
+	return &Client{
 		client: client,
 	}
 }
 
-func (c *ClientImpl) ListVersions(ctx context.Context, crate string) ([]string, error) {
+func (c *Client) ListVersions(ctx context.Context, crate string) ([]string, error) {
 	versions, _, err := listInstallableVersions(ctx, c.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s/versions", crate))
 	return versions, err
 }
 
-func (c *ClientImpl) GetLatestVersion(ctx context.Context, crate string) (string, error) {
+func (c *Client) GetLatestVersion(ctx context.Context, crate string) (string, error) {
 	versions, err := c.ListVersions(ctx, crate)
 	if len(versions) == 0 {
 		return "", err
@@ -77,7 +71,7 @@ func (c *ClientImpl) GetLatestVersion(ctx context.Context, crate string) (string
 	return versions[0], err
 }
 
-func (c *ClientImpl) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
+func (c *Client) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
 	payload, _, err := getCrate(ctx, c.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s", crate))
 	return payload, err
 }

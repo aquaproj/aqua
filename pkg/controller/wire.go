@@ -116,8 +116,8 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 			wire.Bind(new(genrgst.TestdataOutputter), new(*output.Outputter)),
 		),
 		wire.NewSet(
-			cargo.NewClientImpl,
-			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
+			cargo.NewClient,
+			wire.Bind(new(genrgst.CargoClient), new(*cargo.Client)),
 		),
 	)
 	return &genrgst.Controller{}
@@ -202,9 +202,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 		wire.NewSet(
-			cargo.NewClientImpl,
-			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
-			wire.Bind(new(versiongetter.CargoClient), new(*cargo.ClientImpl)),
+			cargo.NewClient,
+			wire.Bind(new(versiongetter.CargoClient), new(*cargo.Client)),
 		),
 		wire.NewSet(
 			versiongetter.NewFuzzy,
@@ -826,9 +825,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
 		wire.NewSet(
-			cargo.NewClientImpl,
-			wire.Bind(new(cargo.Client), new(*cargo.ClientImpl)),
-			wire.Bind(new(versiongetter.CargoClient), new(*cargo.ClientImpl)),
+			cargo.NewClient,
+			wire.Bind(new(versiongetter.CargoClient), new(*cargo.Client)),
 		),
 		wire.NewSet(
 			which.New,

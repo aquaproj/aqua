@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -24,7 +23,6 @@ type Controller struct {
 	fuzzyFinder       FuzzyFinder
 	fs                afero.Fs
 	outputter         Outputter
-	cargoClient       cargo.Client
 	fuzzyGetter       FuzzyGetter
 }
 
@@ -41,7 +39,7 @@ type FuzzyFinder interface {
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, cargoClient cargo.Client, fuzzyGetter FuzzyGetter) *Controller {
+func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, fuzzyGetter FuzzyGetter) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
@@ -50,7 +48,6 @@ func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller R
 		github:            gh,
 		fs:                fs,
 		fuzzyFinder:       fuzzyFinder,
-		cargoClient:       cargoClient,
 		outputter:         output.New(os.Stdout, fs),
 		fuzzyGetter:       fuzzyGetter,
 	}
