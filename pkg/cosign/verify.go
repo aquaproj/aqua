@@ -27,7 +27,7 @@ func GetMutex() *sync.Mutex {
 	return mutex
 }
 
-type VerifierImpl struct {
+type Verifier struct {
 	executor      Executor
 	fs            afero.Fs
 	downloader    download.ClientAPI
@@ -35,9 +35,9 @@ type VerifierImpl struct {
 	disabled      bool
 }
 
-func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *VerifierImpl {
+func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *Verifier {
 	rt := runtime.NewR()
-	return &VerifierImpl{
+	return &Verifier{
 		executor:   executor,
 		fs:         fs,
 		downloader: downloader,
@@ -50,10 +50,6 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 	}
 }
 
-type Verifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
-}
-
 type MockVerifier struct {
 	err error
 }
@@ -62,7 +58,7 @@ func (v *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runti
 	return v.err
 }
 
-func (v *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
+func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
 	if v.disabled {
 		logE.Debug("verification with cosign is disabled")
 		return nil
@@ -156,7 +152,7 @@ type ParamVerify struct {
 
 var errVerify = errors.New("verify with Cosign")
 
-func (v *VerifierImpl) exec(ctx context.Context, args, envs []string) (string, error) {
+func (v *Verifier) exec(ctx context.Context, args, envs []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -177,7 +173,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	return nil
 }
 
-func (v *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
+func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	envs := []string{}
 	if param.CosignExperimental {
 		envs = []string{"COSIGN_EXPERIMENTAL=1"}
@@ -199,7 +195,7 @@ func (v *VerifierImpl) verify(ctx context.Context, logE *logrus.Entry, param *Pa
 	return errVerify
 }
 
-func (v *VerifierImpl) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
+func (v *Verifier) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
 	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("get a readcloser: %w", err)

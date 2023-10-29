@@ -12,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
@@ -29,12 +28,12 @@ type InstallerImpl struct {
 	registryDownloader domain.GitHubContentFileDownloader
 	param              *config.Param
 	fs                 afero.Fs
-	cosign             cosign.Verifier
+	cosign             CosignVerifier
 	slsaVerifier       SLSAVerifier
 	rt                 *runtime.Runtime
 }
 
-func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos cosign.Verifier, slsaVerifier SLSAVerifier) *InstallerImpl {
+func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *InstallerImpl {
 	return &InstallerImpl{
 		param:              param,
 		registryDownloader: downloader,
@@ -47,6 +46,10 @@ func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs 
 
 type SLSAVerifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *slsa.ParamVerify) error
+}
+
+type CosignVerifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
 }
 
 type Installer interface {
