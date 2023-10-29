@@ -275,7 +275,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.UnarchiverImpl)),
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
@@ -441,7 +441,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.UnarchiverImpl)),
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
@@ -517,7 +517,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.UnarchiverImpl)),
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
 		wire.NewSet(
 			checksum.NewCalculator,
@@ -629,7 +629,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			unarchive.New,
-			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.UnarchiverImpl)),
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
 		),
 		wire.NewSet(
 			policy.NewConfigReader,
