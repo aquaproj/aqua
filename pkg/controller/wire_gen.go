@@ -63,8 +63,8 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
-	controller := list.NewController(configFinder, configReader, installerImpl, fs)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	controller := list.NewController(configFinder, configReader, installer, fs)
 	return controller
 }
 
@@ -102,7 +102,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	clientImpl := cargo.NewClientImpl(httpClient)
 	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
@@ -110,7 +110,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
-	controller := generate.New(configFinder, configReader, installerImpl, repositoriesService, fs, fuzzyfinderFinder, clientImpl, fuzzyGetter)
+	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyfinderFinder, clientImpl, fuzzyGetter)
 	return controller
 }
 
@@ -126,7 +126,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
@@ -134,12 +134,12 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installpackageInstallerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, verifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, verifierImpl, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, installerImpl, installpackageInstallerImpl, fs, rt, policyReader, configFinderImpl)
+	controller := install.New(param, configFinder, configReader, installer, installerImpl, fs, rt, policyReader, configFinderImpl)
 	return controller
 }
 
@@ -155,10 +155,10 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	osEnv := osenv.New()
 	linker := link.New()
-	controllerImpl := which.New(param, configFinder, configReader, installerImpl, rt, osEnv, fs, linker)
+	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	return controllerImpl
 }
 
@@ -182,9 +182,9 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstallerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	osEnv := osenv.New()
-	controllerImpl := which.New(param, configFinder, configReader, registryInstallerImpl, rt, osEnv, fs, linker)
+	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
@@ -234,14 +234,14 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstallerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	osEnv := osenv.New()
-	controllerImpl := which.New(param, configFinder, configReader, registryInstallerImpl, rt, osEnv, fs, linker)
+	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, registryInstallerImpl, installerImpl, fs, rt, policyReader, configFinderImpl)
+	controller := install.New(param, configFinder, configReader, installer, installerImpl, fs, rt, policyReader, configFinderImpl)
 	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, policyReader)
 	return cpController
 }
@@ -258,9 +258,9 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
-	controller := updatechecksum.New(param, configFinder, configReader, installerImpl, fs, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader)
+	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader)
 	return controller
 }
 
@@ -276,7 +276,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	clientImpl := cargo.NewClientImpl(httpClient)
 	cargoVersionGetter := versiongetter.NewCargo(clientImpl)
@@ -286,8 +286,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()
-	controllerImpl := which.New(param, configFinder, configReader, installerImpl, rt, osEnv, fs, linker)
-	controller := update.New(param, repositoriesService, configFinder, configReader, installerImpl, fs, rt, fuzzyGetter, fuzzyfinderFinder, controllerImpl)
+	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	controller := update.New(param, repositoriesService, configFinder, configReader, installer, fs, rt, fuzzyGetter, fuzzyfinderFinder, controllerImpl)
 	return controller
 }
 
@@ -326,11 +326,11 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	verifierImpl := slsa.New(downloader, fs, executorImpl)
-	installerImpl := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	osEnv := osenv.New()
 	linker := link.New()
-	controllerImpl := which.New(param, configFinder, configReader, installerImpl, rt, osEnv, fs, linker)
-	controller := remove.New(param, fs, rt, configFinder, configReader, installerImpl, fuzzyfinderFinder, controllerImpl)
+	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	controller := remove.New(param, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controllerImpl)
 	return controller
 }
