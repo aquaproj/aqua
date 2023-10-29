@@ -27,10 +27,6 @@ func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *VerifierImpl
 	}
 }
 
-type Verifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error
-}
-
 type MockVerifier struct {
 	err error
 }

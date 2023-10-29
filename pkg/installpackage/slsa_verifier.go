@@ -13,12 +13,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type SLSAVerifier struct {
+type SLSAVerifierInstaller struct {
 	installer *InstallerImpl
 	mutex     *sync.Mutex
 }
 
-func (sv *SLSAVerifier) installSLSAVerifier(ctx context.Context, logE *logrus.Entry, version string) error {
+func (sv *SLSAVerifierInstaller) installSLSAVerifier(ctx context.Context, logE *logrus.Entry, version string) error {
 	sv.mutex.Lock()
 	defer sv.mutex.Unlock()
 	pkg := &config.Package{
