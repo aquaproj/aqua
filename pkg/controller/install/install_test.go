@@ -33,7 +33,7 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 		links             map[string]string
 		param             *config.Param
 		rt                *runtime.Runtime
-		registryInstaller registry.Installer
+		registryInstaller install.RegistryInstaller
 		isErr             bool
 	}{
 		{

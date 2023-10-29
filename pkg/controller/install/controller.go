@@ -1,9 +1,12 @@
 package install
 
 import (
+	"context"
+
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -16,7 +19,7 @@ type Controller struct {
 	rootDir            string
 	configFinder       ConfigFinder
 	configReader       ConfigReader
-	registryInstaller  registry.Installer
+	registryInstaller  RegistryInstaller
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
 	tags               map[string]struct{}
@@ -27,7 +30,7 @@ type Controller struct {
 	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -52,4 +55,8 @@ type ConfigReader interface {
 type PolicyReader interface {
 	Read(policyFilePaths []string) ([]*policy.Config, error)
 	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
+}
+
+type RegistryInstaller interface {
+	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 }

@@ -54,6 +54,7 @@ func (r *Reader) Read(policyFilePaths []string) ([]*Config, error) {
 	return cfgs, nil
 }
 
+// Append finds and reads a policy file for aquaYAMLPath and appends the policy to policies.
 func (r *Reader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
 	policyFilePath, err := r.finder.Find("", filepath.Dir(aquaYAMLPath))
 	if err != nil {
