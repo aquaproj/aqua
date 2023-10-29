@@ -5,6 +5,14 @@ import (
 )
 
 func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen,cyclop
+	if strings.Contains(lowAssetName, ".exe.") || strings.HasSuffix(lowAssetName, ".exe") {
+		assetInfo.OS = "windows"
+	} else if strings.HasSuffix(lowAssetName, ".dmg") || strings.HasSuffix(lowAssetName, ".pkg") {
+		// other formats take precedence over DMG because DMG requires external commands.
+		assetInfo.Score = -1
+		assetInfo.OS = osDarwin
+	}
+
 	osList := []*OS{
 		{
 			Name: "apple-darwin",
@@ -71,10 +79,14 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 			OS:   "windows",
 		},
 	}
+
 	for _, o := range osList {
+		if assetInfo.OS != "" && assetInfo.OS != o.OS {
+			continue
+		}
 		if idx := strings.Index(lowAssetName, o.Name); idx != -1 {
-			osName := assetName[idx : idx+len(o.Name)]
 			assetInfo.OS = o.OS
+			osName := assetName[idx : idx+len(o.Name)]
 			if osName != o.OS {
 				if assetInfo.Replacements == nil {
 					assetInfo.Replacements = map[string]string{}
@@ -86,16 +98,7 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 				// "unknown-linux-musl" and "pc-windows-msvc" take precedence over "unknown-linux-gnu" and "pc-windows-gnu".
 				assetInfo.Score = -1
 			}
-			break
-		}
-	}
-	if assetInfo.OS == "" {
-		if strings.Contains(lowAssetName, ".exe") {
-			assetInfo.OS = "windows"
-		} else if strings.HasSuffix(lowAssetName, ".dmg") || strings.HasSuffix(lowAssetName, ".pkg") {
-			// other formats take precedence over DMG because DMG requires external commands.
-			assetInfo.Score = -1
-			assetInfo.OS = osDarwin
+			return
 		}
 	}
 }
