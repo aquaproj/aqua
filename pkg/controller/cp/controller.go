@@ -23,12 +23,11 @@ type Controller struct {
 	runtime            *runtime.Runtime
 	which              which.Controller
 	installer          Installer
-	policyConfigReader policy.Reader
-	policyConfigFinder policy.ConfigFinder
+	policyConfigReader PolicyReader
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader PolicyReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,
@@ -37,9 +36,13 @@ func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *ru
 		which:              whichCtrl,
 		installer:          installer,
 		policyConfigReader: policyConfigReader,
-		policyConfigFinder: policyConfigFinder,
 		requireChecksum:    param.RequireChecksum,
 	}
+}
+
+type PolicyReader interface {
+	Read(policyFilePaths []string) ([]*policy.Config, error)
+	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
 }
 
 type ConfigFinder interface {

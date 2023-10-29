@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -21,12 +22,12 @@ type Controller struct {
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
 	policyConfigFinder policy.ConfigFinder
-	policyConfigReader policy.Reader
+	policyConfigReader PolicyReader
 	skipLink           bool
 	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -46,4 +47,9 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 
 type ConfigReader interface {
 	Read(configFilePath string, cfg *aqua.Config) error
+}
+
+type PolicyReader interface {
+	Read(policyFilePaths []string) ([]*policy.Config, error)
+	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
 }
