@@ -28,7 +28,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		cfgFinder        updatechecksum.ConfigFinder
 		cfgReader        updatechecksum.ConfigReader
 		registInstaller  rgst.Installer
-		registDownloader domain.GitHubContentFileDownloader
+		registDownloader updatechecksum.GitHubContentFileDownloader
 		fs               afero.Fs
 		rt               *runtime.Runtime
 		chkDL            download.ChecksumDownloader

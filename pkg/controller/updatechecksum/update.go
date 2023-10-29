@@ -25,7 +25,7 @@ type Controller struct {
 	configFinder       ConfigFinder
 	configReader       ConfigReader
 	registryInstaller  registry.Installer
-	registryDownloader domain.GitHubContentFileDownloader
+	registryDownloader GitHubContentFileDownloader
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
 	chkDL              download.ChecksumDownloader
@@ -33,7 +33,7 @@ type Controller struct {
 	prune              bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registDownloader domain.GitHubContentFileDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registDownloader GitHubContentFileDownloader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -46,6 +46,10 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		downloader:         pkgDownloader,
 		prune:              param.Prune,
 	}
+}
+
+type GitHubContentFileDownloader interface {
+	DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error)
 }
 
 type ConfigReader interface {

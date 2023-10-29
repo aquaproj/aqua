@@ -25,7 +25,7 @@ import (
 )
 
 type InstallerImpl struct {
-	registryDownloader domain.GitHubContentFileDownloader
+	registryDownloader GitHubContentFileDownloader
 	param              *config.Param
 	fs                 afero.Fs
 	cosign             CosignVerifier
@@ -33,7 +33,7 @@ type InstallerImpl struct {
 	rt                 *runtime.Runtime
 }
 
-func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *InstallerImpl {
+func New(param *config.Param, downloader GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *InstallerImpl {
 	return &InstallerImpl{
 		param:              param,
 		registryDownloader: downloader,
@@ -42,6 +42,10 @@ func New(param *config.Param, downloader domain.GitHubContentFileDownloader, fs 
 		cosign:             cos,
 		slsaVerifier:       slsaVerifier,
 	}
+}
+
+type GitHubContentFileDownloader interface {
+	DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error)
 }
 
 type SLSAVerifier interface {

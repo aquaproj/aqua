@@ -68,7 +68,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -164,7 +164,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -239,7 +239,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -345,7 +345,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -412,7 +412,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -605,7 +605,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -719,7 +719,9 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(updatechecksum.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -777,7 +779,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -903,7 +905,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		afero.NewOsFs,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			github.New,
