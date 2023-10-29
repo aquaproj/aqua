@@ -26,7 +26,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		name             string
 		param            *config.Param
 		cfgFinder        updatechecksum.ConfigFinder
-		cfgReader        reader.ConfigReader
+		cfgReader        updatechecksum.ConfigReader
 		registInstaller  rgst.Installer
 		registDownloader domain.GitHubContentFileDownloader
 		fs               afero.Fs

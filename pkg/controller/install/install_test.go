@@ -12,7 +12,6 @@ import (
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
-	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/exec"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
@@ -95,7 +94,7 @@ packages:
 			if err != nil {
 				t.Fatal(err)
 			}
-			linker := domain.NewMockLinker(fs)
+			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)

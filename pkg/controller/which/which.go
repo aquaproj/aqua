@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/domain"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -29,10 +28,10 @@ type ControllerImpl struct {
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	fs                afero.Fs
-	linker            domain.Linker
+	linker            Linker
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller rgst.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker) *ControllerImpl {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller rgst.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker Linker) *ControllerImpl {
 	return &ControllerImpl{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -48,6 +47,12 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 
 type Controller interface {
 	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error)
+}
+
+type Linker interface {
+	Lstat(s string) (os.FileInfo, error)
+	Symlink(dest, src string) error
+	Readlink(src string) (string, error)
 }
 
 type ConfigReader interface {

@@ -259,7 +259,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -356,7 +356,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+			wire.Bind(new(which.Linker), new(*link.Linker)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -440,7 +441,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+			wire.Bind(new(which.Linker), new(*link.Linker)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -539,7 +541,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -633,7 +635,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+			wire.Bind(new(which.Linker), new(*link.Linker)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -828,7 +831,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+			wire.Bind(new(which.Linker), new(*link.Linker)),
 		),
 		osenv.New,
 	)
@@ -941,7 +945,8 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		osenv.New,
 		wire.NewSet(
 			link.New,
-			wire.Bind(new(domain.Linker), new(*link.Linker)),
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+			wire.Bind(new(which.Linker), new(*link.Linker)),
 		),
 	)
 	return &remove.Controller{}
