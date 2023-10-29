@@ -13,48 +13,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
-
-type Controller struct {
-	rootDir            string
-	configFinder       ConfigFinder
-	configReader       ConfigReader
-	registryInstaller  registry.Installer
-	registryDownloader GitHubContentFileDownloader
-	fs                 afero.Fs
-	runtime            *runtime.Runtime
-	chkDL              download.ChecksumDownloader
-	downloader         download.ClientAPI
-	prune              bool
-}
-
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registDownloader GitHubContentFileDownloader) *Controller {
-	return &Controller{
-		rootDir:            param.RootDir,
-		configFinder:       configFinder,
-		configReader:       configReader,
-		registryInstaller:  registInstaller,
-		registryDownloader: registDownloader,
-		fs:                 fs,
-		runtime:            rt,
-		chkDL:              chkDL,
-		downloader:         pkgDownloader,
-		prune:              param.Prune,
-	}
-}
-
-type GitHubContentFileDownloader interface {
-	DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error)
-}
-
-type ConfigReader interface {
-	Read(configFilePath string, cfg *aqua.Config) error
-}
 
 func (c *Controller) UpdateChecksum(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {

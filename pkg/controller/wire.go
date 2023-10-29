@@ -64,7 +64,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(list.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -160,7 +160,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(generate.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -235,7 +235,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(install.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -341,7 +341,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -408,7 +408,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -601,7 +601,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(install.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -711,7 +712,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(updatechecksum.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -768,7 +769,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(update.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -901,7 +903,8 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(registry.Installer), new(*registry.InstallerImpl)),
+			wire.Bind(new(remove.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
 		),
 		afero.NewOsFs,
 		wire.NewSet(

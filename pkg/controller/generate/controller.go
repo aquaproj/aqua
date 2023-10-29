@@ -6,11 +6,11 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
-	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -18,7 +18,7 @@ import (
 type Controller struct {
 	stdin             io.Reader
 	github            RepositoriesService
-	registryInstaller rgst.Installer
+	registryInstaller RegistryInstaller
 	configFinder      ConfigFinder
 	configReader      ConfigReader
 	fuzzyFinder       FuzzyFinder
@@ -41,7 +41,7 @@ type FuzzyFinder interface {
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller rgst.Installer, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, cargoClient cargo.Client, fuzzyGetter FuzzyGetter) *Controller {
+func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, cargoClient cargo.Client, fuzzyGetter FuzzyGetter) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
@@ -54,4 +54,8 @@ func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller r
 		outputter:         output.New(os.Stdout, fs),
 		fuzzyGetter:       fuzzyGetter,
 	}
+}
+
+type RegistryInstaller interface {
+	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 }

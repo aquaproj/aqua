@@ -24,7 +24,7 @@ func TestController_List(t *testing.T) {
 		name              string
 		files             map[string]string
 		param             *config.Param
-		registryInstaller registry.Installer
+		registryInstaller list.RegistryInstaller
 		isErr             bool
 	}{
 		{

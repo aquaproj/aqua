@@ -9,69 +9,19 @@ import (
 	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
-	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/aquaproj/aqua/v2/pkg/slsa"
-	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
 
-type InstallerImpl struct {
-	registryDownloader GitHubContentFileDownloader
-	param              *config.Param
-	fs                 afero.Fs
-	cosign             CosignVerifier
-	slsaVerifier       SLSAVerifier
-	rt                 *runtime.Runtime
-}
-
-func New(param *config.Param, downloader GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *InstallerImpl {
-	return &InstallerImpl{
-		param:              param,
-		registryDownloader: downloader,
-		fs:                 fs,
-		rt:                 rt,
-		cosign:             cos,
-		slsaVerifier:       slsaVerifier,
-	}
-}
-
-type GitHubContentFileDownloader interface {
-	DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error)
-}
-
-type SLSAVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *slsa.ParamVerify) error
-}
-
-type CosignVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
-}
-
-type Installer interface {
-	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
-}
-
-type MockInstaller struct {
-	M   map[string]*registry.Config
-	Err error
-}
-
-func (m *MockInstaller) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
-	return m.M, m.Err
-}
-
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
 
-func (is *InstallerImpl) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
+func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
@@ -119,7 +69,7 @@ func (is *InstallerImpl) InstallRegistries(ctx context.Context, logE *logrus.Ent
 	return registryContents, nil
 }
 
-func (is *InstallerImpl) readRegistry(p string, registry *registry.Config) error {
+func (is *Installer) readRegistry(p string, registry *registry.Config) error {
 	f, err := is.fs.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
@@ -139,7 +89,7 @@ func (is *InstallerImpl) readRegistry(p string, registry *registry.Config) error
 
 // installRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (is *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *Installer) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	registryFilePath, err := regist.FilePath(is.param.RootDir, cfgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
@@ -163,7 +113,7 @@ func (is *InstallerImpl) installRegistry(ctx context.Context, logE *logrus.Entry
 }
 
 // getRegistry downloads and installs the registry file.
-func (is *InstallerImpl) getRegistry(ctx context.Context, logE *logrus.Entry, registry *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *Installer) getRegistry(ctx context.Context, logE *logrus.Entry, registry *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	// TODO checksum verification
 	// TODO download checksum file
 	if registry.Type == aqua.RegistryTypeGitHubContent {
@@ -174,7 +124,7 @@ func (is *InstallerImpl) getRegistry(ctx context.Context, logE *logrus.Entry, re
 
 const registryFilePermission = 0o600
 
-func (is *InstallerImpl) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	ghContentFile, err := is.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
