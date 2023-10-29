@@ -138,8 +138,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
-	readerImpl := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, installerImpl, installpackageInstallerImpl, fs, rt, readerImpl, configFinderImpl)
+	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
+	controller := install.New(param, configFinder, configReader, installerImpl, installpackageInstallerImpl, fs, rt, policyReader, configFinderImpl)
 	return controller
 }
 
@@ -188,8 +188,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
-	readerImpl := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, readerImpl, configFinderImpl)
+	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
+	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, policyReader, configFinderImpl)
 	return controller
 }
 
@@ -240,9 +240,9 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
-	readerImpl := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, registryInstallerImpl, installerImpl, fs, rt, readerImpl, configFinderImpl)
-	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, readerImpl)
+	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
+	controller := install.New(param, configFinder, configReader, registryInstallerImpl, installerImpl, fs, rt, policyReader, configFinderImpl)
+	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, policyReader)
 	return cpController
 }
 
