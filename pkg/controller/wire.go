@@ -72,7 +72,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(list.ConfigReader), new(*reader.ConfigReader)),
 		),
 		afero.NewOsFs,
 		download.NewHTTPDownloader,
@@ -168,7 +168,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(generate.ConfigReader), new(*reader.ConfigReader)),
 		),
 		afero.NewOsFs,
 		wire.NewSet(
@@ -243,7 +243,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(install.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
 			installpackage.New,
@@ -349,7 +349,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(which.ConfigReader), new(*reader.ConfigReader)),
 		),
 		osenv.New,
 		afero.NewOsFs,
@@ -415,7 +415,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(which.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
 			which.New,
@@ -607,7 +607,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(which.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(install.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
 			which.New,
@@ -698,7 +699,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(updatechecksum.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -756,8 +757,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
-			wire.Bind(new(update.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(update.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(which.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -888,7 +889,8 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(reader.ConfigReader), new(*reader.ConfigReaderImpl)),
+			wire.Bind(new(remove.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(which.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
 			registry.New,

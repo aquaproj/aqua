@@ -9,7 +9,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
@@ -25,7 +24,7 @@ type ControllerImpl struct {
 	stdout            io.Writer
 	rootDir           string
 	configFinder      ConfigFinder
-	configReader      reader.ConfigReader
+	configReader      ConfigReader
 	registryInstaller rgst.Installer
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
@@ -33,7 +32,7 @@ type ControllerImpl struct {
 	linker            domain.Linker
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller rgst.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker) *ControllerImpl {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller rgst.Installer, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker domain.Linker) *ControllerImpl {
 	return &ControllerImpl{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -49,6 +48,10 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 
 type Controller interface {
 	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error)
+}
+
+type ConfigReader interface {
+	Read(configFilePath string, cfg *aqua.Config) error
 }
 
 type MockController struct {

@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
-	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
@@ -24,7 +23,7 @@ import (
 type Controller struct {
 	rootDir            string
 	configFinder       ConfigFinder
-	configReader       reader.ConfigReader
+	configReader       ConfigReader
 	registryInstaller  registry.Installer
 	registryDownloader domain.GitHubContentFileDownloader
 	fs                 afero.Fs
@@ -34,7 +33,7 @@ type Controller struct {
 	prune              bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader reader.ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registDownloader domain.GitHubContentFileDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller registry.Installer, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registDownloader domain.GitHubContentFileDownloader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -47,6 +46,10 @@ func New(param *config.Param, configFinder ConfigFinder, configReader reader.Con
 		downloader:         pkgDownloader,
 		prune:              param.Prune,
 	}
+}
+
+type ConfigReader interface {
+	Read(configFilePath string, cfg *aqua.Config) error
 }
 
 func (c *Controller) UpdateChecksum(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
