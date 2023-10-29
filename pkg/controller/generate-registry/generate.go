@@ -4,12 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
-	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -18,30 +15,7 @@ import (
 	"github.com/forPelevin/gomoji"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
-
-type Controller struct {
-	stdout            io.Writer
-	fs                afero.Fs
-	github            RepositoriesService
-	testdataOutputter TestdataOutputter
-	cargoClient       cargo.Client
-}
-
-type TestdataOutputter interface {
-	Output(param *output.Param) error
-}
-
-func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter TestdataOutputter, cargoClient cargo.Client) *Controller {
-	return &Controller{
-		stdout:            os.Stdout,
-		fs:                fs,
-		github:            gh,
-		testdataOutputter: testdataOutputter,
-		cargoClient:       cargoClient,
-	}
-}
 
 var errLimitMustBeGreaterEqualThanZero = errors.New("limit must be greater equal than zero")
 
