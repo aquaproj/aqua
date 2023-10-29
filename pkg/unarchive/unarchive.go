@@ -36,10 +36,6 @@ type DownloadedFile interface {
 	Wrap(w io.Writer) io.Writer
 }
 
-type Unarchiver interface {
-	Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error
-}
-
 type MockUnarchiver struct {
 	Err error
 }
