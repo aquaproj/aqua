@@ -10,11 +10,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-type Reader interface {
-	Read(policyFilePaths []string) ([]*Config, error)
-	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error)
-}
-
 type MockReader struct {
 	Config  *Config
 	Configs []*Config

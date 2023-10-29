@@ -295,7 +295,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			policy.NewReader,
-			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+			wire.Bind(new(install.PolicyReader), new(*policy.ReaderImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -467,7 +467,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewReader,
-			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+			wire.Bind(new(cexec.PolicyReader), new(*policy.ReaderImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -661,7 +661,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewReader,
-			wire.Bind(new(policy.Reader), new(*policy.ReaderImpl)),
+			wire.Bind(new(cp.PolicyReader), new(*policy.ReaderImpl)),
+			wire.Bind(new(install.PolicyReader), new(*policy.ReaderImpl)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,

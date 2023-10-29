@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
@@ -22,13 +23,13 @@ type Controller struct {
 	packageInstaller   installpackage.Installer
 	executor           Executor
 	fs                 afero.Fs
-	policyConfigReader policy.Reader
+	policyConfigReader PolicyReader
 	policyConfigFinder policy.ConfigFinder
 	enabledXSysExec    bool
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader policy.Reader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -60,4 +61,9 @@ func getEnabledXSysExec(osEnv osenv.OSEnv, goos string) bool {
 type Executor interface {
 	Exec(ctx context.Context, exePath string, args ...string) (int, error)
 	ExecXSys(exePath string, args ...string) error
+}
+
+type PolicyReader interface {
+	Read(policyFilePaths []string) ([]*policy.Config, error)
+	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
 }
