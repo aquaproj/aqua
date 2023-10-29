@@ -203,7 +203,6 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			cargo.NewClient,
-			// wire.Bind(new(cargo.Client), new(*cargo.Client)),
 			wire.Bind(new(versiongetter.CargoClient), new(*cargo.Client)),
 		),
 		wire.NewSet(
@@ -827,7 +826,6 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		versiongetter.NewGitHubTag,
 		wire.NewSet(
 			cargo.NewClient,
-			// wire.Bind(new(cargo.Client), new(*cargo.Client)),
 			wire.Bind(new(versiongetter.CargoClient), new(*cargo.Client)),
 		),
 		wire.NewSet(
