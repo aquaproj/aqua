@@ -142,7 +142,7 @@ func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageI
 				continue
 			}
 		}
-		if asset.Exclude(pkgName, assetName, tagName) {
+		if asset.Exclude(pkgName, assetName) {
 			logE.WithField("asset_name", assetName).Debug("exclude an asset")
 			continue
 		}
