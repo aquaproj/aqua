@@ -117,7 +117,7 @@ func (c *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, par
 			return err //nolint:wrapcheck
 		}
 
-		if err := c.install(ctx, logE, findResult, policyConfigs); err != nil {
+		if err := c.install(ctx, logE, findResult, policyConfigs, param); err != nil {
 			return err
 		}
 	}

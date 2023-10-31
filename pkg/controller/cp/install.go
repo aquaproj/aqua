@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
@@ -13,7 +14,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policyConfigs []*policy.Config) error {
+func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policyConfigs []*policy.Config, param *config.Param) error {
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -37,6 +38,7 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 		RequireChecksum: findResult.Config.RequireChecksum(c.requireChecksum),
 		ConfigFileDir:   filepath.Dir(findResult.ConfigFilePath),
 		PolicyConfigs:   policyConfigs,
+		DisablePolicy:   param.DisablePolicy,
 	}); err != nil {
 		return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 	}

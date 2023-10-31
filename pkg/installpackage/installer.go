@@ -117,6 +117,7 @@ type ParamInstallPackages struct {
 	Checksums       *checksum.Checksums
 	SkipLink        bool
 	RequireChecksum bool
+	DisablePolicy   bool
 }
 
 type ParamInstallPackage struct {
@@ -208,6 +209,7 @@ func (is *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry
 				Checksums:       param.Checksums,
 				RequireChecksum: param.Config.RequireChecksum(param.RequireChecksum),
 				PolicyConfigs:   param.PolicyConfigs,
+				DisablePolicy:   param.DisablePolicy,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
