@@ -326,7 +326,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.ControllerImpl {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -419,7 +419,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(cexec.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -614,7 +614,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(cp.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -830,7 +830,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(update.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			link.New,
@@ -944,7 +944,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(remove.WhichController), new(*which.Controller)),
 		),
 		osenv.New,
 		wire.NewSet(

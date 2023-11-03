@@ -143,7 +143,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return controller
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.ControllerImpl {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
@@ -158,8 +158,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	osEnv := osenv.New()
 	linker := link.New()
-	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	return controllerImpl
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	return controller
 }
 
 func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *exec2.Controller {
@@ -184,13 +184,13 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	osEnv := osenv.New()
-	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := exec2.New(param, installerImpl, controllerImpl, executor, osEnv, fs, policyReader, configFinderImpl)
-	return controller
+	execController := exec2.New(param, installerImpl, controller, executor, osEnv, fs, policyReader, configFinderImpl)
+	return execController
 }
 
 func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
@@ -236,13 +236,13 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, verifierImpl)
 	osEnv := osenv.New()
-	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, installer, installerImpl, fs, rt, policyReader, configFinderImpl)
-	cpController := cp.New(param, installerImpl, fs, rt, controllerImpl, controller, policyReader)
+	installController := install.New(param, configFinder, configReader, installer, installerImpl, fs, rt, policyReader, configFinderImpl)
+	cpController := cp.New(param, installerImpl, fs, rt, controller, installController, policyReader)
 	return cpController
 }
 
@@ -286,9 +286,9 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()
-	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	controller := update.New(param, repositoriesService, configFinder, configReader, installer, fs, rt, fuzzyGetter, fuzzyfinderFinder, controllerImpl)
-	return controller
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	updateController := update.New(param, repositoriesService, configFinder, configReader, installer, fs, rt, fuzzyGetter, fuzzyfinderFinder, controller)
+	return updateController
 }
 
 func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
@@ -330,7 +330,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 	fuzzyfinderFinder := fuzzyfinder.New()
 	osEnv := osenv.New()
 	linker := link.New()
-	controllerImpl := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	controller := remove.New(param, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controllerImpl)
-	return controller
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	removeController := remove.New(param, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller)
+	return removeController
 }

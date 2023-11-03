@@ -19,7 +19,7 @@ type Controller struct {
 	stdin              io.Reader
 	stdout             io.Writer
 	stderr             io.Writer
-	which              which.Controller
+	which              WhichController
 	packageInstaller   installpackage.Installer
 	executor           Executor
 	fs                 afero.Fs
@@ -29,7 +29,7 @@ type Controller struct {
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl which.Controller, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -45,19 +45,6 @@ func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl w
 	}
 }
 
-func getEnabledXSysExec(osEnv osenv.OSEnv, goos string) bool {
-	if goos == "windows" {
-		return false
-	}
-	if osEnv.Getenv("AQUA_EXPERIMENTAL_X_SYS_EXEC") == "false" {
-		return false
-	}
-	if osEnv.Getenv("AQUA_X_SYS_EXEC") == "false" {
-		return false
-	}
-	return true
-}
-
 type Executor interface {
 	Exec(ctx context.Context, exePath string, args ...string) (int, error)
 	ExecXSys(exePath string, args ...string) error
@@ -66,4 +53,8 @@ type Executor interface {
 type PolicyReader interface {
 	Read(policyFilePaths []string) ([]*policy.Config, error)
 	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
+}
+
+type WhichController interface {
+	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
 }

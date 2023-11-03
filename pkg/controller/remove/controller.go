@@ -22,7 +22,11 @@ type Controller struct {
 	configReader      ConfigReader
 	registryInstaller RegistryInstaller
 	fuzzyFinder       FuzzyFinder
-	which             which.Controller
+	which             WhichController
+}
+
+type WhichController interface {
+	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
 }
 
 type ConfigReader interface {
@@ -33,7 +37,7 @@ type FuzzyFinder interface {
 	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
+func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		fs:                fs,

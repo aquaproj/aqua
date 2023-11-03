@@ -15,7 +15,7 @@ import (
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-type ControllerImpl struct {
+type Controller struct {
 	stdout            io.Writer
 	rootDir           string
 	configFinder      ConfigFinder
@@ -27,8 +27,8 @@ type ControllerImpl struct {
 	linker            Linker
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker Linker) *ControllerImpl {
-	return &ControllerImpl{
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker Linker) *Controller {
+	return &Controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -39,10 +39,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		fs:                fs,
 		linker:            linker,
 	}
-}
-
-type Controller interface {
-	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error)
 }
 
 type Linker interface {
