@@ -34,4 +34,5 @@ func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter Testda
 
 type CargoClient interface {
 	GetCrate(ctx context.Context, crate string) (*cargo.CratePayload, error)
+	GetLatestVersion(ctx context.Context, crate string) (string, error)
 }
