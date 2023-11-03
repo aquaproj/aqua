@@ -92,8 +92,8 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -194,8 +194,8 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -246,7 +246,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
+			wire.Bind(new(install.Installer), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -303,8 +303,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -326,7 +326,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return &install.Controller{}
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.ControllerImpl {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -374,8 +374,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -398,7 +398,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
+			wire.Bind(new(cexec.Installer), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -419,7 +419,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(cexec.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -475,8 +475,8 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -512,7 +512,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.InstallerImpl)),
+			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -549,8 +549,8 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -590,8 +590,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(installpackage.Installer), new(*installpackage.InstallerImpl)),
-			wire.Bind(new(cp.PackageInstaller), new(*installpackage.InstallerImpl)),
+			wire.Bind(new(install.Installer), new(*installpackage.Installer)),
+			wire.Bind(new(cp.PackageInstaller), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -614,7 +614,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(cp.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			exec.New,
@@ -671,8 +671,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -742,8 +742,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -801,8 +801,8 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -830,7 +830,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(update.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			link.New,
@@ -931,8 +931,8 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			slsa.New,
-			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.VerifierImpl)),
-			wire.Bind(new(registry.SLSAVerifier), new(*slsa.VerifierImpl)),
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
 		),
 		wire.NewSet(
 			slsa.NewExecutor,
@@ -944,7 +944,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(which.Controller), new(*which.ControllerImpl)),
+			wire.Bind(new(remove.WhichController), new(*which.Controller)),
 		),
 		osenv.New,
 		wire.NewSet(

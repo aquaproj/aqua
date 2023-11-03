@@ -2,7 +2,6 @@ package which
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -13,22 +12,6 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *MockController) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
-	return c.FindResult, c.Err
-}
-
-type MockMultiController struct {
-	FindResults map[string]*FindResult
-}
-
-func (c *MockMultiController) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
-	fr, ok := c.FindResults[exeName]
-	if !ok {
-		return nil, errors.New("command isn't found")
-	}
-	return fr, nil
-}
-
 type FindResult struct {
 	Package        *config.Package
 	File           *registry.File
@@ -38,7 +21,7 @@ type FindResult struct {
 	EnableChecksum bool
 }
 
-func (c *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
+func (c *Controller) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		findResult, err := c.findExecFile(ctx, logE, cfgFilePath, exeName)
 		if err != nil {
@@ -75,7 +58,7 @@ func (c *ControllerImpl) Which(ctx context.Context, logE *logrus.Entry, param *c
 	})
 }
 
-func (c *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
+func (c *Controller) getExePath(findResult *FindResult) (string, error) {
 	pkg := findResult.Package
 	file := findResult.File
 	if pkg.Package.Version == "" {
@@ -84,7 +67,7 @@ func (c *ControllerImpl) getExePath(findResult *FindResult) (string, error) {
 	return pkg.ExePath(c.rootDir, file, c.runtime) //nolint:wrapcheck
 }
 
-func (c *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {
+func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {
 	cfg := &aqua.Config{}
 	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
@@ -122,7 +105,7 @@ func (c *ControllerImpl) findExecFile(ctx context.Context, logE *logrus.Entry, c
 	return nil, nil //nolint:nilnil
 }
 
-func (c *ControllerImpl) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *FindResult { //nolint:cyclop
+func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *FindResult { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil

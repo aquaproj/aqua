@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (is *InstallerImpl) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
+func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
 	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logE, is.runtime, pkg)
 	if err != nil {
 		return "", fmt.Errorf("download a checksum file: %w", err)
@@ -65,7 +65,7 @@ type ParamVerifyChecksum struct {
 	SkipSetChecksum bool
 }
 
-func (is *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry, param *DownloadParam, bodyFile *download.DownloadedFile) error {
+func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry, param *DownloadParam, bodyFile *download.DownloadedFile) error {
 	if param.Checksum == nil && param.Checksums == nil {
 		return nil
 	}
@@ -105,7 +105,7 @@ func (is *InstallerImpl) verifyChecksumWrap(ctx context.Context, logE *logrus.En
 	return nil
 }
 
-func (is *InstallerImpl) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop,funlen
+func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop,funlen
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums

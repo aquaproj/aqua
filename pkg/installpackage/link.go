@@ -12,7 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (is *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
+func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
 	failed := false
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
@@ -34,7 +34,7 @@ func (is *InstallerImpl) createLinks(logE *logrus.Entry, pkgs []*config.Package)
 	return failed
 }
 
-func (is *InstallerImpl) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
+func (is *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	if fileInfo, err := is.linker.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -67,7 +67,7 @@ func (is *InstallerImpl) createLink(linkPath, linkDest string, logE *logrus.Entr
 	return nil
 }
 
-func (is *InstallerImpl) recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
+func (is *Installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
 	lnDest, err := is.linker.Readlink(linkPath)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
@@ -101,7 +101,7 @@ exec aqua exec -- $0 $@
 	proxyPermission os.FileMode = 0o755
 )
 
-func (is *InstallerImpl) createProxyWindows(binName string, logE *logrus.Entry) error {
+func (is *Installer) createProxyWindows(binName string, logE *logrus.Entry) error {
 	if err := is.createBinWindows(filepath.Join(is.rootDir, "bin", binName), scrTemplate, logE); err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func (is *InstallerImpl) createProxyWindows(binName string, logE *logrus.Entry) 
 	return nil
 }
 
-func (is *InstallerImpl) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
+func (is *Installer) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
 	if fileInfo, err := is.linker.Lstat(binPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -136,7 +136,7 @@ func (is *InstallerImpl) createBinWindows(binPath, binTxt string, logE *logrus.E
 	return is.writeBinWindows(binPath, binTxt, logE)
 }
 
-func (is *InstallerImpl) writeBinWindows(proxyPath, binTxt string, logE *logrus.Entry) error {
+func (is *Installer) writeBinWindows(proxyPath, binTxt string, logE *logrus.Entry) error {
 	logE.WithFields(logrus.Fields{
 		"proxy_path": proxyPath,
 	}).Info("create a proxy file")

@@ -68,7 +68,7 @@ func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus.E
 	return nil
 }
 
-func (is *InstallerImpl) downloadCargo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, root string) error {
+func (is *Installer) downloadCargo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, root string) error {
 	cargoOpts := pkg.PackageInfo.Cargo
 	if cargoOpts != nil {
 		if cargoOpts.AllFeatures {

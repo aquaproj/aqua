@@ -15,7 +15,7 @@ import (
 )
 
 type Controller struct {
-	packageInstaller   installpackage.Installer
+	packageInstaller   Installer
 	rootDir            string
 	configFinder       ConfigFinder
 	configReader       ConfigReader
@@ -30,7 +30,7 @@ type Controller struct {
 	requireChecksum    bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller installpackage.Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -46,6 +46,12 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		policyConfigFinder: policyConfigFinder,
 		requireChecksum:    param.RequireChecksum,
 	}
+}
+
+type Installer interface {
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackages) error
+	InstallProxy(ctx context.Context, logE *logrus.Entry) error
 }
 
 type ConfigReader interface {

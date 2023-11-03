@@ -13,14 +13,14 @@ import (
 	"github.com/spf13/afero"
 )
 
-type VerifierImpl struct {
+type Verifier struct {
 	downloader download.ClientAPI
 	fs         afero.Fs
 	exe        Executor
 }
 
-func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *VerifierImpl {
-	return &VerifierImpl{
+func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *Verifier {
+	return &Verifier{
 		downloader: downloader,
 		fs:         fs,
 		exe:        exe,
@@ -43,7 +43,7 @@ type ParamVerify struct {
 	ArtifactPath string
 }
 
-func (v *VerifierImpl) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
+func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
 	f, err := download.ConvertDownloadedFileToFile(sp.ToDownloadedFile(), file, rt, art)
 	if err != nil {
 		return err //nolint:wrapcheck

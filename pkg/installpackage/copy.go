@@ -10,7 +10,7 @@ const (
 	executableFilePermission os.FileMode = 0o755
 )
 
-func (is *InstallerImpl) Copy(dest, src string) error {
+func (is *Installer) Copy(dest, src string) error {
 	dst, err := is.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, executableFilePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)

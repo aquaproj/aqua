@@ -14,7 +14,7 @@ import (
 )
 
 type SLSAVerifierInstaller struct {
-	installer *InstallerImpl
+	installer *Installer
 	mutex     *sync.Mutex
 }
 
