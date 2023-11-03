@@ -61,23 +61,30 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				RepoName:    "cli",
 				Type:        "github_release",
 				Description: "GitHub’s official command line tool",
-				Asset:       "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
-				Format:      "tar.gz",
-				Replacements: registry.Replacements{
-					"darwin": "macOS",
-				},
-				Overrides: []*registry.Override{
+
+				VersionConstraints: "false",
+				VersionOverrides: []*registry.VersionOverride{
 					{
-						GOOS:   "windows",
-						Format: "zip",
+						VersionConstraints: "true",
+						Asset:              "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+						Format:             "tar.gz",
+						Replacements: registry.Replacements{
+							"darwin": "macOS",
+						},
+						Overrides: []*registry.Override{
+							{
+								GOOS:   "windows",
+								Format: "zip",
+							},
+						},
+						SupportedEnvs: registry.SupportedEnvs{
+							"darwin",
+							"linux",
+							"amd64",
+						},
+						Rosetta2: ptr.Bool(true),
 					},
 				},
-				SupportedEnvs: registry.SupportedEnvs{
-					"darwin",
-					"linux",
-					"amd64",
-				},
-				Rosetta2: true,
 			},
 			repo: &github.Repository{
 				Description: ptr.String("GitHub’s official command line tool"),

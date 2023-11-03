@@ -19,8 +19,11 @@ type Group struct {
 	assetNames []string
 }
 
-func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) {
+func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:cyclop
 	pkg := &registry.PackageInfo{}
+	if len(groups) == 0 {
+		return pkg, nil
+	}
 	versions := make([]string, 0, len(groups))
 	for _, group := range groups {
 		if len(group.releases) == 0 {
@@ -75,7 +78,10 @@ func replaceVersion(assetName, version string) string {
 		strings.TrimPrefix(version, "v"), "{{trimV .Version}}", 1)
 }
 
-func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Release) []*Group { //nolint:funlen,cyclop
+func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Release) []*Group { //nolint:funlen,cyclop,gocognit
+	if len(releases) == 0 {
+		return nil
+	}
 	groups := []*Group{}
 	var group *Group
 	for _, release := range releases {
@@ -108,6 +114,9 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 			assetNames: assetNames,
 		}
 	}
+	if len(groups) == 0 && group != nil {
+		groups = append(groups, group)
+	}
 	if groups[len(groups)-1].allAsset != group.allAsset {
 		groups = append(groups, group)
 	}
@@ -134,6 +143,9 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		}
 		newGroups = append(newGroups, prevGroup)
 		prevGroup = group
+	}
+	if len(newGroups) == 0 && prevGroup != nil {
+		newGroups = append(newGroups, prevGroup)
 	}
 	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
 		newGroups = append(newGroups, prevGroup)
@@ -177,7 +189,5 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 }
 
 func (c *Controller) generatePackage(logE *logrus.Entry, pkgName string, releases []*Release) (*registry.PackageInfo, []string) {
-	groups := c.group(logE, pkgName, releases)
-	pkgInfo, versions := mergeGroups(groups)
-	return pkgInfo, versions
+	return mergeGroups(c.group(logE, pkgName, releases))
 }
