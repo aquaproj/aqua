@@ -127,6 +127,7 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 
 func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop
 	if len(assets) == 0 {
+		pkgInfo.NoAsset = true
 		return
 	}
 	assetInfos := make([]*asset.AssetInfo, 0, len(assets))

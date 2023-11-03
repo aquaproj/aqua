@@ -28,6 +28,7 @@ type Release struct {
 	Tag           string
 	Version       *version.Version
 	VersionPrefix string
+	assets        []*github.ReleaseAsset
 }
 
 func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
@@ -87,11 +88,10 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		v1 := r1.Version
 		v2 := r2.Version
 		if v1 == nil || v2 == nil {
-			return r1.Tag >= r2.Tag
+			return r1.Tag <= r2.Tag
 		}
-		return v1.GreaterThanOrEqual(v2)
+		return v1.LessThan(v2)
 	})
-	pkgs := make([]*Package, 0, len(releases))
 	for _, release := range releases {
 		pkgInfo := &registry.PackageInfo{
 			Type:      "github_release",
@@ -106,17 +106,14 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		if len(assets) == 0 {
 			continue
 		}
-		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, assets)
-		pkgs = append(pkgs, &Package{
-			Info:    pkgInfo,
-			Version: release.Tag,
-			SemVer:  release.Tag[len(release.VersionPrefix):],
-		})
+		release.assets = assets
 	}
-	p, versions := mergePackages(pkgs)
-	if p == nil {
-		return pkgInfo, versions
-	}
+
+	p, versions := c.generatePackage(logE, pkgName, releases)
+	p.Type = pkgInfo.Type
+	p.RepoOwner = pkgInfo.RepoOwner
+	p.RepoName = pkgInfo.RepoName
+	p.VersionConstraints = "false"
 	p.Description = pkgInfo.Description
 	p.Name = pkgInfo.Name
 	return p, versions
