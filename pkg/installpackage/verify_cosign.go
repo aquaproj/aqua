@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (is *InstallerImpl) verifyWithCosign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
+func (is *Installer) verifyWithCosign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
 	ppkg := param.Package
 
 	cos := ppkg.PackageInfo.Cosign

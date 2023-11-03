@@ -20,7 +20,7 @@ type Controller struct {
 	stdout             io.Writer
 	stderr             io.Writer
 	which              WhichController
-	packageInstaller   installpackage.Installer
+	packageInstaller   Installer
 	executor           Executor
 	fs                 afero.Fs
 	policyConfigReader PolicyReader
@@ -29,7 +29,11 @@ type Controller struct {
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller installpackage.Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+type Installer interface {
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
+}
+
+func New(param *config.Param, pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,

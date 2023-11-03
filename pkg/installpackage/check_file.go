@@ -14,7 +14,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (is *InstallerImpl) checkFilesWrap(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage, pkgPath string) error {
+func (is *Installer) checkFilesWrap(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage, pkgPath string) error {
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 
@@ -50,7 +50,7 @@ func (is *InstallerImpl) checkFilesWrap(ctx context.Context, logE *logrus.Entry,
 	return nil
 }
 
-func (is *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
+func (is *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
 	exePath, err := is.checkFileSrc(ctx, pkg, file, logE)
 	if err != nil {
 		return fmt.Errorf("check file_src is correct: %w", err)
@@ -66,7 +66,7 @@ func (is *InstallerImpl) checkAndCopyFile(ctx context.Context, pkg *config.Packa
 	return nil
 }
 
-func (is *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (is *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(is.rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if isWindows(is.runtime.GOOS) {
@@ -95,7 +95,7 @@ func (is *InstallerImpl) checkFileSrcGo(ctx context.Context, pkg *config.Package
 	return exePath, nil
 }
 
-func (is *InstallerImpl) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (is *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
 	if pkg.PackageInfo.Type == "go_build" {
 		return is.checkFileSrcGo(ctx, pkg, file, logE)
 	}

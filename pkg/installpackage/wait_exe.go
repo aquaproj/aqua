@@ -11,7 +11,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (is *InstallerImpl) WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
+func (is *Installer) WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
 	for i := 0; i < 10; i++ {
 		logE.Debug("check if exec file exists")
 		if fi, err := is.fs.Stat(exePath); err == nil {

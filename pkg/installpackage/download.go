@@ -12,7 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (is *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
+func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    param.Package.Package.Name,
 		"package_version": param.Package.Package.Version,
@@ -46,7 +46,7 @@ func (is *InstallerImpl) downloadWithRetry(ctx context.Context, logE *logrus.Ent
 	}
 }
 
-func (is *InstallerImpl) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
+func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
 	ppkg := param.Package
 	pkg := ppkg.Package
 	logE = logE.WithFields(logrus.Fields{

@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (is *InstallerImpl) validatePackage(logE *logrus.Entry, param *ParamInstallPackage) error {
+func (is *Installer) validatePackage(logE *logrus.Entry, param *ParamInstallPackage) error {
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 

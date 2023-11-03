@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (is *InstallerImpl) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
+func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
 	provTemplate := "multiple.intoto.jsonl"
 	disabled := false
 	pkg := &config.Package{

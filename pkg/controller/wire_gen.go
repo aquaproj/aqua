@@ -134,12 +134,12 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, installer, installerImpl, fs, rt, policyReader, configFinderImpl)
+	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyReader, configFinderImpl)
 	return controller
 }
 
@@ -178,18 +178,18 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	execController := exec2.New(param, installerImpl, controller, executor, osEnv, fs, policyReader, configFinderImpl)
+	execController := exec2.New(param, installer, controller, executor, osEnv, fs, policyReader, configFinderImpl)
 	return execController
 }
 
@@ -209,8 +209,8 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
-	controller := updateaqua.New(param, fs, rt, repositoriesService, installerImpl)
+	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
 	return controller
 }
 
@@ -230,19 +230,19 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installerImpl := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	installController := install.New(param, configFinder, configReader, installer, installerImpl, fs, rt, policyReader, configFinderImpl)
-	cpController := cp.New(param, installerImpl, fs, rt, controller, installController, policyReader)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyReader, configFinderImpl)
+	cpController := cp.New(param, installer, fs, rt, controller, installController, policyReader)
 	return cpController
 }
 

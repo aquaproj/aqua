@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (is *InstallerImpl) verifyWithSLSA(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
+func (is *Installer) verifyWithSLSA(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
 	ppkg := param.Package
 	pkgInfo := param.Package.PackageInfo
 	sp := ppkg.PackageInfo.SLSAProvenance
