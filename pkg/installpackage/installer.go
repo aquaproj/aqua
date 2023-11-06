@@ -26,7 +26,7 @@ const (
 	maxRetryDownload = 1
 )
 
-type InstallerImpl struct {
+type Installer struct {
 	downloader            download.ClientAPI
 	checksumDownloader    download.ChecksumDownloader
 	checksumCalculator    ChecksumCalculator
@@ -48,7 +48,7 @@ type InstallerImpl struct {
 	onlyLink              bool
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
 	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller)
 	installer.cosignInstaller = &Cosign{
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
@@ -61,8 +61,8 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *InstallerImpl {
-	return &InstallerImpl{
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
+	return &Installer{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
 		downloader:            downloader,
@@ -101,12 +101,6 @@ type Unarchiver interface {
 	Unarchive(ctx context.Context, logE *logrus.Entry, src *unarchive.File, dest string) error
 }
 
-type Installer interface {
-	InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error
-	InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error
-	InstallProxy(ctx context.Context, logE *logrus.Entry) error
-}
-
 type ParamInstallPackages struct {
 	ConfigFilePath  string
 	Config          *aqua.Config
@@ -117,6 +111,7 @@ type ParamInstallPackages struct {
 	Checksums       *checksum.Checksums
 	SkipLink        bool
 	RequireChecksum bool
+	DisablePolicy   bool
 }
 
 type ParamInstallPackage struct {
@@ -138,7 +133,7 @@ func isWindows(goos string) bool {
 	return goos == "windows"
 }
 
-func (is *InstallerImpl) SetCopyDir(copyDir string) {
+func (is *Installer) SetCopyDir(copyDir string) {
 	is.copyDir = copyDir
 }
 
@@ -151,7 +146,7 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (is *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
+func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, is.runtime, param.Registries)
 	if !param.SkipLink {
 		if failedCreateLinks := is.createLinks(logE, pkgs); failedCreateLinks {
@@ -208,6 +203,7 @@ func (is *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry
 				Checksums:       param.Checksums,
 				RequireChecksum: param.Config.RequireChecksum(param.RequireChecksum),
 				PolicyConfigs:   param.PolicyConfigs,
+				DisablePolicy:   param.DisablePolicy,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
@@ -222,7 +218,7 @@ func (is *InstallerImpl) InstallPackages(ctx context.Context, logE *logrus.Entry
 	return nil
 }
 
-func (is *InstallerImpl) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
+func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
 	pkg := param.Pkg
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,

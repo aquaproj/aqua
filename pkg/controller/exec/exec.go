@@ -58,13 +58,13 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 			return logerr.WithFields(errExecNotFoundDisableLazyInstall, logE.WithField("doc", "https://aquaproj.github.io/docs/reference/codes/006").Data) //nolint:wrapcheck
 		}
 	}
-	if err := c.install(ctx, logE, findResult, policyCfgs); err != nil {
+	if err := c.install(ctx, logE, findResult, policyCfgs, param); err != nil {
 		return err
 	}
 	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 }
 
-func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config) error {
+func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config, param *config.Param) error {
 	var checksums *checksum.Checksums
 	if findResult.Config.ChecksumEnabled() {
 		checksums = checksum.New()
@@ -87,6 +87,7 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(c.requireChecksum),
 		PolicyConfigs:   policies,
+		DisablePolicy:   param.DisablePolicy,
 	}); err != nil {
 		return fmt.Errorf("install the package: %w", err)
 	}

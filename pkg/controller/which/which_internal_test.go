@@ -70,7 +70,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	ctrl := &ControllerImpl{
+	ctrl := &Controller{
 		runtime: &runtime.Runtime{
 			GOOS:   "linux",
 			GOARCH: "amd64",

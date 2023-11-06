@@ -26,7 +26,11 @@ type Controller struct {
 	requireChecksum   bool
 	fuzzyGetter       FuzzyGetter
 	fuzzyFinder       FuzzyFinder
-	which             which.Controller
+	which             WhichController
+}
+
+type WhichController interface {
+	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
 }
 
 type FuzzyFinder interface {
@@ -49,7 +53,7 @@ type RepositoriesService interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController which.Controller) *Controller {
+func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
 	return &Controller{
 		gh:                gh,
 		rootDir:           param.RootDir,

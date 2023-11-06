@@ -14,7 +14,7 @@ import (
 )
 
 type Cosign struct {
-	installer *InstallerImpl
+	installer *Installer
 	mutex     *sync.Mutex
 }
 

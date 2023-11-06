@@ -13,13 +13,13 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestInstallerImpl_verifyChecksum(t *testing.T) { //nolint:funlen
+func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name  string
 		param *ParamVerifyChecksum
 		isErr bool
-		inst  *InstallerImpl
+		inst  *Installer
 	}{
 		{
 			name: "normal",
@@ -47,7 +47,7 @@ func TestInstallerImpl_verifyChecksum(t *testing.T) { //nolint:funlen
 				ChecksumID:   "github_release/github.com/cli/cli/v2.17.0/gh_2.17.0_darwin_arm64.tar.gz",
 				TempFilePath: "/tmp/verify_checksum/tempfile",
 			},
-			inst: &InstallerImpl{
+			inst: &Installer{
 				fs: afero.NewMemMapFs(),
 				checksumDownloader: &download.MockChecksumDownloader{
 					Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb

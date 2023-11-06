@@ -23,7 +23,7 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		pkgInstaller cp.PackageInstaller
 		fs           afero.Fs
 		rt           *runtime.Runtime
-		whichCtrl    which.Controller
+		whichCtrl    cp.WhichController
 		installer    cp.Installer
 		isErr        bool
 	}{

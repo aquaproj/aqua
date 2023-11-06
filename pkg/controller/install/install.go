@@ -45,7 +45,7 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
-		if err := c.install(ctx, logE, cfgFilePath, policyCfgs); err != nil {
+		if err := c.install(ctx, logE, cfgFilePath, policyCfgs, param); err != nil {
 			return err
 		}
 	}
@@ -78,14 +78,14 @@ func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
-		if err := c.install(ctx, logE, cfgFilePath, policyConfigs); err != nil {
+		if err := c.install(ctx, logE, cfgFilePath, policyConfigs, param); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfigs []*policy.Config) error {
+func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfigs []*policy.Config, param *config.Param) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -126,5 +126,6 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePat
 		PolicyConfigs:   policyConfigs,
 		Checksums:       checksums,
 		RequireChecksum: c.requireChecksum,
+		DisablePolicy:   param.DisablePolicy,
 	})
 }

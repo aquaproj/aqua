@@ -25,7 +25,7 @@ func ProxyChecksums() map[string]string {
 	}
 }
 
-func (is *InstallerImpl) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
+func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
 	if isWindows(is.runtime.GOOS) {
 		return nil
 	}

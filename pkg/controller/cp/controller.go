@@ -21,13 +21,17 @@ type Controller struct {
 	rootDir            string
 	fs                 afero.Fs
 	runtime            *runtime.Runtime
-	which              which.Controller
+	which              WhichController
 	installer          Installer
 	policyConfigReader PolicyReader
 	requireChecksum    bool
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl which.Controller, installer Installer, policyConfigReader PolicyReader) *Controller {
+type WhichController interface {
+	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
+}
+
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl WhichController, installer Installer, policyConfigReader PolicyReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		packageInstaller:   pkgInstaller,
@@ -117,7 +121,7 @@ func (c *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, par
 			return err //nolint:wrapcheck
 		}
 
-		if err := c.install(ctx, logE, findResult, policyConfigs); err != nil {
+		if err := c.install(ctx, logE, findResult, policyConfigs, param); err != nil {
 			return err
 		}
 	}

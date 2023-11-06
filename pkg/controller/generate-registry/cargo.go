@@ -31,5 +31,10 @@ func (c *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry
 			}
 		}
 	}
-	return pkgInfo, nil
+	version, err := c.cargoClient.GetLatestVersion(ctx, crate)
+	if err != nil {
+		logE.WithError(err).Warn("get a latest version by crates.io API")
+		return pkgInfo, nil
+	}
+	return pkgInfo, []string{version}
 }
