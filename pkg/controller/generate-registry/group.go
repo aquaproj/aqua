@@ -19,6 +19,19 @@ type Group struct {
 	assetNames []string
 }
 
+func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
+	return &registry.VersionOverride{
+		Asset:              pkgInfo.Asset,
+		Files:              pkgInfo.Files,
+		Format:             pkgInfo.Format,
+		Overrides:          pkgInfo.Overrides,
+		Replacements:       pkgInfo.Replacements,
+		SupportedEnvs:      pkgInfo.SupportedEnvs,
+		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
+		Checksum:           pkgInfo.Checksum,
+	}
+}
+
 func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:cyclop
 	pkg := &registry.PackageInfo{}
 	if len(groups) == 0 {
@@ -30,16 +43,7 @@ func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:c
 			continue
 		}
 		pkgInfo := group.pkg.Info
-		vo := &registry.VersionOverride{
-			Asset:              pkgInfo.Asset,
-			Files:              pkgInfo.Files,
-			Format:             pkgInfo.Format,
-			Overrides:          pkgInfo.Overrides,
-			Replacements:       pkgInfo.Replacements,
-			SupportedEnvs:      pkgInfo.SupportedEnvs,
-			CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
-			Checksum:           pkgInfo.Checksum,
-		}
+		vo := ConvertPkgToVO(pkgInfo)
 		if len(group.releases) == 1 {
 			v := group.releases[0].Tag
 			vo.VersionConstraints = fmt.Sprintf(`Version == "%s"`, v)
