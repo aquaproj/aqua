@@ -11,7 +11,10 @@ import (
 
 func (r *Runner) newUpdateChecksumCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "update-checksum",
+		Name: "update-checksum",
+		Aliases: []string{
+			"upc",
+		},
 		Usage: "Create or Update aqua-checksums.json",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
