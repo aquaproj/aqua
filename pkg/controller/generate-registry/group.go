@@ -52,7 +52,7 @@ func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:c
 			}
 		} else {
 			v := group.releases[len(group.releases)-1].Tag
-			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, v)
+			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(v, "v"))
 			if !group.pkg.Info.NoAsset {
 				versions = append(versions, v)
 			}
@@ -82,10 +82,7 @@ func replaceVersion(assetName, version string) string {
 		strings.TrimPrefix(version, "v"), "{{trimV .Version}}", 1)
 }
 
-func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Release) []*Group { //nolint:funlen,cyclop,gocognit
-	if len(releases) == 0 {
-		return nil
-	}
+func groupByAllAsset(releases []*Release) []*Group {
 	groups := []*Group{}
 	var group *Group
 	for _, release := range releases {
@@ -124,10 +121,14 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 	if groups[len(groups)-1].allAsset != group.allAsset {
 		groups = append(groups, group)
 	}
+	return groups
+}
 
-	var prevGroup *Group
-	newGroups := make([]*Group, 0, len(groups))
-	for _, group := range groups {
+func groupByExcludedAsset(groups []*Group, pkgName string) []*Group {
+	newGroups := make([]*Group, 1, len(groups))
+	prevGroup := groups[0]
+	newGroups[0] = prevGroup
+	for _, group := range groups[1:] {
 		assetNames := make([]string, 0, len(group.assetNames))
 		for _, assetName := range group.assetNames {
 			if asset.Exclude(pkgName, assetName) {
@@ -137,10 +138,6 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		}
 		group.assetNames = assetNames
 		group.allAsset = strings.Join(assetNames, "\n")
-		if prevGroup == nil {
-			prevGroup = group
-			continue
-		}
 		if prevGroup.allAsset == group.allAsset {
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
 			continue
@@ -148,14 +145,19 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		newGroups = append(newGroups, prevGroup)
 		prevGroup = group
 	}
-	if len(newGroups) == 0 && prevGroup != nil {
-		newGroups = append(newGroups, prevGroup)
-	}
 	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
 		newGroups = append(newGroups, prevGroup)
 	}
+	return newGroups
+}
 
-	for _, group := range newGroups {
+func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Release) []*Group {
+	if len(releases) == 0 {
+		return nil
+	}
+	groups := groupByExcludedAsset(groupByAllAsset(releases), pkgName)
+
+	for _, group := range groups {
 		release := group.releases[0]
 		pkgInfo := &registry.PackageInfo{}
 		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, release.assets)
@@ -166,30 +168,30 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		}
 	}
 
-	if len(newGroups) == 1 {
-		return newGroups
+	if len(groups) == 1 {
+		return groups
 	}
-	prevGroup = newGroups[0]
-	groups = newGroups
-	newGroups = []*Group{prevGroup}
-	for _, group := range newGroups[1:] {
+	prevGroup := groups[0]
+	newGroups := make([]*Group, 1, len(groups))
+	newGroups[0] = prevGroup
+	for _, group := range groups[1:] {
 		if reflect.DeepEqual(group.pkg, prevGroup.pkg) {
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
 			continue
 		}
-		groups = append(groups, group)
+		newGroups = append(newGroups, group)
 		prevGroup = group
 	}
 
-	if groups[len(groups)-1].allAsset != prevGroup.allAsset {
-		groups = append(groups, prevGroup)
+	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
+		newGroups = append(newGroups, prevGroup)
 	}
-	group = groups[len(groups)-1]
+	group := newGroups[len(newGroups)-1]
 	if group.pkg.Info.NoAsset || group.pkg.Info.Asset == "" {
-		return groups[:len(groups)-1]
+		return newGroups[:len(newGroups)-1]
 	}
 
-	return groups
+	return newGroups
 }
 
 func (c *Controller) generatePackage(logE *logrus.Entry, pkgName string, releases []*Release) (*registry.PackageInfo, []string) {
