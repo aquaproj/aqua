@@ -144,7 +144,7 @@ func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, par
 		checksums.Set(checksumID, chksum)
 	}
 
-	algorithm := "sha512"
+	algorithm := "sha256"
 	if chksum != nil {
 		algorithm = chksum.Algorithm
 	}

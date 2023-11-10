@@ -126,8 +126,8 @@ func (c *Controller) updateRegistry(ctx context.Context, logE *logrus.Entry, che
 	}
 	defer ghContentFile.Close()
 	content := ghContentFile.Reader()
-	algorithm := "sha512"
-	chk, err := checksum.CalculateReader(content, "sha512")
+	algorithm := "sha256"
+	chk, err := checksum.CalculateReader(content, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate a checksum of Registry: %w", err)
 	}
@@ -322,7 +322,7 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Ent
 		return fmt.Errorf("download an asset: %w", err)
 	}
 	defer file.Close()
-	algorithm := "sha512"
+	algorithm := "sha256"
 	fields["algorithm"] = algorithm
 	chk, err := checksum.CalculateReader(file, algorithm)
 	if err != nil {
