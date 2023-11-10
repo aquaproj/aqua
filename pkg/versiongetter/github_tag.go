@@ -86,8 +86,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 		}
 		// After filtering, not enough versions added.
 		// Increase per_page to reduce the consumption of GitHub API.
-		diff := len(versions) - prevCnt
-		if diff < opt.PerPage && opt.PerPage < ghMaxPerPage {
+		if len(versions)-prevCnt < opt.PerPage && opt.PerPage < ghMaxPerPage {
 			opt.PerPage *= 2
 			if opt.PerPage > ghMaxPerPage {
 				opt.PerPage = ghMaxPerPage
