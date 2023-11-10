@@ -112,7 +112,7 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 		}
 		// After filtering, not enough versions added.
 		// Increase per_page to reduce the consumption of GitHub API.
-		if len(items)-prevCnt < opt.PerPage && opt.PerPage < ghMaxPerPage {
+		if opt.PerPage < ghMaxPerPage && len(items)-prevCnt < opt.PerPage {
 			opt.PerPage *= 2
 			if opt.PerPage > ghMaxPerPage {
 				opt.PerPage = ghMaxPerPage
