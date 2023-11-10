@@ -179,7 +179,7 @@ func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageI
 		if _, ok := checksumNames[assetName+".sha1"]; ok {
 			pkgInfo.Checksum = &registry.Checksum{
 				Type:      "github_release",
-				Asset:     "{{.Asset}}.sha512",
+				Asset:     "{{.Asset}}.sha1",
 				Algorithm: "sha1",
 			}
 			break

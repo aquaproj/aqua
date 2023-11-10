@@ -10,7 +10,7 @@ jobs:
     permissions: {}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: aquaproj/aqua-installer@36dc5833b04eb63f06e3bb818aa6b7a6e6db99a9 # v2.1.2
+      - uses: aquaproj/aqua-installer@d9c4b5d107a17831a8c8718efa4ce67a0923d1f5 # v2.1.3
         with:
           aqua_version: v2.16.4
         env:
