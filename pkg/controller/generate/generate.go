@@ -16,7 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-const defaultVerNumLimit int = 30
+const defaultVerCntLimit int = 30
 
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
@@ -47,7 +47,7 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	}
 
 	if param.Limit == 0 {
-		param.Limit = defaultVerNumLimit
+		param.Limit = defaultVerCntLimit
 	}
 
 	list, err := c.listPkgs(ctx, logE, param, cfg, cfgFilePath, args...)
