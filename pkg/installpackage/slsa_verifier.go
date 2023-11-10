@@ -55,7 +55,7 @@ func (sv *SLSAVerifierInstaller) installSLSAVerifier(ctx context.Context, logE *
 		Checksums: checksum.New(), // Check slsa-verifier's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 		Checksum: &checksum.Checksum{
-			Algorithm: "sha512",
+			Algorithm: "sha256",
 			Checksum:  chksum,
 		},
 		DisablePolicy: true,
