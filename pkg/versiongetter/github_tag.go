@@ -23,6 +23,8 @@ type GitHubTagClient interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
+const ghMaxPerPage int = 100
+
 func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
@@ -50,10 +52,15 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
+		PerPage: ghMaxPerPage, //nolint:gomnd
 	}
+	if limit > 0 && opt.PerPage > limit {
+		opt.PerPage = limit
+	}
+
 	var versions []string
 	tagNames := map[string]struct{}{}
+	var prevCnt int // previous length of versions
 	for {
 		tags, _, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
@@ -66,11 +73,27 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 			}
 			tagNames[tagName] = struct{}{}
 			if filterTag(tag, filters) {
+				prevCnt = len(versions)
 				versions = append(versions, tagName)
 			}
 		}
+		if limit > 0 && len(versions) >= limit { // Reach the limit
+			if len(versions) > limit {
+				versions = versions[:limit]
+			}
+			return fuzzyfinder.ConvertStringsToItems(versions), nil
+		}
 		if len(tags) != opt.PerPage {
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
+		}
+		// After filtering, not enough versions added.
+		// Increase per_page to reduce the consumption of GitHub API.
+		diff := len(versions) - prevCnt
+		if diff < opt.PerPage && opt.PerPage < ghMaxPerPage {
+			opt.PerPage *= 2
+			if opt.PerPage > ghMaxPerPage {
+				opt.PerPage = ghMaxPerPage
+			}
 		}
 		opt.Page++
 	}

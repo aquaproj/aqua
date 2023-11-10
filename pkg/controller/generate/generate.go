@@ -16,6 +16,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+const defaultVerNumLimit int = 30
+
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
@@ -42,6 +44,10 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	cfg := &aqua.Config{}
 	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
+	}
+
+	if param.Limit == 0 {
+		param.Limit = defaultVerNumLimit
 	}
 
 	list, err := c.listPkgs(ctx, logE, param, cfg, cfgFilePath, args...)
@@ -197,7 +203,7 @@ func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, pa
 		outputPkg.Registry = ""
 	}
 	if outputPkg.Version == "" {
-		version := c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, "", param.SelectVersion)
+		version := c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, "", param.SelectVersion, param.Limit)
 		if version == "" {
 			outputPkg.Version = "[SET PACKAGE VERSION]"
 			return outputPkg
