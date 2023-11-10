@@ -86,8 +86,15 @@ echo "cli/cli" | aqua g -f -
 - name: cli/cli@v2.2.0
 
 You can select a version interactively with "-s" option.
+By default, aqua g -s will only display 30 versions of package.
+Use --limit/-l to change it. -1 refers to no limit.
 
+# Display 30 versions of selected by default
 $ aqua g -s
+# Display all versions of selected package 
+$ aqua g -s -l -1 
+# Display 5 versions of selected package
+$ aqua g -s -l 5
 
 The option "-pin" is useful to prevent the package from being updated by Renovate.
 
