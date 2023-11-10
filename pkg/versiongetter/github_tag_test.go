@@ -125,7 +125,7 @@ func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 			t.Parallel()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
 			ghTagGetter := versiongetter.NewGitHubTag(ghTagClient)
-			items, err := ghTagGetter.List(ctx, d.pkg, d.filters)
+			items, err := ghTagGetter.List(ctx, d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return

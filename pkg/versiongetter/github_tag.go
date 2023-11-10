@@ -46,7 +46,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageI
 	}
 }
 
-func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{

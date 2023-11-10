@@ -29,12 +29,12 @@ func (g *GeneralVersionGetter) Get(ctx context.Context, pkg *registry.PackageInf
 	return getter.Get(ctx, pkg, filters) //nolint:wrapcheck
 }
 
-func (g *GeneralVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) ([]*fuzzyfinder.Item, error) {
+func (g *GeneralVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	getter := g.get(pkg)
 	if getter == nil {
 		return nil, nil
 	}
-	return getter.List(ctx, pkg, filters) //nolint:wrapcheck
+	return getter.List(ctx, pkg, filters, limit) //nolint:wrapcheck
 }
 
 func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {

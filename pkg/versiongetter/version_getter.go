@@ -9,5 +9,5 @@ import (
 
 type VersionGetter interface {
 	Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error)
-	List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) ([]*fuzzyfinder.Item, error)
+	List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error)
 }

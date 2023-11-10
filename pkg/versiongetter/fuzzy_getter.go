@@ -33,7 +33,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.Pa
 	}
 
 	if useFinder { //nolint:nestif
-		versions, err := g.getter.List(ctx, pkg, filters)
+		versions, err := g.getter.List(ctx, pkg, filters, limit)
 		if err != nil {
 			return ""
 		}
