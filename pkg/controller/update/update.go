@@ -11,6 +11,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const defaultVerCntLimit int = 30
+
 func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if err := c.updateCommand(ctx, logE, param); err != nil {
 		return err
@@ -18,6 +20,10 @@ func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *conf
 	if len(param.Args) != 0 {
 		return nil
 	}
+	if param.Limit == 0 {
+		param.Limit = defaultVerCntLimit
+	}
+
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath)
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)

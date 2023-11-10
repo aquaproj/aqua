@@ -24,7 +24,7 @@ func (r *Runner) newUpdateCommand() *cli.Command {
 			&cli.BoolFlag{
 				Name:    "select-version",
 				Aliases: []string{"s"},
-				Usage:   `Select the version with fuzzy finder`,
+				Usage:   `Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it.`,
 			},
 			&cli.BoolFlag{
 				Name:    "only-registry",
@@ -35,6 +35,11 @@ func (r *Runner) newUpdateCommand() *cli.Command {
 				Name:    "only-package",
 				Aliases: []string{"p"},
 				Usage:   `Update only packages`,
+			},
+			&cli.IntFlag{
+				Name:    "limit",
+				Aliases: []string{"l"},
+				Usage:   "The maximum number of versions. -1 refers to no limit.",
 			},
 		},
 	}
