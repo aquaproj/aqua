@@ -36,7 +36,7 @@ func (c *Checksum) GetEnabled() bool {
 
 func (c *Checksum) GetAlgorithm() string {
 	if !c.GetEnabled() {
-		return "sha512"
+		return "sha256"
 	}
 	return c.Algorithm
 }
