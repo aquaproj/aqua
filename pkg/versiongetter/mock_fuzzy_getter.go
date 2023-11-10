@@ -17,6 +17,6 @@ func NewMockFuzzyGetter(versions map[string]string) *MockFuzzyGetter {
 	}
 }
 
-func (g *MockFuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool) string {
+func (g *MockFuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string {
 	return g.versions[pkg.GetName()]
 }

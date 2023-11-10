@@ -26,7 +26,7 @@ type FuzzyFinder interface {
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool) string { //nolint:cyclop
+func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string { //nolint:cyclop
 	filters, err := createFilters(pkg)
 	if err != nil {
 		return ""

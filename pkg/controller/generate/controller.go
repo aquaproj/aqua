@@ -31,7 +31,7 @@ type ConfigReader interface {
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool) string
+	Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string
 }
 
 type FuzzyFinder interface {
