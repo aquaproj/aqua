@@ -137,7 +137,12 @@ func (r *Runner) newGenerateCommand() *cli.Command {
 			&cli.BoolFlag{
 				Name:    "select-version",
 				Aliases: []string{"s"},
-				Usage:   `Select the installed version interactively`,
+				Usage:   `Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it.`,
+			},
+			&cli.IntFlag{
+				Name:    "limit",
+				Aliases: []string{"l"},
+				Usage:   "The maximum number of versions. -1 refers to no limit.",
 			},
 		},
 	}
