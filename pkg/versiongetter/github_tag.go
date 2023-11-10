@@ -23,8 +23,6 @@ type GitHubTagClient interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-const ghMaxPerPage int = 100
-
 func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName

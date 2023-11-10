@@ -7,6 +7,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 )
 
+const ghMaxPerPage int = 100
+
 type GeneralVersionGetter struct {
 	cargo     *CargoVersionGetter
 	ghTag     *GitHubTagVersionGetter
