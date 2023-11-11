@@ -58,7 +58,6 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 
 	var versions []string
 	tagNames := map[string]struct{}{}
-	var prevCnt int // previous length of versions
 	for {
 		tags, _, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
@@ -71,7 +70,6 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 			}
 			tagNames[tagName] = struct{}{}
 			if filterTag(tag, filters) {
-				prevCnt = len(versions)
 				versions = append(versions, tagName)
 			}
 		}
@@ -83,14 +81,6 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 		}
 		if len(tags) != opt.PerPage {
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
-		}
-		// After filtering, not enough versions added.
-		// Increase per_page to reduce the consumption of GitHub API.
-		if opt.PerPage < ghMaxPerPage && len(versions)-prevCnt < opt.PerPage {
-			opt.PerPage *= 2
-			if opt.PerPage > ghMaxPerPage {
-				opt.PerPage = ghMaxPerPage
-			}
 		}
 		opt.Page++
 	}

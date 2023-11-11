@@ -75,7 +75,6 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 
 	var items []*fuzzyfinder.Item
 	tags := map[string]struct{}{}
-	var prevCnt int // previous length of items
 	for {
 		releases, _, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
@@ -94,7 +93,6 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 					Description: release.GetBody(),
 					URL:         release.GetHTMLURL(),
 				}
-				prevCnt = len(items)
 				items = append(items, &fuzzyfinder.Item{
 					Item:    tagName,
 					Preview: fuzzyfinder.PreviewVersion(v),
@@ -109,14 +107,6 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 		}
 		if len(releases) != opt.PerPage {
 			return items, nil
-		}
-		// After filtering, not enough versions added.
-		// Increase per_page to reduce the consumption of GitHub API.
-		if opt.PerPage < ghMaxPerPage && len(items)-prevCnt < opt.PerPage {
-			opt.PerPage *= 2
-			if opt.PerPage > ghMaxPerPage {
-				opt.PerPage = ghMaxPerPage
-			}
 		}
 		opt.Page++
 	}
