@@ -69,7 +69,11 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 	opt := &github.ListOptions{
 		PerPage: ghMaxPerPage,
 	}
-	if limit > 0 && opt.PerPage > limit {
+	// If filters exist, filter as much data as possible and
+	// per_page would be ghMaxPerPage.
+	// If there are no filters, set per_page to the limit
+	// to reduce the size of response data.
+	if limit > 0 && len(filters) == 0 && opt.PerPage > limit {
 		opt.PerPage = limit
 	}
 
