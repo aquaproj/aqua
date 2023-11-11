@@ -2,6 +2,7 @@ package ast
 
 import (
 	"errors"
+	"fmt"
 
 	wast "github.com/aquaproj/aqua/v2/pkg/ast"
 	"github.com/goccy/go-yaml/ast"
@@ -15,7 +16,7 @@ func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string
 
 	mv, err := wast.FindMappingValueFromNode(body, "registries")
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf(`find a mapping value node "registries": %w`, err)
 	}
 
 	seq, ok := mv.Value.(*ast.SequenceNode)
@@ -58,7 +59,7 @@ func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName
 func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:gocognit,cyclop,funlen
 	mvs, err := wast.NormalizeMappingValueNodes(node)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("normalize a mapping value node: %w", err)
 	}
 	var refNode *ast.StringNode
 	var newVersion string
