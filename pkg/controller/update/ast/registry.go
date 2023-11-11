@@ -2,42 +2,38 @@ package ast
 
 import (
 	"errors"
+	"fmt"
 
+	wast "github.com/aquaproj/aqua/v2/pkg/ast"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/sirupsen/logrus"
 )
 
 const typeStandard = "standard"
 
-func findMappingValue(values []*ast.MappingValueNode, key string) *ast.MappingValueNode {
-	for _, value := range values {
-		sn, ok := value.Key.(*ast.StringNode)
-		if !ok {
-			continue
-		}
-		if sn.Value == key {
-			return value
-		}
-	}
-	return nil
-}
+func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string]string) (bool, error) {
+	body := file.Docs[0].Body // DocumentNode
 
-func normalizeMappingValueNodes(node ast.Node) ([]*ast.MappingValueNode, error) {
-	switch t := node.(type) {
-	case *ast.MappingNode:
-		return t.Values, nil
-	case *ast.MappingValueNode:
-		return []*ast.MappingValueNode{t}, nil
-	}
-	return nil, errors.New("node must be a mapping node or mapping value node")
-}
-
-func findMappingValueFromNode(body ast.Node, key string) (*ast.MappingValueNode, error) {
-	values, err := normalizeMappingValueNodes(body)
+	mv, err := wast.FindMappingValueFromNode(body, "registries")
 	if err != nil {
-		return nil, err
+		return false, fmt.Errorf(`find a mapping value node "registries": %w`, err)
 	}
-	return findMappingValue(values, key), nil
+
+	seq, ok := mv.Value.(*ast.SequenceNode)
+	if !ok {
+		return false, errors.New("the value must be a sequence node")
+	}
+	updated := false
+	for _, value := range seq.Values {
+		up, err := parseRegistryNode(logE, value, newVersions)
+		if err != nil {
+			return false, err
+		}
+		if up {
+			updated = true
+		}
+	}
+	return updated, nil
 }
 
 func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName, newVersion string) bool {
@@ -61,9 +57,9 @@ func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName
 }
 
 func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:gocognit,cyclop,funlen
-	mvs, err := normalizeMappingValueNodes(node)
+	mvs, err := wast.NormalizeMappingValueNodes(node)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("normalize a mapping value node: %w", err)
 	}
 	var refNode *ast.StringNode
 	var newVersion string
@@ -126,28 +122,4 @@ func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string
 		return false, nil
 	}
 	return updateRegistryVersion(logE, refNode, rgstName, version), nil
-}
-
-func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string]string) (bool, error) {
-	body := file.Docs[0].Body // DocumentNode
-	mv, err := findMappingValueFromNode(body, "registries")
-	if err != nil {
-		return false, err
-	}
-
-	seq, ok := mv.Value.(*ast.SequenceNode)
-	if !ok {
-		return false, errors.New("the value must be a sequence node")
-	}
-	updated := false
-	for _, value := range seq.Values {
-		up, err := parseRegistryNode(logE, value, newVersions)
-		if err != nil {
-			return false, err
-		}
-		if up {
-			updated = true
-		}
-	}
-	return updated, nil
 }
