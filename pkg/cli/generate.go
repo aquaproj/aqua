@@ -87,7 +87,7 @@ echo "cli/cli" | aqua g -f -
 
 You can select a version interactively with "-s" option.
 By default, aqua g -s will only display 30 versions of package.
-Use --limit/-l to change it. -1 refers to no limit.
+Use --limit/-l to change it. Non-positive number refers to no limit.
 
 # Display 30 versions of selected by default
 $ aqua g -s
@@ -149,7 +149,8 @@ func (r *Runner) newGenerateCommand() *cli.Command {
 			&cli.IntFlag{
 				Name:    "limit",
 				Aliases: []string{"l"},
-				Usage:   "The maximum number of versions. -1 refers to no limit.",
+				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
+				Value:   30,
 			},
 		},
 	}

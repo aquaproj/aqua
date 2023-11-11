@@ -11,13 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const defaultVerCntLimit int = 30
-
 func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if param.Limit == 0 {
-		param.Limit = defaultVerCntLimit
-	}
-
 	if err := c.updateCommand(ctx, logE, param); err != nil {
 		return err
 	}

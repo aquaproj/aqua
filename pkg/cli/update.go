@@ -39,7 +39,8 @@ func (r *Runner) newUpdateCommand() *cli.Command {
 			&cli.IntFlag{
 				Name:    "limit",
 				Aliases: []string{"l"},
-				Usage:   "The maximum number of versions. -1 refers to no limit.",
+				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
+				Value:   30,
 			},
 		},
 	}
@@ -85,7 +86,7 @@ If -i option is used, registries aren't updated.
 If you want to select versions, please use the --select-version [-s] option.
 You can select versions with the fuzzy finder. You can not only update but also downgrade packages.
 By default, -s will only display 30 versions of package.
-Use --limit/-l to change it. -1 refers to no limit.
+Use --limit/-l to change it. Non-positive number refers to no limit.
 
   # Select updated packages and versions with fuzzy finder
   # Display 30 versions by default
