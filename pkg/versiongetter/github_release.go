@@ -63,16 +63,17 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, pkg *registry.Pack
 	}
 }
 
-func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
+		PerPage: itemNumPerPage(limit, len(filters)),
 	}
+
 	var items []*fuzzyfinder.Item
 	tags := map[string]struct{}{}
 	for {
-		releases, _, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
@@ -95,10 +96,13 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 				})
 			}
 		}
-		if len(releases) != opt.PerPage {
+		if limit > 0 && len(items) >= limit { // Reach the limit
+			return items[:limit], nil
+		}
+		if resp.NextPage == 0 {
 			return items, nil
 		}
-		opt.Page++
+		opt.Page = resp.NextPage
 	}
 }
 

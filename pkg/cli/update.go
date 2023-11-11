@@ -24,7 +24,7 @@ func (r *Runner) newUpdateCommand() *cli.Command {
 			&cli.BoolFlag{
 				Name:    "select-version",
 				Aliases: []string{"s"},
-				Usage:   `Select the version with fuzzy finder`,
+				Usage:   `Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it.`,
 			},
 			&cli.BoolFlag{
 				Name:    "only-registry",
@@ -35,6 +35,12 @@ func (r *Runner) newUpdateCommand() *cli.Command {
 				Name:    "only-package",
 				Aliases: []string{"p"},
 				Usage:   `Update only packages`,
+			},
+			&cli.IntFlag{
+				Name:    "limit",
+				Aliases: []string{"l"},
+				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
+				Value:   config.DefaultVerCnt,
 			},
 		},
 	}
@@ -79,9 +85,16 @@ If -i option is used, registries aren't updated.
 
 If you want to select versions, please use the --select-version [-s] option.
 You can select versions with the fuzzy finder. You can not only update but also downgrade packages.
+By default, -s will only display 30 versions of package.
+Use --limit/-l to change it. Non-positive number refers to no limit.
 
   # Select updated packages and versions with fuzzy finder
+  # Display 30 versions by default
   $ aqua update -i -s
+  # Display only 5 versions
+  $ aqua update -i -s -l 5
+  # Display all versions 
+  $ aqua update -i -s -l -1
 
 This command doesn't update packages if the field 'version' is used.
 

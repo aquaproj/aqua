@@ -31,5 +31,6 @@ func (g *MockGitHubReleaseClient) ListReleases(ctx context.Context, owner, repo 
 	if !ok {
 		return nil, nil, errors.New("repository isn't found")
 	}
-	return releases, nil, nil
+	resp := &github.Response{}
+	return releases, resp, nil
 }

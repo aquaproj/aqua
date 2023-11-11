@@ -7,6 +7,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 )
 
+const ghMaxPerPage int = 100
+
 type GeneralVersionGetter struct {
 	cargo     *CargoVersionGetter
 	ghTag     *GitHubTagVersionGetter
@@ -29,12 +31,12 @@ func (g *GeneralVersionGetter) Get(ctx context.Context, pkg *registry.PackageInf
 	return getter.Get(ctx, pkg, filters) //nolint:wrapcheck
 }
 
-func (g *GeneralVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) ([]*fuzzyfinder.Item, error) {
+func (g *GeneralVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	getter := g.get(pkg)
 	if getter == nil {
 		return nil, nil
 	}
-	return getter.List(ctx, pkg, filters) //nolint:wrapcheck
+	return getter.List(ctx, pkg, filters, limit) //nolint:wrapcheck
 }
 
 func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
@@ -51,4 +53,15 @@ func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 		return g.ghTag
 	}
 	return g.ghRelease
+}
+
+// If filters exist, filter as much data as possible and
+// per_page would be ghMaxPerPage.
+// If there are no filters, set per_page to the limit
+// to reduce the size of response data.
+func itemNumPerPage(limit, filterNum int) int {
+	if limit > 0 && filterNum == 0 && ghMaxPerPage > limit {
+		return limit
+	}
+	return ghMaxPerPage
 }

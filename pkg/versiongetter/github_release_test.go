@@ -143,7 +143,7 @@ body(v1)`,
 			t.Parallel()
 			ghReleaseClient := versiongetter.NewMockGitHubReleaseClient(d.releases)
 			ghReleaseGetter := versiongetter.NewGitHubRelease(ghReleaseClient)
-			items, err := ghReleaseGetter.List(ctx, d.pkg, d.filters)
+			items, err := ghReleaseGetter.List(ctx, d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return

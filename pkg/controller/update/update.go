@@ -18,6 +18,7 @@ func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *conf
 	if len(param.Args) != 0 {
 		return nil
 	}
+
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath)
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)

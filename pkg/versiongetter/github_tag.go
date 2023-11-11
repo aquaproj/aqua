@@ -46,16 +46,17 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageI
 	}
 }
 
-func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
+		PerPage: itemNumPerPage(limit, len(filters)),
 	}
+
 	var versions []string
 	tagNames := map[string]struct{}{}
 	for {
-		tags, _, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
@@ -69,10 +70,13 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 				versions = append(versions, tagName)
 			}
 		}
-		if len(tags) != opt.PerPage {
+		if limit > 0 && len(versions) >= limit { // Reach the limit
+			return fuzzyfinder.ConvertStringsToItems(versions[:limit]), nil
+		}
+		if resp.NextPage == 0 {
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
 		}
-		opt.Page++
+		opt.Page = resp.NextPage
 	}
 }
 
