@@ -67,7 +67,7 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
-		PerPage: ghMaxPerPage, //nolint:gomnd
+		PerPage: ghMaxPerPage,
 	}
 	if limit > 0 && opt.PerPage > limit {
 		opt.PerPage = limit
