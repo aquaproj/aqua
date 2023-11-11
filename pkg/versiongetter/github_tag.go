@@ -73,7 +73,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 		if limit > 0 && len(versions) >= limit { // Reach the limit
 			return fuzzyfinder.ConvertStringsToItems(versions[:limit]), nil
 		}
-		if resp.LastPage == 0 {
+		if resp.NextPage == 0 {
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
 		}
 		opt.Page = resp.NextPage
