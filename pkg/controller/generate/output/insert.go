@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	wast "github.com/aquaproj/aqua/v2/pkg/ast"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
@@ -43,30 +44,6 @@ func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) err
 	return nil
 }
 
-func getPkgsAST(values []*ast.MappingValueNode) *ast.MappingValueNode {
-	for _, mapValue := range values {
-		key, ok := mapValue.Key.(*ast.StringNode)
-		if !ok {
-			continue
-		}
-		if key.Value != "packages" {
-			continue
-		}
-		return mapValue
-	}
-	return nil
-}
-
-func getMappingValueNodeFromBody(body ast.Node) []*ast.MappingValueNode {
-	switch b := body.(type) {
-	case *ast.MappingNode:
-		return b.Values
-	case *ast.MappingValueNode:
-		return []*ast.MappingValueNode{b}
-	}
-	return nil
-}
-
 func appendPkgsNode(mapValue *ast.MappingValueNode, node ast.Node) error {
 	switch mapValue.Value.Type() {
 	case ast.NullType:
@@ -88,15 +65,10 @@ func updateASTFile(body ast.Node, pkgs []*aqua.Package) error {
 		return fmt.Errorf("convert packages to node: %w", err)
 	}
 
-	values := getMappingValueNodeFromBody(body)
-	if values == nil {
-		return errBodyFormat
+	values, err := wast.FindMappingValueFromNode(body, "packages")
+	if err != nil {
+		return fmt.Errorf(`find a mapping value node "packages": %w`, err)
 	}
 
-	mapValue := getPkgsAST(values)
-	if mapValue == nil {
-		return errPkgsNotFound
-	}
-
-	return appendPkgsNode(mapValue, node)
+	return appendPkgsNode(values, node)
 }
