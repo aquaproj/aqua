@@ -54,3 +54,14 @@ func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 	}
 	return g.ghRelease
 }
+
+// If filters exist, filter as much data as possible and
+// per_page would be ghMaxPerPage.
+// If there are no filters, set per_page to the limit
+// to reduce the size of response data.
+func itemNumPerPage(limit, filterNum int) int {
+	if limit > 0 && filterNum == 0 && ghMaxPerPage > limit {
+		return limit
+	}
+	return ghMaxPerPage
+}

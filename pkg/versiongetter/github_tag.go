@@ -50,14 +50,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
-		PerPage: ghMaxPerPage,
-	}
-	// If filters exist, filter as much data as possible and
-	// per_page would be ghMaxPerPage.
-	// If there are no filters, set per_page to the limit
-	// to reduce the size of response data.
-	if limit > 0 && len(filters) == 0 && opt.PerPage > limit {
-		opt.PerPage = limit
+		PerPage: itemNumPerPage(limit, len(filters)),
 	}
 
 	var versions []string
