@@ -150,7 +150,7 @@ func (r *Runner) newGenerateCommand() *cli.Command {
 				Name:    "limit",
 				Aliases: []string{"l"},
 				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   30,
+				Value:   config.DefaultVerCnt,
 			},
 		},
 	}
