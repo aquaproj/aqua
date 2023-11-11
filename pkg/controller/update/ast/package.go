@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"strings"
 
+	wast "github.com/aquaproj/aqua/v2/pkg/ast"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/sirupsen/logrus"
 )
 
 func UpdatePackages(logE *logrus.Entry, file *ast.File, newVersions map[string]string) (bool, error) {
 	body := file.Docs[0].Body // DocumentNode
-	mv, err := findMappingValueFromNode(body, "packages")
+	mv, err := wast.FindMappingValueFromNode(body, "packages")
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf(`find a mapping value node "packages": %w`, err)
 	}
 
 	seq, ok := mv.Value.(*ast.SequenceNode)
@@ -34,9 +35,9 @@ func UpdatePackages(logE *logrus.Entry, file *ast.File, newVersions map[string]s
 }
 
 func parsePackageNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:cyclop,funlen
-	mvs, err := normalizeMappingValueNodes(node)
+	mvs, err := wast.NormalizeMappingValueNodes(node)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("normalize mapping value node: %w", err)
 	}
 	var registryName string
 	var pkgName string
