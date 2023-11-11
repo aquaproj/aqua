@@ -104,10 +104,7 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 			}
 		}
 		if limit > 0 && len(items) >= limit { // Reach the limit
-			if len(items) > limit {
-				items = items[:limit]
-			}
-			return items, nil
+			return items[:limit], nil
 		}
 		if resp.LastPage == 0 {
 			return items, nil
