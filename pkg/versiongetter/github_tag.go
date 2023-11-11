@@ -63,7 +63,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 	var versions []string
 	tagNames := map[string]struct{}{}
 	for {
-		tags, _, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
@@ -83,10 +83,10 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 			}
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
 		}
-		if len(tags) != opt.PerPage {
+		if resp.LastPage == 0 {
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
 		}
-		opt.Page++
+		opt.Page = resp.NextPage
 	}
 }
 
