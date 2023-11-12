@@ -3,6 +3,9 @@ project_name: aqua
 
 archives:
   - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+    format_overrides:
+      - goos: windows
+        format: zip
 
 builds:
   - binary: aqua
