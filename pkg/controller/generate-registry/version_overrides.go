@@ -3,15 +3,12 @@ package genrgst
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -28,6 +25,7 @@ type Release struct {
 	Tag           string
 	Version       *version.Version
 	VersionPrefix string
+	assets        []*github.ReleaseAsset
 }
 
 func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
@@ -87,11 +85,10 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		v1 := r1.Version
 		v2 := r2.Version
 		if v1 == nil || v2 == nil {
-			return r1.Tag >= r2.Tag
+			return r1.Tag <= r2.Tag
 		}
-		return v1.GreaterThanOrEqual(v2)
+		return v1.LessThan(v2)
 	})
-	pkgs := make([]*Package, 0, len(releases))
 	for _, release := range releases {
 		pkgInfo := &registry.PackageInfo{
 			Type:      "github_release",
@@ -106,141 +103,19 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		if len(assets) == 0 {
 			continue
 		}
-		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, assets)
-		pkgs = append(pkgs, &Package{
-			Info:    pkgInfo,
-			Version: release.Tag,
-			SemVer:  release.Tag[len(release.VersionPrefix):],
-		})
+		release.assets = assets
 	}
-	p, versions := mergePackages(pkgs)
-	if p == nil {
-		return pkgInfo, versions
-	}
+
+	p, versions := c.generatePackage(logE, pkgName, releases)
+	p.Type = pkgInfo.Type
+	p.RepoOwner = pkgInfo.RepoOwner
+	p.RepoName = pkgInfo.RepoName
 	p.Description = pkgInfo.Description
 	p.Name = pkgInfo.Name
+	if len(p.VersionOverrides) != 0 {
+		p.VersionConstraints = "false"
+	}
 	return p, versions
-}
-
-func getVersionOverride(latestPkgInfo, pkgInfo *registry.PackageInfo) *registry.VersionOverride { //nolint:cyclop
-	vo := &registry.VersionOverride{}
-	if pkgInfo.Asset != latestPkgInfo.Asset {
-		vo.Asset = pkgInfo.Asset
-	}
-	if pkgInfo.Format != latestPkgInfo.Format {
-		vo.Format = pkgInfo.Format
-	}
-	if !reflect.DeepEqual(pkgInfo.Replacements, latestPkgInfo.Replacements) {
-		vo.Replacements = pkgInfo.Replacements
-		if pkgInfo.Replacements == nil {
-			vo.Replacements = map[string]string{}
-		}
-	}
-	if !reflect.DeepEqual(pkgInfo.Overrides, latestPkgInfo.Overrides) {
-		vo.Overrides = pkgInfo.Overrides
-		if pkgInfo.Overrides == nil {
-			vo.Overrides = []*registry.Override{}
-		}
-	}
-	if !reflect.DeepEqual(pkgInfo.SupportedEnvs, latestPkgInfo.SupportedEnvs) {
-		vo.SupportedEnvs = pkgInfo.SupportedEnvs
-		if pkgInfo.SupportedEnvs == nil {
-			vo.SupportedEnvs = []string{}
-		}
-	}
-	if pkgInfo.Rosetta2 != latestPkgInfo.Rosetta2 {
-		vo.Rosetta2 = &pkgInfo.Rosetta2
-	}
-	if pkgInfo.WindowsExt != latestPkgInfo.WindowsExt {
-		vo.WindowsExt = pkgInfo.WindowsExt
-	}
-	if !reflect.DeepEqual(pkgInfo.VersionPrefix, latestPkgInfo.VersionPrefix) {
-		vo.VersionPrefix = &pkgInfo.VersionPrefix
-		if pkgInfo.VersionPrefix == "" {
-			vo.VersionPrefix = ptr.String("")
-		}
-	}
-	if !reflect.DeepEqual(pkgInfo.Checksum, latestPkgInfo.Checksum) {
-		vo.Checksum = pkgInfo.Checksum
-		if pkgInfo.Checksum == nil {
-			vo.Checksum = &registry.Checksum{
-				Enabled: ptr.Bool(false),
-			}
-		}
-	}
-	return vo
-}
-
-func isSemver(v string) bool {
-	_, err := version.NewVersion(v)
-	return err == nil
-}
-
-func mergePackages(pkgs []*Package) (*registry.PackageInfo, []string) { //nolint:funlen,cyclop
-	if len(pkgs) == 0 {
-		return nil, nil
-	}
-	if len(pkgs) == 1 {
-		return pkgs[0].Info, []string{pkgs[0].Version}
-	}
-	basePkg := pkgs[0]
-	basePkgInfo := basePkg.Info
-	latestPkgInfo := basePkgInfo
-	minimumVersion := basePkg.SemVer
-	minimumTag := basePkg.Version
-	var lastMinimumVersion string
-	vos := []*registry.VersionOverride{}
-	var lastVO *registry.VersionOverride
-	versions := []string{basePkg.Version}
-	versionsM := map[string]struct{}{
-		basePkg.Version: {},
-	}
-	for _, pkg := range pkgs[1:] {
-		pkgInfo := pkg.Info
-		if reflect.DeepEqual(basePkgInfo, pkgInfo) {
-			minimumVersion = pkg.SemVer
-			minimumTag = pkg.Version
-			continue
-		}
-		if _, ok := versionsM[minimumTag]; !ok {
-			versions = append(versions, minimumTag)
-			versionsM[minimumTag] = struct{}{}
-		}
-		lastMinimumVersion = strings.TrimPrefix(minimumVersion, "v")
-
-		var versionConstraints string
-		if isSemver(lastMinimumVersion) {
-			versionConstraints = fmt.Sprintf(`semver(">= %s")`, lastMinimumVersion)
-		} else {
-			versionConstraints = fmt.Sprintf(`SemVer >= "%s"`, lastMinimumVersion)
-		}
-		if lastVO == nil {
-			latestPkgInfo.VersionConstraints = versionConstraints
-		} else {
-			lastVO.VersionConstraints = versionConstraints
-			vos = append(vos, lastVO)
-		}
-		lastVO = getVersionOverride(latestPkgInfo, pkgInfo)
-		basePkgInfo = pkgInfo
-		minimumVersion = pkg.SemVer
-		minimumTag = pkg.Version
-	}
-	if lastMinimumVersion != "" {
-		if _, ok := versionsM[minimumTag]; !ok {
-			versions = append(versions, minimumTag)
-			versionsM[minimumTag] = struct{}{}
-		}
-		if isSemver(lastMinimumVersion) {
-			lastVO.VersionConstraints = fmt.Sprintf(`semver("< %s")`, lastMinimumVersion)
-		} else {
-			lastVO.VersionConstraints = fmt.Sprintf(`Version < "%s"`, lastMinimumVersion)
-		}
-		vos = append(vos, lastVO)
-	}
-	if len(vos) != 0 {
-		latestPkgInfo.VersionOverrides = vos
-	}
-	return latestPkgInfo, versions
 }
 
 func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, limit int) []*github.RepositoryRelease {

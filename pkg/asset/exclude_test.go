@@ -19,13 +19,11 @@ func Test_Exclude(t *testing.T) {
 			name:      "not exclude",
 			pkgName:   "suzuki-shunsuke/tfcmt",
 			assetName: "tfcmt_linux_amd64.tar.gz",
-			version:   "v3.0.0",
 		},
 		{
 			name:      "32bit",
 			pkgName:   "suzuki-shunsuke/tfcmt",
 			assetName: "tfcmt-linux-32bit.tar.gz",
-			version:   "v3.0.0",
 			exp:       true,
 		},
 	}
@@ -33,7 +31,7 @@ func Test_Exclude(t *testing.T) {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			f := asset.Exclude(d.pkgName, d.assetName, d.version)
+			f := asset.Exclude(d.pkgName, d.assetName)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)
 			}

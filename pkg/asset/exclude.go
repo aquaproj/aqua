@@ -2,35 +2,10 @@ package asset
 
 import (
 	"strings"
-
-	"github.com/aquaproj/aqua/v2/pkg/osfile"
 )
 
-func Exclude(pkgName, assetName, version string) bool {
-	allowedExts := map[string]struct{}{
-		".exe": {},
-		".sh":  {},
-		".js":  {},
-		".jar": {},
-		".py":  {},
-	}
-	if format := getFormat(assetName); format == formatRaw {
-		ext := osfile.Ext(assetName, version)
-		if len(ext) > 0 && len(ext) < 6 {
-			if _, ok := allowedExts[ext]; !ok {
-				return true
-			}
-		}
-	}
-	suffixes := []string{
-		"sha256",
-	}
+func Exclude(pkgName, assetName string) bool {
 	asset := strings.ToLower(assetName)
-	for _, s := range suffixes {
-		if strings.HasSuffix(asset, "."+s) {
-			return true
-		}
-	}
 	words := []string{
 		"32-bit",
 		"32bit",
@@ -39,7 +14,6 @@ func Exclude(pkgName, assetName, version string) bool {
 		"armv6",
 		"armv7",
 		"changelog",
-		"checksum",
 		"freebsd",
 		"i386",
 		"license",
@@ -62,6 +36,16 @@ func Exclude(pkgName, assetName, version string) bool {
 	}
 	for _, s := range words {
 		if strings.Contains(asset, s) && !strings.Contains(pkgName, s) {
+			return true
+		}
+	}
+	exts := []string{
+		".deb",
+		".rpm",
+		".msi",
+	}
+	for _, ext := range exts {
+		if strings.HasSuffix(asset, ext) {
 			return true
 		}
 	}
