@@ -38,7 +38,7 @@ func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, para
 		}
 
 		if findResult.Package == nil && findResult.ExePath != "" {
-			return fmt.Errorf("command found, but not managed by aqua")
+			return fmt.Errorf("command not managed by aqua")
 		}
 
 		pkg := findResult.Package
