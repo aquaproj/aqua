@@ -74,3 +74,11 @@ func logGHRateLimit(logE *logrus.Entry, resp *github.Response) {
 		"gh_rate_remaining": resp.Rate.Remaining,
 	}).Info("GitHub API rate limit info")
 }
+
+// fuzzy-finder's output will overwrite the log, add fields to original logE
+func addRteLimitInfo(logE *logrus.Entry, resp *github.Response) {
+	*logE = *logE.WithFields(logrus.Fields{
+		"gh_rate_limit":     resp.Rate.Limit,
+		"gh_rate_remaining": resp.Rate.Remaining,
+	})
+}

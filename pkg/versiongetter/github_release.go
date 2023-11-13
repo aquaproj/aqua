@@ -46,7 +46,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 		PerPage: 30, //nolint:gomnd
 	}
 	for {
-		releases, _, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logGHRateLimit(logE, resp)
 			return "", fmt.Errorf("list tags: %w", err)
@@ -75,11 +75,8 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entr
 	tags := map[string]struct{}{}
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
-		*logE = *logE.WithFields(logrus.Fields{ // finder's output will overwrite the log, add fields to parent logE here
-			"gh_rate_limit":     resp.Rate.Limit,
-			"gh_rate_remaining": resp.Rate.Remaining,
-		})
 		if err != nil {
+			addRteLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, release := range releases {
@@ -102,9 +99,11 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entr
 			}
 		}
 		if limit > 0 && len(items) >= limit { // Reach the limit
+			addRteLimitInfo(logE, resp)
 			return items[:limit], nil
 		}
 		if resp.NextPage == 0 {
+			addRteLimitInfo(logE, resp)
 			return items, nil
 		}
 		opt.Page = resp.NextPage

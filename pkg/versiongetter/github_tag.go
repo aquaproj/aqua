@@ -61,11 +61,8 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 	tagNames := map[string]struct{}{}
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
-		*logE = *logE.WithFields(logrus.Fields{ // finder's output will overwrite the log, add fields to parent logE here
-			"gh_rate_limit":     resp.Rate.Limit,
-			"gh_rate_remaining": resp.Rate.Remaining,
-		})
 		if err != nil {
+			addRteLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {
@@ -79,9 +76,11 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 			}
 		}
 		if limit > 0 && len(versions) >= limit { // Reach the limit
+			addRteLimitInfo(logE, resp)
 			return fuzzyfinder.ConvertStringsToItems(versions[:limit]), nil
 		}
 		if resp.NextPage == 0 {
+			addRteLimitInfo(logE, resp)
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
 		}
 		opt.Page = resp.NextPage
