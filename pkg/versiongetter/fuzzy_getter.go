@@ -3,6 +3,7 @@ package versiongetter
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
@@ -26,15 +27,22 @@ type FuzzyFinder interface {
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string { //nolint:cyclop
+func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string { //nolint:cyclop
 	filters, err := createFilters(pkg)
 	if err != nil {
 		return ""
 	}
 
+	const getVerTimeInfo string = "Retrieve pkg version(s) in "
+	const getVerErrWarn string = "Version retrieving err"
+	repoName := pkg.RepoOwner + "/" + pkg.RepoName
+	logE = logE.WithField("repo", repoName)
+	start := time.Now()
 	if useFinder { //nolint:nestif
 		versions, err := g.getter.List(ctx, pkg, filters, limit)
+		elapsed := time.Since(start)
 		if err != nil {
+			logE.WithError(err).Warn(getVerErrWarn)
 			return ""
 		}
 		if versions == nil {
@@ -51,6 +59,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.Pa
 			}
 		}
 		idx, err := g.fuzzyFinder.Find(versions, true)
+		logE.Info(getVerTimeInfo, elapsed) // finder's output will overwrite log, so log after it
 		if err != nil {
 			return ""
 		}
@@ -61,7 +70,9 @@ func (g *FuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.Pa
 	}
 
 	version, err := g.getter.Get(ctx, pkg, filters)
+	logE.Info(getVerTimeInfo, time.Since(start))
 	if err != nil {
+		logE.WithError(err).Warn(getVerErrWarn)
 		return ""
 	}
 	return version
