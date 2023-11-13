@@ -36,6 +36,11 @@ func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, para
 		if err != nil {
 			return fmt.Errorf("find a command: %w", err)
 		}
+
+		if findResult.Package == nil && findResult.ExePath != "" {
+			return fmt.Errorf("command found, but not managed by aqua")
+		}
+
 		pkg := findResult.Package
 		if newVersion := c.getPackageNewVersion(ctx, logE, param, nil, pkg); newVersion != "" {
 			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
