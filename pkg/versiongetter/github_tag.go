@@ -24,26 +24,29 @@ type GitHubTagClient interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
 	}
 	for {
-		tags, _, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
+			logGHRateLimit(logE, resp)
 			return "", fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {
 			if filterTag(tag, filters) {
+				logGHRateLimit(logE, resp)
 				return tag.GetName(), nil
 			}
 		}
-		if len(tags) != opt.PerPage {
+		if resp.NextPage == 0 {
+			logGHRateLimit(logE, resp)
 			return "", nil
 		}
-		opt.Page++
+		opt.Page = resp.NextPage
 	}
 }
 

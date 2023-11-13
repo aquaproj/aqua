@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,12 +24,12 @@ func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionG
 	}
 }
 
-func (g *GeneralVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GeneralVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	getter := g.get(pkg)
 	if getter == nil {
 		return "", nil
 	}
-	return getter.Get(ctx, pkg, filters) //nolint:wrapcheck
+	return getter.Get(ctx, logE, pkg, filters) //nolint:wrapcheck
 }
 
 func (g *GeneralVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
@@ -64,4 +65,12 @@ func itemNumPerPage(limit, filterNum int) int {
 		return limit
 	}
 	return ghMaxPerPage
+}
+
+// log the GitHub API rate limit info
+func logGHRateLimit(logE *logrus.Entry, resp *github.Response) {
+	logE.WithFields(logrus.Fields{
+		"gh_rate_limit":     resp.Rate.Limit,
+		"gh_rate_remaining": resp.Rate.Remaining,
+	}).Info("GitHub API rate limit info")
 }

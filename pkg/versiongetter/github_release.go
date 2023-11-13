@@ -27,20 +27,18 @@ type GitHubReleaseClient interface {
 	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
 }
 
-func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 
-	release, _, err := g.gh.GetLatestRelease(ctx, repoOwner, repoName)
+	release, resp, err := g.gh.GetLatestRelease(ctx, repoOwner, repoName)
 	if err != nil {
+		logGHRateLimit(logE, resp)
 		return "", fmt.Errorf("get the latest GitHub Release: %w", err)
 	}
 
-	if len(filters) == 0 {
-		return release.GetTagName(), nil
-	}
-
-	if filterRelease(release, filters) {
+	if len(filters) == 0 || filterRelease(release, filters) {
+		logGHRateLimit(logE, resp)
 		return release.GetTagName(), nil
 	}
 
@@ -50,17 +48,19 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, pkg *registry.Pack
 	for {
 		releases, _, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
+			logGHRateLimit(logE, resp)
 			return "", fmt.Errorf("list tags: %w", err)
 		}
 		for _, release := range releases {
 			if filterRelease(release, filters) {
+				logGHRateLimit(logE, resp)
 				return release.GetTagName(), nil
 			}
 		}
-		if len(releases) != opt.PerPage {
+		if resp.NextPage == 0 {
 			return "", nil
 		}
-		opt.Page++
+		opt.Page = resp.NextPage
 	}
 }
 

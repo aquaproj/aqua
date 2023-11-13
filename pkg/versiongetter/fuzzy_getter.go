@@ -69,7 +69,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 		return versions[idx].Item
 	}
 
-	version, err := g.getter.Get(ctx, pkg, filters)
+	version, err := g.getter.Get(ctx, logE, pkg, filters)
 	logE.Info(getVerTimeInfo, time.Since(start))
 	if err != nil {
 		logE.WithError(err).Warn(getVerErrWarn)

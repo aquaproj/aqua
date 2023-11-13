@@ -24,7 +24,7 @@ func NewCargo(client CargoClient) *CargoVersionGetter {
 	}
 }
 
-func (c *CargoVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (c *CargoVersionGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	return c.client.GetLatestVersion(ctx, pkg.Crate) //nolint:wrapcheck
 }
 

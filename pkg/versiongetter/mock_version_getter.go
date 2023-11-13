@@ -19,7 +19,7 @@ func NewMockVersionGetter(versions map[string][]*fuzzyfinder.Item) *MockVersionG
 	}
 }
 
-func (g *MockVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *MockVersionGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	versions, ok := g.versions[pkg.GetName()]
 	if !ok {
 		return "", errors.New("version isn't found")
