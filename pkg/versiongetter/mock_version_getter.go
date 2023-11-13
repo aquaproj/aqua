@@ -3,10 +3,10 @@ package versiongetter
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/sirupsen/logrus"
 )
 
 type MockVersionGetter struct {
