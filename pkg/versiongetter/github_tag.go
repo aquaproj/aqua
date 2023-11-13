@@ -3,6 +3,7 @@ package versiongetter
 import (
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
@@ -46,7 +47,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageI
 	}
 }
 
-func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
@@ -57,6 +58,10 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 	tagNames := map[string]struct{}{}
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		*logE = *logE.WithFields(logrus.Fields{ // finder's output will overwrite the log, add fields to parent logE here
+			"gh_rate_limit":     resp.Rate.Limit,
+			"gh_rate_remaining": resp.Rate.Remaining,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("list tags: %w", err)
 		}

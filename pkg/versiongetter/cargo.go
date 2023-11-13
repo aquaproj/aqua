@@ -3,6 +3,7 @@ package versiongetter
 import (
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
@@ -27,7 +28,7 @@ func (c *CargoVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo,
 	return c.client.GetLatestVersion(ctx, pkg.Crate) //nolint:wrapcheck
 }
 
-func (c *CargoVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (c *CargoVersionGetter) List(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	versionStrings, err := c.client.ListVersions(ctx, pkg.Crate)
 	if err != nil {
 		return nil, fmt.Errorf("list versions of the crate: %w", err)

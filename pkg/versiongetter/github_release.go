@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/sirupsen/logrus"
 )
 
 type GitHubReleaseVersionGetter struct {
@@ -63,7 +64,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, pkg *registry.Pack
 	}
 }
 
-func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
@@ -74,6 +75,10 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, pkg *registry.Pac
 	tags := map[string]struct{}{}
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
+		*logE = *logE.WithFields(logrus.Fields{ // finder's output will overwrite the log, add fields to parent logE here
+			"gh_rate_limit":     resp.Rate.Limit,
+			"gh_rate_remaining": resp.Rate.Remaining,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("list tags: %w", err)
 		}

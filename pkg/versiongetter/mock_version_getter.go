@@ -3,6 +3,7 @@ package versiongetter
 import (
 	"context"
 	"errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
@@ -26,7 +27,7 @@ func (g *MockVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, 
 	return versions[0].Item, nil
 }
 
-func (g *MockVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *MockVersionGetter) List(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	versions, ok := g.versions[pkg.GetName()]
 	if !ok {
 		return nil, errors.New("version isn't found")
