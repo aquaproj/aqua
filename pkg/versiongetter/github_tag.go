@@ -30,20 +30,24 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
 	}
+
+	var respToLog *github.Response
+	defer func() {
+		addRteLimitInfo(logE, respToLog)
+	}()
+
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		respToLog = resp
 		if err != nil {
-			logGHRateLimit(logE, resp)
 			return "", fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {
 			if filterTag(tag, filters) {
-				logGHRateLimit(logE, resp)
 				return tag.GetName(), nil
 			}
 		}
 		if resp.NextPage == 0 {
-			logGHRateLimit(logE, resp)
 			return "", nil
 		}
 		opt.Page = resp.NextPage
@@ -57,12 +61,17 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 		PerPage: itemNumPerPage(limit, len(filters)),
 	}
 
+	var respToLog *github.Response
+	defer func() {
+		addRteLimitInfo(logE, respToLog)
+	}()
+
 	var versions []string
 	tagNames := map[string]struct{}{}
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		respToLog = resp
 		if err != nil {
-			addRteLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {
@@ -76,11 +85,9 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 			}
 		}
 		if limit > 0 && len(versions) >= limit { // Reach the limit
-			addRteLimitInfo(logE, resp)
 			return fuzzyfinder.ConvertStringsToItems(versions[:limit]), nil
 		}
 		if resp.NextPage == 0 {
-			addRteLimitInfo(logE, resp)
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
 		}
 		opt.Page = resp.NextPage
