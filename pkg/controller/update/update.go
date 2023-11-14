@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -37,8 +38,8 @@ func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, para
 			return fmt.Errorf("find a command: %w", err)
 		}
 
-		if findResult.Package == nil && findResult.ExePath != "" {
-			return fmt.Errorf("command not managed by aqua")
+		if findResult.Package == nil {
+			return errors.New("command not managed by aqua")
 		}
 
 		pkg := findResult.Package
