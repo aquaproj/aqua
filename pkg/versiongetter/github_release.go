@@ -74,17 +74,12 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entr
 		PerPage: itemNumPerPage(limit, len(filters)),
 	}
 
-	var respToLog *github.Response
-	defer func() {
-		addRteLimitInfo(logE, respToLog)
-	}()
-
 	var items []*fuzzyfinder.Item
 	tags := map[string]struct{}{}
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
-		respToLog = resp
 		if err != nil {
+			*logE = *addRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, release := range releases {

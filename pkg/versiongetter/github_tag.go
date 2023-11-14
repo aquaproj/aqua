@@ -33,7 +33,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 
 	var respToLog *github.Response
 	defer func() {
-		addRteLimitInfo(logE, respToLog)
+		logGHRateLimit(logE, respToLog)
 	}()
 
 	for {
@@ -61,17 +61,12 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 		PerPage: itemNumPerPage(limit, len(filters)),
 	}
 
-	var respToLog *github.Response
-	defer func() {
-		addRteLimitInfo(logE, respToLog)
-	}()
-
 	var versions []string
 	tagNames := map[string]struct{}{}
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
-		respToLog = resp
 		if err != nil {
+			*logE = *addRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {
