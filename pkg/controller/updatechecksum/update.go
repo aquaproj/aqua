@@ -15,7 +15,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -292,7 +291,7 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 	return nil
 }
 
-func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (gErr error) { //nolint:cyclop
+func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (gErr error) {
 	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
 		return fmt.Errorf("get a checksum id: %w", err)
@@ -323,27 +322,9 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Ent
 		return fmt.Errorf("download an asset: %w", err)
 	}
 	defer file.Close()
-
-	// Download a file to a temporal file.
-	// https://github.com/aquaproj/aqua/issues/2467
-	tempFilePath, err := copyToTempFile(c.fs, file)
-	if err != nil {
-		return fmt.Errorf("copy an asset to a temporal file: %w", err)
-	}
-	defer func() {
-		if err := c.fs.Remove(tempFilePath); err != nil {
-			logE.WithError(err).Warn("remove a temporal file")
-		}
-	}()
-	tempFile, err := c.fs.Open(tempFilePath)
-	if err != nil {
-		return fmt.Errorf("open a temporal file to calculate the checksum: %w", err)
-	}
-	defer tempFile.Close()
-
 	algorithm := "sha256"
 	fields["algorithm"] = algorithm
-	chk, err := checksum.CalculateReader(tempFile, algorithm)
+	chk, err := checksum.CalculateReader(file, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate an asset: %w", err)
 	}
@@ -353,16 +334,4 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Ent
 		Algorithm: algorithm,
 	})
 	return nil
-}
-
-func copyToTempFile(fs afero.Fs, file io.Reader) (string, error) {
-	tempFile, err := afero.TempFile(fs, "", "")
-	if err != nil {
-		return "", fmt.Errorf("create a temporal file: %w", err)
-	}
-	if _, err := io.Copy(tempFile, file); err != nil {
-		return "", fmt.Errorf("download an asset to a temporal file: %w", err)
-	}
-	tempFile.Close()
-	return tempFile.Name(), nil
 }
