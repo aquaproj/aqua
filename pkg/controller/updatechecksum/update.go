@@ -339,6 +339,7 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Ent
 	if err != nil {
 		return fmt.Errorf("open a temporal file to calculate the checksum: %w", err)
 	}
+	defer tempFile.Close()
 
 	algorithm := "sha256"
 	fields["algorithm"] = algorithm
