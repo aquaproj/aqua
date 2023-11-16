@@ -53,7 +53,7 @@ func (c *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.
 		// configuration file already exists, then do nothing.
 		logE.WithFields(logrus.Fields{
 			"policy_file_path": cfgFilePath,
-		}).Info("plicy file already exists")
+		}).Info("policy file already exists")
 		return nil
 	}
 

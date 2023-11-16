@@ -1,16 +1,17 @@
 package checksum
 
 import (
+	"crypto/md5"  //nolint:gosec
 	"crypto/sha1" //nolint:gosec
+	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/codingsince1985/checksum"
 	"github.com/spf13/afero"
 )
 
@@ -30,38 +31,31 @@ func (*Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, e
 }
 
 func CalculateReader(file io.Reader, algorithm string) (string, error) {
+	h, err := getHash(algorithm)
+	if err != nil {
+		return "", err
+	}
+	if _, err := io.Copy(h, file); err != nil {
+		return "", fmt.Errorf("copy a io.Reader to hash object: %w", err)
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+func getHash(algorithm string) (hash.Hash, error) {
 	switch algorithm {
 	case "md5":
-		return checksum.MD5sumReader(file) //nolint:wrapcheck
+		return md5.New(), nil //nolint:gosec
 	case "sha256":
-		return checksum.SHA256sumReader(file) //nolint:wrapcheck
+		return sha256.New(), nil
 	case "sha512":
-		return calculateSHA512Reader(file)
+		return sha512.New(), nil
 	case "sha1":
-		return calculateSHA1Reader(file)
+		return sha1.New(), nil //nolint:gosec
 	case "":
-		return "", errors.New("algorithm is required")
+		return nil, errors.New("algorithm is required")
 	default:
-		return "", errors.New("unsupported algorithm")
+		return nil, errors.New("unsupported algorithm")
 	}
-}
-
-func calculateSHA1Reader(file io.Reader) (string, error) {
-	byt, err := io.ReadAll(file)
-	if err != nil {
-		return "", fmt.Errorf("read a file: %w", err)
-	}
-	sum := sha1.Sum(byt) //nolint:gosec
-	return hex.EncodeToString(sum[:]), nil
-}
-
-func calculateSHA512Reader(file io.Reader) (string, error) {
-	byt, err := io.ReadAll(file)
-	if err != nil {
-		return "", fmt.Errorf("read a file: %w", err)
-	}
-	sum := sha512.Sum512(byt)
-	return hex.EncodeToString(sum[:]), nil
 }
 
 func convertChecksumFileName(filename, version string) string {
