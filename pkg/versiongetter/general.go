@@ -70,8 +70,10 @@ func itemNumPerPage(limit, filterNum int) int {
 
 // log the GitHub API rate limit info
 func logGHRateLimit(logE *logrus.Entry, resp *github.Response) {
-	logE = addRateLimitInfo(logE, resp)
-	logE.Debug("GitHub API Rate Limit info")
+	if resp != nil {
+		logE = addRateLimitInfo(logE, resp)
+		logE.Debug("GitHub API Rate Limit info")
+	}
 }
 
 func addRateLimitInfo(logE *logrus.Entry, resp *github.Response) *logrus.Entry {
