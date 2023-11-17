@@ -12,7 +12,7 @@ jobs:
     uses: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml@8facac38f5b2008648c14e31c632c3a709439b9c # v0.1.1
     with:
       go-version: 1.21.4
-      aqua_version: v2.17.2
+      aqua_version: v2.17.3
     secrets:
       gh_app_id: ${{secrets.gh_app_id}}
       gh_app_private_key: ${{secrets.gh_app_private_key}}
