@@ -48,7 +48,7 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 
 var versionPattern = regexp.MustCompile(`^(.*?)v?((?:\d+)(?:\.\d+)?(?:\.\d+)?(?:(\.|-).+)?)$`)
 
-func getVersionAndPrefix(tag string) (*version.Version, string, error) {
+func GetVersionAndPrefix(tag string) (*version.Version, string, error) {
 	if v, err := version.NewVersion(tag); err == nil {
 		return v, "", nil
 	}
@@ -68,7 +68,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 	releases := make([]*Release, len(ghReleases))
 	for i, release := range ghReleases {
 		tag := release.GetTagName()
-		v, prefix, err := getVersionAndPrefix(tag)
+		v, prefix, err := GetVersionAndPrefix(tag)
 		if err != nil {
 			logE.WithField("tag_name", tag).WithError(err).Warn("parse a tag as semver")
 		}
