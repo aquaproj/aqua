@@ -6,7 +6,7 @@ on:
 permissions: {}
 jobs:
   release:
-    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@d6f6cfa71c22d118c758a42ec2d1fb18cba0536e # v0.4.4
+    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@d5b30f148d2f6fb207c58aee61fab4d3a3021421 # v0.4.5
     with:
       homebrew: true
       go-version: 1.21.4
