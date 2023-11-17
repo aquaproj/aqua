@@ -15,6 +15,7 @@ jobs:
     secrets:
       gh_app_id: ${{secrets.APP_ID}}
       gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
+      winget_github_token: ${{secrets.WINGET_GITHUB_TOKEN}}
     permissions:
       contents: write
       id-token: write
