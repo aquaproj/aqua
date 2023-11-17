@@ -70,7 +70,9 @@ func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 }
 
 func (f *ConfigFinderImpl) exist(p string) bool {
-	b, err := afero.IsDir(f.fs, p)
+	// https://github.com/orgs/aquaproj/discussions/2476
+	// Using `git worktree`, .git is a file.
+	b, err := afero.Exists(f.fs, p)
 	if err != nil {
 		return false
 	}
