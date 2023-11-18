@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/sirupsen/logrus"
 )
 
 type GitHubTagVersionGetter struct {
@@ -23,14 +24,21 @@ type GitHubTagClient interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
 	}
+
+	var respToLog *github.Response
+	defer func() {
+		logGHRateLimit(logE, respToLog)
+	}()
+
 	for {
-		tags, _, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		respToLog = resp
 		if err != nil {
 			return "", fmt.Errorf("list tags: %w", err)
 		}
@@ -39,14 +47,14 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, pkg *registry.PackageI
 				return tag.GetName(), nil
 			}
 		}
-		if len(tags) != opt.PerPage {
+		if resp.NextPage == 0 {
 			return "", nil
 		}
-		opt.Page++
+		opt.Page = resp.NextPage
 	}
 }
 
-func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
@@ -58,6 +66,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, pkg *registry.Package
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
+			*logE = *addRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {

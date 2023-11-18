@@ -5,6 +5,8 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/sirupsen/logrus"
 )
 
 const ghMaxPerPage int = 100
@@ -23,20 +25,20 @@ func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionG
 	}
 }
 
-func (g *GeneralVersionGetter) Get(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GeneralVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	getter := g.get(pkg)
 	if getter == nil {
 		return "", nil
 	}
-	return getter.Get(ctx, pkg, filters) //nolint:wrapcheck
+	return getter.Get(ctx, logE, pkg, filters) //nolint:wrapcheck
 }
 
-func (g *GeneralVersionGetter) List(ctx context.Context, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *GeneralVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	getter := g.get(pkg)
 	if getter == nil {
 		return nil, nil
 	}
-	return getter.List(ctx, pkg, filters, limit) //nolint:wrapcheck
+	return getter.List(ctx, logE, pkg, filters, limit) //nolint:wrapcheck
 }
 
 func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
@@ -64,4 +66,22 @@ func itemNumPerPage(limit, filterNum int) int {
 		return limit
 	}
 	return ghMaxPerPage
+}
+
+// log the GitHub API rate limit info
+func logGHRateLimit(logE *logrus.Entry, resp *github.Response) {
+	if resp != nil {
+		logE = addRateLimitInfo(logE, resp)
+		logE.Debug("GitHub API Rate Limit info")
+	}
+}
+
+func addRateLimitInfo(logE *logrus.Entry, resp *github.Response) *logrus.Entry {
+	if resp != nil {
+		return logE.WithFields(logrus.Fields{
+			"gh_rate_limit":     resp.Rate.Limit,
+			"gh_rate_remaining": resp.Rate.Remaining,
+		})
+	}
+	return logE
 }
