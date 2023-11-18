@@ -23,8 +23,7 @@ func (g *MockGitHubReleaseClient) GetLatestRelease(ctx context.Context, repoOwne
 	if !ok {
 		return nil, nil, errors.New("repository isn't found")
 	}
-	resp := &github.Response{}
-	return releases[0], resp, nil
+	return releases[0], &github.Response{}, nil
 }
 
 func (g *MockGitHubReleaseClient) ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
@@ -32,6 +31,5 @@ func (g *MockGitHubReleaseClient) ListReleases(ctx context.Context, owner, repo 
 	if !ok {
 		return nil, nil, errors.New("repository isn't found")
 	}
-	resp := &github.Response{}
-	return releases, resp, nil
+	return releases, &github.Response{}, nil
 }
