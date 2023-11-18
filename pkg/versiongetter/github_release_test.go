@@ -7,11 +7,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/log"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
-	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
@@ -57,7 +56,7 @@ func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
 			t.Parallel()
 			ghReleaseClient := versiongetter.NewMockGitHubReleaseClient(d.releases)
 			ghReleaseGetter := versiongetter.NewGitHubRelease(ghReleaseClient)
-			version, err := ghReleaseGetter.Get(ctx, log.New(runtime.New(), ""), d.pkg, d.filters)
+			version, err := ghReleaseGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
 			if err != nil {
 				if d.isErr {
 					return
@@ -145,7 +144,7 @@ body(v1)`,
 			t.Parallel()
 			ghReleaseClient := versiongetter.NewMockGitHubReleaseClient(d.releases)
 			ghReleaseGetter := versiongetter.NewGitHubRelease(ghReleaseClient)
-			items, err := ghReleaseGetter.List(ctx, log.New(runtime.New(), ""), d.pkg, d.filters, -1)
+			items, err := ghReleaseGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return

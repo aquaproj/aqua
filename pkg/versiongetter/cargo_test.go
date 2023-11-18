@@ -6,10 +6,9 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
-	"github.com/aquaproj/aqua/v2/pkg/log"
-	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 func TestCargoVersionGetter_Get(t *testing.T) {
@@ -48,7 +47,7 @@ func TestCargoVersionGetter_Get(t *testing.T) {
 			t.Parallel()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)
 			cargoGetter := versiongetter.NewCargo(cargoClient)
-			version, err := cargoGetter.Get(ctx, log.New(runtime.New(), ""), d.pkg, d.filters)
+			version, err := cargoGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
 			if err != nil {
 				if d.isErr {
 					return
@@ -111,7 +110,7 @@ func TestCargoVersionGetter_List(t *testing.T) {
 			t.Parallel()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)
 			cargoGetter := versiongetter.NewCargo(cargoClient)
-			items, err := cargoGetter.List(ctx, log.New(runtime.New(), ""), d.pkg, d.filters, -1)
+			items, err := cargoGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return
