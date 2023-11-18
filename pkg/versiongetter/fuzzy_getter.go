@@ -34,10 +34,10 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 	}
 
 	repoName := pkg.RepoOwner + "/" + pkg.RepoName
-	logE = logE.WithField("repo", repoName)
-	start := time.Now()
+	logE = logE.WithField("repository", repoName)
 	if useFinder { //nolint:nestif
 		logE := logE.WithFields(nil) // Copy logE becuse g.getter.List has a side effect to change logE
+		start := time.Now()
 		versions, err := g.getter.List(ctx, logE, pkg, filters, limit)
 		elapsed := time.Since(start)
 		if err != nil {
@@ -68,6 +68,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 		return versions[idx].Item
 	}
 
+	start := time.Now()
 	version, err := g.getter.Get(ctx, logE, pkg, filters)
 	logE.Debug("retrieve package versions in ", time.Since(start))
 	if err != nil {
