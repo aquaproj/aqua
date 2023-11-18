@@ -63,14 +63,14 @@ func (m *MockRepositoriesService) ListReleases(ctx context.Context, owner, repo 
 	if m.Releases == nil {
 		return nil, nil, errReleaseNotFound
 	}
-	return m.Releases, nil, nil
+	return m.Releases, &github.Response{}, nil
 }
 
 func (m *MockRepositoriesService) ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
 	if m.Tags == nil {
 		return nil, nil, errTagNotFound
 	}
-	return m.Tags, nil, nil
+	return m.Tags, &github.Response{}, nil
 }
 
 func (m *MockRepositoriesService) GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error) {
@@ -91,5 +91,5 @@ func (m *MockRepositoriesService) ListReleaseAssets(ctx context.Context, owner, 
 	if m.Assets == nil {
 		return nil, nil, errListAssets
 	}
-	return m.Assets, nil, nil
+	return m.Assets, &github.Response{}, nil
 }
