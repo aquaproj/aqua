@@ -33,11 +33,6 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 		return ""
 	}
 
-	const ( // log message
-		getVerTimeInfo = "Retrieve pkg version(s) in "
-		getVerErrWarn  = "Version retrieving error"
-	)
-
 	repoName := pkg.RepoOwner + "/" + pkg.RepoName
 	logE = logE.WithField("repo", repoName)
 	start := time.Now()
@@ -46,7 +41,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 		versions, err := g.getter.List(ctx, logE, pkg, filters, limit)
 		elapsed := time.Since(start)
 		if err != nil {
-			logE.WithError(err).Warn(getVerErrWarn)
+			logE.WithError(err).Warn("retrieve package versions")
 			return ""
 		}
 		if versions == nil {
@@ -63,7 +58,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 			}
 		}
 		idx, err := g.fuzzyFinder.Find(versions, true)
-		logE.Debug(getVerTimeInfo, elapsed) // finder's output will overwrite log, so log after it
+		logE.Debug("retrieve package versions in ", elapsed) // finder's output will overwrite log, so log after it
 		if err != nil {
 			return ""
 		}
@@ -74,9 +69,9 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 	}
 
 	version, err := g.getter.Get(ctx, logE, pkg, filters)
-	logE.Debug(getVerTimeInfo, time.Since(start))
+	logE.Debug("retrieve package versions in ", time.Since(start))
 	if err != nil {
-		logE.WithError(err).Warn(getVerErrWarn)
+		logE.WithError(err).Warn("retrieve package versions")
 		return ""
 	}
 	return version
