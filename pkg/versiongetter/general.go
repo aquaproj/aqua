@@ -71,17 +71,17 @@ func itemNumPerPage(limit, filterNum int) int {
 // log the GitHub API rate limit info
 func logGHRateLimit(logE *logrus.Entry, resp *github.Response) {
 	if resp != nil {
-		logE = addRateLimitInfo(logE, resp)
+		logE = withRateLimitInfo(logE, resp)
 		logE.Debug("GitHub API Rate Limit info")
 	}
 }
 
-func addRateLimitInfo(logE *logrus.Entry, resp *github.Response) *logrus.Entry {
-	if resp != nil {
-		return logE.WithFields(logrus.Fields{
-			"gh_rate_limit":     resp.Rate.Limit,
-			"gh_rate_remaining": resp.Rate.Remaining,
-		})
+func withRateLimitInfo(logE *logrus.Entry, resp *github.Response) *logrus.Entry {
+	if resp == nil {
+		return logE
 	}
-	return logE
+	return logE.WithFields(logrus.Fields{
+		"github_api_rate_limit":     resp.Rate.Limit,
+		"github_api_rate_remaining": resp.Rate.Remaining,
+	})
 }
