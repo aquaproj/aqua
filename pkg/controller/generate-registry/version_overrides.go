@@ -132,7 +132,7 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 	var arr []*github.RepositoryRelease
 
 	for i := 0; i < 10; i++ {
-		releases, _, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, resp, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"repo_owner": repoOwner,
@@ -147,7 +147,7 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 		if len(releases) != opt.PerPage {
 			return arr
 		}
-		opt.Page++
+		opt.Page = resp.NextPage
 	}
 	return arr
 }
