@@ -144,7 +144,7 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 		if limit > 0 && len(releases) >= limit {
 			return arr
 		}
-		if len(releases) != opt.PerPage {
+		if resp.NextPage == 0 {
 			return arr
 		}
 		opt.Page = resp.NextPage
