@@ -42,6 +42,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 	logE = logE.WithField("repo", repoName)
 	start := time.Now()
 	if useFinder { //nolint:nestif
+		logE := logE.WithFields(nil) // Copy logE becuse g.getter.List has a side effect to change logE
 		versions, err := g.getter.List(ctx, logE, pkg, filters, limit)
 		elapsed := time.Since(start)
 		if err != nil {
