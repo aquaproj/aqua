@@ -113,6 +113,10 @@ e.g.
 
   # Update cli/cli
   $ aqua update gh
+
+You can also specify a version.
+
+  $ aqua update gh@v2.30.0
 `
 
 func (r *Runner) updateAction(c *cli.Context) error {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -13,7 +14,7 @@ import (
 )
 
 func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if err := c.updateCommand(ctx, logE, param); err != nil {
+	if err := c.updateCommands(ctx, logE, param); err != nil {
 		return err
 	}
 	if len(param.Args) != 0 {
@@ -30,30 +31,41 @@ func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *conf
 	return nil
 }
 
-func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) updateCommands(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	newVersions := map[string]string{}
 	for _, arg := range param.Args {
-		findResult, err := c.which.Which(ctx, logE, param, arg)
-		if err != nil {
-			return fmt.Errorf("find a command: %w", err)
+		if err := c.updateCommand(ctx, logE, param, newVersions, arg); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		if findResult.Package == nil {
-			return errors.New("command not managed by aqua")
-		}
+func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, param *config.Param, newVersions map[string]string, cmd string) error {
+	command, newVersion, _ := strings.Cut(cmd, "@")
+	findResult, err := c.which.Which(ctx, logE, param, command)
+	if err != nil {
+		return fmt.Errorf("find a command: %w", err)
+	}
 
-		pkg := findResult.Package
-		if newVersion := c.getPackageNewVersion(ctx, logE, param, nil, pkg); newVersion != "" {
-			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
-			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
-		}
-		filePath := findResult.ConfigFilePath
-		if pkg.Package.FilePath != "" {
-			filePath = pkg.Package.FilePath
-		}
-		if err := c.updateFile(logE, filePath, newVersions); err != nil {
-			return fmt.Errorf("update a package: %w", err)
-		}
+	if findResult.Package == nil {
+		return errors.New("command not managed by aqua")
+	}
+
+	pkg := findResult.Package
+	if newVersion != "" {
+		newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
+		newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
+	} else if newVersion := c.getPackageNewVersion(ctx, logE, param, nil, pkg); newVersion != "" {
+		newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
+		newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
+	}
+	filePath := findResult.ConfigFilePath
+	if pkg.Package.FilePath != "" {
+		filePath = pkg.Package.FilePath
+	}
+	if err := c.updateFile(logE, filePath, newVersions); err != nil {
+		return fmt.Errorf("update a package: %w", err)
 	}
 	return nil
 }

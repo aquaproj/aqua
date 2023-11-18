@@ -40,7 +40,7 @@ func TestController_Update(t *testing.T) { //nolint:funlen,maintidx
 		registries     map[string]*registry.Config
 		versions       map[string]string
 	}{
-		{
+		{ //nolint:dupl
 			name: "update commands",
 			param: &config.Param{
 				Args: []string{"tfcmt", "gh"},
@@ -407,6 +407,101 @@ packages:
 			releases: []*github.RepositoryRelease{
 				{
 					TagName: ptr.String("v4.60.0"),
+				},
+			},
+		},
+		{ //nolint:dupl
+			name: "update commands with versions",
+			param: &config.Param{
+				Args: []string{"tfcmt", "gh@v2.27.0"},
+			},
+			versions: map[string]string{
+				"suzuki-shunsuke/tfcmt": "v4.0.0",
+				"cli/cli":               "v2.30.0",
+			},
+			files: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v3.0.0
+- name: cli/cli@v2.0.0
+`,
+			},
+			expFiles: map[string]string{
+				"/workspace/aqua.yaml": `registries:
+- type: standard
+  ref: v4.0.0
+packages:
+- name: suzuki-shunsuke/tfcmt@v4.0.0
+- name: cli/cli@v2.27.0
+`,
+			},
+			findResults: map[string]*which.FindResult{
+				"tfcmt": {
+					Package: &config.Package{
+						Package: &aqua.Package{
+							Name:     "suzuki-shunsuke/tfcmt",
+							Registry: "standard",
+							Version:  "v3.0.0",
+						},
+						PackageInfo: &registry.PackageInfo{
+							Type:      "github_release",
+							RepoOwner: "suzuki-shunsuke",
+							RepoName:  "tfcmt",
+							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
+						Registry: &aqua.Registry{
+							Name:      "standard",
+							Type:      "github_content",
+							RepoOwner: "aquaproj",
+							RepoName:  "aqua-registry",
+							Ref:       "v4.0.0",
+							Path:      "registry.yaml",
+						},
+					},
+					File: &registry.File{
+						Name: "tfcmt",
+					},
+					Config:         &aqua.Config{},
+					ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/tfcmt/v3.0.0/tfcmt_darwin_arm64.tar.gz/tfcmt",
+					ConfigFilePath: "/workspace/aqua.yaml",
+				},
+				"gh": {
+					Package: &config.Package{
+						Package: &aqua.Package{
+							Name:     "cli/cli",
+							Registry: "standard",
+							Version:  "v2.0.0",
+						},
+						PackageInfo: &registry.PackageInfo{
+							Type:      "github_release",
+							RepoOwner: "cli",
+							RepoName:  "cli",
+							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Files: []*registry.File{
+								{
+									Name: "gh",
+									Src:  "{{.AssetWithoutExt}}/bin/gh",
+								},
+							},
+						},
+						Registry: &aqua.Registry{
+							Name:      "standard",
+							Type:      "github_content",
+							RepoOwner: "aquaproj",
+							RepoName:  "aqua-registry",
+							Ref:       "v4.0.0",
+							Path:      "registry.yaml",
+						},
+					},
+					File: &registry.File{
+						Name: "gh",
+						Src:  "{{.AssetWithoutExt}}/bin/gh",
+					},
+					Config:         &aqua.Config{},
+					ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/cli/cli/v2.0.0/gh_2.0.0_macOS_arm64.zip/gh_2.0.0_macOS_arm64/bin/gh",
+					ConfigFilePath: "/workspace/aqua.yaml",
 				},
 			},
 		},
