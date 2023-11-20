@@ -186,33 +186,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.3/ghalint_0.2.3_darwin_amd64.tar.gz",
-      "checksum": "1471FE159EFED59825884167038DC5B6A8CD67F961BE959FF551AB093573E723",
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.4/ghalint_0.2.4_darwin_amd64.tar.gz",
+      "checksum": "F782902B3248FCD2FA6A79D0110F76E855A52AEAC968927FD35F93BE5AF7D3F0",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.3/ghalint_0.2.3_darwin_arm64.tar.gz",
-      "checksum": "E3E470C81F10996470D04F2F7DBE54D7C330E9DF04DE23A9EDB5B6FC372D2903",
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.4/ghalint_0.2.4_darwin_arm64.tar.gz",
+      "checksum": "CB916BE510A8A51117C05BB9F360CA99F003F0DF17F48ADBC17AC6686C59368E",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.3/ghalint_0.2.3_linux_amd64.tar.gz",
-      "checksum": "DD8C992D1D42DFF1AC66C840BA44005DCCA91FE1AC8987EF200CBCBD18A72D3D",
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.4/ghalint_0.2.4_linux_amd64.tar.gz",
+      "checksum": "F133EE5957464CB1F9AB9407BE5A2FDB44E494FAA8CF6937D1FE2A2BD62D151F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.3/ghalint_0.2.3_linux_arm64.tar.gz",
-      "checksum": "0CC9C1F4106BFD3CCC8FC08A15762D7C59C10BA0024159E080753A6E4C0A361C",
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.4/ghalint_0.2.4_linux_arm64.tar.gz",
+      "checksum": "BA173F416BD88C71131D841C66CC60C458E44B595E997A4FEC2B72297DD9CC9E",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.3/ghalint_0.2.3_windows_amd64.tar.gz",
-      "checksum": "C6919CFFF1139C8AA52FED5FB250889C3DE4AE21E0DB0A6CCA3478B0BA8D9388",
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.4/ghalint_0.2.4_windows_amd64.tar.gz",
+      "checksum": "49E9290C9E9D6AFC8EB9D2440562AB94308E93A7945EC9CE98289D75291747E1",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.3/ghalint_0.2.3_windows_arm64.tar.gz",
-      "checksum": "B8B144E747FAB5FFBE40150B0CF3EAF3427D7503B290DEA46D88C5187EB78C63",
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v0.2.4/ghalint_0.2.4_windows_arm64.tar.gz",
+      "checksum": "6F07E67FBAC1599B6AA6F2D2DF3F5E1C74F6E6A1EBDCD9EA8E86D329EFD72F61",
       "algorithm": "sha256"
     },
     {
