@@ -87,7 +87,7 @@ func (p *PackageInfo) GetAppendExt() bool {
 
 type VersionOverride struct {
 	VersionConstraints string          `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=go_build"`
+	Type               string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
 	RepoOwner          string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName           string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset              string          `yaml:",omitempty" json:"asset,omitempty"`
