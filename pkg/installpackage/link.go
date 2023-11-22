@@ -96,7 +96,7 @@ const (
 aqua exec -- <COMMAND> %*
 `
 	scrTemplate = `#!/usr/bin/env bash
-exec aqua exec -- $0 $@
+exec aqua exec -- "$0" "$@"
 `
 	proxyPermission os.FileMode = 0o755
 )
