@@ -259,6 +259,7 @@ type Param struct {
 	All                   bool
 	Insert                bool
 	SelectVersion         bool
+	ShowVersion           bool
 	ProgressBar           bool
 	Deep                  bool
 	SkipLink              bool
