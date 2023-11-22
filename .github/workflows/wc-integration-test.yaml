@@ -69,6 +69,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua which go
+      - name: Test which's -v option
+        run: aqua which -v go
       - run: kind version
         working-directory: tests/main
         env:

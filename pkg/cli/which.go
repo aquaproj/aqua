@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -29,8 +30,20 @@ If the command isn't found, exits with non zero exit code.
 
 $ aqua which foo
 FATA[0000] aqua failed                                   aqua_version=0.8.6 error="command is not found" exe_name=foo program=aqua
+
+If you want the package version, "--version" option is useful.
+
+$ aqua which --version gh
+v2.4.0
 `,
 		Action: r.whichAction,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Usage:   "Output the given package version",
+			},
+		},
 	}
 }
 
@@ -60,6 +73,13 @@ func (r *Runner) whichAction(c *cli.Context) error {
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	fmt.Fprintln(os.Stdout, which.ExePath)
+	if !param.ShowVersion {
+		fmt.Fprintln(os.Stdout, which.ExePath)
+		return nil
+	}
+	if which.Package == nil {
+		return errors.New("aqua can't get the command version because the command isn't managed by aqua")
+	}
+	fmt.Fprintln(os.Stdout, which.Package.Package.Version)
 	return nil
 }
