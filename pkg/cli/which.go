@@ -8,6 +8,8 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"github.com/urfave/cli/v2"
 )
 
@@ -69,16 +71,21 @@ func (r *Runner) whichAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	which, err := ctrl.Which(c.Context, r.LogE, param, exeName)
+	logE := r.LogE.WithField("exe_name", exeName)
+	which, err := ctrl.Which(c.Context, logE, param, exeName)
 	if err != nil {
-		return err //nolint:wrapcheck
+		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+			"exe_name": exeName,
+		})
 	}
 	if !param.ShowVersion {
 		fmt.Fprintln(os.Stdout, which.ExePath)
 		return nil
 	}
 	if which.Package == nil {
-		return errors.New("aqua can't get the command version because the command isn't managed by aqua")
+		return logerr.WithFields(errors.New("aqua can't get the command version because the command isn't managed by aqua"), logrus.Fields{ //nolint:wrapcheck
+			"exe_name": exeName,
+		})
 	}
 	fmt.Fprintln(os.Stdout, which.Package.Package.Version)
 	return nil
