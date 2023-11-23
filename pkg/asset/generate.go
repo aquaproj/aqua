@@ -322,10 +322,10 @@ func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
 		return nil
 	}
 	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", osDarwin, "windows/amd64"}) {
-		return []string{osDarwin, "linux", "amd64"}
+		return nil
 	}
 	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux/amd64", osDarwin, "windows/amd64"}) {
-		return []string{osDarwin, "amd64"}
+		return []string{osDarwin, osWindows, "amd64"}
 	}
 	return envs
 }
