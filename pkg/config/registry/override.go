@@ -31,7 +31,7 @@ func (ov *Override) Match(rt *runtime.Runtime) bool {
 		return false
 	}
 	if ov.Envs != nil {
-		if !matchEnvs(ov.Envs, rt.GOOS, rt.GOARCH, rt.GOOS+"/"+rt.GOARCH, false) {
+		if !matchEnvs(ov.Envs, rt.GOOS, rt.GOARCH, rt.GOOS+"/"+rt.GOARCH, false, false) {
 			return false
 		}
 	}

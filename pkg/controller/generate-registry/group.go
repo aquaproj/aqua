@@ -63,6 +63,9 @@ func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:c
 		if pkgInfo.Rosetta2 {
 			vo.Rosetta2 = ptr.Bool(true)
 		}
+		if pkgInfo.WindowsARMEmulation {
+			vo.WindowsARMEmulation = ptr.Bool(true)
+		}
 		if pkgInfo.VersionFilter != "" {
 			vo.VersionFilter = ptr.String(pkgInfo.VersionFilter)
 		}

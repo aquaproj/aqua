@@ -1,3 +1,6 @@
 package asset
 
-const osDarwin = "darwin"
+const (
+	osDarwin  = "darwin"
+	osWindows = "windows"
+)
