@@ -65,7 +65,7 @@ func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.
 		Version: pkg.Version,
 		SemVer:  p.semVer(),
 		OS:      replace(rt.GOOS, pkgInfo.Replacements),
-		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		Format:  pkgInfo.GetFormat(),
 		Asset:   asset,
 	}
@@ -164,7 +164,7 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 		"GOOS":            rt.GOOS,
 		"GOARCH":          rt.GOARCH,
 		"OS":              replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":            getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		"Arch":            getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		"Format":          format,
 		"FileName":        file.Name,
 		"Asset":           assetName,
@@ -184,9 +184,13 @@ func replace(key string, replacements registry.Replacements) string {
 	return a
 }
 
-func getArch(rosetta2 bool, replacements registry.Replacements, rt *runtime.Runtime) string {
+func getArch(rosetta2, windowsARMEmulation bool, replacements registry.Replacements, rt *runtime.Runtime) string {
 	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
 		// Rosetta 2
+		return replace("amd64", replacements)
+	}
+	if windowsARMEmulation && rt.GOOS == "windows" && rt.GOARCH == "arm64" {
+		// Windows ARM Emulation
 		return replace("amd64", replacements)
 	}
 	return replace(rt.GOARCH, replacements)
@@ -330,7 +334,7 @@ func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string,
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, replacements),
-		"Arch":    getArch(pkgInfo.Rosetta2, replacements, rt),
+		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 		"Asset":   asset,
 	})
@@ -349,7 +353,7 @@ func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime
 		"GOOS":    rt.GOOS,
 		"GOARCH":  rt.GOARCH,
 		"OS":      replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 	})
 	if err != nil {
@@ -376,7 +380,7 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 		"GOOS":     rt.GOOS,
 		"GOARCH":   rt.GOARCH,
 		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.Replacements, rt),
+		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
 	})

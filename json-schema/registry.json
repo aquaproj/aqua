@@ -451,6 +451,9 @@
         "rosetta2": {
           "type": "boolean"
         },
+        "windows_arm_emulation": {
+          "type": "boolean"
+        },
         "no_asset": {
           "type": "boolean"
         },
@@ -652,6 +655,9 @@
           "type": "string"
         },
         "rosetta2": {
+          "type": "boolean"
+        },
+        "windows_arm_emulation": {
           "type": "boolean"
         },
         "complete_windows_ext": {

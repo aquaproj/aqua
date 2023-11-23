@@ -22,17 +22,17 @@ func (p *PackageInfo) CheckSupportedEnvs(goos, goarch, env string) bool {
 	if p.SupportedEnvs == nil {
 		return true
 	}
-	return matchEnvs(p.SupportedEnvs, goos, goarch, env, p.Rosetta2)
+	return matchEnvs(p.SupportedEnvs, goos, goarch, env, p.Rosetta2, p.WindowsARMEmulation)
 }
 
 func (p *PackageInfo) checkExcludedEnvs(goos, goarch, env string) bool {
 	if p.Build.ExcludedEnvs == nil {
 		return true
 	}
-	return !matchEnvs(p.Build.ExcludedEnvs, goos, goarch, env, p.Rosetta2)
+	return !matchEnvs(p.Build.ExcludedEnvs, goos, goarch, env, p.Rosetta2, p.WindowsARMEmulation)
 }
 
-func matchEnvs(envs []string, goos, goarch, env string, rosetta2 bool) bool {
+func matchEnvs(envs []string, goos, goarch, env string, rosetta2, windowsARMEmulation bool) bool { //nolint:cyclop
 	for _, elem := range envs {
 		switch elem {
 		case goos, goarch, env, "all":
@@ -43,6 +43,14 @@ func matchEnvs(envs []string, goos, goarch, env string, rosetta2 bool) bool {
 		for _, elem := range envs {
 			switch elem {
 			case "amd64", "darwin/amd64":
+				return true
+			}
+		}
+	}
+	if goos == "windows" && goarch == "arm64" && windowsARMEmulation {
+		for _, elem := range envs {
+			switch elem {
+			case "amd64", "windows/amd64":
 				return true
 			}
 		}
