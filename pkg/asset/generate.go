@@ -132,6 +132,9 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	if checkRosetta2(assetInfos) {
 		pkgInfo.Rosetta2 = true
 	}
+	if checkWindowsARMEmulation(assetInfos) {
+		pkgInfo.WindowsARMEmulation = true
+	}
 
 	pkgInfo.SupportedEnvs = normalizeSupportedEnvs(pkgInfo.SupportedEnvs)
 
@@ -306,6 +309,12 @@ func checkRosetta2(assetInfos []*AssetInfo) bool {
 	darwinAmd64 := GetOSArch(osDarwin, "amd64", assetInfos)
 	darwinArm64 := GetOSArch(osDarwin, "arm64", assetInfos)
 	return darwinAmd64 != nil && darwinArm64 == nil
+}
+
+func checkWindowsARMEmulation(assetInfos []*AssetInfo) bool {
+	windowsAmd64 := GetOSArch(osWindows, "amd64", assetInfos)
+	windowsArm64 := GetOSArch(osWindows, "arm64", assetInfos)
+	return windowsAmd64 != nil && windowsArm64 == nil
 }
 
 func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
