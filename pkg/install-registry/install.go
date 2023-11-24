@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -69,22 +71,35 @@ func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, 
 	return registryContents, nil
 }
 
-func (is *Installer) readRegistry(p string, registry *registry.Config) error {
+func (is *Installer) readYAMLRegistry(p string, registry *registry.Config) error {
 	f, err := is.fs.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
 	}
 	defer f.Close()
-	if filepath.Ext(p) == ".json" {
-		if err := json.NewDecoder(f).Decode(registry); err != nil {
-			return fmt.Errorf("parse the registry configuration as JSON: %w", err)
-		}
-		return nil
-	}
 	if err := yaml.NewDecoder(f).Decode(registry); err != nil {
 		return fmt.Errorf("parse the registry configuration as YAML: %w", err)
 	}
 	return nil
+}
+
+func (is *Installer) readJSONRegistry(p string, registry *registry.Config) error {
+	f, err := is.fs.Open(p)
+	if err != nil {
+		return fmt.Errorf("open the registry configuration file: %w", err)
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(registry); err != nil {
+		return fmt.Errorf("parse the registry configuration as JSON: %w", err)
+	}
+	return nil
+}
+
+func (is *Installer) readRegistry(p string, registry *registry.Config) error {
+	if filepath.Ext(p) == ".json" {
+		return is.readJSONRegistry(p, registry)
+	}
+	return is.readYAMLRegistry(p, registry)
 }
 
 // installRegistry installs and reads the registry file and returns the registry content.
@@ -94,22 +109,72 @@ func (is *Installer) installRegistry(ctx context.Context, logE *logrus.Entry, re
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
 	}
-	if _, err := is.fs.Stat(registryFilePath); err == nil {
+
+	if regist.Type == aqua.RegistryTypeLocal {
 		registryContent := &registry.Config{}
 		if err := is.readRegistry(registryFilePath, registryContent); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
+					"local_registry_file_path": registryFilePath,
+				})
+			}
 			return nil, err
 		}
 		return registryContent, nil
 	}
-	if regist.Type == aqua.RegistryTypeLocal {
-		return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
-			"local_registry_file_path": registryFilePath,
-		})
+
+	if !strings.HasSuffix(registryFilePath, ".json") {
+		return is.handleYAMLGitHubContent(ctx, logE, regist, checksums, registryFilePath)
 	}
-	if err := osfile.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
-		return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
+
+	registryContent := &registry.Config{}
+	if err := is.readJSONRegistry(registryFilePath, registryContent); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		if err := osfile.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
+			return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
+		}
+		return is.getRegistry(ctx, logE, regist, registryFilePath, checksums)
 	}
-	return is.getRegistry(ctx, logE, regist, registryFilePath, checksums)
+	return registryContent, nil
+}
+
+func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, checksums *checksum.Checksums, registryFilePath string) (*registry.Config, error) {
+	jsonPath := registryFilePath + ".json"
+	registryContent := &registry.Config{}
+	if err := is.readJSONRegistry(jsonPath, registryContent); err != nil { //nolint:nestif
+		if !errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		if err := is.readYAMLRegistry(registryFilePath, registryContent); err != nil {
+			if !errors.Is(err, os.ErrNotExist) {
+				return nil, err
+			}
+			if err := osfile.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
+				return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
+			}
+			registryContent, err := is.getRegistry(ctx, logE, regist, registryFilePath, checksums)
+			if err != nil {
+				return nil, err
+			}
+			return registryContent, is.createJSON(jsonPath, registryContent)
+		}
+		return registryContent, is.createJSON(jsonPath, registryContent)
+	}
+	return registryContent, nil
+}
+
+func (is *Installer) createJSON(jsonPath string, content *registry.Config) error {
+	jsonFile, err := is.fs.Create(jsonPath)
+	if err != nil {
+		return fmt.Errorf("create a file to convert registry YAML to JSON: %w", err)
+	}
+	defer jsonFile.Close()
+	if err := json.NewEncoder(jsonFile).Encode(content); err != nil {
+		return fmt.Errorf("encode a registry as JSON: %w", err)
+	}
+	return nil
 }
 
 // getRegistry downloads and installs the registry file.
