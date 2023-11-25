@@ -38,10 +38,9 @@ body:
     validations:
       required: false
   - type: textarea
-    id: reference
+    id: note
     attributes:
-      label: Reference
-      value: |
-        *
+      label: Note
+      description: Additional information about the discussion.
     validations:
       required: false

@@ -17,16 +17,6 @@ body:
 
         ```
 
-        #### aqua < v2.10.0
-
-        ```console
-        $ aqua -v
-
-        ```
-
-        OS (Windows, Linux, macOS, etc):
-        CPU Architecture (amd64, arm64, etc):
-
     validations:
       required: true
 
@@ -91,17 +81,9 @@ body:
     validations:
       required: true
   - type: textarea
-    id: important-factoid
+    id: note
     attributes:
-      label: Important Factoids
+      label: Note
       value:
-    validations:
-      required: false
-  - type: textarea
-    id: reference
-    attributes:
-      label: Reference
-      value: |
-        *
     validations:
       required: false

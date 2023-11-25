@@ -30,16 +30,6 @@ body:
 
         ```
 
-        #### aqua < v2.10.0
-
-        ```console
-        $ aqua -v
-
-        ```
-
-        OS (Windows, Linux, macOS, etc):
-        CPU Architecture (amd64, arm64, etc):
-
     validations:
       required: true
 
@@ -47,7 +37,6 @@ body:
     id: overview
     attributes:
       label: Overview
-      value:
     validations:
       required: true
   - type: textarea
@@ -93,28 +82,18 @@ body:
     id: expected-behaviour
     attributes:
       label: Expected behaviour
-      value:
     validations:
       required: true
   - type: textarea
     id: actual-behaviour
     attributes:
       label: Actual behaviour
-      value:
     validations:
       required: true
   - type: textarea
-    id: important-factoid
+    id: note
     attributes:
-      label: Important Factoids
-      value:
-    validations:
-      required: false
-  - type: textarea
-    id: reference
-    attributes:
-      label: Reference
-      value: |
-        *
+      label: Note
+      description: Additional information about the discussion.
     validations:
       required: false

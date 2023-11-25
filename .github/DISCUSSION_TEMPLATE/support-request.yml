@@ -91,17 +91,9 @@ body:
     validations:
       required: true
   - type: textarea
-    id: important-factoid
+    id: note
     attributes:
-      label: Important Factoids
-      value:
-    validations:
-      required: false
-  - type: textarea
-    id: reference
-    attributes:
-      label: Reference
-      value: |
-        *
+      label: Note
+      description: Additional information about the discussion.
     validations:
       required: false
