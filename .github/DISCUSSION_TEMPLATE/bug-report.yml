@@ -1,18 +1,5 @@
-name: Bug Report
-description: If something isn't working as expected.
-labels:
-  - bug
+title: Bug Report
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ## :warning: Please create a GitHub Discussion instead of GitHub Issue
-
-        https://github.com/orgs/aquaproj/discussions
-
-        Only maintainers can create new Issues. If needed, a maintainer will create an Issue after your Discussion been triaged and confirmed.
-        This way we keep Issues actionable, and free of duplicates or wrong bug reports.
-
   - type: textarea
     id: aqua-info
     attributes:
@@ -37,6 +24,7 @@ body:
     id: overview
     attributes:
       label: Overview
+      value:
     validations:
       required: true
   - type: textarea
@@ -82,18 +70,20 @@ body:
     id: expected-behaviour
     attributes:
       label: Expected behaviour
+      value:
     validations:
       required: true
   - type: textarea
     id: actual-behaviour
     attributes:
       label: Actual behaviour
+      value:
     validations:
       required: true
   - type: textarea
     id: note
     attributes:
       label: Note
-      description: Additional information about the discussion.
+      value:
     validations:
       required: false
