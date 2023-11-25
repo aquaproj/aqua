@@ -1,0 +1,8 @@
+title: Bug Report
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## :warning: Please use GitHub Issues instead
+
+        https://github.com/aquaproj/aqua/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml
