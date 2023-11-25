@@ -8,7 +8,8 @@ body:
 
         https://github.com/orgs/aquaproj/discussions
 
-        Only maintainers can use this template.
+        Only maintainers can create new Issues. If needed, a maintainer will create an Issue after your Discussion been triaged and confirmed.
+        This way we keep Issues actionable, and free of duplicates or wrong bug reports.
 
   - type: textarea
     id: free-text
