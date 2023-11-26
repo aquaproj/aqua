@@ -17,7 +17,7 @@ jobs:
           go-version: 1.21.4
           cache: true
 
-      - uses: suzuki-shunsuke/github-token-action@04d633c696e9d09e958c8b815c75db9606d6d927 # v0.2.0
+      - uses: suzuki-shunsuke/github-token-action@350d7506222e3a0016491abe85b5c4dd475b67d1 # v0.2.1
         id: token
         with:
           github_app_id: ${{secrets.APP_ID}}
