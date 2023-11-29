@@ -33,8 +33,8 @@ Declarative CLI Version Manager written in Go.
 - [GitHub Public repositories that use aqua](https://github.com/aquaproj/user-list)
 - [tfaction](https://github.com/suzuki-shunsuke/tfaction) uses aqua heavily to install various tools such as Terraform, tfsec, tflint, tfcmt, and so on
 - Recruit Co., Ltd. - [StudySapuri](https://brand.studysapuri.jp/) and [Quipper](https://www.quipper.com/) product team
-- [Masterpoint Consulting](https://masterpoint.io/)
-- [Retty](https://engineer.retty.me/entry/2022/12/14/130000)
+- [Masterpoint Consulting](https://masterpoint.io/) ([ref](https://github.com/orgs/aquaproj/discussions/2124#discussioncomment-6553057))
+- [Retty](https://retty.me/) ([ref](https://engineer.retty.me/entry/2022/12/14/130000))
 
 ## License
 
