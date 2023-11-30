@@ -11,7 +11,7 @@
 
 The logo has been created by [@vadasambar](https://github.com/vadasambar).
 
-It has been built with open source: 
+It has been built with open source:
 
 * Built with [Inkscape](https://inkscape.org/) 0.91
 * Font: [Swasdee Regular](https://en.fontke.com/font/12135927/) ([License](https://en.fontke.com/font/12135927/licence/))

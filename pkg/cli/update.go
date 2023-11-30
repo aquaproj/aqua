@@ -93,7 +93,7 @@ Use --limit/-l to change it. Non-positive number refers to no limit.
   $ aqua update -i -s
   # Display only 5 versions
   $ aqua update -i -s -l 5
-  # Display all versions 
+  # Display all versions
   $ aqua update -i -s -l -1
 
 This command doesn't update packages if the field 'version' is used.
