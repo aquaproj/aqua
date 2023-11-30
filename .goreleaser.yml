@@ -180,7 +180,7 @@ winget:
 
     # Tags.
     # tags:
-    #   - 
+    #   -
 
     # Repository to push the generated files to.
     repository:

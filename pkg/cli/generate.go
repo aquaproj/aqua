@@ -15,7 +15,7 @@ If no argument is passed, interactive fuzzy finder is launched.
 
 $ aqua g
 
-  influxdata/influx-cli (standard) (influx)                     ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ 
+  influxdata/influx-cli (standard) (influx)                     ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
   newrelic/newrelic-cli (standard) (newrelic)                   │  cli/cli
   pivotal-cf/pivnet-cli (standard) (pivnet)                     │
   scaleway/scaleway-cli (standard) (scw)                        │  https://cli.github.com/
@@ -35,7 +35,7 @@ $ aqua g
   openfaas/faas-cli (standard)                                  │
 > cli/cli (standard) (gh)                                       │
   48/380                                                        │
-> cli                                                           └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ 
+> cli                                                           └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
 
 Please select the package you want to install, then the package configuration is outptted.
 You can select multiple packages by tab key.
@@ -91,8 +91,8 @@ Use --limit/-l to change it. Non-positive number refers to no limit.
 
 # Display 30 versions of selected by default
 $ aqua g -s
-# Display all versions of selected package 
-$ aqua g -s -l -1 
+# Display all versions of selected package
+$ aqua g -s -l -1
 # Display 5 versions of selected package
 $ aqua g -s -l 5
 
