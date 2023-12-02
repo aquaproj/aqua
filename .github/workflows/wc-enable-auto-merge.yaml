@@ -19,6 +19,15 @@ jobs:
         with:
           app_id: ${{secrets.gh_app_id}}
           private_key: ${{secrets.gh_app_private_key}}
+          permissions: >-
+            {
+              "contents": "write",
+              "pull-requests": "write"
+            }
+          repositories: >-
+            [
+              "${{github.event.repository.name}}"
+            ]
       - run: gh -R "$GITHUB_REPOSITORY" pr merge --squash --auto --delete-branch "$PR_NUMBER"
         env:
           GITHUB_TOKEN: ${{steps.generate_token.outputs.token}} # Use GitHub App to trigger GitHub Actions Workflow by merge commit.
