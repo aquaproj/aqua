@@ -8,6 +8,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -25,6 +26,14 @@ type Controller struct {
 	installer          Installer
 	policyConfigReader PolicyReader
 	requireChecksum    bool
+}
+
+type PackageInstaller interface {
+	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
+	InstallPackages(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackages) error
+	SetCopyDir(copyDir string)
+	Copy(dest, src string) error
+	WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error
 }
 
 type WhichController interface {

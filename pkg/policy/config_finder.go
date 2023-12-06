@@ -12,15 +12,6 @@ type ConfigFinder interface {
 	Find(policyFilePath, wd string) (string, error)
 }
 
-type MockConfigFinder struct {
-	path string
-	err  error
-}
-
-func (f *MockConfigFinder) Find(policyFilePath, wd string) (string, error) {
-	return f.path, f.err
-}
-
 type ConfigFinderImpl struct {
 	fs afero.Fs
 }

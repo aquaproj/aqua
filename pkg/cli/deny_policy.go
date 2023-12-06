@@ -38,5 +38,5 @@ func (r *Runner) denyPolicyAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeDenyPolicyCommandController(c.Context, param)
-	return ctrl.Deny(c.Context, r.LogE, param, c.Args().First()) //nolint:wrapcheck
+	return ctrl.Deny(r.LogE, param, c.Args().First()) //nolint:wrapcheck
 }

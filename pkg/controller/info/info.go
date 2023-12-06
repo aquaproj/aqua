@@ -50,7 +50,7 @@ func maskUser(s, username string) string {
 	return strings.ReplaceAll(s, username, "(USER)")
 }
 
-func (c *Controller) Info(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string) error { //nolint:funlen
+func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Param) error { //nolint:funlen
 	currentUser, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("get a current user: %w", err)

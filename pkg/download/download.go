@@ -44,16 +44,6 @@ type ClientAPI interface {
 	ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error)
 }
 
-type Mock struct {
-	RC   io.ReadCloser
-	Code int64
-	Err  error
-}
-
-func (m *Mock) ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
-	return m.RC, m.Code, m.Err
-}
-
 func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
 	switch file.Type {
 	case config.PkgInfoTypeGitHubRelease:

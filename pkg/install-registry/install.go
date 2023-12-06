@@ -96,7 +96,7 @@ func (is *Installer) readJSONRegistry(p string, registry *registry.Config) error
 }
 
 func (is *Installer) readRegistry(p string, registry *registry.Config) error {
-	if filepath.Ext(p) == ".json" {
+	if isJSON(p) {
 		return is.readJSONRegistry(p, registry)
 	}
 	return is.readYAMLRegistry(p, registry)
@@ -123,7 +123,7 @@ func (is *Installer) installRegistry(ctx context.Context, logE *logrus.Entry, re
 		return registryContent, nil
 	}
 
-	if !strings.HasSuffix(registryFilePath, ".json") {
+	if !isJSON(registryFilePath) {
 		return is.handleYAMLGitHubContent(ctx, logE, regist, checksums, registryFilePath)
 	}
 
@@ -141,7 +141,7 @@ func (is *Installer) installRegistry(ctx context.Context, logE *logrus.Entry, re
 }
 
 func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, checksums *checksum.Checksums, registryFilePath string) (*registry.Config, error) {
-	jsonPath := registryFilePath + ".json"
+	jsonPath := registryFilePath + jsonSuffix
 	registryContent := &registry.Config{}
 	if err := is.readJSONRegistry(jsonPath, registryContent); err != nil { //nolint:nestif
 		if !errors.Is(err, os.ErrNotExist) {
@@ -222,7 +222,7 @@ func (is *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
 	registryContent := &registry.Config{}
-	if filepath.Ext(registryFilePath) == ".json" {
+	if isJSON(registryFilePath) {
 		if err := json.Unmarshal(content, registryContent); err != nil {
 			return nil, fmt.Errorf("parse the registry configuration file as JSON: %w", err)
 		}
@@ -232,4 +232,8 @@ func (is *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.
 		return nil, fmt.Errorf("parse the registry configuration file as YAML: %w", err)
 	}
 	return registryContent, nil
+}
+
+func isJSON(p string) bool {
+	return strings.HasSuffix(p, jsonSuffix)
 }

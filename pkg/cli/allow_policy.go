@@ -38,5 +38,5 @@ func (r *Runner) allowPolicyAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeAllowPolicyCommandController(c.Context, param)
-	return ctrl.Allow(c.Context, r.LogE, param, c.Args().First()) //nolint:wrapcheck
+	return ctrl.Allow(r.LogE, param, c.Args().First()) //nolint:wrapcheck
 }

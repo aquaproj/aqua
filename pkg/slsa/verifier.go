@@ -27,14 +27,6 @@ func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *Verifier {
 	}
 }
 
-type MockVerifier struct {
-	err error
-}
-
-func (m *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
-	return m.err
-}
-
 type ParamVerify struct {
 	// e.g. github.com/suzuki-shunsuke/test-cosign-keyless-aqua
 	SourceURI string

@@ -38,14 +38,6 @@ func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
 	}
 }
 
-type MockExecutor struct {
-	Err error
-}
-
-func (m *MockExecutor) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
-	return m.Err
-}
-
 func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:gomnd

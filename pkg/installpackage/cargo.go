@@ -15,14 +15,6 @@ type CargoPackageInstaller interface {
 	Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error
 }
 
-type MockCargoPackageInstaller struct {
-	Err error
-}
-
-func (m *MockCargoPackageInstaller) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
-	return m.Err
-}
-
 type CargoPackageInstallerImpl struct {
 	exec    Executor
 	cleaner Cleaner

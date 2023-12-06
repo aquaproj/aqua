@@ -1,7 +1,6 @@
 package denypolicy
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -25,7 +24,7 @@ func New(fs afero.Fs, policyConfigFinder policy.ConfigFinder, policyValidator po
 	}
 }
 
-func (c *Controller) Deny(ctx context.Context, logE *logrus.Entry, param *config.Param, policyFilePath string) error {
+func (c *Controller) Deny(logE *logrus.Entry, param *config.Param, policyFilePath string) error {
 	policyFilePath, err := c.policyConfigFinder.Find(policyFilePath, param.PWD)
 	if err != nil {
 		return fmt.Errorf("find a policy file: %w", err)

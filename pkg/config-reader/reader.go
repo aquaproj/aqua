@@ -29,16 +29,6 @@ func New(fs afero.Fs, param *config.Param) *ConfigReader {
 	}
 }
 
-type MockConfigReader struct {
-	Cfg *aqua.Config
-	Err error
-}
-
-func (r *MockConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
-	*cfg = *r.Cfg
-	return r.Err
-}
-
 const homePrefix = "$HOME" + string(os.PathSeparator)
 
 func (r *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error {

@@ -36,14 +36,6 @@ type DownloadedFile interface {
 	Wrap(w io.Writer) io.Writer
 }
 
-type MockUnarchiver struct {
-	Err error
-}
-
-func (u *MockUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
-	return u.Err
-}
-
 func New(executor Executor, fs afero.Fs) *Unarchiver {
 	return &Unarchiver{
 		executor: executor,
