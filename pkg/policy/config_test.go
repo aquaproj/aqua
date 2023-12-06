@@ -51,7 +51,7 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 							Type:      "github_content",
 							Name:      registryTypeStandard,
 							RepoOwner: "aquaproj",
-							RepoName:  "aqua",
+							RepoName:  "aqua-registry",
 							Path:      "registry.yaml",
 						},
 						{
@@ -67,7 +67,7 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 								Type:      "github_content",
 								Name:      registryTypeStandard,
 								RepoOwner: "aquaproj",
-								RepoName:  "aqua",
+								RepoName:  "aqua-registry",
 								Path:      "registry.yaml",
 							},
 						},
