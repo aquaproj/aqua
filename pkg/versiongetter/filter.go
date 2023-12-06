@@ -1,9 +1,9 @@
 package versiongetter
 
 import (
-	"github.com/expr-lang/expr/vm"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
+	"github.com/expr-lang/expr/vm"
 )
 
 type Filter struct {
