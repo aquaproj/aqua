@@ -42,6 +42,10 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 	}
 }
 
+type ConfigFinder interface {
+	Finds(wd, configFilePath string) []string
+}
+
 type GitHubContentFileDownloader interface {
 	DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error)
 }

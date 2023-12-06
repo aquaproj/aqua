@@ -1,7 +1,6 @@
 package initpolicy_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -38,7 +37,6 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
@@ -48,7 +46,7 @@ packages:
 				t.Fatal(err)
 			}
 			ctrl := initpolicy.New(fs)
-			if err := ctrl.Init(ctx, "", logE); err != nil {
+			if err := ctrl.Init(logE, ""); err != nil {
 				if d.isErr {
 					return
 				}

@@ -21,26 +21,6 @@ type Validator interface {
 	Warn(logE *logrus.Entry, policyFilePath string, updated bool) error
 }
 
-type MockValidator struct {
-	Err error
-}
-
-func (v *MockValidator) Allow(_ string) error {
-	return v.Err
-}
-
-func (v *MockValidator) Deny(_ string) error {
-	return v.Err
-}
-
-func (v *MockValidator) Validate(_ string) error {
-	return v.Err
-}
-
-func (v *MockValidator) Warn(_ *logrus.Entry, _ string, _ bool) error {
-	return v.Err
-}
-
 type ValidatorImpl struct {
 	rootDir  string
 	fs       afero.Fs

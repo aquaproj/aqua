@@ -42,5 +42,5 @@ func (r *Runner) initPolicyAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitPolicyCommandController(c.Context)
-	return ctrl.Init(c.Context, c.Args().First(), r.LogE) //nolint:wrapcheck
+	return ctrl.Init(r.LogE, c.Args().First()) //nolint:wrapcheck
 }

@@ -50,14 +50,6 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 	}
 }
 
-type MockVerifier struct {
-	err error
-}
-
-func (v *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:revive
-	return v.err
-}
-
 func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error { //nolint:cyclop,funlen
 	if v.disabled {
 		logE.Debug("verification with cosign is disabled")

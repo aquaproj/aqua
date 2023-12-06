@@ -12,14 +12,6 @@ type GoInstallInstaller interface {
 	Install(ctx context.Context, path, gobin string) error
 }
 
-type MockGoInstallInstaller struct {
-	Err error
-}
-
-func (m *MockGoInstallInstaller) Install(_ context.Context, _, _ string) error {
-	return m.Err
-}
-
 type GoInstallInstallerImpl struct {
 	exec Executor
 }

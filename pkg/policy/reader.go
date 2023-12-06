@@ -10,21 +10,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-type MockReader struct {
-	Config  *Config
-	Configs []*Config
-	Err     error
-}
-
-func (r *MockReader) Read(_ []string) ([]*Config, error) {
-	allowCfgs(r.Configs)
-	return r.Configs, r.Err
-}
-
-func (r *MockReader) Append(_ *logrus.Entry, _ string, _ []*Config, _ map[string]struct{}) ([]*Config, error) {
-	return r.Configs, r.Err
-}
-
 type Reader struct {
 	mutex     *sync.RWMutex
 	policies  map[string]*Config

@@ -1,7 +1,6 @@
 package initpolicy
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
@@ -45,7 +44,7 @@ func New(fs afero.Fs) *Controller {
 	}
 }
 
-func (c *Controller) Init(_ context.Context, cfgFilePath string, logE *logrus.Entry) error {
+func (c *Controller) Init(logE *logrus.Entry, cfgFilePath string) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua-policy.yaml"
 	}

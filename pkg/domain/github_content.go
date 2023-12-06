@@ -50,12 +50,3 @@ func (f *GitHubContentFile) Close() error {
 type GitHubContentFileDownloader interface {
 	DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *GitHubContentFileParam) (*GitHubContentFile, error)
 }
-
-type MockGitHubContentFileDownloader struct {
-	File *GitHubContentFile
-	Err  error
-}
-
-func (m *MockGitHubContentFileDownloader) DownloadGitHubContentFile(_ context.Context, _ *logrus.Entry, _ *GitHubContentFileParam) (*GitHubContentFile, error) {
-	return m.File, m.Err
-}
