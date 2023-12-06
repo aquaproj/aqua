@@ -56,6 +56,6 @@ type MockGitHubContentFileDownloader struct {
 	Err  error
 }
 
-func (m *MockGitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *GitHubContentFileParam) (*GitHubContentFile, error) {
+func (m *MockGitHubContentFileDownloader) DownloadGitHubContentFile(_ context.Context, _ *logrus.Entry, _ *GitHubContentFileParam) (*GitHubContentFile, error) {
 	return m.File, m.Err
 }

@@ -28,7 +28,7 @@ type MockConfigReader struct {
 	Err  error
 }
 
-func (r *MockConfigReader) Read(files []string) ([]*Config, error) {
+func (r *MockConfigReader) Read(_ []string) ([]*Config, error) {
 	return r.Cfgs, r.Err
 }
 

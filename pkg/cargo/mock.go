@@ -10,17 +10,17 @@ type MockClient struct {
 	CratePayload *CratePayload
 }
 
-func (m *MockClient) ListVersions(ctx context.Context, crate string) ([]string, error) {
+func (m *MockClient) ListVersions(_ context.Context, _ string) ([]string, error) {
 	return m.Versions, m.Err
 }
 
-func (m *MockClient) GetLatestVersion(ctx context.Context, crate string) (string, error) {
+func (m *MockClient) GetLatestVersion(_ context.Context, _ string) (string, error) {
 	if len(m.Versions) == 0 {
 		return "", m.Err
 	}
 	return m.Versions[0], m.Err
 }
 
-func (m *MockClient) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
+func (m *MockClient) GetCrate(_ context.Context, _ string) (*CratePayload, error) {
 	return m.CratePayload, m.Err
 }

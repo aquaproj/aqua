@@ -38,7 +38,7 @@ if command -v aqua &> /dev/null; then source <(aqua completion zsh); fi
 	}
 }
 
-func (r *Runner) bashCompletionAction(c *cli.Context) error {
+func (r *Runner) bashCompletionAction(*cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/bash_autocomplete
 	// https://github.com/urfave/cli/blob/c3f51bed6fffdf84227c5b59bd3f2e90683314df/autocomplete/bash_autocomplete#L5-L20
 	fmt.Fprintln(r.Stdout, `
@@ -61,7 +61,7 @@ complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
 	return nil
 }
 
-func (r *Runner) zshCompletionAction(c *cli.Context) error {
+func (r *Runner) zshCompletionAction(*cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
 	fmt.Fprintln(r.Stdout, `

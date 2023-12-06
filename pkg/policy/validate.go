@@ -25,19 +25,19 @@ type MockValidator struct {
 	Err error
 }
 
-func (v *MockValidator) Allow(p string) error {
+func (v *MockValidator) Allow(_ string) error {
 	return v.Err
 }
 
-func (v *MockValidator) Deny(p string) error {
+func (v *MockValidator) Deny(_ string) error {
 	return v.Err
 }
 
-func (v *MockValidator) Validate(p string) error {
+func (v *MockValidator) Validate(_ string) error {
 	return v.Err
 }
 
-func (v *MockValidator) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
+func (v *MockValidator) Warn(_ *logrus.Entry, _ string, _ bool) error {
 	return v.Err
 }
 

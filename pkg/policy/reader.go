@@ -16,12 +16,12 @@ type MockReader struct {
 	Err     error
 }
 
-func (r *MockReader) Read(policyFilePaths []string) ([]*Config, error) {
+func (r *MockReader) Read(_ []string) ([]*Config, error) {
 	allowCfgs(r.Configs)
 	return r.Configs, r.Err
 }
 
-func (r *MockReader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+func (r *MockReader) Append(_ *logrus.Entry, _ string, _ []*Config, _ map[string]struct{}) ([]*Config, error) {
 	return r.Configs, r.Err
 }
 

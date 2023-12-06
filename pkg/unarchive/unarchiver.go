@@ -15,7 +15,7 @@ type unarchiverWithUnarchiver struct {
 	fs         afero.Fs
 }
 
-func (u *unarchiverWithUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+func (u *unarchiverWithUnarchiver) Unarchive(_ context.Context, _ *logrus.Entry, src *File) error {
 	tempFilePath, err := src.Body.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporal file: %w", err)

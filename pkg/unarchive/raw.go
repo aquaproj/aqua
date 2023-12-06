@@ -17,7 +17,7 @@ type rawUnarchiver struct {
 	fs   afero.Fs
 }
 
-func (u *rawUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+func (u *rawUnarchiver) Unarchive(_ context.Context, _ *logrus.Entry, src *File) error {
 	dest := u.dest
 	if err := osfile.MkdirAll(u.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)

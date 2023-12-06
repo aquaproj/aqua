@@ -5,6 +5,7 @@ import (
 	"crypto/sha1" //nolint:gosec
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash"
@@ -38,7 +39,7 @@ func CalculateReader(file io.Reader, algorithm string) (string, error) {
 	if _, err := io.Copy(h, file); err != nil {
 		return "", fmt.Errorf("copy a io.Reader to hash object: %w", err)
 	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func getHash(algorithm string) (hash.Hash, error) {

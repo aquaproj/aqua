@@ -1,4 +1,8 @@
 ---
+run:
+  skip-files:
+    - "mock\\.go$"
+    - "mock_[^/]*\\.go$"
 linters:
   enable-all: true
   disable:
@@ -25,3 +29,5 @@ linters:
     - exhaustruct
     - nonamedreturns
     - musttag
+    - depguard
+    - tagalign

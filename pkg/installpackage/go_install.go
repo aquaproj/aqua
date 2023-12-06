@@ -16,7 +16,7 @@ type MockGoInstallInstaller struct {
 	Err error
 }
 
-func (m *MockGoInstallInstaller) Install(ctx context.Context, path, gobin string) error {
+func (m *MockGoInstallInstaller) Install(_ context.Context, _, _ string) error {
 	return m.Err
 }
 

@@ -19,7 +19,7 @@ type MockCargoPackageInstaller struct {
 	Err error
 }
 
-func (m *MockCargoPackageInstaller) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
+func (m *MockCargoPackageInstaller) Install(_ context.Context, _ *logrus.Entry, _, _, _ string, _ *registry.Cargo) error {
 	return m.Err
 }
 

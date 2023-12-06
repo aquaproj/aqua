@@ -17,7 +17,7 @@ type MockConfigFinder struct {
 	err  error
 }
 
-func (f *MockConfigFinder) Find(policyFilePath, wd string) (string, error) {
+func (f *MockConfigFinder) Find(_, _ string) (string, error) {
 	return f.path, f.err
 }
 

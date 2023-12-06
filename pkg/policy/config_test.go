@@ -96,9 +96,9 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 			}
 			if d.isErr {
 				t.Fatal("error must be returned")
-				if diff := cmp.Diff(d.exp, d.cfg); diff != "" {
-					t.Fatal(diff)
-				}
+			}
+			if diff := cmp.Diff(d.exp, d.cfg); diff != "" {
+				t.Fatal(diff)
 			}
 		})
 	}

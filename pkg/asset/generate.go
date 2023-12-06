@@ -82,7 +82,7 @@ func mergeReplacements(goos string, m1, m2 map[string]string) (map[string]string
 	return nil, false
 }
 
-func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,gocognit,cyclop
+func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,cyclop
 	for _, goos := range []string{"linux", osDarwin, "windows"} {
 		var overrides []*registry.Override
 		var supportedEnvs []string

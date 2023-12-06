@@ -37,5 +37,5 @@ func (r *Runner) info(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInfoCommandController(c.Context, param, r.Runtime)
-	return ctrl.Info(c.Context, r.LogE, param, c.Args().First()) //nolint:wrapcheck
+	return ctrl.Info(c.Context, r.LogE, param) //nolint:wrapcheck
 }

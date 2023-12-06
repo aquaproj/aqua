@@ -34,7 +34,7 @@ type MockConfigReader struct {
 	Err error
 }
 
-func (r *MockConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
+func (r *MockConfigReader) Read(_ string, cfg *aqua.Config) error {
 	*cfg = *r.Cfg
 	return r.Err
 }

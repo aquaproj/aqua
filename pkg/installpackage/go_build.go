@@ -14,7 +14,7 @@ type MockGoBuildInstaller struct {
 	Err error
 }
 
-func (m *MockGoBuildInstaller) Install(ctx context.Context, exePath, exeDir, src string) error {
+func (m *MockGoBuildInstaller) Install(ctx context.Context, exePath, exeDir, src string) error { //nolint:revive
 	return m.Err
 }
 

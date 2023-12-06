@@ -50,7 +50,7 @@ type Mock struct {
 	Err  error
 }
 
-func (m *Mock) ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
+func (m *Mock) ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) { //nolint:revive
 	return m.RC, m.Code, m.Err
 }
 

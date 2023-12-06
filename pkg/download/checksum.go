@@ -43,7 +43,7 @@ type MockChecksumDownloader struct {
 	Err  error
 }
 
-func (dl *MockChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
+func (dl *MockChecksumDownloader) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) { //nolint:revive
 	return io.NopCloser(strings.NewReader(dl.Body)), dl.Code, dl.Err
 }
 

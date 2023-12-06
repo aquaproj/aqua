@@ -18,7 +18,7 @@ type Decompressor struct {
 	dest         string
 }
 
-func (d *Decompressor) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+func (d *Decompressor) Unarchive(_ context.Context, _ *logrus.Entry, src *File) error {
 	dest := d.dest
 	if err := osfile.MkdirAll(d.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)

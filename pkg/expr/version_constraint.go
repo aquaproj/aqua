@@ -1,6 +1,6 @@
 package expr
 
-func emptySemver(s string) bool {
+func emptySemver(_ string) bool {
 	return false
 }
 

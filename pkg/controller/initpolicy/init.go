@@ -45,7 +45,7 @@ func New(fs afero.Fs) *Controller {
 	}
 }
 
-func (c *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
+func (c *Controller) Init(_ context.Context, cfgFilePath string, logE *logrus.Entry) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua-policy.yaml"
 	}
