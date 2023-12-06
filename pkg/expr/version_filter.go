@@ -1,8 +1,8 @@
 package expr
 
 import (
-	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
+	"github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/vm"
 )
 
 func CompileVersionFilter(versionFilter string) (*vm.Program, error) {
