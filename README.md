@@ -36,6 +36,7 @@ Declarative CLI Version Manager written in Go.
 - [Masterpoint Consulting](https://masterpoint.io/) ([ref](https://github.com/orgs/aquaproj/discussions/2124#discussioncomment-6553057))
 - [Retty](https://retty.me/) ([ref](https://engineer.retty.me/entry/2022/12/14/130000))
 - [Mercari, Inc.](https://about.mercari.com/en/)
+- [Gunosy Inc.](https://gunosy.co.jp/en/) ([ref](https://tech.gunosy.io/entry/snyk_iac_reviewdog_aqua_devsecops))
 
 ## License
 
