@@ -555,11 +555,11 @@ func (p *PackageInfo) GetChecksumReplacements() Replacements {
 }
 
 func (p *PackageInfo) Validate() error { //nolint:cyclop
-	if p.NoAsset || p.ErrorMessage != "" {
-		return nil
-	}
 	if p.GetName() == "" {
 		return errPkgNameIsRequired
+	}
+	if p.NoAsset || p.ErrorMessage != "" {
+		return nil
 	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
