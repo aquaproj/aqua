@@ -555,6 +555,9 @@ func (p *PackageInfo) GetChecksumReplacements() Replacements {
 }
 
 func (p *PackageInfo) Validate() error { //nolint:cyclop
+	if p.NoAsset || p.ErrorMessage != "" {
+		return nil
+	}
 	if p.GetName() == "" {
 		return errPkgNameIsRequired
 	}
