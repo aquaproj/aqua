@@ -12,6 +12,12 @@ jobs:
       go-version: 1.21.5
       aqua_policy_allow: true
       aqua_version: v2.21.0
+      app_token_repositories: >-
+        [
+          "${{github.event.repository.name}}",
+          "homebrew-${{github.event.repository.name}}",
+          "scoop-bucket"
+        ]
     secrets:
       gh_app_id: ${{secrets.APP_ID}}
       gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
