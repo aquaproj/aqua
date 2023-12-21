@@ -4,15 +4,6 @@ Please read the following document.
 
 - https://github.com/suzuki-shunsuke/oss-contribution-guide
 
-## Please create a GitHub Discussion instead of GitHub Issue
-
-https://github.com/orgs/aquaproj/discussions
-
-Only maintainers can create new Issues. If needed, a maintainer will create an Issue after your Discussion been triaged and confirmed.
-This way we keep Issues actionable, and free of duplicates or wrong bug reports.
-
-[#1930](https://github.com/aquaproj/aqua/issues/1930)
-
 ## Feature Request
 
 Please [create a discussion](https://github.com/orgs/aquaproj/discussions/new?category=feature-request) before sending a pull request for Feature Request.
