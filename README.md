@@ -38,6 +38,7 @@ Declarative CLI Version Manager written in Go.
 - [Mercari, Inc.](https://about.mercari.com/en/)
 - [Gunosy Inc.](https://gunosy.co.jp/en/) ([ref](https://tech.gunosy.io/entry/snyk_iac_reviewdog_aqua_devsecops))
 - [DeNA Co., Ltd.](https://dena.com/intl/)
+- [CADDi Inc.](https://caddi.com/)
 
 ## License
 
