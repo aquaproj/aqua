@@ -275,6 +275,7 @@ type Param struct {
 	OnlyPackage           bool
 	OnlyRegistry          bool
 	CosignDisabled        bool
+	SLSADisabled          bool
 	PolicyConfigFilePaths []string
 	Commands              []string
 }

@@ -47,6 +47,7 @@ type Installer struct {
 	progressBar           bool
 	onlyLink              bool
 	cosignDisabled        bool
+	slsaDisabled          bool
 }
 
 func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
@@ -75,6 +76,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		progressBar:           param.ProgressBar,
 		onlyLink:              param.OnlyLink,
 		cosignDisabled:        param.CosignDisabled,
+		slsaDisabled:          param.SLSADisabled,
 		copyDir:               param.Dest,
 		unarchiver:            unarchiver,
 		cosign:                cosignVerifier,

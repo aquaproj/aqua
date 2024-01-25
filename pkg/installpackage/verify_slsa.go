@@ -10,6 +10,10 @@ import (
 )
 
 func (is *Installer) verifyWithSLSA(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
+	if is.slsaDisabled {
+		logE.Debug("slsa verification is disabled")
+		return nil
+	}
 	ppkg := param.Package
 	pkgInfo := param.Package.PackageInfo
 	sp := ppkg.PackageInfo.SLSAProvenance

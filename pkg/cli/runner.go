@@ -53,6 +53,7 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	param.Detail = c.Bool("detail")
 	param.Prune = c.Bool("prune")
 	param.CosignDisabled = c.Bool("disable-cosign")
+	param.SLSADisabled = c.Bool("disable-slsa")
 	param.Limit = c.Int("limit")
 	param.SelectVersion = c.Bool("select-version")
 	param.ShowVersion = c.Bool("version")
@@ -156,6 +157,11 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				Name:    "disable-cosign",
 				Usage:   "Disable Cosign verification",
 				EnvVars: []string{"AQUA_DISABLE_COSIGN"},
+			},
+			&cli.BoolFlag{
+				Name:    "disable-slsa",
+				Usage:   "Disable SLSA verification",
+				EnvVars: []string{"AQUA_DISABLE_SLSA"},
 			},
 			&cli.StringFlag{
 				Name:  "trace",
