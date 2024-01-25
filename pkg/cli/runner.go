@@ -130,7 +130,7 @@ func parseTags(tags []string) map[string]struct{} {
 	return tagsM
 }
 
-func (r *Runner) Run(ctx context.Context, args ...string) error {
+func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funlen
 	compiledDate, err := time.Parse(time.RFC3339, r.LDFlags.Date)
 	if err != nil {
 		compiledDate = time.Now()
