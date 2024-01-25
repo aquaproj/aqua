@@ -10,6 +10,11 @@ import (
 )
 
 func (is *Installer) verifyWithCosign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
+	if is.cosignDisabled {
+		logE.Debug("cosign is disabled")
+		return nil
+	}
+
 	ppkg := param.Package
 
 	cos := ppkg.PackageInfo.Cosign
