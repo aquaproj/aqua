@@ -52,6 +52,8 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	param.All = c.Bool("all")
 	param.Detail = c.Bool("detail")
 	param.Prune = c.Bool("prune")
+	param.CosignDisabled = c.Bool("disable-cosign")
+	param.SLSADisabled = c.Bool("disable-slsa")
 	param.Limit = c.Int("limit")
 	param.SelectVersion = c.Bool("select-version")
 	param.ShowVersion = c.Bool("version")
@@ -128,7 +130,7 @@ func parseTags(tags []string) map[string]struct{} {
 	return tagsM
 }
 
-func (r *Runner) Run(ctx context.Context, args ...string) error {
+func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funlen
 	compiledDate, err := time.Parse(time.RFC3339, r.LDFlags.Date)
 	if err != nil {
 		compiledDate = time.Now()
@@ -150,6 +152,16 @@ func (r *Runner) Run(ctx context.Context, args ...string) error {
 				Aliases: []string{"c"},
 				Usage:   "configuration file path",
 				EnvVars: []string{"AQUA_CONFIG"},
+			},
+			&cli.BoolFlag{
+				Name:    "disable-cosign",
+				Usage:   "Disable Cosign verification",
+				EnvVars: []string{"AQUA_DISABLE_COSIGN"},
+			},
+			&cli.BoolFlag{
+				Name:    "disable-slsa",
+				Usage:   "Disable SLSA verification",
+				EnvVars: []string{"AQUA_DISABLE_SLSA"},
 			},
 			&cli.StringFlag{
 				Name:  "trace",

@@ -28,7 +28,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 		return "", fmt.Errorf("read a checksum file: %w", err)
 	}
 
-	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() {
+	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() && !is.cosignDisabled {
 		f, err := afero.TempFile(is.fs, "", "")
 		if err != nil {
 			return "", fmt.Errorf("create a temporal file: %w", err)
