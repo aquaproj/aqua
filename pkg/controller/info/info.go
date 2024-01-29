@@ -86,7 +86,9 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 	envs := []string{
 		"AQUA_CONFIG",
 		"AQUA_DISABLE_LAZY_INSTALL",
+		"AQUA_DISABLE_COSIGN",
 		"AQUA_DISABLE_POLICY",
+		"AQUA_DISABLE_SLSA",
 		"AQUA_EXPERIMENTAL_X_SYS_EXEC",
 		"AQUA_GENERATE_WITH_DETAIL",
 		"AQUA_GLOBAL_CONFIG",
