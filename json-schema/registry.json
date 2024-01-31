@@ -286,6 +286,7 @@
             "http",
             "go",
             "go_install",
+            "cargo",
             "go_build"
           ]
         },
