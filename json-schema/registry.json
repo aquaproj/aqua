@@ -17,6 +17,9 @@
     },
     "Build": {
       "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -35,9 +38,6 @@
         },
         "excluded_envs": {
           "$ref": "#/$defs/SupportedEnvs"
-        },
-        "enabled": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -286,6 +286,7 @@
             "http",
             "go",
             "go_install",
+            "cargo",
             "go_build"
           ]
         },
@@ -303,15 +304,6 @@
         "crate": {
           "type": "string"
         },
-        "cargo": {
-          "$ref": "#/$defs/Cargo"
-        },
-        "files": {
-          "items": {
-            "$ref": "#/$defs/File"
-          },
-          "type": "array"
-        },
         "url": {
           "type": "string"
         },
@@ -324,6 +316,18 @@
         "windows_ext": {
           "type": "string"
         },
+        "append_ext": {
+          "type": "boolean"
+        },
+        "cargo": {
+          "$ref": "#/$defs/Cargo"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
         "replacements": {
           "$ref": "#/$defs/Replacements"
         },
@@ -335,9 +339,6 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
-        },
-        "append_ext": {
-          "type": "boolean"
         },
         "envs": {
           "$ref": "#/$defs/SupportedEnvs"
@@ -400,9 +401,6 @@
         "crate": {
           "type": "string"
         },
-        "cargo": {
-          "$ref": "#/$defs/Cargo"
-        },
         "url": {
           "type": "string"
         },
@@ -417,30 +415,6 @@
             "zip",
             "dmg"
           ]
-        },
-        "overrides": {
-          "items": {
-            "$ref": "#/$defs/Override"
-          },
-          "type": "array"
-        },
-        "format_overrides": {
-          "items": {
-            "$ref": "#/$defs/FormatOverride"
-          },
-          "type": "array"
-        },
-        "files": {
-          "items": {
-            "$ref": "#/$defs/File"
-          },
-          "type": "array"
-        },
-        "replacements": {
-          "$ref": "#/$defs/Replacements"
-        },
-        "supported_envs": {
-          "$ref": "#/$defs/SupportedEnvs"
         },
         "version_filter": {
           "type": "string"
@@ -469,6 +443,42 @@
         "windows_ext": {
           "type": "string"
         },
+        "private": {
+          "type": "boolean"
+        },
+        "append_ext": {
+          "type": "boolean"
+        },
+        "cargo": {
+          "$ref": "#/$defs/Cargo"
+        },
+        "build": {
+          "$ref": "#/$defs/Build"
+        },
+        "overrides": {
+          "items": {
+            "$ref": "#/$defs/Override"
+          },
+          "type": "array"
+        },
+        "format_overrides": {
+          "items": {
+            "$ref": "#/$defs/FormatOverride"
+          },
+          "type": "array"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
+        "replacements": {
+          "$ref": "#/$defs/Replacements"
+        },
+        "supported_envs": {
+          "$ref": "#/$defs/SupportedEnvs"
+        },
         "checksum": {
           "$ref": "#/$defs/Checksum"
         },
@@ -477,15 +487,6 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
-        },
-        "private": {
-          "type": "boolean"
-        },
-        "build": {
-          "$ref": "#/$defs/Build"
-        },
-        "append_ext": {
-          "type": "boolean"
         },
         "version_constraint": {
           "type": "string"
@@ -610,20 +611,11 @@
         "crate": {
           "type": "string"
         },
-        "cargo": {
-          "$ref": "#/$defs/Cargo"
-        },
         "path": {
           "type": "string"
         },
         "url": {
           "type": "string"
-        },
-        "files": {
-          "items": {
-            "$ref": "#/$defs/File"
-          },
-          "type": "array"
         },
         "format": {
           "type": "string",
@@ -633,18 +625,6 @@
             "zip"
           ]
         },
-        "format_overrides": {
-          "$ref": "#/$defs/FormatOverrides"
-        },
-        "overrides": {
-          "$ref": "#/$defs/Overrides"
-        },
-        "replacements": {
-          "$ref": "#/$defs/Replacements"
-        },
-        "supported_envs": {
-          "$ref": "#/$defs/SupportedEnvs"
-        },
         "version_filter": {
           "type": "string"
         },
@@ -652,6 +632,12 @@
           "type": "string"
         },
         "version_source": {
+          "type": "string"
+        },
+        "windows_ext": {
+          "type": "string"
+        },
+        "error_message": {
           "type": "string"
         },
         "rosetta2": {
@@ -663,8 +649,26 @@
         "complete_windows_ext": {
           "type": "boolean"
         },
-        "windows_ext": {
-          "type": "string"
+        "no_asset": {
+          "type": "boolean"
+        },
+        "append_ext": {
+          "type": "boolean"
+        },
+        "cargo": {
+          "$ref": "#/$defs/Cargo"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/File"
+          },
+          "type": "array"
+        },
+        "format_overrides": {
+          "$ref": "#/$defs/FormatOverrides"
+        },
+        "replacements": {
+          "$ref": "#/$defs/Replacements"
         },
         "checksum": {
           "$ref": "#/$defs/Checksum"
@@ -675,17 +679,14 @@
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
         },
-        "error_message": {
-          "type": "string"
-        },
-        "no_asset": {
-          "type": "boolean"
-        },
-        "append_ext": {
-          "type": "boolean"
-        },
         "build": {
           "$ref": "#/$defs/Build"
+        },
+        "overrides": {
+          "$ref": "#/$defs/Overrides"
+        },
+        "supported_envs": {
+          "$ref": "#/$defs/SupportedEnvs"
         }
       },
       "additionalProperties": false,
