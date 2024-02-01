@@ -187,7 +187,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 	newGroups := make([]*Group, 1, len(groups))
 	newGroups[0] = prevGroup
 	for _, group := range groups[1:] {
-		if reflect.DeepEqual(group.pkg, prevGroup.pkg) {
+		if reflect.DeepEqual(group.pkg.Info, prevGroup.pkg.Info) {
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
 			continue
 		}
