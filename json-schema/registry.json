@@ -667,14 +667,8 @@
         "format_overrides": {
           "$ref": "#/$defs/FormatOverrides"
         },
-        "overrides": {
-          "$ref": "#/$defs/Overrides"
-        },
         "replacements": {
           "$ref": "#/$defs/Replacements"
-        },
-        "supported_envs": {
-          "$ref": "#/$defs/SupportedEnvs"
         },
         "checksum": {
           "$ref": "#/$defs/Checksum"
@@ -687,6 +681,12 @@
         },
         "build": {
           "$ref": "#/$defs/Build"
+        },
+        "overrides": {
+          "$ref": "#/$defs/Overrides"
+        },
+        "supported_envs": {
+          "$ref": "#/$defs/SupportedEnvs"
         }
       },
       "additionalProperties": false,

@@ -108,13 +108,13 @@ type VersionOverride struct {
 	Cargo               *Cargo          `json:"cargo,omitempty"`
 	Files               []*File         `yaml:",omitempty" json:"files,omitempty"`
 	FormatOverrides     FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	Overrides           Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
 	Replacements        Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
-	SupportedEnvs       SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 	Checksum            *Checksum       `json:"checksum,omitempty"`
 	Cosign              *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance      *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Build               *Build          `json:"build,omitempty" yaml:",omitempty"`
+	Overrides           Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
+	SupportedEnvs       SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 }
 
 type Override struct {
