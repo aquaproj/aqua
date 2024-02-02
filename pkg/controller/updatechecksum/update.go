@@ -2,7 +2,6 @@ package updatechecksum
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -165,7 +164,7 @@ func (c *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, check
 		})
 		pkg, ok := pkgs[env]
 		if !ok {
-			return errors.New("package isn't found")
+			continue
 		}
 		if err := c.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt, assetNames); err != nil {
 			return err
