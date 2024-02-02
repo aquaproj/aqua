@@ -147,11 +147,6 @@ func (c *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, chec
 }
 
 func (c *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
-	switch pkg.PackageInfo.Type {
-	case "go_install", "cargo":
-		logE.WithField("package_type", pkg.PackageInfo.Type).Debug("skip updating the package's checksum")
-		return nil
-	}
 	logE.Info("updating a package checksum")
 	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
@@ -187,6 +182,11 @@ func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[s
 		pkgInfo := pkg.PackageInfo
 		pkgInfo = pkgInfo.Copy()
 		pkgInfo.OverrideByRuntime(rt)
+		switch pkgInfo.Type {
+		case "cargo", "go_install":
+			// Skip updating checksums of these packages
+			continue
+		}
 		pkgWithEnv := &config.Package{
 			Package:     pkg.Package,
 			PackageInfo: pkgInfo,
