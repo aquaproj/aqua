@@ -20,10 +20,10 @@ func PreviewVersion(v *Version) string {
 		s += "\n"
 	}
 	if v.URL != "" {
-		s += fmt.Sprintf("\n%s", v.URL)
+		s += "\n" + v.URL
 	}
 	if v.URL != "" {
-		s += fmt.Sprintf("\n%s", v.Description)
+		s += "\n" + v.Description
 	}
 	return s
 }
@@ -37,10 +37,10 @@ func (v *Version) Preview(w int) string {
 		s += "\n"
 	}
 	if v.URL != "" {
-		s += fmt.Sprintf("\n%s", v.URL)
+		s += "\n" + v.URL
 	}
 	if v.URL != "" {
-		s += fmt.Sprintf("\n%s", formatPreview(v.Description, w/2-8)) //nolint:gomnd
+		s += "\n" + formatPreview(v.Description, w/2-8) //nolint:gomnd
 	}
 	return s
 }

@@ -14,10 +14,10 @@ import (
 func showFileContent(logE *logrus.Entry, content string) {
 	if len(content) > 10000 { //nolint:gomnd
 		content = content[:10000]
-		logE.Error(fmt.Sprintf("Checksum isn't found in a checksum file. Checksum file content (10000):\n%s", content))
+		logE.Error("Checksum isn't found in a checksum file. Checksum file content (10000):\n" + content)
 		return
 	}
-	logE.Error(fmt.Sprintf("Checksum isn't found in a checksum file. Checksum file content:\n%s", content))
+	logE.Error("Checksum isn't found in a checksum file. Checksum file content:\n" + content)
 }
 
 func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, checksumConfig *registry.Checksum) (string, error) {
