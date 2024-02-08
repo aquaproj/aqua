@@ -51,7 +51,7 @@ func (c *Client) GetLatestVersion(ctx context.Context, crate string) (string, er
 }
 
 func (c *Client) GetCrate(ctx context.Context, crate string) (*CratePayload, error) {
-	payload, _, err := getCrate(ctx, c.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s", crate))
+	payload, _, err := getCrate(ctx, c.client, "https://crates.io/api/v1/crates/"+crate)
 	return payload, err
 }
 

@@ -287,7 +287,7 @@ func appendExt(s, format string) string {
 	if format == formatRaw || format == "" {
 		return s
 	}
-	if strings.HasSuffix(s, fmt.Sprintf(".%s", format)) {
+	if strings.HasSuffix(s, "."+format) {
 		return s
 	}
 	return fmt.Sprintf("%s.%s", s, format)
