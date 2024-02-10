@@ -23,7 +23,7 @@ func (f *Finder) Find(items []*Item, hasPreview bool) (int, error) {
 	var opts []fuzzyfinder.Option
 	if hasPreview {
 		opts = []fuzzyfinder.Option{
-			fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+			fuzzyfinder.WithPreviewWindow(func(i, w, _ int) string {
 				if i < 0 {
 					return "No item matches"
 				}
@@ -40,7 +40,7 @@ func (f *Finder) FindMulti(items []*Item, hasPreview bool) ([]int, error) {
 	var opts []fuzzyfinder.Option
 	if hasPreview {
 		opts = []fuzzyfinder.Option{
-			fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+			fuzzyfinder.WithPreviewWindow(func(i, w, _ int) string {
 				if i < 0 {
 					return "No item matches"
 				}
