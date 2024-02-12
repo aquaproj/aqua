@@ -7,7 +7,7 @@
 #   require_checksum: true
 registries:
 - type: standard
-  ref: v4.131.1 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.132.1 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: suzuki-shunsuke/tfcmt@v4.9.0
   tags:
