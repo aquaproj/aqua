@@ -21,7 +21,7 @@ const configTemplate = `---
 #   - all
 registries:
 - type: standard
-  ref: %%STANDARD_REGISTRY_VERSION%% # renovate: depName=aquaproj/aqua-registry
+  ref: %%STANDARD_REGISTRY_VERSION%%  # renovate: depName=aquaproj/aqua-registry
 packages:
 `
 

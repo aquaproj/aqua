@@ -1,49 +1,50 @@
+---
 registries:
-- type: standard # standard registry
-  ref: v3.90.0 # renovate: depName=aquaproj/aqua-registry
-- name: local # local registry
-  type: local
-  path: registry.yaml
-- name: aqua-registry
-  type: github_content # github_content registry
-  ref: v3.90.0 # renovate: depName=aquaproj/aqua-registry
-  repo_owner: aquaproj
-  repo_name: aqua-registry
-  path: registry.yaml
+  - type: standard  # standard registry
+    ref: v3.90.0  # renovate: depName=aquaproj/aqua-registry
+  - name: local  # local registry
+    type: local
+    path: registry.yaml
+  - name: aqua-registry
+    type: github_content  # github_content registry
+    ref: v3.90.0  # renovate: depName=aquaproj/aqua-registry
+    repo_owner: aquaproj
+    repo_name: aqua-registry
+    path: registry.yaml
 packages:
-- name: x-motemen/ghq@v1.3.0
-- name: kubernetes-sigs/kind # http package, raw format
-  registry: standard # standard registry
-  version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
-- name: restic/restic@v0.14.0
-  # decompressor, package name with version
-  registry: aqua-registry # github content registry
-- name: golang-migrate/migrate # version_constraint
-  registry: aqua-registry # github content registry
-  version: v4.14.1
-- name: golang-migrate/migrate # version_constraint, omit "registry"
-  version: v4.15.2 # renovate: depName=golang-migrate/migrate
-- name: aquaproj/aqua-installer@v1.1.2
-  # github_content package
-  registry: local
-- name: tfutils/tfenv@v3.0.0
-  # github_archive package
-  registry: local
-- name: katbyte/terrafmt@v0.5.2
-  # type: go_install
-  registry: local
-- name: bats-core/bats-core
-  # specify revision
-  version: 9695e7c589a07756c999893764ccd9a506a47f89
-- name: github.com/anqiansong/github-compare
-  registry: local
-  # type: go_install
-  version: e9ceff4e053200afb1eb7e8e3c16932b2e2f01ee
-- name: helm/helm@v3.10.1
-  registry: local
-- name: tamasfe/taplo@0.8.0
-  registry: local
-- name: crates.io/skim@0.10.4
-  registry: local
-- name: suzuki-shunsuke/github-comment@v4.0.0
-  registry: local
+  - name: x-motemen/ghq@v1.3.0
+  - name: kubernetes-sigs/kind  # http package, raw format
+    registry: standard  # standard registry
+    version: v0.17.0  # renovate: depName=kubernetes-sigs/kind
+  - name: restic/restic@v0.14.0
+    # decompressor, package name with version
+    registry: aqua-registry  # github content registry
+  - name: golang-migrate/migrate  # version_constraint
+    registry: aqua-registry  # github content registry
+    version: v4.14.1
+  - name: golang-migrate/migrate  # version_constraint, omit "registry"
+    version: v4.15.2  # renovate: depName=golang-migrate/migrate
+  - name: aquaproj/aqua-installer@v1.1.2
+    # github_content package
+    registry: local
+  - name: tfutils/tfenv@v3.0.0
+    # github_archive package
+    registry: local
+  - name: katbyte/terrafmt@v0.5.2
+    # type: go_install
+    registry: local
+  - name: bats-core/bats-core
+    # specify revision
+    version: 9695e7c589a07756c999893764ccd9a506a47f89
+  - name: github.com/anqiansong/github-compare
+    registry: local
+    # type: go_install
+    version: e9ceff4e053200afb1eb7e8e3c16932b2e2f01ee
+  - name: helm/helm@v3.10.1
+    registry: local
+  - name: tamasfe/taplo@0.8.0
+    registry: local
+  - name: crates.io/skim@0.10.4
+    registry: local
+  - name: suzuki-shunsuke/github-comment@v4.0.0
+    registry: local

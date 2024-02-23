@@ -1,0 +1,12 @@
+name: 'Yamllint'
+on:
+  - pull_request
+jobs:
+  yamllint:
+    name: 'Yamllint'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+      - name: 'Yamllint'
+        uses: karancode/yamllint-github-action@v2.1.1

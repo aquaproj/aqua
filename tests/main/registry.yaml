@@ -1,3 +1,4 @@
+---
 packages:
   - type: github_release
     repo_owner: kubernetes-sigs
@@ -9,19 +10,19 @@ packages:
       - version_constraint: 'semverWithVersion("< 4.2.0", trimPrefix(Version, "kustomize/"))'
         rosetta2: true
 
-  - type: github_content # github_content package
+  - type: github_content  # github_content package
     repo_owner: aquaproj
     repo_name: aqua-installer
     path: aqua-installer
 
-  - type: github_archive # github_archive package
+  - type: github_archive  # github_archive package
     repo_owner: tfutils
     repo_name: tfenv
     files:
-    - name: tfenv
-      src: tfenv-{{trimV .Version}}/bin/tfenv
-    - name: terraform
-      src: tfenv-{{trimV .Version}}/bin/terraform
+      - name: tfenv
+        src: tfenv-{{trimV .Version}}/bin/tfenv
+      - name: terraform
+        src: tfenv-{{trimV .Version}}/bin/terraform
 
   - type: go_install
     path: github.com/anqiansong/github-compare

@@ -1,3 +1,4 @@
+---
 packages:
   # Verify checksum file with slsa-verifier
   # Verify with slsa-verifier

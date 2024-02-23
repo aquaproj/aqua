@@ -17,8 +17,8 @@ registries:
     type: local
     path: ../tests/macos/registry.yaml
 packages:
-- registry: standard
-- registry: main
-- registry: cosign
-- registry: slsa
-- registry: macos
+  - registry: standard
+  - registry: main
+  - registry: cosign
+  - registry: slsa
+  - registry: macos

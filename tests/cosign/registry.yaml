@@ -1,3 +1,4 @@
+---
 packages:
   # Verify checksum file with Cosign
   - type: github_release

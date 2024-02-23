@@ -1,2 +1,3 @@
+---
 packages:
   - name: golangci/golangci-lint@v1.56.2
