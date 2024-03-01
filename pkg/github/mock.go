@@ -45,6 +45,21 @@ func (m *MockRepositoriesService) GetContents(ctx context.Context, repoOwner, re
 	return m.Content, nil, nil, nil
 }
 
+func (m *MockRepositoriesService) DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error) {
+	if m.Content == nil {
+		return nil, nil, errContentNotFound
+	}
+	c, err := m.Content.GetContent()
+	if err != nil {
+		return nil, nil, err
+	}
+	return io.NopCloser(strings.NewReader(c)), &github.Response{
+		Response: &http.Response{
+			StatusCode: http.StatusOK,
+		},
+	}, nil
+}
+
 func (m *MockRepositoriesService) GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error) {
 	if len(m.Releases) == 0 {
 		return nil, nil, errReleaseNotFound
