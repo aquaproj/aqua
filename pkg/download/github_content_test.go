@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
@@ -69,9 +68,7 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 			},
 			exp: "foo",
 			github: &github.MockRepositoriesService{
-				Content: &github.RepositoryContent{
-					Content: ptr.String("foo"),
-				},
+				Content: "foo",
 			},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{

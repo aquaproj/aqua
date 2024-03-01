@@ -23,7 +23,7 @@ var (
 
 type MockRepositoriesService struct {
 	Releases []*github.RepositoryRelease
-	Content  *github.RepositoryContent
+	Content  string
 	Repo     *github.Repository
 	Tags     []*github.RepositoryTag
 	Asset    string
@@ -39,14 +39,10 @@ func (m *MockRepositoriesService) GetLatestRelease(ctx context.Context, repoOwne
 }
 
 func (m *MockRepositoriesService) DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error) {
-	if m.Content == nil {
+	if m.Content == "" {
 		return nil, nil, errContentNotFound
 	}
-	c, err := m.Content.GetContent()
-	if err != nil {
-		return nil, nil, err
-	}
-	return io.NopCloser(strings.NewReader(c)), &github.Response{
+	return io.NopCloser(strings.NewReader(m.Content)), &github.Response{
 		Response: &http.Response{
 			StatusCode: http.StatusOK,
 		},
