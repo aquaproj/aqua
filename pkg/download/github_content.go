@@ -3,6 +3,8 @@ package download
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
@@ -15,7 +17,7 @@ type GitHubContentFileDownloader struct {
 }
 
 type GitHubContentAPI interface {
-	GetContents(ctx context.Context, repoOwner, repoName, path string, opt *github.RepositoryContentGetOptions) (*github.RepositoryContent, []*github.RepositoryContent, *github.Response, error)
+	DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
 }
 
 func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) *GitHubContentFileDownloader {
@@ -42,20 +44,17 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 		}
 	}
 
-	file, _, _, err := dl.github.GetContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
+	file, resp, err := dl.github.DownloadContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
 		Ref: param.Ref,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("get a file by Get GitHub Content API: %w", err)
 	}
-	if file == nil {
-		return nil, errGitHubContentMustBeFile
-	}
-	content, err := file.GetContent()
-	if err != nil {
-		return nil, fmt.Errorf("get a GitHub Content file content: %w", err)
+	if resp.StatusCode != http.StatusOK {
+		file.Close()
+		return nil, fmt.Errorf("get a file by Get GitHub Content API: status code %d", resp.StatusCode)
 	}
 	return &domain.GitHubContentFile{
-		String: content,
+		ReadCloser: file,
 	}, nil
 }
