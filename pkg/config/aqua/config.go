@@ -7,14 +7,15 @@ import (
 )
 
 type Package struct {
-	Name        string   `validate:"required" json:"name,omitempty"`
-	Registry    string   `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
-	Version     string   `validate:"required" yaml:",omitempty" json:"version,omitempty"`
-	Import      string   `yaml:",omitempty" json:"import,omitempty"`
-	Tags        []string `yaml:",omitempty" json:"tags,omitempty"`
-	Description string   `yaml:",omitempty" json:"description,omitempty"`
-	Link        string   `yaml:",omitempty" json:"link,omitempty"`
-	FilePath    string   `json:"-" yaml:"-"`
+	Name          string   `validate:"required" json:"name,omitempty"`
+	Registry      string   `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
+	Version       string   `validate:"required" yaml:",omitempty" json:"version,omitempty"`
+	Import        string   `yaml:",omitempty" json:"import,omitempty"`
+	Tags          []string `yaml:",omitempty" json:"tags,omitempty"`
+	Description   string   `yaml:",omitempty" json:"description,omitempty"`
+	Link          string   `yaml:",omitempty" json:"link,omitempty"`
+	FilePath      string   `json:"-" yaml:"-"`
+	GoVersionFile string   `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`
 }
 
 func (p *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
