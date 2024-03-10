@@ -43,7 +43,7 @@ func (c *Controller) listInstalledByConfig(cfgFilePath string) error {
 		return err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
-		fmt.Fprintln(c.stdout, pkg.Registry+","+pkg.Name+","+pkg.Version)
+		fmt.Fprintln(c.stdout, pkg.Name+"\t"+pkg.Version+"\t"+pkg.Registry)
 	}
 	return nil
 }
