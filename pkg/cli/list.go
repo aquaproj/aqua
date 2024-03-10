@@ -23,7 +23,30 @@ standard,99designs/aws-vault
 standard,abiosoft/colima
 standard,abs-lang/abs
 ...
+
+If the option -installed is set, the command lists only installed packages.
+
+$ aqua list -installed
+standard,golangci/golangci-lint,v1.56.2
+standard,goreleaser/goreleaser,v1.24.0
+...
+
+By default, the command doesn't list global configuration packages.
+If you want to list global configuration packages too, please set the option -a.
+
+$ aqua list -installed -a
 `,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "installed",
+				Usage: "List installed packages",
+			},
+			&cli.BoolFlag{
+				Name:    "all",
+				Aliases: []string{"a"},
+				Usage:   "List global configuration packages too",
+			},
+		},
 	}
 }
 

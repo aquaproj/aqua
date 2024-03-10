@@ -54,6 +54,9 @@ jobs:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - run: aqua list
+      - run: aqua list -installed
+      - run: aqua list -installed -a
+
       - run: aqua update-checksum
         working-directory: tests/main
         env:

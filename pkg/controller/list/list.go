@@ -11,6 +11,9 @@ import (
 )
 
 func (c *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error { //nolint:cyclop
+	if param.Installed {
+		return c.listInstalled(param, logE)
+	}
 	cfg := &aqua.Config{}
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
