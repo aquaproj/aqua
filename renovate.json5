@@ -1,46 +1,58 @@
 {
   extends: [
-    "config:recommended",
-    "github>suzuki-shunsuke/renovate-config#2.3.0",
-    "github>aquaproj/aqua-renovate-config#2.2.0",
-    "github>suzuki-shunsuke/renovate-config:nolimit#2.3.0",
-    "github>aquaproj/aqua-renovate-config:file#2.2.0(tests/aqua.*\\.yaml)",
-    "github>suzuki-shunsuke/renovate-config:action-go-version#2.3.0",
-    "github>aquaproj/aqua-renovate-config:file#2.2.0(aqua/imports/.*\\.ya?ml)",
-    "github>aquaproj/aqua-renovate-config:installer-script#2.2.0(Dockerfile-prebuilt)"
+    'config:recommended',
+    'github>suzuki-shunsuke/renovate-config#2.3.0',
+    'github>aquaproj/aqua-renovate-config#2.2.0',
+    'github>suzuki-shunsuke/renovate-config:nolimit#2.3.0',
+    'github>aquaproj/aqua-renovate-config:file#2.2.0(tests/aqua.*\\.yaml)',
+    'github>suzuki-shunsuke/renovate-config:action-go-version#2.3.0',
+    'github>aquaproj/aqua-renovate-config:file#2.2.0(aqua/imports/.*\\.ya?ml)',
+    'github>aquaproj/aqua-renovate-config:installer-script#2.2.0(Dockerfile-prebuilt)',
   ],
   ignorePaths: [
-    "tests/update/**",
+    'tests/update/**',
   ],
-  regexManagers: [
+  customManagers: [
     {
-      fileMatch: [".*\\.go"],
-      depNameTemplate: "aquaproj/aqua-proxy",
-      datasourceTemplate: "github-releases",
+      customType: 'regex',
+      fileMatch: [
+        '.*\\.go',
+      ],
+      depNameTemplate: 'aquaproj/aqua-proxy',
+      datasourceTemplate: 'github-releases',
       matchStrings: [
         '"(?<currentValue>.*)" // renovate: depName=aquaproj/aqua-proxy',
       ],
     },
     {
-      fileMatch: [".*\\.go"],
-      depNameTemplate: "aquaproj/aqua-registry",
-      datasourceTemplate: "github-releases",
+      customType: 'regex',
+      fileMatch: [
+        '.*\\.go',
+      ],
+      depNameTemplate: 'aquaproj/aqua-registry',
+      datasourceTemplate: 'github-releases',
       matchStrings: [
         '"(?<currentValue>.*)",? // renovate: depName=aquaproj/aqua-registry',
       ],
     },
     {
-      fileMatch: ["^pkg/cosign/version\\.go"],
-      depNameTemplate: "sigstore/cosign",
-      datasourceTemplate: "github-releases",
+      customType: 'regex',
+      fileMatch: [
+        '^pkg/cosign/version\\.go',
+      ],
+      depNameTemplate: 'sigstore/cosign',
+      datasourceTemplate: 'github-releases',
       matchStrings: [
         'const Version = "(?<currentValue>.*)"',
       ],
     },
     {
-      fileMatch: ["^pkg/slsa/version\\.go"],
-      depNameTemplate: "slsa-framework/slsa-verifier",
-      datasourceTemplate: "github-releases",
+      customType: 'regex',
+      fileMatch: [
+        '^pkg/slsa/version\\.go',
+      ],
+      depNameTemplate: 'slsa-framework/slsa-verifier',
+      datasourceTemplate: 'github-releases',
       matchStrings: [
         'const Version = "(?<currentValue>.*)"',
       ],
