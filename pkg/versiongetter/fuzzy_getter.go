@@ -8,6 +8,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type FuzzyGetter struct {
@@ -72,7 +73,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 	version, err := g.getter.Get(ctx, logE, pkg, filters)
 	logE.Debug("retrieve package versions in ", time.Since(start))
 	if err != nil {
-		logE.WithError(err).Warn("retrieve package versions")
+		logerr.WithError(logE, err).Warn("retrieve package versions")
 		return ""
 	}
 	return version
