@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Payload struct {
@@ -38,8 +40,11 @@ func NewClient(client *http.Client) *Client {
 }
 
 func (c *Client) ListVersions(ctx context.Context, crate string) ([]string, error) {
-	versions, _, err := listInstallableVersions(ctx, c.client, fmt.Sprintf("https://crates.io/api/v1/crates/%s/versions", crate))
-	return versions, err
+	u := fmt.Sprintf("https://crates.io/api/v1/crates/%s/versions", crate)
+	versions, _, err := listInstallableVersions(ctx, c.client, u)
+	return versions, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
+		"url": u,
+	})
 }
 
 func (c *Client) GetLatestVersion(ctx context.Context, crate string) (string, error) {
@@ -60,6 +65,7 @@ func getCrate(ctx context.Context, client *http.Client, uri string) (*CratePaylo
 	if err != nil {
 		return nil, 0, fmt.Errorf("create a HTTP request: %w", err)
 	}
+	req.Header.Add("User-Agent", "aqua") // https://github.com/aquaproj/aqua/issues/2742
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, 0, fmt.Errorf("send a HTTP request: %w", err)
@@ -80,6 +86,7 @@ func listInstallableVersions(ctx context.Context, client *http.Client, uri strin
 	if err != nil {
 		return nil, 0, fmt.Errorf("create a HTTP request: %w", err)
 	}
+	req.Header.Add("User-Agent", "aqua") // https://github.com/aquaproj/aqua/issues/2742
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, 0, fmt.Errorf("send a HTTP request: %w", err)
