@@ -24,6 +24,16 @@ type GitHubTagClient interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
+func convTag(tag *github.RepositoryTag) *Release {
+	v, prefix, _ := GetVersionAndPrefix(tag.GetName())
+	return &Release{
+		Tag:           tag.GetName(),
+		Version:       v,
+		VersionPrefix: prefix,
+		Prerelease:    v.Prerelease() != "",
+	}
+}
+
 func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
@@ -36,6 +46,8 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 		logGHRateLimit(logE, respToLog)
 	}()
 
+	candidates := []*Release{}
+
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		respToLog = resp
@@ -44,8 +56,11 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 		}
 		for _, tag := range tags {
 			if filterTag(tag, filters) {
-				return tag.GetName(), nil
+				candidates = append(candidates, convTag(tag))
 			}
+		}
+		if len(candidates) > 0 {
+			return getLatestRelease(candidates).Tag, nil
 		}
 		if resp.NextPage == 0 {
 			return "", nil

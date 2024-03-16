@@ -85,7 +85,7 @@ func getLatestRelease(releases []*Release) *Release {
 	return latest
 }
 
-func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) { //nolint:cyclop
+func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 
@@ -120,18 +120,14 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 				candidates = append(candidates, convRelease(release))
 			}
 		}
-		if resp.NextPage == 0 {
-			break
-		}
 		if len(candidates) > 0 {
-			break
+			return getLatestRelease(candidates).Tag, nil
+		}
+		if resp.NextPage == 0 {
+			return "", nil
 		}
 		opt.Page = resp.NextPage
 	}
-	if len(candidates) == 0 {
-		return "", nil
-	}
-	return getLatestRelease(candidates).Tag, nil
 }
 
 func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
