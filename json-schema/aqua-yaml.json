@@ -71,6 +71,9 @@
         },
         "link": {
           "type": "string"
+        },
+        "update": {
+          "$ref": "#/$defs/Update"
         }
       },
       "additionalProperties": false,
@@ -130,6 +133,15 @@
         ]
       },
       "type": "array"
+    },
+    "Update": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     }
   }
 }
