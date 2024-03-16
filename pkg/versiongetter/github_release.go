@@ -94,17 +94,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 		logGHRateLimit(logE, respToLog)
 	}()
 
-	release, resp, err := g.gh.GetLatestRelease(ctx, repoOwner, repoName)
-	respToLog = resp
-	if err != nil {
-		return "", fmt.Errorf("get the latest GitHub Release: %w", err)
-	}
-
 	candidates := []*Release{}
-
-	if len(filters) == 0 || filterRelease(release, filters) {
-		candidates = append(candidates, convRelease(release))
-	}
 
 	opt := &github.ListOptions{
 		PerPage: 30, //nolint:gomnd
