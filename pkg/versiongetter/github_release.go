@@ -3,12 +3,14 @@ package versiongetter
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,7 +29,63 @@ type GitHubReleaseClient interface {
 	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
 }
 
-func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+type Release struct {
+	Tag           string
+	Version       *version.Version
+	VersionPrefix string
+	Prerelease    bool
+}
+
+func convRelease(release *github.RepositoryRelease) *Release {
+	v, prefix, _ := GetVersionAndPrefix(release.GetTagName())
+	return &Release{
+		Tag:           release.GetTagName(),
+		Version:       v,
+		VersionPrefix: prefix,
+		Prerelease:    release.GetPrerelease() || v.Prerelease() != "",
+	}
+}
+
+func compareRelease(latest, release *Release) bool {
+	if latest.Prerelease && !release.Prerelease {
+		return true
+	}
+	if !latest.Prerelease && release.Prerelease {
+		return false
+	}
+	if release.Version == nil {
+		if latest.Version != nil {
+			return false
+		}
+		if release.Tag > latest.Tag {
+			return true
+		}
+		return false
+	}
+	if latest.Version == nil {
+		return true
+	}
+	if release.Version.GreaterThan(latest.Version) {
+		return true
+	}
+	return false
+}
+
+func getLatestRelease(releases []*Release) *Release {
+	if len(releases) == 0 {
+		return nil
+	}
+	latest := releases[0]
+	for _, release := range releases[1:] {
+		if compareRelease(latest, release) {
+			latest = release
+			continue
+		}
+	}
+	return latest
+}
+
+func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) { //nolint:cyclop
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 
@@ -42,8 +100,10 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 		return "", fmt.Errorf("get the latest GitHub Release: %w", err)
 	}
 
+	candidates := []*Release{}
+
 	if len(filters) == 0 || filterRelease(release, filters) {
-		return release.GetTagName(), nil
+		candidates = append(candidates, convRelease(release))
 	}
 
 	opt := &github.ListOptions{
@@ -57,14 +117,21 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 		}
 		for _, release := range releases {
 			if filterRelease(release, filters) {
-				return release.GetTagName(), nil
+				candidates = append(candidates, convRelease(release))
 			}
 		}
 		if resp.NextPage == 0 {
-			return "", nil
+			break
+		}
+		if len(candidates) > 0 {
+			break
 		}
 		opt.Page = resp.NextPage
 	}
+	if len(candidates) == 0 {
+		return "", nil
+	}
+	return getLatestRelease(candidates).Tag, nil
 }
 
 func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
@@ -146,4 +213,21 @@ func filterTagByFilter(tagName string, filter *Filter) bool {
 		return true
 	}
 	return false
+}
+
+var versionPattern = regexp.MustCompile(`^(.*?)v?((?:\d+)(?:\.\d+)?(?:\.\d+)?(?:(\.|-).+)?)$`)
+
+func GetVersionAndPrefix(tag string) (*version.Version, string, error) {
+	if v, err := version.NewVersion(tag); err == nil {
+		return v, "", nil
+	}
+	a := versionPattern.FindStringSubmatch(tag)
+	if a == nil {
+		return nil, "", nil
+	}
+	v, err := version.NewVersion(a[2])
+	if err != nil {
+		return nil, "", err //nolint:wrapcheck
+	}
+	return v, a[1], nil
 }
