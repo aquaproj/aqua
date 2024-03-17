@@ -14,7 +14,28 @@ type Package struct {
 	Tags        []string `yaml:",omitempty" json:"tags,omitempty"`
 	Description string   `yaml:",omitempty" json:"description,omitempty"`
 	Link        string   `yaml:",omitempty" json:"link,omitempty"`
+	Update      *Update  `yaml:",omitempty" json:"update,omitempty"`
 	FilePath    string   `json:"-" yaml:"-"`
+}
+
+type Update struct {
+	// # If enabled is false, aqua up command ignores the package.
+	// If the package name is passed to aqua up command explicitly, enabled is ignored.
+	// By default, enabled is true.
+	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
+	// The condition of allowed version.
+	// expr https://github.com/expr-lang/expr is used.
+	// By default, all versions are allowed.
+	// The version must meet both allowed_version and types.
+	AllowedVersion string `yaml:"allowed_version,omitempty" json:"allowed_version,omitempty"`
+	// The list of allowed update types
+	// By default, all types are allowed.
+	// major, minor, patch, other
+	Types []string `yaml:",omitempty" json:"types,omitempty"`
+}
+
+func (u *Update) GetEnabled() bool {
+	return u == nil || u.Enabled == nil || *u.Enabled
 }
 
 func (p *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {

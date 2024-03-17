@@ -51,6 +51,12 @@ func (c *Controller) updatePackagesInFile(ctx context.Context, logE *logrus.Entr
 		return nil
 	}
 	for _, pkg := range pkgs {
+		if len(param.Args) == 0 && !param.Insert {
+			if !pkg.Package.Update.GetEnabled() {
+				// If the update is disabled, the package is ignored
+				continue
+			}
+		}
 		logE := logE.WithFields(logrus.Fields{
 			"package_name":    pkg.Package.Name,
 			"package_version": pkg.Package.Version,
