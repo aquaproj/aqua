@@ -57,6 +57,8 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	param.CosignDisabled = true // TODO Remove this line. https://github.com/aquaproj/aqua/issues/1665#issuecomment-2008588288
 
 	param.SLSADisabled = c.Bool("disable-slsa")
+	param.SLSADisabled = true // TODO Remove this line. https://github.com/aquaproj/aqua/issues/1665#issuecomment-2008588288
+
 	param.Limit = c.Int("limit")
 	param.SelectVersion = c.Bool("select-version")
 	param.Installed = c.Bool("installed")
