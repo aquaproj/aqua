@@ -56,16 +56,6 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		return nil
 	}
 
-	if cos.CertificateIdentity == "" && cos.CertificateIdentityRegexp == "" {
-		return errors.New("Either cosign.certificate_identity_regexp or cosign.certificate_identity is required")
-	}
-	if cos.CertificateIdentity != "" && cos.CertificateIdentityRegexp != "" {
-		return errors.New("Don't set both cosign.certificate_identity_regexp and cosign.certificate_identity")
-	}
-	if cos.CertificateOIDCIssuer == "" {
-		return errors.New("cosign.certificate_oidc_issuer is required")
-	}
-
 	opts, err := cos.RenderOpts(rt, art)
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
@@ -127,22 +117,6 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		}
 		opts = append(opts, "--certificate", certFile.Name())
 	}
-
-	if cos.CertificateIdentity != "" {
-		s, err := template.Render(cos.CertificateIdentity, art, rt)
-		if err != nil {
-			return fmt.Errorf("render a cosign option: %w", err)
-		}
-		opts = append(opts, "--certificate-identity", s)
-	}
-	if cos.CertificateIdentityRegexp != "" {
-		s, err := template.Render(cos.CertificateIdentityRegexp, art, rt)
-		if err != nil {
-			return fmt.Errorf("render a cosign option: %w", err)
-		}
-		opts = append(opts, "--certificate-identity-regexp", s)
-	}
-	opts = append(opts, "--certificate-oidc-issuer", cos.CertificateOIDCIssuer)
 
 	if err := v.verify(ctx, logE, &ParamVerify{
 		Opts:   opts,

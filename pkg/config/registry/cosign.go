@@ -8,14 +8,11 @@ import (
 )
 
 type Cosign struct {
-	Enabled                   *bool           `json:"enabled,omitempty"`
-	Opts                      []string        `json:"opts,omitempty"`
-	Signature                 *DownloadedFile `json:"signature,omitempty"`
-	Certificate               *DownloadedFile `json:"certificate,omitempty"`
-	Key                       *DownloadedFile `json:"key,omitempty"`
-	CertificateIdentityRegexp string          `yaml:"certificate_identity_regexp,omitempty" json:"certificate_identity_regexp,omitempty"`
-	CertificateIdentity       string          `yaml:"certificate_identity,omitempty" json:"certificate_identity,omitempty"`
-	CertificateOIDCIssuer     string          `yaml:"certificate_oidc_issuer,omitempty" json:"certificate_oidc_issuer,omitempty"`
+	Enabled     *bool           `json:"enabled,omitempty"`
+	Opts        []string        `json:"opts,omitempty"`
+	Signature   *DownloadedFile `json:"signature,omitempty"`
+	Certificate *DownloadedFile `json:"certificate,omitempty"`
+	Key         *DownloadedFile `json:"key,omitempty"`
 }
 
 type DownloadedFile struct {
