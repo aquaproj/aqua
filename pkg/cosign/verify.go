@@ -164,16 +164,6 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
-	// cosign verify-blob \
-	//   --signature "" \
-	//   --key "" \
-	//   --certificate "" \
-
-	//   --certificate-identity "https://github.com/aquaproj/aqua/.github/workflows/release.yml@refs/tags/__VERSION__" \
-	//   --certificate-identity-regexp 'https://github\.com/aquaproj/aqua/\.github/workflows/.+'
-
-	//   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-	//   ""
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
