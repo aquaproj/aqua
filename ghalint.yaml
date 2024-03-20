@@ -10,3 +10,9 @@ excludes:
   - policy_name: job_secrets
     workflow_file_path: .github/workflows/windows-test.yaml
     job_name: integration-test-windows-pwsh
+  - policy_name: action_ref_should_be_full_length_commit_sha
+    action_name: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml
+  - policy_name: action_ref_should_be_full_length_commit_sha
+    action_name: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml
+  - policy_name: action_ref_should_be_full_length_commit_sha
+    action_name: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml
