@@ -3,6 +3,7 @@ name: ghalint
 on: workflow_call
 env:
   AQUA_LOG_COLOR: always
+  AQUA_DISABLE_COSIGN: "true"
 jobs:
   ghalint:
     # Validate GitHub Actions Workflows by ghalint.
