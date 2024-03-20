@@ -1,6 +1,8 @@
 ---
 name: integration-test
 on: workflow_call
+env:
+  AQUA_DISABLE_COSIGN: "true"
 jobs:
   integration-test:
     runs-on: ubuntu-latest
