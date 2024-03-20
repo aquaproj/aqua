@@ -16,3 +16,5 @@ excludes:
     action_name: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml
   - policy_name: action_ref_should_be_full_length_commit_sha
     action_name: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml
+  - policy_name: action_ref_should_be_full_length_commit_sha
+    action_name: aquaproj/update-checksum-workflow/.github/workflows/update-checksum.yaml
