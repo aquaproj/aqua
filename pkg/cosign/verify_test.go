@@ -57,7 +57,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			cos: &registry.Cosign{
-				CosignExperimental: true,
 				Opts: []string{
 					"--signature",
 					"https://github.com/aquaproj/aqua-installer/releases/download/{{.Version}}/aqua-installer.sig",
@@ -96,7 +95,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			cos: &registry.Cosign{
-				CosignExperimental: true,
 				Signature: &registry.DownloadedFile{
 					Type:  "github_release",
 					Asset: ptr.String("aqua-installer.sig"),

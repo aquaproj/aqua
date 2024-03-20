@@ -20,10 +20,9 @@ func (p *Package) RenderCosign(cos *registry.Cosign, rt *runtime.Runtime) (*regi
 	}
 
 	return &registry.Cosign{
-		CosignExperimental: cos.CosignExperimental,
-		Signature:          cos.Signature,
-		Certificate:        cos.Certificate,
-		Key:                cos.Key,
-		Opts:               opts,
+		Signature:   cos.Signature,
+		Certificate: cos.Certificate,
+		Key:         cos.Key,
+		Opts:        opts,
 	}, nil
 }

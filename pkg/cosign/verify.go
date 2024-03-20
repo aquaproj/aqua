@@ -55,6 +55,17 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		logE.Debug("verification with cosign is disabled")
 		return nil
 	}
+
+	if cos.CertificateIdentity == "" && cos.CertificateIdentityRegexp == "" {
+		return errors.New("Either cosign.certificate_identity_regexp or cosign.certificate_identity is required")
+	}
+	if cos.CertificateIdentity != "" && cos.CertificateIdentityRegexp != "" {
+		return errors.New("Don't set both cosign.certificate_identity_regexp and cosign.certificate_identity")
+	}
+	if cos.CertificateOIDCIssuer == "" {
+		return errors.New("cosign.certificate_oidc_issuer is required")
+	}
+
 	opts, err := cos.RenderOpts(rt, art)
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
@@ -117,15 +128,29 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		opts = append(opts, "--certificate", certFile.Name())
 	}
 
+	if cos.CertificateIdentity != "" {
+		s, err := template.Render(cos.CertificateIdentity, art, rt)
+		if err != nil {
+			return fmt.Errorf("render a cosign option: %w", err)
+		}
+		opts = append(opts, "--certificate-identity", s)
+	}
+	if cos.CertificateIdentityRegexp != "" {
+		s, err := template.Render(cos.CertificateIdentityRegexp, art, rt)
+		if err != nil {
+			return fmt.Errorf("render a cosign option: %w", err)
+		}
+		opts = append(opts, "--certificate-identity-regexp", s)
+	}
+	opts = append(opts, "--certificate-oidc-issuer", cos.CertificateOIDCIssuer)
+
 	if err := v.verify(ctx, logE, &ParamVerify{
-		Opts:               opts,
-		CosignExperimental: cos.CosignExperimental,
-		Target:             verifiedFilePath,
+		Opts:   opts,
+		Target: verifiedFilePath,
 	}); err != nil {
 		return fmt.Errorf("verify a signature file with Cosign: %w", logerr.WithFields(err, logrus.Fields{
-			"cosign_opts":         strings.Join(opts, ", "),
-			"cosign_experimental": cos.CosignExperimental,
-			"target":              verifiedFilePath,
+			"cosign_opts": strings.Join(opts, ", "),
+			"target":      verifiedFilePath,
 		}))
 	}
 	return nil
@@ -136,19 +161,18 @@ type Executor interface {
 }
 
 type ParamVerify struct {
-	CosignExperimental bool
-	Opts               []string
-	Target             string
-	CosignExePath      string
+	Opts          []string
+	Target        string
+	CosignExePath string
 }
 
 var errVerify = errors.New("verify with Cosign")
 
-func (v *Verifier) exec(ctx context.Context, args, envs []string) (string, error) {
+func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := v.executor.ExecWithEnvsAndGetCombinedOutput(ctx, v.cosignExePath, args, envs)
+	out, _, err := v.executor.ExecWithEnvsAndGetCombinedOutput(ctx, v.cosignExePath, args, nil)
 	return out, err //nolint:wrapcheck
 }
 
@@ -166,14 +190,20 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
-	envs := []string{}
-	if param.CosignExperimental {
-		envs = []string{"COSIGN_EXPERIMENTAL=1"}
-	}
+	// cosign verify-blob \
+	//   --signature "" \
+	//   --key "" \
+	//   --certificate "" \
+
+	//   --certificate-identity "https://github.com/aquaproj/aqua/.github/workflows/release.yml@refs/tags/__VERSION__" \
+	//   --certificate-identity-regexp 'https://github\.com/aquaproj/aqua/\.github/workflows/.+'
+
+	//   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+	//   ""
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
-		if _, err := v.exec(ctx, args, envs); err == nil {
+		if _, err := v.exec(ctx, args); err == nil {
 			return nil
 		}
 		if i == 4 { //nolint:gomnd
