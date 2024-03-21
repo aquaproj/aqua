@@ -1,4 +1,2 @@
 packages:
-  - name: sigstore/cosign@v1.13.2
-    update:
-      enabled: false
+  - name: sigstore/cosign@v2.2.3

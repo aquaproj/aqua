@@ -8,12 +8,11 @@ import (
 )
 
 type Cosign struct {
-	Enabled            *bool           `json:"enabled,omitempty"`
-	CosignExperimental bool            `yaml:"cosign_experimental" json:"cosign_experimental,omitempty"`
-	Opts               []string        `json:"opts,omitempty"`
-	Signature          *DownloadedFile `json:"signature,omitempty"`
-	Certificate        *DownloadedFile `json:"certificate,omitempty"`
-	Key                *DownloadedFile `json:"key,omitempty"`
+	Enabled     *bool           `json:"enabled,omitempty"`
+	Opts        []string        `json:"opts,omitempty"`
+	Signature   *DownloadedFile `json:"signature,omitempty"`
+	Certificate *DownloadedFile `json:"certificate,omitempty"`
+	Key         *DownloadedFile `json:"key,omitempty"`
 }
 
 type DownloadedFile struct {
@@ -31,7 +30,7 @@ func (c *Cosign) GetEnabled() bool {
 	if c.Enabled != nil {
 		return *c.Enabled
 	}
-	return len(c.Opts) != 0 || c.Signature != nil || c.Certificate != nil || c.Key != nil || c.CosignExperimental
+	return len(c.Opts) != 0 || c.Signature != nil || c.Certificate != nil || c.Key != nil
 }
 
 func (c *Cosign) RenderOpts(rt *runtime.Runtime, art *template.Artifact) ([]string, error) {
