@@ -9,7 +9,7 @@ on:
         required: true
 jobs:
   go-mod-tidy:
-    uses: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml@8facac38f5b2008648c14e31c632c3a709439b9c # v0.1.1
+    uses: suzuki-shunsuke/go-mod-tidy-workflow/.github/workflows/go-mod-tidy.yaml@a5c2fa84515541e6abd8d746d948e251400404a6 # v0.1.2
     with:
       go-version: 1.22.1
       aqua_version: v2.25.0
