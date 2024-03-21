@@ -55,6 +55,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		logE.Debug("verification with cosign is disabled")
 		return nil
 	}
+
 	opts, err := cos.RenderOpts(rt, art)
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
@@ -118,14 +119,12 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 	}
 
 	if err := v.verify(ctx, logE, &ParamVerify{
-		Opts:               opts,
-		CosignExperimental: cos.CosignExperimental,
-		Target:             verifiedFilePath,
+		Opts:   opts,
+		Target: verifiedFilePath,
 	}); err != nil {
 		return fmt.Errorf("verify a signature file with Cosign: %w", logerr.WithFields(err, logrus.Fields{
-			"cosign_opts":         strings.Join(opts, ", "),
-			"cosign_experimental": cos.CosignExperimental,
-			"target":              verifiedFilePath,
+			"cosign_opts": strings.Join(opts, ", "),
+			"target":      verifiedFilePath,
 		}))
 	}
 	return nil
@@ -136,19 +135,18 @@ type Executor interface {
 }
 
 type ParamVerify struct {
-	CosignExperimental bool
-	Opts               []string
-	Target             string
-	CosignExePath      string
+	Opts          []string
+	Target        string
+	CosignExePath string
 }
 
 var errVerify = errors.New("verify with Cosign")
 
-func (v *Verifier) exec(ctx context.Context, args, envs []string) (string, error) {
+func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := v.executor.ExecWithEnvsAndGetCombinedOutput(ctx, v.cosignExePath, args, envs)
+	out, _, err := v.executor.ExecWithEnvsAndGetCombinedOutput(ctx, v.cosignExePath, args, nil)
 	return out, err //nolint:wrapcheck
 }
 
@@ -166,14 +164,10 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
-	envs := []string{}
-	if param.CosignExperimental {
-		envs = []string{"COSIGN_EXPERIMENTAL=1"}
-	}
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := 0; i < 5; i++ {
 		// https://github.com/aquaproj/aqua/issues/1554
-		if _, err := v.exec(ctx, args, envs); err == nil {
+		if _, err := v.exec(ctx, args); err == nil {
 			return nil
 		}
 		if i == 4 { //nolint:gomnd
