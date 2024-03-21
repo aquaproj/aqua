@@ -42,7 +42,7 @@ func convRelease(release *github.RepositoryRelease) *Release {
 		Tag:           release.GetTagName(),
 		Version:       v,
 		VersionPrefix: prefix,
-		Prerelease:    release.GetPrerelease() || v.Prerelease() != "",
+		Prerelease:    release.GetPrerelease() || (v != nil && v.Prerelease() != ""),
 	}
 }
 
