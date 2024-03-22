@@ -9,5 +9,5 @@ WORKDIR /home/foo/workspace
 RUN curl -sSfL -O https://raw.githubusercontent.com/aquaproj/aqua-installer/v2.3.2/aqua-installer
 RUN echo "63054c35389e9297d808880d6d01de579061a1cf09f78344ee67d0dcde2cfcb6  aqua-installer" | sha256sum -c
 RUN chmod +x aqua-installer
-RUN ./aqua-installer -v "v2.25.0"
+RUN ./aqua-installer -v "v2.25.1"
 ENV PATH=/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
