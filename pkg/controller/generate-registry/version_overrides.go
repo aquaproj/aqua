@@ -74,7 +74,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 	})
 	for _, release := range releases {
 		pkgInfo := &registry.PackageInfo{
-			Type:      "github_release",
+			Type:      pkgInfo.Type,
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 		}

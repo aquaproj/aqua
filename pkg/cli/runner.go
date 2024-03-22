@@ -43,6 +43,7 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	param.ConfigFilePath = c.String("config")
 	param.Dest = c.String("o")
 	param.OutTestData = c.String("out-testdata")
+	param.Type = c.String("type")
 	param.OnlyLink = c.Bool("only-link")
 	if commandName == "generate-registry" {
 		param.InsertFile = c.String("i")

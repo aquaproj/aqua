@@ -253,6 +253,7 @@ type Param struct {
 	Dest                  string
 	HomeDir               string
 	OutTestData           string
+	Type                  string
 	Limit                 int
 	MaxParallelism        int
 	Args                  []string
