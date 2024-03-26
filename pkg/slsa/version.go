@@ -1,6 +1,6 @@
 package slsa
 
-const Version = "v2.4.1"
+const Version = "v2.5.1"
 
 func Checksums() map[string]string {
 	return map[string]string{
