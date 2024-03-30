@@ -30,7 +30,7 @@ func ParseGlobalConfigFilePaths(pwd, env string) []string {
 			continue
 		}
 		s = filepath.Clean(s)
-		if filepath.IsAbs(s) {
+		if !filepath.IsAbs(s) {
 			s = filepath.Join(pwd, s)
 		}
 		if _, ok := m[s]; ok {
