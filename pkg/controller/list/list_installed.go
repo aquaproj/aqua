@@ -2,7 +2,6 @@ package list
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -32,10 +31,6 @@ func (c *Controller) listInstalled(param *config.Param, logE *logrus.Entry) erro
 
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		logE := logE.WithField("config_file_path", cfgFilePath)
-		if !filepath.IsAbs(cfgFilePath) {
-			cfgFilePath = filepath.Join(param.PWD, cfgFilePath)
-		}
-
 		if _, ok := cfgFileMap[cfgFilePath]; ok {
 			continue
 		}

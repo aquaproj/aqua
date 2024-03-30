@@ -26,11 +26,12 @@ func TestParseGlobalConfigFilePaths(t *testing.T) {
 			exp:  []string{"/foo/bar", "/yoo"},
 		},
 	}
+	pwd := "/home/foo"
 	for _, d := range data {
 		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			paths := finder.ParseGlobalConfigFilePaths(d.env)
+			paths := finder.ParseGlobalConfigFilePaths(pwd, d.env)
 			if !reflect.DeepEqual(d.exp, paths) {
 				t.Fatalf("wanted %+v, got %+v", d.exp, paths)
 			}
