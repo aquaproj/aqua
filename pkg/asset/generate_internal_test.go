@@ -50,7 +50,6 @@ func Test_mergeReplacements(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			m, f := mergeReplacements(d.goos, d.m1, d.m2)
@@ -156,7 +155,6 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			m, overrides := normalizeOverridesByReplacements(&registry.PackageInfo{

@@ -28,7 +28,6 @@ func Test_Exclude(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			f := asset.Exclude(d.pkgName, d.assetName)

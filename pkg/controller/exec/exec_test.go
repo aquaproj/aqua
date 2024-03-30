@@ -133,7 +133,6 @@ packages:
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files, d.dirs...)
@@ -218,7 +217,6 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		b.Run("normal", func(b *testing.B) {
 			tempDir := b.TempDir()
 			d.param.ConfigFilePath = filepath.Join(tempDir, "aqua.yaml")

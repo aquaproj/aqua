@@ -52,7 +52,6 @@ func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()

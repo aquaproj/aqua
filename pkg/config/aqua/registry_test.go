@@ -76,7 +76,6 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if err := d.registry.Validate(); err != nil {
@@ -128,7 +127,6 @@ func TestRegistry_FilePath(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			p, err := d.registry.FilePath(d.rootDir, d.cfgFilePath)

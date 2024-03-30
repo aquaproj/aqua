@@ -93,7 +93,6 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			checksumID, err := d.pkg.ChecksumID(d.rt)
@@ -184,7 +183,6 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			checksumID, err := d.pkg.ChecksumIDFromAsset(d.asset)
@@ -238,7 +236,6 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			checksumFileName, err := d.pkg.RenderChecksumFileName(d.rt)
@@ -292,7 +289,6 @@ func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			u, err := d.pkg.RenderChecksumURL(d.rt)

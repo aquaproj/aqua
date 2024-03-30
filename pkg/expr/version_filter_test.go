@@ -25,7 +25,6 @@ func TestCompileVersionFilter(t *testing.T) {
 	}
 
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			prog, err := expr.CompileVersionFilter(d.versionFilter)

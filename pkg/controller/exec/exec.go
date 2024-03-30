@@ -91,7 +91,7 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 	}); err != nil {
 		return fmt.Errorf("install the package: %w", err)
 	}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		logE.Debug("check if exec file exists")
 		if fi, err := c.fs.Stat(findResult.ExePath); err == nil {
 			if osfile.IsOwnerExecutable(fi.Mode()) {
@@ -140,7 +140,7 @@ func (c *Controller) execCommand(ctx context.Context, exePath string, args ...st
 }
 
 func (c *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath string, args ...string) error {
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		logE.Debug("execute the command")
 		retried, err := c.execCommand(ctx, exePath, args...)
 		if !retried {

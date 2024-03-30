@@ -95,7 +95,6 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			b, err := d.pkgInfo.CheckSupported(d.rt, d.rt.Env())

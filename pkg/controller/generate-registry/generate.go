@@ -204,7 +204,7 @@ func (c *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entry, 
 		PerPage: 100, //nolint:gomnd
 	}
 	var arr []*github.ReleaseAsset
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		assets, _, err := c.github.ListReleaseAssets(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, releaseID, opts)
 		if err != nil {
 			logE.WithFields(logrus.Fields{

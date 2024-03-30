@@ -17,7 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
+func Test_installer_InstallAqua(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name               string
@@ -58,7 +58,6 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)

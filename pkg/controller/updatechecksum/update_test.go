@@ -185,7 +185,6 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registDownloader)

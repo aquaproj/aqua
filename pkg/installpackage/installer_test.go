@@ -173,7 +173,6 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)
@@ -255,7 +254,6 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)

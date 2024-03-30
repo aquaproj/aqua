@@ -37,7 +37,6 @@ func TestValidator_Allow(t *testing.T) { //nolint:dupl
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()
@@ -90,7 +89,6 @@ func TestValidator_Deny(t *testing.T) { //nolint:dupl
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()
@@ -144,7 +142,6 @@ func TestValidator_Warn(t *testing.T) {
 	}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()
@@ -169,7 +166,7 @@ func TestValidator_Warn(t *testing.T) {
 	}
 }
 
-func TestValidator_Validate(t *testing.T) { //nolint:funlen
+func TestValidator_Validate(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name           string
@@ -208,7 +205,6 @@ func TestValidator_Validate(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()

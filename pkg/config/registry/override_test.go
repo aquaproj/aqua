@@ -110,7 +110,6 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 	}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			pkgInfo, err := d.pkgInfo.Override(logE, d.version, d.rt)
@@ -171,7 +170,6 @@ func TestOverride_Match(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if f := d.override.Match(d.rt); f != d.exp {

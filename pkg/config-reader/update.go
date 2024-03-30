@@ -23,7 +23,6 @@ func (r *ConfigReader) ReadToUpdate(configFilePath string, cfg *aqua.Config) (ma
 	}
 	var configFileDir string
 	for _, rgst := range cfg.Registries {
-		rgst := rgst
 		if rgst.Type == "local" {
 			if strings.HasPrefix(rgst.Path, homePrefix) {
 				if r.homeDir == "" {

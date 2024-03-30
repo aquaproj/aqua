@@ -379,7 +379,6 @@ packages:
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)

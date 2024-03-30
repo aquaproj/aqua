@@ -42,7 +42,6 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			assetID, err := getAssetIDFromAssets(d.assets, d.assetName)
