@@ -79,7 +79,6 @@ packages:
 	}
 
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			cfg := &aqua.Config{}

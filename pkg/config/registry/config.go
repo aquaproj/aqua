@@ -26,7 +26,6 @@ func (p *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[stri
 	logE = logE.WithField("package_name", "")
 	for _, pkgInfo := range *p {
 		logE := logE
-		pkgInfo := pkgInfo
 		if pkgInfo == nil {
 			logE.Log(logLevel, "ignore an empty package")
 			continue

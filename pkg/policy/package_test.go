@@ -80,7 +80,6 @@ func TestValidatePackage(t *testing.T) { //nolint:funlen
 	}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			if err := policy.ValidatePackage(logE, d.pkg, d.policies); err != nil {

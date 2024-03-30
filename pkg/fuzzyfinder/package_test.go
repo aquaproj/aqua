@@ -95,7 +95,6 @@ func TestPackage_Item(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			s := d.pkg.Item()

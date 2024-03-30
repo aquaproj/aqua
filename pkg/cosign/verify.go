@@ -165,7 +165,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 
 func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		// https://github.com/aquaproj/aqua/issues/1554
 		if _, err := v.exec(ctx, args); err == nil {
 			return nil

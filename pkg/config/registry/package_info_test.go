@@ -33,7 +33,6 @@ func TestPackageInfo_GetName(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if name := d.pkgInfo.GetName(); name != d.exp {
@@ -69,7 +68,6 @@ func TestPackageInfo_GetLink(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if link := d.pkgInfo.GetLink(); link != d.exp {
@@ -100,7 +98,6 @@ func TestPackageInfo_GetFormat(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if format := d.pkgInfo.GetFormat(); format != d.exp {
@@ -167,7 +164,6 @@ func TestPackageInfo_GetFiles(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			files := d.pkgInfo.GetFiles()
@@ -272,7 +268,6 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if err := d.pkgInfo.Validate(); err != nil {

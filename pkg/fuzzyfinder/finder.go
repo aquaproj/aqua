@@ -59,7 +59,7 @@ func formatLine(line string, w int) string {
 	lineWidth := w - len([]rune("\n"))
 	numOfLines := (lenDescRune / lineWidth) + 1
 	descArr := make([]string, numOfLines)
-	for i := 0; i < numOfLines; i++ {
+	for i := range numOfLines {
 		start := i * lineWidth
 		end := start + lineWidth
 		if i == numOfLines-1 {

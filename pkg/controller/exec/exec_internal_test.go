@@ -27,7 +27,6 @@ func TestController_execCommand(t *testing.T) {
 	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			ctrl := &Controller{

@@ -50,7 +50,6 @@ func Test_fromURL(t *testing.T) { //nolint:funlen
 	}
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			httpDownloader := NewHTTPDownloader(d.httpClient)

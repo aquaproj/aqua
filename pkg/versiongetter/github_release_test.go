@@ -51,7 +51,6 @@ func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
 
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ghReleaseClient := versiongetter.NewMockGitHubReleaseClient(d.releases)
@@ -139,7 +138,6 @@ body(v1)`,
 
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ghReleaseClient := versiongetter.NewMockGitHubReleaseClient(d.releases)

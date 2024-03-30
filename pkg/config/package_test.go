@@ -122,7 +122,6 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 	}
 	rt := runtime.New()
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if d.rt == nil {
@@ -209,7 +208,6 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 	}
 	rt := runtime.New()
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			pkgPath, err := d.pkg.PkgPath(rootDir, rt)

@@ -25,7 +25,6 @@ func Test_parsePkgName(t *testing.T) {
 	}
 
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			r, p := parsePkgName(d.input)

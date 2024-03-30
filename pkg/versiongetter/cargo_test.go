@@ -42,7 +42,6 @@ func TestCargoVersionGetter_Get(t *testing.T) {
 
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)
@@ -105,7 +104,6 @@ func TestCargoVersionGetter_List(t *testing.T) {
 
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)

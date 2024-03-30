@@ -163,7 +163,6 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 		GOARCH: "amd64",
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)

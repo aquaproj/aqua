@@ -51,7 +51,6 @@ func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
@@ -121,7 +120,6 @@ func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)

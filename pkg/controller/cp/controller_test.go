@@ -70,7 +70,6 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockReader{})

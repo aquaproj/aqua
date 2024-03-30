@@ -83,7 +83,7 @@ func reverse(versions []string) {
 	// sort.Reverse doesn't work well.
 	// https://qiita.com/shibukawa/items/0e6e01dc41c352ccedb5
 	size := len(versions)
-	for i := 0; i < size/2; i++ {
+	for i := range size / 2 {
 		versions[i], versions[size-i-1] = versions[size-i-1], versions[i]
 	}
 }

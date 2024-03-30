@@ -22,7 +22,6 @@ func TestExt(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ext := osfile.Ext(d.s, d.version)
