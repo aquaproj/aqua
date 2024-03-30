@@ -66,7 +66,6 @@ func Test_getUnarchiver(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			unarchiver := New(d.executor, afero.NewMemMapFs())

@@ -30,7 +30,6 @@ func TestMockLinker_Lstat(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			linker := installpackage.NewMockLinker(afero.NewMemMapFs())
@@ -78,7 +77,6 @@ func TestMockLinker_Readlink(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			linker := installpackage.NewMockLinker(afero.NewMemMapFs())

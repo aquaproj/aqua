@@ -50,7 +50,6 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			pkgInfo := d.pkgInfo.overrideVersion(d.child)
@@ -123,7 +122,6 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 	}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			pkgInfo, err := d.pkgInfo.SetVersion(logE, d.version)

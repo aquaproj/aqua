@@ -24,7 +24,6 @@ func TestExecutorExec(t *testing.T) {
 	executor := exec.New()
 	ctx := context.Background()
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			exitCode, err := executor.Exec(ctx, d.exePath, d.args...)

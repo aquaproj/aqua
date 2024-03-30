@@ -31,7 +31,6 @@ func TestGetMaxParallelism(t *testing.T) {
 	}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			maxParallelism := config.GetMaxParallelism(d.envMaxParallelism, logE)

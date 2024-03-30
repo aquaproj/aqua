@@ -56,7 +56,6 @@ func Test_evaluateBool(t *testing.T) { //nolint:funlen
 	}
 
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			b, err := evaluateBool(d.expression, d.env, d.input)

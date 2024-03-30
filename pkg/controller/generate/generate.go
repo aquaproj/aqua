@@ -129,7 +129,6 @@ func (c *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*
 	for registryName, registryContent := range registryContents {
 		logE := logE.WithField("registry_name", registryName)
 		for pkgName, pkg := range registryContent.PackageInfos.ToMap(logE) {
-			pkg := pkg
 			logE := logE.WithField("package_name", pkgName)
 			m[registryName+","+pkgName] = &fuzzyfinder.Package{
 				PackageInfo:  pkg,

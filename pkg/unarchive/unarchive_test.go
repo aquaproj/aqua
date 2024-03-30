@@ -55,7 +55,6 @@ func TestIsUnarchived(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			f := unarchive.IsUnarchived(d.archiveType, d.assetName)
@@ -108,7 +107,6 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 	httpDownloader := download.NewHTTPDownloader(http.DefaultClient)
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewOsFs()

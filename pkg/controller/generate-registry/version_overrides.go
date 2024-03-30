@@ -114,7 +114,7 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 
 	var arr []*github.RepositoryRelease
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		releases, resp, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{

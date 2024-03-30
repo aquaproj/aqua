@@ -85,7 +85,6 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			if err := d.cfg.Init(); err != nil {

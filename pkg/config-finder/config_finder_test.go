@@ -27,7 +27,6 @@ func TestParseGlobalConfigFilePaths(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			paths := finder.ParseGlobalConfigFilePaths(d.env)
@@ -82,7 +81,6 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)
@@ -152,7 +150,6 @@ func Test_configFinderFinds(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)

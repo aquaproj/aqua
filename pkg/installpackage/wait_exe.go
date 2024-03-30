@@ -12,7 +12,7 @@ import (
 )
 
 func (is *Installer) WaitExe(ctx context.Context, logE *logrus.Entry, exePath string) error {
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		logE.Debug("check if exec file exists")
 		if fi, err := is.fs.Stat(exePath); err == nil {
 			if osfile.IsOwnerExecutable(fi.Mode()) {

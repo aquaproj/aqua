@@ -40,7 +40,6 @@ func TestChecksums_Get(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			checksums := checksum.New()
@@ -78,7 +77,6 @@ func TestChecksums_ReadFile(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.m)
@@ -120,7 +118,6 @@ func TestChecksums_UpdateFile(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs := afero.NewMemMapFs()
@@ -195,7 +192,6 @@ func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) { //nolint:funlen
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files)

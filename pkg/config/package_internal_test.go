@@ -166,7 +166,6 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 	}
 	rt := runtime.New()
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if d.rt == nil {

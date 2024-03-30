@@ -72,7 +72,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		"--source-tag",
 		param.SourceTag,
 	}
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if _, err := e.exec(ctx, args); err == nil {
 			return nil
 		}

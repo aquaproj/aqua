@@ -72,7 +72,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			verifier := slsa.New(d.downloader, d.fs, d.exe)

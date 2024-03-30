@@ -87,7 +87,6 @@ packages:
 	ctx := context.Background()
 	registryDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 	for _, d := range data {
-		d := d
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			fs, err := testutil.NewFs(d.files, d.dirs...)
