@@ -2,6 +2,7 @@ package list
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -10,7 +11,14 @@ import (
 )
 
 func (c *Controller) listInstalled(param *config.Param, logE *logrus.Entry) error {
-	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+	cfgFilePaths := c.configFinder.Finds(param.PWD, param.ConfigFilePath)
+	cfgFileMap := map[string]struct{}{}
+	for _, cfgFilePath := range cfgFilePaths {
+		if _, ok := cfgFileMap[cfgFilePath]; ok {
+			continue
+		}
+		cfgFileMap[cfgFilePath] = struct{}{}
+
 		if err := c.listInstalledByConfig(cfgFilePath); err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"config_file_path": cfgFilePath,
@@ -24,6 +32,15 @@ func (c *Controller) listInstalled(param *config.Param, logE *logrus.Entry) erro
 
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		logE := logE.WithField("config_file_path", cfgFilePath)
+		if !filepath.IsAbs(cfgFilePath) {
+			cfgFilePath = filepath.Join(param.PWD, cfgFilePath)
+		}
+
+		if _, ok := cfgFileMap[cfgFilePath]; ok {
+			continue
+		}
+		cfgFileMap[cfgFilePath] = struct{}{}
+
 		logE.Debug("checking a global configuration file")
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
