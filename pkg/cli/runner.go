@@ -36,6 +36,10 @@ type LDFlags struct {
 }
 
 func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error { //nolint:funlen,cyclop
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get the current directory: %w", err)
+	}
 	param.Args = c.Args().Slice()
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
@@ -72,15 +76,11 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	log.SetLevel(param.LogLevel, logE)
 	log.SetColor(param.LogColor, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
-	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(os.Getenv("AQUA_GLOBAL_CONFIG"))
+	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = c.Bool("deep")
 	param.Pin = c.Bool("pin")
 	param.OnlyPackage = c.Bool("only-package")
 	param.OnlyRegistry = c.Bool("only-registry")
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("get the current directory: %w", err)
-	}
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))

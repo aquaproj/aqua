@@ -21,13 +21,17 @@ func NewConfigFinder(fs afero.Fs) *ConfigFinder {
 	}
 }
 
-func ParseGlobalConfigFilePaths(env string) []string {
+func ParseGlobalConfigFilePaths(pwd, env string) []string {
 	src := filepath.SplitList(env)
 	paths := make([]string, 0, len(src))
 	m := make(map[string]struct{}, len(src))
 	for _, s := range src {
 		if s == "" {
 			continue
+		}
+		s = filepath.Clean(s)
+		if !filepath.IsAbs(s) {
+			s = filepath.Join(pwd, s)
 		}
 		if _, ok := m[s]; ok {
 			continue
