@@ -7,7 +7,6 @@
 
 #
 
-[![Build Status](https://github.com/aquaproj/aqua/workflows/test/badge.svg)](https://github.com/aquaproj/aqua/actions)
 [![GitHub last commit](https://img.shields.io/github/last-commit/aquaproj/aqua.svg)](https://github.com/aquaproj/aqua)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/aquaproj/aqua/main/LICENSE)
 
