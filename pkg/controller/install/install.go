@@ -95,7 +95,7 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePat
 	}
 
 	var checksums *checksum.Checksums
-	if cfg.ChecksumEnabled() {
+	if cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
 		checksums = checksum.New()
 		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 		if err != nil {

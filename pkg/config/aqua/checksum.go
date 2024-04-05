@@ -2,14 +2,20 @@ package aqua
 
 import "github.com/aquaproj/aqua/v2/pkg/config/registry"
 
-func (c *Config) ChecksumEnabled() bool {
-	if c == nil {
-		return false
+func (c *Config) ChecksumEnabled(enforceValue, defValue bool) bool {
+	if enforceValue {
+		return true
+	}
+	if c == nil || c.Checksum == nil || c.Checksum.Enabled == nil {
+		return defValue
 	}
 	return c.Checksum.GetEnabled()
 }
 
-func (c *Config) RequireChecksum(defValue bool) bool {
+func (c *Config) RequireChecksum(enforceValue, defValue bool) bool {
+	if enforceValue {
+		return true
+	}
 	if c == nil || c.Checksum == nil || c.Checksum.RequireChecksum == nil {
 		return defValue
 	}
