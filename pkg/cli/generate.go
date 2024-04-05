@@ -108,6 +108,14 @@ $ aqua g -detail cli/cli
 - name: cli/cli@v2.2.0
   description: GitHub’s official command line tool
   link: https://github.com/cli/cli
+
+With -g option, aqua reads a first global configuration file.
+
+$ aqua g -g cli/cli
+
+You can add packages to a first global configuration file with -g and -i option.
+
+$ aqua g -g -i cli/cli
 `
 
 func (r *Runner) newGenerateCommand() *cli.Command {
