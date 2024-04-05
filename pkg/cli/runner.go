@@ -54,6 +54,7 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 		param.Insert = c.Bool("i")
 	}
 	param.All = c.Bool("all")
+	param.Global = c.Bool("g")
 	param.Detail = c.Bool("detail")
 	param.Prune = c.Bool("prune")
 	param.CosignDisabled = c.Bool("disable-cosign")

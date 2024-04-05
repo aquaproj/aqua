@@ -34,9 +34,9 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	//       merge version with package name
 	//       set default value
 	//   Output to Stdout or Update aqua.yaml (-i)
-	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+	cfgFilePath, err := c.getConfigFile(param)
 	if err != nil {
-		return err //nolint:wrapcheck
+		return err
 	}
 
 	cfg := &aqua.Config{}
@@ -59,6 +59,16 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 		List:           list,
 		ConfigFilePath: cfgFilePath,
 	})
+}
+
+func (c *Controller) getConfigFile(param *config.Param) (string, error) {
+	if param.ConfigFilePath != "" || !param.Global {
+		return c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...) //nolint:wrapcheck
+	}
+	if len(param.GlobalConfigFilePaths) == 0 {
+		return "", errors.New("no global configuration file is found")
+	}
+	return param.GlobalConfigFilePaths[0], nil
 }
 
 func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {

@@ -261,6 +261,7 @@ type Param struct {
 	DisableLazyInstall    bool
 	OnlyLink              bool
 	All                   bool
+	Global                bool
 	Insert                bool
 	SelectVersion         bool
 	ShowVersion           bool
