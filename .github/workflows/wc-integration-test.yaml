@@ -49,6 +49,10 @@ jobs:
         run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
+      - name: Test g -g
+        run: aqua g -g cli/cli
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: Test version_prefix
         run: aqua -c aqua.yaml g -i kubernetes-sigs/kustomize
