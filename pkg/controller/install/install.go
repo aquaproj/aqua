@@ -117,15 +117,16 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePat
 	}
 
 	return c.packageInstaller.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
-		Config:          cfg,
-		Registries:      registryContents,
-		ConfigFilePath:  cfgFilePath,
-		SkipLink:        c.skipLink,
-		Tags:            c.tags,
-		ExcludedTags:    c.excludedTags,
-		PolicyConfigs:   policyConfigs,
-		Checksums:       checksums,
-		RequireChecksum: c.requireChecksum,
-		DisablePolicy:   param.DisablePolicy,
+		Config:                 cfg,
+		Registries:             registryContents,
+		ConfigFilePath:         cfgFilePath,
+		SkipLink:               c.skipLink,
+		Tags:                   c.tags,
+		ExcludedTags:           c.excludedTags,
+		PolicyConfigs:          policyConfigs,
+		Checksums:              checksums,
+		RequireChecksum:        param.RequireChecksum,
+		EnforceRequireChecksum: param.EnforceRequireChecksum,
+		DisablePolicy:          param.DisablePolicy,
 	})
 }

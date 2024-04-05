@@ -26,7 +26,6 @@ type Controller struct {
 	policyConfigReader PolicyReader
 	policyConfigFinder policy.ConfigFinder
 	enabledXSysExec    bool
-	requireChecksum    bool
 }
 
 type Installer interface {
@@ -45,7 +44,6 @@ func New(param *config.Param, pkgInstaller Installer, whichCtrl WhichController,
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
 		policyConfigFinder: policyConfigFinder,
-		requireChecksum:    param.RequireChecksum,
 	}
 }
 
