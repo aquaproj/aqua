@@ -62,17 +62,13 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 }
 
 func (c *Controller) getConfigFile(param *config.Param) (string, error) {
-	if param.ConfigFilePath != "" {
-		return param.ConfigFilePath, nil
+	if param.ConfigFilePath != "" || !param.Global {
+		return c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	}
-	if param.Global {
-		if len(param.GlobalConfigFilePaths) == 0 {
-			return "", errors.New("no global configuration file is found")
-		}
-		return param.GlobalConfigFilePaths[0], nil
+	if len(param.GlobalConfigFilePaths) == 0 {
+		return "", errors.New("no global configuration file is found")
 	}
-
-	return c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+	return param.GlobalConfigFilePaths[0], nil
 }
 
 func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
