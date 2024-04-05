@@ -36,7 +36,7 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	//   Output to Stdout or Update aqua.yaml (-i)
 	cfgFilePath, err := c.getConfigFile(param)
 	if err != nil {
-		return err //nolint:wrapcheck
+		return err
 	}
 
 	cfg := &aqua.Config{}
@@ -63,7 +63,7 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 
 func (c *Controller) getConfigFile(param *config.Param) (string, error) {
 	if param.ConfigFilePath != "" || !param.Global {
-		return c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+		return c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...) //nolint:wrapcheck
 	}
 	if len(param.GlobalConfigFilePaths) == 0 {
 		return "", errors.New("no global configuration file is found")
