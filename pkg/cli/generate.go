@@ -132,6 +132,10 @@ func (r *Runner) newGenerateCommand() *cli.Command {
 				Usage: `Pin version`,
 			},
 			&cli.BoolFlag{
+				Name:  "g",
+				Usage: `Insert packages in a global configuration file`,
+			},
+			&cli.BoolFlag{
 				Name:    "detail",
 				Aliases: []string{"d"},
 				Usage:   `Output additional fields such as description and link`,
