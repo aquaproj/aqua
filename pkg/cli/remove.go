@@ -32,6 +32,8 @@ e.g.
 $ aqua rm --all
 $ aqua rm cli/cli direnv/direnv
 
+Note that this command remove files from AQUA_ROOT_DIR/pkgs, but doesn't remove packages from aqua.yaml and doesn't remove files from AQUA_ROOT_DIR/bin and AQUA_ROOT_DIR/bat.
+
 If you want to uninstall packages of non standard registry, you need to specify the registry name too.
 
 e.g.
