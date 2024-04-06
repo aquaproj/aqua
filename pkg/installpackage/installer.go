@@ -106,17 +106,16 @@ type Unarchiver interface {
 }
 
 type ParamInstallPackages struct {
-	ConfigFilePath         string
-	Config                 *aqua.Config
-	Registries             map[string]*registry.Config
-	Tags                   map[string]struct{}
-	ExcludedTags           map[string]struct{}
-	PolicyConfigs          []*policy.Config
-	Checksums              *checksum.Checksums
-	SkipLink               bool
-	EnforceRequireChecksum bool
-	RequireChecksum        bool
-	DisablePolicy          bool
+	ConfigFilePath  string
+	Config          *aqua.Config
+	Registries      map[string]*registry.Config
+	Tags            map[string]struct{}
+	ExcludedTags    map[string]struct{}
+	PolicyConfigs   []*policy.Config
+	Checksums       *checksum.Checksums
+	SkipLink        bool
+	RequireChecksum bool
+	DisablePolicy   bool
 }
 
 type ParamInstallPackage struct {
@@ -206,7 +205,7 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 			if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
-				RequireChecksum: param.Config.RequireChecksum(param.EnforceRequireChecksum, param.RequireChecksum),
+				RequireChecksum: param.RequireChecksum,
 				PolicyConfigs:   param.PolicyConfigs,
 				DisablePolicy:   param.DisablePolicy,
 			}); err != nil {
