@@ -25,7 +25,7 @@ func (c *Controller) List(ctx context.Context, param *config.Param, logE *logrus
 	}
 
 	var checksums *checksum.Checksums
-	if cfg.ChecksumEnabled() {
+	if cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
 		checksums = checksum.New()
 		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 		if err != nil {

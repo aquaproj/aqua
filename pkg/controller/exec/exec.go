@@ -66,7 +66,7 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 
 func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config, param *config.Param) error {
 	var checksums *checksum.Checksums
-	if findResult.Config.ChecksumEnabled() {
+	if findResult.Config.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
 		checksums = checksum.New()
 		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, findResult.ConfigFilePath)
 		if err != nil {
@@ -85,7 +85,7 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 	if err := c.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
-		RequireChecksum: findResult.Config.RequireChecksum(c.requireChecksum),
+		RequireChecksum: findResult.Config.RequireChecksum(param.EnforceRequireChecksum, param.RequireChecksum),
 		PolicyConfigs:   policies,
 		DisablePolicy:   param.DisablePolicy,
 	}); err != nil {

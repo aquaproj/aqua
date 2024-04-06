@@ -27,7 +27,6 @@ type Controller struct {
 	policyConfigFinder policy.ConfigFinder
 	policyConfigReader PolicyReader
 	skipLink           bool
-	requireChecksum    bool
 }
 
 func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
@@ -44,7 +43,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
 		policyConfigFinder: policyConfigFinder,
-		requireChecksum:    param.RequireChecksum,
 	}
 }
 
