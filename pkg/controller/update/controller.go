@@ -23,7 +23,6 @@ type Controller struct {
 	registryInstaller RegistryInstaller
 	fs                afero.Fs
 	runtime           *runtime.Runtime
-	requireChecksum   bool
 	fuzzyGetter       FuzzyGetter
 	fuzzyFinder       FuzzyFinder
 	which             WhichController
@@ -62,7 +61,6 @@ func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder,
 		registryInstaller: registInstaller,
 		fs:                fs,
 		runtime:           rt,
-		requireChecksum:   param.RequireChecksum,
 		fuzzyGetter:       fuzzyGetter,
 		fuzzyFinder:       fuzzyFinder,
 		which:             whichController,

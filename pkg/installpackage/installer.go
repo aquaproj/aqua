@@ -205,7 +205,7 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 			if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
-				RequireChecksum: param.Config.RequireChecksum(param.RequireChecksum),
+				RequireChecksum: param.RequireChecksum,
 				PolicyConfigs:   param.PolicyConfigs,
 				DisablePolicy:   param.DisablePolicy,
 			}); err != nil {

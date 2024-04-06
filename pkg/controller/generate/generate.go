@@ -73,7 +73,7 @@ func (c *Controller) getConfigFile(param *config.Param) (string, error) {
 
 func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
 	var checksums *checksum.Checksums
-	if cfg.ChecksumEnabled() {
+	if cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
 		checksums = checksum.New()
 		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 		if err != nil {

@@ -23,7 +23,7 @@ type FindResult struct {
 
 func (c *Controller) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		findResult, err := c.findExecFile(ctx, logE, cfgFilePath, exeName)
+		findResult, err := c.findExecFile(ctx, logE, param, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -38,7 +38,7 @@ func (c *Controller) Which(ctx context.Context, logE *logrus.Entry, param *confi
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		findResult, err := c.findExecFile(ctx, logE, cfgFilePath, exeName)
+		findResult, err := c.findExecFile(ctx, logE, param, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -67,14 +67,14 @@ func (c *Controller) getExePath(findResult *FindResult) (string, error) {
 	return pkg.ExePath(c.rootDir, file, c.runtime) //nolint:wrapcheck
 }
 
-func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, cfgFilePath, exeName string) (*FindResult, error) {
+func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath, exeName string) (*FindResult, error) {
 	cfg := &aqua.Config{}
 	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
 	var checksums *checksum.Checksums
-	if cfg.ChecksumEnabled() {
+	if cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
 		checksums = checksum.New()
 		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 		if err != nil {

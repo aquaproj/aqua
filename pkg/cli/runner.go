@@ -110,12 +110,33 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 			}
 		}
 	}
+	if a := os.Getenv("AQUA_CHECKSUM"); a != "" {
+		chksm, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_CHECKSUM as bool: %w", err)
+		}
+		param.Checksum = chksm
+	}
 	if a := os.Getenv("AQUA_REQUIRE_CHECKSUM"); a != "" {
 		requireChecksum, err := strconv.ParseBool(a)
 		if err != nil {
 			return fmt.Errorf("parse the environment variable AQUA_REQUIRE_CHECKSUM as bool: %w", err)
 		}
 		param.RequireChecksum = requireChecksum
+	}
+	if a := os.Getenv("AQUA_ENFORCE_CHECKSUM"); a != "" {
+		chksm, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_ENFORCE_CHECKSUM as bool: %w", err)
+		}
+		param.EnforceChecksum = chksm
+	}
+	if a := os.Getenv("AQUA_ENFORCE_REQUIRE_CHECKSUM"); a != "" {
+		requireChecksum, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_ENFORCE_REQUIRE_CHECKSUM as bool: %w", err)
+		}
+		param.EnforceRequireChecksum = requireChecksum
 	}
 	return nil
 }

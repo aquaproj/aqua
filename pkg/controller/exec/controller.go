@@ -26,14 +26,13 @@ type Controller struct {
 	policyConfigReader PolicyReader
 	policyConfigFinder policy.ConfigFinder
 	enabledXSysExec    bool
-	requireChecksum    bool
 }
 
 type Installer interface {
 	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
 }
 
-func New(param *config.Param, pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
@@ -45,7 +44,6 @@ func New(param *config.Param, pkgInstaller Installer, whichCtrl WhichController,
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
 		policyConfigFinder: policyConfigFinder,
-		requireChecksum:    param.RequireChecksum,
 	}
 }
 
