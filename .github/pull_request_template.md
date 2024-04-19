@@ -2,7 +2,7 @@
 
 <!-- Please check the list. Please don't remove the check list. -->
 
-- [ ] Read [CONTRIBUTING.md](https://github.com/suzuki-shunsuke/tfaction/blob/main/CONTRIBUTING.md)
+- [ ] Read [CONTRIBUTING.md](https://github.com/aquaproj/aqua/blob/main/CONTRIBUTING.md)
   - [ ] Read [OSS Contribution Guide](https://github.com/suzuki-shunsuke/oss-contribution-guide/blob/main/README.md)
 - [ ] [Write a GitHub Issue before creating a Pull Request](https://github.com/suzuki-shunsuke/oss-contribution-guide/blob/main/README.md#create-an-issue-before-creating-a-pull-request)
   - Link to the issue:
