@@ -64,10 +64,9 @@ complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete aqua`)
 func (r *Runner) zshCompletionAction(*cli.Context) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
-	fmt.Fprintln(r.Stdout, `
-#compdef aqua
+	fmt.Fprintln(r.Stdout, `#compdef aqua
 
-_cli_zsh_autocomplete() {
+_aqua() {
   local -a opts
   local cur
   cur=${words[-1]}
@@ -84,6 +83,10 @@ _cli_zsh_autocomplete() {
   fi
 }
 
-compdef _cli_zsh_autocomplete aqua`)
+if [ "$funcstack[1]" = "_aqua" ]; then
+  _aqua "$@"
+else
+  compdef _aqua aqua
+fi`)
 	return nil
 }
