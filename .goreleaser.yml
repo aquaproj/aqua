@@ -77,6 +77,13 @@ brews:
     test: |
       system "#{bin}/aqua --version"
 
+    # Additional install instructions so you don't need to override `install`.
+    #
+    # Template: allowed
+    # Since: v1.20
+    extra_install: |
+      generate_completions_from_executable(bin/"aqua", "completion", shells: [:bash, :zsh])
+
 scoops:
   -
     description: |
