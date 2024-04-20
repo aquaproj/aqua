@@ -77,6 +77,14 @@ brews:
     test: |
       system "#{bin}/aqua --version"
 
+    # Custom install script for brew.
+    #
+    # Template: allowed
+    # Default: 'bin.install "BinaryName"'
+    install: |
+      bin.install "aqua"
+      generate_completions_from_executable(bin/"aqua", "completion", shells: [:bash, :zsh])
+
 scoops:
   -
     description: |
