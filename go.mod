@@ -2,7 +2,7 @@ module github.com/aquaproj/aqua/v2
 
 go 1.22
 
-toolchain go1.22.0
+toolchain go1.22.2
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
