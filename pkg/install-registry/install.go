@@ -147,7 +147,7 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logE *logrus.E
 		if !errors.Is(err, os.ErrNotExist) {
 			logerr.WithError(logE, err).WithFields(logrus.Fields{
 				"registry_json_path": jsonPath,
-			}).Warn("failed to read a registry JSON file. Will remove the file to recreate it")
+			}).Warn("failed to read a registry JSON file. Will remove and recreate the file")
 			if err := is.fs.Remove(jsonPath); err != nil {
 				logerr.WithError(logE, err).WithFields(logrus.Fields{
 					"registry_json_path": jsonPath,
