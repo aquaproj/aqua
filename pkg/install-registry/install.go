@@ -145,7 +145,18 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logE *logrus.E
 	registryContent := &registry.Config{}
 	if err := is.readJSONRegistry(jsonPath, registryContent); err != nil { //nolint:nestif
 		if !errors.Is(err, os.ErrNotExist) {
-			return nil, err
+			logerr.WithError(logE, err).WithFields(logrus.Fields{
+				"registry_json_path": jsonPath,
+			}).Debug("read a registry JSON file")
+			if err := is.fs.Remove(jsonPath); err != nil {
+				logerr.WithError(logE, err).WithFields(logrus.Fields{
+					"registry_json_path": jsonPath,
+				}).Debug("failed to remove a registry JSON file")
+			} else {
+				logE.WithFields(logrus.Fields{
+					"registry_json_path": jsonPath,
+				}).Debug("remove a registry JSON file")
+			}
 		}
 		if err := is.readYAMLRegistry(registryFilePath, registryContent); err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
