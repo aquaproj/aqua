@@ -20,7 +20,7 @@ func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
 	switch pkgInfo.Type {
-	case PkgInfoTypeGitHubArchive:
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
