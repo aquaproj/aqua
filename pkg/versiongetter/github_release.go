@@ -97,7 +97,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 	candidates := []*Release{}
 
 	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
+		PerPage: 30, //nolint:mnd
 	}
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)

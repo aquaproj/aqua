@@ -102,7 +102,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 				}
 			}
 		}
-		if len(overrides) == 2 { //nolint:gomnd
+		if len(overrides) == 2 { //nolint:mnd
 			// amd64, arm64
 			supportedEnvs = []string{goos}
 			asset1 := overrides[0]

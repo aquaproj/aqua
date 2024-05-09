@@ -105,7 +105,7 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
-		PerPage: 100, //nolint:gomnd
+		PerPage: 100, //nolint:mnd
 	}
 
 	if limit != 0 && limit < 100 {

@@ -38,7 +38,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
-		PerPage: 30, //nolint:gomnd
+		PerPage: 30, //nolint:mnd
 	}
 
 	var respToLog *github.Response

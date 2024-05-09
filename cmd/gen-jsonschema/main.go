@@ -41,7 +41,7 @@ func gen(input interface{}, p string) error {
 	if err != nil {
 		return fmt.Errorf("mashal schema as JSON: %w", err)
 	}
-	if err := os.WriteFile(p, []byte(strings.ReplaceAll(string(b), "http://json-schema.org", "https://json-schema.org")+"\n"), 0o644); err != nil { //nolint:gosec,gomnd
+	if err := os.WriteFile(p, []byte(strings.ReplaceAll(string(b), "http://json-schema.org", "https://json-schema.org")+"\n"), 0o644); err != nil { //nolint:gosec,mnd
 		return fmt.Errorf("write JSON Schema to %s: %w", p, err)
 	}
 	return nil

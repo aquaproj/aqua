@@ -40,7 +40,7 @@ func (v *Version) Preview(w int) string {
 		s += "\n" + v.URL
 	}
 	if v.URL != "" {
-		s += "\n" + formatPreview(v.Description, w/2-8) //nolint:gomnd
+		s += "\n" + formatPreview(v.Description, w/2-8) //nolint:mnd
 	}
 	return s
 }
