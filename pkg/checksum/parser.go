@@ -12,7 +12,7 @@ import (
 )
 
 func showFileContent(logE *logrus.Entry, content string) {
-	if len(content) > 10000 { //nolint:gomnd
+	if len(content) > 10000 { //nolint:mnd
 		content = content[:10000]
 		logE.Error("Checksum isn't found in a checksum file. Checksum file content (10000):\n" + content)
 		return

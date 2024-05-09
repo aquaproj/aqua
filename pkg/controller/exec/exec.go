@@ -101,7 +101,7 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 		logE.WithFields(logrus.Fields{
 			"retry_count": i + 1,
 		}).Debug("command isn't found. wait for lazy install")
-		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
 			return err
 		}
 	}
@@ -147,7 +147,7 @@ func (c *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entr
 			return err
 		}
 		logE.WithError(err).WithField("retry_count", i+1).Debug("the process isn't started. retry")
-		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
 			return err
 		}
 	}

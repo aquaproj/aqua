@@ -152,7 +152,7 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 
 func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
-	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:gomnd
+	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
 	logE.WithFields(logrus.Fields{
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
@@ -170,7 +170,7 @@ func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamV
 		if _, err := v.exec(ctx, args); err == nil {
 			return nil
 		}
-		if i == 4 { //nolint:gomnd
+		if i == 4 { //nolint:mnd
 			// skip last wait
 			break
 		}

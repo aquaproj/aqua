@@ -93,7 +93,7 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 		pkgInfo.Name = pkgName
 		return pkgInfo, nil
 	}
-	if len(splitPkgNames) != 2 { //nolint:gomnd
+	if len(splitPkgNames) != 2 { //nolint:mnd
 		pkgInfo.Name = pkgName
 	}
 	pkgInfo.RepoOwner = splitPkgNames[0]
@@ -201,7 +201,7 @@ func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageI
 
 func (c *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, releaseID int64) []*github.ReleaseAsset {
 	opts := &github.ListOptions{
-		PerPage: 100, //nolint:gomnd
+		PerPage: 100, //nolint:mnd
 	}
 	var arr []*github.ReleaseAsset
 	for range 10 {

@@ -36,7 +36,7 @@ func (is *Installer) checkFilesWrap(ctx context.Context, logE *logrus.Entry, par
 		if err != nil {
 			logerr.WithError(logE, err).Warn("traverse the content of unarchived package")
 		} else {
-			if len(paths) > 30 { //nolint:gomnd
+			if len(paths) > 30 { //nolint:mnd
 				logE.Errorf("executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n"))
 			} else {
 				logE.Errorf("executable files aren't found\nFiles in the unarchived package:\n%s\n ", strings.Join(paths, "\n"))

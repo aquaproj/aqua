@@ -71,7 +71,7 @@ func getCrate(ctx context.Context, client *http.Client, uri string) (*CratePaylo
 		return nil, 0, fmt.Errorf("send a HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode >= 300 { //nolint:gomnd
+	if resp.StatusCode >= 300 { //nolint:mnd
 		return nil, resp.StatusCode, errors.ErrHTTPStatusCodeIsGreaterEqualThan300
 	}
 	payload := &CratePayload{}
@@ -92,7 +92,7 @@ func listInstallableVersions(ctx context.Context, client *http.Client, uri strin
 		return nil, 0, fmt.Errorf("send a HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode >= 300 { //nolint:gomnd
+	if resp.StatusCode >= 300 { //nolint:mnd
 		return nil, resp.StatusCode, errors.ErrHTTPStatusCodeIsGreaterEqualThan300
 	}
 	payload := &Payload{}

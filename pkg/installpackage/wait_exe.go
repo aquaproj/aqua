@@ -22,7 +22,7 @@ func (is *Installer) WaitExe(ctx context.Context, logE *logrus.Entry, exePath st
 		logE.WithFields(logrus.Fields{
 			"retry_count": i + 1,
 		}).Debug("command isn't found. wait for lazy install")
-		if err := timer.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:gomnd
+		if err := timer.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
 			return fmt.Errorf("wait: %w", logerr.WithFields(err, logE.Data))
 		}
 	}
