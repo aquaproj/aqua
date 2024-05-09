@@ -13,22 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     steps:
-      - name: Generate token
-        id: generate_token
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+      - uses: suzuki-shunsuke/enable-auto-merge-action@ec074392e76cd1062925255cd82a86ea1c44b6fd # v0.1.0
         with:
-          app_id: ${{secrets.gh_app_id}}
-          private_key: ${{secrets.gh_app_private_key}}
-          permissions: >-
-            {
-              "contents": "write",
-              "pull_requests": "write"
-            }
-          repositories: >-
-            [
-              "${{github.event.repository.name}}"
-            ]
-      - run: gh -R "$GITHUB_REPOSITORY" pr merge --squash --auto --delete-branch "$PR_NUMBER"
-        env:
-          GITHUB_TOKEN: ${{steps.generate_token.outputs.token}} # Use GitHub App to trigger GitHub Actions Workflow by merge commit.
-          PR_NUMBER: ${{github.event.pull_request.number}}
+          pr_number: ${{github.event.pull_request.number}}
+          merge_method: squash
+          github_app_id: ${{secrets.gh_app_id}}
+          github_app_private_key: ${{secrets.gh_app_private_key}}
