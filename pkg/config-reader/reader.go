@@ -68,6 +68,9 @@ func (r *ConfigReader) readImports(configFilePath string, cfg *aqua.Config) erro
 			continue
 		}
 		if pkg.Import == "" {
+			if err := readGoVersionFile(r.fs, configFilePath, pkg); err != nil {
+				return err
+			}
 			pkgs = append(pkgs, pkg)
 			continue
 		}
@@ -84,6 +87,9 @@ func (r *ConfigReader) readImports(configFilePath string, cfg *aqua.Config) erro
 			}
 			for _, pkg := range subCfg.Packages {
 				pkg.FilePath = filePath
+				if err := readGoVersionFile(r.fs, filePath, pkg); err != nil {
+					return err
+				}
 				pkgs = append(pkgs, pkg)
 			}
 		}
