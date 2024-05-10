@@ -46,7 +46,7 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 			Runtime: rt,
 		}),
 		// assets for windows/arm64 aren't released.
-		disabled: rt.GOOS == "windows" && rt.GOARCH == "arm64",
+		disabled: rt.IsWindows() && rt.GOARCH == "arm64",
 	}
 }
 

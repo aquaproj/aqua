@@ -8,6 +8,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/urfave/cli/v2"
 )
 
@@ -53,7 +54,7 @@ func (r *Runner) execAction(c *cli.Context) error {
 	if err := r.setParam(c, "exec", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, runtime.NewR())
 	exeName, args, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err

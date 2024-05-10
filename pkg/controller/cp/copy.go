@@ -11,7 +11,7 @@ import (
 
 func (c *Controller) copy(logE *logrus.Entry, param *config.Param, findResult *which.FindResult, exeName string) error {
 	p := filepath.Join(param.Dest, exeName)
-	if c.runtime.GOOS == "windows" && filepath.Ext(exeName) == "" {
+	if c.runtime.IsWindows() && filepath.Ext(exeName) == "" {
 		p += ".exe"
 	}
 	logE.WithFields(logrus.Fields{
