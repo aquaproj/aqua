@@ -58,7 +58,7 @@ func (c *Controller) mkBinBatDir() error {
 	if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
-	if c.runtime.GOOS == "windows" {
+	if c.runtime.IsWindows() {
 		if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bat")); err != nil {
 			return fmt.Errorf("create the directory: %w", err)
 		}

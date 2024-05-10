@@ -29,6 +29,10 @@ func (rt *Runtime) Env() string {
 	return fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)
 }
 
+func (rt *Runtime) IsWindows() bool {
+	return rt.GOOS == "windows"
+}
+
 func goos() string {
 	if s := os.Getenv("AQUA_GOOS"); s != "" {
 		return s

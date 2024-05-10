@@ -189,7 +189,7 @@ func getArch(rosetta2, windowsARMEmulation bool, replacements registry.Replaceme
 		// Rosetta 2
 		return replace("amd64", replacements)
 	}
-	if windowsARMEmulation && rt.GOOS == "windows" && rt.GOARCH == "arm64" {
+	if windowsARMEmulation && rt.IsWindows() && rt.GOARCH == "arm64" {
 		// Windows ARM Emulation
 		return replace("amd64", replacements)
 	}

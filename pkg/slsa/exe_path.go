@@ -14,7 +14,7 @@ type ParamExePath struct {
 
 func ExePath(param *ParamExePath) string {
 	assetName := fmt.Sprintf("slsa-verifier-%s-%s", param.Runtime.GOOS, param.Runtime.GOARCH)
-	if param.Runtime.GOOS == "windows" {
+	if param.Runtime.IsWindows() {
 		assetName += ".exe"
 	}
 	return filepath.Join(param.RootDir, "pkgs", "github_release", "github.com", "slsa-framework", "slsa-verifier", Version, assetName, assetName)

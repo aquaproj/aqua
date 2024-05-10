@@ -28,7 +28,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 			Format:    "tar.gz",
 			Overrides: []*registry.Override{
 				{
-					GOOS:   "windows",
+					GOOS:   osWindows,
 					Format: "zip",
 				},
 			},
@@ -132,7 +132,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 		return fmt.Errorf("get the executable file path: %w", err)
 	}
 
-	if is.runtime.GOOS == "windows" {
+	if is.runtime.IsWindows() {
 		return is.Copy(filepath.Join(is.rootDir, "bin", "aqua.exe"), exePath)
 	}
 
