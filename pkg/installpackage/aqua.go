@@ -9,7 +9,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 )
 
 func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
@@ -133,7 +135,9 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 	}
 
 	if is.runtime.GOOS == "windows" {
-		return is.Copy(filepath.Join(is.rootDir, "bin", "aqua.exe"), exePath)
+		if err := is.copyAquaOnWindows(exePath); err != nil {
+			return err
+		}
 	}
 
 	// create a symbolic link
@@ -143,4 +147,24 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 	}
 
 	return is.createLink(filepath.Join(is.rootDir, "bin", "aqua"), a, logE)
+}
+
+func (is *Installer) copyAquaOnWindows(exePath string) error {
+	// https://github.com/orgs/aquaproj/discussions/2510
+	// https://stackoverflow.com/questions/1211948/best-method-for-implementing-self-updating-software
+	dest := filepath.Join(is.rootDir, "bin", "aqua.exe")
+	if f, err := afero.Exists(is.fs, dest); err != nil {
+		return fmt.Errorf("check if aqua.exe exists: %w", err)
+	} else if f {
+		// afero.Tempfile can't be used
+		// > The system cannot move the file to a different disk drive
+		tempDir := filepath.Join(is.rootDir, "temp")
+		if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
+			return fmt.Errorf("create a temporal directory: %w", err)
+		}
+		if err := is.fs.Rename(dest, filepath.Join(tempDir, "aqua.exe")); err != nil {
+			return fmt.Errorf("rename aqua.exe to update: %w", err)
+		}
+	}
+	return is.Copy(dest, exePath)
 }
