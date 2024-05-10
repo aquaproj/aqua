@@ -135,9 +135,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 	}
 
 	if is.runtime.GOOS == "windows" {
-		if err := is.copyAquaOnWindows(exePath); err != nil {
-			return err
-		}
+		return is.copyAquaOnWindows(exePath)
 	}
 
 	// create a symbolic link
