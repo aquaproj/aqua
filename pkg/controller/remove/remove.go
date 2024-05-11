@@ -48,7 +48,7 @@ func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *conf
 	}
 
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 

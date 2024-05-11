@@ -20,7 +20,7 @@ func (c *Controller) List(ctx context.Context, param *config.Param, logE *logrus
 		return err //nolint:wrapcheck
 	}
 
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 

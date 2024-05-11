@@ -18,7 +18,7 @@ func (c *Controller) listInstalled(param *config.Param, logE *logrus.Entry) erro
 		}
 		cfgFileMap[cfgFilePath] = struct{}{}
 
-		if err := c.listInstalledByConfig(cfgFilePath); err != nil {
+		if err := c.listInstalledByConfig(logE, cfgFilePath); err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"config_file_path": cfgFilePath,
 			})
@@ -40,7 +40,7 @@ func (c *Controller) listInstalled(param *config.Param, logE *logrus.Entry) erro
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := c.listInstalledByConfig(cfgFilePath); err != nil {
+		if err := c.listInstalledByConfig(logE, cfgFilePath); err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"config_file_path": cfgFilePath,
 			})
@@ -49,9 +49,9 @@ func (c *Controller) listInstalled(param *config.Param, logE *logrus.Entry) erro
 	return nil
 }
 
-func (c *Controller) listInstalledByConfig(cfgFilePath string) error {
+func (c *Controller) listInstalledByConfig(logE *logrus.Entry, cfgFilePath string) error {
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {

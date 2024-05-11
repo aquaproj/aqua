@@ -8,6 +8,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 func Test_configReader_Read(t *testing.T) { //nolint:funlen
@@ -97,6 +98,7 @@ packages:
 			},
 		},
 	}
+	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -108,7 +110,7 @@ packages:
 				HomeDir: d.homeDir,
 			})
 			cfg := &aqua.Config{}
-			if err := reader.Read(d.configFilePath, cfg); err != nil {
+			if err := reader.Read(logE, d.configFilePath, cfg); err != nil {
 				if d.isErr {
 					return
 				}

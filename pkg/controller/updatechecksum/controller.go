@@ -51,7 +51,7 @@ type GitHubContentFileDownloader interface {
 }
 
 type ConfigReader interface {
-	Read(configFilePath string, cfg *aqua.Config) error
+	Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error
 }
 
 type RegistryInstaller interface {

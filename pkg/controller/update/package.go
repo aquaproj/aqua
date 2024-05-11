@@ -91,7 +91,7 @@ func (c *Controller) getPackageNewVersion(ctx context.Context, logE *logrus.Entr
 func (c *Controller) selectPackages(logE *logrus.Entry, cfgFilePath string) (map[string]struct{}, error) {
 	updatedPkgs := map[string]struct{}{}
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return nil, fmt.Errorf("read a configuration file: %w", err)
 	}
 	items := make([]*fuzzyfinder.Item, 0, len(cfg.Packages))

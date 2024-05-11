@@ -21,13 +21,13 @@ func readGoVersionFile(fs afero.Fs, filePath string, pkg *aqua.Package) error {
 	p := filepath.Join(filepath.Dir(filePath), pkg.GoVersionFile)
 	b, err := afero.ReadFile(fs, p)
 	if err != nil {
-		return logerr.WithFields(fmt.Errorf("open a go version file: %w", err), logrus.Fields{
+		return fmt.Errorf("open a go version file: %w", logerr.WithFields(err, logrus.Fields{
 			"go_version_file": p,
-		})
+		}))
 	}
 	matches := goVersionPattern.FindSubmatch(b)
 	if len(matches) == 0 {
-		return logerr.WithFields(errors.New("invalid go version file. No go directive is found. The version must be a semver x.y.z"), logrus.Fields{
+		return logerr.WithFields(errors.New("invalid go version file. No go directive is found. The version must be a semver x.y.z"), logrus.Fields{ //nolint:wrapcheck
 			"go_version_file": p,
 		})
 	}

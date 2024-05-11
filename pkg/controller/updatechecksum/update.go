@@ -47,7 +47,7 @@ func (c *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfg
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 
