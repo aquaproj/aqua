@@ -11,7 +11,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -31,14 +33,15 @@ func New(fs afero.Fs, param *config.Param) *ConfigReader {
 
 const homePrefix = "$HOME" + string(os.PathSeparator)
 
-func (r *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
+func (r *ConfigReader) Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error {
+	logE = logE.WithField("config_file_path", configFilePath)
 	file, err := r.fs.Open(configFilePath)
 	if err != nil {
-		return err //nolint:wrapcheck
+		return fmt.Errorf("open a file: %w", err)
 	}
 	defer file.Close()
 	if err := yaml.NewDecoder(file).Decode(cfg); err != nil {
-		return fmt.Errorf("parse a configuration file as YAML %s: %w", configFilePath, err)
+		return fmt.Errorf("parse a configuration file as YAML: %w", err)
 	}
 	var configFileDir string
 	for _, rgst := range cfg.Registries {
@@ -55,13 +58,13 @@ func (r *ConfigReader) Read(configFilePath string, cfg *aqua.Config) error {
 			rgst.Path = osfile.Abs(configFileDir, rgst.Path)
 		}
 	}
-	if err := r.readImports(configFilePath, cfg); err != nil {
-		return fmt.Errorf("read imports (%s): %w", configFilePath, err)
+	if err := r.readImports(logE, configFilePath, cfg); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (r *ConfigReader) readImports(configFilePath string, cfg *aqua.Config) error {
+func (r *ConfigReader) readImports(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error {
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg == nil {
@@ -69,26 +72,32 @@ func (r *ConfigReader) readImports(configFilePath string, cfg *aqua.Config) erro
 		}
 		if pkg.Import == "" {
 			if err := readGoVersionFile(r.fs, configFilePath, pkg); err != nil {
-				return err
+				logerr.WithError(logE, err).Error("read a go version file")
+				continue
 			}
 			pkgs = append(pkgs, pkg)
 			continue
 		}
+		logE := logE.WithField("import", pkg.Import)
 		p := filepath.Join(filepath.Dir(configFilePath), pkg.Import)
 		filePaths, err := afero.Glob(r.fs, p)
 		if err != nil {
-			return fmt.Errorf("read files with glob pattern (%s): %w", p, err)
+			logerr.WithError(logE, err).Error("read files with glob pattern")
+			continue
 		}
 		sort.Strings(filePaths)
 		for _, filePath := range filePaths {
+			logE := logE.WithField("imported_file", filePath)
 			subCfg := &aqua.Config{}
-			if err := r.Read(filePath, subCfg); err != nil {
-				return err
+			if err := r.Read(logE, filePath, subCfg); err != nil {
+				logerr.WithError(logE, err).Error("read an import file")
+				continue
 			}
 			for _, pkg := range subCfg.Packages {
 				pkg.FilePath = filePath
 				if err := readGoVersionFile(r.fs, filePath, pkg); err != nil {
-					return err
+					logerr.WithError(logE, err).Error("read a go version file")
+					continue
 				}
 				pkgs = append(pkgs, pkg)
 			}
