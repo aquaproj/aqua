@@ -40,7 +40,7 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	}
 
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 

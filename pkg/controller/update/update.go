@@ -75,7 +75,7 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 

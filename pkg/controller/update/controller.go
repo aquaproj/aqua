@@ -38,7 +38,7 @@ type FuzzyFinder interface {
 }
 
 type ConfigReader interface {
-	Read(configFilePath string, cfg *aqua.Config) error
+	Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error
 	ReadToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error)
 }
 

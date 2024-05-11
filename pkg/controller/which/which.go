@@ -69,7 +69,7 @@ func (c *Controller) getExePath(findResult *FindResult) (string, error) {
 
 func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath, exeName string) (*FindResult, error) {
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
