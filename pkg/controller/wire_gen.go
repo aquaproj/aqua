@@ -139,7 +139,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyReader, configFinderImpl)
+	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyReader)
 	return controller
 }
 
@@ -241,7 +241,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyReader, configFinderImpl)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyReader)
 	cpController := cp.New(param, installer, fs, rt, controller, installController, policyReader)
 	return cpController
 }

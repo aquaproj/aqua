@@ -24,12 +24,11 @@ type Controller struct {
 	runtime            *runtime.Runtime
 	tags               map[string]struct{}
 	excludedTags       map[string]struct{}
-	policyConfigFinder policy.ConfigFinder
 	policyConfigReader PolicyReader
 	skipLink           bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
@@ -42,7 +41,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		tags:               param.Tags,
 		excludedTags:       param.ExcludedTags,
 		policyConfigReader: policyConfigReader,
-		policyConfigFinder: policyConfigFinder,
 	}
 }
 
