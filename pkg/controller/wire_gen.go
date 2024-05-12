@@ -189,7 +189,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	execController := exec2.New(installer, controller, executor, osEnv, fs, policyReader, configFinderImpl)
+	execController := exec2.New(installer, controller, executor, osEnv, fs, policyReader)
 	return execController
 }
 

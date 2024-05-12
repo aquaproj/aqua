@@ -32,7 +32,7 @@ type Installer interface {
 	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
 }
 
-func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyConfigReader PolicyReader) *Controller {
 	return &Controller{
 		stdin:              os.Stdin,
 		stdout:             os.Stdout,
