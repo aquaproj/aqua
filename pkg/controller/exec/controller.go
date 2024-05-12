@@ -24,8 +24,8 @@ type Controller struct {
 	executor           Executor
 	fs                 afero.Fs
 	policyConfigReader PolicyReader
-	policyConfigFinder policy.ConfigFinder
-	enabledXSysExec    bool
+	// policyConfigFinder policy.ConfigFinder
+	enabledXSysExec bool
 }
 
 type Installer interface {
@@ -43,7 +43,7 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 		enabledXSysExec:    getEnabledXSysExec(osEnv, runtime.GOOS),
 		fs:                 fs,
 		policyConfigReader: policyConfigReader,
-		policyConfigFinder: policyConfigFinder,
+		// policyConfigFinder: policyConfigFinder,
 	}
 }
 
