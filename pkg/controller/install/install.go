@@ -30,7 +30,7 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 		}
 	}
 
-	policyCfgs, err := c.policyConfigReader.Read(param.PolicyConfigFilePaths)
+	policyCfgs, err := c.policyReader.Read(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
@@ -41,7 +41,7 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 	}
 
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		policyCfgs, err := c.policyConfigReader.Append(logE, cfgFilePath, policyCfgs, globalPolicyPaths)
+		policyCfgs, err := c.policyReader.Append(logE, cfgFilePath, policyCfgs, globalPolicyPaths)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
@@ -74,7 +74,7 @@ func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		policyConfigs, err := c.policyConfigReader.Append(logE, cfgFilePath, policyConfigs, globalPolicyPaths)
+		policyConfigs, err := c.policyReader.Append(logE, cfgFilePath, policyConfigs, globalPolicyPaths)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}

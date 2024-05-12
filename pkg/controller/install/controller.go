@@ -15,34 +15,32 @@ import (
 )
 
 type Controller struct {
-	packageInstaller   Installer
-	rootDir            string
-	configFinder       ConfigFinder
-	configReader       ConfigReader
-	registryInstaller  RegistryInstaller
-	fs                 afero.Fs
-	runtime            *runtime.Runtime
-	tags               map[string]struct{}
-	excludedTags       map[string]struct{}
-	policyConfigFinder policy.ConfigFinder
-	policyConfigReader PolicyReader
-	skipLink           bool
+	packageInstaller  Installer
+	rootDir           string
+	configFinder      ConfigFinder
+	configReader      ConfigReader
+	registryInstaller RegistryInstaller
+	fs                afero.Fs
+	runtime           *runtime.Runtime
+	tags              map[string]struct{}
+	excludedTags      map[string]struct{}
+	policyReader      PolicyReader
+	skipLink          bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyConfigReader PolicyReader, policyConfigFinder policy.ConfigFinder) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader) *Controller {
 	return &Controller{
-		rootDir:            param.RootDir,
-		configFinder:       configFinder,
-		configReader:       configReader,
-		registryInstaller:  registInstaller,
-		packageInstaller:   pkgInstaller,
-		fs:                 fs,
-		runtime:            rt,
-		skipLink:           param.SkipLink,
-		tags:               param.Tags,
-		excludedTags:       param.ExcludedTags,
-		policyConfigReader: policyConfigReader,
-		policyConfigFinder: policyConfigFinder,
+		rootDir:           param.RootDir,
+		configFinder:      configFinder,
+		configReader:      configReader,
+		registryInstaller: registInstaller,
+		packageInstaller:  pkgInstaller,
+		fs:                fs,
+		runtime:           rt,
+		skipLink:          param.SkipLink,
+		tags:              param.Tags,
+		excludedTags:      param.ExcludedTags,
+		policyReader:      policyReader,
 	}
 }
 

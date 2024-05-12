@@ -25,7 +25,7 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 		}
 	}()
 
-	policyCfgs, err := c.policyConfigReader.Read(param.PolicyConfigFilePaths)
+	policyCfgs, err := c.policyReader.Read(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
@@ -48,7 +48,7 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 		"package_version": findResult.Package.Package.Version,
 	})
 
-	policyCfgs, err = c.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
+	policyCfgs, err = c.policyReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

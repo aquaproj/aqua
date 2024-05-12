@@ -18,13 +18,13 @@ import (
 )
 
 type Controller struct {
-	packageInstaller   PackageInstaller
-	rootDir            string
-	fs                 afero.Fs
-	runtime            *runtime.Runtime
-	which              WhichController
-	installer          Installer
-	policyConfigReader PolicyReader
+	packageInstaller PackageInstaller
+	rootDir          string
+	fs               afero.Fs
+	runtime          *runtime.Runtime
+	which            WhichController
+	installer        Installer
+	policyReader     PolicyReader
 }
 
 type PackageInstaller interface {
@@ -39,15 +39,15 @@ type WhichController interface {
 	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl WhichController, installer Installer, policyConfigReader PolicyReader) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl WhichController, installer Installer, policyReader PolicyReader) *Controller {
 	return &Controller{
-		rootDir:            param.RootDir,
-		packageInstaller:   pkgInstaller,
-		fs:                 fs,
-		runtime:            rt,
-		which:              whichCtrl,
-		installer:          installer,
-		policyConfigReader: policyConfigReader,
+		rootDir:          param.RootDir,
+		packageInstaller: pkgInstaller,
+		fs:               fs,
+		runtime:          rt,
+		which:            whichCtrl,
+		installer:        installer,
+		policyReader:     policyReader,
 	}
 }
 
@@ -83,7 +83,7 @@ func (c *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *config
 
 	c.packageInstaller.SetCopyDir("")
 
-	policyCfgs, err := c.policyConfigReader.Read(param.PolicyConfigFilePaths)
+	policyCfgs, err := c.policyReader.Read(param.PolicyConfigFilePaths)
 	if err != nil {
 		return fmt.Errorf("read policy files: %w", err)
 	}
@@ -123,7 +123,7 @@ func (c *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, par
 	if findResult.Package != nil {
 		logE = logE.WithField("package", findResult.Package.Package.Name)
 
-		policyConfigs, err := c.policyConfigReader.Append(logE, findResult.ConfigFilePath, policyConfigs, globalPolicyPaths)
+		policyConfigs, err := c.policyReader.Append(logE, findResult.ConfigFilePath, policyConfigs, globalPolicyPaths)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
