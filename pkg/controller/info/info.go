@@ -58,8 +58,11 @@ func getCurrentUserName() (string, error) {
 	userName := currentUser.Username
 	if runtime.GOOS == "windows" {
 		// On Windows, the user name is in the form of "domain\user".
-		const domainUserPartCount = 2
-		userName = strings.SplitN(userName, "\\", domainUserPartCount)[domainUserPartCount-1]
+		domain, userName, ok := strings.Cut(userName, "\\")
+		if ok {
+			return userName, nil
+		}
+		return domain, nil
 	}
 	return userName, nil
 }
