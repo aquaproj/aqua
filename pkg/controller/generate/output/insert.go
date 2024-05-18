@@ -3,6 +3,7 @@ package output
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	wast "github.com/aquaproj/aqua/v2/pkg/ast"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -29,8 +30,41 @@ func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) err
 			"num_of_docs": len(file.Docs),
 		})
 	}
+	body := file.Docs[0].Body
 
-	if err := updateASTFile(file.Docs[0].Body, pkgs); err != nil {
+	values, err := wast.FindMappingValueFromNode(body, "packages")
+	if err != nil {
+		return fmt.Errorf(`find a mapping value node "packages": %w`, err)
+	}
+	if values == nil {
+		a, err := yaml.Marshal(struct {
+			Packages []*aqua.Package `yaml:"packages"`
+		}{
+			Packages: pkgs,
+		})
+		if err != nil {
+			return fmt.Errorf("marshal packages: %w", err)
+		}
+		b, err := afero.ReadFile(o.fs, cfgFilePath)
+		if err != nil {
+			return fmt.Errorf("read a configuration file: %w", err)
+		}
+		sb := string(b)
+		if !strings.HasSuffix(sb, "\n") {
+			sb += "\n"
+		}
+		sb += string(a)
+		stat, err := o.fs.Stat(cfgFilePath)
+		if err != nil {
+			return fmt.Errorf("get configuration file stat: %w", err)
+		}
+		if err := afero.WriteFile(o.fs, cfgFilePath, []byte(sb), stat.Mode()); err != nil {
+			return fmt.Errorf("write the configuration file: %w", err)
+		}
+		return nil
+	}
+
+	if err := updateASTFile(body, pkgs); err != nil {
 		return err
 	}
 
@@ -68,6 +102,34 @@ func updateASTFile(body ast.Node, pkgs []*aqua.Package) error {
 	values, err := wast.FindMappingValueFromNode(body, "packages")
 	if err != nil {
 		return fmt.Errorf(`find a mapping value node "packages": %w`, err)
+	}
+
+	if values == nil {
+		values, err := wast.NormalizeMappingValueNodes(body)
+		if err != nil {
+			return err
+		}
+		idx := len(values)
+		mn, ok := node.(*ast.MappingValueNode)
+		if !ok {
+			return errors.New("body must be a mapping value node")
+		}
+		mv, ok := body.(*ast.MappingNode)
+		if !ok {
+			return errors.New("body must be a mapping node")
+		}
+		latterValues := make([]*ast.MappingValueNode, len(mv.Values[idx:]))
+		copy(latterValues, mv.Values[idx:])
+		mv.Values = mv.Values[:idx]
+		mv.Merge(&ast.MappingNode{
+			Values: []*ast.MappingValueNode{
+				mn,
+			},
+		})
+		mv.Merge(&ast.MappingNode{
+			Values: latterValues,
+		})
+		return nil
 	}
 
 	return appendPkgsNode(values, node)
