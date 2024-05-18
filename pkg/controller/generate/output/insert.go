@@ -30,41 +30,8 @@ func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) err
 			"num_of_docs": len(file.Docs),
 		})
 	}
-	body := file.Docs[0].Body
-
-	values, err := wast.FindMappingValueFromNode(body, "packages")
+	s, err := o.getAppendedTxt(cfgFilePath, file, pkgs)
 	if err != nil {
-		return fmt.Errorf(`find a mapping value node "packages": %w`, err)
-	}
-	if values == nil {
-		a, err := yaml.Marshal(struct {
-			Packages []*aqua.Package `yaml:"packages"`
-		}{
-			Packages: pkgs,
-		})
-		if err != nil {
-			return fmt.Errorf("marshal packages: %w", err)
-		}
-		b, err := afero.ReadFile(o.fs, cfgFilePath)
-		if err != nil {
-			return fmt.Errorf("read a configuration file: %w", err)
-		}
-		sb := string(b)
-		if !strings.HasSuffix(sb, "\n") {
-			sb += "\n"
-		}
-		sb += string(a)
-		stat, err := o.fs.Stat(cfgFilePath)
-		if err != nil {
-			return fmt.Errorf("get configuration file stat: %w", err)
-		}
-		if err := afero.WriteFile(o.fs, cfgFilePath, []byte(sb), stat.Mode()); err != nil {
-			return fmt.Errorf("write the configuration file: %w", err)
-		}
-		return nil
-	}
-
-	if err := updateASTFile(body, pkgs); err != nil {
 		return err
 	}
 
@@ -72,10 +39,26 @@ func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) err
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(o.fs, cfgFilePath, []byte(file.String()), stat.Mode()); err != nil {
+	if err := afero.WriteFile(o.fs, cfgFilePath, []byte(s), stat.Mode()); err != nil {
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil
+}
+
+func (o *Outputter) getAppendedTxt(cfgFilePath string, file *ast.File, pkgs []*aqua.Package) (string, error) {
+	body := file.Docs[0].Body
+	values, err := wast.FindMappingValueFromNode(body, "packages")
+	if err != nil {
+		return "", fmt.Errorf(`find a mapping value node "packages": %w`, err)
+	}
+	if values == nil {
+		return o.appendPkgsTxt(cfgFilePath, pkgs)
+	}
+
+	if err := updateASTFile(values, pkgs); err != nil {
+		return "", err
+	}
+	return file.String(), nil
 }
 
 func appendPkgsNode(mapValue *ast.MappingValueNode, node ast.Node) error {
@@ -93,16 +76,31 @@ func appendPkgsNode(mapValue *ast.MappingValueNode, node ast.Node) error {
 	}
 }
 
-func updateASTFile(body ast.Node, pkgs []*aqua.Package) error {
+func updateASTFile(values *ast.MappingValueNode, pkgs []*aqua.Package) error {
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)
 	}
 
-	values, err := wast.FindMappingValueFromNode(body, "packages")
-	if err != nil {
-		return fmt.Errorf(`find a mapping value node "packages": %w`, err)
-	}
-
 	return appendPkgsNode(values, node)
+}
+
+func (o *Outputter) appendPkgsTxt(cfgFilePath string, pkgs []*aqua.Package) (string, error) {
+	a, err := yaml.Marshal(struct {
+		Packages []*aqua.Package `yaml:"packages"`
+	}{
+		Packages: pkgs,
+	})
+	if err != nil {
+		return "", fmt.Errorf("marshal packages: %w", err)
+	}
+	b, err := afero.ReadFile(o.fs, cfgFilePath)
+	if err != nil {
+		return "", fmt.Errorf("read a configuration file: %w", err)
+	}
+	sb := string(b)
+	if !strings.HasSuffix(sb, "\n") {
+		sb += "\n"
+	}
+	return sb + string(a), nil
 }
