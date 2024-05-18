@@ -50,12 +50,25 @@ func maskUser(s, username string) string {
 	return strings.ReplaceAll(s, username, "(USER)")
 }
 
-func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Param) error { //nolint:funlen
+func getCurrentUserName() (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
-		return fmt.Errorf("get a current user: %w", err)
+		return "", fmt.Errorf("get a current user: %w", err)
 	}
 	userName := currentUser.Username
+	if runtime.GOOS == "windows" {
+		// On Windows, the user name is in the form of "domain\user".
+		const domainUserPartCount = 2
+		userName = strings.SplitN(userName, "\\", domainUserPartCount)[domainUserPartCount-1]
+	}
+	return userName, nil
+}
+
+func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Param) error { //nolint:funlen
+	userName, err := getCurrentUserName()
+	if err != nil {
+		return fmt.Errorf("get a current user name: %w", err)
+	}
 
 	filePaths := c.finder.Finds(param.PWD, param.ConfigFilePath)
 	cfgs := make([]*Config, len(filePaths))
