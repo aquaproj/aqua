@@ -104,33 +104,5 @@ func updateASTFile(body ast.Node, pkgs []*aqua.Package) error {
 		return fmt.Errorf(`find a mapping value node "packages": %w`, err)
 	}
 
-	if values == nil {
-		values, err := wast.NormalizeMappingValueNodes(body)
-		if err != nil {
-			return err
-		}
-		idx := len(values)
-		mn, ok := node.(*ast.MappingValueNode)
-		if !ok {
-			return errors.New("body must be a mapping value node")
-		}
-		mv, ok := body.(*ast.MappingNode)
-		if !ok {
-			return errors.New("body must be a mapping node")
-		}
-		latterValues := make([]*ast.MappingValueNode, len(mv.Values[idx:]))
-		copy(latterValues, mv.Values[idx:])
-		mv.Values = mv.Values[:idx]
-		mv.Merge(&ast.MappingNode{
-			Values: []*ast.MappingValueNode{
-				mn,
-			},
-		})
-		mv.Merge(&ast.MappingNode{
-			Values: latterValues,
-		})
-		return nil
-	}
-
 	return appendPkgsNode(values, node)
 }
