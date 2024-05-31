@@ -12,9 +12,11 @@ func (r *Runner) newCompletionCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "completion",
 		Usage: "Output shell completion script for bash, zsh, or fish",
-		Description: `Output shell completion script for bash, zsh, or fish
-Run these commands in .bash_profile, .zprofile, or ~/.config/fish/config.fish.
+		Description: `Output shell completion script for bash, zsh, or fish.
+Source the output to enable completion.
+
 e.g.
+
 .bash_profile
 
 if command -v aqua &> /dev/null; then
@@ -27,11 +29,9 @@ if command -v aqua &> /dev/null; then
 	source <(aqua completion zsh)
 fi
 
-~/.config/fish/config.fish
+fish
 
-if command -v aqua &> /dev/null; 
-	aqua completion fish | source
-end
+aqua completion fish > ~/.config/fish/completions/aqua.fish
 `,
 		Subcommands: []*cli.Command{
 			{
