@@ -82,7 +82,7 @@ brews:
     # Template: allowed
     # Since: v1.20
     extra_install: |
-      generate_completions_from_executable(bin/"aqua", "completion", shells: [:bash, :zsh])
+      generate_completions_from_executable(bin/"aqua", "completion", shells: [:bash, :zsh, :fish])
 
 scoops:
   -
