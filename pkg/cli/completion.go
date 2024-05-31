@@ -13,7 +13,7 @@ func (r *Runner) newCompletionCommand() *cli.Command {
 		Name:  "completion",
 		Usage: "Output shell completion script for bash, zsh, or fish",
 		Description: `Output shell completion script for bash, zsh, or fish
-Run these commands in .bash_profile, .zprofile, or ~/.config/config.fish.
+Run these commands in .bash_profile, .zprofile, or ~/.config/fish/config.fish.
 e.g.
 .bash_profile
 
@@ -27,7 +27,7 @@ if command -v aqua &> /dev/null; then
 	source <(aqua completion zsh)
 fi
 
-~/.config/config.fish
+~/.config/fish/config.fish
 
 if command -v aqua &> /dev/null; 
 	aqua completion fish | source
