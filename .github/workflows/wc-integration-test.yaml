@@ -149,6 +149,8 @@ jobs:
         run: aqua completion bash
       - name: output zsh completion
         run: aqua completion zsh
+      - name: output fish completion
+        run: aqua completion fish
 
       - run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main

@@ -11,17 +11,27 @@ func (r *Runner) newCompletionCommand() *cli.Command {
 	// https://cli.urfave.org/v2/#bash-completion
 	return &cli.Command{
 		Name:  "completion",
-		Usage: "Output shell completion script for bash or zsh",
-		Description: `Output shell completion script for bash or zsh
-Run these commands in .bash_profile or .zprofile
+		Usage: "Output shell completion script for bash, zsh, or fish",
+		Description: `Output shell completion script for bash, zsh, or fish.
+Source the output to enable completion.
+
 e.g.
+
 .bash_profile
 
-if command -v aqua &> /dev/null; then source <(aqua completion bash); fi
+if command -v aqua &> /dev/null; then
+	source <(aqua completion bash)
+fi
 
 .zprofile
 
-if command -v aqua &> /dev/null; then source <(aqua completion zsh); fi
+if command -v aqua &> /dev/null; then
+	source <(aqua completion zsh)
+fi
+
+fish
+
+aqua completion fish > ~/.config/fish/completions/aqua.fish
 `,
 		Subcommands: []*cli.Command{
 			{
@@ -33,6 +43,11 @@ if command -v aqua &> /dev/null; then source <(aqua completion zsh); fi
 				Name:   "zsh",
 				Usage:  "Output shell completion script for zsh",
 				Action: r.zshCompletionAction,
+			},
+			{
+				Name:   "fish",
+				Usage:  "Output shell completion script for fish",
+				Action: r.fishCompletionAction,
 			},
 		},
 	}
@@ -88,5 +103,14 @@ if [ "$funcstack[1]" = "_aqua" ]; then
 else
   compdef _aqua aqua
 fi`)
+	return nil
+}
+
+func (r *Runner) fishCompletionAction(c *cli.Context) error {
+	s, err := c.App.ToFishCompletion()
+	if err != nil {
+		return fmt.Errorf("generate fish completion: %w", err)
+	}
+	fmt.Fprintln(r.Stdout, s)
 	return nil
 }
