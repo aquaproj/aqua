@@ -1,0 +1,13 @@
+---
+name: push-main
+on:
+  push:
+    branches:
+      - main
+permissions: {}
+jobs:
+  ossf-scorecard:
+    uses: suzuki-shunsuke/ossf-scorecard-workflow/.github/workflows/ossf-scorecard.yaml@aaed88174d5c679f7bb9b5a8db029079ac282006 # v0.1.0
+    permissions:
+      security-events: write
+      id-token: write
