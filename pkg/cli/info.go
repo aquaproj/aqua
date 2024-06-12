@@ -14,8 +14,15 @@ func (r *Runner) newInfoCommand() *cli.Command {
 		Usage: "Show information",
 		Description: `Show information.
 e.g.
-$ aqua info`,
+$ aqua info
+
+See also subcommands
+$ aqua info help
+`,
 		Action: r.info,
+		Subcommands: []*cli.Command{
+			r.newPackageInfoCommand(),
+		},
 	}
 }
 

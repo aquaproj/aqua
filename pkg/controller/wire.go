@@ -14,6 +14,7 @@ import (
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/allowpolicy"
+	"github.com/aquaproj/aqua/v2/pkg/controller/packageinfo"
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
 	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	cexec "github.com/aquaproj/aqua/v2/pkg/controller/exec"
@@ -884,6 +885,60 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 		afero.NewOsFs,
 	)
 	return &info.Controller{}
+}
+
+func InitializePackageInfoCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *packageinfo.Controller {
+	wire.Build(
+		packageinfo.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(packageinfo.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(packageinfo.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(packageinfo.ConfigReader), new(*reader.ConfigReader)),
+		),
+		afero.NewOsFs,
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+
+	)
+	return &packageinfo.Controller{}
 }
 
 func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *remove.Controller {
