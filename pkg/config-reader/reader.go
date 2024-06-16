@@ -58,13 +58,11 @@ func (r *ConfigReader) Read(logE *logrus.Entry, configFilePath string, cfg *aqua
 			rgst.Path = osfile.Abs(configFileDir, rgst.Path)
 		}
 	}
-	if err := r.readImports(logE, configFilePath, cfg); err != nil {
-		return err
-	}
+	r.readImports(logE, configFilePath, cfg)
 	return nil
 }
 
-func (r *ConfigReader) readImports(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error {
+func (r *ConfigReader) readImports(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) {
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg == nil {
@@ -104,5 +102,4 @@ func (r *ConfigReader) readImports(logE *logrus.Entry, configFilePath string, cf
 		}
 	}
 	cfg.Packages = pkgs
-	return nil
 }
