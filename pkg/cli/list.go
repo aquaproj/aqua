@@ -38,8 +38,9 @@ $ aqua list -installed -a
 `,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "installed",
-				Usage: "List installed packages",
+				Name:    "installed",
+				Usage:   "List installed packages",
+				Aliases: []string{"i"},
 			},
 			&cli.BoolFlag{
 				Name:    "all",
