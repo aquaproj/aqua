@@ -119,9 +119,9 @@ func (c *Controller) PackageInfo(ctx context.Context, param *config.Param, logE 
 }
 
 func registryAndPackage(name string) (string, string) {
-	i := strings.IndexByte(name, ',')
-	if i == -1 {
-		return "standard", name
+	r, p, ok := strings.Cut(name, ",")
+	if ok {
+		return r, p
 	}
-	return name[:i], name[i+1:]
+	return "standard", name
 }
