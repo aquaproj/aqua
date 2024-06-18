@@ -22,7 +22,7 @@ $ aqua info package sigstore/cosign`,
 
 func (r *Runner) packageInfoAction(c *cli.Context) error {
 	param := &config.Param{}
-	if err := r.setParam(c, "generate", param); err != nil {
+	if err := r.setParam(c, "info-package", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
