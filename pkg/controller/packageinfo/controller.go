@@ -90,7 +90,7 @@ func (c *Controller) PackageInfo(ctx context.Context, param *config.Param, logE 
 		packageInfoByNameByRegistry[registryName]= registryConfig.PackageInfos.ToMap(logE)
 	}
 
-	encoder := json.NewEncoder(os.Stdout)
+	encoder := json.NewEncoder(c.stdout)
 	encoder.SetIndent("", "  ")
 
 	missingPackages := false
