@@ -5,6 +5,7 @@ jobs:
   status-check:
     # This job is used for main branch's branch protection rule's status check.
     # If all dependent jobs succeed or are skipped this job succeeds.
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     permissions: {}
     steps:

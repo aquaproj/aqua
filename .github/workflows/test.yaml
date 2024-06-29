@@ -5,6 +5,7 @@ permissions: {}
 jobs:
   path-filter:
     # Get changed files to filter jobs
+    timeout-minutes: 30
     outputs:
       update-aqua-checksums: ${{steps.changes.outputs.update-aqua-checksums}}
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}

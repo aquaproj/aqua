@@ -6,6 +6,7 @@ env:
 jobs:
   ghalint:
     # Validate GitHub Actions Workflows by ghalint.
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     permissions: {}
     steps:

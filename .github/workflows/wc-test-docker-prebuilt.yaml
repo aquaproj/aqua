@@ -4,6 +4,7 @@ on: workflow_call
 jobs:
   test-docker:
     # Test Dockerfile
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     permissions: {}
     steps:
