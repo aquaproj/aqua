@@ -32,6 +32,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+replace github.com/urfave/cli/v2 v2.27.2 => github.com/urfave/cli/v2 v2.27.3-0.20240629214313-84c536d83870
+
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
@@ -74,7 +76,7 @@ require (
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
+	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
