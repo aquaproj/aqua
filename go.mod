@@ -4,7 +4,7 @@ go 1.22.3
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/adrg/xdg v0.4.0
+	github.com/adrg/xdg v0.5.0
 	github.com/expr-lang/expr v1.16.9
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/goccy/go-yaml v1.11.3
@@ -70,7 +70,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
