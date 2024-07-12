@@ -56,6 +56,7 @@ type PackageInfo struct {
 	Checksum            *Checksum          `json:"checksum,omitempty"`
 	Cosign              *Cosign            `json:"cosign,omitempty"`
 	SLSAProvenance      *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	Minisign            *Minisign          `json:"minisign,omitempty" yaml:",omitempty"`
 	VersionConstraints  string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides    []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 }
@@ -112,6 +113,7 @@ type VersionOverride struct {
 	Checksum            *Checksum       `json:"checksum,omitempty"`
 	Cosign              *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance      *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	Minisign            *Minisign       `json:"minisign,omitempty" yaml:",omitempty"`
 	Build               *Build          `json:"build,omitempty" yaml:",omitempty"`
 	Overrides           Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
 	SupportedEnvs       SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
@@ -135,6 +137,7 @@ type Override struct {
 	Checksum           *Checksum       `json:"checksum,omitempty"`
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	Minisign           *Minisign       `json:"minisign,omitempty" yaml:",omitempty"`
 	Envs               SupportedEnvs   `yaml:",omitempty" json:"envs,omitempty"`
 }
 
@@ -170,6 +173,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		Checksum:            p.Checksum,
 		Cosign:              p.Cosign,
 		SLSAProvenance:      p.SLSAProvenance,
+		Minisign:            p.Minisign,
 		Private:             p.Private,
 		ErrorMessage:        p.ErrorMessage,
 		NoAsset:             p.NoAsset,
@@ -210,6 +214,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.CompleteWindowsExt = nil
 		p.Cosign = nil
 		p.SLSAProvenance = nil
+		p.Minisign = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -223,6 +228,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.CompleteWindowsExt = nil
 		p.Cosign = nil
 		p.SLSAProvenance = nil
+		p.Minisign = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -235,6 +241,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.CompleteWindowsExt = nil
 		p.Cosign = nil
 		p.SLSAProvenance = nil
+		p.Minisign = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -316,6 +323,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	}
 	if child.SLSAProvenance != nil {
 		pkg.SLSAProvenance = child.SLSAProvenance
+	}
+	if child.Minisign != nil {
+		pkg.Minisign = child.Minisign
 	}
 	if child.ErrorMessage != nil {
 		pkg.ErrorMessage = *child.ErrorMessage
@@ -409,6 +419,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 
 	if ov.SLSAProvenance != nil {
 		p.SLSAProvenance = ov.SLSAProvenance
+	}
+
+	if ov.Minisign != nil {
+		p.Minisign = ov.Minisign
 	}
 
 	if ov.AppendExt != nil {

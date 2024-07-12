@@ -100,6 +100,10 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 		return err
 	}
 
+	if err := is.verifyWithMinisign(ctx, logE, bodyFile, param); err != nil {
+		return err
+	}
+
 	if err := is.verifyChecksumWrap(ctx, logE, param, bodyFile); err != nil {
 		return err
 	}

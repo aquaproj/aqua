@@ -49,6 +49,9 @@ func (r *Runner) updaetAquaAction(c *cli.Context) error {
 	if err := r.setParam(c, "update-aqua", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeUpdateAquaCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	ctrl, err := controller.InitializeUpdateAquaCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	if err != nil {
+		return fmt.Errorf("initialize a UpdateAquaController: %w", err)
+	}
 	return ctrl.UpdateAqua(c.Context, r.LogE, param) //nolint:wrapcheck
 }

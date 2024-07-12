@@ -1,0 +1,33 @@
+package installpackage
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/minisign"
+	"github.com/sirupsen/logrus"
+)
+
+func (is *Installer) verifyWithMinisign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
+	ppkg := param.Package
+	m := ppkg.PackageInfo.Minisign
+	if !m.GetEnabled() {
+		return nil
+	}
+	logE.Info("verify a package with minisign")
+	if err := is.minisignInstaller.installMinisign(ctx, logE); err != nil {
+		return fmt.Errorf("install minisign: %w", err)
+	}
+	tempFilePath, err := bodyFile.Path()
+	if err != nil {
+		return fmt.Errorf("get a temporary file path: %w", err)
+	}
+	if err := is.minisignVerifier.Verify(ctx, logE, &minisign.ParamVerify{
+		ArtifactPath: tempFilePath,
+		PublicKey:    m.PublicKey,
+	}); err != nil {
+		return fmt.Errorf("verify a package with minisign: %w", err)
+	}
+	return nil
+}
