@@ -30,6 +30,7 @@ type ExecutorImpl struct {
 func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
 	rt := runtime.NewR()
 	pkg := Package()
+	pkg.PackageInfo.OverrideByRuntime(rt)
 	exePath, err := pkg.ExePath(param.RootDir, pkg.PackageInfo.Files[0], rt)
 	if err != nil {
 		return nil, fmt.Errorf("get an executable file path of minisign: %w", err)
