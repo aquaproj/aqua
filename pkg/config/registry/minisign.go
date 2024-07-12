@@ -7,7 +7,7 @@ type Minisign struct {
 	RepoName  string  `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset     *string `json:"asset,omitempty" yaml:",omitempty"`
 	URL       *string `json:"url,omitempty" yaml:",omitempty"`
-	PublicKey string  `json:"public_key" yaml:"public_key"`
+	PublicKey string  `json:"public_key,omitempty" yaml:"public_key,omitempty"`
 }
 
 func (m *Minisign) ToDownloadedFile() *DownloadedFile {

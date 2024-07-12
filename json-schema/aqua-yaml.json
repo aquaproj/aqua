@@ -74,6 +74,9 @@
         },
         "update": {
           "$ref": "#/$defs/Update"
+        },
+        "go_version_file": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -138,6 +141,15 @@
       "properties": {
         "enabled": {
           "type": "boolean"
+        },
+        "allowed_version": {
+          "type": "string"
+        },
+        "types": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,

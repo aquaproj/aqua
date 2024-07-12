@@ -133,9 +133,6 @@
         "enabled": {
           "type": "boolean"
         },
-        "cosign_experimental": {
-          "type": "boolean"
-        },
         "opts": {
           "items": {
             "type": "string"
@@ -240,6 +237,37 @@
       },
       "type": "array"
     },
+    "Minisign": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "github_release",
+            "http"
+          ]
+        },
+        "repo_owner": {
+          "type": "string"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "public_key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "Override": {
       "properties": {
         "goos": {
@@ -339,6 +367,9 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
+        },
+        "minisign": {
+          "$ref": "#/$defs/Minisign"
         },
         "envs": {
           "$ref": "#/$defs/SupportedEnvs"
@@ -487,6 +518,9 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
+        },
+        "minisign": {
+          "$ref": "#/$defs/Minisign"
         },
         "version_constraint": {
           "type": "string"
@@ -678,6 +712,9 @@
         },
         "slsa_provenance": {
           "$ref": "#/$defs/SLSAProvenance"
+        },
+        "minisign": {
+          "$ref": "#/$defs/Minisign"
         },
         "build": {
           "$ref": "#/$defs/Build"
