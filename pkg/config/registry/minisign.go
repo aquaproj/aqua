@@ -27,7 +27,7 @@ func (m *Minisign) GetEnabled() bool {
 	if m.Enabled != nil {
 		return *m.Enabled
 	}
-	return m.Type != ""
+	return true
 }
 
 func (m *Minisign) GetDownloadedFile() *DownloadedFile {

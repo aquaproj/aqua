@@ -136,7 +136,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
@@ -185,7 +185,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
@@ -221,7 +221,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
@@ -247,7 +247,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)

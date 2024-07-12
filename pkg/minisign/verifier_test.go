@@ -2,6 +2,8 @@ package minisign_test
 
 import (
 	"context"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -21,6 +23,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		isErr            bool
 		fs               afero.Fs
 		rt               *runtime.Runtime
+		downloader       download.ClientAPI
 		file             *download.File
 		m                *registry.Minisign
 		art              *template.Artifact
@@ -34,6 +37,9 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			rt: &runtime.Runtime{
 				GOOS:   "darwin",
 				GOARCH: "arm64",
+			},
+			downloader: &download.Mock{
+				RC: io.NopCloser(strings.NewReader("hello")),
 			},
 			file: &download.File{
 				Type:      "github_release",
@@ -66,8 +72,8 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			verifier := minisign.New(d.fs, d.exe)
-			if err := verifier.Verify(ctx, logE, d.param); err != nil {
+			verifier := minisign.New(d.downloader, d.fs, d.exe)
+			if err := verifier.Verify(ctx, logE, d.rt, d.m, d.art, d.file, d.param); err != nil {
 				if d.isErr {
 					return
 				}

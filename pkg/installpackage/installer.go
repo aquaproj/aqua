@@ -106,7 +106,7 @@ type SLSAVerifier interface {
 }
 
 type MinisignVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, param *minisign.ParamVerify) error
+	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *minisign.ParamVerify) error
 }
 
 type CosignVerifier interface {

@@ -19,7 +19,7 @@ type CommandExecutor interface {
 }
 
 type Executor interface {
-	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error
+	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, signature string) error
 }
 
 type ExecutorImpl struct {
@@ -64,13 +64,15 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 
 var errVerify = errors.New("verify with minisign")
 
-func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
+func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, signature string) error {
 	// minisign -Vm myfile.txt -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
 	args := []string{
 		"-Vm",
 		param.ArtifactPath,
 		"-P",
 		param.PublicKey,
+		"-x",
+		signature,
 	}
 	for i := range 5 {
 		if err := e.exec(ctx, args); err == nil {

@@ -15,6 +15,7 @@ func (is *Installer) verifyWithMinisign(ctx context.Context, logE *logrus.Entry,
 	if !m.GetEnabled() {
 		return nil
 	}
+	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with minisign")
 	if err := is.minisignInstaller.installMinisign(ctx, logE); err != nil {
 		return fmt.Errorf("install minisign: %w", err)
@@ -23,7 +24,11 @@ func (is *Installer) verifyWithMinisign(ctx context.Context, logE *logrus.Entry,
 	if err != nil {
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
-	if err := is.minisignVerifier.Verify(ctx, logE, &minisign.ParamVerify{
+	if err := is.minisignVerifier.Verify(ctx, logE, is.runtime, m, art, &download.File{
+		RepoOwner: ppkg.PackageInfo.RepoOwner,
+		RepoName:  ppkg.PackageInfo.RepoName,
+		Version:   ppkg.Package.Version,
+	}, &minisign.ParamVerify{
 		ArtifactPath: tempFilePath,
 		PublicKey:    m.PublicKey,
 	}); err != nil {
