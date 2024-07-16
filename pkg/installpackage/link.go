@@ -1,6 +1,7 @@
 package installpackage
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -38,12 +39,15 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 	return failed
 }
 
-func (is *Installer) replaceWithHardlinks() error {
+func (is *Installer) replaceWithHardlinks(ctx context.Context, logE *logrus.Entry) error {
 	hardlinkFile := filepath.Join(is.rootDir, "hardlink")
 	if f, err := afero.Exists(is.fs, hardlinkFile); err != nil {
 		return fmt.Errorf("check if a hardlink flag exists: %w", err)
 	} else if f {
 		return nil
+	}
+	if err := is.InstallProxy(ctx, logE); err != nil {
+		return err
 	}
 	binDir := filepath.Join(is.rootDir, "bin")
 	infos, err := afero.ReadDir(is.fs, binDir)
