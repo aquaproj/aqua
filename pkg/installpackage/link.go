@@ -75,7 +75,7 @@ func (is *Installer) recreateHardLinks() error {
 	a := filepath.Join(pkgPath, "aqua-proxy.exe")
 
 	for _, info := range infos {
-		p := filepath.Join(binDir, info.Name()+".exe")
+		p := filepath.Join(binDir, info.Name())
 		if err := is.fs.Remove(p); err != nil {
 			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
 		}
