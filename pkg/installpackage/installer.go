@@ -232,12 +232,6 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 	})
 	logE.Debug("installing the package")
 
-	if isWindows(is.runtime.GOOS) {
-		if err := is.replaceWithHardlinks(ctx, logE); err != nil {
-			return err
-		}
-	}
-
 	if err := is.validatePackage(logE, param); err != nil {
 		return err
 	}

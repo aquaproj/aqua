@@ -1,7 +1,6 @@
 package installpackage
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,14 +13,36 @@ import (
 
 func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
 	failed := false
+
+	var aquaProxyPathOnWindows string
+	if is.runtime.IsWindows() {
+		pkg := proxyPkg()
+		pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+		if err != nil {
+			logerr.WithError(logE, err).Error("get a path to aqua-proxy")
+			failed = true
+		}
+		aquaProxyPathOnWindows = filepath.Join(pkgPath, "aqua-proxy.exe")
+	}
+
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
 			if isWindows(is.runtime.GOOS) {
+				hardLink := filepath.Join(is.rootDir, "bin", file.Name+".exe")
+				if f, err := afero.Exists(is.fs, hardLink); err != nil {
+					logerr.WithError(logE, err).WithFields(logrus.Fields{
+						"command": file.Name,
+					}).Error("check if a hard link to aqua-proxy exists")
+					failed = true
+					continue
+				} else if f {
+					continue
+				}
 				logE.WithFields(logrus.Fields{
 					"command": file.Name,
 				}).Info("creating a hard link to aqua-proxy")
-				if err := is.linker.Hardlink(filepath.Join(is.rootDir, proxyName+".exe"), filepath.Join(is.rootDir, "bin", file.Name+".exe")); err != nil {
+				if err := is.linker.Hardlink(aquaProxyPathOnWindows, hardLink); err != nil {
 					logerr.WithError(logE, err).WithFields(logrus.Fields{
 						"command": file.Name,
 					}).Error("creating a hard link to aqua-proxy")
@@ -39,36 +60,28 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 	return failed
 }
 
-func (is *Installer) replaceWithHardlinks(ctx context.Context, logE *logrus.Entry) error {
-	hardlinkFile := filepath.Join(is.rootDir, "hardlink")
-	if f, err := afero.Exists(is.fs, hardlinkFile); err != nil {
-		return fmt.Errorf("check if a hardlink flag exists: %w", err)
-	} else if f {
-		return nil
-	}
-	if err := is.InstallProxy(ctx, logE); err != nil {
-		return err
-	}
+func (is *Installer) recreateHardLinks() error {
 	binDir := filepath.Join(is.rootDir, "bin")
 	infos, err := afero.ReadDir(is.fs, binDir)
 	if err != nil {
 		return fmt.Errorf("read a bin dir: %w", err)
 	}
-	proxy := filepath.Join(is.rootDir, "aqua-proxy")
+
+	pkg := proxyPkg()
+	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	a := filepath.Join(pkgPath, "aqua-proxy.exe")
+
 	for _, info := range infos {
-		p := filepath.Join(binDir, info.Name())
+		p := filepath.Join(binDir, info.Name()+".exe")
 		if err := is.fs.Remove(p); err != nil {
 			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
 		}
-		if err := is.linker.Hardlink(proxy, p); err != nil {
+		if err := is.linker.Hardlink(a, p); err != nil {
 			return fmt.Errorf("create a hard link: %w", err)
 		}
-	}
-
-	if f, err := is.fs.Create(hardlinkFile); err != nil {
-		return fmt.Errorf("create a hardlink flag: %w", err)
-	} else { //nolint:revive
-		f.Close()
 	}
 	return nil
 }

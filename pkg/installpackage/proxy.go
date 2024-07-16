@@ -25,8 +25,8 @@ func ProxyChecksums() map[string]string {
 	}
 }
 
-func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
-	pkg := &config.Package{
+func proxyPkg() *config.Package {
+	return &config.Package{
 		Package: &aqua.Package{
 			Name:    proxyName,
 			Version: ProxyVersion,
@@ -43,6 +43,10 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 			},
 		},
 	}
+}
+
+func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
+	pkg := proxyPkg()
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
 		"package_version": pkg.Package.Version,
@@ -69,7 +73,7 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 
 	logE.Debug("check if aqua-proxy is already installed")
 	finfo, err := is.fs.Stat(pkgPath)
-	if err != nil { //nolint:nestif
+	if err != nil {
 		// file doesn't exist
 		chksum := ProxyChecksums()[is.runtime.Env()]
 		if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
@@ -84,16 +88,16 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 			return err
 		}
 		if isWindows(is.runtime.GOOS) {
-			logE.Info("creating a hard link of aqua-proxy")
-			if err := is.linker.Hardlink(a+".exe", filepath.Join(is.rootDir, proxyName+".exe")); err != nil {
-				return fmt.Errorf("create a hard link of aqua-proxy: %w", err)
-			}
-			return nil
+			return is.recreateHardLinks()
 		}
 	} else { //nolint:gocritic
 		if !finfo.IsDir() {
 			return fmt.Errorf("%s isn't a directory", pkgPath)
 		}
+	}
+
+	if isWindows(is.runtime.GOOS) {
+		return nil
 	}
 
 	return is.createLink(filepath.Join(is.rootDir, proxyName), a, logE)
