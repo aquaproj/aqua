@@ -19,10 +19,10 @@ import (
 // This method is also called by "cp" command.
 func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if param.Dest == "" {
-		// Create "bin" and "bat" directories and install aqua-proxy in advance.
+		// Create a "bin" directory and install aqua-proxy in advance.
 		// If param.Dest isn't empty, this means this method is called by "copy" command.
 		// If the command is "copy", this block is skipped.
-		if err := c.mkBinBatDir(); err != nil {
+		if err := c.mkBinDir(); err != nil {
 			return err
 		}
 		if err := c.packageInstaller.InstallProxy(ctx, logE); err != nil {
@@ -53,14 +53,13 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 	return c.installAll(ctx, logE, param, policyCfgs, globalPolicyPaths)
 }
 
-func (c *Controller) mkBinBatDir() error {
-	rootBin := filepath.Join(c.rootDir, "bin")
-	if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
+func (c *Controller) mkBinDir() error {
+	if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bin")); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
-	if c.runtime.GOOS == "windows" {
-		if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bat")); err != nil {
-			return fmt.Errorf("create the directory: %w", err)
+	if c.runtime.IsWindows() {
+		if err := c.fs.RemoveAll(filepath.Join(c.rootDir, "bat")); err != nil {
+			return fmt.Errorf("remove the bat directory: %w", err)
 		}
 	}
 	return nil

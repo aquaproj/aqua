@@ -44,6 +44,23 @@ func (lk *mockLinker) Symlink(dest, src string) error {
 	return nil
 }
 
+func (lk *mockLinker) Hardlink(dest, src string) error {
+	if _, ok := lk.files[src]; ok {
+		return errors.New("file already exists")
+	}
+	if _, err := lk.fs.Create(src); err != nil {
+		return err //nolint:wrapcheck
+	}
+	if lk.files == nil {
+		lk.files = map[string]*mockFileInfo{}
+	}
+	lk.files[src] = &mockFileInfo{
+		Dest: dest,
+		name: filepath.Base(src),
+	}
+	return nil
+}
+
 func (lk *mockLinker) Readlink(src string) (string, error) {
 	if f, ok := lk.files[src]; ok {
 		return f.Dest, nil

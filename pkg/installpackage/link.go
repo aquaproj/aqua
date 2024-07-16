@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -14,12 +15,39 @@ import (
 
 func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) bool {
 	failed := false
+
+	var aquaProxyPathOnWindows string
+	if is.runtime.IsWindows() {
+		pkg := proxyPkg()
+		pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+		if err != nil {
+			logerr.WithError(logE, err).Error("get a path to aqua-proxy")
+			failed = true
+		}
+		aquaProxyPathOnWindows = filepath.Join(pkgPath, "aqua-proxy.exe")
+	}
+
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
-			if isWindows(is.runtime.GOOS) {
-				if err := is.createProxyWindows(file.Name, logE); err != nil {
-					logerr.WithError(logE, err).Error("create the proxy file")
+			if isWindows(runtime.GOOS) {
+				hardLink := filepath.Join(is.rootDir, "bin", file.Name+".exe")
+				if f, err := afero.Exists(is.fs, hardLink); err != nil {
+					logerr.WithError(logE, err).WithFields(logrus.Fields{
+						"command": file.Name,
+					}).Error("check if a hard link to aqua-proxy exists")
+					failed = true
+					continue
+				} else if f {
+					continue
+				}
+				logE.WithFields(logrus.Fields{
+					"command": file.Name,
+				}).Info("creating a hard link to aqua-proxy")
+				if err := is.linker.Hardlink(aquaProxyPathOnWindows, hardLink); err != nil {
+					logerr.WithError(logE, err).WithFields(logrus.Fields{
+						"command": file.Name,
+					}).Error("create a hard link to aqua-proxy")
 					failed = true
 				}
 				continue
@@ -32,6 +60,37 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 		}
 	}
 	return failed
+}
+
+func (is *Installer) recreateHardLinks() error {
+	binDir := filepath.Join(is.rootDir, "bin")
+	infos, err := afero.ReadDir(is.fs, binDir)
+	if err != nil {
+		return fmt.Errorf("read a bin dir: %w", err)
+	}
+
+	pkg := proxyPkg()
+	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	a := filepath.Join(pkgPath, "aqua-proxy.exe")
+
+	for _, info := range infos {
+		if info.Name() == "aqua.exe" {
+			continue
+		}
+		p := filepath.Join(binDir, info.Name())
+		if err := is.fs.Remove(p); err != nil {
+			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
+		}
+		if strings.HasSuffix(info.Name(), ".exe") {
+			if err := is.linker.Hardlink(a, p); err != nil {
+				return fmt.Errorf("create a hard link: %w", err)
+			}
+		}
+	}
+	return nil
 }
 
 func (is *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
@@ -87,61 +146,6 @@ func (is *Installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry)
 	}
 	if err := is.linker.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
-	}
-	return nil
-}
-
-const (
-	batTemplate = `@echo off
-aqua exec -- <COMMAND> %*
-`
-	scrTemplate = `#!/usr/bin/env bash
-exec aqua exec -- "$0" "$@"
-`
-	proxyPermission os.FileMode = 0o755
-)
-
-func (is *Installer) createProxyWindows(binName string, logE *logrus.Entry) error {
-	if err := is.createBinWindows(filepath.Join(is.rootDir, "bin", binName), scrTemplate, logE); err != nil {
-		return err
-	}
-	if err := is.createBinWindows(filepath.Join(is.rootDir, "bat", binName+".bat"), strings.Replace(batTemplate, "<COMMAND>", binName, 1), logE); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (is *Installer) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
-	if fileInfo, err := is.linker.Lstat(binPath); err == nil {
-		switch mode := fileInfo.Mode(); {
-		case mode.IsDir():
-			// if file is a directory, raise error
-			return fmt.Errorf("%s has already existed and is a directory", binPath)
-		case mode&os.ModeNamedPipe != 0:
-			// if file is a pipe, raise error
-			return fmt.Errorf("%s has already existed and is a named pipe", binPath)
-		case mode.IsRegular():
-			// TODO check content
-			return nil
-		case mode&os.ModeSymlink != 0:
-			if err := is.fs.Remove(binPath); err != nil {
-				return fmt.Errorf("remove a symbolic link (%s): %w", binPath, err)
-			}
-			return is.writeBinWindows(binPath, binTxt, logE)
-		default:
-			return fmt.Errorf("unexpected file mode %s: %s", binPath, mode.String())
-		}
-	}
-
-	return is.writeBinWindows(binPath, binTxt, logE)
-}
-
-func (is *Installer) writeBinWindows(proxyPath, binTxt string, logE *logrus.Entry) error {
-	logE.WithFields(logrus.Fields{
-		"proxy_path": proxyPath,
-	}).Info("create a proxy file")
-	if err := afero.WriteFile(is.fs, proxyPath, []byte(binTxt), proxyPermission); err != nil {
-		return fmt.Errorf("create a proxy file (%s): %w", proxyPath, err)
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"runtime"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -12,24 +13,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const ProxyVersion = "v1.2.6" // renovate: depName=aquaproj/aqua-proxy
+const ProxyVersion = "v1.2.7" // renovate: depName=aquaproj/aqua-proxy
 
 func ProxyChecksums() map[string]string {
 	return map[string]string{
-		"darwin/amd64":  "b7bc0d22040bf450fbb31a8a92acabee11e33735e59a0692574ee57fbe4695be",
-		"darwin/arm64":  "2f0a551c14cae1823d2cde2530348032ce04aff5bfe9b5d8fd5815a366d7a9e5",
-		"linux/amd64":   "8fa0876fb9c6b23b9f911fa49ec8edc750badec86eb30b47e8aff231d82d12dd",
-		"linux/arm64":   "4694cbbdf7e2a22778baf75c424db59c3810d795792234b72be1166d432786ef",
-		"windows/amd64": "86ec4a91f4bee061482070ac1b6e519a37a27313372af259e367799f413d8dfd",
-		"windows/arm64": "5e81237a2117b5f3f7a41c84181f722bfcb1032b7af8ff3977a94e1995dd0c47",
+		"darwin/amd64":  "1EA8D0CD0A1BDCEE463B04DB7DF9DBF50AB54549B9EB9FE6506A15CDFA8F4563",
+		"darwin/arm64":  "3686358F141D39A2909F9A6467E37B48DEF9767F7AF872483D43B4C9A5C5DF93",
+		"linux/amd64":   "6917C867B818FA0B261E28C1924EFB33820D8FFF3930093D16B4E76793773F81",
+		"linux/arm64":   "5E7B8A403E4B20251B02D0AEE537249C107DD6743DBD1F22A40EE6A077AC7DE9",
+		"windows/amd64": "9C953DABD95A6231CF3C5C1A20781007AB44E603160C0865836DE57F3307976A",
+		"windows/arm64": "4CBC6E4002EB5322A74E2B331B5BDAC188D4B678EF93DD2D2BED1AEF71683A8E",
 	}
 }
 
-func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
-	if isWindows(is.runtime.GOOS) {
-		return nil
-	}
-	pkg := &config.Package{
+func proxyPkg() *config.Package {
+	return &config.Package{
 		Package: &aqua.Package{
 			Name:    proxyName,
 			Version: ProxyVersion,
@@ -46,6 +44,10 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 			},
 		},
 	}
+}
+
+func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
+	pkg := proxyPkg()
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    pkg.Package.Name,
 		"package_version": pkg.Package.Version,
@@ -62,6 +64,14 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
+	// create a symbolic link
+	binName := proxyName
+	a, err := filepath.Rel(is.rootDir, filepath.Join(pkgPath, binName))
+	if err != nil {
+		return fmt.Errorf("get a relative path: %w", err)
+	}
+
 	logE.Debug("check if aqua-proxy is already installed")
 	finfo, err := is.fs.Stat(pkgPath)
 	if err != nil {
@@ -78,17 +88,17 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		}); err != nil {
 			return err
 		}
+		if isWindows(runtime.GOOS) {
+			return is.recreateHardLinks()
+		}
 	} else { //nolint:gocritic
 		if !finfo.IsDir() {
 			return fmt.Errorf("%s isn't a directory", pkgPath)
 		}
 	}
 
-	// create a symbolic link
-	binName := proxyName
-	a, err := filepath.Rel(is.rootDir, filepath.Join(pkgPath, binName))
-	if err != nil {
-		return fmt.Errorf("get a relative path: %w", err)
+	if isWindows(runtime.GOOS) {
+		return nil
 	}
 
 	return is.createLink(filepath.Join(is.rootDir, proxyName), a, logE)

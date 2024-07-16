@@ -90,6 +90,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 type Linker interface {
 	Lstat(s string) (os.FileInfo, error)
 	Symlink(dest, src string) error
+	Hardlink(dest, src string) error
 	Readlink(src string) (string, error)
 }
 

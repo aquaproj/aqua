@@ -18,6 +18,10 @@ func (lk *Linker) Symlink(dest, src string) error {
 	return os.Symlink(dest, src) //nolint:wrapcheck
 }
 
+func (lk *Linker) Hardlink(dest, src string) error {
+	return os.Link(dest, src) //nolint:wrapcheck
+}
+
 func (lk *Linker) Readlink(src string) (string, error) {
 	return os.Readlink(src) //nolint:wrapcheck
 }
