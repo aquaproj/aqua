@@ -13,7 +13,7 @@ on:
 permissions: {}
 jobs:
   action-tmate:
-    timeout-minutes: 30
+    timeout-minutes: 360
     runs-on: ${{inputs.runs-on}}
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
