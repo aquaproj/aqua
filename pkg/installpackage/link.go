@@ -17,7 +17,7 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
 			if isWindows(is.runtime.GOOS) {
-				if err := is.createHardLink(filepath.Join(is.rootDir, "bin", file.Name), filepath.Join(is.rootDir, proxyName), logE); err != nil {
+				if err := is.createHardLink(filepath.Join(is.rootDir, "bin", file.Name+".exe"), filepath.Join(is.rootDir, proxyName+".exe"), logE); err != nil {
 					logerr.WithError(logE, err).Error("create the proxy file")
 					failed = true
 				}
