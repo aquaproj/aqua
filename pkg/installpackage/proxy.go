@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"runtime"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -87,7 +88,7 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		}); err != nil {
 			return err
 		}
-		if isWindows(is.runtime.GOOS) {
+		if isWindows(runtime.GOOS) {
 			return is.recreateHardLinks()
 		}
 	} else { //nolint:gocritic
@@ -96,7 +97,7 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		}
 	}
 
-	if isWindows(is.runtime.GOOS) {
+	if isWindows(runtime.GOOS) {
 		return nil
 	}
 
