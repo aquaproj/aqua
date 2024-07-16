@@ -135,7 +135,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 	}
 
 	if is.runtime.GOOS == "windows" {
-		return is.linker.Hardlink(exePath, filepath.Join(is.rootDir, "bin", "aqua.exe"))
+		return is.copyAquaOnWindows(exePath)
 	}
 
 	// create a symbolic link
@@ -150,6 +150,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 func (is *Installer) copyAquaOnWindows(exePath string) error {
 	// https://github.com/orgs/aquaproj/discussions/2510
 	// https://stackoverflow.com/questions/1211948/best-method-for-implementing-self-updating-software
+	// https://github.com/aquaproj/aqua/issues/2918
 	dest := filepath.Join(is.rootDir, "bin", "aqua.exe")
 	if f, err := afero.Exists(is.fs, dest); err != nil {
 		return fmt.Errorf("check if aqua.exe exists: %w", err)
@@ -164,5 +165,5 @@ func (is *Installer) copyAquaOnWindows(exePath string) error {
 			return fmt.Errorf("rename aqua.exe to update: %w", err)
 		}
 	}
-	return is.Copy(dest, exePath)
+	return is.linker.Hardlink(exePath, dest)
 }
