@@ -12,16 +12,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const ProxyVersion = "v1.2.6" // renovate: depName=aquaproj/aqua-proxy
+const ProxyVersion = "v1.2.7-1" // renovate: depName=aquaproj/aqua-proxy
 
 func ProxyChecksums() map[string]string {
 	return map[string]string{
-		"darwin/amd64":  "b7bc0d22040bf450fbb31a8a92acabee11e33735e59a0692574ee57fbe4695be",
-		"darwin/arm64":  "2f0a551c14cae1823d2cde2530348032ce04aff5bfe9b5d8fd5815a366d7a9e5",
-		"linux/amd64":   "8fa0876fb9c6b23b9f911fa49ec8edc750badec86eb30b47e8aff231d82d12dd",
-		"linux/arm64":   "4694cbbdf7e2a22778baf75c424db59c3810d795792234b72be1166d432786ef",
-		"windows/amd64": "86ec4a91f4bee061482070ac1b6e519a37a27313372af259e367799f413d8dfd",
-		"windows/arm64": "5e81237a2117b5f3f7a41c84181f722bfcb1032b7af8ff3977a94e1995dd0c47",
+		"darwin/amd64":  "A2DC53DB2F8A272C586F0B84127E50DB0C27652BFF05ADD00B6777EC5889FB5F",
+		"darwin/arm64":  "A5B21FD3CED16EC650E0772F3FB5EEFBFF2D45001C6DB314117F3290B461AB87",
+		"linux/amd64":   "B1655278D54550B527B09FBED53F0684C10499C38FDB91AC1D7A91526D212861",
+		"linux/arm64":   "68DD293008E8CCBDD7F0DC85B43CA87AB059BFA41EFDEEC6131A849CEFD6B99F",
+		"windows/amd64": "FC9C5B4587A9AC33E2E38EC179C319744E95885358178462EC529134178479FA",
+		"windows/arm64": "F2B2BC7E396407FC4DFABADE7A0D746D43681007D91733BCA69F15F67304CFE5",
 	}
 }
 
