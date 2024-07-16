@@ -57,8 +57,8 @@ func (is *Installer) replaceWithHardlinks() error {
 	}
 
 	if f, err := is.fs.Create(hardlinkFile); err != nil {
-		return err
-	} else {
+		return fmt.Errorf("create a hardlink flag: %w", err)
+	} else { //nolint:revive
 		f.Close()
 	}
 	return nil
@@ -127,45 +127,6 @@ func (is *Installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry)
 	}
 	if err := is.linker.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
-	}
-	return nil
-}
-
-const (
-	proxyPermission os.FileMode = 0o755
-)
-
-func (is *Installer) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
-	if fileInfo, err := is.linker.Lstat(binPath); err == nil {
-		switch mode := fileInfo.Mode(); {
-		case mode.IsDir():
-			// if file is a directory, raise error
-			return fmt.Errorf("%s has already existed and is a directory", binPath)
-		case mode&os.ModeNamedPipe != 0:
-			// if file is a pipe, raise error
-			return fmt.Errorf("%s has already existed and is a named pipe", binPath)
-		case mode.IsRegular():
-			// TODO check content
-			return nil
-		case mode&os.ModeSymlink != 0:
-			if err := is.fs.Remove(binPath); err != nil {
-				return fmt.Errorf("remove a symbolic link (%s): %w", binPath, err)
-			}
-			return is.writeBinWindows(binPath, binTxt, logE)
-		default:
-			return fmt.Errorf("unexpected file mode %s: %s", binPath, mode.String())
-		}
-	}
-
-	return is.writeBinWindows(binPath, binTxt, logE)
-}
-
-func (is *Installer) writeBinWindows(proxyPath, binTxt string, logE *logrus.Entry) error {
-	logE.WithFields(logrus.Fields{
-		"proxy_path": proxyPath,
-	}).Info("create a proxy file")
-	if err := afero.WriteFile(is.fs, proxyPath, []byte(binTxt), proxyPermission); err != nil {
-		return fmt.Errorf("create a proxy file (%s): %w", proxyPath, err)
 	}
 	return nil
 }
