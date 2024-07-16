@@ -89,7 +89,7 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 	}
 
 	if isWindows(is.runtime.GOOS) {
-		return is.createHardLink(a+".exe", filepath.Join(is.rootDir, proxyName+".exe"), logE)
+		return is.createHardLink(filepath.Join(is.rootDir, proxyName+".exe"), a+".exe", logE)
 	}
 
 	return is.createLink(filepath.Join(is.rootDir, proxyName), a, logE)
