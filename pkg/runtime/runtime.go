@@ -25,6 +25,10 @@ func NewR() *Runtime {
 	}
 }
 
+func (rt *Runtime) IsWindows() bool {
+	return rt.GOOS == "windows"
+}
+
 func (rt *Runtime) Env() string {
 	return fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)
 }

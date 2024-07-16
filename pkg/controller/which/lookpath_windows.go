@@ -29,10 +29,9 @@ func (c *Controller) listExts() []string {
 
 func (c *Controller) lookPath(envPath, exeName string) string {
 	binDir := filepath.Join(c.rootDir, "bin")
-	batDir := filepath.Join(c.rootDir, "bat")
 	exts := c.listExts()
 	for _, p := range filepath.SplitList(envPath) {
-		if p == binDir || p == batDir {
+		if p == binDir {
 			continue
 		}
 		bin := filepath.Join(p, exeName)
