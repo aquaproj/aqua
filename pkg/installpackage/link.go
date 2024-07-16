@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -45,7 +46,7 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 				if err := is.linker.Hardlink(aquaProxyPathOnWindows, hardLink); err != nil {
 					logerr.WithError(logE, err).WithFields(logrus.Fields{
 						"command": file.Name,
-					}).Error("creating a hard link to aqua-proxy")
+					}).Error("create a hard link to aqua-proxy")
 					failed = true
 				}
 				continue
@@ -79,8 +80,10 @@ func (is *Installer) recreateHardLinks() error {
 		if err := is.fs.Remove(p); err != nil {
 			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
 		}
-		if err := is.linker.Hardlink(a, p); err != nil {
-			return fmt.Errorf("create a hard link: %w", err)
+		if strings.HasSuffix(info.Name(), ".exe") {
+			if err := is.linker.Hardlink(a, p); err != nil {
+				return fmt.Errorf("create a hard link: %w", err)
+			}
 		}
 	}
 	return nil
