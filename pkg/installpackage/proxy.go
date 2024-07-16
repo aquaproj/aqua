@@ -26,9 +26,6 @@ func ProxyChecksums() map[string]string {
 }
 
 func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error { //nolint:funlen
-	if isWindows(is.runtime.GOOS) {
-		return nil
-	}
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    proxyName,
@@ -89,6 +86,10 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 	a, err := filepath.Rel(is.rootDir, filepath.Join(pkgPath, binName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
+	}
+
+	if isWindows(is.runtime.GOOS) {
+		return is.createHardLink(a, filepath.Join(is.rootDir, proxyName), logE)
 	}
 
 	return is.createLink(filepath.Join(is.rootDir, proxyName), a, logE)

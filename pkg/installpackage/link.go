@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -18,7 +17,7 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
 			if isWindows(is.runtime.GOOS) {
-				if err := is.createProxyWindows(file.Name, logE); err != nil {
+				if err := is.createHardLink(filepath.Join(is.rootDir, "bin", file.Name), filepath.Join(is.rootDir, proxyName), logE); err != nil {
 					logerr.WithError(logE, err).Error("create the proxy file")
 					failed = true
 				}
@@ -32,6 +31,47 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 		}
 	}
 	return failed
+}
+
+func (is *Installer) replaceWithHardlinks() error {
+	hardlinkFile := filepath.Join(is.rootDir, "hardlink")
+	if f, err := afero.Exists(is.fs, hardlinkFile); err != nil {
+		return fmt.Errorf("check if a hardlink flag exists: %w", err)
+	} else if f {
+		return nil
+	}
+	binDir := filepath.Join(is.rootDir, "bin")
+	infos, err := afero.ReadDir(is.fs, binDir)
+	if err != nil {
+		return fmt.Errorf("read a bin dir: %w", err)
+	}
+	proxy := filepath.Join(is.rootDir, "aqua-proxy")
+	for _, info := range infos {
+		p := filepath.Join(binDir, info.Name())
+		if err := is.fs.Remove(p); err != nil {
+			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
+		}
+		if err := is.linker.Hardlink(proxy, p); err != nil {
+			return fmt.Errorf("create a hard link: %w", err)
+		}
+	}
+
+	if f, err := is.fs.Create(hardlinkFile); err != nil {
+		return err
+	} else {
+		f.Close()
+	}
+	return nil
+}
+
+func (is *Installer) createHardLink(linkPath, linkDest string, logE *logrus.Entry) error {
+	logE.WithFields(logrus.Fields{
+		"command": filepath.Base(linkPath),
+	}).Info("creating a hard link")
+	if err := is.linker.Hardlink(linkDest, linkPath); err != nil {
+		return fmt.Errorf("create a hard link: %w", err)
+	}
+	return nil
 }
 
 func (is *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
@@ -92,24 +132,8 @@ func (is *Installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry)
 }
 
 const (
-	batTemplate = `@echo off
-aqua exec -- <COMMAND> %*
-`
-	scrTemplate = `#!/usr/bin/env bash
-exec aqua exec -- "$0" "$@"
-`
 	proxyPermission os.FileMode = 0o755
 )
-
-func (is *Installer) createProxyWindows(binName string, logE *logrus.Entry) error {
-	if err := is.createBinWindows(filepath.Join(is.rootDir, "bin", binName), scrTemplate, logE); err != nil {
-		return err
-	}
-	if err := is.createBinWindows(filepath.Join(is.rootDir, "bat", binName+".bat"), strings.Replace(batTemplate, "<COMMAND>", binName, 1), logE); err != nil {
-		return err
-	}
-	return nil
-}
 
 func (is *Installer) createBinWindows(binPath, binTxt string, logE *logrus.Entry) error {
 	if fileInfo, err := is.linker.Lstat(binPath); err == nil {

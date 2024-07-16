@@ -90,6 +90,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 type Linker interface {
 	Lstat(s string) (os.FileInfo, error)
 	Symlink(dest, src string) error
+	Hardlink(dest, src string) error
 	Readlink(src string) (string, error)
 }
 
@@ -230,6 +231,12 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 		"registry":        pkg.Package.Registry,
 	})
 	logE.Debug("installing the package")
+
+	if isWindows(is.runtime.GOOS) {
+		if err := is.replaceWithHardlinks(); err != nil {
+			return err
+		}
+	}
 
 	if err := is.validatePackage(logE, param); err != nil {
 		return err
