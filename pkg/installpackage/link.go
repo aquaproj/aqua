@@ -17,8 +17,13 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
 			if isWindows(is.runtime.GOOS) {
-				if err := is.createHardLink(filepath.Join(is.rootDir, "bin", file.Name+".exe"), filepath.Join(is.rootDir, proxyName+".exe"), logE); err != nil {
-					logerr.WithError(logE, err).Error("create the proxy file")
+				logE.WithFields(logrus.Fields{
+					"command": file.Name,
+				}).Info("creating a hard link to aqua-proxy")
+				if err := is.linker.Hardlink(filepath.Join(is.rootDir, proxyName+".exe"), filepath.Join(is.rootDir, "bin", file.Name+".exe")); err != nil {
+					logerr.WithError(logE, err).WithFields(logrus.Fields{
+						"command": file.Name,
+					}).Error("creating a hard link to aqua-proxy")
 					failed = true
 				}
 				continue
@@ -60,16 +65,6 @@ func (is *Installer) replaceWithHardlinks() error {
 		return fmt.Errorf("create a hardlink flag: %w", err)
 	} else { //nolint:revive
 		f.Close()
-	}
-	return nil
-}
-
-func (is *Installer) createHardLink(linkPath, linkDest string, logE *logrus.Entry) error {
-	logE.WithFields(logrus.Fields{
-		"command": filepath.Base(linkPath),
-	}).Info("creating a hard link")
-	if err := is.linker.Hardlink(linkDest, linkPath); err != nil {
-		return fmt.Errorf("create a hard link: %w", err)
 	}
 	return nil
 }

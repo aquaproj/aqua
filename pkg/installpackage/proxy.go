@@ -59,9 +59,17 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
+	// create a symbolic link
+	binName := proxyName
+	a, err := filepath.Rel(is.rootDir, filepath.Join(pkgPath, binName))
+	if err != nil {
+		return fmt.Errorf("get a relative path: %w", err)
+	}
+
 	logE.Debug("check if aqua-proxy is already installed")
 	finfo, err := is.fs.Stat(pkgPath)
-	if err != nil {
+	if err != nil { //nolint:nestif
 		// file doesn't exist
 		chksum := ProxyChecksums()[is.runtime.Env()]
 		if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
@@ -75,21 +83,17 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		}); err != nil {
 			return err
 		}
+		if isWindows(is.runtime.GOOS) {
+			logE.Info("creating a hard link of aqua-proxy")
+			if err := is.linker.Hardlink(a+".exe", filepath.Join(is.rootDir, proxyName+".exe")); err != nil {
+				return fmt.Errorf("create a hard link of aqua-proxy: %w", err)
+			}
+			return nil
+		}
 	} else { //nolint:gocritic
 		if !finfo.IsDir() {
 			return fmt.Errorf("%s isn't a directory", pkgPath)
 		}
-	}
-
-	// create a symbolic link
-	binName := proxyName
-	a, err := filepath.Rel(is.rootDir, filepath.Join(pkgPath, binName))
-	if err != nil {
-		return fmt.Errorf("get a relative path: %w", err)
-	}
-
-	if isWindows(is.runtime.GOOS) {
-		return is.createHardLink(filepath.Join(is.rootDir, proxyName+".exe"), a+".exe", logE)
 	}
 
 	return is.createLink(filepath.Join(is.rootDir, proxyName), a, logE)
