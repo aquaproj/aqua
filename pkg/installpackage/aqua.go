@@ -165,5 +165,8 @@ func (is *Installer) copyAquaOnWindows(exePath string) error {
 			return fmt.Errorf("rename aqua.exe to update: %w", err)
 		}
 	}
-	return is.linker.Hardlink(exePath, dest)
+	if err := is.linker.Hardlink(exePath, dest); err != nil {
+		return fmt.Errorf("create a hard link to aqua.exe: %w", err)
+	}
+	return nil
 }
