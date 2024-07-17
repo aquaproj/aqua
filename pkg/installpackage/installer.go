@@ -38,11 +38,11 @@ type Installer struct {
 	minisignVerifier      MinisignVerifier
 	cosignInstaller       *Cosign
 	slsaVerifierInstaller *SLSAVerifierInstaller
-	minisignInstaller     *MinisignInstaller
 	goInstallInstaller    GoInstallInstaller
 	goBuildInstaller      GoBuildInstaller
 	cargoPackageInstaller CargoPackageInstaller
 	runtime               *runtime.Runtime
+	realRuntime           *runtime.Runtime
 	fs                    afero.Fs
 	rootDir               string
 	copyDir               string
@@ -63,10 +63,6 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
 		mutex:     &sync.Mutex{},
 	}
-	installer.minisignInstaller = &MinisignInstaller{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
-		mutex:     &sync.Mutex{},
-	}
 	return installer
 }
 
@@ -78,6 +74,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		checksumDownloader:    chkDL,
 		checksumCalculator:    chkCalc,
 		runtime:               rt,
+		realRuntime:           runtime.NewR(),
 		fs:                    fs,
 		linker:                linker,
 		progressBar:           param.ProgressBar,
