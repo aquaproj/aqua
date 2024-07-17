@@ -53,7 +53,10 @@ func (r *Runner) execAction(c *cli.Context) error {
 	if err := r.setParam(c, "exec", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	ctrl, err := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	if err != nil {
+		return fmt.Errorf("initialize a ExecController: %w", err)
+	}
 	exeName, args, err := parseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err

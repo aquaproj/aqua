@@ -39,6 +39,7 @@ import (
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
+	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -220,7 +221,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	return &generate.Controller{}
 }
 
-func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *install.Controller {
+func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
 	wire.Build(
 		install.New,
 		wire.NewSet(
@@ -266,6 +267,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
@@ -311,6 +313,14 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 		wire.NewSet(
+			minisign.New,
+			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			minisign.NewExecutor,
+			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
@@ -323,7 +333,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
-	return &install.Controller{}
+	return &install.Controller{}, nil
 }
 
 func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
@@ -385,7 +395,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cexec.Controller {
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
 	wire.Build(
 		cexec.New,
 		wire.NewSet(
@@ -427,6 +437,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
@@ -483,6 +494,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 		wire.NewSet(
+			minisign.New,
+			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			minisign.NewExecutor,
+			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
@@ -495,10 +514,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
-	return &cexec.Controller{}
+	return &cexec.Controller{}, nil
 }
 
-func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updateaqua.Controller {
+func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
 	wire.Build(
 		updateaqua.New,
 		wire.NewSet(
@@ -524,6 +543,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
@@ -557,6 +577,14 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 		wire.NewSet(
+			minisign.New,
+			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			minisign.NewExecutor,
+			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
@@ -569,10 +597,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
-	return &updateaqua.Controller{}
+	return &updateaqua.Controller{}, nil
 }
 
-func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *cp.Controller {
+func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
 	wire.Build(
 		cp.New,
 		wire.NewSet(
@@ -623,6 +651,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -679,6 +708,14 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 		wire.NewSet(
+			minisign.New,
+			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			minisign.NewExecutor,
+			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
@@ -691,7 +728,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
-	return &cp.Controller{}
+	return &cp.Controller{}, nil
 }
 
 func InitializeUpdateChecksumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {

@@ -81,6 +81,9 @@ func (r *Runner) installAction(c *cli.Context) error {
 	if err := r.setParam(c, "install", param); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	ctrl, err := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	if err != nil {
+		return fmt.Errorf("initialize a InstallController: %w", err)
+	}
 	return ctrl.Install(c.Context, r.LogE, param) //nolint:wrapcheck
 }
