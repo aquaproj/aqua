@@ -64,7 +64,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 	if cos.Signature != nil {
 		sigFile, err := afero.TempFile(v.fs, "", "")
 		if err != nil {
-			return fmt.Errorf("create a temporal file: %w", err)
+			return fmt.Errorf("create a temporary file: %w", err)
 		}
 		defer v.fs.Remove(sigFile.Name()) //nolint:errcheck
 
@@ -81,7 +81,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 	if cos.Key != nil {
 		keyFile, err := afero.TempFile(v.fs, "", "")
 		if err != nil {
-			return fmt.Errorf("create a temporal file: %w", err)
+			return fmt.Errorf("create a temporary file: %w", err)
 		}
 		defer v.fs.Remove(keyFile.Name()) //nolint:errcheck
 
@@ -99,7 +99,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 	if cos.Certificate != nil {
 		certFile, err := afero.TempFile(v.fs, "", "")
 		if err != nil {
-			return fmt.Errorf("create a temporal file: %w", err)
+			return fmt.Errorf("create a temporary file: %w", err)
 		}
 		defer v.fs.Remove(certFile.Name()) //nolint:errcheck
 

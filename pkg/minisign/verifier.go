@@ -45,7 +45,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 
 	signatureFile, err := afero.TempFile(v.fs, "", "")
 	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
+		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	defer signatureFile.Close()
 	defer v.fs.Remove(signatureFile.Name()) //nolint:errcheck

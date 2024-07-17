@@ -48,12 +48,12 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 
 	provenanceFile, err := afero.TempFile(v.fs, "", "")
 	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
+		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	defer provenanceFile.Close()
 	defer v.fs.Remove(provenanceFile.Name()) //nolint:errcheck
 	if _, err := io.Copy(provenanceFile, rc); err != nil {
-		return fmt.Errorf("copy a provenance to a temporal file: %w", err)
+		return fmt.Errorf("copy a provenance to a temporary file: %w", err)
 	}
 
 	return v.exe.Verify(ctx, logE, param, provenanceFile.Name()) //nolint:wrapcheck

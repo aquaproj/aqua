@@ -25,7 +25,7 @@ func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *logrus.Entry, src *Fil
 
 	tempFilePath, err := src.Body.Path()
 	if err != nil {
-		return fmt.Errorf("get a temporal file path: %w", err)
+		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 
 	if _, err := u.executor.UnarchivePkg(ctx, tempFilePath, u.dest); err != nil {
