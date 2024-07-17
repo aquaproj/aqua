@@ -15,6 +15,8 @@ import (
 )
 
 func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *runtime.Runtime, tplParam *template.Artifact) (*File, error) {
+	// art has the version and the default value of RepoOwner and RepoName.
+	// tplParam has parameters to render asset and URL.
 	f := &File{
 		Type:      file.Type,
 		RepoOwner: file.RepoOwner,

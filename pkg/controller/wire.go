@@ -44,6 +44,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/verify"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 
 	"github.com/google/wire"
@@ -248,6 +249,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(install.Installer), new(*installpackage.Installer)),
+			wire.Bind(new(verify.Installer), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -331,6 +333,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			verify.New,
+			wire.Bind(new(installpackage.Verifier), new(*verify.Verifier)),
 		),
 	)
 	return &install.Controller{}, nil

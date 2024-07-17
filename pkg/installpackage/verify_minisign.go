@@ -15,6 +15,7 @@ func (is *Installer) verifyWithMinisign(ctx context.Context, logE *logrus.Entry,
 	if !m.GetEnabled() {
 		return nil
 	}
+
 	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with minisign")
 	if err := is.minisignInstaller.installMinisign(ctx, logE); err != nil {

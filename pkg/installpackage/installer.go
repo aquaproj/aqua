@@ -51,26 +51,31 @@ type Installer struct {
 	onlyLink              bool
 	cosignDisabled        bool
 	slsaDisabled          bool
+	verifier              Verifier
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
-	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller)
+type Verifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, pkg *config.Package, bodyFile *download.DownloadedFile) error
+}
+
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, verifier Verifier) *Installer {
+	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, verifier)
 	installer.cosignInstaller = &Cosign{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, verifier),
 		mutex:     &sync.Mutex{},
 	}
 	installer.slsaVerifierInstaller = &SLSAVerifierInstaller{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, verifier),
 		mutex:     &sync.Mutex{},
 	}
 	installer.minisignInstaller = &MinisignInstaller{
-		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		installer: newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, verifier),
 		mutex:     &sync.Mutex{},
 	}
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, verifier Verifier) *Installer {
 	return &Installer{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
@@ -92,6 +97,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		goInstallInstaller:    goInstallInstaller,
 		goBuildInstaller:      goBuildInstaller,
 		cargoPackageInstaller: cargoPackageInstaller,
+		verifier:              verifier,
 	}
 }
 
