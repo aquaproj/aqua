@@ -3,30 +3,22 @@ package installpackage
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/sirupsen/logrus"
 )
 
-type MinisignInstaller struct {
-	installer *Installer
-	mutex     *sync.Mutex
-}
-
-func (m *MinisignInstaller) installMinisign(ctx context.Context, logE *logrus.Entry) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (is *Installer) installMinisign(ctx context.Context, logE *logrus.Entry) error {
 	pkg := minisign.Package()
 
-	chksum := minisign.Checksums()[m.installer.runtime.Env()]
+	chksum := minisign.Checksums()[is.realRuntime.Env()]
 
-	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, m.installer.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, is.realRuntime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
-	supported, err := pkgInfo.CheckSupported(m.installer.runtime, m.installer.runtime.Env())
+	supported, err := pkgInfo.CheckSupported(is.realRuntime, is.realRuntime.Env())
 	if err != nil {
 		return fmt.Errorf("check if minisign is supported: %w", err)
 	}
@@ -37,7 +29,7 @@ func (m *MinisignInstaller) installMinisign(ctx context.Context, logE *logrus.En
 
 	pkg.PackageInfo = pkgInfo
 
-	if err := m.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
+	if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums: checksum.New(), // Check minisign's checksum but not update aqua-checksums.json
 		Pkg:       pkg,
 		Checksum: &checksum.Checksum{
