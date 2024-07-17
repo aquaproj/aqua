@@ -159,7 +159,7 @@ func (is *Installer) copyAquaOnWindows(exePath string) error {
 		// > The system cannot move the file to a different disk drive
 		tempDir := filepath.Join(is.rootDir, "temp")
 		if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
-			return fmt.Errorf("create a temporal directory: %w", err)
+			return fmt.Errorf("create a temporary directory: %w", err)
 		}
 		if err := is.fs.Rename(dest, filepath.Join(tempDir, "aqua.exe")); err != nil {
 			return fmt.Errorf("rename aqua.exe to update: %w", err)

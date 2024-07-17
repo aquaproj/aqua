@@ -27,7 +27,7 @@ func (is *Installer) verifyWithSLSA(ctx context.Context, logE *logrus.Entry, bod
 	}
 	tempFilePath, err := bodyFile.Path()
 	if err != nil {
-		return fmt.Errorf("get a temporal file path: %w", err)
+		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 	if err := is.slsaVerifier.Verify(ctx, logE, is.runtime, sp, art, &download.File{
 		RepoOwner: ppkg.PackageInfo.RepoOwner,

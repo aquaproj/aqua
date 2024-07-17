@@ -88,7 +88,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 	bodyFile := download.NewDownloadedFile(is.fs, body, pb)
 	defer func() {
 		if err := bodyFile.Remove(); err != nil {
-			logE.WithError(err).Warn("remove a temporal file")
+			logE.WithError(err).Warn("remove a temporary file")
 		}
 	}()
 

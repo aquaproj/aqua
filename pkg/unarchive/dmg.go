@@ -30,17 +30,17 @@ func (u *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *
 
 	tempFilePath, err := src.Body.Path()
 	if err != nil {
-		return fmt.Errorf("get a temporal file path: %w", err)
+		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 
 	tmpMountPoint, err := afero.TempDir(u.fs, "", "")
 	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
+		return fmt.Errorf("create a temporary file: %w", err)
 	}
 
 	if _, err := u.executor.HdiutilAttach(ctx, tempFilePath, tmpMountPoint); err != nil {
 		if err := u.fs.Remove(tmpMountPoint); err != nil {
-			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
+			logE.WithError(err).Warn("remove a temporary directory created to attach a DMG file")
 		}
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
@@ -49,7 +49,7 @@ func (u *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *
 			logE.WithError(err).Warn("detach a DMG file")
 		}
 		if err := u.fs.Remove(tmpMountPoint); err != nil {
-			logE.WithError(err).Warn("remove a temporal directory created to attach a DMG file")
+			logE.WithError(err).Warn("remove a temporary directory created to attach a DMG file")
 		}
 	}()
 

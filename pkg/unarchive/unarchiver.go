@@ -18,7 +18,7 @@ type unarchiverWithUnarchiver struct {
 func (u *unarchiverWithUnarchiver) Unarchive(_ context.Context, _ *logrus.Entry, src *File) error {
 	tempFilePath, err := src.Body.Path()
 	if err != nil {
-		return fmt.Errorf("get a temporal file: %w", err)
+		return fmt.Errorf("get a temporary file: %w", err)
 	}
 	return u.unarchiver.Unarchive(tempFilePath, u.dest) //nolint:wrapcheck
 }

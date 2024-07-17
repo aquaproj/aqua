@@ -31,12 +31,12 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() && !is.cosignDisabled {
 		f, err := afero.TempFile(is.fs, "", "")
 		if err != nil {
-			return "", fmt.Errorf("create a temporal file: %w", err)
+			return "", fmt.Errorf("create a temporary file: %w", err)
 		}
 		defer f.Close()
 		defer is.fs.Remove(f.Name()) //nolint:errcheck
 		if _, err := f.Write(b); err != nil {
-			return "", fmt.Errorf("write a checksum to a temporal file: %w", err)
+			return "", fmt.Errorf("write a checksum to a temporary file: %w", err)
 		}
 		art := pkg.TemplateArtifact(is.runtime, assetName)
 		logE.Info("verify a checksum file with Cosign")
@@ -72,7 +72,7 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry,
 	ppkg := param.Package
 	tempFilePath, err := bodyFile.Path()
 	if err != nil {
-		return fmt.Errorf("get a temporal file path: %w", err)
+		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 	paramVerifyChecksum := &ParamVerifyChecksum{
 		Checksum:        param.Checksum,
@@ -113,7 +113,7 @@ func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, par
 	checksumID := param.ChecksumID
 	tempFilePath := param.TempFilePath
 
-	// Download an asset in a temporal directory
+	// Download an asset in a temporary directory
 	// Calculate the checksum of download asset
 	// Download a checksum file
 	// Extract the checksum from the checksum file

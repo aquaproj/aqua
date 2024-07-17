@@ -78,7 +78,7 @@ func (f *DownloadedFile) Wrap(w io.Writer) io.Writer {
 func (f *DownloadedFile) copy() error {
 	tmp, err := afero.TempFile(f.fs, "", "")
 	if err != nil {
-		return fmt.Errorf("create a temporal file: %w", err)
+		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	f.path = tmp.Name()
 	var w io.Writer = tmp
