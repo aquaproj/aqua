@@ -32,8 +32,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace github.com/urfave/cli/v2 v2.27.2 => github.com/urfave/cli/v2 v2.27.3-0.20240629214313-84c536d83870
-
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
