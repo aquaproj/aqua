@@ -68,6 +68,7 @@ func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.
 		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		Format:  pkgInfo.GetFormat(),
 		Asset:   asset,
+		Vars:    pkg.Vars,
 	}
 }
 
