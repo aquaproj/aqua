@@ -31,7 +31,13 @@ func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *co
 		oldPaths[p] = struct{}{}
 	}
 
-	shell := &Shell{}
+	shell := &Shell{
+		Env: &Env{
+			Path: &Path{
+				Values: []string{},
+			},
+		},
+	}
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		if err := c.handleConfig(ctx, logE, cfgFilePath, param, shell); err != nil {
 			return err
@@ -39,6 +45,11 @@ func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *co
 	}
 
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
+		if f, err := afero.Exists(c.fs, cfgFilePath); err != nil {
+			return err
+		} else if !f {
+			continue
+		}
 		if err := c.handleConfig(ctx, logE, cfgFilePath, param, shell); err != nil {
 			return err
 		}
@@ -123,7 +134,7 @@ func (c *Controller) readShell(shellPath string, shell *Shell) error {
 	return nil
 }
 
-func (c *Controller) handleConfig(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *config.Param, oldShell *Shell) error {
+func (c *Controller) handleConfig(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *config.Param, shell *Shell) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -171,7 +182,7 @@ func (c *Controller) handleConfig(ctx context.Context, logE *logrus.Entry, cfgFi
 			if err != nil {
 				return err
 			}
-			oldShell.Env.Path.Values = append(oldShell.Env.Path.Values, filepath.Join(pkgPath, filepath.FromSlash(newP)))
+			shell.Env.Path.Values = append(shell.Env.Path.Values, filepath.Join(pkgPath, filepath.FromSlash(newP)))
 		}
 	}
 
