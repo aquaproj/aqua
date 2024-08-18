@@ -31,12 +31,33 @@ type Shell struct {
 	Env *Env `json:"env,omitempty"`
 }
 
+func (s *Shell) GetPaths() []string {
+	if s == nil {
+		return nil
+	}
+	return s.Env.GetPaths()
+}
+
 type Env struct {
 	Path *Path `json:"PATH,omitempty"`
 }
 
+func (e *Env) GetPaths() []string {
+	if e == nil {
+		return nil
+	}
+	return e.Path.GetPaths()
+}
+
 type Path struct {
 	Values []string `json:"values,omitempty"`
+}
+
+func (p *Path) GetPaths() []string {
+	if p == nil {
+		return nil
+	}
+	return p.Values
 }
 
 func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, stdout io.Writer) *Controller {

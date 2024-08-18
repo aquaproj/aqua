@@ -19,20 +19,15 @@ import (
 )
 
 func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	globalPolicyPaths := make(map[string]struct{}, len(param.PolicyConfigFilePaths))
-	for _, p := range param.PolicyConfigFilePaths {
-		globalPolicyPaths[p] = struct{}{}
-	}
-
-	shellPath := filepath.Join(c.rootDir, "shell", strconv.Itoa(param.Pid), "shell.json")
+	shellPath := filepath.Join(c.rootDir, "shell", strconv.Itoa(param.Ppid), "shell.json")
 
 	oldShell := &Shell{}
 	if err := c.readShell(shellPath, oldShell); err != nil {
 		return err
 	}
 
-	oldPaths := make(map[string]struct{}, len(oldShell.Env.Path.Values))
-	for _, p := range oldShell.Env.Path.Values {
+	oldPaths := make(map[string]struct{}, len(oldShell.GetPaths()))
+	for _, p := range oldShell.GetPaths() {
 		oldPaths[p] = struct{}{}
 	}
 
@@ -43,8 +38,14 @@ func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *co
 		}
 	}
 
-	paths := make(map[string]struct{}, len(shell.Env.Path.Values))
-	for _, p := range shell.Env.Path.Values {
+	for _, cfgFilePath := range param.GlobalConfigFilePaths {
+		if err := c.handleConfig(ctx, logE, cfgFilePath, param, shell); err != nil {
+			return err
+		}
+	}
+
+	paths := make(map[string]struct{}, len(shell.GetPaths()))
+	for _, p := range shell.GetPaths() {
 		paths[p] = struct{}{}
 	}
 

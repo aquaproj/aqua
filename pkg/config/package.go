@@ -283,7 +283,7 @@ type Param struct {
 	Installed              bool
 	PolicyConfigFilePaths  []string
 	Commands               []string
-	Pid                    int
+	Ppid                   int
 	EnvPath                string
 	PathListSeparator      string
 }

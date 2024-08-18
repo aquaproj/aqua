@@ -43,7 +43,7 @@ func (r *Runner) setShellAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{
-		Pid:               os.Getpid(),
+		Ppid:              os.Getppid(),
 		EnvPath:           os.Getenv("PATH"),
 		PathListSeparator: string(os.PathListSeparator),
 	}
