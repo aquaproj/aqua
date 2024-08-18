@@ -18,7 +18,14 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *config.Param, shellType string) error {
+	switch shellType {
+	case "":
+		return errors.New("the argument shell type is required")
+	case "bash", "zsh":
+	default:
+		return errors.New(`supported shell types are 'bash' and 'zsh'`)
+	}
 	shellPath := filepath.Join(c.rootDir, "shell", strconv.Itoa(param.Ppid), "shell.json")
 
 	oldShell := &Shell{}
@@ -92,7 +99,12 @@ func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *co
 	}
 
 	if updated {
-		fmt.Fprintf(c.stdout, "export PATH=%s\n", strings.Join(newPS, param.PathListSeparator))
+		fmt.Fprintf(c.stdout, `_aqua_env() {
+	export PATH=%s
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook preexec _aqua_env
+`, strings.Join(newPS, param.PathListSeparator))
 	}
 
 	if err := c.saveShell(shellPath, shell); err != nil {

@@ -54,5 +54,5 @@ func (r *Runner) setShellAction(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize a SetShellController: %w", err)
 	}
-	return ctrl.SetShell(c.Context, r.LogE, param) //nolint:wrapcheck
+	return ctrl.SetShell(c.Context, r.LogE, param, c.Args().First()) //nolint:wrapcheck
 }
