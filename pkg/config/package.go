@@ -283,6 +283,9 @@ type Param struct {
 	Installed              bool
 	PolicyConfigFilePaths  []string
 	Commands               []string
+	Pid                    int
+	EnvPath                string
+	PathListSeparator      string
 }
 
 func appendExt(s, format string) string {

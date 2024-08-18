@@ -26,6 +26,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
+	"github.com/aquaproj/aqua/v2/pkg/controller/setshell"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
@@ -991,4 +992,58 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 	)
 	return &remove.Controller{}
+}
+
+func InitializeSetShellCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, stdout io.Writer) (*setshell.Controller, error) {
+	wire.Build(
+		setshell.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(setshell.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(setshell.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(setshell.ConfigReader), new(*reader.ConfigReader)),
+		),
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			exec.New,
+			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+	)
+	return &setshell.Controller{}, nil
 }

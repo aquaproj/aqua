@@ -59,6 +59,11 @@ type PackageInfo struct {
 	Minisign            *Minisign          `json:"minisign,omitempty" yaml:",omitempty"`
 	VersionConstraints  string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides    []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	Shell               *Shell             `json:"shell,omitempty"`
+}
+
+type Shell struct {
+	Env map[string]string `json:"env,omitempty" yaml:",omitempty"`
 }
 
 type Build struct {
@@ -117,6 +122,7 @@ type VersionOverride struct {
 	Build               *Build          `json:"build,omitempty" yaml:",omitempty"`
 	Overrides           Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
 	SupportedEnvs       SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	Shell               *Shell          `json:"shell,omitempty"`
 }
 
 type Override struct {
@@ -139,6 +145,7 @@ type Override struct {
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign           *Minisign       `json:"minisign,omitempty" yaml:",omitempty"`
 	Envs               SupportedEnvs   `yaml:",omitempty" json:"envs,omitempty"`
+	Shell              *Shell          `json:"shell,omitempty"`
 }
 
 func (p *PackageInfo) Copy() *PackageInfo {
@@ -179,6 +186,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		NoAsset:             p.NoAsset,
 		AppendExt:           p.AppendExt,
 		Build:               p.Build,
+		Shell:               p.Shell,
 	}
 	return pkg
 }
@@ -339,6 +347,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.Build != nil {
 		pkg.Build = child.Build
 	}
+	if child.Shell != nil {
+		pkg.Shell = child.Shell
+	}
 	return pkg
 }
 
@@ -427,6 +438,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 
 	if ov.AppendExt != nil {
 		p.AppendExt = ov.AppendExt
+	}
+
+	if ov.Shell != nil {
+		p.Shell = ov.Shell
 	}
 }
 
