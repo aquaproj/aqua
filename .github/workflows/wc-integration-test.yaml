@@ -76,7 +76,7 @@ jobs:
           npm i -g renovate
           renovate -v
 
-          cd v22.6.0
+          cd ../v22.6.0
           eval "$(aqua output-shell)"
           node -v
           npm -v
