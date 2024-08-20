@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:funlen
+func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	shellPath := filepath.Join(c.rootDir, "shell", strconv.Itoa(param.Ppid), "shell.json")
 
 	oldPaths, err := c.readOldPaths(shellPath)
@@ -147,7 +147,7 @@ func (c *Controller) readShell(shellPath string, shell *Shell) error {
 	return nil
 }
 
-func (c *Controller) handleConfig(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *config.Param, shell *Shell) error {
+func (c *Controller) handleConfig(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *config.Param, shell *Shell) error { //nolint:cyclop
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
