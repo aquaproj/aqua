@@ -62,6 +62,27 @@ jobs:
       - run: aqua list -installed
       - run: aqua list -installed -a
 
+      - run: aqua output-shell
+      - run: aqua set-shell bash
+      - run: aqua set-shell zsh
+      - run: |
+          set -eux
+          cd v20.16.0
+          aqua i
+          eval "$(aqua set-shell bash)"
+          node -v
+          npm -v
+          npm i -g renovate
+          renovate -v
+
+          cd v22.6.0
+          eval "$(aqua set-shell bash)"
+          node -v
+          npm -v
+          npm i -g renovate
+          renovate -v
+        working-directory: tests/nodejs
+
       - run: aqua update-checksum
         working-directory: tests/main
         env:

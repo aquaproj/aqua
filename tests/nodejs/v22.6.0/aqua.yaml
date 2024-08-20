@@ -1,0 +1,13 @@
+---
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+# checksum:
+#   enabled: true
+#   require_checksum: true
+#   supported_envs:
+#   - all
+registries:
+  - type: standard
+    ref: v4.215.0-1 # renovate: depName=aquaproj/aqua-registry
+packages:
+  - name: nodejs/node@v22.6.0
