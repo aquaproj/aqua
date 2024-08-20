@@ -70,13 +70,14 @@ jobs:
           cd v20.16.0
           aqua i
           eval "$(aqua set-shell bash)"
+          eval "$(aqua output-shell)"
           node -v
           npm -v
           npm i -g renovate
           renovate -v
 
           cd v22.6.0
-          eval "$(aqua set-shell bash)"
+          eval "$(aqua output-shell)"
           node -v
           npm -v
           npm i -g renovate
