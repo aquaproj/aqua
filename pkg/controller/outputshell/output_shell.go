@@ -21,14 +21,9 @@ import (
 func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:funlen
 	shellPath := filepath.Join(c.rootDir, "shell", strconv.Itoa(param.Ppid), "shell.json")
 
-	oldShell := &Shell{}
-	if err := c.readShell(shellPath, oldShell); err != nil {
+	oldPaths, err := c.readOldPaths(shellPath)
+	if err != nil {
 		return err
-	}
-
-	oldPaths := make(map[string]struct{}, len(oldShell.GetPaths()))
-	for _, p := range oldShell.GetPaths() {
-		oldPaths[p] = struct{}{}
 	}
 
 	shell := &Shell{
@@ -55,6 +50,33 @@ func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param 
 		}
 	}
 
+	newPS, updated := c.getNewPS(param, shell, oldPaths)
+
+	if updated {
+		fmt.Fprintln(c.stdout, "export PATH="+strings.Join(newPS, param.PathListSeparator))
+	}
+
+	if err := c.saveShell(shellPath, shell); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Controller) readOldPaths(shellPath string) (map[string]struct{}, error) {
+	oldShell := &Shell{}
+	if err := c.readShell(shellPath, oldShell); err != nil {
+		return nil, err
+	}
+
+	oldPaths := make(map[string]struct{}, len(oldShell.GetPaths()))
+	for _, p := range oldShell.GetPaths() {
+		oldPaths[p] = struct{}{}
+	}
+	return oldPaths, nil
+}
+
+func (c *Controller) getNewPS(param *config.Param, shell *Shell, oldPaths map[string]struct{}) ([]string, bool) {
 	paths := make(map[string]struct{}, len(shell.GetPaths()))
 	for _, p := range shell.GetPaths() {
 		paths[p] = struct{}{}
@@ -90,16 +112,7 @@ func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param 
 		}
 		newPS = append(newPS, p)
 	}
-
-	if updated {
-		fmt.Fprintln(c.stdout, "export PATH="+strings.Join(newPS, param.PathListSeparator))
-	}
-
-	if err := c.saveShell(shellPath, shell); err != nil {
-		return err
-	}
-
-	return nil
+	return newPS, updated
 }
 
 func (c *Controller) saveShell(shellPath string, shell *Shell) error {
@@ -187,11 +200,11 @@ func (c *Controller) handlePkg(shell *Shell, pkg *config.Package) error {
 	}
 	newP, err := pkg.RenderTemplateString(p, c.runtime)
 	if err != nil {
-		return err
+		return fmt.Errorf("render added $PATH: %w", err)
 	}
 	pkgPath, err := pkg.PkgPath(c.rootDir, c.runtime)
 	if err != nil {
-		return err
+		return fmt.Errorf("get the installed package path: %w", err)
 	}
 	shell.Env.Path.Values = append(shell.Env.Path.Values, filepath.Join(pkgPath, filepath.FromSlash(newP)))
 	return nil
