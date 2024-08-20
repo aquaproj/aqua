@@ -25,6 +25,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/outputshell"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/setshell"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
@@ -359,6 +360,12 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 
 func InitializeSetShellCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, stdout io.Writer) (*setshell.Controller, error) {
 	fs := afero.NewOsFs()
+	controller := setshell.New(param, fs, rt, stdout)
+	return controller, nil
+}
+
+func InitializeOutputShellCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, stdout io.Writer) (*outputshell.Controller, error) {
+	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	repositoriesService := github.New(ctx)
@@ -370,6 +377,6 @@ func InitializeSetShellCommandController(ctx context.Context, param *config.Para
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
-	controller := setshell.New(param, configFinder, configReader, installer, fs, rt, stdout)
+	controller := outputshell.New(param, configFinder, configReader, installer, fs, rt, stdout)
 	return controller, nil
 }

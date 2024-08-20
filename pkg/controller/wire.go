@@ -25,6 +25,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/outputshell"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/setshell"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
@@ -998,8 +999,19 @@ func InitializeSetShellCommandController(ctx context.Context, param *config.Para
 	wire.Build(
 		setshell.New,
 		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
+	)
+	return &setshell.Controller{}, nil
+}
+
+func InitializeOutputShellCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, stdout io.Writer) (*outputshell.Controller, error) {
+	wire.Build(
+		outputshell.New,
+		wire.NewSet(
 			finder.NewConfigFinder,
-			wire.Bind(new(setshell.ConfigFinder), new(*finder.ConfigFinder)),
+			wire.Bind(new(outputshell.ConfigFinder), new(*finder.ConfigFinder)),
 		),
 		wire.NewSet(
 			github.New,
@@ -1008,7 +1020,7 @@ func InitializeSetShellCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			registry.New,
-			wire.Bind(new(setshell.RegistryInstaller), new(*registry.Installer)),
+			wire.Bind(new(outputshell.RegistryInstaller), new(*registry.Installer)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -1016,7 +1028,7 @@ func InitializeSetShellCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			reader.New,
-			wire.Bind(new(setshell.ConfigReader), new(*reader.ConfigReader)),
+			wire.Bind(new(outputshell.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -1045,5 +1057,5 @@ func InitializeSetShellCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
-	return &setshell.Controller{}, nil
+	return &outputshell.Controller{}, nil
 }

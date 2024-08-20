@@ -216,6 +216,7 @@ func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funle
 			r.newRemoveCommand(),
 			r.newUpdateCommand(),
 			r.newSetShellCommand(),
+			r.newOutputShellCommand(),
 		},
 	}
 
