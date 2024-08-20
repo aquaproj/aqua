@@ -12,8 +12,9 @@ import (
 
 func (r *Runner) newOutputShellCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "output-shell",
-		Usage: "Output a script to set the shell",
+		Name:   "output-shell",
+		Hidden: true, // Hide this command from users as it is not intended to be used directly. This command is called by set-shell command.
+		Usage:  "Output a script to set the shell",
 		Description: `Output a script to set the shell
 
 aqua set-shell command executes this command.
