@@ -16,14 +16,14 @@ var zshScript []byte
 //go:embed bash.sh
 var bashScript []byte
 
-func (c *Controller) SetShell(ctx context.Context, logE *logrus.Entry, param *config.Param, shellType string) error {
+func (c *Controller) SetShell(_ context.Context, _ *logrus.Entry, _ *config.Param, shellType string) error {
 	switch shellType {
 	case "":
 		return errors.New("the argument shell type is required")
 	case "bash":
-		fmt.Fprintf(c.stdout, string(bashScript))
+		fmt.Fprintln(c.stdout, string(bashScript))
 	case "zsh":
-		fmt.Fprintf(c.stdout, string(zshScript))
+		fmt.Fprintln(c.stdout, string(zshScript))
 	default:
 		return errors.New(`supported shell types are 'bash' and 'zsh'`)
 	}

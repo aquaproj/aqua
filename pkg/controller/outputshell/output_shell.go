@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:funlen
 	shellPath := filepath.Join(c.rootDir, "shell", strconv.Itoa(param.Ppid), "shell.json")
 
 	oldShell := &Shell{}
@@ -46,7 +46,7 @@ func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param 
 
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if f, err := afero.Exists(c.fs, cfgFilePath); err != nil {
-			return err
+			return fmt.Errorf("check if a global configuration file exists: %w", err)
 		} else if !f {
 			continue
 		}
@@ -60,7 +60,7 @@ func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param 
 		paths[p] = struct{}{}
 	}
 
-	ps := strings.Split(param.EnvPath, string(param.PathListSeparator))
+	ps := strings.Split(param.EnvPath, param.PathListSeparator)
 	psMap := make(map[string]struct{}, len(ps))
 	for _, p := range ps {
 		psMap[p] = struct{}{}
@@ -92,7 +92,7 @@ func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param 
 	}
 
 	if updated {
-		fmt.Fprintln(c.stdout, "export PATH="+strings.Join(newPS, string(param.PathListSeparator)))
+		fmt.Fprintln(c.stdout, "export PATH="+strings.Join(newPS, param.PathListSeparator))
 	}
 
 	if err := c.saveShell(shellPath, shell); err != nil {
@@ -169,22 +169,30 @@ func (c *Controller) handleConfig(ctx context.Context, logE *logrus.Entry, cfgFi
 		return errors.New("failed to list packages")
 	}
 	for _, pkg := range pkgs {
-		if pkg.PackageInfo.Shell != nil {
-			p, ok := pkg.PackageInfo.Shell.Env["PATH"]
-			if !ok {
-				continue
-			}
-			newP, err := pkg.RenderTemplateString(p, c.runtime)
-			if err != nil {
-				return err
-			}
-			pkgPath, err := pkg.PkgPath(c.rootDir, c.runtime)
-			if err != nil {
-				return err
-			}
-			shell.Env.Path.Values = append(shell.Env.Path.Values, filepath.Join(pkgPath, filepath.FromSlash(newP)))
+		if err := c.handlePkg(shell, pkg); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func (c *Controller) handlePkg(shell *Shell, pkg *config.Package) error {
+	if pkg.PackageInfo.Shell == nil {
+		return nil
+	}
+	p, ok := pkg.PackageInfo.Shell.Env["PATH"]
+	if !ok {
+		return nil
+	}
+	newP, err := pkg.RenderTemplateString(p, c.runtime)
+	if err != nil {
+		return err
+	}
+	pkgPath, err := pkg.PkgPath(c.rootDir, c.runtime)
+	if err != nil {
+		return err
+	}
+	shell.Env.Path.Values = append(shell.Env.Path.Values, filepath.Join(pkgPath, filepath.FromSlash(newP)))
 	return nil
 }

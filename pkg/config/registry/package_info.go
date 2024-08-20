@@ -257,7 +257,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	}
 }
 
-func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
+func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo
 	pkg := p.Copy()
 	if child.Type != "" {
 		pkg.resetByPkgType(child.Type)
