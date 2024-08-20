@@ -104,32 +104,32 @@ func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param 
 
 func (c *Controller) saveShell(shellPath string, shell *Shell) error {
 	if err := osfile.MkdirAll(c.fs, filepath.Dir(shellPath)); err != nil {
-		return err
+		return fmt.Errorf("create a directory to store shell.json: %w", err)
 	}
 	f, err := c.fs.Create(shellPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("create a shell.json: %w", err)
 	}
 	defer f.Close()
 	if err := json.NewEncoder(f).Encode(shell); err != nil {
-		return err
+		return fmt.Errorf("write shell.json: %w", err)
 	}
 	return nil
 }
 
 func (c *Controller) readShell(shellPath string, shell *Shell) error {
 	if f, err := afero.Exists(c.fs, shellPath); err != nil {
-		return err
+		return fmt.Errorf("check if shell.json exists: %w", err)
 	} else if !f {
 		return nil
 	}
 	f, err := c.fs.Open(shellPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("open a shell.json: %w", err)
 	}
 	defer f.Close()
 	if err := json.NewDecoder(f).Decode(shell); err != nil {
-		return err
+		return fmt.Errorf("read a shell.json: %w", err)
 	}
 	return nil
 }
