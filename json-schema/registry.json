@@ -373,6 +373,9 @@
         },
         "envs": {
           "$ref": "#/$defs/SupportedEnvs"
+        },
+        "shell": {
+          "$ref": "#/$defs/Shell"
         }
       },
       "additionalProperties": false,
@@ -530,6 +533,9 @@
             "$ref": "#/$defs/VersionOverride"
           },
           "type": "array"
+        },
+        "shell": {
+          "$ref": "#/$defs/Shell"
         }
       },
       "additionalProperties": false,
@@ -590,6 +596,18 @@
         },
         "source_uri": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Shell": {
+      "properties": {
+        "env": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,
@@ -724,6 +742,9 @@
         },
         "supported_envs": {
           "$ref": "#/$defs/SupportedEnvs"
+        },
+        "shell": {
+          "$ref": "#/$defs/Shell"
         }
       },
       "additionalProperties": false,
