@@ -51,7 +51,6 @@ func (c *Controller) OutputShell(ctx context.Context, logE *logrus.Entry, param 
 	}
 
 	newPS, updated := c.getNewPS(param, shell, oldPaths)
-
 	if updated {
 		fmt.Fprintln(c.stdout, "export PATH="+strings.Join(newPS, param.PathListSeparator))
 	}
@@ -69,8 +68,9 @@ func (c *Controller) readOldPaths(shellPath string) (map[string]struct{}, error)
 		return nil, err
 	}
 
-	oldPaths := make(map[string]struct{}, len(oldShell.GetPaths()))
-	for _, p := range oldShell.GetPaths() {
+	paths := oldShell.GetPaths()
+	oldPaths := make(map[string]struct{}, len(paths))
+	for _, p := range paths {
 		oldPaths[p] = struct{}{}
 	}
 	return oldPaths, nil
