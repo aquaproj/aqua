@@ -113,11 +113,17 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 			logE.Debug("the package isn't supported on this environment")
 			continue
 		}
-		pkgs = append(pkgs, &Package{
+		p := &Package{
 			Package:     pkg,
 			PackageInfo: pkgInfo,
 			Registry:    rgst,
-		})
+		}
+		if err := p.ApplyVars(); err != nil {
+			logerr.WithError(logE, err).Error("apply the package variable")
+			failed = true
+			continue
+		}
+		pkgs = append(pkgs, p)
 	}
 	return pkgs, failed
 }
