@@ -112,7 +112,7 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*FindResult, error) { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 	logE = logE.WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
@@ -121,7 +121,7 @@ func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config,
 	registry, ok := registries[pkg.Registry]
 	if !ok {
 		logE.Warn("registry isn't found")
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 
 	m := registry.PackageInfos.ToMap(logE)
@@ -129,23 +129,23 @@ func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config,
 	pkgInfo, ok := m[pkg.Name]
 	if !ok {
 		logE.Warn("package isn't found")
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 
 	pkgInfo, err := pkgInfo.Override(logE, pkg.Version, c.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 
 	supported, err := pkgInfo.CheckSupported(c.runtime, c.runtime.GOOS+"/"+c.runtime.GOARCH)
 	if err != nil {
 		logerr.WithError(logE, err).Error("check if the package is supported")
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 	if !supported {
 		logE.Debug("the package isn't supported on this environment")
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
@@ -163,11 +163,11 @@ func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config,
 			exePath, err := c.getExePath(findResult)
 			if err != nil {
 				logE.WithError(err).Error("get the execution file path")
-				return nil, nil
+				return nil, nil //nolint:nilnil
 			}
 			findResult.ExePath = exePath
 			return findResult, nil
 		}
 	}
-	return nil, nil
+	return nil, nil //nolint:nilnil
 }
