@@ -37,6 +37,7 @@ Declarative CLI Version Manager written in Go.
 - [Gunosy Inc.](https://gunosy.co.jp/en/) ([ref](https://tech.gunosy.io/entry/snyk_iac_reviewdog_aqua_devsecops))
 - [DeNA Co., Ltd.](https://dena.com/intl/)
 - [CADDi Inc.](https://caddi.com/)
+- [Studist](https://studist.jp/) ([ref](https://studist.tech/entrance-book-4a57bc50aace))
 
 ## License
 
