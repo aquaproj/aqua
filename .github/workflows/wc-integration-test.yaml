@@ -28,6 +28,7 @@ jobs:
       - run: go install ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
+
       - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
@@ -51,6 +52,12 @@ jobs:
         run: aqua g -g cli/cli
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
+
+      - name: Test checksum
+        run: aqua -c aqua.yaml i
+        working-directory: tests/3064
+        env:
+          GITHUB_TOKEN: ${{github.token}}
 
       - name: Test version_prefix
         run: aqua -c aqua.yaml g -i kubernetes-sigs/kustomize
