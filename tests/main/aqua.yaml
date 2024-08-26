@@ -18,5 +18,3 @@ packages:
   version: v3.8.0 # rename files on Windows
 - name: golang/go
   go_version_file: ../../go.mod
-- name: suzuki-shunsuke/cmdx
-  version: v1.7.4
