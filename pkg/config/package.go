@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -14,6 +15,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Package struct {
@@ -68,6 +71,7 @@ func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.
 		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		Format:  pkgInfo.GetFormat(),
 		Asset:   asset,
+		Vars:    pkg.Vars,
 	}
 }
 
@@ -344,6 +348,7 @@ func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string,
 		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
 		"Asset":   asset,
+		"Vars":    pkg.Vars,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render a template: %w", err)
@@ -362,6 +367,7 @@ func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime
 		"OS":      replace(rt.GOOS, pkgInfo.Replacements),
 		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		"Format":  pkgInfo.GetFormat(),
+		"Vars":    pkg.Vars,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render a template: %w", err)
@@ -390,5 +396,43 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
 		"Format":   pkgInfo.GetFormat(),
 		"FileName": file.Name,
+		"Vars":     pkg.Vars,
 	})
+}
+
+func (p *Package) ApplyVars() error {
+	if p.PackageInfo.Vars == nil {
+		return nil
+	}
+	for _, v := range p.PackageInfo.Vars {
+		if v.Name == "" {
+			return errors.New("a variable name is empty")
+		}
+		if err := p.applyVar(v); err != nil {
+			return fmt.Errorf("apply a variable: %w", logerr.WithFields(err, logrus.Fields{
+				"var_name": v.Name,
+			}))
+		}
+	}
+	return nil
+}
+
+func (p *Package) applyVar(v *registry.Var) error {
+	if _, ok := p.Package.Vars[v.Name]; ok {
+		return nil
+	}
+	if v.Default != nil {
+		if p.Package.Vars == nil {
+			p.Package.Vars = map[string]any{
+				v.Name: v.Default,
+			}
+			return nil
+		}
+		p.Package.Vars[v.Name] = v.Default
+		return nil
+	}
+	if !v.Required {
+		return nil
+	}
+	return errors.New("a variable is required")
 }

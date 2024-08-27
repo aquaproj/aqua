@@ -95,7 +95,11 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 		return nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
-		if findResult := c.findExecFileFromPkg(registryContents, exeName, pkg, logE); findResult != nil {
+		findResult, err := c.findExecFileFromPkg(registryContents, exeName, pkg, logE)
+		if err != nil {
+			return nil, err
+		}
+		if findResult != nil {
 			findResult.Config = cfg
 			findResult.ConfigFilePath = cfgFilePath
 			findResult.Package.Registry = cfg.Registries[pkg.Registry]
@@ -105,10 +109,10 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 	return nil, nil //nolint:nilnil
 }
 
-func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) *FindResult { //nolint:cyclop
+func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*FindResult, error) { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
-		return nil
+		return nil, nil //nolint:nilnil
 	}
 	logE = logE.WithFields(logrus.Fields{
 		"registry_name": pkg.Registry,
@@ -117,7 +121,7 @@ func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config,
 	registry, ok := registries[pkg.Registry]
 	if !ok {
 		logE.Warn("registry isn't found")
-		return nil
+		return nil, nil //nolint:nilnil
 	}
 
 	m := registry.PackageInfos.ToMap(logE)
@@ -125,23 +129,23 @@ func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config,
 	pkgInfo, ok := m[pkg.Name]
 	if !ok {
 		logE.Warn("package isn't found")
-		return nil
+		return nil, nil //nolint:nilnil
 	}
 
 	pkgInfo, err := pkgInfo.Override(logE, pkg.Version, c.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
-		return nil
+		return nil, nil //nolint:nilnil
 	}
 
 	supported, err := pkgInfo.CheckSupported(c.runtime, c.runtime.GOOS+"/"+c.runtime.GOARCH)
 	if err != nil {
 		logerr.WithError(logE, err).Error("check if the package is supported")
-		return nil
+		return nil, nil //nolint:nilnil
 	}
 	if !supported {
 		logE.Debug("the package isn't supported on this environment")
-		return nil
+		return nil, nil //nolint:nilnil
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
@@ -153,14 +157,17 @@ func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config,
 				},
 				File: file,
 			}
+			if err := findResult.Package.ApplyVars(); err != nil {
+				return nil, fmt.Errorf("apply package variables: %w", err)
+			}
 			exePath, err := c.getExePath(findResult)
 			if err != nil {
 				logE.WithError(err).Error("get the execution file path")
-				return nil
+				return nil, nil //nolint:nilnil
 			}
 			findResult.ExePath = exePath
-			return findResult
+			return findResult, nil
 		}
 	}
-	return nil
+	return nil, nil //nolint:nilnil
 }

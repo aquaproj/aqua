@@ -371,6 +371,12 @@
         "minisign": {
           "$ref": "#/$defs/Minisign"
         },
+        "vars": {
+          "items": {
+            "$ref": "#/$defs/Var"
+          },
+          "type": "array"
+        },
         "envs": {
           "$ref": "#/$defs/SupportedEnvs"
         }
@@ -522,6 +528,12 @@
         "minisign": {
           "$ref": "#/$defs/Minisign"
         },
+        "vars": {
+          "items": {
+            "$ref": "#/$defs/Var"
+          },
+          "type": "array"
+        },
         "version_constraint": {
           "type": "string"
         },
@@ -614,6 +626,22 @@
         ]
       },
       "type": "array"
+    },
+    "Var": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": true
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
     },
     "VersionOverride": {
       "properties": {
@@ -718,6 +746,12 @@
         },
         "build": {
           "$ref": "#/$defs/Build"
+        },
+        "vars": {
+          "items": {
+            "$ref": "#/$defs/Var"
+          },
+          "type": "array"
         },
         "overrides": {
           "$ref": "#/$defs/Overrides"
