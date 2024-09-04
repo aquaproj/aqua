@@ -923,7 +923,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return &info.Controller{}
 }
 
-func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *remove.Controller {
+func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveTarget) *remove.Controller {
 	wire.Build(
 		remove.New,
 		wire.NewSet(

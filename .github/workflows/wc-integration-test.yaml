@@ -286,6 +286,11 @@ jobs:
       - name: Test rm
         run: aqua rm x-motemen/ghq bats-core/bats-core
 
+      - name: Test rm -m l
+        run: aqua rm -m l ghcp
+      - name: Test rm -m lp
+        run: aqua rm -m lp ghcp reviewdog
+
       - name: Test rm --all
         run: aqua rm -a
 

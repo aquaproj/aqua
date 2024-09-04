@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -138,6 +139,23 @@ func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, reg
 }
 
 func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, param *config.Param, cmds []string) error {
+	var gErr error
+	if c.mode.Link {
+		for _, cmd := range cmds {
+			logE := logE.WithField("exe_name", cmd)
+			logE.Info("removing a link")
+			if err := c.fs.Remove(filepath.Join(c.rootDir, "bin", cmd)); err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					continue
+				}
+				logerr.WithError(logE, err).Error("remove a link")
+				gErr = errors.New("remove links")
+			}
+		}
+	}
+	if !c.mode.Package {
+		return gErr
+	}
 	for _, cmd := range cmds {
 		logE := logE.WithField("exe_name", cmd)
 		findResult, err := c.which.Which(ctx, logE, param, cmd)
@@ -151,21 +169,37 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 			}))
 		}
 	}
-	return nil
+	return gErr
 }
 
 func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
+	var gErr error
+	logE.Info("removing a package")
+	if c.mode.Link {
+		for _, file := range pkg.GetFiles() {
+			if err := c.fs.Remove(filepath.Join(rootDir, "bin", file.Name)); err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					continue
+				}
+				logerr.WithError(logE, err).WithField("link", file.Name).Error("remove a link")
+				gErr = errors.New("remove links")
+			}
+		}
+	}
+	if !c.mode.Package {
+		return gErr
+	}
+
 	path := pkg.PkgPath()
 	if path == "" {
 		logE.WithField("package_type", pkg.Type).Warn("this package type can't be removed")
-		return nil
+		return gErr
 	}
 	pkgPath := filepath.Join(rootDir, "pkgs", path)
-	logE.Info("removing a package")
 	if err := c.fs.RemoveAll(pkgPath); err != nil {
 		return fmt.Errorf("remove directories: %w", err)
 	}
-	return nil
+	return gErr
 }
 
 func parsePkgName(pkgName string) (string, string) {
@@ -192,8 +226,17 @@ func findPkg(pkgName string, registryContents map[string]*registry.Config) (*reg
 }
 
 func (c *Controller) removeAll(rootDir string) error {
-	if err := c.fs.RemoveAll(filepath.Join(rootDir, "pkgs")); err != nil {
-		return fmt.Errorf("remove all packages $AQUA_ROOT_DIR/pkgs: %w", err)
+	var gErr error
+	if c.mode.Link {
+		if err := c.fs.RemoveAll(filepath.Join(rootDir, "bin")); err != nil {
+			gErr = fmt.Errorf("remove the bin directory: %w", err)
+		}
 	}
-	return nil
+	if !c.mode.Package {
+		return gErr
+	}
+	if err := c.fs.RemoveAll(filepath.Join(rootDir, "pkgs")); err != nil {
+		return fmt.Errorf("remove all packages: %w", err)
+	}
+	return gErr
 }

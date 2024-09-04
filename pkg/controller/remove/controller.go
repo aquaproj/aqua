@@ -23,6 +23,7 @@ type Controller struct {
 	registryInstaller RegistryInstaller
 	fuzzyFinder       FuzzyFinder
 	which             WhichController
+	mode              *config.RemoveMode
 }
 
 type WhichController interface {
@@ -37,7 +38,7 @@ type FuzzyFinder interface {
 	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
+func New(param *config.Param, target *config.RemoveMode, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		fs:                fs,
@@ -47,6 +48,7 @@ func New(param *config.Param, fs afero.Fs, rt *runtime.Runtime, configFinder Con
 		registryInstaller: registryInstaller,
 		fuzzyFinder:       fuzzyFinder,
 		which:             whichController,
+		mode:              target,
 	}
 }
 

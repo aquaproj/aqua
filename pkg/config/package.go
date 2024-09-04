@@ -243,6 +243,11 @@ const (
 	PkgInfoTypeCargo         = "cargo"
 )
 
+type RemoveMode struct {
+	Link    bool
+	Package bool
+}
+
 type Param struct {
 	GlobalConfigFilePaths  []string
 	ConfigFilePath         string
