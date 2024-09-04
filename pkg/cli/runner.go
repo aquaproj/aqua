@@ -63,7 +63,6 @@ func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Para
 	param.SelectVersion = c.Bool("select-version")
 	param.Installed = c.Bool("installed")
 	param.ShowVersion = c.Bool("version")
-	param.Link = c.Bool("link")
 	param.File = c.String("f")
 	if cmd := c.String("cmd"); cmd != "" {
 		param.Commands = strings.Split(cmd, ",")

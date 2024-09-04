@@ -335,7 +335,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return controller
 }
 
-func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *remove.Controller {
+func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) *remove.Controller {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
@@ -352,6 +352,6 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 	osEnv := osenv.New()
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	removeController := remove.New(param, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller)
+	removeController := remove.New(param, target, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller)
 	return removeController
 }
