@@ -22,6 +22,11 @@ func (r *Runner) newRemoveCommand() *cli.Command {
 				Usage:   "uninstall all packages",
 			},
 			&cli.BoolFlag{
+				Name:    "link",
+				Aliases: []string{"l"},
+				Usage:   "Remove links from the bin directory",
+			},
+			&cli.BoolFlag{
 				Name:  "i",
 				Usage: "Select packages with a Fuzzy Finder",
 			},
@@ -30,7 +35,7 @@ func (r *Runner) newRemoveCommand() *cli.Command {
 
 e.g.
 $ aqua rm --all
-$ aqua rm cli/cli direnv/direnv
+$ aqua rm cli/cli direnv/direnv tfcmt # Package names and command names
 
 Note that this command remove files from AQUA_ROOT_DIR/pkgs, but doesn't remove packages from aqua.yaml and doesn't remove files from AQUA_ROOT_DIR/bin and AQUA_ROOT_DIR/bat.
 
@@ -38,6 +43,11 @@ If you want to uninstall packages of non standard registry, you need to specify 
 
 e.g.
 $ aqua rm foo,suzuki-shunsuke/foo
+
+By default, this command doesn't remove links from the bin directory.
+If you want to remove them, you need to specify the --link flag.
+
+$ aqua rm -l cli/cli
 
 Limitation:
 "http" and "go_install" packages can't be removed.

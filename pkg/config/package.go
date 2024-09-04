@@ -285,6 +285,7 @@ type Param struct {
 	CosignDisabled         bool
 	SLSADisabled           bool
 	Installed              bool
+	Link                   bool
 	PolicyConfigFilePaths  []string
 	Commands               []string
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -106,7 +107,7 @@ func (c *Controller) removePackagesInteractively(logE *logrus.Entry, param *conf
 		pkg := pkgs[idx]
 		pkgName := pkg.PackageInfo.GetName()
 		logE := logE.WithField("package_name", pkgName)
-		if err := c.removePackage(logE, param.RootDir, pkg.PackageInfo); err != nil {
+		if err := c.removePackage(logE, param.RootDir, pkg.PackageInfo, param.Link); err != nil {
 			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
 				"package_name": pkgName,
 			}))
@@ -128,7 +129,7 @@ func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, reg
 				"package_name": pkgName,
 			}))
 		}
-		if err := c.removePackage(logE, param.RootDir, pkg); err != nil {
+		if err := c.removePackage(logE, param.RootDir, pkg, param.Link); err != nil {
 			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
 				"package_name": pkgName,
 			}))
@@ -145,7 +146,7 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 			return fmt.Errorf("find a command: %w", err)
 		}
 		logE = logE.WithField("package_name", findResult.Package.Package.Name)
-		if err := c.removePackage(logE, param.RootDir, findResult.Package.PackageInfo); err != nil {
+		if err := c.removePackage(logE, param.RootDir, findResult.Package.PackageInfo, param.Link); err != nil {
 			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
 				"package_name": findResult.Package.Package.Name,
 			}))
@@ -154,16 +155,34 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 	return nil
 }
 
-func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
+func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo, isRemoveLink bool) error {
+	failed := false
+	logE.Info("removing a package")
+	if isRemoveLink {
+		for _, file := range pkg.GetFiles() {
+			if err := c.fs.Remove(filepath.Join(rootDir, "bin", file.Name)); err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					continue
+				}
+				logerr.WithError(logE, err).WithField("link", file.Name).Error("remove a link")
+				failed = true
+			}
+		}
+	}
 	path := pkg.PkgPath()
 	if path == "" {
 		logE.WithField("package_type", pkg.Type).Warn("this package type can't be removed")
+		if failed {
+			return errors.New("failed to remove links")
+		}
 		return nil
 	}
 	pkgPath := filepath.Join(rootDir, "pkgs", path)
-	logE.Info("removing a package")
 	if err := c.fs.RemoveAll(pkgPath); err != nil {
 		return fmt.Errorf("remove directories: %w", err)
+	}
+	if failed {
+		return errors.New("failed to remove links")
 	}
 	return nil
 }
