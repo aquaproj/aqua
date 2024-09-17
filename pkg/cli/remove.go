@@ -24,6 +24,7 @@ func (r *Runner) newRemoveCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:    "mode",
 				Aliases: []string{"m"},
+				EnvVars: []string{"AQUA_REMOVE_MODE"},
 				Usage:   "Removed target modes. l: link, p: package",
 			},
 			&cli.BoolFlag{
