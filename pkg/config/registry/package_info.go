@@ -671,12 +671,25 @@ var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
 func (p *PackageInfo) pkgPaths() []string {
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		if p.RepoOwner == "" || p.RepoName == "" {
+			return nil
+		}
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
+		if p.Crate == "" {
+			return nil
+		}
 		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
 	case PkgInfoTypeGoInstall:
-		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(p.Path, "*")))}
+		a := p.GetPath()
+		if a == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(a, "*")))}
 	case PkgInfoTypeHTTP:
+		if p.URL == "" {
+			return nil
+		}
 		u, err := url.Parse(placeHolderTemplate.ReplaceAllLiteralString(p.URL, "*"))
 		if err != nil {
 			return nil
