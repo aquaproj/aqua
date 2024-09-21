@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/invopop/jsonschema"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
-	"golang.org/x/exp/maps"
 )
 
 const (
@@ -687,7 +686,7 @@ func (p *PackageInfo) pkgPaths() []string {
 	return nil
 }
 
-func (p *PackageInfo) PkgPaths() []string {
+func (p *PackageInfo) PkgPaths() map[string]struct{} {
 	m := map[string]struct{}{}
 	for _, a := range p.pkgPaths() {
 		m[a] = struct{}{}
@@ -698,7 +697,7 @@ func (p *PackageInfo) PkgPaths() []string {
 			m[a] = struct{}{}
 		}
 	}
-	return maps.Keys(m)
+	return m
 }
 
 func (p *PackageInfo) SLSASourceURI() string {

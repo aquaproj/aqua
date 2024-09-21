@@ -196,7 +196,7 @@ func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *regi
 		logE.WithField("package_type", pkg.Type).Warn("this package can't be removed")
 		return gErr
 	}
-	for _, path := range paths {
+	for path := range paths {
 		if err := c.removePath(logE, rootDir, path); err != nil {
 			return err
 		}
