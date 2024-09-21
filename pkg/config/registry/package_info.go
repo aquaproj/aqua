@@ -671,8 +671,22 @@ func (p *PackageInfo) PkgPath() string {
 		return filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)
 	case PkgInfoTypeCargo:
 		return filepath.Join(p.Type, "crates.io", p.Crate)
-	case PkgInfoTypeGoInstall, PkgInfoTypeHTTP:
-		return filepath.Join(p.Type, p.BaseDir)
+	case PkgInfoTypeGoInstall:
+		if p.BaseDir != "" {
+			return filepath.Join(p.Type, p.BaseDir)
+		}
+		if !strings.Contains(p.Path, "{{") {
+			return filepath.Join(p.Type, p.Path)
+		}
+		return ""
+	case PkgInfoTypeHTTP:
+		if p.BaseDir != "" {
+			return filepath.Join(p.Type, p.BaseDir)
+		}
+		// if !strings.Contains(p.URL, "{{") {
+		// 	return filepath.Join(p.Type, p.URL)
+		// }
+		return ""
 	}
 	return ""
 }
