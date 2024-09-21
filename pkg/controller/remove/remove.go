@@ -190,14 +190,16 @@ func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *regi
 		return gErr
 	}
 
-	path := pkg.PkgPath()
-	if path == "" {
-		logE.WithField("package_type", pkg.Type).Warn("this package type can't be removed")
+	paths := pkg.PkgPaths()
+	if len(paths) == 0 {
+		logE.WithField("package_type", pkg.Type).Warn("this package can't be removed")
 		return gErr
 	}
-	pkgPath := filepath.Join(rootDir, "pkgs", path)
-	if err := c.fs.RemoveAll(pkgPath); err != nil {
-		return fmt.Errorf("remove directories: %w", err)
+	for _, path := range paths {
+		pkgPath := filepath.Join(rootDir, "pkgs", path)
+		if err := c.fs.RemoveAll(pkgPath); err != nil {
+			return fmt.Errorf("remove directories: %w", err)
+		}
 	}
 	return gErr
 }

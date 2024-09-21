@@ -61,7 +61,7 @@ type PackageInfo struct {
 	Vars                []*Var             `json:"vars,omitempty" yaml:",omitempty"`
 	VersionConstraints  string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides    []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
-	BaseDir             string             `yaml:"base_dir,omitempty" json:"base_dir,omitempty"`
+	BaseDirs            []string           `yaml:"base_dirs,omitempty" json:"base_dirs,omitempty"`
 }
 
 type Var struct {
@@ -191,6 +191,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		AppendExt:           p.AppendExt,
 		Build:               p.Build,
 		Vars:                p.Vars,
+		BaseDirs:            p.BaseDirs,
 	}
 	return pkg
 }
@@ -666,34 +667,42 @@ func (p *PackageInfo) defaultCmdName() string {
 	return path.Base(p.GetName())
 }
 
-func (p *PackageInfo) PkgPath() string {
+func (p *PackageInfo) PkgPaths() []string {
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)
+		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
-		return filepath.Join(p.Type, "crates.io", p.Crate)
+		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
 	case PkgInfoTypeGoInstall:
-		if p.BaseDir != "" {
-			return filepath.Join(p.Type, p.BaseDir)
+		if p.BaseDirs != nil {
+			dirs := make([]string, len(p.BaseDirs))
+			for i, a := range p.BaseDirs {
+				dirs[i] = filepath.Join(p.Type, a)
+			}
+			return dirs
 		}
 		if !strings.Contains(p.Path, "{{") {
-			return filepath.Join(p.Type, p.Path)
+			return []string{filepath.Join(p.Type, p.Path)}
 		}
-		return ""
+		return nil
 	case PkgInfoTypeHTTP:
-		if p.BaseDir != "" {
-			return filepath.Join(p.Type, p.BaseDir)
+		if p.BaseDirs != nil {
+			dirs := make([]string, len(p.BaseDirs))
+			for i, a := range p.BaseDirs {
+				dirs[i] = filepath.Join(p.Type, a)
+			}
+			return dirs
 		}
 		if !strings.Contains(p.URL, "{{") {
 			u, err := url.Parse(p.URL)
 			if err != nil {
-				return ""
+				return nil
 			}
-			return filepath.Join(p.Type, u.Host, u.Path)
+			return []string{filepath.Join(p.Type, u.Host, u.Path)}
 		}
-		return ""
+		return nil
 	}
-	return ""
+	return nil
 }
 
 func (p *PackageInfo) SLSASourceURI() string {
