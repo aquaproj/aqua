@@ -197,19 +197,26 @@ func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *regi
 		return gErr
 	}
 	for _, path := range paths {
-		pkgPath := filepath.Join(rootDir, "pkgs", path)
-		arr, err := afero.Glob(c.fs, pkgPath)
-		if err != nil {
-			return fmt.Errorf("find directories: %w", err)
-		}
-		for _, p := range arr {
-			logE.WithField("removed_path", p).Debug("removing a directory")
-			if err := c.fs.RemoveAll(p); err != nil {
-				return fmt.Errorf("remove directories: %w", err)
-			}
+		if err := c.removePath(logE, rootDir, path); err != nil {
+			return err
 		}
 	}
 	return gErr
+}
+
+func (c *Controller) removePath(logE *logrus.Entry, rootDir string, path string) error {
+	pkgPath := filepath.Join(rootDir, "pkgs", path)
+	arr, err := afero.Glob(c.fs, pkgPath)
+	if err != nil {
+		return fmt.Errorf("find directories: %w", err)
+	}
+	for _, p := range arr {
+		logE.WithField("removed_path", p).Debug("removing a directory")
+		if err := c.fs.RemoveAll(p); err != nil {
+			return fmt.Errorf("remove directories: %w", err)
+		}
+	}
+	return nil
 }
 
 func parsePkgName(pkgName string) (string, string) {
