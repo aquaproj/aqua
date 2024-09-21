@@ -667,6 +667,14 @@ func (p *PackageInfo) defaultCmdName() string {
 	return path.Base(p.GetName())
 }
 
+func (p *PackageInfo) baseDirsPkgPaths() []string {
+	dirs := make([]string, len(p.BaseDirs))
+	for i, a := range p.BaseDirs {
+		dirs[i] = filepath.Join(p.Type, a)
+	}
+	return dirs
+}
+
 func (p *PackageInfo) PkgPaths() []string {
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
@@ -675,11 +683,7 @@ func (p *PackageInfo) PkgPaths() []string {
 		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
 	case PkgInfoTypeGoInstall:
 		if p.BaseDirs != nil {
-			dirs := make([]string, len(p.BaseDirs))
-			for i, a := range p.BaseDirs {
-				dirs[i] = filepath.Join(p.Type, a)
-			}
-			return dirs
+			return p.baseDirsPkgPaths()
 		}
 		if !strings.Contains(p.Path, "{{") {
 			return []string{filepath.Join(p.Type, p.Path)}
@@ -687,11 +691,7 @@ func (p *PackageInfo) PkgPaths() []string {
 		return nil
 	case PkgInfoTypeHTTP:
 		if p.BaseDirs != nil {
-			dirs := make([]string, len(p.BaseDirs))
-			for i, a := range p.BaseDirs {
-				dirs[i] = filepath.Join(p.Type, a)
-			}
-			return dirs
+			return p.baseDirsPkgPaths()
 		}
 		if !strings.Contains(p.URL, "{{") {
 			u, err := url.Parse(p.URL)
