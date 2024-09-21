@@ -283,12 +283,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
-      - run: kind --help
+      - run: terraform --help
       - run: terrafmt --help
       - name: Test rm
-        # http - kind
+        # http - terraform
         # go_install - terrafmt
-        run: aqua rm x-motemen/ghq bats-core/bats-core kind terrafmt
+        run: aqua rm x-motemen/ghq bats-core/bats-core terraform terrafmt
 
       - name: Test rm -m l
         run: aqua rm -m l ghcp
