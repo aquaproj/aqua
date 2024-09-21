@@ -667,40 +667,29 @@ func (p *PackageInfo) defaultCmdName() string {
 	return path.Base(p.GetName())
 }
 
-func (p *PackageInfo) baseDirsPkgPaths() []string {
-	dirs := make([]string, len(p.BaseDirs))
-	for i, a := range p.BaseDirs {
-		dirs[i] = filepath.Join(p.Type, a)
-	}
-	return dirs
-}
-
 func (p *PackageInfo) PkgPaths() []string {
+	if p.BaseDirs != nil {
+		return p.BaseDirs
+	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
 		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
 	case PkgInfoTypeGoInstall:
-		if p.BaseDirs != nil {
-			return p.baseDirsPkgPaths()
+		if strings.Contains(p.Path, "{{") {
+			return nil
 		}
-		if !strings.Contains(p.Path, "{{") {
-			return []string{filepath.Join(p.Type, p.Path)}
-		}
-		return nil
+		return []string{filepath.Join(p.Type, p.Path)}
 	case PkgInfoTypeHTTP:
-		if p.BaseDirs != nil {
-			return p.baseDirsPkgPaths()
+		if strings.Contains(p.URL, "{{") {
+			return nil
 		}
-		if !strings.Contains(p.URL, "{{") {
-			u, err := url.Parse(p.URL)
-			if err != nil {
-				return nil
-			}
-			return []string{filepath.Join(p.Type, u.Host, u.Path)}
+		u, err := url.Parse(p.URL)
+		if err != nil {
+			return nil
 		}
-		return nil
+		return []string{filepath.Join(p.Type, u.Host, u.Path)}
 	}
 	return nil
 }
