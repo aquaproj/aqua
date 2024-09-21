@@ -63,7 +63,6 @@ type PackageInfo struct {
 	Vars                []*Var             `json:"vars,omitempty" yaml:",omitempty"`
 	VersionConstraints  string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides    []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
-	BaseDirs            []string           `yaml:"base_dirs,omitempty" json:"base_dirs,omitempty"`
 }
 
 type Var struct {
@@ -193,7 +192,6 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		AppendExt:           p.AppendExt,
 		Build:               p.Build,
 		Vars:                p.Vars,
-		BaseDirs:            p.BaseDirs,
 	}
 	return pkg
 }
@@ -672,13 +670,6 @@ func (p *PackageInfo) defaultCmdName() string {
 var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
 
 func (p *PackageInfo) pkgPaths() []string {
-	if p.BaseDirs != nil {
-		dirs := make([]string, len(p.BaseDirs))
-		for i, d := range p.BaseDirs {
-			dirs[i] = filepath.FromSlash(d)
-		}
-		return dirs
-	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
