@@ -2,8 +2,10 @@ package registry
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -664,16 +666,54 @@ func (p *PackageInfo) defaultCmdName() string {
 	return path.Base(p.GetName())
 }
 
-func (p *PackageInfo) PkgPath() string {
+var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
+
+func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
+	if p.NoAsset || p.ErrorMessage != "" {
+		return nil
+	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)
+		if p.RepoOwner == "" || p.RepoName == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
-		return filepath.Join(p.Type, "crates.io", p.Crate)
-	case PkgInfoTypeGoInstall, PkgInfoTypeHTTP:
-		return ""
+		if p.Crate == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
+	case PkgInfoTypeGoInstall:
+		a := p.GetPath()
+		if a == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(a, "*")))}
+	case PkgInfoTypeHTTP:
+		if p.URL == "" {
+			return nil
+		}
+		u, err := url.Parse(placeHolderTemplate.ReplaceAllLiteralString(p.URL, "*"))
+		if err != nil {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
 	}
-	return ""
+	return nil
+}
+
+func (p *PackageInfo) PkgPaths() map[string]struct{} {
+	m := map[string]struct{}{}
+	for _, a := range p.pkgPaths() {
+		m[a] = struct{}{}
+	}
+	for _, vo := range p.VersionOverrides {
+		pkg := p.overrideVersion(vo)
+		for _, a := range pkg.pkgPaths() {
+			m[a] = struct{}{}
+		}
+	}
+	return m
 }
 
 func (p *PackageInfo) SLSASourceURI() string {
