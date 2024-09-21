@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -197,8 +198,15 @@ func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *regi
 	}
 	for _, path := range paths {
 		pkgPath := filepath.Join(rootDir, "pkgs", path)
-		if err := c.fs.RemoveAll(pkgPath); err != nil {
-			return fmt.Errorf("remove directories: %w", err)
+		arr, err := afero.Glob(c.fs, pkgPath)
+		if err != nil {
+			return fmt.Errorf("find directories: %w", err)
+		}
+		for _, p := range arr {
+			logE.WithField("removed_path", p).Debug("removing a directory")
+			if err := c.fs.RemoveAll(p); err != nil {
+				return fmt.Errorf("remove directories: %w", err)
+			}
 		}
 	}
 	return gErr

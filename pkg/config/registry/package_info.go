@@ -5,11 +5,13 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/invopop/jsonschema"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"golang.org/x/exp/maps"
 )
 
 const (
@@ -667,7 +669,9 @@ func (p *PackageInfo) defaultCmdName() string {
 	return path.Base(p.GetName())
 }
 
-func (p *PackageInfo) PkgPaths() []string {
+var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
+
+func (p *PackageInfo) pkgPaths() []string {
 	if p.BaseDirs != nil {
 		dirs := make([]string, len(p.BaseDirs))
 		for i, d := range p.BaseDirs {
@@ -681,21 +685,29 @@ func (p *PackageInfo) PkgPaths() []string {
 	case PkgInfoTypeCargo:
 		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
 	case PkgInfoTypeGoInstall:
-		if strings.Contains(p.Path, "{{") {
-			return nil
-		}
-		return []string{filepath.Join(p.Type, filepath.FromSlash(p.Path))}
+		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(p.Path, "*")))}
 	case PkgInfoTypeHTTP:
-		if strings.Contains(p.URL, "{{") {
-			return nil
-		}
-		u, err := url.Parse(p.URL)
+		u, err := url.Parse(placeHolderTemplate.ReplaceAllLiteralString(p.URL, "*"))
 		if err != nil {
 			return nil
 		}
 		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
 	}
 	return nil
+}
+
+func (p *PackageInfo) PkgPaths() []string {
+	m := map[string]struct{}{}
+	for _, a := range p.pkgPaths() {
+		m[a] = struct{}{}
+	}
+	for _, vo := range p.VersionOverrides {
+		pkg := p.overrideVersion(vo)
+		for _, a := range pkg.pkgPaths() {
+			m[a] = struct{}{}
+		}
+	}
+	return maps.Keys(m)
 }
 
 func (p *PackageInfo) SLSASourceURI() string {
