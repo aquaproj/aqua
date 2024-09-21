@@ -669,6 +669,9 @@ func (p *PackageInfo) defaultCmdName() string {
 var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
 
 func (p *PackageInfo) pkgPaths() []string {
+	if p.NoAsset || p.ErrorMessage != "" {
+		return nil
+	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		if p.RepoOwner == "" || p.RepoName == "" {
