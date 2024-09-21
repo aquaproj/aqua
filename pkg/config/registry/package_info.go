@@ -60,6 +60,7 @@ type PackageInfo struct {
 	Vars                []*Var             `json:"vars,omitempty" yaml:",omitempty"`
 	VersionConstraints  string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides    []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	BaseDir             string             `yaml:"base_dir,omitempty" json:"base_dir,omitempty"`
 }
 
 type Var struct {
@@ -671,7 +672,7 @@ func (p *PackageInfo) PkgPath() string {
 	case PkgInfoTypeCargo:
 		return filepath.Join(p.Type, "crates.io", p.Crate)
 	case PkgInfoTypeGoInstall, PkgInfoTypeHTTP:
-		return ""
+		return filepath.Join(p.Type, p.BaseDir)
 	}
 	return ""
 }
