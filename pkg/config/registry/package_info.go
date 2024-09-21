@@ -669,7 +669,11 @@ func (p *PackageInfo) defaultCmdName() string {
 
 func (p *PackageInfo) PkgPaths() []string {
 	if p.BaseDirs != nil {
-		return p.BaseDirs
+		dirs := make([]string, len(p.BaseDirs))
+		for i, d := range p.BaseDirs {
+			dirs[i] = filepath.FromSlash(d)
+		}
+		return dirs
 	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
@@ -680,7 +684,7 @@ func (p *PackageInfo) PkgPaths() []string {
 		if strings.Contains(p.Path, "{{") {
 			return nil
 		}
-		return []string{filepath.Join(p.Type, p.Path)}
+		return []string{filepath.Join(p.Type, filepath.FromSlash(p.Path))}
 	case PkgInfoTypeHTTP:
 		if strings.Contains(p.URL, "{{") {
 			return nil
@@ -689,7 +693,7 @@ func (p *PackageInfo) PkgPaths() []string {
 		if err != nil {
 			return nil
 		}
-		return []string{filepath.Join(p.Type, u.Host, u.Path)}
+		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
 	}
 	return nil
 }
