@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
@@ -683,9 +684,13 @@ func (p *PackageInfo) PkgPath() string {
 		if p.BaseDir != "" {
 			return filepath.Join(p.Type, p.BaseDir)
 		}
-		// if !strings.Contains(p.URL, "{{") {
-		// 	return filepath.Join(p.Type, p.URL)
-		// }
+		if !strings.Contains(p.URL, "{{") {
+			u, err := url.Parse(p.URL)
+			if err != nil {
+				return ""
+			}
+			return filepath.Join(p.Type, u.Host, u.Path)
+		}
 		return ""
 	}
 	return ""
