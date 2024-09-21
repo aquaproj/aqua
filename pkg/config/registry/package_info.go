@@ -668,7 +668,7 @@ func (p *PackageInfo) defaultCmdName() string {
 
 var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
 
-func (p *PackageInfo) pkgPaths() []string {
+func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
 	}
