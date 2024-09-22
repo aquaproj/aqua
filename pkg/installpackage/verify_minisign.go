@@ -24,7 +24,7 @@ func (is *Installer) verifyWithMinisign(ctx context.Context, logE *logrus.Entry,
 	}
 	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with minisign")
-	if err := is.installMinisign(ctx, logE); err != nil {
+	if err := is.minisignInstaller.install(ctx, logE); err != nil {
 		return fmt.Errorf("install minisign: %w", err)
 	}
 	tempFilePath, err := bodyFile.Path()
