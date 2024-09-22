@@ -31,7 +31,7 @@ jobs:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.22.6
+          go-version: 1.23.1
 
       # The default vim doesn't work well, so we install the latest vim ourselves.
       - uses: rhysd/action-setup-vim@acff3bc31a82af69a26f90af710926fdab04d00e # v1.3.5
