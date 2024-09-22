@@ -67,6 +67,15 @@ func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logru
 	if !ms.GetEnabled() {
 		return nil
 	}
+
+	mPkg := minisign.Package()
+	if f, err := mPkg.PackageInfo.CheckSupported(is.realRuntime, is.realRuntime.Env()); err != nil {
+		return fmt.Errorf("check if minisign supports this environment: %w", err)
+	} else if !f {
+		logE.Warn("minisign doesn't support this environment")
+		return nil
+	}
+
 	if tempFilePath == "" {
 		f, err := afero.TempFile(is.fs, "", "")
 		if err != nil {
