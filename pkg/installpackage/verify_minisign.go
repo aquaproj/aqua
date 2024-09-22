@@ -15,6 +15,13 @@ func (is *Installer) verifyWithMinisign(ctx context.Context, logE *logrus.Entry,
 	if !m.GetEnabled() {
 		return nil
 	}
+	mPkg := minisign.Package()
+	if f, err := mPkg.PackageInfo.CheckSupported(is.realRuntime, is.realRuntime.Env()); err != nil {
+		return fmt.Errorf("check if minisign supports this environment: %w", err)
+	} else if !f {
+		logE.Warn("minisign doesn't support this environment")
+		return nil
+	}
 	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with minisign")
 	if err := is.installMinisign(ctx, logE); err != nil {
