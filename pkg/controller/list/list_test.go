@@ -63,7 +63,7 @@ packages:
 				t.Fatal(err)
 			}
 			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
-			if err := ctrl.List(ctx, d.param, logE); err != nil {
+			if err := ctrl.List(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return
 				}
