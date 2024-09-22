@@ -95,7 +95,7 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 		return nil, err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {
-		findResult, err := c.findExecFileFromPkg(registryContents, exeName, pkg, logE)
+		findResult, err := c.findExecFileFromPkg(logE, registryContents, exeName, pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +109,7 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 	return nil, nil //nolint:nilnil
 }
 
-func (c *Controller) findExecFileFromPkg(registries map[string]*registry.Config, exeName string, pkg *aqua.Package, logE *logrus.Entry) (*FindResult, error) { //nolint:cyclop
+func (c *Controller) findExecFileFromPkg(logE *logrus.Entry, registries map[string]*registry.Config, exeName string, pkg *aqua.Package) (*FindResult, error) { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil, nil //nolint:nilnil

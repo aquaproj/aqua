@@ -144,7 +144,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return is.createLink(filepath.Join(is.rootDir, "bin", "aqua"), a, logE)
+	return is.createLink(logE, filepath.Join(is.rootDir, "bin", "aqua"), a)
 }
 
 func (is *Installer) copyAquaOnWindows(exePath string) error {

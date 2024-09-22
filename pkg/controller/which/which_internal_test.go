@@ -81,7 +81,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			which, err := ctrl.findExecFileFromPkg(d.registries, d.exeName, d.pkg, logE)
+			which, err := ctrl.findExecFileFromPkg(logE, d.registries, d.exeName, d.pkg)
 			if err != nil {
 				t.Fatal(err)
 			}

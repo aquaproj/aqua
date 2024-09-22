@@ -37,7 +37,7 @@ func New(gh RepositoriesService, fs afero.Fs) *Controller {
 	}
 }
 
-func (c *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
+func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua.yaml"
 	}
