@@ -39,5 +39,5 @@ func (r *Runner) initAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(c.Context, param)
-	return ctrl.Init(c.Context, c.Args().First(), r.LogE) //nolint:wrapcheck
+	return ctrl.Init(c.Context, r.LogE, c.Args().First()) //nolint:wrapcheck
 }

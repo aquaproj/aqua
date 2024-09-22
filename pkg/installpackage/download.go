@@ -57,7 +57,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 	pkgInfo := param.Package.PackageInfo
 
 	if pkgInfo.Type == "go_install" {
-		return is.downloadGoInstall(ctx, ppkg, param.Dest, logE)
+		return is.downloadGoInstall(ctx, logE, ppkg, param.Dest)
 	}
 
 	if pkgInfo.Type == "cargo" {

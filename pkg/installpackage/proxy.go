@@ -101,5 +101,5 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		return nil
 	}
 
-	return is.createLink(filepath.Join(is.rootDir, proxyName), a, logE)
+	return is.createLink(logE, filepath.Join(is.rootDir, proxyName), a)
 }
