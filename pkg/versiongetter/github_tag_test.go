@@ -135,7 +135,7 @@ func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 				t.Fatal("error must be returned")
 			}
 			if diff := cmp.Diff(items, d.items); diff != "" {
-				t.Fatalf(diff)
+				t.Fatal(diff)
 			}
 		})
 	}
