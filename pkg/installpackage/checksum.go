@@ -9,7 +9,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -40,7 +39,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 		}
 		art := pkg.TemplateArtifact(is.runtime, assetName)
 		logE.Info("verify a checksum file with Cosign")
-		if err := is.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
+		if err := is.cosignInstaller.install(ctx, logE); err != nil {
 			return "", err
 		}
 		if err := is.cosign.Verify(ctx, logE, is.runtime, &download.File{

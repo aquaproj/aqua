@@ -22,7 +22,7 @@ func (is *Installer) verifyWithSLSA(ctx context.Context, logE *logrus.Entry, bod
 	}
 	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with slsa-verifier")
-	if err := is.slsaVerifierInstaller.installSLSAVerifier(ctx, logE, slsa.Version); err != nil {
+	if err := is.slsaVerifierInstaller.install(ctx, logE); err != nil {
 		return fmt.Errorf("install slsa-verifier: %w", err)
 	}
 	tempFilePath, err := bodyFile.Path()

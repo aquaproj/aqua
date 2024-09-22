@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/sirupsen/logrus"
 )
@@ -24,7 +23,7 @@ func (is *Installer) verifyWithCosign(ctx context.Context, logE *logrus.Entry, b
 
 	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
 	logE.Info("verify a package with Cosign")
-	if err := is.cosignInstaller.installCosign(ctx, logE, cosign.Version); err != nil {
+	if err := is.cosignInstaller.install(ctx, logE); err != nil {
 		return fmt.Errorf("install sigstore/cosign: %w", err)
 	}
 	tempFilePath, err := bodyFile.Path()
