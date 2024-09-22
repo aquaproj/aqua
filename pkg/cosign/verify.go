@@ -50,7 +50,7 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 	}
 }
 
-func (v *Verifier) downloadFile(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, downloadedFile *registry.DownloadedFile) (string, error) {
+func (v *Verifier) downloadFile(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, art *template.Artifact, downloadedFile *registry.DownloadedFile) (string, error) {
 	// --signature cos.Signature - Download a signature file
 	sigFile, err := afero.TempFile(v.fs, "", "")
 	if err != nil {
@@ -89,7 +89,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		if df == nil {
 			continue
 		}
-		f, err := v.downloadFile(ctx, logE, rt, file, cos, art, df)
+		f, err := v.downloadFile(ctx, logE, rt, file, art, df)
 		if f != "" {
 			defer v.fs.Remove(f) //nolint:errcheck
 		}
