@@ -7,7 +7,9 @@ checksum:
 #   supported_envs:
 #   - all
 registries:
-- type: standard
-  ref: 3b233e231969388a2cc54028d75948705d73ac09 # TODO update ref
+  - type: standard
+    ref: 3b233e231969388a2cc54028d75948705d73ac09 # TODO update ref
 packages:
-- name: bufbuild/buf@v1.42.0
+  - name: bufbuild/buf@v1.42.0
+  - name: bufbuild/buf
+    version: v0.53.0
