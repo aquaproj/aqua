@@ -39,6 +39,7 @@ type Installer struct {
 	minisignVerifier      MinisignVerifier
 	cosignInstaller       *DedicatedInstaller
 	slsaVerifierInstaller *DedicatedInstaller
+	minisignInstaller     *DedicatedInstaller
 	goInstallInstaller    GoInstallInstaller
 	goBuildInstaller      GoBuildInstaller
 	cargoPackageInstaller CargoPackageInstaller
@@ -65,6 +66,11 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 		newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
 		slsa.Package,
 		slsa.Checksums(),
+	)
+	installer.minisignInstaller = newDedicatedInstaller(
+		newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		minisign.Package,
+		minisign.Checksums(),
 	)
 	return installer
 }
