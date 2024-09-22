@@ -33,25 +33,33 @@ type ParamVerify struct {
 }
 
 func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *ParamVerify) error {
+	sigFile, err := v.downloadSignature(ctx, logE, rt, m, art, file)
+	if err != nil {
+		return err
+	}
+	defer v.fs.Remove(sigFile)                     //nolint:errcheck
+	return v.exe.Verify(ctx, logE, param, sigFile) //nolint:wrapcheck
+}
+
+func (v *Verifier) downloadSignature(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File) (string, error) {
 	f, err := download.ConvertDownloadedFileToFile(m.ToDownloadedFile(), file, rt, art)
 	if err != nil {
-		return err //nolint:wrapcheck
+		return "", err //nolint:wrapcheck
 	}
+
 	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
 	if err != nil {
-		return fmt.Errorf("download a Minisign signature: %w", err)
+		return "", fmt.Errorf("download a Minisign signature: %w", err)
 	}
 	defer rc.Close()
 
 	signatureFile, err := afero.TempFile(v.fs, "", "")
 	if err != nil {
-		return fmt.Errorf("create a temporary file: %w", err)
+		return "", fmt.Errorf("create a temporary file: %w", err)
 	}
-	defer signatureFile.Close()
-	defer v.fs.Remove(signatureFile.Name()) //nolint:errcheck
+	defer signatureFile.Close() //nolint:errcheck
 	if _, err := io.Copy(signatureFile, rc); err != nil {
-		return fmt.Errorf("copy a signature to a temporary file: %w", err)
+		return signatureFile.Name(), fmt.Errorf("copy a signature to a temporary file: %w", err)
 	}
-
-	return v.exe.Verify(ctx, logE, param, signatureFile.Name()) //nolint:wrapcheck
+	return signatureFile.Name(), nil
 }

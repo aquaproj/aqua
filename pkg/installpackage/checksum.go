@@ -55,14 +55,16 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 		}
 	}
 
-	if err := is.verifyChecksumWithMinisign(ctx, logE, pkg, assetName, tempFilePath, b); err != nil {
+	if err := is.verifyChecksumWithMinisign(ctx, logE, pkg, tempFilePath, b); err != nil {
 		return "", err
 	}
 
 	return checksum.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
 }
 
-func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName, tempFilePath string, b []byte) error {
+// b is a content of the checksum file.
+// tempFilePath is a path of the checksum file.
+func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logrus.Entry, pkg *config.Package, tempFilePath string, b []byte) error {
 	ms := pkg.PackageInfo.Checksum.GetMinisign()
 	if !ms.GetEnabled() {
 		return nil
@@ -88,7 +90,8 @@ func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logru
 			return fmt.Errorf("write a checksum to a temporary file: %w", err)
 		}
 	}
-	art := pkg.TemplateArtifact(is.runtime, assetName)
+
+	art := pkg.TemplateArtifact(is.runtime, "")
 	logE.Info("verifing a checksum file with Minisign")
 	if err := is.minisignInstaller.install(ctx, logE); err != nil {
 		return err
