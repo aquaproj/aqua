@@ -29,9 +29,12 @@ func newDedicatedInstaller(installer *Installer, pkg func() *config.Package, che
 func (di *DedicatedInstaller) install(ctx context.Context, logE *logrus.Entry) error {
 	di.mutex.Lock()
 	defer di.mutex.Unlock()
-	chksum := di.checksums[di.installer.runtime.Env()]
 
 	pkg := di.pkg()
+	logE = logE.WithFields(logrus.Fields{
+		"package_name":    pkg.Package.Name,
+		"package_version": pkg.Package.Version,
+	})
 
 	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, di.installer.runtime)
 	if err != nil {
@@ -47,6 +50,7 @@ func (di *DedicatedInstaller) install(ctx context.Context, logE *logrus.Entry) e
 	}
 
 	pkg.PackageInfo = pkgInfo
+	chksum := di.checksums[fmt.Sprintf("%s/%s", di.installer.runtime.GOOS, di.installer.runtime.Arch(pkg.PackageInfo.Rosetta2, pkg.PackageInfo.WindowsARMEmulation))]
 
 	if err := di.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
 		Checksums: checksum.New(), // Check checksum but not update aqua-checksums.json
