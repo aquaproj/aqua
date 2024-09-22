@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -30,7 +29,7 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
 		for _, file := range pkgInfo.GetFiles() {
-			if isWindows(runtime.GOOS) {
+			if is.realRuntime.IsWindows() {
 				hardLink := filepath.Join(is.rootDir, "bin", file.Name+".exe")
 				if f, err := afero.Exists(is.fs, hardLink); err != nil {
 					logerr.WithError(logE, err).WithFields(logrus.Fields{

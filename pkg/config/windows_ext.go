@@ -17,7 +17,7 @@ func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, fi
 	if err != nil {
 		return "", err
 	}
-	if !isWindows(rt.GOOS) {
+	if !rt.IsWindows() {
 		return s, nil
 	}
 	if osfile.Ext(s, p.Package.Version) != "" {

@@ -152,10 +152,6 @@ type ChecksumCalculator interface {
 	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
 }
 
-func isWindows(goos string) bool {
-	return goos == "windows"
-}
-
 func (is *Installer) SetCopyDir(copyDir string) {
 	is.copyDir = copyDir
 }

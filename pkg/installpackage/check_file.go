@@ -69,7 +69,7 @@ func (is *Installer) checkAndCopyFile(ctx context.Context, logE *logrus.Entry, p
 func (is *Installer) checkFileSrcGo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, file *registry.File) (string, error) {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(is.rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
-	if isWindows(is.runtime.GOOS) {
+	if is.runtime.IsWindows() {
 		exePath += ".exe"
 	}
 	dir, err := pkg.RenderDir(file, is.runtime)
