@@ -56,37 +56,46 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 		}
 	}
 
-	if ms := pkg.PackageInfo.Checksum.GetMinisign(); ms.GetEnabled() {
-		if tempFilePath == "" {
-			f, err := afero.TempFile(is.fs, "", "")
-			if err != nil {
-				return "", fmt.Errorf("create a temporary file: %w", err)
-			}
-			tempFilePath = f.Name()
-			defer f.Close()
-			defer is.fs.Remove(tempFilePath) //nolint:errcheck
-			if _, err := f.Write(b); err != nil {
-				return "", fmt.Errorf("write a checksum to a temporary file: %w", err)
-			}
-		}
-		art := pkg.TemplateArtifact(is.runtime, assetName)
-		logE.Info("verifing a checksum file with Minisign")
-		if err := is.installMinisign(ctx, logE); err != nil {
-			return "", err
-		}
-		if err := is.minisignVerifier.Verify(ctx, logE, is.runtime, ms, art, &download.File{
-			RepoOwner: pkg.PackageInfo.RepoOwner,
-			RepoName:  pkg.PackageInfo.RepoName,
-			Version:   pkg.Package.Version,
-		}, &minisign.ParamVerify{
-			ArtifactPath: tempFilePath,
-			PublicKey:    ms.PublicKey,
-		}); err != nil {
-			return "", fmt.Errorf("verify a checksum file with Minisign: %w", err)
-		}
+	if err := is.verifyChecksumWithMinisign(ctx, logE, pkg, assetName, tempFilePath, b); err != nil {
+		return "", err
 	}
 
 	return checksum.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
+}
+
+func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName, tempFilePath string, b []byte) error {
+	ms := pkg.PackageInfo.Checksum.GetMinisign()
+	if !ms.GetEnabled() {
+		return nil
+	}
+	if tempFilePath == "" {
+		f, err := afero.TempFile(is.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporary file: %w", err)
+		}
+		tempFilePath = f.Name()
+		defer f.Close()
+		defer is.fs.Remove(tempFilePath) //nolint:errcheck
+		if _, err := f.Write(b); err != nil {
+			return fmt.Errorf("write a checksum to a temporary file: %w", err)
+		}
+	}
+	art := pkg.TemplateArtifact(is.runtime, assetName)
+	logE.Info("verifing a checksum file with Minisign")
+	if err := is.installMinisign(ctx, logE); err != nil {
+		return err
+	}
+	if err := is.minisignVerifier.Verify(ctx, logE, is.runtime, ms, art, &download.File{
+		RepoOwner: pkg.PackageInfo.RepoOwner,
+		RepoName:  pkg.PackageInfo.RepoName,
+		Version:   pkg.Package.Version,
+	}, &minisign.ParamVerify{
+		ArtifactPath: tempFilePath,
+		PublicKey:    ms.PublicKey,
+	}); err != nil {
+		return fmt.Errorf("verify a checksum file with Minisign: %w", err)
+	}
+	return nil
 }
 
 type ParamVerifyChecksum struct {
