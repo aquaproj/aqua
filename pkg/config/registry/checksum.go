@@ -10,6 +10,7 @@ type Checksum struct {
 	Enabled      *bool            `json:"enabled,omitempty"`
 	Replacements Replacements     `json:"replacements,omitempty"`
 	Cosign       *Cosign          `json:"cosign,omitempty"`
+	Minisign     *Minisign        `json:"minisign,omitempty"`
 }
 
 type ChecksumPattern struct {
@@ -46,4 +47,11 @@ func (c *Checksum) GetCosign() *Cosign {
 		return nil
 	}
 	return c.Cosign
+}
+
+func (c *Checksum) GetMinisign() *Minisign {
+	if c == nil {
+		return nil
+	}
+	return c.Minisign
 }
