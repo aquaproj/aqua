@@ -12,7 +12,8 @@ registries:
   path: registry.yaml
 packages:
 - name: x-motemen/ghq@v1.3.0
-- name: kubernetes-sigs/kind # http package, raw format
+- name: hashicorp/terraform@v1.9.6
+- name: kubernetes-sigs/kind # raw format
   registry: standard # standard registry
   version: v0.17.0 # renovate: depName=kubernetes-sigs/kind
 - name: restic/restic@v0.14.0

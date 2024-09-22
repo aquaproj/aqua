@@ -28,6 +28,7 @@ jobs:
       - run: go install ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
+
       - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
@@ -51,6 +52,12 @@ jobs:
         run: aqua g -g cli/cli
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
+
+      - name: Test checksum
+        run: aqua -c aqua.yaml i
+        working-directory: tests/3064
+        env:
+          GITHUB_TOKEN: ${{github.token}}
 
       - name: Test version_prefix
         run: aqua -c aqua.yaml g -i kubernetes-sigs/kustomize
@@ -276,8 +283,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
+      - run: terraform --help
+      - run: terrafmt --help
       - name: Test rm
-        run: aqua rm x-motemen/ghq bats-core/bats-core
+        # http - terraform
+        # go_install - terrafmt
+        run: aqua rm x-motemen/ghq bats-core/bats-core terraform terrafmt
+
+      - name: Test rm -m l
+        run: aqua rm -m l ghcp
+      - name: Test rm -m lp
+        run: aqua rm -m lp ghcp reviewdog
 
       - name: Test rm --all
         run: aqua rm -a

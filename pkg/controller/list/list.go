@@ -10,9 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (c *Controller) List(ctx context.Context, param *config.Param, logE *logrus.Entry) error { //nolint:cyclop
+func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
 	if param.Installed {
-		return c.listInstalled(param, logE)
+		return c.listInstalled(logE, param)
 	}
 	cfg := &aqua.Config{}
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)

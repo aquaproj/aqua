@@ -9,7 +9,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) listInstalled(param *config.Param, logE *logrus.Entry) error {
+func (c *Controller) listInstalled(logE *logrus.Entry, param *config.Param) error {
 	cfgFilePaths := c.configFinder.Finds(param.PWD, param.ConfigFilePath)
 	cfgFileMap := map[string]struct{}{}
 	for _, cfgFilePath := range cfgFilePaths {

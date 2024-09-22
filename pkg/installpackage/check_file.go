@@ -23,7 +23,7 @@ func (is *Installer) checkFilesWrap(ctx context.Context, logE *logrus.Entry, par
 	for _, file := range pkgInfo.GetFiles() {
 		logE := logE.WithField("file_name", file.Name)
 		var errFileNotFound *config.FileNotFoundError
-		if err := is.checkAndCopyFile(ctx, pkg, file, logE); err != nil {
+		if err := is.checkAndCopyFile(ctx, logE, pkg, file); err != nil {
 			if errors.As(err, &errFileNotFound) {
 				notFound = true
 			}
@@ -50,8 +50,8 @@ func (is *Installer) checkFilesWrap(ctx context.Context, logE *logrus.Entry, par
 	return nil
 }
 
-func (is *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) error {
-	exePath, err := is.checkFileSrc(ctx, pkg, file, logE)
+func (is *Installer) checkAndCopyFile(ctx context.Context, logE *logrus.Entry, pkg *config.Package, file *registry.File) error {
+	exePath, err := is.checkFileSrc(ctx, logE, pkg, file)
 	if err != nil {
 		return fmt.Errorf("check file_src is correct: %w", err)
 	}
@@ -66,7 +66,7 @@ func (is *Installer) checkAndCopyFile(ctx context.Context, pkg *config.Package, 
 	return nil
 }
 
-func (is *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (is *Installer) checkFileSrcGo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, file *registry.File) (string, error) {
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(is.rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if isWindows(is.runtime.GOOS) {
@@ -95,9 +95,9 @@ func (is *Installer) checkFileSrcGo(ctx context.Context, pkg *config.Package, fi
 	return exePath, nil
 }
 
-func (is *Installer) checkFileSrc(ctx context.Context, pkg *config.Package, file *registry.File, logE *logrus.Entry) (string, error) {
+func (is *Installer) checkFileSrc(ctx context.Context, logE *logrus.Entry, pkg *config.Package, file *registry.File) (string, error) {
 	if pkg.PackageInfo.Type == "go_build" {
-		return is.checkFileSrcGo(ctx, pkg, file, logE)
+		return is.checkFileSrcGo(ctx, logE, pkg, file)
 	}
 
 	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)

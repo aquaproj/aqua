@@ -84,42 +84,53 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 			"package_version": pkg.Version,
 			"registry":        pkg.Registry,
 		})
-		rgst, ok := cfg.Registries[pkg.Registry]
-		if ok {
-			if rgst.Ref != "" {
-				logE = logE.WithField("registry_ref", rgst.Ref)
-			}
-		}
-		pkgInfo, err := getPkgInfoFromRegistries(logE, registries, pkg, m)
+		p, err := listPackage(logE, cfg, rt, registries, pkg, m, env)
 		if err != nil {
-			logerr.WithError(logE, err).Error("install the package")
+			logerr.WithError(logE, err).Error("ignore a package because the package version is empty")
 			failed = true
 			continue
 		}
-
-		pkgInfo, err = pkgInfo.Override(logE, pkg.Version, rt)
-		if err != nil {
-			logerr.WithError(logE, err).Error("evaluate version constraints")
-			failed = true
+		if p == nil {
 			continue
 		}
-		supported, err := pkgInfo.CheckSupported(rt, env)
-		if err != nil {
-			logerr.WithError(logE, err).Error("check if the package is supported")
-			failed = true
-			continue
-		}
-		if !supported {
-			logE.Debug("the package isn't supported on this environment")
-			continue
-		}
-		pkgs = append(pkgs, &Package{
-			Package:     pkg,
-			PackageInfo: pkgInfo,
-			Registry:    rgst,
-		})
+		pkgs = append(pkgs, p)
 	}
 	return pkgs, failed
+}
+
+func listPackage(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo, env string) (*Package, error) {
+	rgst, ok := cfg.Registries[pkg.Registry]
+	if ok {
+		if rgst.Ref != "" {
+			logE = logE.WithField("registry_ref", rgst.Ref)
+		}
+	}
+	pkgInfo, err := getPkgInfoFromRegistries(logE, registries, pkg, m)
+	if err != nil {
+		return nil, errors.New("install the package")
+	}
+
+	pkgInfo, err = pkgInfo.Override(logE, pkg.Version, rt)
+	if err != nil {
+		return nil, errors.New("evaluate version constraints")
+	}
+	supported, err := pkgInfo.CheckSupported(rt, env)
+	if err != nil {
+		return nil, errors.New("check if the package is supported")
+	}
+	if !supported {
+		logE.Debug("the package isn't supported on this environment")
+		return nil, nil //nolint:nilnil
+	}
+	p := &Package{
+		Package:     pkg,
+		PackageInfo: pkgInfo,
+		Registry:    rgst,
+	}
+	if err := p.ApplyVars(); err != nil {
+		return nil, errors.New("apply the package variable")
+	}
+	return p, nil
 }
 
 func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {

@@ -14,6 +14,7 @@ type Artifact struct {
 	Format          string
 	Asset           string
 	AssetWithoutExt string
+	Vars            map[string]any
 }
 
 func renderParam(art *Artifact, rt *runtime.Runtime) map[string]interface{} {
@@ -27,6 +28,7 @@ func renderParam(art *Artifact, rt *runtime.Runtime) map[string]interface{} {
 		"Format":          art.Format,
 		"Asset":           art.Asset,
 		"AssetWithoutExt": art.AssetWithoutExt,
+		"Vars":            art.Vars,
 	}
 }
 

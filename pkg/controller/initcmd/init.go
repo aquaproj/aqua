@@ -37,7 +37,7 @@ func New(gh RepositoriesService, fs afero.Fs) *Controller {
 	}
 }
 
-func (c *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.Entry) error {
+func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua.yaml"
 	}
@@ -49,7 +49,7 @@ func (c *Controller) Init(ctx context.Context, cfgFilePath string, logE *logrus.
 		return nil
 	}
 
-	registryVersion := "v4.212.0" // renovate: depName=aquaproj/aqua-registry
+	registryVersion := "v4.223.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{

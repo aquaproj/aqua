@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -138,6 +140,23 @@ func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, reg
 }
 
 func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, param *config.Param, cmds []string) error {
+	var gErr error
+	if c.mode.Link {
+		for _, cmd := range cmds {
+			logE := logE.WithField("exe_name", cmd)
+			logE.Info("removing a link")
+			if err := c.fs.Remove(filepath.Join(c.rootDir, "bin", cmd)); err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					continue
+				}
+				logerr.WithError(logE, err).Error("remove a link")
+				gErr = errors.New("remove links")
+			}
+		}
+	}
+	if !c.mode.Package {
+		return gErr
+	}
 	for _, cmd := range cmds {
 		logE := logE.WithField("exe_name", cmd)
 		findResult, err := c.which.Which(ctx, logE, param, cmd)
@@ -151,19 +170,51 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 			}))
 		}
 	}
-	return nil
+	return gErr
 }
 
 func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
-	path := pkg.PkgPath()
-	if path == "" {
-		logE.WithField("package_type", pkg.Type).Warn("this package type can't be removed")
-		return nil
-	}
-	pkgPath := filepath.Join(rootDir, "pkgs", path)
+	var gErr error
 	logE.Info("removing a package")
-	if err := c.fs.RemoveAll(pkgPath); err != nil {
-		return fmt.Errorf("remove directories: %w", err)
+	if c.mode.Link {
+		for _, file := range pkg.GetFiles() {
+			if err := c.fs.Remove(filepath.Join(rootDir, "bin", file.Name)); err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					continue
+				}
+				logerr.WithError(logE, err).WithField("link", file.Name).Error("remove a link")
+				gErr = errors.New("remove links")
+			}
+		}
+	}
+	if !c.mode.Package {
+		return gErr
+	}
+
+	paths := pkg.PkgPaths()
+	if len(paths) == 0 {
+		logE.WithField("package_type", pkg.Type).Warn("this package can't be removed")
+		return gErr
+	}
+	for path := range paths {
+		if err := c.removePath(logE, rootDir, path); err != nil {
+			return err
+		}
+	}
+	return gErr
+}
+
+func (c *Controller) removePath(logE *logrus.Entry, rootDir string, path string) error {
+	pkgPath := filepath.Join(rootDir, "pkgs", path)
+	arr, err := afero.Glob(c.fs, pkgPath)
+	if err != nil {
+		return fmt.Errorf("find directories: %w", err)
+	}
+	for _, p := range arr {
+		logE.WithField("removed_path", p).Debug("removing a directory")
+		if err := c.fs.RemoveAll(p); err != nil {
+			return fmt.Errorf("remove directories: %w", err)
+		}
 	}
 	return nil
 }
@@ -192,8 +243,17 @@ func findPkg(pkgName string, registryContents map[string]*registry.Config) (*reg
 }
 
 func (c *Controller) removeAll(rootDir string) error {
-	if err := c.fs.RemoveAll(filepath.Join(rootDir, "pkgs")); err != nil {
-		return fmt.Errorf("remove all packages $AQUA_ROOT_DIR/pkgs: %w", err)
+	var gErr error
+	if c.mode.Link {
+		if err := c.fs.RemoveAll(filepath.Join(rootDir, "bin")); err != nil {
+			gErr = fmt.Errorf("remove the bin directory: %w", err)
+		}
 	}
-	return nil
+	if !c.mode.Package {
+		return gErr
+	}
+	if err := c.fs.RemoveAll(filepath.Join(rootDir, "pkgs")); err != nil {
+		return fmt.Errorf("remove all packages: %w", err)
+	}
+	return gErr
 }

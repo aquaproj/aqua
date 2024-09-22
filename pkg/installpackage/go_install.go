@@ -30,7 +30,7 @@ func (is *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin strin
 	return nil
 }
 
-func (is *Installer) downloadGoInstall(ctx context.Context, pkg *config.Package, dest string, logE *logrus.Entry) error {
+func (is *Installer) downloadGoInstall(ctx context.Context, logE *logrus.Entry, pkg *config.Package, dest string) error {
 	p, err := pkg.RenderPath()
 	if err != nil {
 		return fmt.Errorf("render Go Module Path: %w", err)

@@ -69,5 +69,5 @@ func (r *Runner) listAction(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient, r.Runtime)
-	return ctrl.List(c.Context, param, r.LogE) //nolint:wrapcheck
+	return ctrl.List(c.Context, r.LogE, param) //nolint:wrapcheck
 }

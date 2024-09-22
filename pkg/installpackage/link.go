@@ -52,7 +52,7 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 				}
 				continue
 			}
-			if err := is.createLink(filepath.Join(is.rootDir, "bin", file.Name), filepath.Join("..", proxyName), logE); err != nil {
+			if err := is.createLink(logE, filepath.Join(is.rootDir, "bin", file.Name), filepath.Join("..", proxyName)); err != nil {
 				logerr.WithError(logE, err).Error("create the symbolic link")
 				failed = true
 				continue
@@ -93,7 +93,7 @@ func (is *Installer) recreateHardLinks() error {
 	return nil
 }
 
-func (is *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry) error {
+func (is *Installer) createLink(logE *logrus.Entry, linkPath, linkDest string) error {
 	if fileInfo, err := is.linker.Lstat(linkPath); err == nil {
 		switch mode := fileInfo.Mode(); {
 		case mode.IsDir():
@@ -112,7 +112,7 @@ func (is *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry) e
 			}
 			return nil
 		case mode&os.ModeSymlink != 0:
-			return is.recreateLink(linkPath, linkDest, logE)
+			return is.recreateLink(logE, linkPath, linkDest)
 		default:
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
@@ -126,7 +126,7 @@ func (is *Installer) createLink(linkPath, linkDest string, logE *logrus.Entry) e
 	return nil
 }
 
-func (is *Installer) recreateLink(linkPath, linkDest string, logE *logrus.Entry) error {
+func (is *Installer) recreateLink(logE *logrus.Entry, linkPath, linkDest string) error {
 	lnDest, err := is.linker.Readlink(linkPath)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)

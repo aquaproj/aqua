@@ -2,8 +2,10 @@ package registry
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -57,8 +59,15 @@ type PackageInfo struct {
 	Cosign              *Cosign            `json:"cosign,omitempty"`
 	SLSAProvenance      *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign            *Minisign          `json:"minisign,omitempty" yaml:",omitempty"`
+	Vars                []*Var             `json:"vars,omitempty" yaml:",omitempty"`
 	VersionConstraints  string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides    []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+}
+
+type Var struct {
+	Name     string `json:"name"`
+	Required bool   `json:"required,omitempty"`
+	Default  any    `json:"default,omitempty"`
 }
 
 type Build struct {
@@ -115,6 +124,7 @@ type VersionOverride struct {
 	SLSAProvenance      *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign            *Minisign       `json:"minisign,omitempty" yaml:",omitempty"`
 	Build               *Build          `json:"build,omitempty" yaml:",omitempty"`
+	Vars                []*Var          `json:"vars,omitempty" yaml:",omitempty"`
 	Overrides           Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
 	SupportedEnvs       SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 }
@@ -138,6 +148,7 @@ type Override struct {
 	Cosign             *Cosign         `json:"cosign,omitempty"`
 	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign           *Minisign       `json:"minisign,omitempty" yaml:",omitempty"`
+	Vars               []*Var          `json:"vars,omitempty" yaml:",omitempty"`
 	Envs               SupportedEnvs   `yaml:",omitempty" json:"envs,omitempty"`
 }
 
@@ -179,6 +190,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		NoAsset:             p.NoAsset,
 		AppendExt:           p.AppendExt,
 		Build:               p.Build,
+		Vars:                p.Vars,
 	}
 	return pkg
 }
@@ -249,7 +261,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	}
 }
 
-func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen
+func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo
 	pkg := p.Copy()
 	if child.Type != "" {
 		pkg.resetByPkgType(child.Type)
@@ -339,6 +351,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.Build != nil {
 		pkg.Build = child.Build
 	}
+	if child.Vars != nil {
+		pkg.Vars = child.Vars
+	}
 	return pkg
 }
 
@@ -427,6 +442,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 
 	if ov.AppendExt != nil {
 		p.AppendExt = ov.AppendExt
+	}
+
+	if ov.Vars != nil {
+		p.Vars = ov.Vars
 	}
 }
 
@@ -647,16 +666,54 @@ func (p *PackageInfo) defaultCmdName() string {
 	return path.Base(p.GetName())
 }
 
-func (p *PackageInfo) PkgPath() string {
+var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
+
+func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
+	if p.NoAsset || p.ErrorMessage != "" {
+		return nil
+	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		return filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)
+		if p.RepoOwner == "" || p.RepoName == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
-		return filepath.Join(p.Type, "crates.io", p.Crate)
-	case PkgInfoTypeGoInstall, PkgInfoTypeHTTP:
-		return ""
+		if p.Crate == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
+	case PkgInfoTypeGoInstall:
+		a := p.GetPath()
+		if a == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(a, "*")))}
+	case PkgInfoTypeHTTP:
+		if p.URL == "" {
+			return nil
+		}
+		u, err := url.Parse(placeHolderTemplate.ReplaceAllLiteralString(p.URL, "*"))
+		if err != nil {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
 	}
-	return ""
+	return nil
+}
+
+func (p *PackageInfo) PkgPaths() map[string]struct{} {
+	m := map[string]struct{}{}
+	for _, a := range p.pkgPaths() {
+		m[a] = struct{}{}
+	}
+	for _, vo := range p.VersionOverrides {
+		pkg := p.overrideVersion(vo)
+		for _, a := range pkg.pkgPaths() {
+			m[a] = struct{}{}
+		}
+	}
+	return m
 }
 
 func (p *PackageInfo) SLSASourceURI() string {
