@@ -8,28 +8,28 @@ import (
 func allRuntimes() []*Runtime {
 	return []*Runtime{
 		{
-			GOOS:   "darwin",
-			GOARCH: "amd64",
+			GOOS:   darwin,
+			GOARCH: amd64,
 		},
 		{
-			GOOS:   "darwin",
-			GOARCH: "arm64",
+			GOOS:   darwin,
+			GOARCH: arm64,
 		},
 		{
-			GOOS:   "linux",
-			GOARCH: "amd64",
+			GOOS:   linux,
+			GOARCH: amd64,
 		},
 		{
-			GOOS:   "linux",
-			GOARCH: "arm64",
+			GOOS:   linux,
+			GOARCH: arm64,
 		},
 		{
-			GOOS:   "windows",
-			GOARCH: "amd64",
+			GOOS:   windows,
+			GOARCH: amd64,
 		},
 		{
-			GOOS:   "windows",
-			GOARCH: "arm64",
+			GOOS:   windows,
+			GOARCH: arm64,
 		},
 	}
 }
@@ -48,29 +48,29 @@ func GetRuntimes(env string) ([]*Runtime, error) {
 		}, nil
 	}
 	switch o {
-	case "darwin", "linux", "windows":
+	case darwin, linux, windows:
 		return []*Runtime{
 			{
 				GOOS:   o,
-				GOARCH: "amd64",
+				GOARCH: amd64,
 			},
 			{
 				GOOS:   o,
-				GOARCH: "arm64",
+				GOARCH: arm64,
 			},
 		}, nil
-	case "amd64", "arm64":
+	case amd64, arm64:
 		return []*Runtime{
 			{
-				GOOS:   "darwin",
+				GOOS:   darwin,
 				GOARCH: o,
 			},
 			{
-				GOOS:   "windows",
+				GOOS:   windows,
 				GOARCH: o,
 			},
 			{
-				GOOS:   "linux",
+				GOOS:   linux,
 				GOARCH: o,
 			},
 		}, nil

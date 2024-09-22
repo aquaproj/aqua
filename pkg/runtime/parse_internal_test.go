@@ -20,46 +20,46 @@ func TestGetRuntimesFromEnvs(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "all",
-			envs: []string{"darwin", "all"},
+			envs: []string{darwin, "all"},
 			rts:  allRuntimes(),
 		},
 		{
 			name: "darwin amd64",
-			envs: []string{"darwin", "amd64"},
+			envs: []string{darwin, amd64},
 			rts: []*Runtime{
 				{
-					GOOS:   "darwin",
-					GOARCH: "amd64",
+					GOOS:   darwin,
+					GOARCH: amd64,
 				},
 				{
-					GOOS:   "darwin",
-					GOARCH: "arm64",
+					GOOS:   darwin,
+					GOARCH: arm64,
 				},
 				{
-					GOOS:   "windows",
-					GOARCH: "amd64",
+					GOOS:   windows,
+					GOARCH: amd64,
 				},
 				{
-					GOOS:   "linux",
-					GOARCH: "amd64",
+					GOOS:   linux,
+					GOARCH: amd64,
 				},
 			},
 		},
 		{
 			name: "darwin linux/amd64",
-			envs: []string{"darwin", "linux/amd64"},
+			envs: []string{darwin, "linux/amd64"},
 			rts: []*Runtime{
 				{
-					GOOS:   "darwin",
-					GOARCH: "amd64",
+					GOOS:   darwin,
+					GOARCH: amd64,
 				},
 				{
-					GOOS:   "darwin",
-					GOARCH: "arm64",
+					GOOS:   darwin,
+					GOARCH: arm64,
 				},
 				{
-					GOOS:   "linux",
-					GOARCH: "amd64",
+					GOOS:   linux,
+					GOARCH: amd64,
 				},
 			},
 		},
