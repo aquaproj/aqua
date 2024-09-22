@@ -69,6 +69,7 @@ func (v *Verifier) downloadFile(ctx context.Context, logE *logrus.Entry, rt *run
 	return fileName, nil
 }
 
+// art is used to render the template.
 func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
 	if v.disabled {
 		logE.Debug("verification with cosign is disabled")
@@ -167,6 +168,7 @@ func (v *Verifier) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f
 	if err != nil {
 		return fmt.Errorf("get a readcloser: %w", err)
 	}
+	defer rc.Close()
 	if _, err := io.Copy(tf, rc); err != nil {
 		return fmt.Errorf("download a file: %w", err)
 	}
