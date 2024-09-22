@@ -57,7 +57,7 @@ func (v *Verifier) downloadSignature(ctx context.Context, logE *logrus.Entry, rt
 	if err != nil {
 		return "", fmt.Errorf("create a temporary file: %w", err)
 	}
-	defer signatureFile.Close() //nolint:errcheck
+	defer signatureFile.Close()
 	if _, err := io.Copy(signatureFile, rc); err != nil {
 		return signatureFile.Name(), fmt.Errorf("copy a signature to a temporary file: %w", err)
 	}
