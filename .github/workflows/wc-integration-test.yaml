@@ -290,6 +290,10 @@ jobs:
         # go_install - terrafmt
         run: aqua rm x-motemen/ghq bats-core/bats-core terraform terrafmt
 
+      - name: Test minisign
+        run: aqua i
+        working-directory: tests/minisign
+
       - name: Test rm -m l
         run: aqua rm -m l ghcp
       - name: Test rm -m lp
