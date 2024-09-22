@@ -81,7 +81,7 @@ func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logru
 	}
 	art := pkg.TemplateArtifact(is.runtime, assetName)
 	logE.Info("verifing a checksum file with Minisign")
-	if err := is.installMinisign(ctx, logE); err != nil {
+	if err := is.minisignInstaller.install(ctx, logE); err != nil {
 		return err
 	}
 	if err := is.minisignVerifier.Verify(ctx, logE, is.runtime, ms, art, &download.File{
