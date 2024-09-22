@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/sirupsen/logrus"
@@ -57,9 +56,6 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	mutex := cosign.GetMutex()
-	mutex.Lock()
-	defer mutex.Unlock()
 	_, err := e.executor.Exec(ctx, e.minisignExePath, args...)
 	return err //nolint:wrapcheck
 }
