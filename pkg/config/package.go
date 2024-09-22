@@ -55,7 +55,7 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 		asset = appendExt(asset, p.PackageInfo.Format)
 	}
 
-	if !isWindows(rt.GOOS) {
+	if !rt.IsWindows() {
 		return asset, nil
 	}
 	return p.completeWindowsExtToAsset(asset), nil
@@ -139,7 +139,7 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 		s = appendExt(s, p.PackageInfo.Format)
 	}
 
-	if !isWindows(rt.GOOS) {
+	if !rt.IsWindows() {
 		return s, nil
 	}
 	return p.completeWindowsExtToURL(s), nil
@@ -205,7 +205,7 @@ func (p *Package) fileSrc(file *registry.File, rt *runtime.Runtime) (string, err
 	if err != nil {
 		return "", err
 	}
-	if !isWindows(rt.GOOS) {
+	if !rt.IsWindows() {
 		return s, nil
 	}
 	return p.completeWindowsExtToFileSrc(s), nil
