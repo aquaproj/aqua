@@ -8,7 +8,7 @@ checksum:
 #   - all
 registries:
   - type: standard
-    ref: 3b233e231969388a2cc54028d75948705d73ac09 # TODO update ref
+    ref: v4.223.1 # renovate: depName=aquaproj/aqua-registry
 packages:
   - name: bufbuild/buf@v1.42.0
   - name: bufbuild/buf
