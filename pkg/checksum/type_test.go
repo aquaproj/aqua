@@ -48,7 +48,7 @@ func TestChecksums_Get(t *testing.T) {
 			}
 			v := checksums.Get(d.key)
 			if diff := cmp.Diff(v, d.exp); diff != "" {
-				t.Fatalf(diff)
+				t.Fatal(diff)
 			}
 		})
 	}
