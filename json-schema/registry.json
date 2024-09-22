@@ -96,6 +96,9 @@
         },
         "cosign": {
           "$ref": "#/$defs/Cosign"
+        },
+        "minisign": {
+          "$ref": "#/$defs/Minisign"
         }
       },
       "additionalProperties": false,
