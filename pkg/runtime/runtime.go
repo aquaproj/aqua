@@ -6,6 +6,14 @@ import (
 	"runtime"
 )
 
+const (
+	amd64   = "amd64"
+	arm64   = "arm64"
+	darwin  = "darwin"
+	linux   = "linux"
+	windows = "windows"
+)
+
 type Runtime struct {
 	GOOS   string
 	GOARCH string
@@ -26,11 +34,24 @@ func NewR() *Runtime {
 }
 
 func (rt *Runtime) IsWindows() bool {
-	return rt.GOOS == "windows"
+	return rt.GOOS == windows
 }
 
 func (rt *Runtime) Env() string {
 	return fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)
+}
+
+func (rt *Runtime) Arch(rosetta2, windowsARMEmulation bool) string {
+	if rt.GOARCH == amd64 {
+		return amd64
+	}
+	if rt.GOOS == darwin && rosetta2 {
+		return amd64
+	}
+	if rt.IsWindows() && windowsARMEmulation {
+		return amd64
+	}
+	return rt.GOARCH
 }
 
 func goos() string {
@@ -48,14 +69,14 @@ func goarch() string {
 }
 
 func GOOSList() []string {
-	return []string{"darwin", "linux", "windows"}
+	return []string{darwin, linux, windows}
 }
 
 func GOOSMap() map[string]struct{} {
 	return map[string]struct{}{
-		"darwin":  {},
-		"linux":   {},
-		"windows": {},
+		darwin:  {},
+		linux:   {},
+		windows: {},
 	}
 }
 
@@ -65,5 +86,5 @@ func IsOS(k string) bool {
 }
 
 func GOARCHList() []string {
-	return []string{"amd64", "arm64"}
+	return []string{amd64, arm64}
 }

@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type CommandExecutor interface {
@@ -55,9 +56,6 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	mutex := cosign.GetMutex()
-	mutex.Lock()
-	defer mutex.Unlock()
 	_, err := e.executor.Exec(ctx, e.minisignExePath, args...)
 	return err //nolint:wrapcheck
 }
@@ -75,9 +73,14 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		signature,
 	}
 	for i := range 5 {
-		if err := e.exec(ctx, args); err == nil {
+		err := e.exec(ctx, args)
+		if err == nil {
 			return nil
 		}
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
+			"exe":  e.minisignExePath,
+			"args": strings.Join(args, " "),
+		}).Warn("execute minisign")
 		if i == 4 { //nolint:mnd
 			break
 		}
