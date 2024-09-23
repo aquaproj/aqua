@@ -18,7 +18,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) {
+func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) { //nolint:cyclop
 	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logE, is.runtime, pkg)
 	if err != nil {
 		return "", fmt.Errorf("download a checksum file: %w", err)
