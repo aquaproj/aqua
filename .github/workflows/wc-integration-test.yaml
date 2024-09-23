@@ -206,7 +206,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     env:
-      GITHUB_TOKEN: ${{github.token}}
       AQUA_LOG_COLOR: always
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -220,10 +219,16 @@ jobs:
       - run: aqua policy allow
 
       - name: Test the package type "cargo"
-        run: sk --version
+        run: aqua i
         working-directory: tests/cargo
+        env:
+          GITHUB_TOKEN: ${{github.token}}
       - name: Test search versions of the package type "cargo"
         run: aqua g crates.io/eza
         working-directory: tests/cargo
+        env:
+          GITHUB_TOKEN: ${{github.token}}
       - name: Test aqua gr cargo
         run: aqua gr crates.io/skim
+        env:
+          GITHUB_TOKEN: ${{github.token}}
