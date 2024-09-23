@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.23.1
+          go-version-file: go.mod
           cache: true
 
       - uses: suzuki-shunsuke/github-token-action@350d7506222e3a0016491abe85b5c4dd475b67d1 # v0.2.1
@@ -125,18 +125,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
-      - name: Test the package type "cargo"
-        run: sk --version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
-      - name: Test search versions of the package type "cargo"
-        run: aqua -c tests/main/aqua-global.yaml g local,crates.io/skim
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
-      - name: Test aqua gr cargo
-        run: aqua gr crates.io/skim
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test cosign
         run: aqua i
@@ -308,5 +296,44 @@ jobs:
 
       - name: Test update-aqua
         run: aqua update-aqua
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
+
+  integration-test-cargo:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    permissions: {}
+    env:
+      GITHUB_TOKEN: ${{github.token}}
+      AQUA_LOG_LEVEL: debug
+      AQUA_LOG_COLOR: always
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: suzuki-shunsuke/github-token-action@350d7506222e3a0016491abe85b5c4dd475b67d1 # v0.2.1
+        id: token
+        with:
+          github_app_id: ${{secrets.APP_ID}}
+          github_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
+          default_github_token: ${{github.token}}
+
+      - run: go install ./cmd/aqua
+      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      - run: aqua policy allow
+
+      - name: Test the package type "cargo"
+        run: sk --version
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
+      - name: Test search versions of the package type "cargo"
+        run: aqua -c tests/main/aqua-global.yaml g local,crates.io/skim
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.token}}
+      - name: Test aqua gr cargo
+        run: aqua gr crates.io/skim
         env:
           GITHUB_TOKEN: ${{steps.token.outputs.token}}
