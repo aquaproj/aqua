@@ -9,7 +9,9 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -56,6 +58,10 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 	}
 
 	if err := is.verifyChecksumWithMinisign(ctx, logE, pkg, tempFilePath, b); err != nil {
+		return "", err
+	}
+
+	if err := is.verifyChecksumWithGitHubArtifactAttestation(ctx, logE, pkg, pkg.PackageInfo.Checksum.GetGitHubArtifactAttestations(), tempFilePath, b); err != nil {
 		return "", err
 	}
 
@@ -106,6 +112,40 @@ func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logru
 	}); err != nil {
 		return fmt.Errorf("verify a checksum file with Minisign: %w", err)
 	}
+	return nil
+}
+
+func (is *Installer) verifyChecksumWithGitHubArtifactAttestation(ctx context.Context, logE *logrus.Entry, pkg *config.Package, gaa *registry.GitHubArtifactAttestations, tempFilePath string, b []byte) error {
+	if !gaa.GetEnabled() {
+		return nil
+	}
+
+	if tempFilePath == "" {
+		f, err := afero.TempFile(is.fs, "", "")
+		if err != nil {
+			return fmt.Errorf("create a temporary file: %w", err)
+		}
+		tempFilePath = f.Name()
+		defer f.Close()
+		defer is.fs.Remove(tempFilePath) //nolint:errcheck
+		if _, err := f.Write(b); err != nil {
+			return fmt.Errorf("write a checksum to a temporary file: %w", err)
+		}
+	}
+
+	logE.Info("verify GitHub Artifact Attestations")
+	if err := is.ghInstaller.install(ctx, logE); err != nil {
+		return fmt.Errorf("install GitHub CLI: %w", err)
+	}
+
+	if err := is.ghVerifier.Verify(ctx, logE, &ghattestation.ParamVerify{
+		Repository:     pkg.PackageInfo.RepoOwner + "/" + pkg.PackageInfo.RepoName,
+		ArtifactPath:   tempFilePath,
+		SignerWorkflow: gaa.SignerWorkflow,
+	}); err != nil {
+		return fmt.Errorf("verify a package with minisign: %w", err)
+	}
+
 	return nil
 }
 

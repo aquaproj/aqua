@@ -35,6 +35,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/exec"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
@@ -268,6 +269,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
@@ -315,6 +317,14 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		wire.NewSet(
 			minisign.New,
 			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.New,
+			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.NewExecutor,
+			wire.Bind(new(ghattestation.Executor), new(*ghattestation.ExecutorImpl)),
 		),
 		wire.NewSet(
 			minisign.NewExecutor,
@@ -438,6 +448,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
@@ -502,6 +513,14 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
 		),
 		wire.NewSet(
+			ghattestation.New,
+			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.NewExecutor,
+			wire.Bind(new(ghattestation.Executor), new(*ghattestation.ExecutorImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
@@ -544,6 +563,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 		),
 		wire.NewSet(
@@ -579,6 +599,14 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			minisign.New,
 			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.New,
+			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.NewExecutor,
+			wire.Bind(new(ghattestation.Executor), new(*ghattestation.ExecutorImpl)),
 		),
 		wire.NewSet(
 			minisign.NewExecutor,
@@ -652,6 +680,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -710,6 +739,14 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			minisign.New,
 			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.New,
+			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.NewExecutor,
+			wire.Bind(new(ghattestation.Executor), new(*ghattestation.ExecutorImpl)),
 		),
 		wire.NewSet(
 			minisign.NewExecutor,
@@ -923,7 +960,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return &info.Controller{}
 }
 
-func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveTarget) *remove.Controller {
+func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) *remove.Controller {
 	wire.Build(
 		remove.New,
 		wire.NewSet(

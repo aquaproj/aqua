@@ -104,7 +104,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 		return err
 	}
 
-	if err := is.verifyWithGitHubArtifactAttestation(ctx, logE, bodyFile, param); err != nil {
+	if err := is.verifyWithGitHubArtifactAttestation(ctx, logE, ppkg, pkgInfo.GitHubArtifactAttestations, bodyFile); err != nil {
 		return err
 	}
 

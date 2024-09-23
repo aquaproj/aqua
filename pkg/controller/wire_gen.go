@@ -34,6 +34,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/exec"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
@@ -137,10 +138,15 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
@@ -186,10 +192,15 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
@@ -222,10 +233,15 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
 	return controller, nil
 }
@@ -248,10 +264,15 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
+	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)

@@ -18,6 +18,12 @@ func Package() *config.Package {
 			RepoName:  "cli",
 			Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 			Format:    "zip",
+			Files: []*registry.File{
+				{
+					Name: "gh",
+					Src:  "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}/bin/gh",
+				},
+			},
 			Replacements: map[string]string{
 				"darwin": "macOS",
 			},
