@@ -137,14 +137,6 @@ packages:
           - darwin
           - amd64
 
-  - name: crates.io/skim
-    type: cargo
-    repo_owner: lotabout
-    repo_name: skim
-    crate: skim
-    files:
-      - name: sk
-
   - type: go_build
     repo_owner: suzuki-shunsuke
     repo_name: github-comment
