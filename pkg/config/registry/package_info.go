@@ -24,44 +24,45 @@ const (
 )
 
 type PackageInfo struct {
-	Name                string             `json:"name,omitempty" yaml:",omitempty"`
-	Aliases             []*Alias           `yaml:",omitempty" json:"aliases,omitempty"`
-	SearchWords         []string           `json:"search_words,omitempty" yaml:"search_words,omitempty"`
-	Type                string             `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
-	RepoOwner           string             `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	RepoName            string             `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Description         string             `json:"description,omitempty" yaml:",omitempty"`
-	Link                string             `json:"link,omitempty" yaml:",omitempty"`
-	Asset               string             `json:"asset,omitempty" yaml:",omitempty"`
-	Crate               string             `json:"crate,omitempty" yaml:",omitempty"`
-	URL                 string             `json:"url,omitempty" yaml:",omitempty"`
-	Path                string             `json:"path,omitempty" yaml:",omitempty"`
-	Format              string             `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
-	VersionFilter       string             `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
-	VersionPrefix       string             `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
-	Rosetta2            bool               `yaml:",omitempty" json:"rosetta2,omitempty"`
-	WindowsARMEmulation bool               `yaml:"windows_arm_emulation,omitempty" json:"windows_arm_emulation,omitempty"`
-	NoAsset             bool               `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
-	VersionSource       string             `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
-	CompleteWindowsExt  *bool              `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
-	WindowsExt          string             `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
-	Private             bool               `json:"private,omitempty"`
-	ErrorMessage        string             `json:"-" yaml:"-"`
-	AppendExt           *bool              `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
-	Cargo               *Cargo             `json:"cargo,omitempty"`
-	Build               *Build             `json:"build,omitempty" yaml:",omitempty"`
-	Overrides           []*Override        `json:"overrides,omitempty" yaml:",omitempty"`
-	FormatOverrides     []*FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	Files               []*File            `json:"files,omitempty" yaml:",omitempty"`
-	Replacements        Replacements       `json:"replacements,omitempty" yaml:",omitempty"`
-	SupportedEnvs       SupportedEnvs      `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
-	Checksum            *Checksum          `json:"checksum,omitempty"`
-	Cosign              *Cosign            `json:"cosign,omitempty"`
-	SLSAProvenance      *SLSAProvenance    `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
-	Minisign            *Minisign          `json:"minisign,omitempty" yaml:",omitempty"`
-	Vars                []*Var             `json:"vars,omitempty" yaml:",omitempty"`
-	VersionConstraints  string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	VersionOverrides    []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	Name                       string                      `json:"name,omitempty" yaml:",omitempty"`
+	Aliases                    []*Alias                    `yaml:",omitempty" json:"aliases,omitempty"`
+	SearchWords                []string                    `json:"search_words,omitempty" yaml:"search_words,omitempty"`
+	Type                       string                      `validate:"required" json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
+	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Description                string                      `json:"description,omitempty" yaml:",omitempty"`
+	Link                       string                      `json:"link,omitempty" yaml:",omitempty"`
+	Asset                      string                      `json:"asset,omitempty" yaml:",omitempty"`
+	Crate                      string                      `json:"crate,omitempty" yaml:",omitempty"`
+	URL                        string                      `json:"url,omitempty" yaml:",omitempty"`
+	Path                       string                      `json:"path,omitempty" yaml:",omitempty"`
+	Format                     string                      `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
+	VersionFilter              string                      `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix              string                      `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
+	Rosetta2                   bool                        `yaml:",omitempty" json:"rosetta2,omitempty"`
+	WindowsARMEmulation        bool                        `yaml:"windows_arm_emulation,omitempty" json:"windows_arm_emulation,omitempty"`
+	NoAsset                    bool                        `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
+	VersionSource              string                      `json:"version_source,omitempty" yaml:"version_source,omitempty" jsonschema:"enum=github_tag"`
+	CompleteWindowsExt         *bool                       `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	WindowsExt                 string                      `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	Private                    bool                        `json:"private,omitempty"`
+	ErrorMessage               string                      `json:"-" yaml:"-"`
+	AppendExt                  *bool                       `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
+	Cargo                      *Cargo                      `json:"cargo,omitempty"`
+	Build                      *Build                      `json:"build,omitempty" yaml:",omitempty"`
+	Overrides                  []*Override                 `json:"overrides,omitempty" yaml:",omitempty"`
+	FormatOverrides            []*FormatOverride           `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
+	Files                      []*File                     `json:"files,omitempty" yaml:",omitempty"`
+	Replacements               Replacements                `json:"replacements,omitempty" yaml:",omitempty"`
+	SupportedEnvs              SupportedEnvs               `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	Checksum                   *Checksum                   `json:"checksum,omitempty"`
+	Cosign                     *Cosign                     `json:"cosign,omitempty"`
+	SLSAProvenance             *SLSAProvenance             `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	Minisign                   *Minisign                   `json:"minisign,omitempty" yaml:",omitempty"`
+	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
+	Vars                       []*Var                      `json:"vars,omitempty" yaml:",omitempty"`
+	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	VersionOverrides           []*VersionOverride          `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 }
 
 type Var struct {
@@ -96,101 +97,104 @@ func (p *PackageInfo) GetAppendExt() bool {
 }
 
 type VersionOverride struct {
-	VersionConstraints  string          `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type                string          `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
-	RepoOwner           string          `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	RepoName            string          `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	Asset               string          `yaml:",omitempty" json:"asset,omitempty"`
-	Crate               string          `json:"crate,omitempty" yaml:",omitempty"`
-	Path                string          `yaml:",omitempty" json:"path,omitempty"`
-	URL                 string          `yaml:",omitempty" json:"url,omitempty"`
-	Format              string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
-	VersionFilter       *string         `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
-	VersionPrefix       *string         `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
-	VersionSource       string          `json:"version_source,omitempty" yaml:"version_source,omitempty"`
-	WindowsExt          string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
-	ErrorMessage        *string         `json:"error_message,omitempty" yaml:"error_message,omitempty"`
-	Rosetta2            *bool           `yaml:",omitempty" json:"rosetta2,omitempty"`
-	WindowsARMEmulation *bool           `yaml:"windows_arm_emulation,omitempty" json:"windows_arm_emulation,omitempty"`
-	CompleteWindowsExt  *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
-	NoAsset             *bool           `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
-	AppendExt           *bool           `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
-	Cargo               *Cargo          `json:"cargo,omitempty"`
-	Files               []*File         `yaml:",omitempty" json:"files,omitempty"`
-	FormatOverrides     FormatOverrides `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
-	Replacements        Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
-	Checksum            *Checksum       `json:"checksum,omitempty"`
-	Cosign              *Cosign         `json:"cosign,omitempty"`
-	SLSAProvenance      *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
-	Minisign            *Minisign       `json:"minisign,omitempty" yaml:",omitempty"`
-	Build               *Build          `json:"build,omitempty" yaml:",omitempty"`
-	Vars                []*Var          `json:"vars,omitempty" yaml:",omitempty"`
-	Overrides           Overrides       `yaml:",omitempty" json:"overrides,omitempty"`
-	SupportedEnvs       SupportedEnvs   `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
+	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
+	Crate                      string                      `json:"crate,omitempty" yaml:",omitempty"`
+	Path                       string                      `yaml:",omitempty" json:"path,omitempty"`
+	URL                        string                      `yaml:",omitempty" json:"url,omitempty"`
+	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
+	VersionFilter              *string                     `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
+	VersionPrefix              *string                     `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
+	VersionSource              string                      `json:"version_source,omitempty" yaml:"version_source,omitempty"`
+	WindowsExt                 string                      `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	ErrorMessage               *string                     `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	Rosetta2                   *bool                       `yaml:",omitempty" json:"rosetta2,omitempty"`
+	WindowsARMEmulation        *bool                       `yaml:"windows_arm_emulation,omitempty" json:"windows_arm_emulation,omitempty"`
+	CompleteWindowsExt         *bool                       `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	NoAsset                    *bool                       `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
+	AppendExt                  *bool                       `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
+	Cargo                      *Cargo                      `json:"cargo,omitempty"`
+	Files                      []*File                     `yaml:",omitempty" json:"files,omitempty"`
+	FormatOverrides            FormatOverrides             `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
+	Replacements               Replacements                `yaml:",omitempty" json:"replacements,omitempty"`
+	Checksum                   *Checksum                   `json:"checksum,omitempty"`
+	Cosign                     *Cosign                     `json:"cosign,omitempty"`
+	SLSAProvenance             *SLSAProvenance             `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	Minisign                   *Minisign                   `json:"minisign,omitempty" yaml:",omitempty"`
+	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
+	Build                      *Build                      `json:"build,omitempty" yaml:",omitempty"`
+	Vars                       []*Var                      `json:"vars,omitempty" yaml:",omitempty"`
+	Overrides                  Overrides                   `yaml:",omitempty" json:"overrides,omitempty"`
+	SupportedEnvs              SupportedEnvs               `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 }
 
 type Override struct {
-	GOOS               string          `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
-	GOArch             string          `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=386,enum=amd64,enum=arm,enum=arm64,enum=mips,enum=mips64,enum=mips64le,enum=mipsle,enum=ppc64,enum=ppc64le,enum=riscv64,enum=s390x"`
-	Type               string          `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
-	Format             string          `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
-	Asset              string          `yaml:",omitempty" json:"asset,omitempty"`
-	Crate              string          `json:"crate,omitempty" yaml:",omitempty"`
-	URL                string          `yaml:",omitempty" json:"url,omitempty"`
-	Path               string          `yaml:",omitempty" json:"path,omitempty"`
-	CompleteWindowsExt *bool           `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
-	WindowsExt         string          `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
-	AppendExt          *bool           `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
-	Cargo              *Cargo          `json:"cargo,omitempty"`
-	Files              []*File         `yaml:",omitempty" json:"files,omitempty"`
-	Replacements       Replacements    `yaml:",omitempty" json:"replacements,omitempty"`
-	Checksum           *Checksum       `json:"checksum,omitempty"`
-	Cosign             *Cosign         `json:"cosign,omitempty"`
-	SLSAProvenance     *SLSAProvenance `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
-	Minisign           *Minisign       `json:"minisign,omitempty" yaml:",omitempty"`
-	Vars               []*Var          `json:"vars,omitempty" yaml:",omitempty"`
-	Envs               SupportedEnvs   `yaml:",omitempty" json:"envs,omitempty"`
+	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
+	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=386,enum=amd64,enum=arm,enum=arm64,enum=mips,enum=mips64,enum=mips64le,enum=mipsle,enum=ppc64,enum=ppc64le,enum=riscv64,enum=s390x"`
+	Type                       string                      `json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
+	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
+	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
+	Crate                      string                      `json:"crate,omitempty" yaml:",omitempty"`
+	URL                        string                      `yaml:",omitempty" json:"url,omitempty"`
+	Path                       string                      `yaml:",omitempty" json:"path,omitempty"`
+	CompleteWindowsExt         *bool                       `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
+	WindowsExt                 string                      `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
+	AppendExt                  *bool                       `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
+	Cargo                      *Cargo                      `json:"cargo,omitempty"`
+	Files                      []*File                     `yaml:",omitempty" json:"files,omitempty"`
+	Replacements               Replacements                `yaml:",omitempty" json:"replacements,omitempty"`
+	Checksum                   *Checksum                   `json:"checksum,omitempty"`
+	Cosign                     *Cosign                     `json:"cosign,omitempty"`
+	SLSAProvenance             *SLSAProvenance             `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
+	Minisign                   *Minisign                   `json:"minisign,omitempty" yaml:",omitempty"`
+	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
+	Vars                       []*Var                      `json:"vars,omitempty" yaml:",omitempty"`
+	Envs                       SupportedEnvs               `yaml:",omitempty" json:"envs,omitempty"`
 }
 
 func (p *PackageInfo) Copy() *PackageInfo {
 	pkg := &PackageInfo{
-		Name:                p.Name,
-		Type:                p.Type,
-		RepoOwner:           p.RepoOwner,
-		RepoName:            p.RepoName,
-		Asset:               p.Asset,
-		Crate:               p.Crate,
-		Cargo:               p.Cargo,
-		Path:                p.Path,
-		Format:              p.Format,
-		Files:               p.Files,
-		URL:                 p.URL,
-		Description:         p.Description,
-		Link:                p.Link,
-		Replacements:        p.Replacements,
-		Overrides:           p.Overrides,
-		FormatOverrides:     p.FormatOverrides,
-		VersionConstraints:  p.VersionConstraints,
-		VersionOverrides:    p.VersionOverrides,
-		SupportedEnvs:       p.SupportedEnvs,
-		VersionFilter:       p.VersionFilter,
-		VersionPrefix:       p.VersionPrefix,
-		Rosetta2:            p.Rosetta2,
-		WindowsARMEmulation: p.WindowsARMEmulation,
-		Aliases:             p.Aliases,
-		VersionSource:       p.VersionSource,
-		CompleteWindowsExt:  p.CompleteWindowsExt,
-		WindowsExt:          p.WindowsExt,
-		Checksum:            p.Checksum,
-		Cosign:              p.Cosign,
-		SLSAProvenance:      p.SLSAProvenance,
-		Minisign:            p.Minisign,
-		Private:             p.Private,
-		ErrorMessage:        p.ErrorMessage,
-		NoAsset:             p.NoAsset,
-		AppendExt:           p.AppendExt,
-		Build:               p.Build,
-		Vars:                p.Vars,
+		Name:                       p.Name,
+		Type:                       p.Type,
+		RepoOwner:                  p.RepoOwner,
+		RepoName:                   p.RepoName,
+		Asset:                      p.Asset,
+		Crate:                      p.Crate,
+		Cargo:                      p.Cargo,
+		Path:                       p.Path,
+		Format:                     p.Format,
+		Files:                      p.Files,
+		URL:                        p.URL,
+		Description:                p.Description,
+		Link:                       p.Link,
+		Replacements:               p.Replacements,
+		Overrides:                  p.Overrides,
+		FormatOverrides:            p.FormatOverrides,
+		VersionConstraints:         p.VersionConstraints,
+		VersionOverrides:           p.VersionOverrides,
+		SupportedEnvs:              p.SupportedEnvs,
+		VersionFilter:              p.VersionFilter,
+		VersionPrefix:              p.VersionPrefix,
+		Rosetta2:                   p.Rosetta2,
+		WindowsARMEmulation:        p.WindowsARMEmulation,
+		Aliases:                    p.Aliases,
+		VersionSource:              p.VersionSource,
+		CompleteWindowsExt:         p.CompleteWindowsExt,
+		WindowsExt:                 p.WindowsExt,
+		Checksum:                   p.Checksum,
+		Cosign:                     p.Cosign,
+		SLSAProvenance:             p.SLSAProvenance,
+		Minisign:                   p.Minisign,
+		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
+		Private:                    p.Private,
+		ErrorMessage:               p.ErrorMessage,
+		NoAsset:                    p.NoAsset,
+		AppendExt:                  p.AppendExt,
+		Build:                      p.Build,
+		Vars:                       p.Vars,
 	}
 	return pkg
 }
@@ -227,6 +231,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Minisign = nil
+		p.GitHubArtifactAttestations = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -241,6 +246,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Minisign = nil
+		p.GitHubArtifactAttestations = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -254,6 +260,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Minisign = nil
+		p.GitHubArtifactAttestations = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -261,7 +268,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	}
 }
 
-func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo
+func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
 	pkg := p.Copy()
 	if child.Type != "" {
 		pkg.resetByPkgType(child.Type)
@@ -338,6 +345,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	}
 	if child.Minisign != nil {
 		pkg.Minisign = child.Minisign
+	}
+	if child.GitHubArtifactAttestations != nil {
+		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
 	}
 	if child.ErrorMessage != nil {
 		pkg.ErrorMessage = *child.ErrorMessage
@@ -438,6 +448,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 
 	if ov.Minisign != nil {
 		p.Minisign = ov.Minisign
+	}
+
+	if ov.GitHubArtifactAttestations != nil {
+		p.GitHubArtifactAttestations = ov.GitHubArtifactAttestations
 	}
 
 	if ov.AppendExt != nil {

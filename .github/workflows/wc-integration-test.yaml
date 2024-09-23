@@ -69,12 +69,12 @@ jobs:
       - run: helm version
       - run: github-compare -v
       - run: terrafmt version
-      - name: test cosign
+
+      - name: test Cosign, SLSA, and GitHub Artifact Attestations
         run: aqua i
         working-directory: tests/cosign
-      - name: test SLSA
-        run: aqua i
-        working-directory: tests/slsa
+        env:
+          GH_DEBUG: "1"
 
       - name: output bash completion
         run: aqua completion bash

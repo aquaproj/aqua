@@ -1,16 +1,17 @@
 package registry
 
 type Checksum struct {
-	Type         string           `json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
-	Asset        string           `json:"asset,omitempty"`
-	URL          string           `json:"url,omitempty"`
-	FileFormat   string           `yaml:"file_format,omitempty" json:"file_format,omitempty"`
-	Algorithm    string           `json:"algorithm,omitempty" jsonschema:"enum=md5,enum=sha1,enum=sha256,enum=sha512"`
-	Pattern      *ChecksumPattern `json:"pattern,omitempty"`
-	Enabled      *bool            `json:"enabled,omitempty"`
-	Replacements Replacements     `json:"replacements,omitempty"`
-	Cosign       *Cosign          `json:"cosign,omitempty"`
-	Minisign     *Minisign        `json:"minisign,omitempty"`
+	Type                       string                      `json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
+	Asset                      string                      `json:"asset,omitempty"`
+	URL                        string                      `json:"url,omitempty"`
+	FileFormat                 string                      `yaml:"file_format,omitempty" json:"file_format,omitempty"`
+	Algorithm                  string                      `json:"algorithm,omitempty" jsonschema:"enum=md5,enum=sha1,enum=sha256,enum=sha512"`
+	Pattern                    *ChecksumPattern            `json:"pattern,omitempty"`
+	Enabled                    *bool                       `json:"enabled,omitempty"`
+	Replacements               Replacements                `json:"replacements,omitempty"`
+	Cosign                     *Cosign                     `json:"cosign,omitempty"`
+	Minisign                   *Minisign                   `json:"minisign,omitempty"`
+	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
 }
 
 type ChecksumPattern struct {
@@ -54,4 +55,11 @@ func (c *Checksum) GetMinisign() *Minisign {
 		return nil
 	}
 	return c.Minisign
+}
+
+func (c *Checksum) GetGitHubArtifactAttestations() *GitHubArtifactAttestations {
+	if c == nil {
+		return nil
+	}
+	return c.GitHubArtifactAttestations
 }

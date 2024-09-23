@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -37,9 +38,11 @@ type Installer struct {
 	cosign                CosignVerifier
 	slsaVerifier          SLSAVerifier
 	minisignVerifier      MinisignVerifier
+	ghVerifier            GitHubArtifactAttestationsVerifier
 	cosignInstaller       *DedicatedInstaller
 	slsaVerifierInstaller *DedicatedInstaller
 	minisignInstaller     *DedicatedInstaller
+	ghInstaller           *DedicatedInstaller
 	goInstallInstaller    GoInstallInstaller
 	goBuildInstaller      GoBuildInstaller
 	cargoPackageInstaller CargoPackageInstaller
@@ -55,27 +58,35 @@ type Installer struct {
 	slsaDisabled          bool
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
-	installer := newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller)
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
+	ni := func(rt *runtime.Runtime) *Installer {
+		return newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, ghVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller)
+	}
+	installer := ni(rt)
 	installer.cosignInstaller = newDedicatedInstaller(
-		newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		ni(runtime.NewR()),
 		cosign.Package,
 		cosign.Checksums(),
 	)
 	installer.slsaVerifierInstaller = newDedicatedInstaller(
-		newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		ni(runtime.NewR()),
 		slsa.Package,
 		slsa.Checksums(),
 	)
 	installer.minisignInstaller = newDedicatedInstaller(
-		newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		ni(runtime.NewR()),
 		minisign.Package,
 		minisign.Checksums(),
+	)
+	installer.ghInstaller = newDedicatedInstaller(
+		ni(runtime.NewR()),
+		ghattestation.Package,
+		ghattestation.Checksums(),
 	)
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
 	return &Installer{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
@@ -95,6 +106,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		cosign:                cosignVerifier,
 		slsaVerifier:          slsaVerifier,
 		minisignVerifier:      minisignVerifier,
+		ghVerifier:            ghVerifier,
 		goInstallInstaller:    goInstallInstaller,
 		goBuildInstaller:      goBuildInstaller,
 		cargoPackageInstaller: cargoPackageInstaller,
@@ -114,6 +126,10 @@ type SLSAVerifier interface {
 
 type MinisignVerifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *minisign.ParamVerify) error
+}
+
+type GitHubArtifactAttestationsVerifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, param *ghattestation.ParamVerify) error
 }
 
 type CosignVerifier interface {
