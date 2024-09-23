@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -37,9 +38,11 @@ type Installer struct {
 	cosign                CosignVerifier
 	slsaVerifier          SLSAVerifier
 	minisignVerifier      MinisignVerifier
+	ghVerifier            GitHubArtifactAttestationsVerifier
 	cosignInstaller       *DedicatedInstaller
 	slsaVerifierInstaller *DedicatedInstaller
 	minisignInstaller     *DedicatedInstaller
+	ghInstaller           *DedicatedInstaller
 	goInstallInstaller    GoInstallInstaller
 	goBuildInstaller      GoBuildInstaller
 	cargoPackageInstaller CargoPackageInstaller
@@ -71,6 +74,11 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 		newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
 		minisign.Package,
 		minisign.Checksums(),
+	)
+	installer.ghInstaller = newDedicatedInstaller(
+		newInstaller(param, downloader, runtime.NewR(), fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller),
+		ghattestation.Package,
+		ghattestation.Checksums(),
 	)
 	return installer
 }
@@ -114,6 +122,10 @@ type SLSAVerifier interface {
 
 type MinisignVerifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *minisign.ParamVerify) error
+}
+
+type GitHubArtifactAttestationsVerifier interface {
+	Verify(ctx context.Context, logE *logrus.Entry, param *ghattestation.ParamVerify) error
 }
 
 type CosignVerifier interface {
