@@ -73,6 +73,8 @@ jobs:
       - name: test Cosign, SLSA, and GitHub Artifact Attestations
         run: aqua i
         working-directory: tests/cosign
+        env:
+          GH_DEBUG: "1"
 
       - name: output bash completion
         run: aqua completion bash
