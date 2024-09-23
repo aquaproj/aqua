@@ -30,8 +30,6 @@ jobs:
         run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
       - name: Test g -g
         run: aqua g -g cli/cli
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: Test checksum
         run: aqua -c aqua.yaml i
@@ -47,18 +45,12 @@ jobs:
 
       - run: aqua update-checksum
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua update-checksum -prune
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua i -l -a
         working-directory: tests/main
       - run: aqua i
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua which go
       - name: Test which's -v option
         run: aqua which -v cosign
