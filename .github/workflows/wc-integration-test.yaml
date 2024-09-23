@@ -8,62 +8,36 @@ jobs:
     permissions: {}
     env:
       GITHUB_TOKEN: ${{github.token}}
-      AQUA_LOG_LEVEL: debug
       AQUA_LOG_COLOR: always
       AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.23.1
+          go-version-file: go.mod
           cache: true
-
-      - uses: suzuki-shunsuke/github-token-action@350d7506222e3a0016491abe85b5c4dd475b67d1 # v0.2.1
-        id: token
-        with:
-          github_app_id: ${{secrets.APP_ID}}
-          github_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
-          default_github_token: ${{github.token}}
 
       - run: go install ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
 
       - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: echo "x-motemen/ghq" | aqua g -f -
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/main/aqua-global.yaml g -f -
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua g x-motemen/ghq aquaproj/aqua-installer
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: echo cli/cli | aqua g -f - x-motemen/ghq aquaproj/aqua-installer suzuki-shunsuke/tfcmt@v3.0.0
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: Test -pin
         run: aqua g --pin cli/cli suzuki-shunsuke/tfcmt@v2.0.0
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: Test g -g
         run: aqua g -g cli/cli
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: Test checksum
         run: aqua -c aqua.yaml i
         working-directory: tests/3064
-        env:
-          GITHUB_TOKEN: ${{github.token}}
 
       - name: Test version_prefix
         run: aqua -c aqua.yaml g -i kubernetes-sigs/kustomize
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - run: aqua list
       - run: aqua list -installed
@@ -71,84 +45,36 @@ jobs:
 
       - run: aqua update-checksum
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua update-checksum -prune
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua i -l -a
         working-directory: tests/main
       - run: aqua i
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua which go
       - name: Test which's -v option
         run: aqua which -v cosign
       - run: kind version
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: kind version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: restic version
         env:
           AQUA_PROGRESS_BAR: "true"
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: migrate -version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: ghq -version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: gh version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: tfenv --version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: aqua -c tests/main/aqua-global.yaml g local,kubernetes-sigs/kustomize
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: bats -v
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: helm version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: github-compare -v
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: terrafmt version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
-
-      - name: Test the package type "cargo"
-        run: sk --version
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
-      - name: Test search versions of the package type "cargo"
-        run: aqua -c tests/main/aqua-global.yaml g local,crates.io/skim
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
-      - name: Test aqua gr cargo
-        run: aqua gr crates.io/skim
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
-
       - name: test cosign
         run: aqua i
         working-directory: tests/cosign
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
-
       - name: test SLSA
         run: aqua i
         working-directory: tests/slsa
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: output bash completion
         run: aqua completion bash
@@ -159,91 +85,57 @@ jobs:
 
       - run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: add duplicated package
         run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - run: git diff aqua.yaml
         working-directory: tests/main
 
       - name: "Test generate-registry"
         run: aqua gr suzuki-shunsuke/mkghtag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: Test generate-registry (specify version)
         run: aqua gr suzuki-shunsuke/tfcmt@v3.2.4
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test aqua cp
         run: aqua cp actionlint
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test aqua cp
         run: dist/actionlint -version
       - name: test aqua cp
         run: aqua cp
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test aqua cp -a
         run: aqua cp -a
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test tags
         run: aqua i
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i -t test
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i -t foo,bar
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i --exclude-tags test
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua i --exclude-tags test -t foo
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: test tags
         run: aqua cp
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp -t test
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp -t foo,bar
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp --exclude-tags test
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
       - name: test tags
         run: aqua cp --exclude-tags test -t foo
         working-directory: tests/tag
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: update only registrires
         run: |
@@ -258,8 +150,6 @@ jobs:
           git diff .
           git checkout -- .
         working-directory: tests/update
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: update all registries and packages
         run: |
@@ -267,8 +157,6 @@ jobs:
           git diff .
           git checkout -- .
         working-directory: tests/update
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - name: update only specific command
         run: |
@@ -276,12 +164,8 @@ jobs:
           git diff .
           git checkout -- .
         working-directory: tests/update
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - run: aqua update-checksum -a
-        env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
 
       - run: terraform --help
       - run: terrafmt --help
@@ -308,5 +192,35 @@ jobs:
 
       - name: Test update-aqua
         run: aqua update-aqua
+
+  integration-test-cargo:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    permissions: {}
+    env:
+      AQUA_LOG_COLOR: always
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - run: go install ./cmd/aqua
+      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      - run: aqua policy allow
+
+      - name: Test the package type "cargo"
+        run: aqua i
+        working-directory: tests/cargo
         env:
-          GITHUB_TOKEN: ${{steps.token.outputs.token}}
+          GITHUB_TOKEN: ${{github.token}}
+      - name: Test search versions of the package type "cargo"
+        run: aqua g crates.io/eza
+        working-directory: tests/cargo
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+      - name: Test aqua gr cargo
+        run: aqua gr crates.io/skim
+        env:
+          GITHUB_TOKEN: ${{github.token}}

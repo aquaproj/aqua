@@ -44,7 +44,5 @@ packages:
   registry: local
 - name: tamasfe/taplo@0.8.0
   registry: local
-- name: crates.io/skim@0.10.4
-  registry: local
 - name: suzuki-shunsuke/github-comment@v4.0.0
   registry: local
