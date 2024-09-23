@@ -2,6 +2,9 @@
 name: test
 on: pull_request
 permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   path-filter:
     # Get changed files to filter jobs
