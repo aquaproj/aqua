@@ -4,42 +4,62 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 )
 
-func (is *Installer) verifyWithMinisign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
-	ppkg := param.Package
-	m := ppkg.PackageInfo.Minisign
+type minisignVerifier struct {
+	pkg       *config.Package
+	installer *DedicatedInstaller
+	verifier  MinisignVerifier
+	runtime   *runtime.Runtime
+	asset     string
+	minisign  *registry.Minisign
+}
+
+func (s *minisignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+	pkgInfo := s.pkg.PackageInfo
+	m := pkgInfo.Minisign
 	if !m.GetEnabled() {
-		return nil
+		return false, nil
 	}
+
 	mPkg := minisign.Package()
-	if f, err := mPkg.PackageInfo.CheckSupported(is.realRuntime, is.realRuntime.Env()); err != nil {
-		return fmt.Errorf("check if minisign supports this environment: %w", err)
+	if f, err := mPkg.PackageInfo.CheckSupported(s.runtime, s.runtime.Env()); err != nil {
+		return false, fmt.Errorf("check if minisign supports this environment: %w", err)
 	} else if !f {
 		logE.Warn("minisign doesn't support this environment")
-		return nil
+		return false, nil
 	}
-	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
+	return true, nil
+}
+
+func (s *minisignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
 	logE.Info("verify a package with minisign")
-	if err := is.minisignInstaller.install(ctx, logE); err != nil {
+	if err := s.installer.install(ctx, logE); err != nil {
 		return fmt.Errorf("install minisign: %w", err)
 	}
-	tempFilePath, err := bodyFile.Path()
-	if err != nil {
-		return fmt.Errorf("get a temporary file path: %w", err)
-	}
-	if err := is.minisignVerifier.Verify(ctx, logE, is.runtime, m, art, &download.File{
-		RepoOwner: ppkg.PackageInfo.RepoOwner,
-		RepoName:  ppkg.PackageInfo.RepoName,
-		Version:   ppkg.Package.Version,
+
+	pkg := s.pkg
+	pkgInfo := s.pkg.PackageInfo
+	m := s.minisign
+
+	art := pkg.TemplateArtifact(s.runtime, s.asset)
+
+	if err := s.verifier.Verify(ctx, logE, s.runtime, m, art, &download.File{
+		RepoOwner: pkgInfo.RepoOwner,
+		RepoName:  pkgInfo.RepoName,
+		Version:   pkg.Package.Version,
 	}, &minisign.ParamVerify{
-		ArtifactPath: tempFilePath,
+		ArtifactPath: file,
 		PublicKey:    m.PublicKey,
 	}); err != nil {
 		return fmt.Errorf("verify a package with minisign: %w", err)
 	}
+
 	return nil
 }

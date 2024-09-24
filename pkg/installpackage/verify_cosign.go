@@ -4,37 +4,48 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 )
 
-func (is *Installer) verifyWithCosign(ctx context.Context, logE *logrus.Entry, bodyFile *download.DownloadedFile, param *DownloadParam) error {
-	if is.cosignDisabled {
+type cosignVerifier struct {
+	cosignDisabled bool
+	pkg            *config.Package
+	cosign         *registry.Cosign
+	installer      *DedicatedInstaller
+	verifier       CosignVerifier
+	runtime        *runtime.Runtime
+	asset          string
+}
+
+func (c *cosignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+	if c.cosignDisabled {
 		logE.Debug("cosign is disabled")
-		return nil
+		return false, nil
 	}
 
-	ppkg := param.Package
+	return c.cosign.GetEnabled(), nil
+}
 
-	cos := ppkg.PackageInfo.Cosign
-	if !cos.GetEnabled() {
-		return nil
-	}
-
-	art := ppkg.TemplateArtifact(is.runtime, param.Asset)
+func (c *cosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
 	logE.Info("verify a package with Cosign")
-	if err := is.cosignInstaller.install(ctx, logE); err != nil {
+	if err := c.installer.install(ctx, logE); err != nil {
 		return fmt.Errorf("install sigstore/cosign: %w", err)
 	}
-	tempFilePath, err := bodyFile.Path()
-	if err != nil {
-		return fmt.Errorf("get a temporary file path: %w", err)
-	}
-	if err := is.cosign.Verify(ctx, logE, is.runtime, &download.File{
-		RepoOwner: ppkg.PackageInfo.RepoOwner,
-		RepoName:  ppkg.PackageInfo.RepoName,
-		Version:   ppkg.Package.Version,
-	}, cos, art, tempFilePath); err != nil {
+
+	pkg := c.pkg
+	cos := c.cosign
+
+	art := pkg.TemplateArtifact(c.runtime, c.asset)
+
+	if err := c.verifier.Verify(ctx, logE, c.runtime, &download.File{
+		RepoOwner: pkg.PackageInfo.RepoOwner,
+		RepoName:  pkg.PackageInfo.RepoName,
+		Version:   pkg.Package.Version,
+	}, cos, art, file); err != nil {
 		return fmt.Errorf("verify a package with Cosign: %w", err)
 	}
 	return nil
