@@ -31,7 +31,7 @@ func (c *cosignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
 }
 
 func (c *cosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
-	logE.Info("verify a package with Cosign")
+	logE.Info("verifying a file with Cosign")
 	if err := c.installer.install(ctx, logE); err != nil {
 		return fmt.Errorf("install sigstore/cosign: %w", err)
 	}
@@ -46,7 +46,7 @@ func (c *cosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file st
 		RepoName:  pkg.PackageInfo.RepoName,
 		Version:   pkg.Package.Version,
 	}, cos, art, file); err != nil {
-		return fmt.Errorf("verify a package with Cosign: %w", err)
+		return fmt.Errorf("verify a file with Cosign: %w", err)
 	}
 	return nil
 }
