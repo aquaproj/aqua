@@ -22,9 +22,7 @@ type minisignVerifier struct {
 }
 
 func (s *minisignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
-	pkgInfo := s.pkg.PackageInfo
-	m := pkgInfo.Minisign
-	if !m.GetEnabled() {
+	if !s.minisign.GetEnabled() {
 		return false, nil
 	}
 
