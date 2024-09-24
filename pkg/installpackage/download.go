@@ -92,20 +92,60 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 		}
 	}()
 
-	if err := is.verifyWithCosign(ctx, logE, bodyFile, param); err != nil {
-		return err
+	verifiers := []FileVerifier{
+		&gitHubArtifactAttestationsVerifier{
+			gaa:         pkgInfo.GitHubArtifactAttestations,
+			pkg:         ppkg,
+			ghInstaller: is.ghInstaller,
+			ghVerifier:  is.ghVerifier,
+		},
+		&cosignVerifier{
+			cosignDisabled: is.cosignDisabled,
+			pkg:            ppkg,
+			cosign:         pkgInfo.Cosign,
+			installer:      is.cosignInstaller,
+			verifier:       is.cosign,
+			runtime:        is.runtime,
+			asset:          param.Asset,
+		},
+		&slsaVerifier{
+			slsaDisabled: is.slsaDisabled,
+			pkg:          ppkg,
+			provenance:   pkgInfo.SLSAProvenance,
+			installer:    is.slsaVerifierInstaller,
+			verifier:     is.slsaVerifier,
+			runtime:      is.runtime,
+			asset:        param.Asset,
+		},
+		&minisignVerifier{
+			pkg:       ppkg,
+			installer: is.minisignInstaller,
+			verifier:  is.minisignVerifier,
+			runtime:   is.runtime,
+			asset:     param.Asset,
+			minisign:  pkgInfo.Minisign,
+		},
 	}
 
-	if err := is.verifyWithSLSA(ctx, logE, bodyFile, param); err != nil {
-		return err
-	}
-
-	if err := is.verifyWithMinisign(ctx, logE, bodyFile, param); err != nil {
-		return err
-	}
-
-	if err := is.verifyWithGitHubArtifactAttestation(ctx, logE, ppkg, pkgInfo.GitHubArtifactAttestations, bodyFile); err != nil {
-		return err
+	var tempFilePath string
+	for _, verifier := range verifiers {
+		a, err := verifier.Enabled(logE)
+		if err != nil {
+			return fmt.Errorf("check if the verifier is enabled: %w", err)
+		}
+		if !a {
+			continue
+		}
+		if tempFilePath == "" {
+			a, err := bodyFile.Path()
+			if err != nil {
+				return fmt.Errorf("get a temporary file path: %w", err)
+			}
+			tempFilePath = a
+		}
+		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
+			return fmt.Errorf("verify the asset: %w", err)
+		}
 	}
 
 	if err := is.verifyChecksumWrap(ctx, logE, param, bodyFile); err != nil {

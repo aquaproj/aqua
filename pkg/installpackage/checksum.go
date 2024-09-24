@@ -9,16 +9,13 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
-	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) { //nolint:cyclop
+func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) { //nolint:funlen
 	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logE, is.runtime, pkg)
 	if err != nil {
 		return "", fmt.Errorf("download a checksum file: %w", err)
@@ -31,122 +28,60 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 	}
 
 	var tempFilePath string
+	pkgInfo := pkg.PackageInfo
 
-	if cos := pkg.PackageInfo.Checksum.GetCosign(); cos.GetEnabled() && !is.cosignDisabled {
-		f, err := afero.TempFile(is.fs, "", "")
+	verifiers := []FileVerifier{
+		&gitHubArtifactAttestationsVerifier{
+			gaa:         pkgInfo.Checksum.GetGitHubArtifactAttestations(),
+			pkg:         pkg,
+			ghInstaller: is.ghInstaller,
+			ghVerifier:  is.ghVerifier,
+		},
+		&cosignVerifier{
+			cosignDisabled: is.cosignDisabled,
+			cosign:         pkgInfo.Checksum.GetCosign(),
+			pkg:            pkg,
+			installer:      is.cosignInstaller,
+			verifier:       is.cosign,
+			runtime:        is.runtime,
+			asset:          assetName,
+		},
+		&minisignVerifier{
+			pkg:       pkg,
+			minisign:  pkgInfo.Checksum.GetMinisign(),
+			installer: is.minisignInstaller,
+			verifier:  is.minisignVerifier,
+			runtime:   is.runtime,
+			asset:     assetName,
+		},
+	}
+
+	for _, verifier := range verifiers {
+		a, err := verifier.Enabled(logE)
 		if err != nil {
-			return "", fmt.Errorf("create a temporary file: %w", err)
+			return "", fmt.Errorf("check if the verifier is enabled: %w", err)
 		}
-		tempFilePath = f.Name()
-		defer f.Close()
-		defer is.fs.Remove(tempFilePath) //nolint:errcheck
-		if _, err := f.Write(b); err != nil {
-			return "", fmt.Errorf("write a checksum to a temporary file: %w", err)
+		if !a {
+			continue
 		}
-		art := pkg.TemplateArtifact(is.runtime, assetName)
-		logE.Info("verify a checksum file with Cosign")
-		if err := is.cosignInstaller.install(ctx, logE); err != nil {
-			return "", err
+		if tempFilePath == "" {
+			f, err := afero.TempFile(is.fs, "", "")
+			if err != nil {
+				return "", fmt.Errorf("create a temporary file: %w", err)
+			}
+			tempFilePath = f.Name()
+			defer f.Close()
+			defer is.fs.Remove(tempFilePath) //nolint:errcheck
+			if _, err := f.Write(b); err != nil {
+				return "", fmt.Errorf("write a checksum to a temporary file: %w", err)
+			}
 		}
-		if err := is.cosign.Verify(ctx, logE, is.runtime, &download.File{
-			RepoOwner: pkg.PackageInfo.RepoOwner,
-			RepoName:  pkg.PackageInfo.RepoName,
-			Version:   pkg.Package.Version,
-		}, cos, art, tempFilePath); err != nil {
-			return "", fmt.Errorf("verify a checksum file with Cosign: %w", err)
+		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
+			return "", fmt.Errorf("verifiy the checksum file: %w", err)
 		}
-	}
-
-	if err := is.verifyChecksumWithMinisign(ctx, logE, pkg, tempFilePath, b); err != nil {
-		return "", err
-	}
-
-	if err := is.verifyChecksumWithGitHubArtifactAttestation(ctx, logE, pkg, pkg.PackageInfo.Checksum.GetGitHubArtifactAttestations(), tempFilePath, b); err != nil {
-		return "", err
 	}
 
 	return checksum.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
-}
-
-// b is a content of the checksum file.
-// tempFilePath is a path of the checksum file.
-func (is *Installer) verifyChecksumWithMinisign(ctx context.Context, logE *logrus.Entry, pkg *config.Package, tempFilePath string, b []byte) error {
-	ms := pkg.PackageInfo.Checksum.GetMinisign()
-	if !ms.GetEnabled() {
-		return nil
-	}
-
-	mPkg := minisign.Package()
-	if f, err := mPkg.PackageInfo.CheckSupported(is.realRuntime, is.realRuntime.Env()); err != nil {
-		return fmt.Errorf("check if minisign supports this environment: %w", err)
-	} else if !f {
-		logE.Warn("minisign doesn't support this environment")
-		return nil
-	}
-
-	if tempFilePath == "" {
-		f, err := afero.TempFile(is.fs, "", "")
-		if err != nil {
-			return fmt.Errorf("create a temporary file: %w", err)
-		}
-		tempFilePath = f.Name()
-		defer f.Close()
-		defer is.fs.Remove(tempFilePath) //nolint:errcheck
-		if _, err := f.Write(b); err != nil {
-			return fmt.Errorf("write a checksum to a temporary file: %w", err)
-		}
-	}
-
-	art := pkg.TemplateArtifact(is.runtime, "")
-	logE.Info("verifing a checksum file with Minisign")
-	if err := is.minisignInstaller.install(ctx, logE); err != nil {
-		return err
-	}
-	if err := is.minisignVerifier.Verify(ctx, logE, is.runtime, ms, art, &download.File{
-		RepoOwner: pkg.PackageInfo.RepoOwner,
-		RepoName:  pkg.PackageInfo.RepoName,
-		Version:   pkg.Package.Version,
-	}, &minisign.ParamVerify{
-		ArtifactPath: tempFilePath,
-		PublicKey:    ms.PublicKey,
-	}); err != nil {
-		return fmt.Errorf("verify a checksum file with Minisign: %w", err)
-	}
-	return nil
-}
-
-func (is *Installer) verifyChecksumWithGitHubArtifactAttestation(ctx context.Context, logE *logrus.Entry, pkg *config.Package, gaa *registry.GitHubArtifactAttestations, tempFilePath string, b []byte) error {
-	if !gaa.GetEnabled() {
-		return nil
-	}
-
-	if tempFilePath == "" {
-		f, err := afero.TempFile(is.fs, "", "")
-		if err != nil {
-			return fmt.Errorf("create a temporary file: %w", err)
-		}
-		tempFilePath = f.Name()
-		defer f.Close()
-		defer is.fs.Remove(tempFilePath) //nolint:errcheck
-		if _, err := f.Write(b); err != nil {
-			return fmt.Errorf("write a checksum to a temporary file: %w", err)
-		}
-	}
-
-	logE.Info("verify GitHub Artifact Attestations")
-	if err := is.ghInstaller.install(ctx, logE); err != nil {
-		return fmt.Errorf("install GitHub CLI: %w", err)
-	}
-
-	if err := is.ghVerifier.Verify(ctx, logE, &ghattestation.ParamVerify{
-		Repository:     pkg.PackageInfo.RepoOwner + "/" + pkg.PackageInfo.RepoName,
-		ArtifactPath:   tempFilePath,
-		SignerWorkflow: gaa.SignerWorkflow,
-	}); err != nil {
-		return fmt.Errorf("verify a package with minisign: %w", err)
-	}
-
-	return nil
 }
 
 type ParamVerifyChecksum struct {
