@@ -131,7 +131,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 	for _, verifier := range verifiers {
 		a, err := verifier.Enabled(logE)
 		if err != nil {
-			return err
+			return fmt.Errorf("check if the verifier is enabled: %w", err)
 		}
 		if !a {
 			continue
@@ -144,7 +144,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 			tempFilePath = a
 		}
 		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
-			return err
+			return fmt.Errorf("verify the asset: %w", err)
 		}
 	}
 
