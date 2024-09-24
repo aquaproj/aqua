@@ -22,7 +22,7 @@ type gitHubArtifactAttestationsVerifier struct {
 	ghVerifier  GitHubArtifactAttestationsVerifier
 }
 
-func (g *gitHubArtifactAttestationsVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+func (g *gitHubArtifactAttestationsVerifier) Enabled(_ *logrus.Entry) (bool, error) {
 	return g.gaa.GetEnabled(), nil
 }
 
