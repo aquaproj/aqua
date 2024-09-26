@@ -5,6 +5,6 @@ import (
 )
 
 type Executor interface {
-	Exec(cmd *osexec.Cmd) (int, error)
+	ExecStderr(cmd *osexec.Cmd) (int, error)
 	ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error)
 }

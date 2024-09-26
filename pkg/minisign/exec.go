@@ -17,7 +17,7 @@ import (
 )
 
 type CommandExecutor interface {
-	Exec(cmd *osexec.Cmd) (int, error)
+	ExecStderr(cmd *osexec.Cmd) (int, error)
 }
 
 type Executor interface {
@@ -57,7 +57,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	_, err := e.executor.Exec(osexec.Command(ctx, e.minisignExePath, args...))
+	_, err := e.executor.ExecStderr(osexec.Command(ctx, e.minisignExePath, args...))
 	return err //nolint:wrapcheck
 }
 
