@@ -216,8 +216,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.225.0/registry.yaml",
-      "checksum": "6E36DD5509CE5FA48478D07B9AD858B508E8B9C6B05408DF3758316EB42536B138CC0ABE1488ACD7D7B58814F5F9AE29F18550635745FFD4499AB22CBEC4E2C8",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.226.0/registry.yaml",
+      "checksum": "E374B1523B5A83257BC3C424869206F598CE92539C80BD16BD3D8DB0FC7FD1AF0A43EA324C31916BED61896B2924F92117EF47834954C062DE0E058B211920B7",
       "algorithm": "sha512"
     }
   ]
