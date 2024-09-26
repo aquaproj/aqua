@@ -61,3 +61,13 @@ func (e *Executor) ExecAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) 
 	code, err := e.Exec(cmd)
 	return out.String(), code, err
 }
+
+func (e *Executor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
+	cmd.Stdout = cmd.Stderr
+	return e.ExecAndGetCombinedOutput(cmd)
+}
+
+func (e *Executor) ExecStderr(cmd *exec.Cmd) (int, error) {
+	cmd.Stdout = cmd.Stderr
+	return e.Exec(cmd)
+}

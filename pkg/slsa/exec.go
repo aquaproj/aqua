@@ -16,7 +16,7 @@ import (
 )
 
 type CommandExecutor interface {
-	ExecAndGetCombinedOutput(cmd *osexec.Cmd) (string, int, error)
+	ExecStderrAndGetCombinedOutput(cmd *osexec.Cmd) (string, int, error)
 }
 
 type Executor interface {
@@ -56,7 +56,7 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) 
 	mutex := cosign.GetMutex()
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := e.executor.ExecAndGetCombinedOutput(osexec.Command(ctx, e.verifierExePath, args...))
+	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.verifierExePath, args...))
 	return out, err //nolint:wrapcheck
 }
 
