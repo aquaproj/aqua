@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/exec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
@@ -113,7 +114,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 }
 
 type Executor interface {
-	ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error)
+	ExecAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error)
 }
 
 type ParamVerify struct {
@@ -128,7 +129,7 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := v.executor.ExecWithEnvsAndGetCombinedOutput(ctx, v.cosignExePath, args, nil)
+	out, _, err := v.executor.ExecAndGetCombinedOutput(exec.Command(ctx, v.cosignExePath, args...))
 	return out, err //nolint:wrapcheck
 }
 

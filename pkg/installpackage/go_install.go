@@ -3,8 +3,10 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/exec"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,7 +25,9 @@ func NewGoInstallInstallerImpl(exec Executor) *GoInstallInstallerImpl {
 }
 
 func (is *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin string) error {
-	_, err := is.exec.ExecWithEnvs(ctx, "go", []string{"install", path}, []string{"GOBIN=" + gobin})
+	cmd := exec.Command(ctx, "go", "install", path)
+	cmd.Env = append(os.Environ(), "GOBIN="+gobin)
+	_, err := is.exec.Exec(cmd, nil)
 	if err != nil {
 		return fmt.Errorf("install a go package: %w", err)
 	}
