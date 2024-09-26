@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -19,8 +19,8 @@ type dmgUnarchiver struct {
 }
 
 type Executor interface {
-	Exec(cmd *exec.Cmd, param *exec.ParamRun) (int, error)
-	ExecAndOutputWhenFailure(cmd *exec.Cmd) (int, error)
+	Exec(cmd *osexec.Cmd, param *osexec.ParamRun) (int, error)
+	ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error)
 }
 
 func (u *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
@@ -38,14 +38,14 @@ func (u *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *
 		return fmt.Errorf("create a temporary file: %w", err)
 	}
 
-	if _, err := u.executor.ExecAndOutputWhenFailure(exec.Command(ctx, "hdiutil", "attach", tempFilePath, "-mountpoint", tmpMountPoint)); err != nil {
+	if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "hdiutil", "attach", tempFilePath, "-mountpoint", tmpMountPoint)); err != nil {
 		if err := u.fs.Remove(tmpMountPoint); err != nil {
 			logE.WithError(err).Warn("remove a temporary directory created to attach a DMG file")
 		}
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 	defer func() {
-		if _, err := u.executor.ExecAndOutputWhenFailure(exec.Command(ctx, "hdiutil", "detach", tmpMountPoint)); err != nil {
+		if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "hdiutil", "detach", tmpMountPoint)); err != nil {
 			logE.WithError(err).Warn("detach a DMG file")
 		}
 		if err := u.fs.Remove(tmpMountPoint); err != nil {

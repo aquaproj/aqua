@@ -1,7 +1,7 @@
 //go:build windows
 // +build windows
 
-package exec
+package osexec
 
 import "errors"
 

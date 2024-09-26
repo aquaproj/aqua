@@ -1,10 +1,10 @@
-package exec_test
+package osexec_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 )
 
 func TestExecutorExec(t *testing.T) {
@@ -21,12 +21,12 @@ func TestExecutorExec(t *testing.T) {
 			exePath: "/bin/date",
 		},
 	}
-	executor := exec.New()
+	executor := osexec.New()
 	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			exitCode, err := executor.Exec(exec.Command(ctx, d.exePath, d.args...), nil)
+			exitCode, err := executor.Exec(osexec.Command(ctx, d.exePath, d.args...), nil)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")

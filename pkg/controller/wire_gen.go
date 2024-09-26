@@ -32,7 +32,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
@@ -60,7 +60,7 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	executor := exec.New()
+	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -99,7 +99,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	executor := exec.New()
+	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -123,7 +123,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	executor := exec.New()
+	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -162,7 +162,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	executor := exec.New()
+	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -182,7 +182,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
-	executor := exec.New()
+	executor := osexec.New()
 	unarchiver := unarchive.New(executor, fs)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -223,7 +223,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
-	executor := exec.New()
+	executor := osexec.New()
 	unarchiver := unarchive.New(executor, fs)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -254,7 +254,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
-	executor := exec.New()
+	executor := osexec.New()
 	unarchiver := unarchive.New(executor, fs)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -295,7 +295,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	executor := exec.New()
+	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -313,7 +313,7 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	configReader := reader.New(fs, param)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	executor := exec.New()
+	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
@@ -363,7 +363,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	executor := exec.New()
+	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)

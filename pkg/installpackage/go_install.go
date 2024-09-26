@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,7 +25,7 @@ func NewGoInstallInstallerImpl(exec Executor) *GoInstallInstallerImpl {
 }
 
 func (is *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin string) error {
-	cmd := exec.Command(ctx, "go", "install", path)
+	cmd := osexec.Command(ctx, "go", "install", path)
 	cmd.Env = append(os.Environ(), "GOBIN="+gobin)
 	_, err := is.exec.Exec(cmd, nil)
 	if err != nil {

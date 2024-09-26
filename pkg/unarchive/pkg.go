@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -29,7 +29,7 @@ func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *logrus.Entry, src *Fil
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 
-	if _, err := u.executor.ExecAndOutputWhenFailure(exec.Command(ctx, "pkgutil", "--expand-full", tempFilePath, u.dest)); err != nil {
+	if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "pkgutil", "--expand-full", tempFilePath, u.dest)); err != nil {
 		return fmt.Errorf("unarchive a pkg format file: %w", err)
 	}
 

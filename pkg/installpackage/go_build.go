@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 )
 
 type GoBuildInstaller interface {
@@ -22,7 +22,7 @@ func NewGoBuildInstallerImpl(exec Executor) *GoBuildInstallerImpl {
 }
 
 func (is *GoBuildInstallerImpl) Install(ctx context.Context, exePath, exeDir, src string) error {
-	cmd := exec.Command(ctx, "go", "build", "-o", exePath, src)
+	cmd := osexec.Command(ctx, "go", "build", "-o", exePath, src)
 	cmd.Dir = exeDir
 	if _, err := is.exec.Exec(cmd, nil); err != nil {
 		return fmt.Errorf("build a go package: %w", err)

@@ -1,4 +1,4 @@
-package exec
+package osexec
 
 type Mock struct {
 	ExitCode int

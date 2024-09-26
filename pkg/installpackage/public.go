@@ -1,10 +1,10 @@
 package installpackage
 
 import (
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 )
 
 type Executor interface {
-	Exec(cmd *exec.Cmd, param *exec.ParamRun) (int, error)
-	ExecAndOutputWhenFailure(cmd *exec.Cmd) (int, error)
+	Exec(cmd *osexec.Cmd, param *osexec.ParamRun) (int, error)
+	ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error)
 }

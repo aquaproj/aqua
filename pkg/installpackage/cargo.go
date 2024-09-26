@@ -7,7 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -46,7 +46,7 @@ func getCargoArgs(version string, opts *registry.Cargo) []string {
 
 func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
 	args := getCargoArgs(version, opts)
-	if _, err := is.exec.Exec(exec.Command(ctx, "cargo", append(args, "--root", root, crate)...), nil); err != nil {
+	if _, err := is.exec.Exec(osexec.Command(ctx, "cargo", append(args, "--root", root, crate)...), nil); err != nil {
 		// Clean up root
 		logE := logE.WithField("install_dir", root)
 		logE.Info("removing the install directory because the installation failed")
