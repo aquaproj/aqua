@@ -25,7 +25,7 @@ type ParamRun struct {
 	Stderr io.Writer
 }
 
-func (r *Executor) Exec(cmd *exec.Cmd, param *ParamRun) (int, error) {
+func (e *Executor) Exec(cmd *exec.Cmd, param *ParamRun) (int, error) {
 	if param != nil && param.Stdout != nil {
 		cmd.Stdout = io.MultiWriter(cmd.Stdout, param.Stdout)
 	}
