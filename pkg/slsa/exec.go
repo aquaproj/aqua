@@ -9,13 +9,14 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/sirupsen/logrus"
 )
 
 type CommandExecutor interface {
-	ExecWithEnvsAndGetCombinedOutput(ctx context.Context, exePath string, args, envs []string) (string, int, error)
+	ExecAndGetCombinedOutput(cmd *osexec.Cmd) (string, int, error)
 }
 
 type Executor interface {
@@ -55,7 +56,7 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) 
 	mutex := cosign.GetMutex()
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := e.executor.ExecWithEnvsAndGetCombinedOutput(ctx, e.verifierExePath, args, nil)
+	out, _, err := e.executor.ExecAndGetCombinedOutput(osexec.Command(ctx, e.verifierExePath, args...))
 	return out, err //nolint:wrapcheck
 }
 

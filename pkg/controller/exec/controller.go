@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -46,7 +47,7 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 }
 
 type Executor interface {
-	Exec(ctx context.Context, exePath string, args ...string) (int, error)
+	Exec(cmd *osexec.Cmd) (int, error)
 	ExecXSys(exePath string, args ...string) error
 }
 

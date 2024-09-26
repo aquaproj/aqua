@@ -33,7 +33,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/aquaproj/aqua/v2/pkg/exec"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
@@ -41,6 +40,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -84,9 +84,9 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -185,10 +185,10 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -264,13 +264,13 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -384,9 +384,9 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
@@ -405,9 +405,9 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cosexec.Controller, error) {
 	wire.Build(
-		cexec.New,
+		cosexec.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
 			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
@@ -418,7 +418,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(cexec.Installer), new(*installpackage.Installer)),
+			wire.Bind(new(cosexec.Installer), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -439,17 +439,17 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(cexec.WhichController), new(*which.Controller)),
+			wire.Bind(new(cosexec.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
-			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosexec.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -488,7 +488,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewReader,
-			wire.Bind(new(cexec.PolicyReader), new(*policy.Reader)),
+			wire.Bind(new(cosexec.PolicyReader), new(*policy.Reader)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -533,7 +533,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
-	return &cexec.Controller{}, nil
+	return &cosexec.Controller{}, nil
 }
 
 func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
@@ -558,13 +558,13 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			unarchive.New,
@@ -673,14 +673,14 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(cp.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(installpackage.Executor), new(*exec.Executor)),
-			wire.Bind(new(cexec.Executor), new(*exec.Executor)),
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(unarchive.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(minisign.CommandExecutor), new(*exec.Executor)),
-			wire.Bind(new(ghattestation.CommandExecutor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosexec.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			download.NewChecksumDownloader,
@@ -810,9 +810,9 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -869,9 +869,9 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -995,9 +995,9 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
-			exec.New,
-			wire.Bind(new(cosign.Executor), new(*exec.Executor)),
-			wire.Bind(new(slsa.CommandExecutor), new(*exec.Executor)),
+			osexec.New,
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			download.NewDownloader,
