@@ -10,7 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
@@ -36,7 +36,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 	}{
 		{
 			name:     "normal",
-			executor: &exec.Mock{},
+			executor: &osexec.Mock{},
 			fs:       afero.NewMemMapFs(),
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),
@@ -74,7 +74,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		},
 		{
 			name:     "signature, key, certificate",
-			executor: &exec.Mock{},
+			executor: &osexec.Mock{},
 			fs:       afero.NewMemMapFs(),
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),

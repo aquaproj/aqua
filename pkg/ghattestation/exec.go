@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/sirupsen/logrus"
@@ -16,7 +17,7 @@ import (
 )
 
 type CommandExecutor interface {
-	Exec(ctx context.Context, exePath string, args ...string) (int, error)
+	Exec(cmd *osexec.Cmd) (int, error)
 }
 
 type Executor interface {
@@ -56,7 +57,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	_, err := e.executor.Exec(ctx, e.exePath, args...)
+	_, err := e.executor.Exec(osexec.Command(ctx, e.exePath, args...))
 	return err //nolint:wrapcheck
 }
 

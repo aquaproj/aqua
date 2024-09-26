@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aquaproj/aqua/v2/pkg/exec"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,7 +21,7 @@ func TestController_execCommand(t *testing.T) {
 			title:    "normal",
 			exePath:  "/bin/date",
 			args:     []string{},
-			executor: &exec.Mock{},
+			executor: &osexec.Mock{},
 		},
 	}
 	ctx := context.Background()
