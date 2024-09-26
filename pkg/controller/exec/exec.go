@@ -9,8 +9,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
-	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/sirupsen/logrus"
@@ -128,7 +128,7 @@ func (c *Controller) execCommand(ctx context.Context, exePath string, args ...st
 		}
 		return false, nil
 	}
-	if exitCode, err := c.executor.Exec(osexec.Command(ctx, exePath, args...), nil); err != nil {
+	if exitCode, err := c.executor.Exec(osexec.Command(ctx, exePath, args...)); err != nil {
 		// https://pkg.go.dev/os#ProcessState.ExitCode
 		// > ExitCode returns the exit code of the exited process,
 		// > or -1 if the process hasn't exited or was terminated by a signal.

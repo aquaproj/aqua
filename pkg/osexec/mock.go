@@ -6,7 +6,7 @@ type Mock struct {
 	Output   string
 }
 
-func (e *Mock) Exec(cmd *Cmd, param *ParamRun) (int, error) {
+func (e *Mock) Exec(cmd *Cmd) (int, error) {
 	return e.ExitCode, e.Err
 }
 

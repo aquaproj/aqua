@@ -20,18 +20,7 @@ func New() *Executor {
 
 const waitDelay = 1000 * time.Hour
 
-type ParamRun struct {
-	Stdout io.Writer
-	Stderr io.Writer
-}
-
-func (e *Executor) Exec(cmd *exec.Cmd, param *ParamRun) (int, error) {
-	if param != nil && param.Stdout != nil {
-		cmd.Stdout = io.MultiWriter(cmd.Stdout, param.Stdout)
-	}
-	if param != nil && param.Stderr != nil {
-		cmd.Stderr = io.MultiWriter(cmd.Stderr, param.Stderr)
-	}
+func (e *Executor) Exec(cmd *exec.Cmd) (int, error) {
 	err := cmd.Run()
 	return cmd.ProcessState.ExitCode(), err
 }
@@ -67,9 +56,8 @@ func (e *Executor) ExecAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
 
 func (e *Executor) ExecAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
 	out := &bytes.Buffer{}
-	code, err := e.Exec(cmd, &ParamRun{
-		Stdout: out,
-		Stderr: out,
-	})
+	cmd.Stdout = io.MultiWriter(cmd.Stdout, out)
+	cmd.Stderr = io.MultiWriter(cmd.Stderr, out)
+	code, err := e.Exec(cmd)
 	return out.String(), code, err
 }

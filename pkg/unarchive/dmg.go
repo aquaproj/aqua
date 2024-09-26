@@ -19,7 +19,7 @@ type dmgUnarchiver struct {
 }
 
 type Executor interface {
-	Exec(cmd *osexec.Cmd, param *osexec.ParamRun) (int, error)
+	Exec(cmd *osexec.Cmd) (int, error)
 	ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error)
 }
 
