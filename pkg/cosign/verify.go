@@ -114,7 +114,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 }
 
 type Executor interface {
-	ExecAndGetCombinedOutput(cmd *osexec.Cmd) (string, int, error)
+	ExecStderrAndGetCombinedOutput(cmd *osexec.Cmd) (string, int, error)
 }
 
 type ParamVerify struct {
@@ -129,7 +129,7 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := v.executor.ExecAndGetCombinedOutput(osexec.Command(ctx, v.cosignExePath, args...))
+	out, _, err := v.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, v.cosignExePath, args...))
 	return out, err //nolint:wrapcheck
 }
 

@@ -46,7 +46,7 @@ func getCargoArgs(version string, opts *registry.Cargo) []string {
 
 func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
 	args := getCargoArgs(version, opts)
-	if _, err := is.exec.Exec(osexec.Command(ctx, "cargo", append(args, "--root", root, crate)...)); err != nil {
+	if _, err := is.exec.ExecStderr(osexec.Command(ctx, "cargo", append(args, "--root", root, crate)...)); err != nil {
 		// Clean up root
 		logE := logE.WithField("install_dir", root)
 		logE.Info("removing the install directory because the installation failed")
