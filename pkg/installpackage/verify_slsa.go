@@ -13,17 +13,17 @@ import (
 )
 
 type slsaVerifier struct {
-	slsaDisabled bool
-	pkg          *config.Package
-	provenance   *registry.SLSAProvenance
-	installer    *DedicatedInstaller
-	verifier     SLSAVerifier
-	runtime      *runtime.Runtime
-	asset        string
+	disabled   bool
+	pkg        *config.Package
+	provenance *registry.SLSAProvenance
+	installer  *DedicatedInstaller
+	verifier   SLSAVerifier
+	runtime    *runtime.Runtime
+	asset      string
 }
 
 func (s *slsaVerifier) Enabled(logE *logrus.Entry) (bool, error) {
-	if s.slsaDisabled {
+	if s.disabled {
 		logE.Debug("slsa verification is disabled")
 		return false, nil
 	}

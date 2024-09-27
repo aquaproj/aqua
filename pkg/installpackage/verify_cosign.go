@@ -12,17 +12,17 @@ import (
 )
 
 type cosignVerifier struct {
-	cosignDisabled bool
-	pkg            *config.Package
-	cosign         *registry.Cosign
-	installer      *DedicatedInstaller
-	verifier       CosignVerifier
-	runtime        *runtime.Runtime
-	asset          string
+	disabled  bool
+	pkg       *config.Package
+	cosign    *registry.Cosign
+	installer *DedicatedInstaller
+	verifier  CosignVerifier
+	runtime   *runtime.Runtime
+	asset     string
 }
 
 func (c *cosignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
-	if c.cosignDisabled {
+	if c.disabled {
 		logE.Debug("cosign is disabled")
 		return false, nil
 	}
