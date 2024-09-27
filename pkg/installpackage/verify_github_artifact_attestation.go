@@ -16,13 +16,18 @@ type FileVerifier interface {
 }
 
 type gitHubArtifactAttestationsVerifier struct {
+	disabled    bool
 	gaa         *registry.GitHubArtifactAttestations
 	pkg         *config.Package
 	ghInstaller *DedicatedInstaller
 	ghVerifier  GitHubArtifactAttestationsVerifier
 }
 
-func (g *gitHubArtifactAttestationsVerifier) Enabled(_ *logrus.Entry) (bool, error) {
+func (g *gitHubArtifactAttestationsVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+	if g.disabled {
+		logE.Debug("GitHub Artifact Attestation is disabled")
+		return false, nil
+	}
 	return g.gaa.GetEnabled(), nil
 }
 

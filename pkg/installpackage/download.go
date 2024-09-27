@@ -94,6 +94,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 
 	verifiers := []FileVerifier{
 		&gitHubArtifactAttestationsVerifier{
+			disabled:    is.gaaDisabled,
 			gaa:         pkgInfo.GitHubArtifactAttestations,
 			pkg:         ppkg,
 			ghInstaller: is.ghInstaller,
