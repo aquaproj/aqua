@@ -32,6 +32,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 
 	verifiers := []FileVerifier{
 		&gitHubArtifactAttestationsVerifier{
+			disabled:    is.gaaDisabled,
 			gaa:         pkgInfo.Checksum.GetGitHubArtifactAttestations(),
 			pkg:         pkg,
 			ghInstaller: is.ghInstaller,

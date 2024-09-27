@@ -56,6 +56,7 @@ type Installer struct {
 	onlyLink              bool
 	cosignDisabled        bool
 	slsaDisabled          bool
+	gaaDisabled           bool
 }
 
 func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
@@ -101,6 +102,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		onlyLink:              param.OnlyLink,
 		cosignDisabled:        param.CosignDisabled,
 		slsaDisabled:          param.SLSADisabled,
+		gaaDisabled:           param.GitHubArtifactAttestationDisabled,
 		copyDir:               param.Dest,
 		unarchiver:            unarchiver,
 		cosign:                cosignVerifier,
