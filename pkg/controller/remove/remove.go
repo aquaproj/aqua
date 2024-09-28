@@ -164,7 +164,7 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 			return fmt.Errorf("find a command: %w", err)
 		}
 		if findResult.Package == nil {
-			logE.Debug("the package isn't found")
+			logE.Debug("no package is found")
 			continue
 		}
 		logE = logE.WithField("package_name", findResult.Package.Package.Name)
