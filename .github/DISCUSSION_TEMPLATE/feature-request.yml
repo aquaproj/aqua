@@ -1,48 +1,15 @@
 title: Feature Request
 body:
-  - type: textarea
-    id: feature-overview
+  - type: markdown
     attributes:
-      label: Feature Overview
-      value:
-    validations:
-      required: true
-  - type: textarea
-    id: why
-    attributes:
-      label: Why is the feature needed?
-      description: Please explain the problem you want to solve.
-    validations:
-      required: true
-
-  - type: textarea
-    id: workaround
-    attributes:
-      label: Workaround
-      description: |
-        If you have any workaround, please explain it and why the workaround isn't enough.
-
-  - type: textarea
-    id: example-code
-    attributes:
-      label: Example Code
-      description: |
-        Please explain the feature with code. For example, if you want a new subcommand, please explain the usage of the subcommand.
       value: |
-        ```console
-        $ 
-        ```
+        ## :warning: Please use the issue template instead
 
-        Configuration
+        We keep this discussion category only for old discussions.
 
-        ```yaml
-
-        ```
-    validations:
-      required: false
-  - type: textarea
-    id: note
+        [Please create an issue using the issue template](https://github.com/aquaproj/aqua/issues/new?assignees=&labels=enhancement&projects=&template=feature-request.yml).
+  - type: checkboxes
     attributes:
-      label: Note
-    validations:
-      required: false
+      label: .
+      options:
+        - label: ..
