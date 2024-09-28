@@ -3,6 +3,7 @@ package which
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -64,7 +65,14 @@ func (c *Controller) getExePath(findResult *FindResult) (string, error) {
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
 	}
-	return pkg.ExePath(c.rootDir, file, c.runtime) //nolint:wrapcheck
+	exePath, err := pkg.ExePath(c.rootDir, file, c.runtime)
+	if err != nil {
+		return exePath, err //nolint:wrapcheck
+	}
+	if file.Link == "" {
+		return exePath, nil
+	}
+	return filepath.Join(filepath.Dir(exePath), file.Link), nil
 }
 
 func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath, exeName string) (*FindResult, error) {
