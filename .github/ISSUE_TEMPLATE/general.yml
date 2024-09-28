@@ -1,9 +1,0 @@
-name: General
-description: Please use this template only when other templates don't meet your requirement
-body:
-  - type: textarea
-    id: free-text
-    attributes:
-      label: Free Text
-    validations:
-      required: true
