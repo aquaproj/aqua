@@ -133,7 +133,14 @@ func (is *Installer) checkFileSrc(ctx context.Context, logE *logrus.Entry, pkg *
 		return exePath, nil
 	}
 
-	if err := is.createLink(logE, filepath.Join(filepath.Dir(fileSrc), file.Link), file.Link); err != nil {
+	// file.Link is the relative path from exePath to the link
+	link := filepath.Join(filepath.Dir(exePath), file.Link)
+	dest, err := filepath.Rel(filepath.Dir(link), exePath)
+	if err != nil {
+		return "", err
+	}
+
+	if err := is.createLink(logE, link, dest); err != nil {
 		return "", fmt.Errorf("create the symbolic link: %w", err)
 	}
 
