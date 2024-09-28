@@ -65,14 +65,14 @@ func (c *Controller) getExePath(findResult *FindResult) (string, error) {
 	if pkg.Package.Version == "" {
 		return "", errVersionIsRequired
 	}
-	exePath, err := pkg.ExePath(c.rootDir, file, c.runtime) //nolint:wrapcheck
+	exePath, err := pkg.ExePath(c.rootDir, file, c.runtime)
 	if err != nil {
-		return exePath, err
+		return exePath, err //nolint:wrapcheck
 	}
 	if file.Link == "" {
-		return exePath, err
+		return exePath, nil
 	}
-	return filepath.Join(filepath.Dir(exePath), file.Link), err
+	return filepath.Join(filepath.Dir(exePath), file.Link), nil
 }
 
 func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath, exeName string) (*FindResult, error) {
