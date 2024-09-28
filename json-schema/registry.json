@@ -99,6 +99,9 @@
         },
         "minisign": {
           "$ref": "#/$defs/Minisign"
+        },
+        "github_artifact_attestations": {
+          "$ref": "#/$defs/GitHubArtifactAttestations"
         }
       },
       "additionalProperties": false,
@@ -193,6 +196,9 @@
         },
         "dir": {
           "type": "string"
+        },
+        "link": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -239,6 +245,18 @@
         "$ref": "#/$defs/FormatOverride"
       },
       "type": "array"
+    },
+    "GitHubArtifactAttestations": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "signer-workflow": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "Minisign": {
       "properties": {
@@ -373,6 +391,9 @@
         },
         "minisign": {
           "$ref": "#/$defs/Minisign"
+        },
+        "github_artifact_attestations": {
+          "$ref": "#/$defs/GitHubArtifactAttestations"
         },
         "vars": {
           "items": {
@@ -530,6 +551,9 @@
         },
         "minisign": {
           "$ref": "#/$defs/Minisign"
+        },
+        "github_artifact_attestations": {
+          "$ref": "#/$defs/GitHubArtifactAttestations"
         },
         "vars": {
           "items": {
@@ -746,6 +770,9 @@
         },
         "minisign": {
           "$ref": "#/$defs/Minisign"
+        },
+        "github_artifact_attestations": {
+          "$ref": "#/$defs/GitHubArtifactAttestations"
         },
         "build": {
           "$ref": "#/$defs/Build"
