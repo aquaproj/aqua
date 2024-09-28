@@ -161,9 +161,9 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 	for _, cmd := range cmds {
 		logE := logE.WithField("exe_name", cmd)
 		if err := c.removeCommand(ctx, logE, param, cmd); err != nil {
-			return logerr.WithFields(err, logrus.Fields{
+			return fmt.Errorf("remove a command: %w", logerr.WithFields(err, logrus.Fields{
 				"exe_name": cmd,
-			})
+			}))
 		}
 	}
 	return gErr
