@@ -164,7 +164,8 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 			return fmt.Errorf("find a command: %w", err)
 		}
 		if findResult.Package == nil {
-			return fmt.Errorf("command not found, check if %s is defined in aqua.yaml", cmd)
+			logE.Debug("the package isn't found")
+			continue
 		}
 		logE = logE.WithField("package_name", findResult.Package.Package.Name)
 		if err := c.removePackage(logE, param.RootDir, findResult.Package.PackageInfo); err != nil {
