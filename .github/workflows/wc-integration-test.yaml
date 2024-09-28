@@ -173,6 +173,10 @@ jobs:
         # http - terraform
         # go_install - terrafmt
         run: aqua rm x-motemen/ghq bats-core/bats-core terraform terrafmt
+      - name: Remove not found package
+        run: aqua rm Builditluc/wiki-tui
+      - name: Remove not found command
+        run: aqua rm wiki-tui
 
       - name: Test minisign
         run: aqua i
