@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -161,6 +162,10 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 		logE := logE.WithField("exe_name", cmd)
 		findResult, err := c.which.Which(ctx, logE, param, cmd)
 		if err != nil {
+			if errors.Is(err, which.ErrCommandIsNotFound) {
+				logE.Debug("the command isn't found")
+				continue
+			}
 			return fmt.Errorf("find a command: %w", err)
 		}
 		if findResult.Package == nil {

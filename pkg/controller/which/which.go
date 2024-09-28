@@ -53,7 +53,7 @@ func (c *Controller) Which(ctx context.Context, logE *logrus.Entry, param *confi
 			ExePath: exePath,
 		}, nil
 	}
-	return nil, logerr.WithFields(errCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
+	return nil, logerr.WithFields(ErrCommandIsNotFound, logrus.Fields{ //nolint:wrapcheck
 		"exe_name": exeName,
 		"doc":      "https://aquaproj.github.io/docs/reference/codes/004",
 	})
