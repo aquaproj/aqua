@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -159,22 +160,35 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 	}
 	for _, cmd := range cmds {
 		logE := logE.WithField("exe_name", cmd)
-		findResult, err := c.which.Which(ctx, logE, param, cmd)
-		if err != nil {
-			return fmt.Errorf("find a command: %w", err)
-		}
-		if findResult.Package == nil {
-			logE.Debug("no package is found")
-			continue
-		}
-		logE = logE.WithField("package_name", findResult.Package.Package.Name)
-		if err := c.removePackage(logE, param.RootDir, findResult.Package.PackageInfo); err != nil {
-			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
-				"package_name": findResult.Package.Package.Name,
+		if err := c.removeCommand(ctx, logE, param, cmd); err != nil {
+			return fmt.Errorf("remove a command: %w", logerr.WithFields(err, logrus.Fields{
+				"exe_name": cmd,
 			}))
 		}
 	}
 	return gErr
+}
+
+func (c *Controller) removeCommand(ctx context.Context, logE *logrus.Entry, param *config.Param, cmd string) error {
+	findResult, err := c.which.Which(ctx, logE, param, cmd)
+	if err != nil {
+		if errors.Is(err, which.ErrCommandIsNotFound) {
+			logE.Debug("the command isn't found")
+			return nil
+		}
+		return fmt.Errorf("find a command: %w", err)
+	}
+	if findResult.Package == nil {
+		logE.Debug("no package is found")
+		return nil
+	}
+	logE = logE.WithField("package_name", findResult.Package.Package.Name)
+	if err := c.removePackage(logE, param.RootDir, findResult.Package.PackageInfo); err != nil {
+		return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
+			"package_name": findResult.Package.Package.Name,
+		}))
+	}
+	return nil
 }
 
 func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
