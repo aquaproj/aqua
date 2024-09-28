@@ -15,6 +15,7 @@ type File struct {
 	Name string `validate:"required" json:"name,omitempty" yaml:",omitempty"`
 	Src  string `json:"src,omitempty" yaml:",omitempty"`
 	Dir  string `json:"dir,omitempty" yaml:",omitempty"`
+	Link string `json:"link,omitempty" yaml:",omitempty"`
 }
 
 func (p *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {
