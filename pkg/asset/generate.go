@@ -308,13 +308,13 @@ func getDefaultFormat(overrides []*registry.Override) string {
 func checkRosetta2(assetInfos []*AssetInfo) bool {
 	darwinAmd64 := GetOSArch(osDarwin, "amd64", assetInfos)
 	darwinArm64 := GetOSArch(osDarwin, "arm64", assetInfos)
-	return darwinAmd64 != nil && darwinArm64 == nil
+	return darwinAmd64 != nil && darwinArm64 == nil && strings.Contains(darwinAmd64.Template, "{{.Arch}}")
 }
 
 func checkWindowsARMEmulation(assetInfos []*AssetInfo) bool {
 	windowsAmd64 := GetOSArch(osWindows, "amd64", assetInfos)
 	windowsArm64 := GetOSArch(osWindows, "arm64", assetInfos)
-	return windowsAmd64 != nil && windowsArm64 == nil
+	return windowsAmd64 != nil && windowsArm64 == nil && strings.Contains(windowsAmd64.Template, "{{.Arch}}")
 }
 
 func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
