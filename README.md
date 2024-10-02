@@ -38,6 +38,7 @@ Declarative CLI Version Manager written in Go.
 - [DeNA Co., Ltd.](https://dena.com/intl/)
 - [CADDi Inc.](https://caddi.com/)
 - [Studist](https://studist.jp/) ([ref](https://studist.tech/entrance-book-4a57bc50aace))
+- [Connehito Inc.](https://connehito.com/) ([ref](https://tech.connehito.com/entry/2024/10/01/184156#%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%A7%E6%89%B1%E3%81%86CLI%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AF-aqua-%E3%81%A7%E7%AE%A1%E7%90%86))
 
 ## License
 
