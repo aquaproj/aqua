@@ -70,12 +70,6 @@ jobs:
       - run: github-compare -v
       - run: terrafmt version
 
-      - name: test Cosign, SLSA, and GitHub Artifact Attestations
-        run: aqua i
-        working-directory: tests/cosign
-        env:
-          GH_DEBUG: "1"
-
       - name: output bash completion
         run: aqua completion bash
       - name: output zsh completion
@@ -178,10 +172,6 @@ jobs:
       - name: Remove not found command
         run: aqua rm wiki-tui
 
-      - name: Test minisign
-        run: aqua i
-        working-directory: tests/minisign
-
       - name: Test rm -m l
         run: aqua rm -m l ghcp
       - name: Test rm -m lp
@@ -228,3 +218,37 @@ jobs:
         run: aqua gr crates.io/skim
         env:
           GITHUB_TOKEN: ${{github.token}}
+
+  integration-test-all-envs:
+    timeout-minutes: 30
+    runs-on: ${{ matrix.env.runs-on }}
+    permissions: {}
+    strategy:
+      matrix:
+        env:
+          - runs-on: windows-latest
+          - runs-on: ubuntu-24.04
+          - runs-on: macos-13
+          - runs-on: macos-14
+    env:
+      AQUA_LOG_COLOR: always
+      AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
+    steps:
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go install ./cmd/aqua
+      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      - run: aqua policy allow
+
+      - name: Test minisign
+        run: aqua i
+        working-directory: tests/minisign
+      - name: test Cosign, SLSA, and GitHub Artifact Attestations
+        run: aqua i
+        working-directory: tests/cosign
+        env:
+          GH_DEBUG: "1"
+          GITHUB_TOKEN: ${{github.token}} # gh attestation verify requires a GitHub access token
