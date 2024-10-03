@@ -221,7 +221,7 @@ jobs:
 
   integration-test-all-envs:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.env.runs-on }}
     permissions: {}
     strategy:
       matrix:
