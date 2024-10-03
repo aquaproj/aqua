@@ -251,3 +251,4 @@ jobs:
         working-directory: tests/cosign
         env:
           GH_DEBUG: "1"
+          GITHUB_TOKEN: ${{github.token}} # gh attestation verify requires a GitHub access token
