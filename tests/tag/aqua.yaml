@@ -9,7 +9,7 @@ registries:
 - type: standard
   ref: v4.228.0 # renovate: depName=aquaproj/aqua-registry
 packages:
-- name: suzuki-shunsuke/tfcmt@v4.13.0
+- name: suzuki-shunsuke/tfcmt@v4.14.0
   tags:
     - test
     - foo
