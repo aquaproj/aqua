@@ -5,25 +5,25 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
 type policyDenyCommand struct {
-	logE    *logrus.Entry
-	ldFlags *LDFlags
+	r *Runner
 }
 
-func (pd *policyDenyCommand) command() *cli.Command {
+func newPolicyDeny(r *Runner) *cli.Command {
+	i := &policyDenyCommand{
+		r: r,
+	}
 	return &cli.Command{
-		Name:  "deny",
-		Usage: "Deny a policy file",
+		Action: i.action,
+		Name:   "deny",
+		Usage:  "Deny a policy file",
 		Description: `Deny a policy file
 e.g.
 $ aqua policy deny [<policy file path>]
 `,
-		Action: pd.action,
-		Flags:  []cli.Flag{},
 	}
 }
 
@@ -41,9 +41,9 @@ func (pd *policyDenyCommand) action(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := setParam(c, pd.logE, "deny-policy", param, pd.ldFlags); err != nil {
+	if err := setParam(c, pd.r.LogE, "deny-policy", param, pd.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeDenyPolicyCommandController(c.Context, param)
-	return ctrl.Deny(pd.logE, param, c.Args().First()) //nolint:wrapcheck
+	return ctrl.Deny(pd.r.LogE, param, c.Args().First()) //nolint:wrapcheck
 }
