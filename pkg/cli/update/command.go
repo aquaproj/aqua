@@ -1,50 +1,16 @@
-package cli
+package update
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
-
-func (r *Runner) newUpdateCommand() *cli.Command {
-	return &cli.Command{
-		Name:        "update",
-		Aliases:     []string{"up"},
-		Usage:       "Update registries and packages",
-		Description: updateDescription,
-		Action:      r.updateAction,
-		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:  "i",
-				Usage: `Select packages with fuzzy finder`,
-			},
-			&cli.BoolFlag{
-				Name:    "select-version",
-				Aliases: []string{"s"},
-				Usage:   `Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it.`,
-			},
-			&cli.BoolFlag{
-				Name:    "only-registry",
-				Aliases: []string{"r"},
-				Usage:   `Update only registries`,
-			},
-			&cli.BoolFlag{
-				Name:    "only-package",
-				Aliases: []string{"p"},
-				Usage:   `Update only packages`,
-			},
-			&cli.IntFlag{
-				Name:    "limit",
-				Aliases: []string{"l"},
-				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   config.DefaultVerCnt,
-			},
-		},
-	}
-}
 
 const updateDescription = `Update registries and packages.
 If no argument is passed, all registries and packages are updated to the latest.
@@ -119,23 +85,67 @@ You can also specify a version.
   $ aqua update gh@v2.30.0
 `
 
-func (r *Runner) updateAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+type command struct {
+	r *util.Param
+}
+
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
+	return &cli.Command{
+		Name:        "update",
+		Aliases:     []string{"up"},
+		Usage:       "Update registries and packages",
+		Description: updateDescription,
+		Action:      i.action,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "i",
+				Usage: `Select packages with fuzzy finder`,
+			},
+			&cli.BoolFlag{
+				Name:    "select-version",
+				Aliases: []string{"s"},
+				Usage:   `Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it.`,
+			},
+			&cli.BoolFlag{
+				Name:    "only-registry",
+				Aliases: []string{"r"},
+				Usage:   `Update only registries`,
+			},
+			&cli.BoolFlag{
+				Name:    "only-package",
+				Aliases: []string{"p"},
+				Usage:   `Update only packages`,
+			},
+			&cli.IntFlag{
+				Name:    "limit",
+				Aliases: []string{"l"},
+				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
+				Value:   config.DefaultVerCnt,
+			},
+		},
+	}
+}
+
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "update", param); err != nil {
+	if err := util.SetParam(c, i.r.LogE, "update", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeUpdateCommandController(c.Context, param, http.DefaultClient, r.Runtime)
-	return ctrl.Update(c.Context, r.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeUpdateCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	return ctrl.Update(c.Context, i.r.LogE, param) //nolint:wrapcheck
 }

@@ -1,19 +1,29 @@
-package cli
+package list
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newListCommand() *cli.Command {
+type command struct {
+	r *util.Param
+}
+
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
 	return &cli.Command{
 		Name:   "list",
 		Usage:  "List packages in Registries",
-		Action: r.listAction,
+		Action: i.action,
 		Description: `Output the list of packages in registries.
 The output format is <registry name>,<package name>
 
@@ -51,23 +61,23 @@ $ aqua list -installed -a
 	}
 }
 
-func (r *Runner) listAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "list", param); err != nil {
+	if err := util.SetParam(c, i.r.LogE, "list", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient, r.Runtime)
-	return ctrl.List(c.Context, r.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	return ctrl.List(c.Context, i.r.LogE, param) //nolint:wrapcheck
 }

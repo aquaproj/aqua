@@ -1,38 +1,18 @@
-package cli
+package remove
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newRemoveCommand() *cli.Command {
-	return &cli.Command{
-		Name:      "remove",
-		Aliases:   []string{"rm"},
-		Usage:     "Uninstall packages",
-		ArgsUsage: `[<registry name>,]<package name> [...]`,
-		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:    "all",
-				Aliases: []string{"a"},
-				Usage:   "uninstall all packages",
-			},
-			&cli.StringFlag{
-				Name:    "mode",
-				Aliases: []string{"m"},
-				EnvVars: []string{"AQUA_REMOVE_MODE"},
-				Usage:   "Removed target modes. l: link, p: package",
-			},
-			&cli.BoolFlag{
-				Name:  "i",
-				Usage: "Select packages with a Fuzzy Finder",
-			},
-		},
-		Description: `Uninstall packages.
+const description = `Uninstall packages.
 
 e.g.
 $ aqua rm --all
@@ -55,19 +35,51 @@ $ aqua rm -m pl cli/cli # Remove links and packages
 
 Limitation:
 "http" and "go_install" packages can't be removed.
-`,
-		Action: r.removeAction,
+`
+
+type command struct {
+	r *util.Param
+}
+
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
+	return &cli.Command{
+		Name:      "remove",
+		Aliases:   []string{"rm"},
+		Usage:     "Uninstall packages",
+		ArgsUsage: `[<registry name>,]<package name> [...]`,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "all",
+				Aliases: []string{"a"},
+				Usage:   "uninstall all packages",
+			},
+			&cli.StringFlag{
+				Name:    "mode",
+				Aliases: []string{"m"},
+				EnvVars: []string{"AQUA_REMOVE_MODE"},
+				Usage:   "Removed target modes. l: link, p: package",
+			},
+			&cli.BoolFlag{
+				Name:  "i",
+				Usage: "Select packages with a Fuzzy Finder",
+			},
+		},
+		Description: description,
+		Action:      i.action,
 	}
 }
 
-func (r *Runner) removeAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
@@ -79,12 +91,12 @@ func (r *Runner) removeAction(c *cli.Context) error {
 	}
 
 	param := &config.Param{}
-	if err := r.setParam(c, "remove", param); err != nil {
+	if err := util.SetParam(c, i.r.LogE, "remove", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl := controller.InitializeRemoveCommandController(c.Context, param, http.DefaultClient, r.Runtime, mode)
-	if err := ctrl.Remove(c.Context, r.LogE, param); err != nil {
+	ctrl := controller.InitializeRemoveCommandController(c.Context, param, http.DefaultClient, i.r.Runtime, mode)
+	if err := ctrl.Remove(c.Context, i.r.LogE, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

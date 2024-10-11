@@ -1,13 +1,94 @@
-package cli
+package generate
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
+
+type command struct {
+	r *util.Param
+}
+
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
+	return &cli.Command{
+		Name:        "generate",
+		Aliases:     []string{"g"},
+		Usage:       "Search packages in registries and output the configuration interactively",
+		ArgsUsage:   `[<registry name>,<package name> ...]`,
+		Description: generateDescription,
+		Action:      i.action,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "f",
+				Usage: `the file path of packages list. When the value is "-", the list is passed from the standard input`,
+			},
+			&cli.BoolFlag{
+				Name:  "i",
+				Usage: `Insert packages to configuration file`,
+			},
+			&cli.BoolFlag{
+				Name:  "pin",
+				Usage: `Pin version`,
+			},
+			&cli.BoolFlag{
+				Name:  "g",
+				Usage: `Insert packages in a global configuration file`,
+			},
+			&cli.BoolFlag{
+				Name:    "detail",
+				Aliases: []string{"d"},
+				Usage:   `Output additional fields such as description and link`,
+				EnvVars: []string{"AQUA_GENERATE_WITH_DETAIL"},
+			},
+			&cli.StringFlag{
+				Name:  "o",
+				Usage: `inserted file`,
+			},
+			&cli.BoolFlag{
+				Name:    "select-version",
+				Aliases: []string{"s"},
+				Usage:   `Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it.`,
+			},
+			&cli.IntFlag{
+				Name:    "limit",
+				Aliases: []string{"l"},
+				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
+				Value:   config.DefaultVerCnt,
+			},
+		},
+	}
+}
+
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
+	if err != nil {
+		return err
+	}
+	defer tracer.Stop()
+
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
+	if err != nil {
+		return err
+	}
+	defer cpuProfiler.Stop()
+
+	param := &config.Param{}
+	if err := util.SetParam(c, i.r.LogE, "generate", param, i.r.LDFlags); err != nil {
+		return fmt.Errorf("parse the command line arguments: %w", err)
+	}
+	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	return ctrl.Generate(c.Context, i.r.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
+}
 
 const generateDescription = `Search packages in registries and output the configuration interactively.
 
@@ -117,74 +198,3 @@ You can add packages to a first global configuration file with -g and -i option.
 
 $ aqua g -g -i cli/cli
 `
-
-func (r *Runner) newGenerateCommand() *cli.Command {
-	return &cli.Command{
-		Name:        "generate",
-		Aliases:     []string{"g"},
-		Usage:       "Search packages in registries and output the configuration interactively",
-		ArgsUsage:   `[<registry name>,<package name> ...]`,
-		Description: generateDescription,
-		Action:      r.generateAction,
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "f",
-				Usage: `the file path of packages list. When the value is "-", the list is passed from the standard input`,
-			},
-			&cli.BoolFlag{
-				Name:  "i",
-				Usage: `Insert packages to configuration file`,
-			},
-			&cli.BoolFlag{
-				Name:  "pin",
-				Usage: `Pin version`,
-			},
-			&cli.BoolFlag{
-				Name:  "g",
-				Usage: `Insert packages in a global configuration file`,
-			},
-			&cli.BoolFlag{
-				Name:    "detail",
-				Aliases: []string{"d"},
-				Usage:   `Output additional fields such as description and link`,
-				EnvVars: []string{"AQUA_GENERATE_WITH_DETAIL"},
-			},
-			&cli.StringFlag{
-				Name:  "o",
-				Usage: `inserted file`,
-			},
-			&cli.BoolFlag{
-				Name:    "select-version",
-				Aliases: []string{"s"},
-				Usage:   `Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it.`,
-			},
-			&cli.IntFlag{
-				Name:    "limit",
-				Aliases: []string{"l"},
-				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   config.DefaultVerCnt,
-			},
-		},
-	}
-}
-
-func (r *Runner) generateAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
-	if err != nil {
-		return err
-	}
-	defer tracer.Stop()
-
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
-	if err != nil {
-		return err
-	}
-	defer cpuProfiler.Stop()
-
-	param := &config.Param{}
-	if err := r.setParam(c, "generate", param); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
-	}
-	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient, r.Runtime)
-	return ctrl.Generate(c.Context, r.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
-}

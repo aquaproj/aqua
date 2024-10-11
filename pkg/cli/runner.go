@@ -10,12 +10,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/completion"
+	"github.com/aquaproj/aqua/v2/pkg/cli/cp"
+	"github.com/aquaproj/aqua/v2/pkg/cli/exec"
+	"github.com/aquaproj/aqua/v2/pkg/cli/generate"
+	"github.com/aquaproj/aqua/v2/pkg/cli/genr"
 	"github.com/aquaproj/aqua/v2/pkg/cli/info"
 	"github.com/aquaproj/aqua/v2/pkg/cli/initcmd"
 	"github.com/aquaproj/aqua/v2/pkg/cli/install"
+	"github.com/aquaproj/aqua/v2/pkg/cli/list"
 	cpolicy "github.com/aquaproj/aqua/v2/pkg/cli/policy"
+	"github.com/aquaproj/aqua/v2/pkg/cli/remove"
+	"github.com/aquaproj/aqua/v2/pkg/cli/root"
+	"github.com/aquaproj/aqua/v2/pkg/cli/upc"
+	"github.com/aquaproj/aqua/v2/pkg/cli/update"
 	"github.com/aquaproj/aqua/v2/pkg/cli/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
+	"github.com/aquaproj/aqua/v2/pkg/cli/version"
+	"github.com/aquaproj/aqua/v2/pkg/cli/which"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/log"
@@ -218,18 +230,18 @@ func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funle
 			cpolicy.New(r.Param),
 			install.New(r.Param),
 			updateaqua.New(r.Param),
-			r.newGenerateCommand(),
-			r.newWhichCommand(),
-			r.newExecCommand(),
-			r.newListCommand(),
-			r.newGenerateRegistryCommand(),
-			r.newCompletionCommand(),
-			r.newVersionCommand(),
-			r.newCpCommand(),
-			r.newRootDirCommand(),
-			r.newUpdateChecksumCommand(),
-			r.newRemoveCommand(),
-			r.newUpdateCommand(),
+			generate.New(r.Param),
+			which.New(r.Param),
+			exec.New(r.Param),
+			list.New(r.Param),
+			genr.New(r.Param),
+			completion.New(r.Param),
+			version.New(r.Param),
+			cp.New(r.Param),
+			root.New(r.Param),
+			upc.New(r.Param),
+			remove.New(r.Param),
+			update.New(r.Param),
 		},
 	}
 

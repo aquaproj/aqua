@@ -1,10 +1,13 @@
-package cli
+package genr
 
 import (
 	"fmt"
 	"net/http"
 	"os"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
@@ -77,14 +80,21 @@ $ aqua gr -cmd age,age-keygen FiloSottile/age
 	  - name: age-keygen
 `
 
-func (r *Runner) newGenerateRegistryCommand() *cli.Command {
+type command struct {
+	r *util.Param
+}
+
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
 	return &cli.Command{
 		Name:        "generate-registry",
 		Aliases:     []string{"gr"},
 		Usage:       "Generate a registry's package configuration",
 		ArgsUsage:   `<package name>`,
 		Description: generateRegistryDescription,
-		Action:      r.generateRegistryAction,
+		Action:      i.action,
 		// TODO support "i" option
 		Flags: []cli.Flag{
 			// 	&cli.StringFlag{
@@ -112,23 +122,23 @@ func (r *Runner) newGenerateRegistryCommand() *cli.Command {
 	}
 }
 
-func (r *Runner) generateRegistryAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "generate-registry", param); err != nil {
+	if err := util.SetParam(c, i.r.LogE, "generate-registry", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient, os.Stdout)
-	return ctrl.GenerateRegistry(c.Context, param, r.LogE, c.Args().Slice()...) //nolint:wrapcheck
+	return ctrl.GenerateRegistry(c.Context, param, i.r.LogE, c.Args().Slice()...) //nolint:wrapcheck
 }

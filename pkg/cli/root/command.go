@@ -1,14 +1,24 @@
-package cli
+package root
 
 import (
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newRootDirCommand() *cli.Command {
+type command struct {
+	r *util.Param
+}
+
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
 	return &cli.Command{
 		Name:  "root-dir",
 		Usage: "Output the aqua root directory (AQUA_ROOT_DIR)",
@@ -20,23 +30,23 @@ $ aqua root-dir
 
 $ export "PATH=$(aqua root-dir)/bin:PATH"
 `,
-		Action: r.rootDirAction,
+		Action: i.action,
 	}
 }
 
-func (r *Runner) rootDirAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
-	fmt.Fprintln(r.Stdout, config.GetRootDir(osenv.New()))
+	fmt.Fprintln(i.r.Stdout, config.GetRootDir(osenv.New()))
 	return nil
 }

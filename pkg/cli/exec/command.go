@@ -1,26 +1,26 @@
-package cli
+package exec
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"path/filepath"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
+	"github.com/aquaproj/aqua/v2/pkg/cli/which"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
-var errCommandIsRequired = errors.New("command is required")
-
-func parseExecArgs(args []string) (string, []string, error) {
-	if len(args) == 0 {
-		return "", nil, errCommandIsRequired
-	}
-	return filepath.Base(args[0]), args[1:], nil
+type command struct {
+	r *util.Param
 }
 
-func (r *Runner) newExecCommand() *cli.Command {
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
 	return &cli.Command{
 		Name:  "exec",
 		Usage: "Execute tool",
@@ -31,35 +31,35 @@ e.g.
 $ aqua exec -- gh version
 gh version 2.4.0 (2021-12-21)
 https://github.com/cli/cli/releases/tag/v2.4.0`,
-		Action:    r.execAction,
+		Action:    i.action,
 		ArgsUsage: `<executed command> [<arg> ...]`,
 	}
 }
 
-func (r *Runner) execAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "exec", param); err != nil {
+	if err := util.SetParam(c, i.r.LogE, "exec", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	ctrl, err := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a ExecController: %w", err)
 	}
-	exeName, args, err := parseExecArgs(c.Args().Slice())
+	exeName, args, err := which.ParseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
-	return ctrl.Exec(c.Context, r.LogE, param, exeName, args...) //nolint:wrapcheck
+	return ctrl.Exec(c.Context, i.r.LogE, param, exeName, args...) //nolint:wrapcheck
 }

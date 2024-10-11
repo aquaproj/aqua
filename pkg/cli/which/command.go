@@ -1,11 +1,15 @@
-package cli
+package which
 
 import (
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/sirupsen/logrus"
@@ -13,7 +17,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newWhichCommand() *cli.Command {
+type command struct {
+	r *util.Param
+}
+
+func New(r *util.Param) *cli.Command {
+	i := &command{
+		r: r,
+	}
 	return &cli.Command{
 		Name:      "which",
 		Usage:     "Output the absolute file path of the given command",
@@ -38,7 +49,7 @@ If you want the package version, "--version" option is useful.
 $ aqua which --version gh
 v2.4.0
 `,
-		Action: r.whichAction,
+		Action: i.action,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "version",
@@ -49,29 +60,29 @@ v2.4.0
 	}
 }
 
-func (r *Runner) whichAction(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+func (i *command) action(c *cli.Context) error {
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "which", param); err != nil {
+	if err := util.SetParam(c, i.r.LogE, "which", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, r.Runtime)
-	exeName, _, err := parseExecArgs(c.Args().Slice())
+	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	exeName, _, err := ParseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err
 	}
-	logE := r.LogE.WithField("exe_name", exeName)
+	logE := i.r.LogE.WithField("exe_name", exeName)
 	which, err := ctrl.Which(c.Context, logE, param, exeName)
 	if err != nil {
 		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
@@ -89,4 +100,13 @@ func (r *Runner) whichAction(c *cli.Context) error {
 	}
 	fmt.Fprintln(os.Stdout, which.Package.Package.Version)
 	return nil
+}
+
+var errCommandIsRequired = errors.New("command is required")
+
+func ParseExecArgs(args []string) (string, []string, error) {
+	if len(args) == 0 {
+		return "", nil, errCommandIsRequired
+	}
+	return filepath.Base(args[0]), args[1:], nil
 }
