@@ -176,6 +176,16 @@ func parseTags(tags []string) map[string]struct{} {
 	return tagsM
 }
 
+type newC func(r *util.Param) *cli.Command
+
+func (r *Runner) commands(newCs ...newC) []*cli.Command {
+	cs := make([]*cli.Command, len(newCs))
+	for i, newC := range newCs {
+		cs[i] = newC(r.Param)
+	}
+	return cs
+}
+
 func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funlen
 	compiledDate, err := time.Parse(time.RFC3339, r.LDFlags.Date)
 	if err != nil {
@@ -224,25 +234,25 @@ func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funle
 			},
 		},
 		EnableBashCompletion: true,
-		Commands: []*cli.Command{
-			info.New(r.Param),
-			initcmd.New(r.Param),
-			cpolicy.New(r.Param),
-			install.New(r.Param),
-			updateaqua.New(r.Param),
-			generate.New(r.Param),
-			which.New(r.Param),
-			exec.New(r.Param),
-			list.New(r.Param),
-			genr.New(r.Param),
-			completion.New(r.Param),
-			version.New(r.Param),
-			cp.New(r.Param),
-			root.New(r.Param),
-			upc.New(r.Param),
-			remove.New(r.Param),
-			update.New(r.Param),
-		},
+		Commands: r.commands(
+			info.New,
+			initcmd.New,
+			cpolicy.New,
+			install.New,
+			updateaqua.New,
+			generate.New,
+			which.New,
+			exec.New,
+			list.New,
+			genr.New,
+			completion.New,
+			version.New,
+			cp.New,
+			root.New,
+			upc.New,
+			remove.New,
+			update.New,
+		),
 	}
 
 	return app.RunContext(ctx, args) //nolint:wrapcheck
