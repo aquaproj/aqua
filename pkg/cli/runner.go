@@ -10,7 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/info"
+	"github.com/aquaproj/aqua/v2/pkg/cli/initcmd"
 	"github.com/aquaproj/aqua/v2/pkg/cli/install"
+	cpolicy "github.com/aquaproj/aqua/v2/pkg/cli/policy"
+	"github.com/aquaproj/aqua/v2/pkg/cli/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
@@ -209,12 +213,11 @@ func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funle
 		},
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
-			newInfo(r.Param),
-			newInit(r.Param),
-			newInitPolicy(r),
-			newPolicy(r),
+			info.New(r.Param),
+			initcmd.New(r.Param),
+			cpolicy.New(r.Param),
 			install.New(r.Param),
-			newUpdateAqua(r.Param),
+			updateaqua.New(r.Param),
 			r.newGenerateCommand(),
 			r.newWhichCommand(),
 			r.newExecCommand(),

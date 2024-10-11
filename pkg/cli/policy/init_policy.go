@@ -1,15 +1,16 @@
-package cli
+package policy
 
 import (
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/urfave/cli/v2"
 )
 
 type initPolicyCommand struct {
-	r *Runner
+	r *util.Param
 }
 
-func newInitPolicy(r *Runner) *cli.Command {
-	cmd := newPolicyInit(r.Param)
+func newInitPolicy(r *util.Param) *cli.Command {
+	cmd := newPolicyInit(r)
 	return &cli.Command{
 		Name:      "init-policy",
 		Usage:     "[Deprecated] Create a policy file if it doesn't exist",

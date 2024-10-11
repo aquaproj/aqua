@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
-	"github.com/aquaproj/aqua/v2/pkg/cli/trace"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
@@ -75,7 +75,7 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 }
 
 func (i *command) action(c *cli.Context) error {
-	tracer, err := trace.Start(c.String("trace"))
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}

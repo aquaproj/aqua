@@ -1,8 +1,10 @@
-package cli
+package info
 
 import (
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
@@ -13,7 +15,7 @@ type infoCommand struct {
 	r *util.Param
 }
 
-func newInfo(r *util.Param) *cli.Command {
+func New(r *util.Param) *cli.Command {
 	i := &infoCommand{
 		r: r,
 	}
@@ -29,20 +31,20 @@ $ aqua info`,
 }
 
 func (i *infoCommand) action(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := setParam(c, i.r.LogE, "info", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(c, i.r.LogE, "info", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInfoCommandController(c.Context, param, i.r.Runtime)

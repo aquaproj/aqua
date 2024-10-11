@@ -1,21 +1,22 @@
-package cli
+package policy
 
 import (
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/urfave/cli/v2"
 )
 
 type policyCommand struct {
-	r *Runner
+	r *util.Param
 }
 
-func newPolicy(r *Runner) *cli.Command {
+func New(r *util.Param) *cli.Command {
 	return &cli.Command{
 		Name:  "policy",
 		Usage: "Manage Policy",
 		Subcommands: []*cli.Command{
-			newPolicyAllow(r.Param),
-			newPolicyDeny(r.Param),
-			newPolicyInit(r.Param),
+			newPolicyAllow(r),
+			newPolicyDeny(r),
+			newPolicyInit(r),
 		},
 	}
 }

@@ -1,9 +1,11 @@
-package cli
+package updateaqua
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
@@ -14,7 +16,7 @@ type updateAquaCommand struct {
 	r *util.Param
 }
 
-func newUpdateAqua(r *util.Param) *cli.Command {
+func New(r *util.Param) *cli.Command {
 	i := &updateAquaCommand{
 		r: r,
 	}
@@ -41,20 +43,20 @@ $ aqua update-aqua v1.20.0 # Install v1.20.0
 }
 
 func (ua *updateAquaCommand) action(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+	tracer, err := tracer.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := setParam(c, ua.r.LogE, "update-aqua", param, ua.r.LDFlags); err != nil {
+	if err := util.SetParam(c, ua.r.LogE, "update-aqua", param, ua.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl, err := controller.InitializeUpdateAquaCommandController(c.Context, param, http.DefaultClient, ua.r.Runtime)
