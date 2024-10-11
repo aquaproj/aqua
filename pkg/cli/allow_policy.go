@@ -3,16 +3,17 @@ package cli //nolint:dupl
 import (
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
 type policyAllowCommand struct {
-	r *Runner
+	r *util.Param
 }
 
-func newPolicyAllow(r *Runner) *cli.Command {
+func newPolicyAllow(r *util.Param) *cli.Command {
 	i := &policyAllowCommand{
 		r: r,
 	}

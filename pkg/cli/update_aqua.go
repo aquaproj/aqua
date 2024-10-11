@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
 type updateAquaCommand struct {
-	r *Runner
+	r *util.Param
 }
 
-func newUpdateAqua(r *Runner) *cli.Command {
+func newUpdateAqua(r *util.Param) *cli.Command {
 	i := &updateAquaCommand{
 		r: r,
 	}

@@ -13,9 +13,9 @@ func newPolicy(r *Runner) *cli.Command {
 		Name:  "policy",
 		Usage: "Manage Policy",
 		Subcommands: []*cli.Command{
-			newPolicyAllow(r),
-			newPolicyDeny(r),
-			newPolicyInit(r),
+			newPolicyAllow(r.Param),
+			newPolicyDeny(r.Param),
+			newPolicyInit(r.Param),
 		},
 	}
 }

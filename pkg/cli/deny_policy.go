@@ -3,16 +3,17 @@ package cli //nolint:dupl
 import (
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
 type policyDenyCommand struct {
-	r *Runner
+	r *util.Param
 }
 
-func newPolicyDeny(r *Runner) *cli.Command {
+func newPolicyDeny(r *util.Param) *cli.Command {
 	i := &policyDenyCommand{
 		r: r,
 	}

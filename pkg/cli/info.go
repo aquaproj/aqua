@@ -3,16 +3,17 @@ package cli
 import (
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
 type infoCommand struct {
-	r *Runner
+	r *util.Param
 }
 
-func newInfo(r *Runner) *cli.Command {
+func newInfo(r *util.Param) *cli.Command {
 	i := &infoCommand{
 		r: r,
 	}

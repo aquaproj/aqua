@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli"
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/log"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -40,16 +41,18 @@ func main() {
 
 func core(logE *logrus.Entry, rt *runtime.Runtime) error {
 	runner := cli.Runner{
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		LDFlags: &cli.LDFlags{
-			Version: version,
-			Commit:  commit,
-			Date:    date,
+		Param: &util.Param{
+			Stdin:  os.Stdin,
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+			LDFlags: &util.LDFlags{
+				Version: version,
+				Commit:  commit,
+				Date:    date,
+			},
+			LogE:    logE,
+			Runtime: rt,
 		},
-		LogE:    logE,
-		Runtime: rt,
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

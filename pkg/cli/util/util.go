@@ -1,17 +1,13 @@
-package cli
+package util
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/aquaproj/aqua/v2/pkg/cli/install"
-	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/log"
@@ -22,8 +18,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type Runner struct {
-	Param   *util.Param
+type Param struct {
 	Stdin   io.Reader
 	Stdout  io.Writer
 	Stderr  io.Writer
@@ -38,7 +33,7 @@ type LDFlags struct {
 	Date    string
 }
 
-func setParam(c *cli.Context, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *util.LDFlags) error { //nolint:funlen,cyclop
+func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *LDFlags) error { //nolint:funlen,cyclop
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -144,10 +139,6 @@ func setParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 	return nil
 }
 
-func (r *Runner) setParam(c *cli.Context, commandName string, param *config.Param) error {
-	return setParam(c, r.Param.LogE, commandName, param, r.Param.LDFlags)
-}
-
 func parseTags(tags []string) map[string]struct{} {
 	tagsM := map[string]struct{}{}
 	for _, tag := range tags {
@@ -158,84 +149,4 @@ func parseTags(tags []string) map[string]struct{} {
 		tagsM[tag] = struct{}{}
 	}
 	return tagsM
-}
-
-func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funlen
-	compiledDate, err := time.Parse(time.RFC3339, r.LDFlags.Date)
-	if err != nil {
-		compiledDate = time.Now()
-	}
-	app := cli.App{
-		Name:           "aqua",
-		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
-		Version:        r.LDFlags.Version + " (" + r.LDFlags.Commit + ")",
-		Compiled:       compiledDate,
-		ExitErrHandler: exitErrHandlerFunc,
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "log-level",
-				Usage:   "log level",
-				EnvVars: []string{"AQUA_LOG_LEVEL"},
-			},
-			&cli.StringFlag{
-				Name:    "config",
-				Aliases: []string{"c"},
-				Usage:   "configuration file path",
-				EnvVars: []string{"AQUA_CONFIG"},
-			},
-			&cli.BoolFlag{
-				Name:    "disable-cosign",
-				Usage:   "Disable Cosign verification",
-				EnvVars: []string{"AQUA_DISABLE_COSIGN"},
-			},
-			&cli.BoolFlag{
-				Name:    "disable-slsa",
-				Usage:   "Disable SLSA verification",
-				EnvVars: []string{"AQUA_DISABLE_SLSA"},
-			},
-			&cli.BoolFlag{
-				Name:    "disable-github-artifact-attestation",
-				Usage:   "Disable GitHub Artifact Attestations verification",
-				EnvVars: []string{"AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION"},
-			},
-			&cli.StringFlag{
-				Name:  "trace",
-				Usage: "trace output file path",
-			},
-			&cli.StringFlag{
-				Name:  "cpu-profile",
-				Usage: "cpu profile output file path",
-			},
-		},
-		EnableBashCompletion: true,
-		Commands: []*cli.Command{
-			newInfo(r.Param),
-			newInit(r.Param),
-			newInitPolicy(r),
-			newPolicy(r),
-			install.New(r.Param),
-			newUpdateAqua(r.Param),
-			r.newGenerateCommand(),
-			r.newWhichCommand(),
-			r.newExecCommand(),
-			r.newListCommand(),
-			r.newGenerateRegistryCommand(),
-			r.newCompletionCommand(),
-			r.newVersionCommand(),
-			r.newCpCommand(),
-			r.newRootDirCommand(),
-			r.newUpdateChecksumCommand(),
-			r.newRemoveCommand(),
-			r.newUpdateCommand(),
-		},
-	}
-
-	return app.RunContext(ctx, args) //nolint:wrapcheck
-}
-
-func exitErrHandlerFunc(c *cli.Context, err error) {
-	if c.Command.Name != "exec" {
-		cli.HandleExitCoder(err)
-		return
-	}
 }

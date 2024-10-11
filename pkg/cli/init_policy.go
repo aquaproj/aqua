@@ -9,7 +9,7 @@ type initPolicyCommand struct {
 }
 
 func newInitPolicy(r *Runner) *cli.Command {
-	cmd := newPolicyInit(r)
+	cmd := newPolicyInit(r.Param)
 	return &cli.Command{
 		Name:      "init-policy",
 		Usage:     "[Deprecated] Create a policy file if it doesn't exist",

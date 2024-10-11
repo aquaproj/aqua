@@ -1,21 +1,23 @@
-package cli
+package install
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
+	"github.com/aquaproj/aqua/v2/pkg/cli/trace"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
-type installCommand struct {
+type command struct {
 	r *util.Param
 }
 
-func newInstall(r *util.Param) *cli.Command {
-	i := &installCommand{
+func New(r *util.Param) *cli.Command {
+	i := &command{
 		r: r,
 	}
 	return &cli.Command{
@@ -72,14 +74,14 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 	}
 }
 
-func (i *installCommand) action(c *cli.Context) error {
-	tracer, err := startTrace(c.String("trace"))
+func (i *command) action(c *cli.Context) error {
+	tracer, err := trace.Start(c.String("trace"))
 	if err != nil {
 		return err
 	}
 	defer tracer.Stop()
 
-	cpuProfiler, err := startCPUProfile(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
 	if err != nil {
 		return err
 	}
