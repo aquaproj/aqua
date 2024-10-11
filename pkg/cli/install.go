@@ -9,7 +9,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newInstallCommand() *cli.Command {
+type installCommand struct {
+	r *Runner
+}
+
+func newInstall(r *Runner) *cli.Command {
+	i := &installCommand{
+		r: r,
+	}
 	return &cli.Command{
 		Name:    "install",
 		Aliases: []string{"i"},
@@ -35,7 +42,7 @@ e.g.
 $ aqua i -t foo # Install only packages having a tag "foo"
 $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 `,
-		Action: r.installAction,
+		Action: i.action,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "only-link",
@@ -64,7 +71,7 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 	}
 }
 
-func (r *Runner) installAction(c *cli.Context) error {
+func (i *installCommand) action(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -78,12 +85,12 @@ func (r *Runner) installAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "install", param); err != nil {
+	if err := setParam(c, i.r.LogE, "install", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, r.Runtime)
+	ctrl, err := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a InstallController: %w", err)
 	}
-	return ctrl.Install(c.Context, r.LogE, param) //nolint:wrapcheck
+	return ctrl.Install(c.Context, i.r.LogE, param) //nolint:wrapcheck
 }

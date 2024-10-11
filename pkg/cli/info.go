@@ -8,18 +8,26 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newInfoCommand() *cli.Command {
+type infoCommand struct {
+	r *Runner
+}
+
+func newInfo(r *Runner) *cli.Command {
+	i := &infoCommand{
+		r: r,
+	}
 	return &cli.Command{
 		Name:  "info",
 		Usage: "Show information",
 		Description: `Show information.
 e.g.
 $ aqua info`,
-		Action: r.info,
+		Action: i.action,
+		Flags:  []cli.Flag{},
 	}
 }
 
-func (r *Runner) info(c *cli.Context) error {
+func (i *infoCommand) action(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -33,9 +41,9 @@ func (r *Runner) info(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "info", param); err != nil {
+	if err := setParam(c, i.r.LogE, "info", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInfoCommandController(c.Context, param, r.Runtime)
-	return ctrl.Info(c.Context, r.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeInfoCommandController(c.Context, param, i.r.Runtime)
+	return ctrl.Info(c.Context, i.r.LogE, param) //nolint:wrapcheck
 }

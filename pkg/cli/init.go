@@ -8,7 +8,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (r *Runner) newInitCommand() *cli.Command {
+type initCommand struct {
+	r *Runner
+}
+
+func newInit(r *Runner) *cli.Command {
+	ic := &initCommand{
+		r: r,
+	}
 	return &cli.Command{
 		Name:      "init",
 		Usage:     "Create a configuration file if it doesn't exist",
@@ -17,11 +24,12 @@ func (r *Runner) newInitCommand() *cli.Command {
 e.g.
 $ aqua init # create "aqua.yaml"
 $ aqua init foo.yaml # create foo.yaml`,
-		Action: r.initAction,
+		Action: ic.action,
+		Flags:  []cli.Flag{},
 	}
 }
 
-func (r *Runner) initAction(c *cli.Context) error {
+func (ic *initCommand) action(c *cli.Context) error {
 	tracer, err := startTrace(c.String("trace"))
 	if err != nil {
 		return err
@@ -35,9 +43,9 @@ func (r *Runner) initAction(c *cli.Context) error {
 	defer cpuProfiler.Stop()
 
 	param := &config.Param{}
-	if err := r.setParam(c, "init", param); err != nil {
+	if err := setParam(c, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(c.Context, param)
-	return ctrl.Init(c.Context, r.LogE, c.Args().First()) //nolint:wrapcheck
+	return ctrl.Init(c.Context, ic.r.LogE, c.Args().First()) //nolint:wrapcheck
 }
