@@ -206,6 +206,16 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v1.0.0/ghalint_1.0.0_windows_amd64.zip",
+      "checksum": "F91596B58827BBBBAA6EFD8B5220D2C49547D60E30E7CF797E02A9107A39FF11",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/ghalint/v1.0.0/ghalint_1.0.0_windows_arm64.zip",
+      "checksum": "77FB1B80BFEFECB2C43098C9BD76BB335435A56E362961E3BD6ED5E18FA471E6",
+      "algorithm": "sha256"
+    },
+    {
       "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.232.0/registry.yaml",
       "checksum": "79CBAB5160608CDA8AA379938588325259E448E1DF71A60C52463F15C7346A561D2A0AE99449F386879502AD6513CCDBC02E5DF1D5E38B6275354C2AFDD48F75",
       "algorithm": "sha512"
