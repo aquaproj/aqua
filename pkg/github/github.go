@@ -33,9 +33,10 @@ type Option struct {
 }
 
 func New(ctx context.Context, opt *Option) *GitHub {
-	if opt == nil || !opt.Keyring {
+	token := getGitHubToken()
+	if opt == nil || !opt.Keyring || token != "" {
 		return &GitHub{
-			repo:  github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories,
+			repo:  github.NewClient(getHTTPClientForGitHub(ctx, token)).Repositories,
 			mutex: &sync.RWMutex{},
 		}
 	}
