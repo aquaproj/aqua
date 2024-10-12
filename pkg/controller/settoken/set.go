@@ -34,7 +34,9 @@ func (c *Controller) get(logE *logrus.Entry, param *config.Param) ([]byte, error
 		return s, nil
 	}
 	fmt.Fprint(c.stdout, "Enter a GitHub acccess token for aqua: ")
-	text, err := term.ReadPassword(int(syscall.Stdin))
+	// The conversion is necessary for Windows
+	// https://pkg.go.dev/syscall?GOOS=windows#pkg-variables
+	text, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert
 	fmt.Fprintln(c.stdout, "")
 	if err != nil {
 		return nil, fmt.Errorf("read a GitHub access Token from stdin: %w", err)
