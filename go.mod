@@ -30,6 +30,7 @@ require (
 	github.com/zalando/go-keyring v0.2.5
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sys v0.26.0
+	golang.org/x/term v0.23.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -80,7 +81,6 @@ require (
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
