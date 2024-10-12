@@ -34,7 +34,7 @@ func (c *Controller) get(logE *logrus.Entry, param *config.Param) ([]byte, error
 		return s, nil
 	}
 	fmt.Fprint(c.stdout, "Enter a GitHub acccess token for aqua: ")
-	text, err := term.ReadPassword(syscall.Stdin)
+	text, err := term.ReadPassword(int(syscall.Stdin))
 	fmt.Fprintln(c.stdout, "")
 	if err != nil {
 		return nil, fmt.Errorf("read a GitHub access Token from stdin: %w", err)
