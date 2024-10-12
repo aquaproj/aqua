@@ -42,7 +42,7 @@ func main() {
 func core(logE *logrus.Entry, rt *runtime.Runtime) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return cli.Run(ctx, &util.Param{
+	return cli.Run(ctx, &util.Param{ //nolint:wrapcheck
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
@@ -53,5 +53,5 @@ func core(logE *logrus.Entry, rt *runtime.Runtime) error {
 		},
 		LogE:    logE,
 		Runtime: rt,
-	}, os.Args...) //nolint:wrapcheck
+	}, os.Args...)
 }
