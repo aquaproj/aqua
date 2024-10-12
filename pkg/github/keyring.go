@@ -19,7 +19,7 @@ func getTokenFromKeyring() (string, error) {
 	return s, nil
 }
 
-func setTokenInKeyring(token string) error {
+func SetTokenInKeyring(token string) error {
 	if err := keyring.Set(keyService, keyName, token); err != nil {
 		return fmt.Errorf("set a GitHub Access token in keyring: %w", err)
 	}

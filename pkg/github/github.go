@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 
 	"github.com/google/go-github/v66/github"
 	"github.com/sirupsen/logrus"
@@ -34,10 +35,13 @@ type Option struct {
 func New(ctx context.Context, opt *Option) *GitHub {
 	if opt == nil || !opt.Keyring {
 		return &GitHub{
-			repo: github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories,
+			repo:  github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories,
+			mutex: &sync.RWMutex{},
 		}
 	}
-	return &GitHub{}
+	return &GitHub{
+		mutex: &sync.RWMutex{},
+	}
 }
 
 type RepositoriesService interface {
@@ -69,10 +73,13 @@ func getHTTPClientForGitHub(ctx context.Context, token string) *http.Client {
 }
 
 type GitHub struct {
-	repo RepositoriesService
+	repo  RepositoriesService
+	mutex *sync.RWMutex
 }
 
 func (g *GitHub) init(ctx context.Context, logE *logrus.Entry) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	if g.repo != nil {
 		return
 	}
@@ -81,6 +88,7 @@ func (g *GitHub) init(ctx context.Context, logE *logrus.Entry) {
 		logE.WithError(err).Warn("get a GitHub Access token from keyring")
 		g.repo = github.NewClient(http.DefaultClient).Repositories
 	}
+	logE.Debug("got a GitHub Access token from keyring")
 	g.repo = github.NewClient(getHTTPClientForGitHub(ctx, token)).Repositories
 }
 
