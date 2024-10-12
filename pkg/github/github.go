@@ -2,12 +2,15 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/google/go-github/v66/github"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -26,8 +29,13 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context) *RepositoriesServiceImpl {
-	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
+func New(ctx context.Context, logE *logrus.Entry) *RepositoriesServiceImpl {
+	token, err := getGitHubToken()
+	if err != nil {
+		logE.WithError(err).Warn("get a GitHub Access token")
+		token = ""
+	}
+	return github.NewClient(getHTTPClientForGitHub(ctx, token)).Repositories
 }
 
 type RepositoriesService interface {
@@ -37,11 +45,24 @@ type RepositoriesService interface {
 	DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
 }
 
-func getGitHubToken() string {
-	if token := os.Getenv("AQUA_GITHUB_TOKEN"); token != "" {
-		return token
+func getGitHubToken() (string, error) {
+	for _, key := range []string{"AQUA_GITHUB_TOKEN", "GITHUB_TOKEN"} {
+		if token := os.Getenv(key); token != "" {
+			return token, nil
+		}
 	}
-	return os.Getenv("GITHUB_TOKEN")
+	k := os.Getenv("AQUA_KEYRING")
+	if k == "" {
+		return "", nil
+	}
+	a, err := strconv.ParseBool(k)
+	if err != nil {
+		return "", fmt.Errorf("parse AQUA_KEYRING as bool: %w", err)
+	}
+	if !a {
+		return "", nil
+	}
+	return getTokenFromKeyring()
 }
 
 func getHTTPClientForGitHub(ctx context.Context, token string) *http.Client {
