@@ -8,9 +8,6 @@ package controller
 
 import (
 	"context"
-	"io"
-	"net/http"
-
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -19,7 +16,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/allowpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
 	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
-	exec2 "github.com/aquaproj/aqua/v2/pkg/controller/exec"
+	"github.com/aquaproj/aqua/v2/pkg/controller/exec"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
@@ -50,6 +47,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"io"
+	"net/http"
 )
 
 // Injectors from wire.go:
@@ -175,7 +174,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return controller
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*exec2.Controller, error) {
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*exec.Controller, error) {
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
@@ -212,7 +211,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	configFinderImpl := policy.NewConfigFinder(fs)
 	configReaderImpl := policy.NewConfigReader(fs)
 	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	execController := exec2.New(installer, controller, executor, osEnv, fs, policyReader)
+	execController := exec.New(installer, controller, executor, osEnv, fs, policyReader)
 	return execController, nil
 }
 
