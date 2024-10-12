@@ -52,7 +52,7 @@ func (i *command) action(c *cli.Context) error {
 	}
 	exeName, args, err := which.ParseExecArgs(c.Args().Slice())
 	if err != nil {
-		return err
+		return fmt.Errorf("parse args: %w", err)
 	}
 	return ctrl.Exec(c.Context, i.r.LogE, param, exeName, args...) //nolint:wrapcheck
 }
