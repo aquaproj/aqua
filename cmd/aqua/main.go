@@ -40,21 +40,18 @@ func main() {
 }
 
 func core(logE *logrus.Entry, rt *runtime.Runtime) error {
-	runner := cli.Runner{
-		Param: &util.Param{
-			Stdin:  os.Stdin,
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-			LDFlags: &util.LDFlags{
-				Version: version,
-				Commit:  commit,
-				Date:    date,
-			},
-			LogE:    logE,
-			Runtime: rt,
-		},
-	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return runner.Run(ctx, os.Args...) //nolint:wrapcheck
+	return cli.Run(ctx, &util.Param{
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		LDFlags: &util.LDFlags{
+			Version: version,
+			Commit:  commit,
+			Date:    date,
+		},
+		LogE:    logE,
+		Runtime: rt,
+	}, os.Args...) //nolint:wrapcheck
 }

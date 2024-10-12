@@ -25,29 +25,27 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type Runner struct {
-	Param *util.Param
-}
+type Runner struct{}
 
 type newC func(r *util.Param) *cli.Command
 
-func (r *Runner) commands(newCs ...newC) []*cli.Command {
+func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	cs := make([]*cli.Command, len(newCs))
 	for i, newC := range newCs {
-		cs[i] = newC(r.Param)
+		cs[i] = newC(param)
 	}
 	return cs
 }
 
-func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funlen
-	compiledDate, err := time.Parse(time.RFC3339, r.Param.LDFlags.Date)
+func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
+	compiledDate, err := time.Parse(time.RFC3339, param.LDFlags.Date)
 	if err != nil {
 		compiledDate = time.Now()
 	}
 	app := cli.App{
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
-		Version:        r.Param.LDFlags.Version + " (" + r.Param.LDFlags.Commit + ")",
+		Version:        param.LDFlags.Version + " (" + param.LDFlags.Commit + ")",
 		Compiled:       compiledDate,
 		ExitErrHandler: exitErrHandlerFunc,
 		Flags: []cli.Flag{
@@ -87,7 +85,8 @@ func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funle
 			},
 		},
 		EnableBashCompletion: true,
-		Commands: r.commands(
+		Commands: commands(
+			param,
 			info.New,
 			initcmd.New,
 			cpolicy.New,
