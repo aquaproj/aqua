@@ -54,14 +54,8 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 	}
 	param.All = c.Bool("all")
 	param.Stdin = c.Bool("stdin")
-	if a := os.Getenv("AQUA_ENABLE_KEYRING"); a != "" {
-		b, err := strconv.ParseBool(a)
-		if err != nil {
-			return fmt.Errorf("parse the environment variable AQUA_ENABLE_KEYRING as bool: %w", err)
-		}
-		param.GitHub = &github.Option{
-			Keyring: b,
-		}
+	if err := setEnableKeyring(param); err != nil {
+		return err
 	}
 	param.Global = c.Bool("g")
 	param.Detail = c.Bool("detail")
@@ -160,4 +154,17 @@ func parseTags(tags []string) map[string]struct{} {
 		tagsM[tag] = struct{}{}
 	}
 	return tagsM
+}
+
+func setEnableKeyring(param *config.Param) error {
+	if a := os.Getenv("AQUA_ENABLE_KEYRING"); a != "" {
+		b, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_ENABLE_KEYRING as bool: %w", err)
+		}
+		param.GitHub = &github.Option{
+			Keyring: b,
+		}
+	}
+	return nil
 }
