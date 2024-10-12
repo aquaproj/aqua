@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/log"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -52,6 +53,9 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 		param.Insert = c.Bool("i")
 	}
 	param.All = c.Bool("all")
+	param.GitHub = &github.Option{
+		Keyring: c.Bool("keyring"),
+	}
 	param.Global = c.Bool("g")
 	param.Detail = c.Bool("detail")
 	param.Prune = c.Bool("prune")

@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
@@ -291,8 +292,10 @@ type Param struct {
 	GitHubArtifactAttestationDisabled bool
 	SLSADisabled                      bool
 	Installed                         bool
+	Keyring                           bool
 	PolicyConfigFilePaths             []string
 	Commands                          []string
+	GitHub                            *github.Option
 }
 
 func appendExt(s, format string) string {

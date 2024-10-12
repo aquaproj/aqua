@@ -52,7 +52,7 @@ import (
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *list.Controller {
+func InitializeListCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) *list.Controller {
 	wire.Build(
 		list.NewController,
 		wire.NewSet(
@@ -61,8 +61,8 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -105,12 +105,12 @@ func InitializeListCommandController(ctx context.Context, param *config.Param, h
 	return &list.Controller{}
 }
 
-func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, stdout io.Writer, opt *github.Option) *genrgst.Controller {
 	wire.Build(
 		genrgst.NewController,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(genrgst.RepositoriesService), new(*github.GitHub)),
 		),
 		afero.NewOsFs,
 		wire.NewSet(
@@ -125,12 +125,12 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, param *con
 	return &genrgst.Controller{}
 }
 
-func InitializeInitCommandController(ctx context.Context, param *config.Param) *initcmd.Controller {
+func InitializeInitCommandController(ctx context.Context, param *config.Param, opt *github.Option) *initcmd.Controller {
 	wire.Build(
 		initcmd.New,
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(initcmd.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(initcmd.RepositoriesService), new(*github.GitHub)),
 		),
 		afero.NewOsFs,
 	)
@@ -145,7 +145,7 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 	return &initpolicy.Controller{}
 }
 
-func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *generate.Controller {
+func InitializeGenerateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) *generate.Controller {
 	wire.Build(
 		generate.New,
 		wire.NewSet(
@@ -154,11 +154,11 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(generate.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(generate.RepositoriesService), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.GitHub)),
+			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -222,7 +222,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	return &generate.Controller{}
 }
 
-func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
+func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) (*install.Controller, error) {
 	wire.Build(
 		install.New,
 		wire.NewSet(
@@ -231,8 +231,8 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -346,7 +346,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	return &install.Controller{}, nil
 }
 
-func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
+func InitializeWhichCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) *which.Controller {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -355,8 +355,8 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -405,9 +405,9 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cosexec.Controller, error) {
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) (*cexec.Controller, error) {
 	wire.Build(
-		cosexec.New,
+		cexec.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
 			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
@@ -418,12 +418,12 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(cosexec.Installer), new(*installpackage.Installer)),
+			wire.Bind(new(cexec.Installer), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -439,12 +439,12 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(cosexec.WhichController), new(*which.Controller)),
+			wire.Bind(new(cexec.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			osexec.New,
 			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
-			wire.Bind(new(cosexec.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cexec.Executor), new(*osexec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
@@ -488,7 +488,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewReader,
-			wire.Bind(new(cosexec.PolicyReader), new(*policy.Reader)),
+			wire.Bind(new(cexec.PolicyReader), new(*policy.Reader)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -533,10 +533,10 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
-	return &cosexec.Controller{}, nil
+	return &cexec.Controller{}, nil
 }
 
-func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
+func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) (*updateaqua.Controller, error) {
 	wire.Build(
 		updateaqua.New,
 		wire.NewSet(
@@ -545,8 +545,8 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(updateaqua.RepositoriesService), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			installpackage.New,
@@ -628,7 +628,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	return &updateaqua.Controller{}, nil
 }
 
-func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
+func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) (*cp.Controller, error) {
 	wire.Build(
 		cp.New,
 		wire.NewSet(
@@ -651,8 +651,8 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -675,7 +675,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			osexec.New,
 			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
-			wire.Bind(new(cosexec.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cexec.Executor), new(*osexec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
@@ -768,7 +768,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	return &cp.Controller{}, nil
 }
 
-func InitializeUpdateChecksumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
+func InitializeUpdateChecksumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) *updatechecksum.Controller {
 	wire.Build(
 		updatechecksum.New,
 		wire.NewSet(
@@ -789,8 +789,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -827,7 +827,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, param *confi
 	return &updatechecksum.Controller{}
 }
 
-func InitializeUpdateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
+func InitializeUpdateCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, opt *github.Option) *update.Controller {
 	wire.Build(
 		update.New,
 		wire.NewSet(
@@ -847,11 +847,11 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(update.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(update.RepositoriesService), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.GitHub)),
+			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -960,7 +960,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return &info.Controller{}
 }
 
-func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) *remove.Controller {
+func InitializeRemoveCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode, opt *github.Option) *remove.Controller {
 	wire.Build(
 		remove.New,
 		wire.NewSet(
@@ -985,8 +985,8 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 		wire.NewSet(
 			github.New,
-			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHub), new(*github.GitHub)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.GitHub)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,

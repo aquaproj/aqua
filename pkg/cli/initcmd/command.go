@@ -42,6 +42,6 @@ func (ic *initCommand) action(c *cli.Context) error {
 	if err := util.SetParam(c, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInitCommandController(c.Context, param)
+	ctrl := controller.InitializeInitCommandController(c.Context, param, param.GitHub)
 	return ctrl.Init(c.Context, ic.r.LogE, c.Args().First()) //nolint:wrapcheck
 }

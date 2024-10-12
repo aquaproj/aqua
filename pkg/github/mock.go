@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v66/github"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -31,14 +32,14 @@ type MockRepositoriesService struct {
 	URL      *url.URL
 }
 
-func (m *MockRepositoriesService) GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
+func (m *MockRepositoriesService) GetLatestRelease(ctx context.Context, logE *logrus.Entry, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
 	if len(m.Releases) == 0 {
 		return nil, nil, errReleaseNotFound
 	}
 	return m.Releases[0], nil, nil
 }
 
-func (m *MockRepositoriesService) DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error) {
+func (m *MockRepositoriesService) DownloadContents(ctx context.Context, logE *logrus.Entry, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error) {
 	if m.Content == "" {
 		return nil, nil, errContentNotFound
 	}
@@ -49,49 +50,49 @@ func (m *MockRepositoriesService) DownloadContents(ctx context.Context, owner, r
 	}, nil
 }
 
-func (m *MockRepositoriesService) GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error) {
+func (m *MockRepositoriesService) GetReleaseByTag(ctx context.Context, logE *logrus.Entry, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error) {
 	if len(m.Releases) == 0 {
 		return nil, nil, errReleaseNotFound
 	}
 	return m.Releases[0], nil, nil
 }
 
-func (m *MockRepositoriesService) DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error) {
+func (m *MockRepositoriesService) DownloadReleaseAsset(ctx context.Context, logE *logrus.Entry, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error) {
 	if m.Asset == "" {
 		return nil, "", errAssetNotFound
 	}
 	return io.NopCloser(strings.NewReader(m.Asset)), "", nil
 }
 
-func (m *MockRepositoriesService) ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
+func (m *MockRepositoriesService) ListReleases(ctx context.Context, logE *logrus.Entry, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
 	if m.Releases == nil {
 		return nil, nil, errReleaseNotFound
 	}
 	return m.Releases, &github.Response{}, nil
 }
 
-func (m *MockRepositoriesService) ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
+func (m *MockRepositoriesService) ListTags(ctx context.Context, logE *logrus.Entry, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
 	if m.Tags == nil {
 		return nil, nil, errTagNotFound
 	}
 	return m.Tags, &github.Response{}, nil
 }
 
-func (m *MockRepositoriesService) GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error) {
+func (m *MockRepositoriesService) GetArchiveLink(ctx context.Context, logE *logrus.Entry, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error) {
 	if m.URL == nil {
 		return nil, nil, errGetTar
 	}
 	return m.URL, nil, nil
 }
 
-func (m *MockRepositoriesService) Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error) {
+func (m *MockRepositoriesService) Get(ctx context.Context, logE *logrus.Entry, owner, repo string) (*github.Repository, *github.Response, error) {
 	if m.Repo == nil {
 		return nil, nil, errGetRepo
 	}
 	return m.Repo, nil, nil
 }
 
-func (m *MockRepositoriesService) ListReleaseAssets(ctx context.Context, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error) {
+func (m *MockRepositoriesService) ListReleaseAssets(ctx context.Context, logE *logrus.Entry, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error) {
 	if m.Assets == nil {
 		return nil, nil, errListAssets
 	}

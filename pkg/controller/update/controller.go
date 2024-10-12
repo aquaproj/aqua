@@ -47,9 +47,9 @@ type FuzzyGetter interface {
 }
 
 type RepositoriesService interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
-	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
-	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
+	GetLatestRelease(ctx context.Context, logE *logrus.Entry, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
+	ListReleases(ctx context.Context, logE *logrus.Entry, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
+	ListTags(ctx context.Context, logE *logrus.Entry, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
 func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {

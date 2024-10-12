@@ -25,8 +25,8 @@ func NewGitHubRelease(gh GitHubReleaseClient) *GitHubReleaseVersionGetter {
 }
 
 type GitHubReleaseClient interface {
-	GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
-	ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
+	GetLatestRelease(ctx context.Context, logE *logrus.Entry, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error)
+	ListReleases(ctx context.Context, logE *logrus.Entry, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error)
 }
 
 type Release struct {
@@ -100,7 +100,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 		PerPage: 30, //nolint:mnd
 	}
 	for {
-		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, resp, err := g.gh.ListReleases(ctx, logE, repoOwner, repoName, opt)
 		respToLog = resp
 		if err != nil {
 			return "", fmt.Errorf("list tags: %w", err)
@@ -130,7 +130,7 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entr
 	var items []*fuzzyfinder.Item
 	tags := map[string]struct{}{}
 	for {
-		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
+		releases, resp, err := g.gh.ListReleases(ctx, logE, repoOwner, repoName, opt)
 		if err != nil {
 			*logE = *withRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)

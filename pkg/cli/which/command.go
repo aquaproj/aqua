@@ -70,7 +70,7 @@ func (i *command) action(c *cli.Context) error {
 	if err := util.SetParam(c, i.r.LogE, "which", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, i.r.Runtime, param.GitHub)
 	exeName, _, err := ParseExecArgs(c.Args().Slice())
 	if err != nil {
 		return err

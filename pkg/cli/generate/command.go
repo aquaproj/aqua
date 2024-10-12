@@ -79,7 +79,7 @@ func (i *command) action(c *cli.Context) error {
 	if err := util.SetParam(c, i.r.LogE, "generate", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient, i.r.Runtime, param.GitHub)
 	return ctrl.Generate(c.Context, i.r.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
 }
 

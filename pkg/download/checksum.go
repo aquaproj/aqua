@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -17,13 +16,13 @@ import (
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
 type ChecksumDownloaderImpl struct {
-	github    github.RepositoriesService
+	github    GitHub
 	runtime   *runtime.Runtime
 	http      HTTPDownloader
 	ghRelease domain.GitHubReleaseDownloader
 }
 
-func NewChecksumDownloader(gh github.RepositoriesService, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloaderImpl {
+func NewChecksumDownloader(gh GitHub, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloaderImpl {
 	return &ChecksumDownloaderImpl{
 		github:    gh,
 		runtime:   rt,

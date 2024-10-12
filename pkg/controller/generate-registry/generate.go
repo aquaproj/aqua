@@ -71,12 +71,12 @@ func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE 
 	return nil
 }
 
-func (c *Controller) getRelease(ctx context.Context, repoOwner, repoName, version string) (*github.RepositoryRelease, error) {
+func (c *Controller) getRelease(ctx context.Context, logE *logrus.Entry, repoOwner, repoName, version string) (*github.RepositoryRelease, error) {
 	if version == "" {
-		release, _, err := c.github.GetLatestRelease(ctx, repoOwner, repoName)
+		release, _, err := c.github.GetLatestRelease(ctx, logE, repoOwner, repoName)
 		return release, err //nolint:wrapcheck
 	}
-	release, _, err := c.github.GetReleaseByTag(ctx, repoOwner, repoName, version)
+	release, _, err := c.github.GetReleaseByTag(ctx, logE, repoOwner, repoName, version)
 	return release, err //nolint:wrapcheck
 }
 
@@ -98,7 +98,7 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	}
 	pkgInfo.RepoOwner = splitPkgNames[0]
 	pkgInfo.RepoName = splitPkgNames[1]
-	repo, _, err := c.github.Get(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName)
+	repo, _, err := c.github.Get(ctx, logE, pkgInfo.RepoOwner, pkgInfo.RepoName)
 	if err != nil {
 		logE.WithFields(logrus.Fields{
 			"repo_owner": pkgInfo.RepoOwner,
@@ -110,7 +110,7 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	if limit != 1 && version == "" {
 		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit)
 	}
-	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
+	release, err := c.getRelease(ctx, logE, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {
 		logE.WithFields(logrus.Fields{
 			"repo_owner": pkgInfo.RepoOwner,
@@ -205,7 +205,7 @@ func (c *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entry, 
 	}
 	var arr []*github.ReleaseAsset
 	for range 10 {
-		assets, _, err := c.github.ListReleaseAssets(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, releaseID, opts)
+		assets, _, err := c.github.ListReleaseAssets(ctx, logE, pkgInfo.RepoOwner, pkgInfo.RepoName, releaseID, opts)
 		if err != nil {
 			logE.WithFields(logrus.Fields{
 				"repo_owner": pkgInfo.RepoOwner,

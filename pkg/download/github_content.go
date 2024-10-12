@@ -17,7 +17,7 @@ type GitHubContentFileDownloader struct {
 }
 
 type GitHubContentAPI interface {
-	DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
+	DownloadContents(ctx context.Context, logE *logrus.Entry, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
 }
 
 func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) *GitHubContentFileDownloader {
@@ -27,7 +27,7 @@ func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) 
 	}
 }
 
-func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, _ *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
+func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
 	if !param.Private {
 		// https://github.com/aquaproj/aqua/issues/391
 		body, _, err := dl.http.Download(ctx, fmt.Sprintf(
@@ -44,7 +44,7 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 		}
 	}
 
-	file, resp, err := dl.github.DownloadContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
+	file, resp, err := dl.github.DownloadContents(ctx, logE, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
 		Ref: param.Ref,
 	})
 	if err != nil {

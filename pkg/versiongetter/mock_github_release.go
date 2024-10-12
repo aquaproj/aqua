@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/sirupsen/logrus"
 )
 
 type MockGitHubReleaseClient struct {
@@ -18,7 +19,7 @@ func NewMockGitHubReleaseClient(releases map[string][]*github.RepositoryRelease)
 	}
 }
 
-func (g *MockGitHubReleaseClient) GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
+func (g *MockGitHubReleaseClient) GetLatestRelease(ctx context.Context, _ *logrus.Entry, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
 	releases, ok := g.releases[fmt.Sprintf("%s/%s", repoOwner, repoName)]
 	if !ok {
 		return nil, nil, errors.New("repository isn't found")
@@ -26,7 +27,7 @@ func (g *MockGitHubReleaseClient) GetLatestRelease(ctx context.Context, repoOwne
 	return releases[0], &github.Response{}, nil
 }
 
-func (g *MockGitHubReleaseClient) ListReleases(ctx context.Context, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
+func (g *MockGitHubReleaseClient) ListReleases(ctx context.Context, _ *logrus.Entry, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
 	releases, ok := g.releases[fmt.Sprintf("%s/%s", owner, repo)]
 	if !ok {
 		return nil, nil, errors.New("repository isn't found")

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/sirupsen/logrus"
 )
 
 type MockGitHubTagClient struct {
@@ -18,7 +19,7 @@ func NewMockGitHubTagClient(tags map[string][]*github.RepositoryTag) *MockGitHub
 	}
 }
 
-func (g *MockGitHubTagClient) ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
+func (g *MockGitHubTagClient) ListTags(ctx context.Context, _ *logrus.Entry, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
 	tags, ok := g.tags[fmt.Sprintf("%s/%s", owner, repo)]
 	if !ok {
 		return nil, nil, errors.New("repository is not found")

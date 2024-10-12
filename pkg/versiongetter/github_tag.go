@@ -21,7 +21,7 @@ func NewGitHubTag(gh GitHubTagClient) *GitHubTagVersionGetter {
 }
 
 type GitHubTagClient interface {
-	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
+	ListTags(ctx context.Context, logE *logrus.Entry, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
 func convTag(tag *github.RepositoryTag) *Release {
@@ -49,7 +49,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 	candidates := []*Release{}
 
 	for {
-		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		tags, resp, err := g.gh.ListTags(ctx, logE, repoOwner, repoName, opt)
 		respToLog = resp
 		if err != nil {
 			return "", fmt.Errorf("list tags: %w", err)
@@ -79,7 +79,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 	var versions []string
 	tagNames := map[string]struct{}{}
 	for {
-		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
+		tags, resp, err := g.gh.ListTags(ctx, logE, repoOwner, repoName, opt)
 		if err != nil {
 			*logE = *withRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)

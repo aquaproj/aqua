@@ -17,8 +17,8 @@ type GitHubReleaseDownloader struct {
 }
 
 type GitHubReleaseAPI interface {
-	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
-	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
+	GetReleaseByTag(ctx context.Context, logE *logrus.Entry, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
+	DownloadReleaseAsset(ctx context.Context, logE *logrus.Entry, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
 }
 
 func NewGitHubReleaseDownloader(gh GitHubReleaseAPI, httpDL HTTPDownloader) *GitHubReleaseDownloader {
@@ -52,7 +52,7 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
 	}
 
-	release, _, err := dl.github.GetReleaseByTag(ctx, param.RepoOwner, param.RepoName, param.Version)
+	release, _, err := dl.github.GetReleaseByTag(ctx, logE, param.RepoOwner, param.RepoName, param.Version)
 	if err != nil {
 		return nil, 0, fmt.Errorf("get the GitHub Release by Tag: %w", err)
 	}
@@ -60,7 +60,7 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 	if err != nil {
 		return nil, 0, err
 	}
-	body, redirectURL, err := dl.github.DownloadReleaseAsset(ctx, param.RepoOwner, param.RepoName, assetID, http.DefaultClient)
+	body, redirectURL, err := dl.github.DownloadReleaseAsset(ctx, logE, param.RepoOwner, param.RepoName, assetID, http.DefaultClient)
 	if err != nil {
 		return nil, 0, fmt.Errorf("download the release asset (asset id: %d): %w", assetID, err)
 	}

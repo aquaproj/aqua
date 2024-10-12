@@ -18,7 +18,7 @@ func (c *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
-	version, err := c.getVersion(ctx, param)
+	version, err := c.getVersion(ctx, logE, param)
 	if err != nil {
 		return err
 	}
@@ -33,10 +33,10 @@ func (c *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *
 	return nil
 }
 
-func (c *Controller) getVersion(ctx context.Context, param *config.Param) (string, error) {
+func (c *Controller) getVersion(ctx context.Context, logE *logrus.Entry, param *config.Param) (string, error) {
 	switch len(param.Args) {
 	case 0:
-		release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua")
+		release, _, err := c.github.GetLatestRelease(ctx, logE, "aquaproj", "aqua")
 		if err != nil {
 			return "", fmt.Errorf("get the latest version of aqua: %w", err)
 		}

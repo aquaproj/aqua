@@ -50,7 +50,7 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 	}
 
 	registryVersion := "v4.232.0" // renovate: depName=aquaproj/aqua-registry
-	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
+	release, _, err := c.github.GetLatestRelease(ctx, logE, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
 			"repo_owner": "aquaproj",

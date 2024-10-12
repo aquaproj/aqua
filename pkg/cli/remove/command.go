@@ -88,7 +88,7 @@ func (i *command) action(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl := controller.InitializeRemoveCommandController(c.Context, param, http.DefaultClient, i.r.Runtime, mode)
+	ctrl := controller.InitializeRemoveCommandController(c.Context, param, http.DefaultClient, i.r.Runtime, mode, param.GitHub)
 	if err := ctrl.Remove(c.Context, i.r.LogE, param); err != nil {
 		return err //nolint:wrapcheck
 	}

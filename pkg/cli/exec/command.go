@@ -46,7 +46,7 @@ func (i *command) action(c *cli.Context) error {
 	if err := util.SetParam(c, i.r.LogE, "exec", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, i.r.Runtime, param.GitHub)
 	if err != nil {
 		return fmt.Errorf("initialize a ExecController: %w", err)
 	}

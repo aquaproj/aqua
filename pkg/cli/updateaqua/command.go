@@ -52,7 +52,7 @@ func (ua *updateAquaCommand) action(c *cli.Context) error {
 	if err := util.SetParam(c, ua.r.LogE, "update-aqua", param, ua.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeUpdateAquaCommandController(c.Context, param, http.DefaultClient, ua.r.Runtime)
+	ctrl, err := controller.InitializeUpdateAquaCommandController(c.Context, param, http.DefaultClient, ua.r.Runtime, param.GitHub)
 	if err != nil {
 		return fmt.Errorf("initialize a UpdateAquaController: %w", err)
 	}

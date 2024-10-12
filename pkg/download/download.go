@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -25,13 +27,20 @@ type File struct {
 }
 
 type Downloader struct {
-	github    github.RepositoriesService
+	github    GitHub
 	http      HTTPDownloader
 	ghContent domain.GitHubContentFileDownloader
 	ghRelease domain.GitHubReleaseDownloader
 }
 
-func NewDownloader(gh github.RepositoriesService, httpDownloader HTTPDownloader) *Downloader {
+type GitHub interface {
+	DownloadContents(ctx context.Context, logE *logrus.Entry, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
+	GetReleaseByTag(ctx context.Context, logE *logrus.Entry, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
+	DownloadReleaseAsset(ctx context.Context, logE *logrus.Entry, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
+	GetArchiveLink(ctx context.Context, logE *logrus.Entry, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error)
+}
+
+func NewDownloader(gh GitHub, httpDownloader HTTPDownloader) *Downloader {
 	return &Downloader{
 		github:    gh,
 		http:      httpDownloader,
@@ -70,7 +79,7 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *
 		}
 		return io.NopCloser(strings.NewReader(file.String)), 0, nil
 	case config.PkgInfoTypeGitHubArchive:
-		return dl.getReadCloserFromGitHubArchive(ctx, file)
+		return dl.getReadCloserFromGitHubArchive(ctx, logE, file)
 	case config.PkgInfoTypeHTTP:
 		rc, code, err := dl.http.Download(ctx, file.URL)
 		if err != nil {
