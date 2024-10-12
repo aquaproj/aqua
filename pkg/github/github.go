@@ -95,45 +95,45 @@ func (g *GitHub) init(ctx context.Context, logE *logrus.Entry) {
 
 func (g *GitHub) GetArchiveLink(ctx context.Context, logE *logrus.Entry, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.GetArchiveLink(ctx, owner, repo, archiveformat, opts, maxRedirects)
+	return g.repo.GetArchiveLink(ctx, owner, repo, archiveformat, opts, maxRedirects) //nolint:wrapcheck
 }
 
 func (g *GitHub) GetReleaseByTag(ctx context.Context, logE *logrus.Entry, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.GetReleaseByTag(ctx, owner, repoName, version)
+	return g.repo.GetReleaseByTag(ctx, owner, repoName, version) //nolint:wrapcheck
 }
 
 func (g *GitHub) DownloadReleaseAsset(ctx context.Context, logE *logrus.Entry, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error) {
 	g.init(ctx, logE)
-	return g.repo.DownloadReleaseAsset(ctx, owner, repoName, assetID, httpClient)
+	return g.repo.DownloadReleaseAsset(ctx, owner, repoName, assetID, httpClient) //nolint:wrapcheck
 }
 
 func (g *GitHub) DownloadContents(ctx context.Context, logE *logrus.Entry, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.DownloadContents(ctx, owner, repo, filepath, opts)
+	return g.repo.DownloadContents(ctx, owner, repo, filepath, opts) //nolint:wrapcheck
 }
 
 func (g *GitHub) GetLatestRelease(ctx context.Context, logE *logrus.Entry, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.GetLatestRelease(ctx, repoOwner, repoName)
+	return g.repo.GetLatestRelease(ctx, repoOwner, repoName) //nolint:wrapcheck
 }
 
 func (g *GitHub) ListReleases(ctx context.Context, logE *logrus.Entry, owner, repo string, opts *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.ListReleases(ctx, owner, repo, opts)
+	return g.repo.ListReleases(ctx, owner, repo, opts) //nolint:wrapcheck
 }
 
 func (g *GitHub) ListTags(ctx context.Context, logE *logrus.Entry, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.ListTags(ctx, owner, repo, opts)
+	return g.repo.ListTags(ctx, owner, repo, opts) //nolint:wrapcheck
 }
 
 func (g *GitHub) Get(ctx context.Context, logE *logrus.Entry, owner, repo string) (*github.Repository, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.Get(ctx, owner, repo)
+	return g.repo.Get(ctx, owner, repo) //nolint:wrapcheck
 }
 
 func (g *GitHub) ListReleaseAssets(ctx context.Context, logE *logrus.Entry, owner, repo string, id int64, opts *github.ListOptions) ([]*github.ReleaseAsset, *github.Response, error) {
 	g.init(ctx, logE)
-	return g.repo.ListReleaseAssets(ctx, owner, repo, id, opts)
+	return g.repo.ListReleaseAssets(ctx, owner, repo, id, opts) //nolint:wrapcheck
 }

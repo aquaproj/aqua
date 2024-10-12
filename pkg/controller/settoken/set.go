@@ -11,9 +11,9 @@ import (
 	"golang.org/x/term"
 )
 
-func (c *Controller) Set(ctx context.Context, logE *logrus.Entry) error {
+func (c *Controller) Set(_ context.Context, logE *logrus.Entry) error {
 	fmt.Fprint(c.stdout, "Enter a GitHub acccess token for aqua: ")
-	text, err := term.ReadPassword(int(syscall.Stdin))
+	text, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
 		return fmt.Errorf("read a GitHub Access Token from stdin: %w", err)
 	}
