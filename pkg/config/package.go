@@ -293,6 +293,7 @@ type Param struct {
 	SLSADisabled                      bool
 	Installed                         bool
 	Keyring                           bool
+	Stdin                             bool
 	PolicyConfigFilePaths             []string
 	Commands                          []string
 	GitHub                            *github.Option

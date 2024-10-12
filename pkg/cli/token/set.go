@@ -21,8 +21,14 @@ func newSet(r *util.Param) *cli.Command {
 	return &cli.Command{
 		Action:      i.action,
 		Name:        "set",
-		Usage:       "Set a GitHub Access token in keyring",
-		Description: `Set a GitHub Access token in keyring`,
+		Usage:       "Set a GitHub access token in keyring",
+		Description: `Set a GitHub access token in keyring`,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "stdin",
+				Usage: "Read a GitHub access token from stdin",
+			},
+		},
 	}
 }
 
@@ -37,6 +43,6 @@ func (pa *setCommand) action(c *cli.Context) error {
 	if err := util.SetParam(c, pa.r.LogE, "token-set", param, pa.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := settoken.New(pa.r.Stdout)
-	return ctrl.Set(c.Context, pa.r.LogE) //nolint:wrapcheck
+	ctrl := settoken.New(pa.r.Stdin, pa.r.Stdout)
+	return ctrl.Set(c.Context, pa.r.LogE, param) //nolint:wrapcheck
 }

@@ -53,6 +53,7 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 		param.Insert = c.Bool("i")
 	}
 	param.All = c.Bool("all")
+	param.Stdin = c.Bool("stdin")
 	param.GitHub = &github.Option{
 		Keyring: c.Bool("keyring"),
 	}
