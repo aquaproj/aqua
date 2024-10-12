@@ -37,6 +37,6 @@ func (pa *setCommand) action(c *cli.Context) error {
 	if err := util.SetParam(c, pa.r.LogE, "token-set", param, pa.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := settoken.New()
+	ctrl := settoken.New(pa.r.Stdout)
 	return ctrl.Set(c.Context, pa.r.LogE) //nolint:wrapcheck
 }

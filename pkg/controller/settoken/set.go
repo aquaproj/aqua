@@ -3,6 +3,7 @@ package settoken
 import (
 	"context"
 	"fmt"
+	"strings"
 	"syscall"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
@@ -16,7 +17,9 @@ func (c *Controller) Set(ctx context.Context, logE *logrus.Entry) error {
 	if err != nil {
 		return fmt.Errorf("read a GitHub Access Token from stdin: %w", err)
 	}
-	fmt.Println("")
-	github.SetTokenInKeyring(string(text))
+	fmt.Fprintln(c.stdout, "")
+	if err := github.SetTokenInKeyring(strings.TrimSpace(string(text))); err != nil {
+		return fmt.Errorf("set a GitHub Access Token to the secret store: %w", err)
+	}
 	return nil
 }
