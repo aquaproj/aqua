@@ -405,9 +405,9 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cosexec.Controller, error) {
+func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
 	wire.Build(
-		cosexec.New,
+		cexec.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
 			wire.Bind(new(which.ConfigFinder), new(*finder.ConfigFinder)),
@@ -418,7 +418,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(cosexec.Installer), new(*installpackage.Installer)),
+			wire.Bind(new(cexec.Installer), new(*installpackage.Installer)),
 		),
 		wire.NewSet(
 			github.New,
@@ -439,12 +439,12 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			which.New,
-			wire.Bind(new(cosexec.WhichController), new(*which.Controller)),
+			wire.Bind(new(cexec.WhichController), new(*which.Controller)),
 		),
 		wire.NewSet(
 			osexec.New,
 			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
-			wire.Bind(new(cosexec.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cexec.Executor), new(*osexec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
@@ -488,7 +488,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 		),
 		wire.NewSet(
 			policy.NewReader,
-			wire.Bind(new(cosexec.PolicyReader), new(*policy.Reader)),
+			wire.Bind(new(cexec.PolicyReader), new(*policy.Reader)),
 		),
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -533,7 +533,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
 	)
-	return &cosexec.Controller{}, nil
+	return &cexec.Controller{}, nil
 }
 
 func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
@@ -675,7 +675,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			osexec.New,
 			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
-			wire.Bind(new(cosexec.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cexec.Executor), new(*osexec.Executor)),
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
