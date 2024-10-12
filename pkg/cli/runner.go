@@ -91,6 +91,7 @@ func (r *Runner) Run(ctx context.Context, args ...string) error { //nolint:funle
 			info.New,
 			initcmd.New,
 			cpolicy.New,
+			cpolicy.NewInitPolicy,
 			install.New,
 			updateaqua.New,
 			generate.New,

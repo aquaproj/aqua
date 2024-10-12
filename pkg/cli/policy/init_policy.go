@@ -5,11 +5,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type initPolicyCommand struct {
-	r *util.Param
-}
-
-func newInitPolicy(r *util.Param) *cli.Command {
+func NewInitPolicy(r *util.Param) *cli.Command {
 	cmd := newPolicyInit(r)
 	return &cli.Command{
 		Name:      "init-policy",

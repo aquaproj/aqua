@@ -5,10 +5,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type policyCommand struct {
-	r *util.Param
-}
-
 func New(r *util.Param) *cli.Command {
 	return &cli.Command{
 		Name:  "policy",
