@@ -54,8 +54,14 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 	}
 	param.All = c.Bool("all")
 	param.Stdin = c.Bool("stdin")
-	param.GitHub = &github.Option{
-		Keyring: c.Bool("keyring"),
+	if a := os.Getenv("AQUA_ENABLE_KEYRING"); a != "" {
+		b, err := strconv.ParseBool(a)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_ENABLE_KEYRING as bool: %w", err)
+		}
+		param.GitHub = &github.Option{
+			Keyring: b,
+		}
 	}
 	param.Global = c.Bool("g")
 	param.Detail = c.Bool("detail")

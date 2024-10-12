@@ -76,11 +76,6 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 				Usage:   "Disable GitHub Artifact Attestations verification",
 				EnvVars: []string{"AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION"},
 			},
-			&cli.BoolFlag{
-				Name:    "keyring",
-				Usage:   "Enable keyring",
-				EnvVars: []string{"AQUA_KEYRING"},
-			},
 			&cli.StringFlag{
 				Name:  "trace",
 				Usage: "trace output file path",
