@@ -139,6 +139,6 @@ func (i *command) action(c *cli.Context) error {
 	if err := util.SetParam(c, i.r.LogE, "update", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeUpdateCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	ctrl := controller.InitializeUpdateCommandController(c.Context, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	return ctrl.Update(c.Context, i.r.LogE, param) //nolint:wrapcheck
 }

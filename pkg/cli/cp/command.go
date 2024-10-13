@@ -85,7 +85,7 @@ func (i *command) action(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl, err := controller.InitializeCopyCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeCopyCommandController(c.Context, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a CopyController: %w", err)
 	}
