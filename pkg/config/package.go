@@ -173,6 +173,7 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 		"FileName":        file.Name,
 		"Asset":           assetName,
 		"AssetWithoutExt": assetWithoutExt,
+		"Vars":            pkg.Vars,
 	})
 	if err != nil {
 		return "", err //nolint:wrapcheck
