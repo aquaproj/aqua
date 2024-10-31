@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/adrg/xdg v0.5.2
+	github.com/adrg/xdg v0.5.3
 	github.com/expr-lang/expr v1.16.9
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/goccy/go-yaml v1.13.1
