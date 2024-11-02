@@ -59,10 +59,20 @@ func (is *Installer) checkAndCopyFile(ctx context.Context, logE *logrus.Entry, p
 		return nil
 	}
 	logE.Info("copying an executable file")
-	if err := is.Copy(filepath.Join(is.copyDir, file.Name), exePath); err != nil {
-		return err
+	exeNames := map[string]struct{}{}
+	for _, alias := range pkg.Package.CommandAliases {
+		if alias.Command == file.Name {
+			exeNames[alias.Alias] = struct{}{}
+		}
 	}
-
+	if len(exeNames) == 0 {
+		exeNames[file.Name] = struct{}{}
+	}
+	for exeName := range exeNames {
+		if err := is.Copy(filepath.Join(is.copyDir, exeName), exePath); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
