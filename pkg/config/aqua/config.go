@@ -7,17 +7,24 @@ import (
 )
 
 type Package struct {
-	Name          string         `validate:"required" json:"name,omitempty"`
-	Registry      string         `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
-	Version       string         `validate:"required" yaml:",omitempty" json:"version,omitempty"`
-	Import        string         `yaml:",omitempty" json:"import,omitempty"`
-	Tags          []string       `yaml:",omitempty" json:"tags,omitempty"`
-	Description   string         `yaml:",omitempty" json:"description,omitempty"`
-	Link          string         `yaml:",omitempty" json:"link,omitempty"`
-	Update        *Update        `yaml:",omitempty" json:"update,omitempty"`
-	FilePath      string         `json:"-" yaml:"-"`
-	GoVersionFile string         `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`
-	Vars          map[string]any `json:"vars,omitempty" yaml:",omitempty"`
+	Name           string          `validate:"required" json:"name,omitempty"`
+	Registry       string          `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
+	Version        string          `validate:"required" yaml:",omitempty" json:"version,omitempty"`
+	Import         string          `yaml:",omitempty" json:"import,omitempty"`
+	Tags           []string        `yaml:",omitempty" json:"tags,omitempty"`
+	Description    string          `yaml:",omitempty" json:"description,omitempty"`
+	Link           string          `yaml:",omitempty" json:"link,omitempty"`
+	Update         *Update         `yaml:",omitempty" json:"update,omitempty"`
+	FilePath       string          `json:"-" yaml:"-"`
+	GoVersionFile  string          `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`
+	Vars           map[string]any  `json:"vars,omitempty" yaml:",omitempty"`
+	CommandAliases []*CommandAlias `json:"command_aliases,omitempty" yaml:"command_aliases,omitempty"`
+}
+
+type CommandAlias struct {
+	Command string `validate:"required" json:"command"`
+	Alias   string `validate:"required" json:"alias"`
+	NoLink  bool   `yaml:"no_link,omitempty" json:"no_link,omitempty"`
 }
 
 type Update struct {

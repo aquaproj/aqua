@@ -157,25 +157,36 @@ func (c *Controller) findExecFileFromPkg(logE *logrus.Entry, registries map[stri
 	}
 
 	for _, file := range pkgInfo.GetFiles() {
-		if file.Name == exeName {
-			findResult := &FindResult{
-				Package: &config.Package{
-					Package:     pkg,
-					PackageInfo: pkgInfo,
-				},
-				File: file,
+		cmds := map[string]struct{}{}
+		for _, alias := range pkg.CommandAliases {
+			if file.Name != alias.Command {
+				continue
 			}
-			if err := findResult.Package.ApplyVars(); err != nil {
-				return nil, fmt.Errorf("apply package variables: %w", err)
-			}
-			exePath, err := c.getExePath(findResult)
-			if err != nil {
-				logE.WithError(err).Error("get the execution file path")
-				return nil, nil //nolint:nilnil
-			}
-			findResult.ExePath = exePath
-			return findResult, nil
+			cmds[alias.Alias] = struct{}{}
 		}
+		if len(cmds) == 0 {
+			cmds[file.Name] = struct{}{}
+		}
+		if _, ok := cmds[exeName]; !ok {
+			continue
+		}
+		findResult := &FindResult{
+			Package: &config.Package{
+				Package:     pkg,
+				PackageInfo: pkgInfo,
+			},
+			File: file,
+		}
+		if err := findResult.Package.ApplyVars(); err != nil {
+			return nil, fmt.Errorf("apply package variables: %w", err)
+		}
+		exePath, err := c.getExePath(findResult)
+		if err != nil {
+			logE.WithError(err).Error("get the execution file path")
+			return nil, nil //nolint:nilnil
+		}
+		findResult.ExePath = exePath
+		return findResult, nil
 	}
 	return nil, nil //nolint:nilnil
 }

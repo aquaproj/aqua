@@ -28,37 +28,64 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 
 	for _, pkg := range pkgs {
 		pkgInfo := pkg.PackageInfo
+		logE := logE.WithFields(logrus.Fields{
+			"package_name":    pkg.Package.Name,
+			"package_version": pkg.Package.Version,
+		})
 		for _, file := range pkgInfo.GetFiles() {
-			if is.realRuntime.IsWindows() {
-				hardLink := filepath.Join(is.rootDir, "bin", file.Name+".exe")
-				if f, err := afero.Exists(is.fs, hardLink); err != nil {
-					logerr.WithError(logE, err).WithFields(logrus.Fields{
-						"command": file.Name,
-					}).Error("check if a hard link to aqua-proxy exists")
-					failed = true
-					continue
-				} else if f {
+			logE := logE.WithFields(logrus.Fields{
+				"command": file.Name,
+			})
+			cmds := map[string]struct{}{}
+			for _, alias := range pkg.Package.CommandAliases {
+				if file.Name != alias.Command {
 					continue
 				}
-				logE.WithFields(logrus.Fields{
-					"command": file.Name,
-				}).Info("creating a hard link to aqua-proxy")
-				if err := is.linker.Hardlink(aquaProxyPathOnWindows, hardLink); err != nil {
-					logerr.WithError(logE, err).WithFields(logrus.Fields{
-						"command": file.Name,
-					}).Error("create a hard link to aqua-proxy")
-					failed = true
+				if alias.NoLink {
+					continue
 				}
-				continue
+				cmds[alias.Alias] = struct{}{}
 			}
-			if err := is.createLink(logE, filepath.Join(is.rootDir, "bin", file.Name), filepath.Join("..", proxyName)); err != nil {
-				logerr.WithError(logE, err).Error("create the symbolic link")
-				failed = true
-				continue
+			if len(cmds) == 0 {
+				cmds[file.Name] = struct{}{}
+			}
+			for cmd := range cmds {
+				logE := logE
+				if cmd != file.Name {
+					logE = logE.WithFields(logrus.Fields{
+						"command_alias": cmd,
+					})
+				}
+				if is.realRuntime.IsWindows() {
+					if err := is.createHardLink(logE, cmd, aquaProxyPathOnWindows); err != nil {
+						logerr.WithError(logE, err).Error("create a hard link to aqua-proxy")
+						failed = true
+					}
+					continue
+				}
+				if err := is.createLink(logE, filepath.Join(is.rootDir, "bin", cmd), filepath.Join("..", proxyName)); err != nil {
+					logerr.WithError(logE, err).Error("create the symbolic link")
+					failed = true
+					continue
+				}
 			}
 		}
 	}
 	return failed
+}
+
+func (is *Installer) createHardLink(logE *logrus.Entry, cmd string, aquaProxyPathOnWindows string) error {
+	hardLink := filepath.Join(is.rootDir, "bin", cmd+".exe")
+	if f, err := afero.Exists(is.fs, hardLink); err != nil {
+		return fmt.Errorf("check if a hard link to aqua-proxy exists: %w", err)
+	} else if f {
+		return nil
+	}
+	logE.Info("creating a hard link to aqua-proxy")
+	if err := is.linker.Hardlink(aquaProxyPathOnWindows, hardLink); err != nil {
+		return fmt.Errorf("create a hard link to aqua-proxy: %w", err)
+	}
+	return nil
 }
 
 func (is *Installer) recreateHardLinks() error {
