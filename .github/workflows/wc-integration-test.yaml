@@ -39,6 +39,13 @@ jobs:
         run: aqua -c aqua.yaml g -i kubernetes-sigs/kustomize
         working-directory: tests/main
 
+      - name: Test command aliases
+        run: aqua i -l
+        working-directory: tests/aliases
+      - name: Test command aliases
+        run: terraform-013 version
+        working-directory: tests/aliases
+
       - run: aqua list
       - run: aqua list -installed
       - run: aqua list -installed -a

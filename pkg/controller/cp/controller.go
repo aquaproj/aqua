@@ -133,7 +133,7 @@ func (c *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, par
 		}
 	}
 
-	if err := c.copy(logE, param, findResult, exeName); err != nil {
+	if err := c.copy(logE, param, findResult.ExePath, exeName); err != nil {
 		return err
 	}
 	return nil

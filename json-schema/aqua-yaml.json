@@ -18,6 +18,25 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "CommandAlias": {
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "no_link": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "command",
+        "alias"
+      ]
+    },
     "Config": {
       "properties": {
         "packages": {
@@ -80,6 +99,12 @@
         },
         "vars": {
           "type": "object"
+        },
+        "command_aliases": {
+          "items": {
+            "$ref": "#/$defs/CommandAlias"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
