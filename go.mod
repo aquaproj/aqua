@@ -7,7 +7,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/expr-lang/expr v1.16.9
 	github.com/forPelevin/gomoji v1.2.0
-	github.com/goccy/go-yaml v1.13.2
+	github.com/goccy/go-yaml v1.13.3
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v66 v66.0.0
 	github.com/google/wire v0.6.0
