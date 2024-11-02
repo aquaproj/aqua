@@ -164,9 +164,7 @@ func (is *Installer) createLink(logE *logrus.Entry, linkPath, linkDest string) e
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
-	logE.WithFields(logrus.Fields{
-		"command": filepath.Base(linkPath),
-	}).Info("create a symbolic link")
+	logE.Info("create a symbolic link")
 	if err := is.linker.Symlink(linkDest, linkPath); err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
