@@ -55,7 +55,9 @@ func (is *Installer) createPackageLinks(logE *logrus.Entry, pkg *config.Package,
 
 func (is *Installer) createFileLinks(logE *logrus.Entry, pkg *config.Package, file *registry.File, aquaProxyPathOnWindows string) bool {
 	failed := false
-	cmds := map[string]struct{}{}
+	cmds := map[string]struct{}{
+		file.Name: {},
+	}
 	for _, alias := range pkg.Package.CommandAliases {
 		if file.Name != alias.Command {
 			continue
@@ -64,9 +66,6 @@ func (is *Installer) createFileLinks(logE *logrus.Entry, pkg *config.Package, fi
 			continue
 		}
 		cmds[alias.Alias] = struct{}{}
-	}
-	if len(cmds) == 0 {
-		cmds[file.Name] = struct{}{}
 	}
 	for cmd := range cmds {
 		if err := is.createCmdLink(logE, file, cmd, aquaProxyPathOnWindows); err != nil {

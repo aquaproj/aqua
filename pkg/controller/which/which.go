@@ -169,15 +169,14 @@ func (c *Controller) findExecFileFromPkg(logE *logrus.Entry, registries map[stri
 }
 
 func (c *Controller) findExecFileFromFile(logE *logrus.Entry, exeName string, pkg *aqua.Package, pkgInfo *registry.PackageInfo, file *registry.File) (*FindResult, error) {
-	cmds := map[string]struct{}{}
+	cmds := map[string]struct{}{
+		file.Name: {},
+	}
 	for _, alias := range pkg.CommandAliases {
 		if file.Name != alias.Command {
 			continue
 		}
 		cmds[alias.Alias] = struct{}{}
-	}
-	if len(cmds) == 0 {
-		cmds[file.Name] = struct{}{}
 	}
 	if _, ok := cmds[exeName]; !ok {
 		return nil, nil //nolint:nilnil
