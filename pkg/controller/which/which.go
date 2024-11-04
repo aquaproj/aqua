@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -23,7 +24,11 @@ type FindResult struct {
 }
 
 func (c *Controller) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
-	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+	var filePaths []string
+	if param.ConfigFilePath != "" {
+		filePaths = []string{osfile.Abs(param.PWD, param.ConfigFilePath)}
+	}
+	for _, cfgFilePath := range append(filePaths, c.configFinder.Finds(param.PWD, "")...) {
 		findResult, err := c.findExecFile(ctx, logE, param, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
