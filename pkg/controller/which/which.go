@@ -23,7 +23,11 @@ type FindResult struct {
 }
 
 func (c *Controller) Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*FindResult, error) {
-	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+	var filePaths []string
+	if param.ConfigFilePath != "" {
+		filePaths = []string{param.ConfigFilePath}
+	}
+	for _, cfgFilePath := range append(filePaths, c.configFinder.Finds(param.PWD, "")...) {
 		findResult, err := c.findExecFile(ctx, logE, param, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
