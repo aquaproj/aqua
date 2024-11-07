@@ -27,7 +27,7 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/urfave/cli/v2 v2.27.5
 	github.com/wk8/go-ordered-map/v2 v2.1.8
-	golang.org/x/oauth2 v0.23.0
+	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sys v0.26.0
 	gopkg.in/yaml.v2 v2.4.0
 )
