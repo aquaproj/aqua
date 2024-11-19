@@ -25,7 +25,7 @@ type GoProxyClient interface {
 	List(ctx context.Context, path string) ([]string, error)
 }
 
-func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, _ []*Filter) (string, error) {
+func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, _ []*Filter) (string, error) { //nolint:cyclop
 	versions, err := g.gc.List(ctx, pkg.GoVersionPath)
 	if err != nil {
 		return "", fmt.Errorf("list versions: %w", err)
