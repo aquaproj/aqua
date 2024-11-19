@@ -31,17 +31,29 @@ func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.Pa
 		return "", fmt.Errorf("list versions: %w", err)
 	}
 	var latest *version.Version
+	var preLatest *version.Version
 	for _, vs := range versions {
 		v, err := version.NewSemver(vs)
 		if err != nil {
 			logE.WithError(err).WithField("version", vs).Warn("parse a version")
 			continue
 		}
-		if latest == nil || v.GreaterThan(latest) {
+		if v.Prerelease() == "" && (latest == nil || v.GreaterThan(latest)) {
 			latest = v
+			continue
+		}
+		if v.Prerelease() != "" && (preLatest == nil || v.GreaterThan(preLatest)) {
+			preLatest = v
+			continue
 		}
 	}
-	return latest.String(), nil
+	if latest != nil {
+		return latest.Original(), nil
+	}
+	if preLatest != nil {
+		return preLatest.Original(), nil
+	}
+	return "", nil
 }
 
 func (g *GoGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, _ []*Filter, _ int) ([]*fuzzyfinder.Item, error) {
