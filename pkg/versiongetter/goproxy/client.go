@@ -35,5 +35,9 @@ func (c *Client) List(ctx context.Context, path string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read a response body: %w", err)
 	}
-	return strings.Split(strings.TrimSpace(string(b)), "\n"), nil
+	s := strings.TrimSpace(string(b))
+	if s == "" {
+		return nil, nil
+	}
+	return strings.Split(s, "\n"), nil
 }
