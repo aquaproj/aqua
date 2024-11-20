@@ -46,6 +46,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 
 	"github.com/google/wire"
 	"github.com/spf13/afero"
@@ -218,6 +219,11 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 		versiongetter.NewCargo,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
+		versiongetter.NewGoGetter,
+		wire.NewSet(
+			goproxy.New,
+			wire.Bind(new(versiongetter.GoProxyClient), new(*goproxy.Client)),
+		),
 	)
 	return &generate.Controller{}
 }
@@ -898,9 +904,14 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 		versiongetter.NewCargo,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
+		versiongetter.NewGoGetter,
 		wire.NewSet(
 			cargo.NewClient,
 			wire.Bind(new(versiongetter.CargoClient), new(*cargo.Client)),
+		),
+		wire.NewSet(
+			goproxy.New,
+			wire.Bind(new(versiongetter.GoProxyClient), new(*goproxy.Client)),
 		),
 		wire.NewSet(
 			which.New,

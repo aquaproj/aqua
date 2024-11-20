@@ -15,13 +15,15 @@ type GeneralVersionGetter struct {
 	cargo     *CargoVersionGetter
 	ghTag     *GitHubTagVersionGetter
 	ghRelease *GitHubReleaseVersionGetter
+	goGetter  *GoGetter
 }
 
-func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter) *GeneralVersionGetter {
+func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter, goGetter *GoGetter) *GeneralVersionGetter {
 	return &GeneralVersionGetter{
 		cargo:     cargo,
 		ghTag:     ghTag,
 		ghRelease: ghRelease,
+		goGetter:  goGetter,
 	}
 }
 
@@ -44,6 +46,9 @@ func (g *GeneralVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg
 func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 	if pkg.Type == "cargo" {
 		return g.cargo
+	}
+	if pkg.GoVersionPath != "" {
+		return g.goGetter
 	}
 	if g.ghTag == nil {
 		return nil

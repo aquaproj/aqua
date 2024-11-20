@@ -359,6 +359,9 @@
         "path": {
           "type": "string"
         },
+        "go_version_path": {
+          "type": "string"
+        },
         "complete_windows_ext": {
           "type": "boolean"
         },
@@ -481,6 +484,9 @@
           "type": "string"
         },
         "version_prefix": {
+          "type": "string"
+        },
+        "go_version_path": {
           "type": "string"
         },
         "rosetta2": {
@@ -713,6 +719,9 @@
             "raw",
             "zip"
           ]
+        },
+        "go_version_path": {
+          "type": "string"
         },
         "version_filter": {
           "type": "string"

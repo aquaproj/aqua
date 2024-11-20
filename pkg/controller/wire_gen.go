@@ -45,6 +45,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
@@ -110,7 +111,9 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
-	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
+	goproxyClient := goproxy.New(httpClient)
+	goGetter := versiongetter.NewGoGetter(goproxyClient)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyfinderFinder, fuzzyGetter)
 	return controller
@@ -324,7 +327,9 @@ func InitializeUpdateCommandController(ctx context.Context, param *config.Param,
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(repositoriesService)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(repositoriesService)
-	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter)
+	goproxyClient := goproxy.New(httpClient)
+	goGetter := versiongetter.NewGoGetter(goproxyClient)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()

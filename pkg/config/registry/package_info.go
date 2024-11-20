@@ -39,6 +39,7 @@ type PackageInfo struct {
 	Format                     string                      `json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip,example=dmg" yaml:",omitempty"`
 	VersionFilter              string                      `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix              string                      `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
+	GoVersionPath              string                      `yaml:"go_version_path,omitempty" json:"go_version_path,omitempty"`
 	Rosetta2                   bool                        `yaml:",omitempty" json:"rosetta2,omitempty"`
 	WindowsARMEmulation        bool                        `yaml:"windows_arm_emulation,omitempty" json:"windows_arm_emulation,omitempty"`
 	NoAsset                    bool                        `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
@@ -106,6 +107,7 @@ type VersionOverride struct {
 	Path                       string                      `yaml:",omitempty" json:"path,omitempty"`
 	URL                        string                      `yaml:",omitempty" json:"url,omitempty"`
 	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
+	GoVersionPath              *string                     `yaml:"go_version_path,omitempty" json:"go_version_path,omitempty"`
 	VersionFilter              *string                     `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix              *string                     `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
 	VersionSource              string                      `json:"version_source,omitempty" yaml:"version_source,omitempty"`
@@ -140,6 +142,7 @@ type Override struct {
 	Crate                      string                      `json:"crate,omitempty" yaml:",omitempty"`
 	URL                        string                      `yaml:",omitempty" json:"url,omitempty"`
 	Path                       string                      `yaml:",omitempty" json:"path,omitempty"`
+	GoVersionPath              *string                     `yaml:"go_version_path,omitempty" json:"go_version_path,omitempty"`
 	CompleteWindowsExt         *bool                       `json:"complete_windows_ext,omitempty" yaml:"complete_windows_ext,omitempty"`
 	WindowsExt                 string                      `json:"windows_ext,omitempty" yaml:"windows_ext,omitempty"`
 	AppendExt                  *bool                       `json:"append_ext,omitempty" yaml:"append_ext,omitempty"`
@@ -178,6 +181,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		SupportedEnvs:              p.SupportedEnvs,
 		VersionFilter:              p.VersionFilter,
 		VersionPrefix:              p.VersionPrefix,
+		GoVersionPath:              p.GoVersionPath,
 		Rosetta2:                   p.Rosetta2,
 		WindowsARMEmulation:        p.WindowsARMEmulation,
 		Aliases:                    p.Aliases,
@@ -205,22 +209,26 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.URL = ""
 		p.Path = ""
 		p.Crate = ""
+		p.GoVersionPath = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
 		p.URL = ""
 		p.Asset = ""
 		p.Crate = ""
+		p.GoVersionPath = ""
 		p.Cargo = nil
 	case PkgInfoTypeGitHubArchive:
 		p.URL = ""
 		p.Path = ""
 		p.Asset = ""
 		p.Crate = ""
+		p.GoVersionPath = ""
 		p.Cargo = nil
 		p.Format = ""
 	case PkgInfoTypeHTTP:
 		p.Path = ""
 		p.Asset = ""
+		p.GoVersionPath = ""
 	case PkgInfoTypeGoInstall:
 		p.URL = ""
 		p.Asset = ""
@@ -265,6 +273,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
 		p.AppendExt = nil
+		p.GoVersionPath = ""
 	}
 }
 
@@ -318,6 +327,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	}
 	if child.VersionPrefix != nil {
 		pkg.VersionPrefix = *child.VersionPrefix
+	}
+	if child.GoVersionPath != nil {
+		pkg.GoVersionPath = *child.GoVersionPath
 	}
 	if child.Rosetta2 != nil {
 		pkg.Rosetta2 = *child.Rosetta2
@@ -460,6 +472,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 
 	if ov.Vars != nil {
 		p.Vars = ov.Vars
+	}
+
+	if ov.GoVersionPath != nil {
+		p.GoVersionPath = *ov.GoVersionPath
 	}
 }
 
