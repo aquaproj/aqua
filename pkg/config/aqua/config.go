@@ -79,7 +79,7 @@ type Config struct {
 	Checksum   *Checksum  `json:"checksum,omitempty"`
 }
 
-type Registries map[string]*Registry
+type Registries map[string]*Registry //nolint:recvcheck
 
 func (Registries) JSONSchema() *jsonschema.Schema {
 	s := jsonschema.Reflect(&Registry{})
