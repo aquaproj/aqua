@@ -31,6 +31,7 @@ type FuzzyFinder interface {
 func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string { //nolint:cyclop
 	filters, err := createFilters(pkg)
 	if err != nil {
+		logerr.WithError(logE, err).Warn("create filters")
 		return ""
 	}
 
