@@ -9,7 +9,7 @@ require (
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/goccy/go-yaml v1.15.1
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-github/v66 v66.0.0
+	github.com/google/go-github/v67 v67.0.0
 	github.com/google/wire v0.6.0
 	github.com/hashicorp/go-version v1.7.0
 	github.com/invopop/jsonschema v0.12.0
