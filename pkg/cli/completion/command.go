@@ -21,19 +21,19 @@ Source the output to enable completion.
 
 e.g.
 
-.bashrc
+# .bashrc
 
 if command -v aqua &> /dev/null; then
 	eval "$(aqua completion bash)"
 fi
 
-.zshrc
+# .zshrc
 
 if command -v aqua &> /dev/null; then
 	source <(aqua completion zsh)
 fi
 
-fish
+# fish
 
 aqua completion fish > ~/.config/fish/completions/aqua.fish
 `,
