@@ -24,7 +24,7 @@ e.g.
 .bashrc
 
 if command -v aqua &> /dev/null; then
-	source <(aqua completion bash)
+	eval "$(aqua completion bash)"
 fi
 
 .zshrc
