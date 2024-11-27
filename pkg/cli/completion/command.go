@@ -21,13 +21,13 @@ Source the output to enable completion.
 
 e.g.
 
-.bash_profile
+.bashrc
 
 if command -v aqua &> /dev/null; then
 	source <(aqua completion bash)
 fi
 
-.zprofile
+.zshrc
 
 if command -v aqua &> /dev/null; then
 	source <(aqua completion zsh)
