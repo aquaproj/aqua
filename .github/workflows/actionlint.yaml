@@ -11,7 +11,7 @@ jobs:
   actionlint:
     uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@932d2dbef166b2f6f7e11790954e8245289ffd0d # v1.2.1
     with:
-      aqua_version: v2.38.0
+      aqua_version: v2.38.1
       aqua_policy_allow: true
     permissions:
       pull-requests: write
