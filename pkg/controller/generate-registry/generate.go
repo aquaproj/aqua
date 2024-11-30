@@ -35,17 +35,7 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 }
 
 func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
-	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param.Limit)
-	pkgInfo.Description = cleanDescription(pkgInfo.Description)
-	if len(param.Commands) != 0 {
-		files := make([]*registry.File, len(param.Commands))
-		for i, cmd := range param.Commands {
-			files[i] = &registry.File{
-				Name: cmd,
-			}
-		}
-		pkgInfo.Files = files
-	}
+	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param)
 	if param.OutTestData != "" {
 		if err := c.testdataOutputter.Output(&output.Param{
 			List: listPkgsFromVersions(pkgName, versions),
@@ -85,7 +75,22 @@ func cleanDescription(desc string) string {
 	return strings.TrimRight(strings.TrimSpace(gomoji.RemoveEmojis(desc)), ".!?")
 }
 
-func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, limit int) (*registry.PackageInfo, []string) {
+func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, param *config.Param) (*registry.PackageInfo, []string) {
+	pkgInfo, versions := c.getPackageInfoMain(ctx, logE, arg, param.Limit)
+	pkgInfo.Description = cleanDescription(pkgInfo.Description)
+	if len(param.Commands) != 0 {
+		files := make([]*registry.File, len(param.Commands))
+		for i, cmd := range param.Commands {
+			files[i] = &registry.File{
+				Name: cmd,
+			}
+		}
+		pkgInfo.Files = files
+	}
+	return pkgInfo, versions
+}
+
+func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry, arg string, limit int) (*registry.PackageInfo, []string) {
 	pkgName, version, _ := strings.Cut(arg, "@")
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return c.getCargoPackageInfo(ctx, logE, pkgName)

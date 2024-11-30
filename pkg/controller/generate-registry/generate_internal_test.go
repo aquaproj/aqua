@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
@@ -114,7 +115,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				RepoName:    "skim",
 				Type:        "cargo",
 				Crate:       "skim",
-				Description: "Fuzzy Finder in rust!",
+				Description: "Fuzzy Finder in rust",
 			},
 			crate: &cargo.CratePayload{
 				Crate: &cargo.Crate{
@@ -139,7 +140,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				CratePayload: d.crate,
 			}
 			ctrl := NewController(nil, gh, nil, cargoClient)
-			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, 0)
+			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, &config.Param{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}
