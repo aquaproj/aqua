@@ -16,14 +16,6 @@ body:
       description: Please explain the problem you want to solve.
     validations:
       required: true
-
-  - type: textarea
-    id: workaround
-    attributes:
-      label: Workaround
-      description: |
-        If you have any workaround, please explain it and why the workaround isn't enough.
-
   - type: textarea
     id: example-code
     attributes:

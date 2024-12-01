@@ -1,0 +1,20 @@
+---
+name: Close a new Discussion
+on:
+  discussion:
+    types: [created]
+jobs:
+  close-new-discussion:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      discussions: write
+    steps:
+      - uses: suzuki-shunsuke/close-discussion-action@a9a5728293ab3c621c5de3cc1ba4aace06a5f027 # v0.1.0
+        with:
+          id: ${{github.event.discussion.node_id}}
+          message: |
+            This discussion is closed because we stopped using GitHub Discussions.
+            We don't accept new discussions anymore.
+            [Please create an issue instead.](https://github.com/aquaproj/aqua/issues/new/choose)
+            For details, please see https://github.com/aquaproj/aqua/issues/3311

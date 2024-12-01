@@ -1,5 +1,7 @@
 name: Bug Report
-description: If something isn't working as expected.
+description: |
+  Please report the bug of aqua.
+  If you're not sure if it's a bug or not, please use the template `Support Request` instead.
 labels:
   - bug
 body:
@@ -19,10 +21,8 @@ body:
         $ aqua info
 
         ```
-
     validations:
       required: true
-
   - type: textarea
     id: overview
     attributes:
@@ -58,17 +58,6 @@ body:
     validations:
       required: true
   - type: textarea
-    id: debug-output
-    attributes:
-      label: Debug output
-      description: Please set the environment variable `AQUA_LOG_LEVEL=debug` and run aqua and tell us the debug output.
-      value: |
-        ```console
-        $ 
-        ```
-    validations:
-      required: false
-  - type: textarea
     id: expected-behaviour
     attributes:
       label: Expected behaviour
@@ -84,6 +73,5 @@ body:
     id: note
     attributes:
       label: Note
-      description: Additional information about the discussion.
     validations:
       required: false

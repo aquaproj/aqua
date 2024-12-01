@@ -1,0 +1,27 @@
+---
+name: Close a new Issue without an issue template
+on:
+  issues:
+    types: [opened]
+jobs:
+  close-new-issue:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      issues: write
+    # Pleaes update `if` when you edit, delete, or add labels of issue templates.
+    if: |
+      !contains(github.event.issue.labels.*.name, 'bug') &&
+      !contains(github.event.issue.labels.*.name, 'enhancement') &&
+      !contains(github.event.issue.labels.*.name, 'no-fit-template') &&
+      !contains(github.event.issue.labels.*.name, 'question') &&
+      !contains(github.event.issue.labels.*.name, 'support-request')
+    steps:
+      - uses: suzuki-shunsuke/issue-close-lock-action@231aefd9a92cddfd2eb51e60965e9468f3d592bd # v0.1.0
+        with:
+          issue_number: ${{github.event.issue.number}}
+          is_lock: "false"
+          message: |
+            This issue is closed because it was created without an issue template probably.
+            Please use an issue template.
+            https://github.com/aquaproj/aqua/issues/new/choose
