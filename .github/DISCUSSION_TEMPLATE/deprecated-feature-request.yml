@@ -1,0 +1,17 @@
+title: Deprecated (Feature Request)
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # :warning: Please create an Issue instead
+
+        [We don't accept new discussions anymore](https://github.com/aquaproj/aqua/issues/3311).
+        We keep this discussion category only for existing discussions.
+
+        [Please create an issue](https://github.com/aquaproj/aqua/issues/new?assignees=&labels=enhancement&projects=&template=feature-request.yml).
+  # At least one input item is required, so we add a dummy checkbox.
+  - type: checkboxes
+    attributes:
+      label: .
+      options:
+        - label: ..

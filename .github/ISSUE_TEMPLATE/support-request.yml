@@ -1,4 +1,9 @@
-title: Support Request
+name: Support Request
+description: |
+  Please use this template when you face any problem (not bug) and need our help.
+  If you're not sure if it's a bug or not, please use this template.
+labels:
+  - support-request
 body:
   - type: textarea
     id: aqua-info
@@ -16,25 +21,12 @@ body:
         $ aqua info
 
         ```
-
-        #### aqua < v2.10.0
-
-        ```console
-        $ aqua -v
-
-        ```
-
-        OS (Windows, Linux, macOS, etc):
-        CPU Architecture (amd64, arm64, etc):
-
     validations:
       required: true
-
   - type: textarea
     id: overview
     attributes:
       label: Overview
-      value:
     validations:
       required: true
   - type: textarea
@@ -66,34 +58,20 @@ body:
     validations:
       required: true
   - type: textarea
-    id: debug-output
-    attributes:
-      label: Debug output
-      description: Please set the environment variable `AQUA_LOG_LEVEL=debug` and run aqua and tell us the debug output.
-      value: |
-        ```console
-        $ 
-        ```
-    validations:
-      required: false
-  - type: textarea
     id: expected-behaviour
     attributes:
       label: Expected behaviour
-      value:
     validations:
       required: true
   - type: textarea
     id: actual-behaviour
     attributes:
       label: Actual behaviour
-      value:
     validations:
       required: true
   - type: textarea
     id: note
     attributes:
       label: Note
-      description: Additional information about the discussion.
     validations:
       required: false
