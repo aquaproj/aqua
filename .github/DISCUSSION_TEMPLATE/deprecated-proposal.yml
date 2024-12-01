@@ -1,0 +1,18 @@
+title: Deprecated (Proposal)
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # :warning: Please create an Issue instead
+
+        [We don't accept new discussions anymore](https://github.com/aquaproj/aqua/issues/3311).
+        We keep this discussion category only for existing discussions.
+
+        [Please create an issue](https://github.com/aquaproj/aqua/issues/new?assignees=&labels=no-fit-template&projects=&template=general.yml).
+  # At least one input item is required, so we add a dummy checkbox.
+  - type: checkboxes
+    attributes:
+      label: .
+      options:
+        - label: ..
+
