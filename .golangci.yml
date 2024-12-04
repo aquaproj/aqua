@@ -7,8 +7,6 @@ linters:
   enable-all: true
   disable:
     - err113
-    - gomnd # WARN The linter 'gomnd' is deprecated (since v1.58.0) due to: The linter has been renamed. Replaced by mnd
-    - execinquery # WARN The linter 'execinquery' is deprecated (since v1.58.0) due to: The repository of the linter has been archived by the owner
     - wsl
     - lll
     - godot
@@ -24,3 +22,4 @@ linters:
     - depguard
     - tagalign
     - gomoddirectives # TODO remove
+    - exportloopref # WARN The linter 'exportloopref' is deprecated (since v1.60.2) due to: Since Go1.22 (loopvar) this linter is no longer relevant. Replaced by copyloopvar.
