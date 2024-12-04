@@ -61,28 +61,31 @@ func (o *Outputter) getAppendedTxt(cfgFilePath string, file *ast.File, pkgs []*a
 	return file.String(), nil
 }
 
-func appendPkgsNode(mapValue *ast.MappingValueNode, node ast.Node) error {
-	switch mapValue.Value.Type() {
-	case ast.NullType:
-		mapValue.Value = node
-		return nil
-	case ast.SequenceType:
-		if err := ast.Merge(mapValue.Value, node); err != nil {
-			return fmt.Errorf("merge packages: %w", err)
-		}
-		return nil
-	default:
-		return errors.New("packages must be null or array")
-	}
-}
-
 func updateASTFile(values *ast.MappingValueNode, pkgs []*aqua.Package) error {
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)
 	}
 
-	return appendPkgsNode(values, node)
+	switch values.Value.Type() {
+	case ast.NullType:
+		values.Value = node
+		return nil
+	case ast.SequenceType:
+		if err := ast.Merge(values.Value, node); err != nil {
+			return fmt.Errorf("merge packages: %w", err)
+		}
+		seq, ok := values.Value.(*ast.SequenceNode)
+		if ok {
+			for range len(pkgs) {
+				// https://github.com/goccy/go-yaml/issues/502#issuecomment-2515981600
+				seq.ValueHeadComments = append(seq.ValueHeadComments, nil)
+			}
+		}
+		return nil
+	default:
+		return errors.New("packages must be null or array")
+	}
 }
 
 func (o *Outputter) appendPkgsTxt(cfgFilePath string, pkgs []*aqua.Package) (string, error) {

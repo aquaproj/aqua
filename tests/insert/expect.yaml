@@ -1,0 +1,13 @@
+registries:
+  - type: standard
+    ref: v4.267.0 # renovate: depName=aquaproj/aqua-registry
+
+packages:
+  # foo
+  - name: suzuki-shunsuke/mkghtag@v0.1.4
+  # hello
+  - name: suzuki-shunsuke/tfcmt@v4.14.0
+  - name: suzuki-shunsuke/pinact@v1.0.0
+  - name: suzuki-shunsuke/ghalint@v1.0.0
+  - name: suzuki-shunsuke/ci-info@v2.3.1
+  - name: suzuki-shunsuke/ghd2i@v0.1.2

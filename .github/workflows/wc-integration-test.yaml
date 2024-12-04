@@ -84,6 +84,13 @@ jobs:
       - name: output fish completion
         run: aqua completion fish
 
+      - name: Test aqua g -i
+        run: aqua g -i suzuki-shunsuke/ghalint@v1.0.0 suzuki-shunsuke/ci-info@v2.3.1 suzuki-shunsuke/ghd2i@v0.1.2
+        working-directory: tests/insert
+      - name: compare aqua.yaml and expect.yaml
+        run: diff aqua.yaml expect.yaml
+        working-directory: tests/insert
+
       - run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
       - name: add duplicated package
