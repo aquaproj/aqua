@@ -77,7 +77,7 @@ func updateASTFile(values *ast.MappingValueNode, pkgs []*aqua.Package) error {
 		}
 		seq, ok := values.Value.(*ast.SequenceNode)
 		if ok {
-			for range len(pkgs) {
+			for range pkgs {
 				// https://github.com/goccy/go-yaml/issues/502#issuecomment-2515981600
 				seq.ValueHeadComments = append(seq.ValueHeadComments, nil)
 			}
