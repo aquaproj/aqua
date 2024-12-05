@@ -211,7 +211,10 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 								if override.Replacements == nil {
 									override.Replacements = map[string]string{}
 								}
-								override.Replacements[k] = k
+								if !((override.GOOS == osWindows && k == "arm64" && pkgInfo.WindowsARMEmulation) || (override.GOOS == osDarwin && k == "arm64" && pkgInfo.Rosetta2)) {
+									// https://github.com/aquaproj/aqua/issues/3336
+									override.Replacements[k] = k
+								}
 							}
 						}
 					}
