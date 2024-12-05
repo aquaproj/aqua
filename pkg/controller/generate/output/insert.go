@@ -75,13 +75,6 @@ func updateASTFile(values *ast.MappingValueNode, pkgs []*aqua.Package) error {
 		if err := ast.Merge(values.Value, node); err != nil {
 			return fmt.Errorf("merge packages: %w", err)
 		}
-		seq, ok := values.Value.(*ast.SequenceNode)
-		if ok {
-			for range pkgs {
-				// https://github.com/goccy/go-yaml/issues/502#issuecomment-2515981600
-				seq.ValueHeadComments = append(seq.ValueHeadComments, nil)
-			}
-		}
 		return nil
 	default:
 		return errors.New("packages must be null or array")
