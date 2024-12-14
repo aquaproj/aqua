@@ -1,6 +1,6 @@
 ---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/policy.json
 # aqua Policy
-# https://aquaproj.github.io/docs/tutorial-extras/policy-as-code
 registries:
   - type: standard
     ref: semver(">= 3.0.0") or Version == "f9cce37273a70e2f5664fb4c3708169ffe7e320c"
