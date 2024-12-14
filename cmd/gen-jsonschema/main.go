@@ -9,6 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/invopop/jsonschema"
 )
 
@@ -23,6 +24,9 @@ func core() error {
 		return err
 	}
 	if err := gen(&registry.Config{}, "json-schema/registry.json"); err != nil {
+		return err
+	}
+	if err := gen(&policy.ConfigYAML{}, "json-schema/policy.json"); err != nil {
 		return err
 	}
 	return nil
