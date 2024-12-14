@@ -10,6 +10,7 @@ import (
 )
 
 const configTemplate = `---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/policy.json
 # aqua Policy
 # https://aquaproj.github.io/
 registries:
