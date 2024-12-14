@@ -12,6 +12,7 @@ import (
 )
 
 const configTemplate = `---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
 # checksum:
