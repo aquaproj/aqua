@@ -100,7 +100,7 @@ func (p *Package) PkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
 		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, p, pkg.Version, "bin"), nil
 	case PkgInfoTypeCargo:
 		registry := "crates.io"
-		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, registry, pkgInfo.Crate, pkg.Version), nil
+		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, registry, pkgInfo.Crate, strings.TrimPrefix(pkg.Version, "v")), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
 			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
