@@ -17,6 +17,7 @@ type Package struct {
 	Update         *Update         `yaml:",omitempty" json:"update,omitempty"`
 	FilePath       string          `json:"-" yaml:"-"`
 	GoVersionFile  string          `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`
+	VersionExpr    string          `json:"version_expr,omitempty" yaml:"version_expr,omitempty"`
 	Vars           map[string]any  `json:"vars,omitempty" yaml:",omitempty"`
 	CommandAliases []*CommandAlias `json:"command_aliases,omitempty" yaml:"command_aliases,omitempty"`
 }

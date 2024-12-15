@@ -97,6 +97,9 @@
         "go_version_file": {
           "type": "string"
         },
+        "version_expr": {
+          "type": "string"
+        },
         "vars": {
           "type": "object"
         },
