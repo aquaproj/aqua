@@ -94,11 +94,11 @@ func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pk
 				"go_version_file": pkg.GoVersionFile,
 			}))
 		}
-		return nil, nil //nolint:nilnil
+		return nil, nil
 	}
 	if pkg.Import == "" {
 		// version
-		return nil, nil //nolint:nilnil
+		return nil, nil
 	}
 	// import
 	logE = logE.WithField("import", pkg.Import)
