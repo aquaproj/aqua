@@ -107,7 +107,7 @@ func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pk
 				"version_expr": pkg.VersionExpr,
 			}))
 		}
-		pkg.Version = s
+		pkg.Version = pkg.VersionExprPrefix + s
 		return nil, nil
 	}
 	if pkg.Import == "" {
