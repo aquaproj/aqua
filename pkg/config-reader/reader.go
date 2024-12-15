@@ -78,6 +78,7 @@ func (r *ConfigReader) readPackages(logE *logrus.Entry, configFilePath string, c
 			continue
 		}
 		if subPkgs == nil {
+			pkg.FilePath = configFilePath
 			pkgs = append(pkgs, pkg)
 			continue
 		}

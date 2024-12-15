@@ -70,6 +70,7 @@ packages:
 						Name:     "aquaproj/aqua-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
+						FilePath: "/home/foo/workspace/aqua.yaml",
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
@@ -92,6 +93,7 @@ packages:
 							Name:     "aquaproj/aqua-installer",
 							Registry: "standard",
 							Version:  "v1.0.0",
+							FilePath: "/home/foo/workspace/aqua.yaml",
 						},
 					},
 					Registries: aqua.Registries{
@@ -189,6 +191,7 @@ packages:
 						Name:     "aquaproj/aqua-installer",
 						Registry: "standard",
 						Version:  "v1.0.0",
+						FilePath: "/etc/aqua/aqua.yaml",
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
@@ -211,11 +214,13 @@ packages:
 							Name:     "suzuki-shunsuke/ci-info",
 							Registry: "standard",
 							Version:  "v1.0.0",
+							FilePath: "/etc/aqua/aqua.yaml",
 						},
 						{
 							Name:     "aquaproj/aqua-installer",
 							Registry: "standard",
 							Version:  "v1.0.0",
+							FilePath: "/etc/aqua/aqua.yaml",
 						},
 					},
 					Registries: aqua.Registries{
