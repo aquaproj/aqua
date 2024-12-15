@@ -15,9 +15,6 @@ import (
 var goVersionPattern = regexp.MustCompile(`(?m)^go (\d+\.\d+.\d+)$`)
 
 func readGoVersionFile(fs afero.Fs, filePath string, pkg *aqua.Package) error {
-	if pkg.GoVersionFile == "" {
-		return nil
-	}
 	p := filepath.Join(filepath.Dir(filePath), pkg.GoVersionFile)
 	b, err := afero.ReadFile(fs, p)
 	if err != nil {

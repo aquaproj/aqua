@@ -87,6 +87,7 @@ packages:
 						Name:     "suzuki-shunsuke/ci-info",
 						Registry: "standard",
 						Version:  "v1.0.0",
+						FilePath: "/home/workspace/foo/aqua.yaml",
 					},
 					{
 						Name:     "aquaproj/aqua-installer",
