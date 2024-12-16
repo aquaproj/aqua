@@ -91,6 +91,16 @@ jobs:
         run: diff aqua.yaml expect.yaml
         working-directory: tests/insert
 
+      - name: Test version_expr readFile
+        run: aqua which -v terraform
+        working-directory: tests/version_expr_file
+      - name: Test version_expr readJSON
+        run: aqua which -v terraform
+        working-directory: tests/version_expr_json
+      - name: Test version_expr readYAML
+        run: aqua which -v terraform
+        working-directory: tests/version_expr_yaml
+
       - run: aqua g -i suzuki-shunsuke/tfcmt
         working-directory: tests/main
       - name: add duplicated package

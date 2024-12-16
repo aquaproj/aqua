@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -95,6 +96,18 @@ func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pk
 				"go_version_file": pkg.GoVersionFile,
 			}))
 		}
+		return nil, nil
+	}
+	if pkg.VersionExpr != "" {
+		// version_expr
+		dir := filepath.Dir(configFilePath)
+		s, err := expr.EvalVersionExpr(r.fs, dir, pkg.VersionExpr)
+		if err != nil {
+			return nil, fmt.Errorf("evaluate a version_expr: %w", logerr.WithFields(err, logrus.Fields{
+				"version_expr": pkg.VersionExpr,
+			}))
+		}
+		pkg.Version = pkg.VersionExprPrefix + s
 		return nil, nil
 	}
 	if pkg.Import == "" {
