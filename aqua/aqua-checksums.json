@@ -111,33 +111,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rhysd/actionlint/v1.7.4/actionlint_1.7.4_darwin_amd64.tar.gz",
-      "checksum": "63A3BA90EE2325AFAD3FF2E64A4D80688C261E6C68BE8E6AB91214637BF936B8",
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.5/actionlint_1.7.5_darwin_amd64.tar.gz",
+      "checksum": "6B765DA53B4C0F9B8F63DBDCDC12D800A8FEC36B21336940E166EAE329A210DC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rhysd/actionlint/v1.7.4/actionlint_1.7.4_darwin_arm64.tar.gz",
-      "checksum": "CBD193BB490F598D77E179261D7B76DFEBD049DDDEDE5803BA21CBF6A469AEEE",
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.5/actionlint_1.7.5_darwin_arm64.tar.gz",
+      "checksum": "397119F9BAA3FD9FE195DB340B30ACDAEA532826E19A047A9CC9D96ADD7C267D",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rhysd/actionlint/v1.7.4/actionlint_1.7.4_linux_amd64.tar.gz",
-      "checksum": "FC0A6886BBB9A23A39EEEC4B176193CADB54DDBE77CDBB19B637933919545395",
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.5/actionlint_1.7.5_linux_amd64.tar.gz",
+      "checksum": "3E6E0A832DFA0B5F027E6B8956AAD2632D69B7CB778B1CFF847B40279950A856",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rhysd/actionlint/v1.7.4/actionlint_1.7.4_linux_arm64.tar.gz",
-      "checksum": "EDE03682DC955381D057DDE95BB85CE9CA418122209A8A313B617D4ADEC56416",
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.5/actionlint_1.7.5_linux_arm64.tar.gz",
+      "checksum": "CB992426D176CF5C2F9CD0ECD36722EACE064282DDE7125F2B6813F2A299AB36",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rhysd/actionlint/v1.7.4/actionlint_1.7.4_windows_amd64.zip",
-      "checksum": "CEF5EA561B9BE20CFF390301C4062C1D7B260AF2F9963C26B406E57AAF30E4D8",
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.5/actionlint_1.7.5_windows_amd64.zip",
+      "checksum": "B6271ADD72E21BBD3CFFBFB7105ADE7F8648CD2CED0C94184F47705BADC7AE0D",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rhysd/actionlint/v1.7.4/actionlint_1.7.4_windows_arm64.zip",
-      "checksum": "205A2F99BE1CAA70CF0558561FAE47F099B5EF85CA57B00ABCE18C840452EAF3",
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.5/actionlint_1.7.5_windows_arm64.zip",
+      "checksum": "FDFB665BFA53866373E5B6FADA218B5285B06AF70A1C192AE4460F8847667A73",
       "algorithm": "sha256"
     },
     {
