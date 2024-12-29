@@ -1,16 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"os"
-	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/invopop/jsonschema"
+	"github.com/suzuki-shunsuke/gen-go-jsonschema/jsonschema"
 )
 
 func main() {
@@ -20,33 +17,14 @@ func main() {
 }
 
 func core() error {
-	if err := gen(&aqua.Config{}, "json-schema/aqua-yaml.json"); err != nil {
-		return err
+	if err := jsonschema.Write(&aqua.Config{}, "json-schema/aqua-yaml.json"); err != nil {
+		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := gen(&registry.Config{}, "json-schema/registry.json"); err != nil {
-		return err
+	if err := jsonschema.Write(&registry.Config{}, "json-schema/registry.json"); err != nil {
+		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := gen(&policy.ConfigYAML{}, "json-schema/policy.json"); err != nil {
-		return err
-	}
-	return nil
-}
-
-func gen(input interface{}, p string) error {
-	f, err := os.Create(p)
-	if err != nil {
-		return fmt.Errorf("create a file %s: %w", p, err)
-	}
-	defer f.Close()
-	encoder := json.NewEncoder(f)
-	encoder.SetIndent("", "  ")
-	s := jsonschema.Reflect(input)
-	b, err := json.MarshalIndent(s, "", "  ")
-	if err != nil {
-		return fmt.Errorf("mashal schema as JSON: %w", err)
-	}
-	if err := os.WriteFile(p, []byte(strings.ReplaceAll(string(b), "http://json-schema.org", "https://json-schema.org")+"\n"), 0o644); err != nil { //nolint:gosec,mnd
-		return fmt.Errorf("write JSON Schema to %s: %w", p, err)
+	if err := jsonschema.Write(&policy.ConfigYAML{}, "json-schema/policy.json"); err != nil {
+		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
 	return nil
 }

@@ -100,6 +100,9 @@
         "version_expr": {
           "type": "string"
         },
+        "version_expr_prefix": {
+          "type": "string"
+        },
         "vars": {
           "type": "object"
         },

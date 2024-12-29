@@ -142,6 +142,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/suzuki-shunsuke/flute v1.0.1 h1:qzxSX2WQ8ih378zeCrjDMW5mVCsYyEmjicYuCy4aiLk=
 github.com/suzuki-shunsuke/flute v1.0.1/go.mod h1:lQKcCgbjiIzH4lar2V2UX1IdEwAB5KTfTckgWN1rtFg=
+github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0 h1:g7askc+nskCkKRWTVOdsAT8nMhwiaVT6Dmlnh6uvITM=
+github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0/go.mod h1:yFO7h5wwFejxi6jbtazqmk7b/JSBxHcit8DGwb1bhg0=
 github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211154308-176f852d9bca/go.mod h1:Vq3NkhgmA9DT/2UZ08x/3A34xxvzQ/vTMABnTWKoMbY=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0 h1:oVXrrYNGBq4POyITQNWKzwsYz7B2nUcqtDbeX4BfeEc=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0/go.mod h1:kDFtLeftDiIUUHXGI3xq5eJ+uAOi50FPrxPENTHktJ0=
