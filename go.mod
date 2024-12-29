@@ -1,6 +1,6 @@
 module github.com/aquaproj/aqua/v2
 
-go 1.23.2
+go 1.23.4
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
@@ -21,6 +21,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.11.0
 	github.com/suzuki-shunsuke/flute v1.0.1
+	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
