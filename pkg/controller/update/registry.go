@@ -16,7 +16,7 @@ func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry,
 		return "", nil
 	}
 
-	logE.Debug("getting the latest release")
+	logE.Debug("getting the latest release of a registry")
 	release, _, err := c.gh.GetLatestRelease(ctx, rgst.RepoOwner, rgst.RepoName)
 	if err != nil {
 		return "", fmt.Errorf("get the latest release by GitHub API: %w", err)
@@ -28,11 +28,11 @@ func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry,
 func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config) error { //nolint:cyclop
 	newVersions := map[string]string{}
 	for _, rgst := range cfg.Registries {
+		logE := logE.WithFields(logrus.Fields{
+			"registry_name": rgst.Name,
+		})
 		if commitHashPattern.MatchString(rgst.Ref) {
-			logE.WithFields(logrus.Fields{
-				"registry_name":    rgst.Name,
-				"registry_version": rgst.Ref,
-			}).Debug("skip a registry whose version is a commit hash")
+			logE.Debug("skip a registry whose version is a commit hash")
 			continue
 		}
 		newVersion, err := c.newRegistryVersion(ctx, logE, rgst)

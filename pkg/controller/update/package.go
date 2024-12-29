@@ -62,10 +62,17 @@ func (c *Controller) updatePackagesInFile(ctx context.Context, logE *logrus.Entr
 			"package_version": pkg.Package.Version,
 			"registry":        pkg.Package.Registry,
 		})
+		if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
+			logE.Debug("skip updating the package because package tags are unmatched")
+			continue
+		}
 		if newVersion := c.getPackageNewVersion(ctx, logE, param, updatedPkgs, pkg); newVersion != "" {
 			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
 			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
 		}
+	}
+	if len(newVersions) == 0 {
+		return nil
 	}
 	if err := c.updateFile(logE, cfgFilePath, newVersions); err != nil {
 		return fmt.Errorf("update a package: %w", err)

@@ -82,6 +82,12 @@ e.g.
 You can also specify a version.
 
   $ aqua update gh@v2.30.0
+
+You can also filter updated packages using package tags.
+
+e.g.
+$ aqua up -t foo # Install only packages having a tag "foo"
+$ aqua up --exclude-tags foo # Install only packages not having a tag "foo"
 `
 
 type command struct {
@@ -123,6 +129,15 @@ func New(r *util.Param) *cli.Command {
 				Aliases: []string{"l"},
 				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
 				Value:   config.DefaultVerCnt,
+			},
+			&cli.StringFlag{
+				Name:    "tags",
+				Aliases: []string{"t"},
+				Usage:   "filter installed packages with tags",
+			},
+			&cli.StringFlag{
+				Name:  "exclude-tags",
+				Usage: "exclude installed packages with tags",
 			},
 		},
 	}
