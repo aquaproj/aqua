@@ -42,7 +42,7 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, par
 	return nil
 }
 
-func (c *Controller) updatePackagesInFile(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, cfg *aqua.Config, rgstCfgs map[string]*registry.Config, updatedPkgs map[string]struct{}, newVersions map[string]string) error {
+func (c *Controller) updatePackagesInFile(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, cfg *aqua.Config, rgstCfgs map[string]*registry.Config, updatedPkgs map[string]struct{}, newVersions map[string]string) error { //nolint:cyclop
 	pkgs, failed := config.ListPackages(logE, cfg, c.runtime, rgstCfgs)
 	if len(pkgs) == 0 {
 		if failed {
