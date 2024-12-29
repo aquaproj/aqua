@@ -19,7 +19,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
-          go-version: 1.23.4
+          go-version-file: go.mod
           cache: true
       - run: go build -o /usr/local/bin/aqua ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
