@@ -40,6 +40,9 @@ func getCargoArgs(version string, opts *registry.Cargo) []string {
 		} else if len(opts.Features) != 0 {
 			args = append(args, "--features", strings.Join(opts.Features, ","))
 		}
+		if opts.Locked {
+			args = append(args, "--locked")
+		}
 	}
 	return args
 }
