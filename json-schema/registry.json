@@ -53,6 +53,9 @@
         },
         "all_features": {
           "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
