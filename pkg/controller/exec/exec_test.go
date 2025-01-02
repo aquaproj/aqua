@@ -250,7 +250,7 @@ packages:
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{})
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockReader{})
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				func() {
 					if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...); err != nil {
 						if d.isErr {

@@ -135,7 +135,7 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry,
 	return nil
 }
 
-func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop,funlen
+func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
