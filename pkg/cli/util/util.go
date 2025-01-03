@@ -33,15 +33,24 @@ type LDFlags struct {
 	Date    string
 }
 
-func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *LDFlags) error { //nolint:funlen,cyclop
+func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *LDFlags) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
 	param.Args = c.Args().Slice()
-	if logLevel := c.String("log-level"); logLevel != "" {
-		param.LogLevel = logLevel
+	setBasicParams(c, logE, commandName, param, wd, ldFlags)
+	setLogParams(c, param, logE)
+	if err := setEnvParams(param); err != nil {
+		return fmt.Errorf("error during setting params from Env vars: %w", err)
 	}
+	if err := setChecksumParams(param); err != nil {
+		return fmt.Errorf("error during setting params from checksum params: %w", err)
+	}
+	return nil
+}
+
+func setBasicParams(c *cli.Context, logE *logrus.Entry, commandName string, param *config.Param, wd string, ldFlags *LDFlags) {
 	param.ConfigFilePath = c.String("config")
 	param.Dest = c.String("o")
 	param.OutTestData = c.String("out-testdata")
@@ -66,14 +75,11 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 	if cmd := c.String("cmd"); cmd != "" {
 		param.Commands = strings.Split(cmd, ",")
 	}
-	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = ldFlags.Version
 	param.AquaCommitHash = ldFlags.Commit
 	param.RootDir = config.GetRootDir(osenv.New())
 	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
-	log.SetLevel(param.LogLevel, logE)
-	log.SetColor(param.LogColor, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = c.Bool("deep")
@@ -84,7 +90,18 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
 	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
 	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
+}
 
+func setLogParams(c *cli.Context, param *config.Param, logE *logrus.Entry) {
+	if logLevel := c.String("log-level"); logLevel != "" {
+		param.LogLevel = logLevel
+	}
+	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
+	log.SetLevel(param.LogLevel, logE)
+	log.SetColor(param.LogColor, logE)
+}
+
+func setEnvParams(param *config.Param) error {
 	if a := os.Getenv("AQUA_DISABLE_LAZY_INSTALL"); a != "" {
 		disableLazyInstall, err := strconv.ParseBool(a)
 		if err != nil {
@@ -108,6 +125,10 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 			}
 		}
 	}
+	return nil
+}
+
+func setChecksumParams(param *config.Param) error {
 	if a := os.Getenv("AQUA_CHECKSUM"); a != "" {
 		chksm, err := strconv.ParseBool(a)
 		if err != nil {
