@@ -42,15 +42,17 @@ func allowWrite(fs afero.Fs, path string) (func() error, error) {
 	}, nil
 }
 
-func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
-	slashCount := strings.Count(f.NameInArchive, "/")
-	backSlashCount := strings.Count(f.NameInArchive, "\\")
-	p := f.NameInArchive
+func (h *handler) normalizePath(nameInArchive string) string {
+	slashCount := strings.Count(nameInArchive, "/")
+	backSlashCount := strings.Count(nameInArchive, "\\")
 	if backSlashCount > slashCount && filepath.Separator != '\\' {
-		p = strings.ReplaceAll(f.NameInArchive, "\\", string(filepath.Separator))
+		return strings.ReplaceAll(nameInArchive, "\\", string(filepath.Separator))
 	}
-	dstPath := filepath.Join(h.dest, p)
+	return nameInArchive
+}
 
+func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
+	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
 	parentDir := filepath.Dir(dstPath)
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
@@ -81,7 +83,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	reader, err := f.Open()
 	if err != nil {
-		return fmt.Errorf("open file: %w", err)
+		return fmt.Errorf("open a file: %w", err)
 	}
 	defer reader.Close()
 
