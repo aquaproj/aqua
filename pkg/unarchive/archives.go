@@ -2,7 +2,6 @@ package unarchive
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -106,7 +105,7 @@ func (h *handler) unarchive(ctx context.Context, tarball string) error {
 
 	extractor, ok := format.(archives.Extractor)
 	if !ok {
-		return errors.New("the file format isn't supported")
+		return errUnsupportedFileFormat
 	}
 
 	if err := osfile.MkdirAll(h.fs, h.dest); err != nil {

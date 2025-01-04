@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"strings"
 
-	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -104,22 +102,4 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) (coreUnarchiver, erro
 		fs:   u.fs,
 		dest: dest,
 	}, nil
-}
-
-func byExtension(filename string) (interface{}, error) {
-	formats := map[string]interface{}{
-		"tbr":  archiver.NewTarBrotli(),
-		"tbz":  archiver.NewTarBz2(),
-		"tbz2": archiver.NewTarBz2(),
-		"tgz":  archiver.NewTarGz(),
-		"tlz4": archiver.NewTarLz4(),
-		"tsz":  archiver.NewTarSz(),
-		"txz":  archiver.NewTarXz(),
-	}
-	for format, arc := range formats {
-		if strings.HasSuffix(filename, "."+format) {
-			return arc, nil
-		}
-	}
-	return archiver.ByExtension(filename) //nolint:wrapcheck
 }
