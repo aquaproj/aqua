@@ -43,7 +43,13 @@ func allowWrite(fs afero.Fs, path string) (func() error, error) {
 }
 
 func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
-	dstPath := filepath.Clean(filepath.Join(h.dest, f.NameInArchive))
+	slashCount := strings.Count(f.NameInArchive, "/")
+	backSlashCount := strings.Count(f.NameInArchive, "\\")
+	p := f.NameInArchive
+	if backSlashCount > slashCount && filepath.Separator != '\\' {
+		p = strings.ReplaceAll(f.NameInArchive, "\\", string(filepath.Separator))
+	}
+	dstPath := filepath.Join(h.dest, p)
 
 	parentDir := filepath.Dir(dstPath)
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
