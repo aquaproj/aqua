@@ -12,12 +12,14 @@ import (
 	"github.com/mholt/archives"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type handler struct {
 	fs       afero.Fs
 	dest     string
 	filename string
+	logE     *logrus.Entry
 }
 
 const readOnlyPerm = 0o200
@@ -29,7 +31,7 @@ func allowWrite(fs afero.Fs, path string) (func() error, error) {
 	}
 
 	if originalMode.Mode().Perm()&readOnlyPerm != 0 {
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 
 	if err := os.Chmod(path, originalMode.Mode()|readOnlyPerm); err != nil {
@@ -45,7 +47,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	parentDir := filepath.Dir(dstPath)
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
-		return err
+		return fmt.Errorf("create a directory: %w", err)
 	}
 
 	if f.IsDir() {
@@ -64,7 +66,11 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 		return err
 	}
 	if fn != nil {
-		defer fn()
+		defer func() {
+			if err := fn(); err != nil {
+				logerr.WithError(h.logE, err).Warn("failed to restore the original permission")
+			}
+		}()
 	}
 
 	reader, err := f.Open()
@@ -85,7 +91,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	return nil
 }
 
-func (h *handler) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
+func (h *handler) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) error {
 	tempFilePath, err := src.Body.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporary file path: %w", err)
@@ -124,7 +130,7 @@ func (h *handler) unarchive(ctx context.Context, tarball string) error {
 func (h *handler) decompress(input io.Reader, decomp archives.Decompressor) error {
 	rc, err := decomp.OpenReader(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("open a decompressed file: %w", err)
 	}
 	defer rc.Close()
 	if err := osfile.MkdirAll(h.fs, h.dest); err != nil {

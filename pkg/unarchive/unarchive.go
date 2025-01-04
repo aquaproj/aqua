@@ -3,7 +3,6 @@ package unarchive
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"path/filepath"
 
@@ -42,12 +41,7 @@ func New(executor Executor, fs afero.Fs) *Unarchiver {
 }
 
 func (u *Unarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
-	arc, err := u.getUnarchiver(src, dest)
-	if err != nil {
-		return fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
-	}
-
-	return arc.Unarchive(ctx, logE, src) //nolint:wrapcheck
+	return u.getUnarchiver(src, dest).Unarchive(ctx, logE, src) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
@@ -61,27 +55,27 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func (u *Unarchiver) getUnarchiver(src *File, dest string) (coreUnarchiver, error) {
+func (u *Unarchiver) getUnarchiver(src *File, dest string) coreUnarchiver {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
 			dest: filepath.Join(dest, filename),
 			fs:   u.fs,
-		}, nil
+		}
 	}
 	if src.Type == "dmg" {
 		return &dmgUnarchiver{
 			dest:     dest,
 			executor: u.executor,
 			fs:       u.fs,
-		}, nil
+		}
 	}
 	if src.Type == "pkg" {
 		return &pkgUnarchiver{
 			dest:     dest,
 			executor: u.executor,
 			fs:       u.fs,
-		}, nil
+		}
 	}
 	switch ext := filepath.Ext(filename); ext {
 	case ".dmg":
@@ -89,18 +83,18 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) (coreUnarchiver, erro
 			dest:     dest,
 			executor: u.executor,
 			fs:       u.fs,
-		}, nil
+		}
 	case ".pkg":
 		return &pkgUnarchiver{
 			dest:     dest,
 			executor: u.executor,
 			fs:       u.fs,
-		}, nil
+		}
 	}
 
 	return &handler{
 		fs:       u.fs,
 		dest:     dest,
 		filename: filename,
-	}, nil
+	}
 }
