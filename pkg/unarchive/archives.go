@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/mholt/archives"
@@ -14,8 +15,9 @@ import (
 )
 
 type handler struct {
-	fs   afero.Fs
-	dest string
+	fs       afero.Fs
+	dest     string
+	filename string
 }
 
 const readOnlyPerm = 0o200
@@ -103,18 +105,37 @@ func (h *handler) unarchive(ctx context.Context, tarball string) error {
 		return fmt.Errorf("identify the format: %w", err)
 	}
 
-	extractor, ok := format.(archives.Extractor)
-	if !ok {
-		return errUnsupportedFileFormat
-	}
+	if extractor, ok := format.(archives.Extractor); ok {
+		if err := osfile.MkdirAll(h.fs, h.dest); err != nil {
+			return fmt.Errorf("create a destination directory: %w", err)
+		}
 
+		if err := extractor.Extract(ctx, input, h.HandleFile); err != nil {
+			return fmt.Errorf("extract files: %w", err)
+		}
+	}
+	if decomp, ok := format.(archives.Decompressor); ok {
+		return h.decompress(input, decomp)
+	}
+	return errUnsupportedFileFormat
+}
+
+func (h *handler) decompress(input io.Reader, decomp archives.Decompressor) error {
+	rc, err := decomp.OpenReader(input)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
 	if err := osfile.MkdirAll(h.fs, h.dest); err != nil {
-		return fmt.Errorf("create a destination directory: %w", err)
+		return fmt.Errorf("create a directory (%s): %w", h.dest, err)
 	}
-
-	if err := extractor.Extract(ctx, input, h.HandleFile); err != nil {
-		return fmt.Errorf("extract files: %w", err)
+	dst, err := h.fs.Create(filepath.Join(h.dest, strings.TrimSuffix(h.filename, filepath.Ext(h.filename))))
+	if err != nil {
+		return fmt.Errorf("create a destination file: %w", err)
 	}
-
+	defer dst.Close()
+	if _, err := io.Copy(dst, rc); err != nil {
+		return fmt.Errorf("copy decompressed data: %w", err)
+	}
 	return nil
 }

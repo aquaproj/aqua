@@ -99,7 +99,8 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) (coreUnarchiver, erro
 	}
 
 	return &handler{
-		fs:   u.fs,
-		dest: dest,
+		fs:       u.fs,
+		dest:     dest,
+		filename: filename,
 	}, nil
 }
