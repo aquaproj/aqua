@@ -57,9 +57,9 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 		return nil
 	}
 
-	if f.LinkTarget != "" {
-		return nil
-	}
+	// if f.LinkTarget != "" {
+	// 	return nil
+	// }
 
 	fn, err := allowWrite(h.fs, parentDir)
 	if err != nil {
