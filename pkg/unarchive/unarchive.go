@@ -85,31 +85,25 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) (coreUnarchiver, erro
 			fs:       u.fs,
 		}, nil
 	}
-
-	f := filename
-	if src.Type != "" {
-		f = "." + src.Type
-	}
-	arc, err := byExtension(f)
-	if err != nil {
-		return nil, fmt.Errorf("get the unarchiver or decompressor by the file extension: %w", err)
-	}
-
-	switch t := arc.(type) {
-	case archiver.Unarchiver:
-		return &unarchiverWithUnarchiver{
-			unarchiver: t,
-			dest:       dest,
-			fs:         u.fs,
+	switch ext := filepath.Ext(filename); ext {
+	case ".dmg":
+		return &dmgUnarchiver{
+			dest:     dest,
+			executor: u.executor,
+			fs:       u.fs,
 		}, nil
-	case archiver.Decompressor:
-		return &Decompressor{
-			decompressor: t,
-			dest:         filepath.Join(dest, strings.TrimSuffix(filename, filepath.Ext(filename))),
-			fs:           u.fs,
+	case ".pkg":
+		return &pkgUnarchiver{
+			dest:     dest,
+			executor: u.executor,
+			fs:       u.fs,
 		}, nil
 	}
-	return nil, errUnsupportedFileFormat
+
+	return &handler{
+		fs:   u.fs,
+		dest: dest,
+	}, nil
 }
 
 func byExtension(filename string) (interface{}, error) {
