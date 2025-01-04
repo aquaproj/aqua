@@ -113,6 +113,7 @@ func (h *handler) unarchive(ctx context.Context, tarball string) error {
 		if err := extractor.Extract(ctx, input, h.HandleFile); err != nil {
 			return fmt.Errorf("extract files: %w", err)
 		}
+		return nil
 	}
 	if decomp, ok := format.(archives.Decompressor); ok {
 		return h.decompress(input, decomp)

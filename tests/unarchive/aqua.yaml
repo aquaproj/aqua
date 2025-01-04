@@ -44,5 +44,7 @@ packages:
   # .tar (including any compressed variants like .tar.gz)
   - name: lc/gau
     version: v1.0
+  - name: suzuki-shunsuke/tfcmt
+    version: v4.14.1
   # .rar (read-only)
   # .7z (read-only)
