@@ -22,26 +22,6 @@ type handler struct {
 	logE     *logrus.Entry
 }
 
-const readOnlyPerm = 0o200
-
-func allowWrite(fs afero.Fs, path string) (func() error, error) {
-	originalMode, err := os.Stat(path)
-	if err != nil {
-		return nil, fmt.Errorf("stat a parent directory: %w", err)
-	}
-
-	if originalMode.Mode().Perm()&readOnlyPerm != 0 {
-		return nil, nil //nolint:nilnil
-	}
-
-	if err := os.Chmod(path, originalMode.Mode()|readOnlyPerm); err != nil {
-		return nil, fmt.Errorf("chmod parent directory: %w", err)
-	}
-	return func() error {
-		return fs.Chmod(path, originalMode.Mode())
-	}, nil
-}
-
 func (h *handler) normalizePath(nameInArchive string) string {
 	slashCount := strings.Count(nameInArchive, "/")
 	backSlashCount := strings.Count(nameInArchive, "\\")
@@ -60,7 +40,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	}
 
 	if f.IsDir() {
-		if err := h.fs.MkdirAll(dstPath, f.Mode()); err != nil {
+		if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil {
 			logerr.WithError(h.logE, err).Warn("create a directory")
 			return nil
 		}
@@ -70,19 +50,6 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	// if f.LinkTarget != "" {
 	// 	return nil
 	// }
-
-	fn, err := allowWrite(h.fs, parentDir)
-	if err != nil {
-		logerr.WithError(h.logE, err).Warn("allow write permission temporarily")
-		return nil
-	}
-	if fn != nil {
-		defer func() {
-			if err := fn(); err != nil {
-				logerr.WithError(h.logE, err).Warn("failed to restore the original permission")
-			}
-		}()
-	}
 
 	reader, err := f.Open()
 	if err != nil {
