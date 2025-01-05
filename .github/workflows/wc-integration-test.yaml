@@ -33,6 +33,10 @@ jobs:
       - name: Test g -g
         run: aqua g -g cli/cli
 
+      - name: Test unarchive
+        run: aqua i
+        working-directory: tests/unarchive
+
       - name: Test checksum
         run: aqua -c aqua.yaml i
         working-directory: tests/3064
