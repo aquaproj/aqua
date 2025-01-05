@@ -55,12 +55,14 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
 	parentDir := filepath.Dir(dstPath)
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
-		return fmt.Errorf("create a directory: %w", err)
+		logerr.WithError(h.logE, err).Warn("create a directory")
+		return nil
 	}
 
 	if f.IsDir() {
 		if err := h.fs.MkdirAll(dstPath, f.Mode()); err != nil {
-			return fmt.Errorf("create a directory: %w", err)
+			logerr.WithError(h.logE, err).Warn("create a directory")
+			return nil
 		}
 		return nil
 	}
@@ -71,7 +73,8 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	fn, err := allowWrite(h.fs, parentDir)
 	if err != nil {
-		return err
+		logerr.WithError(h.logE, err).Warn("allow write permission temporarily")
+		return nil
 	}
 	if fn != nil {
 		defer func() {
@@ -83,18 +86,21 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	reader, err := f.Open()
 	if err != nil {
-		return fmt.Errorf("open a file: %w", err)
+		logerr.WithError(h.logE, err).Warn("open a file")
+		return nil
 	}
 	defer reader.Close()
 
 	dstFile, err := h.fs.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, f.Mode())
 	if err != nil {
-		return fmt.Errorf("create a file: %w", err)
+		logerr.WithError(h.logE, err).Warn("create a file")
+		return nil
 	}
 	defer dstFile.Close()
 
 	if _, err := io.Copy(dstFile, reader); err != nil {
-		return fmt.Errorf("copy a file: %w", err)
+		logerr.WithError(h.logE, err).Warn("copy a file")
+		return nil
 	}
 	return nil
 }
@@ -107,14 +113,14 @@ func (h *handler) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) err
 	return h.unarchive(ctx, tempFilePath)
 }
 
-func (h *handler) unarchive(ctx context.Context, tarball string) error {
-	archiveFile, err := h.fs.Open(tarball)
+func (h *handler) unarchive(ctx context.Context, file string) error {
+	archiveFile, err := h.fs.Open(file)
 	if err != nil {
-		return fmt.Errorf("open tarball %s: %w", tarball, err)
+		return fmt.Errorf("open a files: %w", err)
 	}
 	defer archiveFile.Close()
 
-	format, input, err := archives.Identify(ctx, tarball, archiveFile)
+	format, input, err := archives.Identify(ctx, file, archiveFile)
 	if err != nil {
 		return fmt.Errorf("identify the format: %w", err)
 	}
