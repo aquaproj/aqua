@@ -16,7 +16,7 @@ require (
 	github.com/ktr0731/go-fuzzyfinder v0.8.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mholt/archiver/v3 v3.5.1
-	github.com/otiai10/copy v1.14.0
+	github.com/otiai10/copy v1.14.1
 	github.com/schollz/progressbar/v3 v3.14.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.11.0
@@ -62,6 +62,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/nsf/termbox-go v1.1.1 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
+	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
