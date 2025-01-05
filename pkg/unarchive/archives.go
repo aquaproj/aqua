@@ -40,7 +40,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	}
 
 	if f.IsDir() {
-		if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil {
+		if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
 			logerr.WithError(h.logE, err).Warn("create a directory")
 			return nil
 		}
