@@ -87,7 +87,7 @@ func (h *handler) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) err
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 	if err := h.unarchive(ctx, src.Filename, tempFilePath); err != nil {
-		return logerr.WithFields(err, logrus.Fields{
+		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 			"archived_file":     tempFilePath,
 			"archived_filename": src.Filename,
 		})
