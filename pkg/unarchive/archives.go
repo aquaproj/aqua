@@ -47,9 +47,18 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 		return nil
 	}
 
-	// if f.LinkTarget != "" {
-	// 	return nil
-	// }
+	if f.LinkTarget != "" {
+		if f.Mode()&os.ModeSymlink != 0 {
+			if err := os.Symlink(f.LinkTarget, dstPath); err != nil {
+				logerr.WithError(h.logE, err).WithFields(logrus.Fields{
+					"link_target": f.LinkTarget,
+					"link_dest":   dstPath,
+				}).Warn("create a symlink")
+				return nil
+			}
+		}
+		return nil
+	}
 
 	reader, err := f.Open()
 	if err != nil {
@@ -77,17 +86,23 @@ func (h *handler) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) err
 	if err != nil {
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
-	return h.unarchive(ctx, tempFilePath)
+	if err := h.unarchive(ctx, src.Filename, tempFilePath); err != nil {
+		return logerr.WithFields(err, logrus.Fields{
+			"archived_file":     tempFilePath,
+			"archived_filename": src.Filename,
+		})
+	}
+	return nil
 }
 
-func (h *handler) unarchive(ctx context.Context, file string) error {
+func (h *handler) unarchive(ctx context.Context, fileName, file string) error {
 	archiveFile, err := h.fs.Open(file)
 	if err != nil {
 		return fmt.Errorf("open a files: %w", err)
 	}
 	defer archiveFile.Close()
 
-	format, input, err := archives.Identify(ctx, file, archiveFile)
+	format, input, err := archives.Identify(ctx, fileName, archiveFile)
 	if err != nil {
 		return fmt.Errorf("identify the format: %w", err)
 	}
