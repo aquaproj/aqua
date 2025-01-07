@@ -42,6 +42,7 @@ packages:
 						Name:     "cmdx",
 						Registry: "standard",
 						Version:  "v1.6.0",
+						Pin:      true,
 					},
 				},
 			},

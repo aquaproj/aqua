@@ -21,6 +21,7 @@ type Package struct {
 	VersionExprPrefix string          `json:"version_expr_prefix,omitempty" yaml:"version_expr_prefix,omitempty"`
 	Vars              map[string]any  `json:"vars,omitempty" yaml:",omitempty"`
 	CommandAliases    []*CommandAlias `json:"command_aliases,omitempty" yaml:"command_aliases,omitempty"`
+	Pin               bool            `json:"-" yaml:"-"`
 }
 
 type CommandAlias struct {
@@ -55,6 +56,7 @@ func (p *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&a); err != nil {
 		return err
 	}
+	pin := a.Version != ""
 	name, version := parseNameWithVersion(a.Name)
 	if name != "" {
 		a.Name = name
@@ -66,7 +68,7 @@ func (p *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if p.Registry == "" {
 		p.Registry = RegistryTypeStandard
 	}
-
+	p.Pin = pin
 	return nil
 }
 

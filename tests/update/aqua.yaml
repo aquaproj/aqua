@@ -13,3 +13,8 @@ packages:
   - name: suzuki-shunsuke/tfcmt@v4.6.0
   - import: ci-info.yaml
   - import: imports/*.yaml
+  - name: golang/go
+    go_version_file: go.mod
+  - name: hashicorp/terraform
+    version_expr: readFile(".terraform-version")
+    version_expr_prefix: v
