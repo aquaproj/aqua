@@ -14,6 +14,7 @@ import (
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	execCtrl "github.com/aquaproj/aqua/v2/pkg/controller/exec"
+	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
@@ -28,7 +29,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -131,6 +131,56 @@ packages:
 				"../foo/gh": "/usr/local/bin/gh",
 			},
 		},
+		{
+			name: "vacuumEnabled",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+				VacuumDays:     func(i int) *int { return &i }(1),
+			},
+			exeName: "aqua-installer",
+			dirs: []string{
+				"/home/foo/workspace/.git",
+			},
+			files: map[string]string{
+				"/home/foo/workspace/aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/aqua-installer@v1.0.0
+`,
+				"/home/foo/workspace/registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
+				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
+			},
+		},
 	}
 	logE := logrus.NewEntry(logrus.New())
 	ctx := context.Background()
@@ -154,7 +204,8 @@ packages:
 			executor := &osexec.Mock{}
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{})
 			policyFinder := policy.NewConfigFinder(fs)
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policy.NewValidator(d.param, fs), policyFinder, policy.NewConfigReader(fs)))
+			vacuumCtrl := vacuum.New(d.param, fs)
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policy.NewValidator(d.param, fs), policyFinder, policy.NewConfigReader(fs)), vacuumCtrl)
 			if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...); err != nil {
 				if d.isErr {
 					return
@@ -189,10 +240,11 @@ func downloadTestFile(uri, tempDir string) (string, error) {
 	return filePath, nil
 }
 
-func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
+func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen
 	data := []struct {
 		name    string
 		files   map[string]string
+		dirs    []string
 		links   map[string]string
 		env     map[string]string
 		param   *config.Param
@@ -209,30 +261,107 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
 			},
 			param: &config.Param{
 				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
 			},
 			exeName: "aqua-installer",
-			files:   map[string]string{},
-		},
-	}
-	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
-	for _, d := range data {
-		b.Run("normal", func(b *testing.B) {
-			tempDir := b.TempDir()
-			d.param.ConfigFilePath = filepath.Join(tempDir, "aqua.yaml")
-			d.files[d.param.ConfigFilePath] = `registries:
+			dirs: []string{
+				"/home/foo/workspace/.git",
+			},
+			files: map[string]string{
+				"/home/foo/workspace/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
-`
-			if _, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.19.0/registry.yaml", tempDir); err != nil {
-				b.Fatal(err)
-			}
-			fs, err := testutil.NewFs(d.files)
+`,
+				"/home/foo/workspace/registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
+				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
+			},
+		},
+		{
+			name: "vacuumEnabled",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				PWD:            "/home/foo/workspace",
+				ConfigFilePath: "aqua.yaml",
+				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				MaxParallelism: 5,
+				VacuumDays:     func(i int) *int { return &i }(1),
+			},
+			exeName: "aqua-installer",
+			env: map[string]string{
+				"AQUA_VACUUM_DAYS": "1",
+			},
+			dirs: []string{
+				"/home/foo/workspace/.git",
+			},
+			files: map[string]string{
+				"/home/foo/workspace/aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/aqua-installer@v1.0.0
+`,
+				"/home/foo/workspace/registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": "",
+				"/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
+				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": `
+registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- type: local
+`,
+			},
+		},
+	}
+
+	logE := logrus.NewEntry(logrus.New())
+	ctx := context.Background()
+	for _, d := range data {
+		b.Run(d.name, func(b *testing.B) {
+			fs, err := testutil.NewFs(d.files, d.dirs...)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -244,11 +373,13 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &osexec.Mock{}
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{})
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockReader{})
+			policyFinder := policy.NewConfigFinder(fs)
+			vacuumCtrl := vacuum.New(d.param, fs)
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policy.NewValidator(d.param, fs), policyFinder, policy.NewConfigReader(fs)), vacuumCtrl)
 			b.ResetTimer()
 			for range b.N {
 				func() {
