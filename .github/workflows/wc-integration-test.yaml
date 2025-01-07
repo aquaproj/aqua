@@ -189,6 +189,20 @@ jobs:
           git checkout -- .
         working-directory: tests/update
 
+      - name: update (go_version_file)
+        run: |
+          aqua up
+          git diff .
+          git checkout -- .
+        working-directory: tests/update2
+
+      - name: update (version_expr)
+        run: |
+          aqua up
+          git diff .
+          git checkout -- .
+        working-directory: tests/update3
+
       - run: aqua update-checksum -a
 
       - run: terraform --help
