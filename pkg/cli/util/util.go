@@ -101,7 +101,7 @@ func setLogParams(c *cli.Context, param *config.Param, logE *logrus.Entry) {
 	log.SetColor(param.LogColor, logE)
 }
 
-func setEnvParams(param *config.Param) error {
+func setEnvParams(param *config.Param) error { //nolint:cyclop
 	if a := os.Getenv("AQUA_DISABLE_LAZY_INSTALL"); a != "" {
 		disableLazyInstall, err := strconv.ParseBool(a)
 		if err != nil {
@@ -124,6 +124,13 @@ func setEnvParams(param *config.Param) error {
 				param.PolicyConfigFilePaths[i] = filepath.Join(param.PWD, p)
 			}
 		}
+	}
+	if a := os.Getenv("AQUA_VACUUM_DAYS"); a != "" {
+		vacuumDays, err := strconv.Atoi(a)
+		if err != nil || vacuumDays <= 0 {
+			return fmt.Errorf("parse the environment variable AQUA_VACUUM_DAYS as a positive integer: %w", err)
+		}
+		param.VacuumDays = &vacuumDays
 	}
 	return nil
 }

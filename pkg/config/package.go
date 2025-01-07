@@ -294,6 +294,7 @@ type Param struct {
 	Installed                         bool
 	PolicyConfigFilePaths             []string
 	Commands                          []string
+	VacuumDays                        *int // When defined, vacuuming is enabled
 }
 
 func appendExt(s, format string) string {
