@@ -2,11 +2,7 @@ package exec_test
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -217,27 +213,6 @@ packages:
 			}
 		})
 	}
-}
-
-func downloadTestFile(uri, tempDir string) (string, error) {
-	req, err := http.NewRequest(http.MethodGet, uri, nil) //nolint:noctx
-	if err != nil {
-		return "", fmt.Errorf("create a request: %w", err)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("send a HTTP request: %w", err)
-	}
-	defer resp.Body.Close()
-	filePath := filepath.Join(tempDir, "registry.yaml")
-	f, err := os.Create(filePath)
-	if err != nil {
-		return "", fmt.Errorf("create a file: %w", err)
-	}
-	if _, err := io.Copy(f, resp.Body); err != nil {
-		return "", fmt.Errorf("write a response body to a file: %w", err)
-	}
-	return filePath, nil
 }
 
 func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen
