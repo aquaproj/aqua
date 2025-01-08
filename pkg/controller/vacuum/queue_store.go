@@ -21,8 +21,8 @@ type StoreQueue struct {
 	closeOnce sync.Once
 }
 
-// NewStoreQueue initializes the task queue with a single worker.
-func NewStoreQueue(vc *Controller) *StoreQueue {
+// newStoreQueue initializes the task queue with a single worker.
+func newStoreQueue(vc *Controller) *StoreQueue {
 	const maxTasks = 100
 	sq := &StoreQueue{
 		taskQueue: make(chan StoreRequest, maxTasks),

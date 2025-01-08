@@ -30,7 +30,7 @@ func New(param *config.Param, fs afero.Fs) *Controller {
 		Param:  param,
 		fs:     fs,
 	}
-	vc.storeQueue = NewStoreQueue(vc)
+	vc.storeQueue = newStoreQueue(vc)
 	return vc
 }
 
