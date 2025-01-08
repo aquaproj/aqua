@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -26,9 +27,10 @@ type Controller struct {
 	excludedTags      map[string]struct{}
 	policyReader      PolicyReader
 	skipLink          bool
+	vacuumCtrl        *vacuum.Controller
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader, vacuumCtrl *vacuum.Controller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -41,6 +43,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		tags:              param.Tags,
 		excludedTags:      param.ExcludedTags,
 		policyReader:      policyReader,
+		vacuumCtrl:        vacuumCtrl,
 	}
 }
 

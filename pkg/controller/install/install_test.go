@@ -11,6 +11,7 @@ import (
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
+	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
@@ -106,7 +107,8 @@ packages:
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{})
 			policyFinder := policy.NewConfigFinder(fs)
 			policyReader := policy.NewReader(fs, &policy.MockValidator{}, policyFinder, policy.NewConfigReader(fs))
-			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader)
+			vacuum := vacuum.New(d.param, fs)
+			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader, vacuum)
 			if err := ctrl.Install(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return
