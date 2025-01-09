@@ -17,7 +17,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mholt/archives v0.1.0
 	github.com/otiai10/copy v1.14.1
-	github.com/schollz/progressbar/v3 v3.17.1
+	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.11.0
 	github.com/suzuki-shunsuke/flute v1.0.1
@@ -85,7 +85,7 @@ require (
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/term v0.26.0 // indirect
+	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
