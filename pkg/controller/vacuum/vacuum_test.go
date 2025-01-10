@@ -414,17 +414,17 @@ func TestMockVacuumController_StorePackage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := mockCtrl.StorePackage(logE, tt.pkg, tt.pkgPath)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			err = mockCtrl.Vacuum(logE)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = mockCtrl.Close(logE)
-			assert.NoError(t, err)
-
+			require.NoError(t, err)
 		})
 	}
 }
@@ -436,12 +436,11 @@ func TestNilVacuumController(t *testing.T) {
 
 	test := generateTestPackages(1, "/tmp")
 	err := mockCtrl.StorePackage(logE, test[0].configPkg, test[0].pkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = mockCtrl.Vacuum(logE)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = mockCtrl.Close(logE)
-	assert.NoError(t, err)
-
+	require.NoError(t, err)
 }
 
 type ConfigPackageWithPath struct {
