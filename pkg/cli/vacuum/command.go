@@ -28,13 +28,14 @@ This command removes versions of packages that have not been used for the specif
 You can list all packages managed by the vacuum system or only expired packages.
 
 	# List all packages managed by the vacuum system
-	$ aqua vacuum --list
-	$ aqua vacuum -l
+	$ aqua vacuum show
 
 	# List only expired packages
-	$ aqua vacuum --expired
-	$ aqua vacuum -e
+	$ aqua vacuum show --expired
+	$ aqua vacuum show -e
 
+	# Run vacuum cleaning
+	$ aqua vacuum run
 `
 
 type command struct {
@@ -50,28 +51,29 @@ func New(r *util.Param) *cli.Command {
 		Usage:       "Operate vacuuming tasks (If AQUA_VACUUM_DAYS is set)",
 		Aliases:     []string{"v"},
 		Description: description,
-		Action:      i.action,
-		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:     "list",
-				Usage:    "List all packages managed by vacuum system",
-				Category: "list",
+		Subcommands: []*cli.Command{
+			{
+				Name:    "show",
+				Aliases: []string{"s"},
+				Usage:   "Show packages managed by vacuum system",
+				Action:  i.action,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "expired",
+						Usage:   "Show only expired packages",
+						Aliases: []string{"e"},
+					},
+				},
 			},
-			&cli.BoolFlag{
-				Name:     "expired",
-				Usage:    "List only expired packages",
-				Category: "list",
+			{
+				Name:    "run",
+				Aliases: []string{"r"},
+				Usage:   "Run vacuum cleaning",
+				Action:  i.action,
 			},
 		},
 	}
 }
-
-// Define the vacuum modes for the CLI
-const (
-	ListPackages          string = "list-packages"
-	ListExpiredPackages   string = "list-expired-packages"
-	VacuumExpiredPackages string = "vacuum-expired-packages"
-)
 
 func (i *command) action(c *cli.Context) error {
 	profiler, err := profile.Start(c)
@@ -80,37 +82,29 @@ func (i *command) action(c *cli.Context) error {
 	}
 	defer profiler.Stop()
 
-	mode := parseVacuumMode(c)
-
 	param := &config.Param{}
 	if err := util.SetParam(c, i.r.LogE, "vacuum", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	if param.VacuumDays == nil {
+	if param.VacuumDays == 0 {
 		return errors.New("vacuum is not enabled, please set the AQUA_VACUUM_DAYS environment variable")
 	}
 
 	ctrl := controller.InitializeVacuumCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
 
-	vacuumMode, err := ctrl.GetVacuumModeCLI(mode)
-	if err != nil {
-		return fmt.Errorf("get vacuum mode: %w", err)
+	if c.Command.Name == "show" {
+		if err := ctrl.ListPackages(i.r.LogE, c.Bool("expired")); err != nil {
+			return fmt.Errorf("list packages: %w", err)
+		}
+		return nil
 	}
 
-	if err := ctrl.Vacuum(c.Context, i.r.LogE, vacuumMode, nil); err != nil {
-		return fmt.Errorf("vacuum: %w", err)
+	if c.Command.Name == "run" {
+		if err := ctrl.Vacuum(i.r.LogE); err != nil {
+			return fmt.Errorf("run: %w", err)
+		}
 	}
+
 	return nil
-}
-
-func parseVacuumMode(c *cli.Context) string {
-	mode := VacuumExpiredPackages
-	if c.Bool("list") {
-		mode = ListPackages
-	}
-	if c.Bool("expired") {
-		mode = ListExpiredPackages
-	}
-	return mode
 }
