@@ -16,16 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	ListPackages          string = "list-packages"
-	ListExpiredPackages   string = "list-expired-packages"
-	StorePackage          string = "store-package"
-	StorePackages         string = "store-packages"
-	AsyncStorePackage     string = "async-store-package"
-	VacuumExpiredPackages string = "vacuum-expired-packages"
-	Close                 string = "close"
-)
-
 func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 	t.Parallel()
 	// Setup common test fixtures
