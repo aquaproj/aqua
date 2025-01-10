@@ -125,12 +125,16 @@ func setEnvParams(param *config.Param) error { //nolint:cyclop
 			}
 		}
 	}
+	param.VacuumDays = 0 // Disabled by default
 	if a := os.Getenv("AQUA_VACUUM_DAYS"); a != "" {
 		vacuumDays, err := strconv.Atoi(a)
-		if err != nil || vacuumDays <= 0 {
-			return fmt.Errorf("parse the environment variable AQUA_VACUUM_DAYS as a positive integer: %w", err)
+		if err != nil {
+			return fmt.Errorf("parse the environment variable AQUA_VACUUM_DAYS as an integer: %w", err)
 		}
-		param.VacuumDays = &vacuumDays
+		if vacuumDays <= 0 {
+			return fmt.Errorf("the environment variable AQUA_VACUUM_DAYS must be a positive integer: %d", vacuumDays)
+		}
+		param.VacuumDays = vacuumDays
 	}
 	return nil
 }
