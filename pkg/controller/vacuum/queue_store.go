@@ -4,12 +4,13 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-// storeRequest represents a task to be processed.
+// StoreRequest represents a task to be processed.
 type StoreRequest struct {
 	logE *logrus.Entry
-	pkg  []*ConfigPackage
+	pkg  *Package
 }
 
 // StoreQueue manages a queue for handling tasks sequentially.
@@ -44,7 +45,7 @@ func (sq *StoreQueue) worker() {
 			}
 			err := sq.vc.storePackageInternal(task.logE, task.pkg)
 			if err != nil {
-				task.logE.WithField("vacuum", dbFile).WithError(err).Error("Failed to store package asynchronously")
+				logerr.WithError(task.logE, err).Error("store package asynchronously")
 			}
 			sq.wg.Done()
 		case <-sq.done:
@@ -53,7 +54,7 @@ func (sq *StoreQueue) worker() {
 				task := <-sq.taskQueue
 				err := sq.vc.storePackageInternal(task.logE, task.pkg)
 				if err != nil {
-					task.logE.WithError(err).Error("Failed to store package asynchronously during shutdown")
+					logerr.WithError(task.logE, err).Error("store package asynchronously during shutdown")
 				}
 				sq.wg.Done()
 			}
@@ -62,8 +63,8 @@ func (sq *StoreQueue) worker() {
 	}
 }
 
-// Enqueue adds a task to the queue.
-func (sq *StoreQueue) enqueue(logE *logrus.Entry, pkg []*ConfigPackage) {
+// enqueue adds a task to the queue.
+func (sq *StoreQueue) enqueue(logE *logrus.Entry, pkg *Package) {
 	select {
 	case <-sq.done:
 		return
@@ -76,7 +77,7 @@ func (sq *StoreQueue) enqueue(logE *logrus.Entry, pkg []*ConfigPackage) {
 	}
 }
 
-// Close waits for all tasks to complete and stops the worker.
+// close waits for all tasks to complete and stops the worker.
 func (sq *StoreQueue) close() {
 	sq.closeOnce.Do(func() {
 		close(sq.done)

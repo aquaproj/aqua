@@ -1,12 +1,10 @@
 package vacuum
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +14,7 @@ import (
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"go.etcd.io/bbolt"
 )
 
@@ -31,97 +30,38 @@ const (
 type PackageVacuumEntries []PackageVacuumEntry
 
 type PackageVacuumEntry struct {
-	Key          []byte
+	PkgPath      []byte
 	PackageEntry *PackageEntry
-}
-
-type ConfigPackage struct {
-	Type    string
-	Name    string
-	Version string
-	PkgPath []string
 }
 
 type PackageEntry struct {
 	LastUsageTime time.Time
-	PkgPath       []string
+	Package       *Package
 }
 
-type Mode string
-
-const (
-	ListPackages          Mode = "list-packages"
-	ListExpiredPackages   Mode = "list-expired-packages"
-	StorePackage          Mode = "store-package"
-	StorePackages         Mode = "store-packages"
-	AsyncStorePackage     Mode = "async-store-package"
-	VacuumExpiredPackages Mode = "vacuum-expired-packages"
-	Close                 Mode = "close"
-)
-
-// GetVacuumModeCLI returns the corresponding Mode based on the provided mode string.
-// It supports the following modes:
-// - "list-packages": returns ListPackages mode
-// - "list-expired-packages": returns ListExpiredPackages mode
-// - "vacuum-expired-packages": returns VacuumExpiredPackages mode
-// If the provided mode string does not match any of the supported modes, it returns an error.
-//
-// Parameters:
-//
-//	mode (string): The mode string to be converted to a Mode.
-//
-// Returns:
-//
-//	(Mode, error): The corresponding Mode and nil if the mode string is valid, otherwise an empty Mode and an error.
-func (vc *Controller) GetVacuumModeCLI(mode string) (Mode, error) {
-	switch mode {
-	case "list-packages":
-		return ListPackages, nil
-	case "list-expired-packages":
-		return ListExpiredPackages, nil
-	case "vacuum-expired-packages":
-		return VacuumExpiredPackages, nil
-	default:
-		return "", errors.New("invalid vacuum mode")
-	}
+type Package struct {
+	Type    string // Type of package (e.g. "github_release")
+	Name    string // Name of package (e.g. "cli/cli")
+	Version string // Version of package (e.g. "v1.0.0")
+	PkgPath string // Path to the install path without the rootDir/pkgs/ prefix
 }
 
-// Vacuum performs various vacuum operations based on the provided mode.
-// Main function of vacuum controller.
-func (vc *Controller) Vacuum(_ context.Context, logE *logrus.Entry, mode Mode, configPkg []*config.Package, args ...string) error {
+// Vacuum performs the vacuuming process if it is enabled.
+func (vc *Controller) Vacuum(logE *logrus.Entry) error {
 	if !vc.IsVacuumEnabled(logE) {
 		return nil
 	}
-
-	vacuumPkg := convertConfigPackages(configPkg)
-
-	switch mode {
-	case ListPackages:
-		return vc.handleListPackages(logE, args...)
-	case ListExpiredPackages:
-		return vc.handleListExpiredPackages(logE, args...)
-	case StorePackage:
-		return vc.handleStorePackage(logE, vacuumPkg)
-	case StorePackages:
-		return vc.handleStorePackages(logE, vacuumPkg)
-	case AsyncStorePackage:
-		return vc.handleAsyncStorePackage(logE, vacuumPkg)
-	case VacuumExpiredPackages:
-		return vc.handleVacuumExpiredPackages(logE)
-	case Close:
-		return vc.close(logE)
-	}
-
-	return errors.New("invalid vacuum mode")
+	return vc.vacuumExpiredPackages(logE)
 }
 
-// convertConfigPackages converts a slice of config.Package pointers to a slice of ConfigPackage pointers.
-func convertConfigPackages(configPkg []*config.Package) []*ConfigPackage {
-	vacuumPkg := make([]*ConfigPackage, 0, len(configPkg))
-	for _, pkg := range configPkg {
-		vacuumPkg = append(vacuumPkg, vacuumConfigPackageFromConfigPackage(pkg))
+// ListPackages lists the packages based on the provided arguments.
+// If the expired flag is set to true, it lists the expired packages.
+// Otherwise, it lists all packages.
+func (vc *Controller) ListPackages(logE *logrus.Entry, expired bool, args ...string) error {
+	if expired {
+		return vc.handleListExpiredPackages(logE, args...)
 	}
-	return vacuumPkg
+	return vc.handleListPackages(logE, args...)
 }
 
 // handleListPackages retrieves a list of packages and displays them using a fuzzy search.
@@ -143,50 +83,53 @@ func (vc *Controller) handleListExpiredPackages(logE *logrus.Entry, args ...stri
 	return vc.displayPackagesFuzzy(logE, expiredPkgs, args...)
 }
 
-// handleStorePackage processes a list of configuration packages and stores the first package in the list.
-func (vc *Controller) handleStorePackage(logE *logrus.Entry, vacuumPkg []*ConfigPackage) error {
-	if len(vacuumPkg) < 1 {
-		return errors.New("StorePackage requires at least one configPackage")
+// StorePackage stores the given package if vacuum is enabled.
+// If the package is nil, it logs a warning and skips storing the package.
+func (vc *Controller) StorePackage(logE *logrus.Entry, pkg *config.Package, pkgPath string) error {
+	if !vc.IsVacuumEnabled(logE) {
+		return nil
 	}
-	defer func() {
-		if err := vc.close(logE); err != nil {
-			logE.WithError(err).Error("Failed to close vacuum DB after storing package")
-		}
-	}()
-	return vc.storePackageInternal(logE, []*ConfigPackage{vacuumPkg[0]})
+	if pkg == nil {
+		logE.Warn("package is nil, skipping store package")
+		return nil
+	}
+
+	vacuumPkg := vc.getVacuumPackage(pkg, pkgPath)
+
+	return vc.handleAsyncStorePackage(logE, vacuumPkg)
 }
 
-// handleStorePackages processes a list of configuration packages and stores them.
-func (vc *Controller) handleStorePackages(logE *logrus.Entry, vacuumPkg []*ConfigPackage) error {
-	if len(vacuumPkg) < 1 {
-		return errors.New("StorePackages requires at least one configPackage")
+// getVacuumPackage converts a config
+func (vc *Controller) getVacuumPackage(configPkg *config.Package, pkgPath string) *Package {
+	pkgPath = generatePackageKey(vc.Param.RootDir, pkgPath)
+	return &Package{
+		Type:    configPkg.PackageInfo.Type,
+		Name:    configPkg.Package.Name,
+		Version: configPkg.Package.Version,
+		PkgPath: pkgPath,
 	}
-	defer func() {
-		if err := vc.close(logE); err != nil {
-			logE.WithError(err).Error("Failed to close vacuum DB after storing multiple packages")
-		}
-	}()
-	return vc.storePackageInternal(logE, vacuumPkg)
+}
+
+// generatePackageKey generates a package key based on the root directory and package path.
+func generatePackageKey(rootDir string, pkgPath string) string {
+	const splitParts = 2
+	pkgPath = strings.SplitN(pkgPath, rootDir+"/pkgs/", splitParts)[1]
+	return pkgPath
 }
 
 // handleAsyncStorePackage processes a list of configuration packages asynchronously.
-func (vc *Controller) handleAsyncStorePackage(logE *logrus.Entry, vacuumPkg []*ConfigPackage) error {
-	if len(vacuumPkg) < 1 {
-		return errors.New("AsyncStorePackage requires at least one configPackage")
+func (vc *Controller) handleAsyncStorePackage(logE *logrus.Entry, vacuumPkg *Package) error {
+	if vacuumPkg == nil {
+		return errors.New("vacuumPkg is nil")
 	}
 	vc.storeQueue.enqueue(logE, vacuumPkg)
 	return nil
 }
 
-// handleVacuumExpiredPackages handles the process of vacuuming expired packages.
-func (vc *Controller) handleVacuumExpiredPackages(logE *logrus.Entry) error {
-	return vc.vacuumExpiredPackages(logE)
-}
-
 // IsVacuumEnabled checks if the vacuum feature is enabled based on the configuration.
 func (vc *Controller) IsVacuumEnabled(logE *logrus.Entry) bool {
-	if vc.Param.VacuumDays == nil || *vc.Param.VacuumDays <= 0 {
-		logE.Debug("Vacuum is disabled. AQUA_VACUUM_DAYS is not set or invalid.")
+	if vc.Param.VacuumDays <= 0 {
+		logE.Debug("vacuum is disabled. AQUA_VACUUM_DAYS is not set or invalid.")
 		return false
 	}
 	return true
@@ -211,8 +154,15 @@ func (vc *Controller) listExpiredPackages(logE *logrus.Entry) ([]*PackageVacuumE
 // isPackageExpired checks if a package is expired based on the vacuum configuration.
 func (vc *Controller) isPackageExpired(pkg *PackageVacuumEntry) bool {
 	const secondsInADay = 24 * 60 * 60
-	threshold := int64(*vc.Param.VacuumDays) * secondsInADay
-	return time.Since(pkg.PackageEntry.LastUsageTime).Seconds() > float64(threshold)
+	threshold := vc.Param.VacuumDays * secondsInADay
+
+	lastUsageTime := pkg.PackageEntry.LastUsageTime
+	if lastUsageTime.Location() != time.UTC {
+		lastUsageTime = lastUsageTime.In(time.UTC)
+	}
+
+	timeSinceLastUsage := time.Since(lastUsageTime).Seconds()
+	return timeSinceLastUsage > float64(threshold)
 }
 
 // listPackages lists all stored package entries.
@@ -237,12 +187,12 @@ func (vc *Controller) listPackages(logE *logrus.Entry) ([]*PackageVacuumEntry, e
 			pkgEntry, err := decodePackageEntry(value)
 			if err != nil {
 				logE.WithFields(logrus.Fields{
-					"pkgKey": string(k),
-				}).Warnf("Failed to decode entry: %v", err)
+					"pkg_key": string(k),
+				}).Warnf("unable to decode entry: %v", err)
 				return err
 			}
 			pkgs = append(pkgs, &PackageVacuumEntry{
-				Key:          append([]byte{}, k...),
+				PkgPath:      append([]byte{}, k...),
 				PackageEntry: pkgEntry,
 			})
 			return nil
@@ -272,7 +222,7 @@ func (vc *Controller) displayPackagesFuzzyTest(logE *logrus.Entry, pkgs []*Packa
 
 func (vc *Controller) displayPackagesFuzzy(logE *logrus.Entry, pkgs []*PackageVacuumEntry, args ...string) error {
 	if len(pkgs) == 0 {
-		logE.Info("No packages to display")
+		logE.Info("no packages to display")
 		return nil
 	}
 	if len(args) > 0 && args[0] == "test" {
@@ -290,7 +240,7 @@ func (vc *Controller) displayPackagesFuzzyInteractive(pkgs []*PackageVacuumEntry
 
 		return fmt.Sprintf("%s%s [%s]",
 			expiredString,
-			pkgs[i].Key,
+			pkgs[i].PkgPath,
 			humanize.Time(pkgs[i].PackageEntry.LastUsageTime),
 		)
 	},
@@ -303,10 +253,6 @@ func (vc *Controller) displayPackagesFuzzyInteractive(pkgs []*PackageVacuumEntry
 			if vc.isPackageExpired(pkg) {
 				expiredString = "Expired ⌛"
 			}
-			parsedConfigPkg, err := generateConfigPackageFromKey(pkg.Key)
-			if err != nil {
-				return fmt.Sprintf("Failed to parse package key: %v", err)
-			}
 			return fmt.Sprintf(
 				"Package Details:\n\n"+
 					"%s \n"+
@@ -314,15 +260,13 @@ func (vc *Controller) displayPackagesFuzzyInteractive(pkgs []*PackageVacuumEntry
 					"Package: %s\n"+
 					"Version: %s\n\n"+
 					"Last Used: %s\n"+
-					"Last Used (exact): %s\n\n"+
-					"PkgPath: %v\n",
+					"Last Used (exact): %s\n\n",
 				expiredString,
-				parsedConfigPkg.Type,
-				parsedConfigPkg.Name,
-				parsedConfigPkg.Version,
+				pkg.PackageEntry.Package.Type,
+				pkg.PackageEntry.Package.Name,
+				pkg.PackageEntry.Package.Version,
 				humanize.Time(pkg.PackageEntry.LastUsageTime),
-				pkg.PackageEntry.LastUsageTime.Format("2024-12-31 15:04:05"),
-				pkg.PackageEntry.PkgPath,
+				pkg.PackageEntry.LastUsageTime.Format("2006-01-02 15:04:05"),
 			)
 		}),
 		fuzzyfinder.WithHeader("Navigate through packages to display details"),
@@ -339,22 +283,25 @@ func (vc *Controller) displayPackagesFuzzyInteractive(pkgs []*PackageVacuumEntry
 
 // vacuumExpiredPackages performs cleanup of expired packages.
 func (vc *Controller) vacuumExpiredPackages(logE *logrus.Entry) error {
-	expired, err := vc.listExpiredPackages(logE)
+	expiredPackages, err := vc.listExpiredPackages(logE)
 	if err != nil {
 		return err
 	}
 
-	if len(expired) == 0 {
+	if len(expiredPackages) == 0 {
+		logE.Info("no expired packages to remove")
 		return nil
 	}
 
-	successKeys, errCh := vc.processExpiredPackages(logE, expired)
+	successfulRemovals, errorsEncountered := vc.processExpiredPackages(logE, expiredPackages)
 
-	if len(errCh) > 0 {
+	if len(errorsEncountered) > 0 {
 		return errors.New("some packages could not be removed")
 	}
-	if len(successKeys) > 0 {
-		if err := vc.removePackages(logE, successKeys); err != nil {
+
+	defer vc.Close(logE)
+	if len(successfulRemovals) > 0 {
+		if err := vc.removePackages(logE, successfulRemovals); err != nil {
 			return fmt.Errorf("failed to remove packages from database: %w", err)
 		}
 	}
@@ -370,9 +317,9 @@ func (vc *Controller) vacuumExpiredPackages(logE *logrus.Entry) error {
 //   - expired: A slice of PackageVacuumEntry representing the expired packages to be processed.
 //
 // Returns:
-//   - A slice of ConfigPackage representing the packages that were successfully processed and need to be removed from the vacuum database.
+//   - A slice of VacuumPackage representing the packages that were successfully processed and need to be removed from the vacuum database.
 //   - A slice of errors encountered during the processing of the expired packages.
-func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*PackageVacuumEntry) ([]*ConfigPackage, []error) { //nolint:funlen
+func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*PackageVacuumEntry) ([]string, []error) {
 	const batchSize = 10
 	successKeys := make(chan string, len(expired))
 	errCh := make(chan error, len(expired))
@@ -385,34 +332,35 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 		}
 
 		batch := make([]struct {
-			key     string
-			pkgPath []string
+			pkgPath string
+			pkgType string
+			pkgName string
 			version string
 		}, len(expired[i:end]))
 
 		for j, entry := range expired[i:end] {
-			batch[j].key = string(entry.Key)
-			batch[j].pkgPath = entry.PackageEntry.PkgPath
-			batch[j].version = strings.Split(string(entry.Key), "@")[1]
+			batch[j].pkgPath = string(entry.PkgPath)
+			batch[j].pkgType = entry.PackageEntry.Package.Type
+			batch[j].pkgName = entry.PackageEntry.Package.Name
+			batch[j].version = entry.PackageEntry.Package.Version
 		}
 
 		wg.Add(1)
 		go func(batch []struct {
-			key     string
-			pkgPath []string
+			pkgPath string
+			pkgType string
+			pkgName string
 			version string
 		},
 		) {
 			defer wg.Done()
 			for _, entry := range batch {
-				for _, path := range entry.pkgPath {
-					if err := vc.removePackageVersionPath(vc.Param, path, entry.version); err != nil {
-						logE.WithField("expiredPackages", entry.key).WithError(err).Error("Error removing path")
-						errCh <- err
-						continue
-					}
-					successKeys <- entry.key
+				if err := vc.removePackageVersionPath(vc.Param, entry.pkgPath, entry.pkgType); err != nil {
+					logerr.WithError(logE, err).Error("removing path")
+					errCh <- err
+					continue
 				}
+				successKeys <- entry.pkgPath
 			}
 		}(batch)
 	}
@@ -421,14 +369,9 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 	close(successKeys)
 	close(errCh)
 
-	ConfigPackageToRemove := make([]*ConfigPackage, 0, len(expired))
-	for key := range successKeys {
-		pkg, err := generateConfigPackageFromKey([]byte(key))
-		if err != nil {
-			logE.WithField("key", key).WithError(err).Error("Failed to generate package from key")
-			continue
-		}
-		ConfigPackageToRemove = append(ConfigPackageToRemove, pkg)
+	pathsToRemove := make([]string, 0, len(expired))
+	for pkgPath := range successKeys {
+		pathsToRemove = append(pathsToRemove, pkgPath)
 	}
 
 	errors := make([]error, 0, len(expired))
@@ -436,11 +379,11 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 		errors = append(errors, err)
 	}
 
-	return ConfigPackageToRemove, errors
+	return pathsToRemove, errors
 }
 
 // storePackageInternal stores package entries in the database.
-func (vc *Controller) storePackageInternal(logE *logrus.Entry, pkgs []*ConfigPackage, dateTime ...time.Time) error {
+func (vc *Controller) storePackageInternal(logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
 	lastUsedTime := time.Now()
 	if len(dateTime) > 0 {
 		lastUsedTime = dateTime[0]
@@ -450,73 +393,77 @@ func (vc *Controller) storePackageInternal(logE *logrus.Entry, pkgs []*ConfigPac
 		if b == nil {
 			return errors.New("bucket not found")
 		}
+		logE.WithFields(logrus.Fields{
+			"name":     pkg.Name,
+			"version":  pkg.Version,
+			"pkg_path": pkg.PkgPath,
+		}).Debug("storing package in vacuum database")
 
-		for _, pkg := range pkgs {
-			logE.WithFields(logrus.Fields{
-				"name":    pkg.Name,
-				"version": pkg.Version,
-				"PkgPath": pkg.PkgPath,
-			}).Debug("Storing package in vacuum database")
-			pkgEntry := &PackageEntry{
-				LastUsageTime: lastUsedTime,
-				PkgPath:       pkg.PkgPath,
-			}
+		pkgKey := pkg.PkgPath
+		pkgEntry := &PackageEntry{
+			LastUsageTime: lastUsedTime,
+			Package:       pkg,
+		}
 
-			data, err := encodePackageEntry(pkgEntry)
-			if err != nil {
-				logE.WithFields(logrus.Fields{
-					"name":    pkg.Name,
-					"version": pkg.Version,
-				}).WithError(err).Error("Failed to encode package")
-				return fmt.Errorf("encode package %s: %w", pkg.Name, err)
-			}
+		data, err := encodePackageEntry(pkgEntry)
+		if err != nil {
+			logerr.WithError(logE, err).WithFields(
+				logrus.Fields{
+					"name":     pkg.Name,
+					"version":  pkg.Version,
+					"pkg_path": pkg.PkgPath,
+				}).Error("encode package")
+			return fmt.Errorf("encode package %s: %w", pkg.Name, err)
+		}
 
-			if err := b.Put(generateKey(pkg), data); err != nil {
-				logE.WithField("pkgKey", pkg).WithError(err).Error("Failed to store package in vacuum database")
-				return fmt.Errorf("store package %s: %w", pkg.Name, err)
-			}
+		if err := b.Put([]byte(pkgKey), data); err != nil {
+			logerr.WithError(logE, err).WithField("pkgKey", pkgKey).Error("store package in vacuum database")
+			return fmt.Errorf("store package %s: %w", pkg.Name, err)
 		}
 		return nil
 	}, Update)
 }
 
 // removePackages removes package entries from the database.
-func (vc *Controller) removePackages(logE *logrus.Entry, pkgs []*ConfigPackage) error {
-	keys := make([]string, 0, len(pkgs))
-	for _, pkg := range pkgs {
-		keys = append(keys, string(generateKey(pkg)))
-	}
+func (vc *Controller) removePackages(logE *logrus.Entry, pkgs []string) error {
 	return vc.withDBRetry(logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return errors.New("bucket not found")
 		}
 
-		for _, key := range keys {
+		for _, key := range pkgs {
 			if err := b.Delete([]byte(key)); err != nil {
 				return fmt.Errorf("delete package %s: %w", key, err)
 			}
+			logE.WithField("pkgKey", key).Info("removed package from vacuum database")
 		}
 		return nil
 	}, Update)
 }
 
 // removePackageVersionPath removes the specified package version directory and its parent directory if it becomes empty.
-func (vc *Controller) removePackageVersionPath(param *config.Param, path string, version string) error {
-	pkgVersionPath := filepath.Join(param.RootDir, "pkgs", path, version)
+func (vc *Controller) removePackageVersionPath(param *config.Param, path string, pkgType string) error {
+	pkgsPath := filepath.Join(param.RootDir, "pkgs")
+	pkgsRemoveLimitPath := filepath.Join(pkgsPath, pkgType)
+	pkgVersionPath := filepath.Join(pkgsPath, path)
 	if err := vc.fs.RemoveAll(pkgVersionPath); err != nil {
 		return fmt.Errorf("remove package version directories: %w", err)
 	}
 
-	pkgPath := filepath.Join(param.RootDir, "pkgs", path)
-	dirIsEmpty, err := afero.IsEmpty(vc.fs, pkgPath)
-	if err != nil {
-		return fmt.Errorf("check if the directory is empty: %w", err)
-	}
-	if dirIsEmpty {
-		if err := vc.fs.RemoveAll(pkgPath); err != nil {
+	currentPath := filepath.Dir(pkgVersionPath)
+	for currentPath != pkgsRemoveLimitPath {
+		dirIsEmpty, err := afero.IsEmpty(vc.fs, currentPath)
+		if err != nil {
+			return fmt.Errorf("check if directory is empty: %w", err)
+		}
+		if !dirIsEmpty {
+			break
+		}
+		if err := vc.fs.RemoveAll(currentPath); err != nil {
 			return fmt.Errorf("remove package directories: %w", err)
 		}
+		currentPath = filepath.Dir(currentPath)
 	}
 	return nil
 }
@@ -539,15 +486,32 @@ func decodePackageEntry(data []byte) (*PackageEntry, error) {
 	return &pkgEntry, nil
 }
 
-// retrievePackageEntry retrieves a package entry from the database by key.
-func (vc *Controller) retrievePackageEntry(logE *logrus.Entry, key []byte) (*PackageEntry, error) {
+// GetPackageLastUsed retrieves the last used time of a package. for testing purposes.
+func (vc *Controller) GetPackageLastUsed(logE *logrus.Entry, pkgPath string) *time.Time {
+	var lastUsedTime time.Time
+	pkgEntry, _ := vc.retrievePackageEntry(logE, pkgPath)
+	if pkgEntry != nil {
+		lastUsedTime = pkgEntry.LastUsageTime
+	}
+	return &lastUsedTime
+}
+
+// SetTimeStampPackage permit define a Timestamp for a package Manually. for testing purposes.
+func (vc *Controller) SetTimestampPackage(logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
+	vacuumPkg := vc.getVacuumPackage(pkg, pkgPath)
+	return vc.storePackageInternal(logE, vacuumPkg, datetime)
+}
+
+// retrievePackageEntry retrieves a package entry from the database by key. for testing purposes.
+func (vc *Controller) retrievePackageEntry(logE *logrus.Entry, key string) (*PackageEntry, error) {
 	var pkgEntry *PackageEntry
+	key = generatePackageKey(vc.Param.RootDir, key)
 	err := vc.withDBRetry(logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return nil
 		}
-		value := b.Get(key)
+		value := b.Get([]byte(key))
 		if value == nil {
 			return nil
 		}
@@ -557,57 +521,4 @@ func (vc *Controller) retrievePackageEntry(logE *logrus.Entry, key []byte) (*Pac
 		return err
 	}, View)
 	return pkgEntry, err
-}
-
-// generateKey generates a unique key for a package.
-func generateKey(pkg *ConfigPackage) []byte {
-	return []byte(pkg.Type + "," + pkg.Name + "@" + pkg.Version)
-}
-
-// vacuumConfigPackageFromConfigPackage returns a ConfigPackage config from a config.Package.
-func vacuumConfigPackageFromConfigPackage(pkg *config.Package) *ConfigPackage {
-	pkgPathsMap := pkg.PackageInfo.PkgPaths()
-	PkgPath := make([]string, 0, len(pkgPathsMap))
-	for k := range pkgPathsMap {
-		PkgPath = append(PkgPath, k)
-	}
-
-	return &ConfigPackage{
-		Type:    pkg.PackageInfo.Type,
-		Name:    pkg.Package.Name,
-		Version: pkg.Package.Version,
-		PkgPath: PkgPath,
-	}
-}
-
-// generateConfigPackageFromKey return a minimal package config from a key.
-func generateConfigPackageFromKey(key []byte) (*ConfigPackage, error) {
-	if len(key) == 0 {
-		return nil, errors.New("empty key")
-	}
-	pattern := `^(?P<PackageInfo_Type>[^,]+),(?P<Package_Name>[^@]+)@(?P<Package_Version>.+)$`
-	re := regexp.MustCompile(pattern)
-	match := re.FindStringSubmatch(string(key))
-
-	if match == nil {
-		return nil, fmt.Errorf("key %s does not match the pattern %s", key, pattern)
-	}
-
-	result := make(map[string]string)
-	for i, name := range re.SubexpNames() {
-		if i != 0 && name != "" {
-			result[name] = match[i]
-		}
-	}
-
-	packageInfoType := result["PackageInfo_Type"]
-	packageName := result["Package_Name"]
-	packageVersion := result["Package_Version"]
-
-	pkg := &ConfigPackage{
-		Type:    packageInfoType,
-		Name:    packageName,
-		Version: packageVersion,
-	}
-	return pkg, nil
 }

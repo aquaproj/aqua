@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -52,18 +53,18 @@ func (vc *Controller) getDB() (*bolt.DB, error) {
 		Timeout: 1 * time.Second,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database %v: %w", dbFile, err)
+		return nil, fmt.Errorf("open database %v: %w", dbFile, err)
 	}
 
 	if err := db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucketNamePkgs))
 		if err != nil {
-			return fmt.Errorf("failed to create bucket '%v' in '%v': %w", bucketNamePkgs, dbFile, err)
+			return fmt.Errorf("create bucket '%v' in '%v': %w", bucketNamePkgs, dbFile, err)
 		}
 		return nil
 	}); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("failed to create bucket: %w", err)
+		return nil, fmt.Errorf("create bucket: %w", err)
 	}
 
 	vc.db.Store(db)
@@ -87,7 +88,7 @@ func (vc *Controller) withDBRetry(logE *logrus.Entry, fn func(*bolt.Tx) error, d
 		logE.WithFields(logrus.Fields{
 			"attempt": i + 1,
 			"error":   err,
-		}).Warn("Retrying database operation")
+		}).Warn("retrying database operation")
 
 		time.Sleep(backoff)
 		backoff *= exponentialBackoff
@@ -107,20 +108,20 @@ func (vc *Controller) withDB(logE *logrus.Entry, fn func(*bolt.Tx) error, dbAcce
 	}
 	defer func() {
 		if err := vc.closeDB(); err != nil {
-			logE.WithError(err).Error("Failed to close database")
+			logerr.WithError(logE, err).Error("close database")
 		}
 	}()
 
 	if dbAccessType == Update {
 		err = db.Update(fn)
 		if err != nil {
-			return fmt.Errorf("failed to view database: %w", err)
+			return fmt.Errorf("update database: %w", err)
 		}
 		return nil
 	}
 	err = db.View(fn)
 	if err != nil {
-		return fmt.Errorf("failed to view database: %w", err)
+		return fmt.Errorf("view database: %w", err)
 	}
 	return nil
 }
@@ -141,7 +142,7 @@ func (vc *Controller) closeDB() error {
 
 	if vc.db.Load() != nil {
 		if err := vc.db.Load().Close(); err != nil {
-			return fmt.Errorf("failed to close database: %w", err)
+			return fmt.Errorf("close database: %w", err)
 		}
 		vc.db.Store(nil)
 	}
@@ -150,8 +151,11 @@ func (vc *Controller) closeDB() error {
 }
 
 // Close closes the dependencies of the Controller.
-func (vc *Controller) close(logE *logrus.Entry) error {
-	logE.Debug("Closing vacuum controller")
+func (vc *Controller) Close(logE *logrus.Entry) error {
+	if !vc.IsVacuumEnabled(logE) {
+		return nil
+	}
+	logE.Debug("closing vacuum controller")
 	if vc.storeQueue != nil {
 		vc.storeQueue.close()
 	}
@@ -161,7 +165,7 @@ func (vc *Controller) close(logE *logrus.Entry) error {
 
 	if vc.db.Load() != nil {
 		if err := vc.db.Load().Close(); err != nil {
-			return fmt.Errorf("failed to close database: %w", err)
+			return fmt.Errorf("close database: %w", err)
 		}
 		vc.db.Store(nil)
 	}
