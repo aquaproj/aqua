@@ -381,10 +381,8 @@ func TestMockVacuumController_StorePackage(t *testing.T) {
 	testDir, err := afero.TempDir(fs, "", "vacuum_no_expired")
 	require.NoError(t, err)
 
-	days := 30
 	param := &config.Param{
-		VacuumDays: days,
-		RootDir:    testDir,
+		RootDir: testDir,
 	}
 
 	logE := logrus.NewEntry(logrus.New())
