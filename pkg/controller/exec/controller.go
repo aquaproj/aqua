@@ -7,7 +7,6 @@ import (
 	"runtime"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
@@ -27,14 +26,14 @@ type Controller struct {
 	fs               afero.Fs
 	policyReader     PolicyReader
 	enabledXSysExec  bool
-	vacuumCtrl       *vacuum.Controller
+	vacuum           VacuumController
 }
 
 type Installer interface {
 	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
 }
 
-func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyReader PolicyReader, vacuumCtrl *vacuum.Controller) *Controller {
+func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyReader PolicyReader, vacuumCtrl VacuumController) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
@@ -45,7 +44,7 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 		enabledXSysExec:  getEnabledXSysExec(osEnv, runtime.GOOS),
 		fs:               fs,
 		policyReader:     policyReader,
-		vacuumCtrl:       vacuumCtrl,
+		vacuum:           vacuumCtrl,
 	}
 }
 
@@ -61,4 +60,8 @@ type PolicyReader interface {
 
 type WhichController interface {
 	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
+}
+
+type VacuumController interface {
+	Close(logE *logrus.Entry) error
 }

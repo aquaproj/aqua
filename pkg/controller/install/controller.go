@@ -7,7 +7,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -27,10 +26,10 @@ type Controller struct {
 	excludedTags      map[string]struct{}
 	policyReader      PolicyReader
 	skipLink          bool
-	vacuumCtrl        *vacuum.Controller
+	vacuum            VacuumController
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader, vacuumCtrl *vacuum.Controller) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader, vacuumCtrl VacuumController) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -43,7 +42,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		tags:              param.Tags,
 		excludedTags:      param.ExcludedTags,
 		policyReader:      policyReader,
-		vacuumCtrl:        vacuumCtrl,
+		vacuum:            vacuumCtrl,
 	}
 }
 
@@ -64,4 +63,8 @@ type PolicyReader interface {
 
 type RegistryInstaller interface {
 	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
+}
+
+type VacuumController interface {
+	Close(logE *logrus.Entry) error
 }

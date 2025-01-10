@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
@@ -63,19 +62,13 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 	if err := c.install(ctx, logE, findResult, policyCfgs, param); err != nil {
 		return err
 	}
-	c.vacuumClose(ctx, logE) // Ensure that the vacuum process and db are closed
+	c.vacuumClose(logE)
 	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 }
 
-func (c *Controller) vacuumClose(ctx context.Context, logE *logrus.Entry) {
-	if c.vacuumCtrl == nil {
-		return
-	}
-	if err := c.vacuumCtrl.Vacuum(ctx, logE, vacuum.Close, nil); err != nil {
-		// If the closing vacuum db failed, we should not stop the process
-		// so we log the error and continue the process.
-		// Updating vacuum db will be retried next time.
-		logE.WithError(err).Error("close the vacuum db failed")
+func (c *Controller) vacuumClose(logE *logrus.Entry) {
+	if err := c.vacuum.Close(logE); err != nil {
+		logerr.WithError(logE, err).Error("close the vacuum")
 	}
 }
 

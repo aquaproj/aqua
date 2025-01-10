@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
@@ -86,7 +85,7 @@ func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *
 }
 
 func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfigs []*policy.Config, param *config.Param) error {
-	defer c.vacuumClose(ctx, logE)
+	defer c.vacuum.Close(logE)
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
@@ -129,16 +128,4 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePat
 		RequireChecksum: cfg.RequireChecksum(param.EnforceRequireChecksum, param.RequireChecksum),
 		DisablePolicy:   param.DisablePolicy,
 	})
-}
-
-func (c *Controller) vacuumClose(ctx context.Context, logE *logrus.Entry) {
-	if c.vacuumCtrl == nil {
-		return
-	}
-	if err := c.vacuumCtrl.Vacuum(ctx, logE, vacuum.Close, nil); err != nil {
-		// If the closing vacuum db failed, we should not stop the process
-		// so we log the error and continue the process.
-		// Updating vacuum db will be retried next time.
-		logE.WithError(err).Error("close the vacuum db failed")
-	}
 }

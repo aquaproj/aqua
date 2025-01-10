@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
@@ -58,12 +57,12 @@ type Installer struct {
 	cosignDisabled        bool
 	slsaDisabled          bool
 	gaaDisabled           bool
-	VacuumCtrl            *vacuum.Controller
+	vacuum                VacuumController
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, opts ...Option) *Installer {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuumCtrl VacuumController) *Installer {
 	ni := func(rt *runtime.Runtime) *Installer {
-		return newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, ghVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller)
+		return newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, ghVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, vacuumCtrl)
 	}
 	installer := ni(rt)
 	installer.cosignInstaller = newDedicatedInstaller(
@@ -86,14 +85,10 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 		ghattestation.Package,
 		ghattestation.Checksums(),
 	)
-	// Apply options
-	for _, opt := range opts {
-		opt(installer)
-	}
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller) *Installer {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuumCtrl VacuumController) *Installer {
 	return &Installer{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
@@ -118,27 +113,13 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		goInstallInstaller:    goInstallInstaller,
 		goBuildInstaller:      goBuildInstaller,
 		cargoPackageInstaller: cargoPackageInstaller,
+		vacuum:                vacuumCtrl,
 	}
 }
 
-// ProvideControllerOptions creates the controller options
-func ProvideControllerOptions(vacuumCtrl *vacuum.Controller) []Option {
-	if vacuumCtrl == nil {
-		return []Option{}
-	}
-	return []Option{WithVacuumController(vacuumCtrl)}
+type VacuumController interface {
+	StorePackage(logE *logrus.Entry, pkg *config.Package, pkgPath string) error
 }
-
-// Option defines a function type for controller configuration
-type Option func(*Installer)
-
-// WithVacuumController sets the VacuumController for the Installer
-func WithVacuumController(vacuumCtrl *vacuum.Controller) Option {
-	return func(c *Installer) {
-		c.VacuumCtrl = vacuumCtrl
-	}
-}
-
 type Linker interface {
 	Lstat(s string) (os.FileInfo, error)
 	Symlink(dest, src string) error
@@ -302,6 +283,10 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
+	if err := is.vacuum.StorePackage(logE, pkg, pkgPath); err != nil {
+		logerr.WithError(logE, err).Error("store the package")
+	}
+
 	if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
 		Package:         pkg,
 		Dest:            pkgPath,
@@ -310,15 +295,10 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 		RequireChecksum: param.RequireChecksum,
 		Checksum:        param.Checksum,
 	}); err != nil {
+		// if download failed, we don't remove key from vacuum database,
+		// because the entry will be vacuumed by the next vacuuming,
+		// when this package will be considered expired
 		return err
-	}
-
-	// Optionally stores the package information in vacuum DB if vacuum controler is instantied and vacuum Enabled
-	if is.VacuumCtrl != nil && is.VacuumCtrl.IsVacuumEnabled(logE) {
-		logE.Debug("store package in vacuum")
-		if err := is.VacuumCtrl.Vacuum(ctx, logE, vacuum.AsyncStorePackage, []*config.Package{pkg}); err != nil {
-			logE.WithError(err).Error("store package in vacuum during install")
-		}
 	}
 
 	return is.checkFilesWrap(ctx, logE, param, pkgPath)
