@@ -1,6 +1,7 @@
 package vacuum
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -26,13 +27,13 @@ type Controller struct {
 }
 
 // New initializes a Controller with the given context, parameters, and dependencies.
-func New(param *config.Param, fs afero.Fs) *Controller {
+func New(ctx context.Context, param *config.Param, fs afero.Fs) *Controller {
 	vc := &Controller{
 		stdout: os.Stdout,
 		Param:  param,
 		fs:     fs,
 	}
-	vc.storeQueue = newStoreQueue(vc)
+	vc.storeQueue = newStoreQueue(ctx, vc)
 	return vc
 }
 
@@ -73,7 +74,7 @@ func (vc *Controller) getDB() (*bolt.DB, error) {
 }
 
 // withDBRetry retries a database operation with exponential backoff.
-func (vc *Controller) withDBRetry(logE *logrus.Entry, fn func(*bolt.Tx) error, dbAccessType DBAccessType) error {
+func (vc *Controller) withDBRetry(ctx context.Context, logE *logrus.Entry, fn func(*bolt.Tx) error, dbAccessType DBAccessType) error {
 	const (
 		retries            = 2
 		initialBackoff     = 100 * time.Millisecond

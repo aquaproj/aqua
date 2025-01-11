@@ -86,14 +86,14 @@ func (i *command) action(c *cli.Context) error {
 	ctrl := controller.InitializeVacuumCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
 
 	if c.Command.Name == "show" {
-		if err := ctrl.ListPackages(i.r.LogE, c.Bool("expired")); err != nil {
+		if err := ctrl.ListPackages(c.Context, i.r.LogE, c.Bool("expired")); err != nil {
 			return fmt.Errorf("show packages: %w", err)
 		}
 		return nil
 	}
 
 	if c.Command.Name == "run" {
-		if err := ctrl.Vacuum(i.r.LogE); err != nil {
+		if err := ctrl.Vacuum(c.Context, i.r.LogE); err != nil {
 			return fmt.Errorf("run: %w", err)
 		}
 	}

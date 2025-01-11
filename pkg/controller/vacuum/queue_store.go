@@ -1,6 +1,7 @@
 package vacuum
 
 import (
+	"context"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -23,7 +24,7 @@ type StoreQueue struct {
 }
 
 // newStoreQueue initializes the task queue with a single worker.
-func newStoreQueue(vc *Controller) *StoreQueue {
+func newStoreQueue(ctx context.Context, vc *Controller) *StoreQueue {
 	const maxTasks = 100
 	sq := &StoreQueue{
 		taskQueue: make(chan StoreRequest, maxTasks),
@@ -31,19 +32,19 @@ func newStoreQueue(vc *Controller) *StoreQueue {
 		vc:        vc,
 	}
 
-	go sq.worker()
+	go sq.worker(ctx)
 	return sq
 }
 
 // worker processes tasks from the queue.
-func (sq *StoreQueue) worker() {
+func (sq *StoreQueue) worker(ctx context.Context) {
 	for {
 		select {
 		case task, ok := <-sq.taskQueue:
 			if !ok {
 				return
 			}
-			err := sq.vc.storePackageInternal(task.logE, task.pkg)
+			err := sq.vc.storePackageInternal(ctx, task.logE, task.pkg)
 			if err != nil {
 				logerr.WithError(task.logE, err).Error("store package asynchronously")
 			}
@@ -52,7 +53,7 @@ func (sq *StoreQueue) worker() {
 			// Process remaining tasks
 			for len(sq.taskQueue) > 0 {
 				task := <-sq.taskQueue
-				err := sq.vc.storePackageInternal(task.logE, task.pkg)
+				err := sq.vc.storePackageInternal(ctx, task.logE, task.pkg)
 				if err != nil {
 					logerr.WithError(task.logE, err).Error("store package asynchronously during shutdown")
 				}

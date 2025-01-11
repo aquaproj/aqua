@@ -1,6 +1,7 @@
 package vacuum
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ func TestHandleAsyncStorePackage_NilPackage(t *testing.T) {
 	t.Parallel()
 	logE := logrus.NewEntry(logrus.New())
 
-	vacuumCtrl := New(nil, nil)
+	vacuumCtrl := New(context.Background(), nil, nil)
 
 	// Test
 	err := vacuumCtrl.handleAsyncStorePackage(logE, nil)

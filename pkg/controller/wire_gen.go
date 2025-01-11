@@ -150,7 +150,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	controller := vacuum.New(param, fs)
+	controller := vacuum.New(ctx, param, fs)
 	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, controller)
 	validatorImpl := policy.NewValidator(param, fs)
 	configFinderImpl := policy.NewConfigFinder(fs)
@@ -205,7 +205,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	controller := vacuum.New(param, fs)
+	controller := vacuum.New(ctx, param, fs)
 	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, controller)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
@@ -389,7 +389,7 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 
 func InitializeVacuumCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *vacuum.Controller {
 	fs := afero.NewOsFs()
-	controller := vacuum.New(param, fs)
+	controller := vacuum.New(ctx, param, fs)
 	return controller
 }
 

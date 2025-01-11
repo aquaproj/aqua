@@ -1,6 +1,7 @@
 package vacuum
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,26 +47,26 @@ type Package struct {
 }
 
 // Vacuum performs the vacuuming process if it is enabled.
-func (vc *Controller) Vacuum(logE *logrus.Entry) error {
+func (vc *Controller) Vacuum(ctx context.Context, logE *logrus.Entry) error {
 	if !vc.IsVacuumEnabled(logE) {
 		return nil
 	}
-	return vc.vacuumExpiredPackages(logE)
+	return vc.vacuumExpiredPackages(ctx, logE)
 }
 
 // ListPackages lists the packages based on the provided arguments.
 // If the expired flag is set to true, it lists the expired packages.
 // Otherwise, it lists all packages.
-func (vc *Controller) ListPackages(logE *logrus.Entry, expired bool, args ...string) error {
+func (vc *Controller) ListPackages(ctx context.Context, logE *logrus.Entry, expired bool, args ...string) error {
 	if expired {
-		return vc.handleListExpiredPackages(logE, args...)
+		return vc.handleListExpiredPackages(ctx, logE, args...)
 	}
-	return vc.handleListPackages(logE, args...)
+	return vc.handleListPackages(ctx, logE, args...)
 }
 
 // handleListPackages retrieves a list of packages and displays them using a fuzzy search.
-func (vc *Controller) handleListPackages(logE *logrus.Entry, args ...string) error {
-	pkgs, err := vc.listPackages(logE)
+func (vc *Controller) handleListPackages(ctx context.Context, logE *logrus.Entry, args ...string) error {
+	pkgs, err := vc.listPackages(ctx, logE)
 	if err != nil {
 		return err
 	}
@@ -74,8 +75,8 @@ func (vc *Controller) handleListPackages(logE *logrus.Entry, args ...string) err
 
 // handleListExpiredPackages handles the process of listing expired packages
 // and displaying them using a fuzzy search.
-func (vc *Controller) handleListExpiredPackages(logE *logrus.Entry, args ...string) error {
-	expiredPkgs, err := vc.listExpiredPackages(logE)
+func (vc *Controller) handleListExpiredPackages(ctx context.Context, logE *logrus.Entry, args ...string) error {
+	expiredPkgs, err := vc.listExpiredPackages(ctx, logE)
 	if err != nil {
 		return err
 	}
@@ -135,8 +136,8 @@ func (vc *Controller) IsVacuumEnabled(logE *logrus.Entry) bool {
 }
 
 // listExpiredPackages lists all packages that have expired based on the vacuum configuration.
-func (vc *Controller) listExpiredPackages(logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
-	pkgs, err := vc.listPackages(logE)
+func (vc *Controller) listExpiredPackages(ctx context.Context, logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
+	pkgs, err := vc.listPackages(ctx, logE)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +166,7 @@ func (vc *Controller) isPackageExpired(pkg *PackageVacuumEntry) bool {
 }
 
 // listPackages lists all stored package entries.
-func (vc *Controller) listPackages(logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
+func (vc *Controller) listPackages(ctx context.Context, logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
 	db, err := vc.getDB()
 	if err != nil {
 		return nil, err
@@ -177,7 +178,7 @@ func (vc *Controller) listPackages(logE *logrus.Entry) ([]*PackageVacuumEntry, e
 
 	var pkgs []*PackageVacuumEntry
 
-	err = vc.withDBRetry(logE, func(tx *bbolt.Tx) error {
+	err = vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return nil
@@ -279,8 +280,8 @@ func (vc *Controller) displayPackagesFuzzyInteractive(pkgs []*PackageVacuumEntry
 }
 
 // vacuumExpiredPackages performs cleanup of expired packages.
-func (vc *Controller) vacuumExpiredPackages(logE *logrus.Entry) error {
-	expiredPackages, err := vc.listExpiredPackages(logE)
+func (vc *Controller) vacuumExpiredPackages(ctx context.Context, logE *logrus.Entry) error {
+	expiredPackages, err := vc.listExpiredPackages(ctx, logE)
 	if err != nil {
 		return err
 	}
@@ -303,7 +304,7 @@ func (vc *Controller) vacuumExpiredPackages(logE *logrus.Entry) error {
 
 	defer vc.Close(logE)
 	if len(successfulRemovals) > 0 {
-		if err := vc.removePackages(logE, successfulRemovals); err != nil {
+		if err := vc.removePackages(ctx, logE, successfulRemovals); err != nil {
 			return fmt.Errorf("remove packages from database: %w", err)
 		}
 	}
@@ -374,12 +375,12 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 }
 
 // storePackageInternal stores package entries in the database.
-func (vc *Controller) storePackageInternal(logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
+func (vc *Controller) storePackageInternal(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
 	lastUsedTime := time.Now()
 	if len(dateTime) > 0 {
 		lastUsedTime = dateTime[0]
 	}
-	return vc.withDBRetry(logE, func(tx *bbolt.Tx) error {
+	return vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return errors.New("bucket not found")
@@ -416,8 +417,8 @@ func (vc *Controller) storePackageInternal(logE *logrus.Entry, pkg *Package, dat
 }
 
 // removePackages removes package entries from the database.
-func (vc *Controller) removePackages(logE *logrus.Entry, pkgs []string) error {
-	return vc.withDBRetry(logE, func(tx *bbolt.Tx) error {
+func (vc *Controller) removePackages(ctx context.Context, logE *logrus.Entry, pkgs []string) error {
+	return vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return errors.New("bucket not found")
@@ -462,9 +463,9 @@ func decodePackageEntry(data []byte) (*PackageEntry, error) {
 }
 
 // GetPackageLastUsed retrieves the last used time of a package. for testing purposes.
-func (vc *Controller) GetPackageLastUsed(logE *logrus.Entry, pkgPath string) *time.Time {
+func (vc *Controller) GetPackageLastUsed(ctx context.Context, logE *logrus.Entry, pkgPath string) *time.Time {
 	var lastUsedTime time.Time
-	pkgEntry, _ := vc.retrievePackageEntry(logE, pkgPath)
+	pkgEntry, _ := vc.retrievePackageEntry(ctx, logE, pkgPath)
 	if pkgEntry != nil {
 		lastUsedTime = pkgEntry.LastUsageTime
 	}
@@ -472,16 +473,16 @@ func (vc *Controller) GetPackageLastUsed(logE *logrus.Entry, pkgPath string) *ti
 }
 
 // SetTimeStampPackage permit define a Timestamp for a package Manually. for testing purposes.
-func (vc *Controller) SetTimestampPackage(logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
+func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
 	vacuumPkg := vc.getVacuumPackage(pkg, pkgPath)
-	return vc.storePackageInternal(logE, vacuumPkg, datetime)
+	return vc.storePackageInternal(ctx, logE, vacuumPkg, datetime)
 }
 
 // retrievePackageEntry retrieves a package entry from the database by key. for testing purposes.
-func (vc *Controller) retrievePackageEntry(logE *logrus.Entry, key string) (*PackageEntry, error) {
+func (vc *Controller) retrievePackageEntry(ctx context.Context, logE *logrus.Entry, key string) (*PackageEntry, error) {
 	var pkgEntry *PackageEntry
 	key = generatePackageKey(vc.Param.RootDir, key)
-	err := vc.withDBRetry(logE, func(tx *bbolt.Tx) error {
+	err := vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return nil

@@ -1,6 +1,7 @@
 package vacuum_test
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 	"time"
@@ -42,12 +43,13 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		param := &config.Param{
 			RootDir: testDir,
 		}
-		controller := vacuum.New(param, fs)
+		ctx := context.Background()
+		controller := vacuum.New(ctx, param, fs)
 
-		err = controller.ListPackages(logE, false, "test")
+		err = controller.ListPackages(ctx, logE, false, "test")
 		require.NoError(t, err, "Should return nil when vacuum is disabled")
 
-		err = controller.Vacuum(logE)
+		err = controller.Vacuum(ctx, logE)
 		require.NoError(t, err, "Should return nil when vacuum is disabled")
 
 		err = controller.Close(logE)
@@ -64,7 +66,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			RootDir:    testDir,
 			VacuumDays: -1,
 		}
-		controller := vacuum.New(param, fs)
+		controller := vacuum.New(context.Background(), param, fs)
 
 		err = controller.StorePackage(logE, nil, testDir)
 		require.NoError(t, err, "Should return nil when vacuum is disabled")
@@ -82,10 +84,11 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		ctx := context.Background()
+		controller := vacuum.New(ctx, param, fs)
 
 		// Test
-		err = controller.ListPackages(logE, false, "test")
+		err = controller.ListPackages(ctx, logE, false, "test")
 
 		// Assert
 		require.NoError(t, err) // Should succeed with empty database
@@ -102,7 +105,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		controller := vacuum.New(context.Background(), param, fs)
 
 		numberPackagesToStore := 7
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
@@ -146,7 +149,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		ctx := context.Background()
+		controller := vacuum.New(ctx, param, fs)
 
 		numberPackagesToStore := 1
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
@@ -159,7 +163,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		require.NoError(t, err)
 
 		// List packages - should contain our stored package
-		err = controller.ListPackages(logE, false, "test")
+		err = controller.ListPackages(ctx, logE, false, "test")
 		require.NoError(t, err)
 		assert.Equal(t, "Test mode: Displaying packages", hook.LastEntry().Message)
 		assert.Equal(t, 1, hook.LastEntry().Data["TotalPackages"])
@@ -167,7 +171,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		hook.Reset()
 
 		// Verify package was stored correctly
-		lastUsed := controller.GetPackageLastUsed(logE, pkgs[0].pkgPath)
+		lastUsed := controller.GetPackageLastUsed(ctx, logE, pkgs[0].pkgPath)
 		assert.False(t, lastUsed.IsZero(), "Package should have a last used time")
 	})
 
@@ -181,7 +185,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		ctx := context.Background()
+		controller := vacuum.New(ctx, param, fs)
 
 		numberPackagesToStore := 4
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
@@ -196,7 +201,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		require.NoError(t, err)
 
 		// List packages - should contain our stored package
-		err = controller.ListPackages(logE, false, "test")
+		err = controller.ListPackages(ctx, logE, false, "test")
 		require.NoError(t, err)
 		assert.Equal(t, "Test mode: Displaying packages", hook.LastEntry().Message)
 		assert.Equal(t, 4, hook.LastEntry().Data["TotalPackages"])
@@ -214,7 +219,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		controller := vacuum.New(context.Background(), param, fs)
 
 		// Store the package
 		err = controller.StorePackage(logE, nil, tempTestDir)
@@ -232,10 +237,11 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		ctx := context.Background()
+		controller := vacuum.New(ctx, param, fs)
 
 		// Test
-		err = controller.ListPackages(logE, true, "test")
+		err = controller.ListPackages(ctx, logE, true, "test")
 
 		// Assert
 		require.NoError(t, err) // Error if no package found
@@ -255,7 +261,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		ctx := context.Background()
+		controller := vacuum.New(ctx, param, fs)
 
 		numberPackagesToStore := 3
 		numberPackagesToExpire := 1
@@ -288,28 +295,28 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		// Modify timestamp of one package to be expired
 		oldTime := time.Now().Add(-48 * time.Hour) // 2 days old
 		for _, pkg := range pkgs[:numberPackagesToExpire] {
-			err = controller.SetTimestampPackage(logE, pkg.configPkg, pkg.pkgPath, oldTime)
+			err = controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime)
 			require.NoError(t, err)
 		}
 
 		// Check Packages after expiration
-		err = controller.ListPackages(logE, false, "test")
+		err = controller.ListPackages(ctx, logE, false, "test")
 		require.NoError(t, err)
 		assert.Equal(t, numberPackagesToStore, hook.LastEntry().Data["TotalPackages"])
 		assert.Equal(t, numberPackagesToExpire, hook.LastEntry().Data["TotalExpired"])
 
 		// List expired packages only
-		err = controller.ListPackages(logE, true, "test")
+		err = controller.ListPackages(ctx, logE, true, "test")
 		require.NoError(t, err)
 		assert.Equal(t, numberPackagesToExpire, hook.LastEntry().Data["TotalPackages"])
 		assert.Equal(t, numberPackagesToExpire, hook.LastEntry().Data["TotalExpired"])
 
 		// Run vacuum
-		err = controller.Vacuum(logE)
+		err = controller.Vacuum(ctx, logE)
 		require.NoError(t, err)
 
 		// List expired packages
-		err = controller.ListPackages(logE, true, "test")
+		err = controller.ListPackages(ctx, logE, true, "test")
 		require.NoError(t, err)
 		assert.Equal(t, "no packages to display", hook.LastEntry().Message)
 
@@ -322,7 +329,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 		// Modify timestamp of one package to be expired And lock DB to simulate a failure in the vacuum operation
 		for _, pkg := range pkgs[:numberPackagesToExpire] {
-			err = controller.SetTimestampPackage(logE, pkg.configPkg, pkg.pkgPath, oldTime)
+			err = controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime)
 			require.NoError(t, err)
 		}
 
@@ -331,7 +338,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		require.NoError(t, err)
 
 		// Run vacuum
-		err = controller.Vacuum(logE)
+		err = controller.Vacuum(ctx, logE)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "open database vacuum.db: timeout")
 	})
@@ -347,7 +354,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			VacuumDays: days,
 			RootDir:    testDir,
 		}
-		controller := vacuum.New(param, fs)
+		ctx := context.Background()
+		controller := vacuum.New(ctx, param, fs)
 
 		// Store non-expired packages
 		pkgs := generateTestPackages(3, param.RootDir)
@@ -361,11 +369,11 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		require.NoError(t, err)
 
 		// Run vacuum
-		err = controller.Vacuum(logE)
+		err = controller.Vacuum(ctx, logE)
 		require.NoError(t, err)
 
 		// Verify no packages were removed
-		err = controller.ListPackages(logE, false, "test")
+		err = controller.ListPackages(ctx, logE, false, "test")
 		require.NoError(t, err)
 		assert.Equal(t, 3, hook.LastEntry().Data["TotalPackages"])
 	})
@@ -500,7 +508,7 @@ func benchmarkVacuumStorePackages(b *testing.B, pkgCount int) {
 	}()
 
 	b.Run("Sync", func(b *testing.B) {
-		controller := vacuum.New(syncParam, fs)
+		controller := vacuum.New(context.Background(), syncParam, fs)
 		b.ResetTimer()
 		for range b.N {
 			for _, pkg := range pkgs {
