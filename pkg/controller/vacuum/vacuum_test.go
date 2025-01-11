@@ -19,9 +19,6 @@ import (
 
 func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 	t.Parallel()
-	// Setup common test fixtures
-	logger, hook := test.NewNullLogger()
-	logE := logrus.NewEntry(logger)
 
 	fs := afero.NewOsFs()
 
@@ -37,6 +34,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("vacuum disabled", func(t *testing.T) {
 		t.Parallel()
+		logger, _ := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_disabled")
 		require.NoError(t, err)
 		// Setup
@@ -58,6 +57,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("vacuum bad configuration", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		logE.Logger.Level = logrus.DebugLevel
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_bad_config")
 		require.NoError(t, err)
@@ -75,6 +76,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("ListPackages mode - empty database", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		// Setup - use a new temp directory for this test
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_list_test")
 		require.NoError(t, err)
@@ -97,6 +100,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("StoreFailed", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "store_failed")
 		require.NoError(t, err)
 
@@ -140,6 +145,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("StorePackage and ListPackages workflow", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		// Setup - use a new temp directory for this test
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_store_test")
 		require.NoError(t, err)
@@ -177,6 +184,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("StoreMultiplePackages", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_StoreMultiplePackages_test")
 		require.NoError(t, err)
 
@@ -211,6 +220,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("StoreNilPackage", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_StoreNilPackage_test")
 		require.NoError(t, err)
 
@@ -229,6 +240,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("handleListExpiredPackages - no expired packages", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_handle_list_expired")
 		require.NoError(t, err)
 
@@ -249,6 +262,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 	})
 	t.Run("VacuumExpiredPackages workflow", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_expire_test")
 		require.NoError(t, err)
 		defer func() {
@@ -345,6 +360,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	t.Run("TestVacuumWithoutExpiredPackages", func(t *testing.T) {
 		t.Parallel()
+		logger, hook := test.NewNullLogger()
+		logE := logrus.NewEntry(logger)
 		fs := afero.NewOsFs()
 		testDir, err := afero.TempDir(fs, "", "vacuum_no_expired")
 		require.NoError(t, err)
