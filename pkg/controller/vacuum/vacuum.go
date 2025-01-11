@@ -389,9 +389,9 @@ func (vc *Controller) storePackageInternal(logE *logrus.Entry, pkg *Package, dat
 			return errors.New("bucket not found")
 		}
 		logE.WithFields(logrus.Fields{
-			"name":     pkg.Name,
-			"version":  pkg.Version,
-			"pkg_path": pkg.PkgPath,
+			"package_name":    pkg.Name,
+			"package_version": pkg.Version,
+			"package_path":    pkg.PkgPath,
 		}).Debug("storing package in vacuum database")
 
 		pkgKey := pkg.PkgPath
@@ -404,15 +404,15 @@ func (vc *Controller) storePackageInternal(logE *logrus.Entry, pkg *Package, dat
 		if err != nil {
 			logerr.WithError(logE, err).WithFields(
 				logrus.Fields{
-					"name":     pkg.Name,
-					"version":  pkg.Version,
-					"pkg_path": pkg.PkgPath,
+					"package_name":    pkg.Name,
+					"package_version": pkg.Version,
+					"package_path":    pkg.PkgPath,
 				}).Error("encode package")
 			return fmt.Errorf("encode package %s: %w", pkg.Name, err)
 		}
 
 		if err := b.Put([]byte(pkgKey), data); err != nil {
-			logerr.WithError(logE, err).WithField("pkgKey", pkgKey).Error("store package in vacuum database")
+			logerr.WithError(logE, err).WithField("package_path", pkgKey).Error("store package in vacuum database")
 			return fmt.Errorf("store package %s: %w", pkg.Name, err)
 		}
 		return nil
