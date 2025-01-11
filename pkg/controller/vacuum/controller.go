@@ -86,10 +86,7 @@ func (vc *Controller) withDBRetry(logE *logrus.Entry, fn func(*bolt.Tx) error, d
 			return nil
 		}
 
-		logE.WithFields(logrus.Fields{
-			"attempt": i + 1,
-			"error":   err,
-		}).Warn("retrying database operation")
+		logerr.WithError(logE, err).WithField("attempt", i+1).Warn("retrying database operation")
 
 		time.Sleep(backoff)
 		backoff *= exponentialBackoff
