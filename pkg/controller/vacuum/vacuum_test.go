@@ -46,6 +46,12 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 		err = controller.ListPackages(logE, false, "test")
 		require.NoError(t, err, "Should return nil when vacuum is disabled")
+
+		err = controller.Vacuum(logE)
+		require.NoError(t, err, "Should return nil when vacuum is disabled")
+
+		err = controller.Close(logE)
+		require.NoError(t, err, "Should return nil when vacuum is disabled")
 	})
 
 	t.Run("vacuum bad configuration", func(t *testing.T) {
