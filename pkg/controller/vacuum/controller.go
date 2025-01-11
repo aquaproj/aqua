@@ -125,9 +125,11 @@ func (vc *Controller) withDB(logE *logrus.Entry, fn func(*bolt.Tx) error, dbAcce
 // Keep_DBOpen opens the database instance. This is used for testing purposes.
 func (vc *Controller) TestKeepDBOpen() error {
 	const dbFileMode = 0o600
-	_, _ = bolt.Open(filepath.Join(vc.Param.RootDir, dbFile), dbFileMode, &bolt.Options{
+	if _, err := bolt.Open(filepath.Join(vc.Param.RootDir, dbFile), dbFileMode, &bolt.Options{
 		Timeout: 1 * time.Second,
-	})
+	}); err != nil {
+		return fmt.Errorf("open database %v: %w", dbFile, err)
+	}
 	return nil
 }
 

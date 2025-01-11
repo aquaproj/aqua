@@ -102,9 +102,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
 
 		// We force Keeping the DB open to simulate a failure in the async operation
-		if err := controller.TestKeepDBOpen(); err != nil {
-			t.Fatal(err)
-		}
+		err = controller.TestKeepDBOpen()
+		require.NoError(t, err)
+
 		hook.Reset()
 		for _, pkg := range pkgs {
 			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
