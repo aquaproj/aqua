@@ -327,14 +327,12 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 
 		batch := make([]struct {
 			pkgPath string
-			pkgType string
 			pkgName string
 			version string
 		}, len(expired[i:end]))
 
 		for j, entry := range expired[i:end] {
 			batch[j].pkgPath = string(entry.PkgPath)
-			batch[j].pkgType = entry.PackageEntry.Package.Type
 			batch[j].pkgName = entry.PackageEntry.Package.Name
 			batch[j].version = entry.PackageEntry.Package.Version
 		}
@@ -342,14 +340,13 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 		wg.Add(1)
 		go func(batch []struct {
 			pkgPath string
-			pkgType string
 			pkgName string
 			version string
 		},
 		) {
 			defer wg.Done()
 			for _, entry := range batch {
-				if err := vc.removePackageVersionPath(vc.Param, entry.pkgPath, entry.pkgType); err != nil {
+				if err := vc.removePackageVersionPath(vc.Param, entry.pkgPath); err != nil {
 					logerr.WithError(logE, err).WithField("pkg_path", entry.pkgPath).Error("removing path")
 					errCh <- err
 					continue
@@ -437,7 +434,7 @@ func (vc *Controller) removePackages(logE *logrus.Entry, pkgs []string) error {
 }
 
 // removePackageVersionPath removes the specified package version directory and its parent directory if it becomes empty.
-func (vc *Controller) removePackageVersionPath(param *config.Param, path string, pkgType string) error {
+func (vc *Controller) removePackageVersionPath(param *config.Param, path string) error {
 	pkgsPath := filepath.Join(param.RootDir, "pkgs")
 	pkgVersionPath := filepath.Join(pkgsPath, path)
 	if err := vc.fs.RemoveAll(pkgVersionPath); err != nil {
