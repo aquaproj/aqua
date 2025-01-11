@@ -217,6 +217,11 @@ jobs:
       - name: Test update-aqua
         run: aqua update-aqua
 
+      - name: Test vacuum Run command
+        env:
+          AQUA_VACUUM_DAYS: 1
+        run: aqua vacuum run
+
   integration-test-cargo:
     timeout-minutes: 30
     runs-on: ubuntu-latest
