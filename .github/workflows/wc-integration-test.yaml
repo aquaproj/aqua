@@ -214,13 +214,14 @@ jobs:
       - run: aqua list
         working-directory: /tmp
 
-      - name: Test update-aqua
-        run: aqua update-aqua
-
       - name: Test vacuum Run command
         env:
           AQUA_VACUUM_DAYS: 1
         run: aqua vacuum run
+
+      - name: Test update-aqua
+        run: aqua update-aqua
+
 
   integration-test-cargo:
     timeout-minutes: 30
