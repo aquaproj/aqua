@@ -90,7 +90,9 @@ func (vc *Controller) withDBRetry(ctx context.Context, logE *logrus.Entry, fn fu
 
 		logerr.WithError(logE, err).WithField("attempt", i+1).Warn("retrying database operation")
 
-		timer.Wait(ctx, backoff)
+		if err := timer.Wait(ctx, backoff); err != nil {
+			return fmt.Errorf("wait for retrying database operation: %w", err)
+		}
 		backoff *= exponentialBackoff
 	}
 
