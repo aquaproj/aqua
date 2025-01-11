@@ -125,7 +125,6 @@ func setEnvParams(param *config.Param) error { //nolint:cyclop
 			}
 		}
 	}
-	param.VacuumDays = 0 // Disabled by default
 	if a := os.Getenv("AQUA_VACUUM_DAYS"); a != "" {
 		vacuumDays, err := strconv.Atoi(a)
 		if err != nil {
