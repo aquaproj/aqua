@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -49,7 +50,7 @@ func (vc *Controller) getDB() (*bolt.DB, error) {
 	}
 
 	const dbFileMode = 0o600
-	db, err := bolt.Open(vc.Param.RootDir+"/"+dbFile, dbFileMode, &bolt.Options{
+	db, err := bolt.Open(filepath.Join(vc.Param.RootDir, dbFile), dbFileMode, &bolt.Options{
 		Timeout: 1 * time.Second,
 	})
 	if err != nil {
