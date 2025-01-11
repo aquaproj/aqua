@@ -10,11 +10,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
+	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
@@ -24,7 +23,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 	// Create temp directory for tests
 	tempTestDir, err := afero.TempDir(fs, "/tmp", "vacuum_test")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Cleanup(func() {
 		err := fs.RemoveAll(tempTestDir)
 		if err != nil {
@@ -37,7 +38,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logger, _ := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_disabled")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 		// Setup
 		param := &config.Param{
 			RootDir: testDir,
@@ -46,13 +49,19 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		controller := vacuum.New(ctx, param, fs)
 
 		err = controller.ListPackages(ctx, logE, false, "test")
-		require.NoError(t, err, "Should return nil when vacuum is disabled")
+		if err != nil {
+			t.Fatal("Should return nil when vacuum is disabled")
+		}
 
 		err = controller.Vacuum(ctx, logE)
-		require.NoError(t, err, "Should return nil when vacuum is disabled")
+		if err != nil {
+			t.Fatal("Should return nil when vacuum is disabled")
+		}
 
 		err = controller.Close(logE)
-		require.NoError(t, err, "Should return nil when vacuum is disabled")
+		if err != nil {
+			t.Fatal("Should return nil when vacuum is disabled")
+		}
 	})
 
 	t.Run("vacuum bad configuration", func(t *testing.T) {
@@ -61,7 +70,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logE := logrus.NewEntry(logger)
 		logE.Logger.Level = logrus.DebugLevel
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_bad_config")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 		// Setup
 		param := &config.Param{
 			RootDir:    testDir,
@@ -70,8 +81,12 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		controller := vacuum.New(context.Background(), param, fs)
 
 		err = controller.StorePackage(logE, nil, testDir)
-		require.NoError(t, err, "Should return nil when vacuum is disabled")
-		assert.Equal(t, "vacuum is disabled. AQUA_VACUUM_DAYS is not set or invalid.", hook.LastEntry().Message)
+		if err != nil {
+			t.Fatal("Should return nil when vacuum is disabled")
+		}
+		if diff := cmp.Diff("vacuum is disabled. AQUA_VACUUM_DAYS is not set or invalid.", hook.LastEntry().Message); diff != "" {
+			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("ListPackages mode - empty database", func(t *testing.T) {
@@ -80,7 +95,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logE := logrus.NewEntry(logger)
 		// Setup - use a new temp directory for this test
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_list_test")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		days := 30
 		param := &config.Param{
@@ -94,8 +111,12 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		err = controller.ListPackages(ctx, logE, false, "test")
 
 		// Assert
-		require.NoError(t, err) // Should succeed with empty database
-		assert.Equal(t, "no packages to display", hook.LastEntry().Message)
+		if err != nil {
+			t.Fatal(err) // Should succeed with empty database
+		}
+		if diff := cmp.Diff("no packages to display", hook.LastEntry().Message); diff != "" {
+			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("StoreFailed", func(t *testing.T) {
@@ -103,7 +124,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "store_failed")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		days := 1 // Short expiration for testing
 		param := &config.Param{
@@ -117,17 +140,23 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 		// We force Keeping the DB open to simulate a failure in the async operation
 		err = controller.TestKeepDBOpen()
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		hook.Reset()
 		for _, pkg := range pkgs {
 			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		// Wait for the async operations to complete
 		err = controller.Close(logE)
-		require.NoError(t, err) // If AsyncStorePackage fails, Close should wait for the async operations to complete, but not return an error
+		if err != nil {
+			t.Fatal(err) // If AsyncStorePackage fails, Close should wait for the async operations to complete, but not return an error
+		}
 
 		expectedLogMessage := []string{
 			"store package asynchronously",
@@ -139,7 +168,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 			receivedMessages = append(receivedMessages, entry.Message)
 		}
 		for _, entry := range expectedLogMessage {
-			assert.Contains(t, receivedMessages, entry)
+			if !contains(receivedMessages, entry) {
+				t.Errorf("Expected log message %q not found", entry)
+			}
 		}
 	})
 
@@ -149,7 +180,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logE := logrus.NewEntry(logger)
 		// Setup - use a new temp directory for this test
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_store_test")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		days := 30
 		param := &config.Param{
@@ -164,22 +197,36 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 		// Store the package
 		err = controller.StorePackage(logE, pkgs[0].configPkg, pkgs[0].pkgPath)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		err = controller.Close(logE) // Close to ensure async operations are completed
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// List packages - should contain our stored package
 		err = controller.ListPackages(ctx, logE, false, "test")
-		require.NoError(t, err)
-		assert.Equal(t, "Test mode: Displaying packages", hook.LastEntry().Message)
-		assert.Equal(t, 1, hook.LastEntry().Data["TotalPackages"])
-		assert.Equal(t, 0, hook.LastEntry().Data["TotalExpired"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff("Test mode: Displaying packages", hook.LastEntry().Message); diff != "" {
+			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(1, hook.LastEntry().Data["TotalPackages"]); diff != "" {
+			t.Errorf("Unexpected total packages (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(0, hook.LastEntry().Data["TotalExpired"]); diff != "" {
+			t.Errorf("Unexpected total expired (-want +got):\n%s", diff)
+		}
 		hook.Reset()
 
 		// Verify package was stored correctly
 		lastUsed := controller.GetPackageLastUsed(ctx, logE, pkgs[0].pkgPath)
-		assert.False(t, lastUsed.IsZero(), "Package should have a last used time")
+		if lastUsed.IsZero() {
+			t.Fatal("Package should have a last used time")
+		}
 	})
 
 	t.Run("StoreMultiplePackages", func(t *testing.T) {
@@ -187,7 +234,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_StoreMultiplePackages_test")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		days := 30
 		param := &config.Param{
@@ -203,18 +252,30 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		// Store the package
 		for _, pkg := range pkgs {
 			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		err = controller.Close(logE) // Close to ensure async operations are completed
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// List packages - should contain our stored package
 		err = controller.ListPackages(ctx, logE, false, "test")
-		require.NoError(t, err)
-		assert.Equal(t, "Test mode: Displaying packages", hook.LastEntry().Message)
-		assert.Equal(t, 4, hook.LastEntry().Data["TotalPackages"])
-		assert.Equal(t, 0, hook.LastEntry().Data["TotalExpired"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff("Test mode: Displaying packages", hook.LastEntry().Message); diff != "" {
+			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(4, hook.LastEntry().Data["TotalPackages"]); diff != "" {
+			t.Errorf("Unexpected total packages (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(0, hook.LastEntry().Data["TotalExpired"]); diff != "" {
+			t.Errorf("Unexpected total expired (-want +got):\n%s", diff)
+		}
 		hook.Reset()
 	})
 
@@ -223,7 +284,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_StoreNilPackage_test")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		days := 30
 		param := &config.Param{
@@ -234,8 +297,12 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 		// Store the package
 		err = controller.StorePackage(logE, nil, tempTestDir)
-		require.NoError(t, err)
-		assert.Equal(t, "package is nil, skipping store package", hook.LastEntry().Message)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff("package is nil, skipping store package", hook.LastEntry().Message); diff != "" {
+			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
+		}
 	})
 
 	t.Run("handleListExpiredPackages - no expired packages", func(t *testing.T) {
@@ -243,7 +310,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_handle_list_expired")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		days := 30
 		param := &config.Param{
@@ -257,15 +326,21 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		err = controller.ListPackages(ctx, logE, true, "test")
 
 		// Assert
-		require.NoError(t, err) // Error if no package found
-		assert.Equal(t, "no packages to display", hook.LastEntry().Message)
+		if err != nil {
+			t.Fatal(err) // Error if no package found
+		}
+		if diff := cmp.Diff("no packages to display", hook.LastEntry().Message); diff != "" {
+			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
+		}
 	})
 	t.Run("VacuumExpiredPackages workflow", func(t *testing.T) {
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_expire_test")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer func() {
 			hook.Reset()
 			fs.RemoveAll(testDir) //nolint:errcheck
@@ -287,12 +362,16 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		// Create package paths and files
 		for _, pkg := range pkgs {
 			err = fs.MkdirAll(pkg.pkgPath, 0o755)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			// Create a test file in the package directory
 			testFile := filepath.Join(pkg.pkgPath, "test.txt")
 			err = afero.WriteFile(fs, testFile, []byte("test content"), 0o644)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			pkgPaths = append(pkgPaths, pkg.pkgPath)
 		}
@@ -300,62 +379,95 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		// Store Multiple packages
 		for _, pkg := range pkgs {
 			err = controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		// Call Close to ensure all async operations are completed
 		err = controller.Close(logE)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// Modify timestamp of one package to be expired
 		oldTime := time.Now().Add(-48 * time.Hour) // 2 days old
 		for _, pkg := range pkgs[:numberPackagesToExpire] {
 			err = controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		// Check Packages after expiration
 		err = controller.ListPackages(ctx, logE, false, "test")
-		require.NoError(t, err)
-		assert.Equal(t, numberPackagesToStore, hook.LastEntry().Data["TotalPackages"])
-		assert.Equal(t, numberPackagesToExpire, hook.LastEntry().Data["TotalExpired"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(numberPackagesToStore, hook.LastEntry().Data["TotalPackages"]); diff != "" {
+			t.Errorf("Unexpected total packages (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(numberPackagesToExpire, hook.LastEntry().Data["TotalExpired"]); diff != "" {
+			t.Errorf("Unexpected total expired (-want +got):\n%s", diff)
+		}
 
 		// List expired packages only
 		err = controller.ListPackages(ctx, logE, true, "test")
-		require.NoError(t, err)
-		assert.Equal(t, numberPackagesToExpire, hook.LastEntry().Data["TotalPackages"])
-		assert.Equal(t, numberPackagesToExpire, hook.LastEntry().Data["TotalExpired"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(numberPackagesToExpire, hook.LastEntry().Data["TotalPackages"]); diff != "" {
+			t.Errorf("Unexpected total packages (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(numberPackagesToExpire, hook.LastEntry().Data["TotalExpired"]); diff != "" {
+			t.Errorf("Unexpected total expired (-want +got):\n%s", diff)
+		}
 
 		// Run vacuum
 		err = controller.Vacuum(ctx, logE)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// List expired packages
 		err = controller.ListPackages(ctx, logE, true, "test")
-		require.NoError(t, err)
-		assert.Equal(t, "no packages to display", hook.LastEntry().Message)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff("no packages to display", hook.LastEntry().Message); diff != "" {
+			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
+		}
 
 		// Verify Package Paths was removed :
 		for _, pkgPath := range pkgPaths[:numberPackagesToExpire] {
 			exist, err := afero.Exists(fs, pkgPath)
-			require.NoError(t, err)
-			assert.False(t, exist, "Package directory should be removed after vacuum")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if exist {
+				t.Fatal("Package directory should be removed after vacuum")
+			}
 		}
 
 		// Modify timestamp of one package to be expired And lock DB to simulate a failure in the vacuum operation
 		for _, pkg := range pkgs[:numberPackagesToExpire] {
 			err = controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		// Keep Database open to simulate a failure in the vacuum operation
 		err = controller.TestKeepDBOpen()
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// Run vacuum
 		err = controller.Vacuum(ctx, logE)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "open database vacuum.db: timeout")
+		if err == nil || !contains([]string{err.Error()}, "open database vacuum.db: timeout") {
+			t.Fatalf("Expected timeout error, got %v", err)
+		}
 	})
 
 	t.Run("TestVacuumWithoutExpiredPackages", func(t *testing.T) {
@@ -364,7 +476,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		logE := logrus.NewEntry(logger)
 		fs := afero.NewOsFs()
 		testDir, err := afero.TempDir(fs, "", "vacuum_no_expired")
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		days := 30
 		param := &config.Param{
@@ -378,29 +492,50 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 		pkgs := generateTestPackages(3, param.RootDir)
 		for _, pkg := range pkgs {
 			err = controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		// Call Close to ensure all async operations are completed
 		err = controller.Close(logE)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// Run vacuum
 		err = controller.Vacuum(ctx, logE)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// Verify no packages were removed
 		err = controller.ListPackages(ctx, logE, false, "test")
-		require.NoError(t, err)
-		assert.Equal(t, 3, hook.LastEntry().Data["TotalPackages"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(3, hook.LastEntry().Data["TotalPackages"]); diff != "" {
+			t.Errorf("Unexpected total packages (-want +got):\n%s", diff)
+		}
 	})
+}
+
+func contains(receivedMessages []string, entry string) bool {
+	for _, msg := range receivedMessages {
+		if msg == entry {
+			return true
+		}
+	}
+	return false
 }
 
 func TestMockVacuumController_StorePackage(t *testing.T) {
 	t.Parallel()
 	fs := afero.NewOsFs()
 	testDir, err := afero.TempDir(fs, "", "vacuum_no_expired")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	param := &config.Param{
 		RootDir: testDir,
@@ -436,14 +571,22 @@ func TestMockVacuumController_StorePackage(t *testing.T) {
 			t.Parallel()
 			err := mockCtrl.StorePackage(logE, tt.pkg, tt.pkgPath)
 			if tt.wantErr {
-				require.Error(t, err)
+				if err == nil {
+					t.Errorf("Expected error, got nil")
+				}
 			} else {
-				require.NoError(t, err)
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
 			}
 			err = mockCtrl.Vacuum(logE)
-			require.NoError(t, err)
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+			}
 			err = mockCtrl.Close(logE)
-			require.NoError(t, err)
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+			}
 		})
 	}
 }
@@ -455,11 +598,17 @@ func TestNilVacuumController(t *testing.T) {
 
 	test := generateTestPackages(1, "/tmp")
 	err := mockCtrl.StorePackage(logE, test[0].configPkg, test[0].pkgPath)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 	err = mockCtrl.Vacuum(logE)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 	err = mockCtrl.Close(logE)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 }
 
 type ConfigPackageWithPath struct {

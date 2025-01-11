@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestHandleAsyncStorePackage_NilPackage(t *testing.T) {
@@ -21,8 +20,12 @@ func TestHandleAsyncStorePackage_NilPackage(t *testing.T) {
 	err := vacuumCtrl.handleAsyncStorePackage(logE, nil)
 
 	// Assert
-	require.Error(t, err)
-	assert.Equal(t, "vacuumPkg is nil", err.Error())
+	if err == nil {
+		t.Fatalf("expected an error but got nil")
+	}
+	if diff := cmp.Diff("vacuumPkg is nil", err.Error()); diff != "" {
+		t.Errorf("unexpected error message (-want +got):\n%s", diff)
+	}
 }
 
 func TestEncodePackageEntry(t *testing.T) {
@@ -33,14 +36,24 @@ func TestEncodePackageEntry(t *testing.T) {
 	}
 
 	data, err := encodePackageEntry(pkgEntry)
-	require.NoError(t, err)
-	assert.NotNil(t, data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if data == nil {
+		t.Fatalf("expected data but got nil")
+	}
 
 	var decodedEntry PackageEntry
 	err = json.Unmarshal(data, &decodedEntry)
-	require.NoError(t, err)
-	assert.Equal(t, pkgEntry.LastUsageTime.Unix(), decodedEntry.LastUsageTime.Unix())
-	assert.Equal(t, pkgEntry.Package.Name, decodedEntry.Package.Name)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if diff := cmp.Diff(pkgEntry.LastUsageTime.Unix(), decodedEntry.LastUsageTime.Unix()); diff != "" {
+		t.Errorf("unexpected LastUsageTime (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(pkgEntry.Package.Name, decodedEntry.Package.Name); diff != "" {
+		t.Errorf("unexpected Package.Name (-want +got):\n%s", diff)
+	}
 }
 
 func TestDecodePackageEntry(t *testing.T) {
@@ -51,18 +64,36 @@ func TestDecodePackageEntry(t *testing.T) {
 	}
 
 	data, err := json.Marshal(pkgEntry)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	decodedEntry, err := decodePackageEntry(data)
-	require.NoError(t, err)
-	assert.NotNil(t, decodedEntry)
-	assert.Equal(t, pkgEntry.LastUsageTime.Unix(), decodedEntry.LastUsageTime.Unix())
-	assert.Equal(t, pkgEntry.Package.Name, decodedEntry.Package.Name)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if decodedEntry == nil {
+		t.Fatalf("expected decodedEntry but got nil")
+	}
+	if diff := cmp.Diff(pkgEntry.LastUsageTime.Unix(), decodedEntry.LastUsageTime.Unix()); diff != "" {
+		t.Errorf("unexpected LastUsageTime (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(pkgEntry.Package.Name, decodedEntry.Package.Name); diff != "" {
+		t.Errorf("unexpected Package.Name (-want +got):\n%s", diff)
+	}
 }
 
 func TestDecodePackageEntry_Error(t *testing.T) {
 	t.Parallel()
 	_, err := decodePackageEntry([]byte("invalid json"))
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "unmarshal package entry")
+	if err == nil {
+		t.Fatalf("expected an error but got nil")
+	}
+	if diff := cmp.Diff(true, contains(err.Error(), "unmarshal package entry")); diff != "" {
+		t.Errorf("unexpected error message (-want +got):\n%s", diff)
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && s[:len(substr)] == substr
 }
