@@ -111,14 +111,12 @@ func (vc *Controller) withDB(logE *logrus.Entry, fn func(*bolt.Tx) error, dbAcce
 	}()
 
 	if dbAccessType == Update {
-		err = db.Update(fn)
-		if err != nil {
+		if err := db.Update(fn); err != nil {
 			return fmt.Errorf("update database: %w", err)
 		}
 		return nil
 	}
-	err = db.View(fn)
-	if err != nil {
+	if err := db.View(fn); err != nil {
 		return fmt.Errorf("view database: %w", err)
 	}
 	return nil
