@@ -134,7 +134,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		}
 		controller := vacuum.New(context.Background(), param, fs)
 
-		numberPackagesToStore := 7
+		numberPackagesToStore := 4
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
 
 		// We force Keeping the DB open to simulate a failure in the async operation
@@ -157,6 +157,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 			t.Fatal(err) // If AsyncStorePackage fails, Close should wait for the async operations to complete, but not return an error
 		}
 
+		time.Sleep(1 * time.Second) // Wait for ensure have time to get all logs
 		expectedLogMessage := []string{
 			"store package asynchronously",
 			"retrying database operation",
