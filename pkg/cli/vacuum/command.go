@@ -13,24 +13,16 @@ import (
 )
 
 const description = `Perform vacuuming tasks.
-If no argument is provided, the vacuum will clean expired packages.
-
-	# Execute vacuum cleaning
-	$ aqua vacuum
-
-This command has an alias "v".
-
-	$ aqua v
 
 Enable vacuuming by setting the AQUA_VACUUM_DAYS environment variable to a value greater than 0.
 This command removes versions of packages that have not been used for the specified number of days.
 
 You can list all packages managed by the vacuum system or only expired packages.
 
-	# List all packages managed by the vacuum system
+	# Show all packages managed by the vacuum system
 	$ aqua vacuum show
 
-	# List only expired packages
+	# Show only expired packages
 	$ aqua vacuum show --expired
 	$ aqua vacuum show -e
 
@@ -95,7 +87,7 @@ func (i *command) action(c *cli.Context) error {
 
 	if c.Command.Name == "show" {
 		if err := ctrl.ListPackages(i.r.LogE, c.Bool("expired")); err != nil {
-			return fmt.Errorf("list packages: %w", err)
+			return fmt.Errorf("show packages: %w", err)
 		}
 		return nil
 	}
