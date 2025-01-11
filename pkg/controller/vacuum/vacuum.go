@@ -13,7 +13,6 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"go.etcd.io/bbolt"
 )
@@ -440,25 +439,9 @@ func (vc *Controller) removePackages(logE *logrus.Entry, pkgs []string) error {
 // removePackageVersionPath removes the specified package version directory and its parent directory if it becomes empty.
 func (vc *Controller) removePackageVersionPath(param *config.Param, path string, pkgType string) error {
 	pkgsPath := filepath.Join(param.RootDir, "pkgs")
-	pkgsRemoveLimitPath := filepath.Join(pkgsPath, pkgType)
 	pkgVersionPath := filepath.Join(pkgsPath, path)
 	if err := vc.fs.RemoveAll(pkgVersionPath); err != nil {
 		return fmt.Errorf("remove package version directories: %w", err)
-	}
-
-	currentPath := filepath.Dir(pkgVersionPath)
-	for currentPath != pkgsRemoveLimitPath {
-		dirIsEmpty, err := afero.IsEmpty(vc.fs, currentPath)
-		if err != nil {
-			return fmt.Errorf("check if directory is empty: %w", err)
-		}
-		if !dirIsEmpty {
-			break
-		}
-		if err := vc.fs.RemoveAll(currentPath); err != nil {
-			return fmt.Errorf("remove package directories: %w", err)
-		}
-		currentPath = filepath.Dir(currentPath)
 	}
 	return nil
 }
