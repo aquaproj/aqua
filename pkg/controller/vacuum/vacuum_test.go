@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
+func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 	t.Parallel()
 
 	fs := afero.NewOsFs()
@@ -109,7 +109,6 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 		// Test
 		err = controller.ListPackages(ctx, logE, false, "test")
-
 		// Assert
 		if err != nil {
 			t.Fatal(err) // Should succeed with empty database
@@ -324,7 +323,6 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop
 
 		// Test
 		err = controller.ListPackages(ctx, logE, true, "test")
-
 		// Assert
 		if err != nil {
 			t.Fatal(err) // Error if no package found
