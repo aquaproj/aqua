@@ -186,9 +186,7 @@ func (vc *Controller) listPackages(logE *logrus.Entry) ([]*PackageVacuumEntry, e
 		return b.ForEach(func(k, value []byte) error {
 			pkgEntry, err := decodePackageEntry(value)
 			if err != nil {
-				logE.WithFields(logrus.Fields{
-					"pkg_key": string(k),
-				}).Warnf("unable to decode entry: %v", err)
+				logerr.WithError(logE, err).WithField("pkg_key", string(k)).Warn("unable to decode entry")
 				return err
 			}
 			pkgs = append(pkgs, &PackageVacuumEntry{
@@ -302,7 +300,7 @@ func (vc *Controller) vacuumExpiredPackages(logE *logrus.Entry) error {
 	defer vc.Close(logE)
 	if len(successfulRemovals) > 0 {
 		if err := vc.removePackages(logE, successfulRemovals); err != nil {
-			return fmt.Errorf("failed to remove packages from database: %w", err)
+			return fmt.Errorf("remove packages from database: %w", err)
 		}
 	}
 
