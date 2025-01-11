@@ -134,7 +134,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		}
 		controller := vacuum.New(context.Background(), param, fs)
 
-		numberPackagesToStore := 4
+		numberPackagesToStore := 7
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
 
 		// We force Keeping the DB open to simulate a failure in the async operation
