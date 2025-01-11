@@ -294,7 +294,12 @@ func (vc *Controller) vacuumExpiredPackages(logE *logrus.Entry) error {
 	successfulRemovals, errorsEncountered := vc.processExpiredPackages(logE, expiredPackages)
 
 	if len(errorsEncountered) > 0 {
-		return errors.New("some packages could not be removed")
+		var gErr error
+		for _, err := range errorsEncountered {
+			logerr.WithError(logE, err).Error("removing package path from system")
+		}
+		gErr = fmt.Errorf("total of %d errors encountered while removing package paths", len(errorsEncountered))
+		return gErr
 	}
 
 	defer vc.Close(logE)
@@ -309,14 +314,6 @@ func (vc *Controller) vacuumExpiredPackages(logE *logrus.Entry) error {
 
 // processExpiredPackages processes a list of expired package entries by removing their associated paths
 // and generating a list of configuration packages to be removed from vacuum database.
-//
-// Parameters:
-//   - logE: A logrus.Entry used for logging errors and information.
-//   - expired: A slice of PackageVacuumEntry representing the expired packages to be processed.
-//
-// Returns:
-//   - A slice of VacuumPackage representing the packages that were successfully processed and need to be removed from the vacuum database.
-//   - A slice of errors encountered during the processing of the expired packages.
 func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*PackageVacuumEntry) ([]string, []error) {
 	const batchSize = 10
 	successKeys := make(chan string, len(expired))
@@ -354,7 +351,7 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 			defer wg.Done()
 			for _, entry := range batch {
 				if err := vc.removePackageVersionPath(vc.Param, entry.pkgPath, entry.pkgType); err != nil {
-					logerr.WithError(logE, err).Error("removing path")
+					logerr.WithError(logE, err).WithField("pkg_path", entry.pkgPath).Error("removing path")
 					errCh <- err
 					continue
 				}
