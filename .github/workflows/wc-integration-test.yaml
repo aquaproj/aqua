@@ -214,11 +214,21 @@ jobs:
       - run: aqua list
         working-directory: /tmp
 
+      # Test if commands succeed with vacuum enabled
+      - name: Test aqua install with AQUA_VACUUM_DAYS
+        env:
+          AQUA_VACUUM_DAYS: 1
+        run: aqua install
+      - name: Test aqua exec with AQUA_VACUUM_DAYS
+        env:
+          AQUA_VACUUM_DAYS: 1
+        run: cmdx -v
       - name: Test vacuum Run command
         env:
           AQUA_VACUUM_DAYS: 1
         run: aqua vacuum run
 
+      # Test update-aqua command
       - name: Test update-aqua
         run: aqua update-aqua
 
