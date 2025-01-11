@@ -273,7 +273,7 @@ func (vc *Controller) displayPackagesFuzzyInteractive(pkgs []*PackageVacuumEntry
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil
 		}
-		return fmt.Errorf("failed to display packages: %w", err)
+		return fmt.Errorf("display packages: %w", err)
 	}
 
 	return nil
@@ -467,7 +467,7 @@ func (vc *Controller) removePackageVersionPath(param *config.Param, path string,
 func encodePackageEntry(pkgEntry *PackageEntry) ([]byte, error) {
 	data, err := json.Marshal(pkgEntry)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal package entry: %w", err)
+		return nil, fmt.Errorf("marshal package entry: %w", err)
 	}
 	return data, nil
 }
@@ -476,7 +476,7 @@ func encodePackageEntry(pkgEntry *PackageEntry) ([]byte, error) {
 func decodePackageEntry(data []byte) (*PackageEntry, error) {
 	var pkgEntry PackageEntry
 	if err := json.Unmarshal(data, &pkgEntry); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal package entry: %w", err)
+		return nil, fmt.Errorf("unmarshal package entry: %w", err)
 	}
 	return &pkgEntry, nil
 }
