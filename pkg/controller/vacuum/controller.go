@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -89,7 +90,7 @@ func (vc *Controller) withDBRetry(ctx context.Context, logE *logrus.Entry, fn fu
 
 		logerr.WithError(logE, err).WithField("attempt", i+1).Warn("retrying database operation")
 
-		time.Sleep(backoff)
+		timer.Wait(ctx, backoff)
 		backoff *= exponentialBackoff
 	}
 
