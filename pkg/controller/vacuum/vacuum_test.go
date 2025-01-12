@@ -21,26 +21,11 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 
 	fs := afero.NewOsFs()
 
-	// Create temp directory for tests
-	tempTestDir, err := afero.TempDir(fs, "/tmp", "vacuum_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		err := fs.RemoveAll(tempTestDir)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
 	t.Run("vacuum disabled", func(t *testing.T) {
 		t.Parallel()
 		logger, _ := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_disabled")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 		// Setup
 		param := &config.Param{
 			RootDir: testDir,
@@ -48,7 +33,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
 
-		err = controller.ListPackages(ctx, logE, false, "test")
+		err := controller.ListPackages(ctx, logE, false, "test")
 		if err != nil {
 			t.Fatal("Should return nil when vacuum is disabled")
 		}
@@ -69,18 +54,15 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		logE.Logger.Level = logrus.DebugLevel
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_bad_config")
-		if err != nil {
-			t.Fatal(err)
-		}
-		// Setup
+		testDir := t.TempDir()
+
 		param := &config.Param{
 			RootDir:    testDir,
 			VacuumDays: -1,
 		}
 		controller := vacuum.New(context.Background(), param, fs)
 
-		err = controller.StorePackage(logE, nil, testDir)
+		err := controller.StorePackage(logE, nil, testDir)
 		if err != nil {
 			t.Fatal("Should return nil when vacuum is disabled")
 		}
@@ -93,11 +75,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		// Setup - use a new temp directory for this test
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_list_test")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 
 		days := 30
 		param := &config.Param{
@@ -107,11 +85,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
 
-		// Test
-		err = controller.ListPackages(ctx, logE, false, "test")
-		// Assert
+		err := controller.ListPackages(ctx, logE, false, "test")
 		if err != nil {
-			t.Fatal(err) // Should succeed with empty database
+			t.Fatal(err)
 		}
 		if diff := cmp.Diff("no packages to display", hook.LastEntry().Message); diff != "" {
 			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
@@ -122,10 +98,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir, err := afero.TempDir(fs, tempTestDir, "store_failed")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 
 		days := 1 // Short expiration for testing
 		param := &config.Param{
@@ -138,7 +111,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
 
 		// We force Keeping the DB open to simulate a failure in the async operation
-		err = controller.TestKeepDBOpen()
+		err := controller.TestKeepDBOpen()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -178,15 +151,10 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		// Setup - use a new temp directory for this test
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_store_test")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 
-		days := 30
 		param := &config.Param{
-			VacuumDays: days,
+			VacuumDays: 30,
 			RootDir:    testDir,
 		}
 		ctx := context.Background()
@@ -196,7 +164,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
 
 		// Store the package
-		err = controller.StorePackage(logE, pkgs[0].configPkg, pkgs[0].pkgPath)
+		err := controller.StorePackage(logE, pkgs[0].configPkg, pkgs[0].pkgPath)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -233,14 +201,10 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_StoreMultiplePackages_test")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 
-		days := 30
 		param := &config.Param{
-			VacuumDays: days,
+			VacuumDays: 30,
 			RootDir:    testDir,
 		}
 		ctx := context.Background()
@@ -257,7 +221,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 			}
 		}
 
-		err = controller.Close(logE) // Close to ensure async operations are completed
+		err := controller.Close(logE) // Close to ensure async operations are completed
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -283,20 +247,16 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_StoreNilPackage_test")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 
-		days := 30
 		param := &config.Param{
-			VacuumDays: days,
+			VacuumDays: 30,
 			RootDir:    testDir,
 		}
 		controller := vacuum.New(context.Background(), param, fs)
 
 		// Store the package
-		err = controller.StorePackage(logE, nil, tempTestDir)
+		err := controller.StorePackage(logE, nil, testDir)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -309,21 +269,17 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_handle_list_expired")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 
-		days := 30
 		param := &config.Param{
-			VacuumDays: days,
+			VacuumDays: 30,
 			RootDir:    testDir,
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
 
 		// Test
-		err = controller.ListPackages(ctx, logE, true, "test")
+		err := controller.ListPackages(ctx, logE, true, "test")
 		// Assert
 		if err != nil {
 			t.Fatal(err) // Error if no package found
@@ -334,20 +290,11 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 	})
 	t.Run("VacuumExpiredPackages workflow", func(t *testing.T) {
 		t.Parallel()
+		testDir := t.TempDir()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir, err := afero.TempDir(fs, tempTestDir, "vacuum_expire_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer func() {
-			hook.Reset()
-			fs.RemoveAll(testDir) //nolint:errcheck
-		}()
-
-		days := 1 // Short expiration for testing
 		param := &config.Param{
-			VacuumDays: days,
+			VacuumDays: 1,
 			RootDir:    testDir,
 		}
 		ctx := context.Background()
@@ -360,7 +307,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 
 		// Create package paths and files
 		for _, pkg := range pkgs {
-			err = fs.MkdirAll(pkg.pkgPath, 0o755)
+			err := fs.MkdirAll(pkg.pkgPath, 0o755)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -377,14 +324,14 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 
 		// Store Multiple packages
 		for _, pkg := range pkgs {
-			err = controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
+			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
 			if err != nil {
 				t.Fatal(err)
 			}
 		}
 
 		// Call Close to ensure all async operations are completed
-		err = controller.Close(logE)
+		err := controller.Close(logE)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -473,15 +420,10 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		fs := afero.NewOsFs()
-		testDir, err := afero.TempDir(fs, "", "vacuum_no_expired")
-		if err != nil {
-			t.Fatal(err)
-		}
+		testDir := t.TempDir()
 
-		days := 30
 		param := &config.Param{
-			VacuumDays: days,
+			VacuumDays: 30,
 			RootDir:    testDir,
 		}
 		ctx := context.Background()
@@ -490,14 +432,14 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		// Store non-expired packages
 		pkgs := generateTestPackages(3, param.RootDir)
 		for _, pkg := range pkgs {
-			err = controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
+			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
 			if err != nil {
 				t.Fatal(err)
 			}
 		}
 
 		// Call Close to ensure all async operations are completed
-		err = controller.Close(logE)
+		err := controller.Close(logE)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -530,11 +472,7 @@ func contains(receivedMessages []string, entry string) bool {
 
 func TestMockVacuumController_StorePackage(t *testing.T) {
 	t.Parallel()
-	fs := afero.NewOsFs()
-	testDir, err := afero.TempDir(fs, "", "vacuum_no_expired")
-	if err != nil {
-		t.Fatal(err)
-	}
+	testDir := t.TempDir()
 
 	param := &config.Param{
 		RootDir: testDir,
@@ -658,19 +596,10 @@ func benchmarkVacuumStorePackages(b *testing.B, pkgCount int) {
 	logE := logrus.NewEntry(logrus.New())
 	fs := afero.NewOsFs()
 
-	// Benchmark sync configuration
-	syncf, errf := afero.TempDir(fs, "/tmp", "vacuum_test_sync")
-	if errf != nil {
-		b.Fatal(errf)
-	}
+	syncf := b.TempDir()
 	pkgs := generateTestPackages(pkgCount, syncf)
 	vacuumDays := 5
 	syncParam := &config.Param{RootDir: syncf, VacuumDays: vacuumDays}
-	defer func() {
-		if err := fs.RemoveAll(syncf); err != nil {
-			b.Fatal(err)
-		}
-	}()
 
 	b.Run("Sync", func(b *testing.B) {
 		controller := vacuum.New(context.Background(), syncParam, fs)
