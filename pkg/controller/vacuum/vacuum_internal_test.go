@@ -3,6 +3,7 @@ package vacuum
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -44,8 +45,7 @@ func TestEncodePackageEntry(t *testing.T) {
 	}
 
 	var decodedEntry PackageEntry
-	err = json.Unmarshal(data, &decodedEntry)
-	if err != nil {
+	if err = json.Unmarshal(data, &decodedEntry); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if diff := cmp.Diff(pkgEntry.LastUsageTime.Unix(), decodedEntry.LastUsageTime.Unix()); diff != "" {
@@ -89,11 +89,7 @@ func TestDecodePackageEntry_Error(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected an error but got nil")
 	}
-	if diff := cmp.Diff(true, contains(err.Error(), "unmarshal package entry")); diff != "" {
+	if diff := cmp.Diff(true, strings.HasPrefix(err.Error(), "unmarshal package entry")); diff != "" {
 		t.Errorf("unexpected error message (-want +got):\n%s", diff)
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && s[:len(substr)] == substr
 }
