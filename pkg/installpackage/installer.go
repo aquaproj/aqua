@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -286,6 +287,7 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 	if err := is.vacuum.StorePackage(logE, pkg, pkgPath); err != nil {
 		logerr.WithError(logE, err).Error("store the package")
 	}
+	pkgPath = filepath.Join(is.rootDir, pkgPath)
 
 	if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
 		Package:         pkg,
