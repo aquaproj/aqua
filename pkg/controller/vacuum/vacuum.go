@@ -92,10 +92,7 @@ func (vc *Controller) StorePackage(logE *logrus.Entry, pkg *config.Package, pkgP
 		logE.Warn("package is nil, skipping store package")
 		return nil
 	}
-
-	vacuumPkg := vc.getVacuumPackage(pkg, pkgPath)
-
-	return vc.handleAsyncStorePackage(logE, vacuumPkg)
+	return vc.handleAsyncStorePackage(logE, vc.getVacuumPackage(pkg, pkgPath))
 }
 
 // getVacuumPackage converts a config
@@ -142,9 +139,10 @@ func (vc *Controller) listExpiredPackages(ctx context.Context, logE *logrus.Entr
 	return expired, nil
 }
 
+const secondsInADay = 24 * 60 * 60
+
 // isPackageExpired checks if a package is expired based on the vacuum configuration.
 func (vc *Controller) isPackageExpired(pkg *PackageVacuumEntry) bool {
-	const secondsInADay = 24 * 60 * 60
 	threshold := vc.Param.VacuumDays * secondsInADay
 
 	lastUsageTime := pkg.PackageEntry.LastUsageTime
