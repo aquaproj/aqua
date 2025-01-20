@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -101,20 +100,12 @@ func (vc *Controller) StorePackage(logE *logrus.Entry, pkg *config.Package, pkgP
 
 // getVacuumPackage converts a config
 func (vc *Controller) getVacuumPackage(configPkg *config.Package, pkgPath string) *Package {
-	pkgPath = generatePackageKey(vc.Param.RootDir, pkgPath)
 	return &Package{
 		Type:    configPkg.PackageInfo.Type,
 		Name:    configPkg.Package.Name,
 		Version: configPkg.Package.Version,
 		PkgPath: pkgPath,
 	}
-}
-
-// generatePackageKey generates a package key based on the root directory and package path.
-func generatePackageKey(rootDir string, pkgPath string) string {
-	const splitParts = 2
-	pkgPath = strings.SplitN(pkgPath, rootDir+"/pkgs/", splitParts)[1]
-	return pkgPath
 }
 
 // handleAsyncStorePackage processes a list of configuration packages asynchronously.
@@ -436,9 +427,7 @@ func (vc *Controller) removePackages(ctx context.Context, logE *logrus.Entry, pk
 
 // removePackageVersionPath removes the specified package version directory and its parent directory if it becomes empty.
 func (vc *Controller) removePackageVersionPath(param *config.Param, path string) error {
-	pkgsPath := filepath.Join(param.RootDir, "pkgs")
-	pkgVersionPath := filepath.Join(pkgsPath, path)
-	if err := vc.fs.RemoveAll(pkgVersionPath); err != nil {
+	if err := vc.fs.RemoveAll(filepath.Join(param.RootDir, path)); err != nil {
 		return fmt.Errorf("remove package version directories: %w", err)
 	}
 	return nil
@@ -481,7 +470,6 @@ func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entr
 // retrievePackageEntry retrieves a package entry from the database by key. for testing purposes.
 func (vc *Controller) retrievePackageEntry(ctx context.Context, logE *logrus.Entry, key string) (*PackageEntry, error) {
 	var pkgEntry *PackageEntry
-	key = generatePackageKey(vc.Param.RootDir, key)
 	err := vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {

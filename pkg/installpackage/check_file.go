@@ -109,10 +109,11 @@ func (is *Installer) checkFileSrc(ctx context.Context, logE *logrus.Entry, pkg *
 		return is.checkFileSrcGo(ctx, logE, pkg, file)
 	}
 
-	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+	pkgPath, err := pkg.PkgPath(is.runtime)
 	if err != nil {
 		return "", fmt.Errorf("get the package install path: %w", err)
 	}
+	pkgPath = filepath.Join(is.rootDir, pkgPath)
 
 	fileSrc, err := pkg.RenameFile(logE, is.fs, pkgPath, file, is.runtime)
 	if err != nil {

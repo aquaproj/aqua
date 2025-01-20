@@ -19,12 +19,12 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 	var aquaProxyPathOnWindows string
 	if is.runtime.IsWindows() {
 		pkg := proxyPkg()
-		pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+		pkgPath, err := pkg.PkgPath(is.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).Error("get a path to aqua-proxy")
 			failed = true
 		}
-		aquaProxyPathOnWindows = filepath.Join(pkgPath, "aqua-proxy.exe")
+		aquaProxyPathOnWindows = filepath.Join(is.rootDir, pkgPath, "aqua-proxy.exe")
 	}
 
 	for _, pkg := range pkgs {
@@ -116,11 +116,11 @@ func (is *Installer) recreateHardLinks() error {
 	}
 
 	pkg := proxyPkg()
-	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+	pkgPath, err := pkg.PkgPath(is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	a := filepath.Join(pkgPath, "aqua-proxy.exe")
+	a := filepath.Join(is.rootDir, pkgPath, "aqua-proxy.exe")
 
 	for _, info := range infos {
 		if info.Name() == "aqua.exe" {

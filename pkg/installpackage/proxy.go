@@ -59,10 +59,11 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		return err //nolint:wrapcheck
 	}
 
-	pkgPath, err := pkg.PkgPath(is.rootDir, is.runtime)
+	pkgPath, err := pkg.PkgPath(is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+	pkgPath = filepath.Join(is.rootDir, pkgPath)
 
 	// create a symbolic link
 	binName := proxyName

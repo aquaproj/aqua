@@ -140,7 +140,6 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 
 func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 	t.Parallel()
-	rootDir := "/tmp/aqua"
 	data := []struct {
 		title string
 		exp   string
@@ -148,7 +147,7 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 	}{
 		{
 			title: "github_archive",
-			exp:   "/tmp/aqua/pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
+			exp:   "pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_archive",
@@ -162,7 +161,7 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_content",
-			exp:   "/tmp/aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
+			exp:   "pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_content",
@@ -177,7 +176,7 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "github_release",
-			exp:   "/tmp/aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v0.7.7/ci-info.tar.gz",
+			exp:   "pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v0.7.7/ci-info.tar.gz",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:      "github_release",
@@ -193,7 +192,7 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "http",
-			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
+			exp:   "pkgs/http/example.com/foo-1.0.0.zip",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
 					Type:   "http",
@@ -210,7 +209,7 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgPath, err := d.pkg.PkgPath(rootDir, rt)
+			pkgPath, err := d.pkg.PkgPath(rt)
 			if err != nil {
 				t.Fatal(err)
 			}

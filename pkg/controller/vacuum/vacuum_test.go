@@ -96,7 +96,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		controller := vacuum.New(context.Background(), param, fs)
 
 		numberPackagesToStore := 7
-		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
+		pkgs := generateTestPackages(numberPackagesToStore)
 
 		// We force Keeping the DB open to simulate a failure in the async operation
 		if err := controller.TestKeepDBOpen(); err != nil {
@@ -144,7 +144,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		controller := vacuum.New(ctx, param, fs)
 
 		numberPackagesToStore := 1
-		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
+		pkgs := generateTestPackages(numberPackagesToStore)
 
 		// Store the package
 		if err := controller.StorePackage(logE, pkgs[0].configPkg, pkgs[0].pkgPath); err != nil {
@@ -189,7 +189,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		controller := vacuum.New(ctx, param, fs)
 
 		numberPackagesToStore := 4
-		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
+		pkgs := generateTestPackages(numberPackagesToStore)
 
 		// Store the package
 		for _, pkg := range pkgs {
@@ -272,22 +272,23 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 
 		numberPackagesToStore := 3
 		numberPackagesToExpire := 1
-		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
+		pkgs := generateTestPackages(numberPackagesToStore)
 		pkgPaths := make([]string, 0, numberPackagesToStore)
 
 		// Create package paths and files
 		for _, pkg := range pkgs {
-			if err := fs.MkdirAll(pkg.pkgPath, 0o755); err != nil {
+			pkgPath := filepath.Join(param.RootDir, pkg.pkgPath)
+			if err := fs.MkdirAll(pkgPath, 0o755); err != nil {
 				t.Fatal(err)
 			}
 
 			// Create a test file in the package directory
-			testFile := filepath.Join(pkg.pkgPath, "test.txt")
+			testFile := filepath.Join(pkgPath, "test.txt")
 			if err := afero.WriteFile(fs, testFile, []byte("test content"), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
-			pkgPaths = append(pkgPaths, pkg.pkgPath)
+			pkgPaths = append(pkgPaths, pkgPath)
 		}
 
 		// Store Multiple packages
@@ -386,7 +387,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		controller := vacuum.New(ctx, param, fs)
 
 		// Store non-expired packages
-		pkgs := generateTestPackages(3, param.RootDir)
+		pkgs := generateTestPackages(3)
 		for _, pkg := range pkgs {
 			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
 			if err != nil {
@@ -425,16 +426,10 @@ func contains(receivedMessages []string, entry string) bool {
 
 func TestMockVacuumController_StorePackage(t *testing.T) {
 	t.Parallel()
-	testDir := t.TempDir()
-
-	param := &config.Param{
-		RootDir: testDir,
-	}
-
 	logE := logrus.NewEntry(logrus.New())
 	mockCtrl := vacuum.NewMockVacuumController()
 
-	pkgs := generateTestPackages(2, param.RootDir)
+	pkgs := generateTestPackages(2)
 
 	tests := []struct {
 		name    string
@@ -484,7 +479,7 @@ func TestNilVacuumController(t *testing.T) {
 	logE := logrus.NewEntry(logrus.New())
 	mockCtrl := &vacuum.NilVacuumController{}
 
-	test := generateTestPackages(1, "/tmp")
+	test := generateTestPackages(1)
 	if err := mockCtrl.StorePackage(logE, test[0].configPkg, test[0].pkgPath); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -501,7 +496,7 @@ type ConfigPackageWithPath struct {
 	pkgPath   string
 }
 
-func generateTestPackages(count int, rootDir string) []ConfigPackageWithPath {
+func generateTestPackages(count int) []ConfigPackageWithPath {
 	pkgs := make([]ConfigPackageWithPath, count)
 	for i := range pkgs {
 		pkgType := "github_release"
@@ -522,7 +517,7 @@ func generateTestPackages(count int, rootDir string) []ConfigPackageWithPath {
 					Asset:     asset,
 				},
 			},
-			pkgPath: filepath.Join(rootDir, "pkgs", pkgType, "github.com", pkgName, asset),
+			pkgPath: filepath.Join("pkgs", pkgType, "github.com", pkgName, asset),
 		}
 	}
 	return pkgs
@@ -544,9 +539,11 @@ func benchmarkVacuumStorePackages(b *testing.B, pkgCount int) {
 	logE := logrus.NewEntry(logrus.New())
 	fs := afero.NewOsFs()
 
-	syncf := b.TempDir()
-	pkgs := generateTestPackages(pkgCount, syncf)
-	syncParam := &config.Param{RootDir: syncf, VacuumDays: 5}
+	pkgs := generateTestPackages(pkgCount)
+	syncParam := &config.Param{
+		RootDir:    b.TempDir(),
+		VacuumDays: 5,
+	}
 
 	b.Run("Sync", func(b *testing.B) {
 		controller := vacuum.New(context.Background(), syncParam, fs)
