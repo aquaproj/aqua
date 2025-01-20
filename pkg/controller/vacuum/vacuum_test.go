@@ -25,27 +25,23 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, _ := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir := t.TempDir()
 		// Setup
 		param := &config.Param{
-			RootDir: testDir,
+			RootDir: t.TempDir(),
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
 
-		err := controller.ListPackages(ctx, logE, false, "test")
-		if err != nil {
-			t.Fatal("Should return nil when vacuum is disabled")
+		if err := controller.ListPackages(ctx, logE, false, "test"); err != nil {
+			t.Fatalf("should return nil when vacuum is disabled: %v", err)
 		}
 
-		err = controller.Vacuum(ctx, logE)
-		if err != nil {
-			t.Fatal("Should return nil when vacuum is disabled")
+		if err := controller.Vacuum(ctx, logE); err != nil {
+			t.Fatalf("should return nil when vacuum is disabled: %v", err)
 		}
 
-		err = controller.Close(logE)
-		if err != nil {
-			t.Fatal("Should return nil when vacuum is disabled")
+		if err := controller.Close(logE); err != nil {
+			t.Fatalf("should return nil when vacuum is disabled: %v", err)
 		}
 	})
 
@@ -62,9 +58,8 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		}
 		controller := vacuum.New(context.Background(), param, fs)
 
-		err := controller.StorePackage(logE, nil, testDir)
-		if err != nil {
-			t.Fatal("Should return nil when vacuum is disabled")
+		if err := controller.StorePackage(logE, nil, testDir); err != nil {
+			t.Fatalf("should return nil when vacuum is disabled: %v", err)
 		}
 		if diff := cmp.Diff("vacuum is disabled. AQUA_VACUUM_DAYS is not set or invalid.", hook.LastEntry().Message); diff != "" {
 			t.Errorf("Unexpected log message (-want +got):\n%s", diff)
@@ -75,18 +70,14 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir := t.TempDir()
-
-		days := 30
 		param := &config.Param{
-			VacuumDays: days,
-			RootDir:    testDir,
+			VacuumDays: 30,
+			RootDir:    t.TempDir(),
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
 
-		err := controller.ListPackages(ctx, logE, false, "test")
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, false, "test"); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff("no packages to display", hook.LastEntry().Message); diff != "" {
@@ -98,12 +89,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir := t.TempDir()
-
-		days := 1 // Short expiration for testing
 		param := &config.Param{
-			VacuumDays: days,
-			RootDir:    testDir,
+			VacuumDays: 1, // Short expiration for testing
+			RootDir:    t.TempDir(),
 		}
 		controller := vacuum.New(context.Background(), param, fs)
 
@@ -111,22 +99,19 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
 
 		// We force Keeping the DB open to simulate a failure in the async operation
-		err := controller.TestKeepDBOpen()
-		if err != nil {
+		if err := controller.TestKeepDBOpen(); err != nil {
 			t.Fatal(err)
 		}
 
 		hook.Reset()
 		for _, pkg := range pkgs {
-			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
-			if err != nil {
+			if err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath); err != nil {
 				t.Fatal(err)
 			}
 		}
 
 		// Wait for the async operations to complete
-		err = controller.Close(logE)
-		if err != nil {
+		if err := controller.Close(logE); err != nil {
 			t.Fatal(err) // If AsyncStorePackage fails, Close should wait for the async operations to complete, but not return an error
 		}
 
@@ -151,11 +136,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir := t.TempDir()
-
 		param := &config.Param{
 			VacuumDays: 30,
-			RootDir:    testDir,
+			RootDir:    t.TempDir(),
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
@@ -164,19 +147,16 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		pkgs := generateTestPackages(numberPackagesToStore, param.RootDir)
 
 		// Store the package
-		err := controller.StorePackage(logE, pkgs[0].configPkg, pkgs[0].pkgPath)
-		if err != nil {
+		if err := controller.StorePackage(logE, pkgs[0].configPkg, pkgs[0].pkgPath); err != nil {
 			t.Fatal(err)
 		}
-
-		err = controller.Close(logE) // Close to ensure async operations are completed
-		if err != nil {
+		// Close to ensure async operations are completed
+		if err := controller.Close(logE); err != nil {
 			t.Fatal(err)
 		}
 
 		// List packages - should contain our stored package
-		err = controller.ListPackages(ctx, logE, false, "test")
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, false, "test"); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff("Test mode: Displaying packages", hook.LastEntry().Message); diff != "" {
@@ -201,11 +181,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir := t.TempDir()
-
 		param := &config.Param{
 			VacuumDays: 30,
-			RootDir:    testDir,
+			RootDir:    t.TempDir(),
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
@@ -221,14 +199,13 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 			}
 		}
 
-		err := controller.Close(logE) // Close to ensure async operations are completed
-		if err != nil {
+		// Close to ensure async operations are completed
+		if err := controller.Close(logE); err != nil {
 			t.Fatal(err)
 		}
 
 		// List packages - should contain our stored package
-		err = controller.ListPackages(ctx, logE, false, "test")
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, false, "test"); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff("Test mode: Displaying packages", hook.LastEntry().Message); diff != "" {
@@ -256,8 +233,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		controller := vacuum.New(context.Background(), param, fs)
 
 		// Store the package
-		err := controller.StorePackage(logE, nil, testDir)
-		if err != nil {
+		if err := controller.StorePackage(logE, nil, testDir); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff("package is nil, skipping store package", hook.LastEntry().Message); diff != "" {
@@ -269,19 +245,14 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir := t.TempDir()
-
 		param := &config.Param{
 			VacuumDays: 30,
-			RootDir:    testDir,
+			RootDir:    t.TempDir(),
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
 
-		// Test
-		err := controller.ListPackages(ctx, logE, true, "test")
-		// Assert
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, true, "test"); err != nil {
 			t.Fatal(err) // Error if no package found
 		}
 		if diff := cmp.Diff("no packages to display", hook.LastEntry().Message); diff != "" {
@@ -290,12 +261,11 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 	})
 	t.Run("VacuumExpiredPackages workflow", func(t *testing.T) {
 		t.Parallel()
-		testDir := t.TempDir()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
 		param := &config.Param{
 			VacuumDays: 1,
-			RootDir:    testDir,
+			RootDir:    t.TempDir(),
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
@@ -307,15 +277,13 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 
 		// Create package paths and files
 		for _, pkg := range pkgs {
-			err := fs.MkdirAll(pkg.pkgPath, 0o755)
-			if err != nil {
+			if err := fs.MkdirAll(pkg.pkgPath, 0o755); err != nil {
 				t.Fatal(err)
 			}
 
 			// Create a test file in the package directory
 			testFile := filepath.Join(pkg.pkgPath, "test.txt")
-			err = afero.WriteFile(fs, testFile, []byte("test content"), 0o644)
-			if err != nil {
+			if err := afero.WriteFile(fs, testFile, []byte("test content"), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -324,30 +292,26 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 
 		// Store Multiple packages
 		for _, pkg := range pkgs {
-			err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath)
-			if err != nil {
+			if err := controller.StorePackage(logE, pkg.configPkg, pkg.pkgPath); err != nil {
 				t.Fatal(err)
 			}
 		}
 
 		// Call Close to ensure all async operations are completed
-		err := controller.Close(logE)
-		if err != nil {
+		if err := controller.Close(logE); err != nil {
 			t.Fatal(err)
 		}
 
 		// Modify timestamp of one package to be expired
 		oldTime := time.Now().Add(-48 * time.Hour) // 2 days old
 		for _, pkg := range pkgs[:numberPackagesToExpire] {
-			err = controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime)
-			if err != nil {
+			if err := controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime); err != nil {
 				t.Fatal(err)
 			}
 		}
 
 		// Check Packages after expiration
-		err = controller.ListPackages(ctx, logE, false, "test")
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, false, "test"); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(numberPackagesToStore, hook.LastEntry().Data["TotalPackages"]); diff != "" {
@@ -358,8 +322,7 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		}
 
 		// List expired packages only
-		err = controller.ListPackages(ctx, logE, true, "test")
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, true, "test"); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(numberPackagesToExpire, hook.LastEntry().Data["TotalPackages"]); diff != "" {
@@ -370,14 +333,12 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		}
 
 		// Run vacuum
-		err = controller.Vacuum(ctx, logE)
-		if err != nil {
+		if err := controller.Vacuum(ctx, logE); err != nil {
 			t.Fatal(err)
 		}
 
 		// List expired packages
-		err = controller.ListPackages(ctx, logE, true, "test")
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, true, "test"); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff("no packages to display", hook.LastEntry().Message); diff != "" {
@@ -397,21 +358,18 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 
 		// Modify timestamp of one package to be expired And lock DB to simulate a failure in the vacuum operation
 		for _, pkg := range pkgs[:numberPackagesToExpire] {
-			err = controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime)
-			if err != nil {
+			if err := controller.SetTimestampPackage(ctx, logE, pkg.configPkg, pkg.pkgPath, oldTime); err != nil {
 				t.Fatal(err)
 			}
 		}
 
 		// Keep Database open to simulate a failure in the vacuum operation
-		err = controller.TestKeepDBOpen()
-		if err != nil {
+		if err := controller.TestKeepDBOpen(); err != nil {
 			t.Fatal(err)
 		}
 
 		// Run vacuum
-		err = controller.Vacuum(ctx, logE)
-		if err == nil || !contains([]string{err.Error()}, "open database vacuum.db: timeout") {
+		if err := controller.Vacuum(ctx, logE); err == nil || !contains([]string{err.Error()}, "open database vacuum.db: timeout") {
 			t.Fatalf("Expected timeout error, got %v", err)
 		}
 	})
@@ -420,11 +378,9 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		t.Parallel()
 		logger, hook := test.NewNullLogger()
 		logE := logrus.NewEntry(logger)
-		testDir := t.TempDir()
-
 		param := &config.Param{
 			VacuumDays: 30,
-			RootDir:    testDir,
+			RootDir:    t.TempDir(),
 		}
 		ctx := context.Background()
 		controller := vacuum.New(ctx, param, fs)
@@ -439,20 +395,17 @@ func TestVacuum(t *testing.T) { //nolint:funlen,maintidx,cyclop,gocognit,gocyclo
 		}
 
 		// Call Close to ensure all async operations are completed
-		err := controller.Close(logE)
-		if err != nil {
+		if err := controller.Close(logE); err != nil {
 			t.Fatal(err)
 		}
 
 		// Run vacuum
-		err = controller.Vacuum(ctx, logE)
-		if err != nil {
+		if err := controller.Vacuum(ctx, logE); err != nil {
 			t.Fatal(err)
 		}
 
 		// Verify no packages were removed
-		err = controller.ListPackages(ctx, logE, false, "test")
-		if err != nil {
+		if err := controller.ListPackages(ctx, logE, false, "test"); err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(3, hook.LastEntry().Data["TotalPackages"]); diff != "" {
@@ -506,8 +459,7 @@ func TestMockVacuumController_StorePackage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			err := mockCtrl.StorePackage(logE, tt.pkg, tt.pkgPath)
-			if tt.wantErr {
+			if err := mockCtrl.StorePackage(logE, tt.pkg, tt.pkgPath); tt.wantErr {
 				if err == nil {
 					t.Errorf("Expected error, got nil")
 				}
@@ -516,12 +468,11 @@ func TestMockVacuumController_StorePackage(t *testing.T) {
 					t.Errorf("Unexpected error: %v", err)
 				}
 			}
-			err = mockCtrl.Vacuum(logE)
-			if err != nil {
+			if err := mockCtrl.Vacuum(logE); err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
-			err = mockCtrl.Close(logE)
-			if err != nil {
+
+			if err := mockCtrl.Close(logE); err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
 		})
@@ -534,16 +485,13 @@ func TestNilVacuumController(t *testing.T) {
 	mockCtrl := &vacuum.NilVacuumController{}
 
 	test := generateTestPackages(1, "/tmp")
-	err := mockCtrl.StorePackage(logE, test[0].configPkg, test[0].pkgPath)
-	if err != nil {
+	if err := mockCtrl.StorePackage(logE, test[0].configPkg, test[0].pkgPath); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	err = mockCtrl.Vacuum(logE)
-	if err != nil {
+	if err := mockCtrl.Vacuum(logE); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	err = mockCtrl.Close(logE)
-	if err != nil {
+	if err := mockCtrl.Close(logE); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -598,8 +546,7 @@ func benchmarkVacuumStorePackages(b *testing.B, pkgCount int) {
 
 	syncf := b.TempDir()
 	pkgs := generateTestPackages(pkgCount, syncf)
-	vacuumDays := 5
-	syncParam := &config.Param{RootDir: syncf, VacuumDays: vacuumDays}
+	syncParam := &config.Param{RootDir: syncf, VacuumDays: 5}
 
 	b.Run("Sync", func(b *testing.B) {
 		controller := vacuum.New(context.Background(), syncParam, fs)
