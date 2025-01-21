@@ -106,7 +106,7 @@ func (vc *Controller) handleAsyncStorePackage(logE *logrus.Entry, vacuumPkg *Pac
 	if vacuumPkg == nil {
 		return errors.New("vacuumPkg is nil")
 	}
-	vc.db.storeQueue.enqueue(logE, vacuumPkg)
+	vc.db.StoreAsync(logE, vacuumPkg)
 	return nil
 }
 

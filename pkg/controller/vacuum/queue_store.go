@@ -67,8 +67,8 @@ func (sq *StoreQueue) worker(ctx context.Context) {
 	}
 }
 
-// enqueue adds a task to the queue.
-func (sq *StoreQueue) enqueue(logE *logrus.Entry, pkg *Package) {
+// Enqueue adds a task to the queue.
+func (sq *StoreQueue) Enqueue(logE *logrus.Entry, pkg *Package) {
 	select {
 	case <-sq.done:
 		return

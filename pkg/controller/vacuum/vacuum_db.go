@@ -91,6 +91,10 @@ func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, lastUs
 	})
 }
 
+func (d *DB) StoreAsync(logE *logrus.Entry, pkg *Package) {
+	d.storeQueue.Enqueue(logE, pkg)
+}
+
 // List lists all stored package entries.
 func (d *DB) List(ctx context.Context, logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
 	db, err := d.getDB()
