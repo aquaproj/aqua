@@ -44,6 +44,10 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 		return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 	}
 
+	if err := c.vacuum.StorePackage(logE, findResult.Package, findResult.PkgPath); err != nil {
+		logerr.WithError(logE, err).Error("store the package")
+	}
+
 	logE = logE.WithFields(logrus.Fields{
 		"package_name":    findResult.Package.Package.Name,
 		"package_version": findResult.Package.Package.Version,
@@ -62,11 +66,10 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 	if err := c.install(ctx, logE, findResult, policyCfgs, param); err != nil {
 		return err
 	}
-	c.vacuumClose(logE)
 	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 }
 
-func (c *Controller) vacuumClose(logE *logrus.Entry) {
+func (c *Controller) CloseVacuum(logE *logrus.Entry) {
 	if err := c.vacuum.Close(logE); err != nil {
 		logerr.WithError(logE, err).Error("close the vacuum")
 	}

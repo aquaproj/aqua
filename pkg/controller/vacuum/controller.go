@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -26,20 +25,4 @@ func New(ctx context.Context, param *config.Param, fs afero.Fs) *Controller {
 		d:      NewDB(ctx, param, fs),
 	}
 	return vc
-}
-
-// Close closes the dependencies of the Controller.
-func (vc *Controller) Close(logE *logrus.Entry) error {
-	if !vc.IsVacuumEnabled(logE) {
-		return nil
-	}
-	logE.Debug("closing vacuum controller")
-	if vc.d.storeQueue != nil {
-		vc.d.storeQueue.close()
-	}
-	return vc.d.Close()
-}
-
-func (vc *Controller) TestKeepDBOpen() error {
-	return vc.d.TestKeepDBOpen()
 }

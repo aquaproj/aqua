@@ -42,8 +42,10 @@ func (i *command) action(c *cli.Context) error {
 	}
 	defer profiler.Stop()
 
+	logE := i.r.LogE
+
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "exec", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(c, logE, "exec", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl, err := controller.InitializeExecCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
@@ -54,5 +56,6 @@ func (i *command) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("parse args: %w", err)
 	}
-	return ctrl.Exec(c.Context, i.r.LogE, param, exeName, args...) //nolint:wrapcheck
+	defer ctrl.CloseVacuum(logE)
+	return ctrl.Exec(c.Context, logE, param, exeName, args...) //nolint:wrapcheck
 }

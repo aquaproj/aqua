@@ -115,8 +115,8 @@ func (d *DB) Close() error {
 	d.dbMutex.Lock()
 	defer d.dbMutex.Unlock()
 
-	if d.db.Load() != nil {
-		if err := d.db.Load().Close(); err != nil {
+	if db := d.db.Load(); db != nil {
+		if err := db.Close(); err != nil {
 			return fmt.Errorf("close database: %w", err)
 		}
 		d.db.Store(nil)

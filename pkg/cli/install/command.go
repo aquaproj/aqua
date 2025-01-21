@@ -80,13 +80,16 @@ func (i *command) action(c *cli.Context) error {
 	}
 	defer profiler.Stop()
 
+	logE := i.r.LogE
+
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "install", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(c, logE, "install", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl, err := controller.InitializeInstallCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a InstallController: %w", err)
 	}
+	defer ctrl.CloseVacuum(logE)
 	return ctrl.Install(c.Context, i.r.LogE, param) //nolint:wrapcheck
 }

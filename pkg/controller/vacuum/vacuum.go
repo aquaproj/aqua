@@ -54,6 +54,59 @@ func (vc *Controller) ListPackages(ctx context.Context, logE *logrus.Entry, expi
 	return vc.handleListPackages(ctx, logE, args...)
 }
 
+// Close closes the dependencies of the Controller.
+func (vc *Controller) Close(logE *logrus.Entry) error {
+	if !vc.IsVacuumEnabled(logE) {
+		return nil
+	}
+	logE.Debug("closing vacuum controller")
+	if vc.d.storeQueue != nil {
+		vc.d.storeQueue.close()
+	}
+	return vc.d.Close()
+}
+
+func (vc *Controller) TestKeepDBOpen() error {
+	return vc.d.TestKeepDBOpen()
+}
+
+// StorePackage stores the given package if vacuum is enabled.
+// If the package is nil, it logs a warning and skips storing the package.
+func (vc *Controller) StorePackage(logE *logrus.Entry, pkg *config.Package, pkgPath string) error {
+	if !vc.IsVacuumEnabled(logE) {
+		return nil
+	}
+	if pkg == nil {
+		logE.Warn("package is nil, skipping store package")
+		return nil
+	}
+	return vc.handleAsyncStorePackage(logE, vc.getVacuumPackage(pkg, pkgPath))
+}
+
+// IsVacuumEnabled checks if the vacuum feature is enabled based on the configuration.
+func (vc *Controller) IsVacuumEnabled(logE *logrus.Entry) bool {
+	if vc.Param.VacuumDays <= 0 {
+		logE.Debug("vacuum is disabled. AQUA_VACUUM_DAYS is not set or invalid.")
+		return false
+	}
+	return true
+}
+
+// GetPackageLastUsed retrieves the last used time of a package. for testing purposes.
+func (vc *Controller) GetPackageLastUsed(ctx context.Context, logE *logrus.Entry, pkgPath string) *time.Time {
+	var lastUsedTime time.Time
+	pkgEntry, _ := vc.retrievePackageEntry(ctx, logE, pkgPath)
+	if pkgEntry != nil {
+		lastUsedTime = pkgEntry.LastUsageTime
+	}
+	return &lastUsedTime
+}
+
+// SetTimeStampPackage permit define a Timestamp for a package Manually. for testing purposes.
+func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
+	return vc.d.Store(ctx, logE, vc.getVacuumPackage(pkg, pkgPath), datetime)
+}
+
 // handleListPackages retrieves a list of packages and displays them using a fuzzy search.
 func (vc *Controller) handleListPackages(ctx context.Context, logE *logrus.Entry, args ...string) error {
 	pkgs, err := vc.listPackages(ctx, logE)
@@ -73,19 +126,6 @@ func (vc *Controller) handleListExpiredPackages(ctx context.Context, logE *logru
 	return vc.displayPackagesFuzzy(logE, expiredPkgs, args...)
 }
 
-// StorePackage stores the given package if vacuum is enabled.
-// If the package is nil, it logs a warning and skips storing the package.
-func (vc *Controller) StorePackage(logE *logrus.Entry, pkg *config.Package, pkgPath string) error {
-	if !vc.IsVacuumEnabled(logE) {
-		return nil
-	}
-	if pkg == nil {
-		logE.Warn("package is nil, skipping store package")
-		return nil
-	}
-	return vc.handleAsyncStorePackage(logE, vc.getVacuumPackage(pkg, pkgPath))
-}
-
 // getVacuumPackage converts a config
 func (vc *Controller) getVacuumPackage(configPkg *config.Package, pkgPath string) *Package {
 	return &Package{
@@ -103,15 +143,6 @@ func (vc *Controller) handleAsyncStorePackage(logE *logrus.Entry, vacuumPkg *Pac
 	}
 	vc.d.storeQueue.enqueue(logE, vacuumPkg)
 	return nil
-}
-
-// IsVacuumEnabled checks if the vacuum feature is enabled based on the configuration.
-func (vc *Controller) IsVacuumEnabled(logE *logrus.Entry) bool {
-	if vc.Param.VacuumDays <= 0 {
-		logE.Debug("vacuum is disabled. AQUA_VACUUM_DAYS is not set or invalid.")
-		return false
-	}
-	return true
 }
 
 // listExpiredPackages lists all packages that have expired based on the vacuum configuration.
@@ -154,7 +185,6 @@ func (vc *Controller) listPackages(ctx context.Context, logE *logrus.Entry) ([]*
 	if db == nil {
 		return nil, nil
 	}
-	defer db.Close()
 
 	var pkgs []*PackageVacuumEntry
 
@@ -282,7 +312,6 @@ func (vc *Controller) vacuumExpiredPackages(ctx context.Context, logE *logrus.En
 		return gErr
 	}
 
-	defer vc.Close(logE)
 	if len(successfulRemovals) > 0 {
 		if err := vc.removePackages(ctx, logE, successfulRemovals); err != nil {
 			return fmt.Errorf("remove packages from database: %w", err)
@@ -396,21 +425,6 @@ func decodePackageEntry(data []byte) (*PackageEntry, error) {
 		return nil, fmt.Errorf("unmarshal package entry: %w", err)
 	}
 	return &pkgEntry, nil
-}
-
-// GetPackageLastUsed retrieves the last used time of a package. for testing purposes.
-func (vc *Controller) GetPackageLastUsed(ctx context.Context, logE *logrus.Entry, pkgPath string) *time.Time {
-	var lastUsedTime time.Time
-	pkgEntry, _ := vc.retrievePackageEntry(ctx, logE, pkgPath)
-	if pkgEntry != nil {
-		lastUsedTime = pkgEntry.LastUsageTime
-	}
-	return &lastUsedTime
-}
-
-// SetTimeStampPackage permit define a Timestamp for a package Manually. for testing purposes.
-func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
-	return vc.d.Store(ctx, logE, vc.getVacuumPackage(pkg, pkgPath), datetime)
 }
 
 // retrievePackageEntry retrieves a package entry from the database by key. for testing purposes.

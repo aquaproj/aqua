@@ -53,6 +53,12 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 	return c.installAll(ctx, logE, param, policyCfgs, globalPolicyPaths)
 }
 
+func (c *Controller) CloseVacuum(logE *logrus.Entry) {
+	if err := c.vacuum.Close(logE); err != nil {
+		logE.WithError(err).Error("close the vacuum")
+	}
+}
+
 func (c *Controller) mkBinDir() error {
 	if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bin")); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
@@ -85,7 +91,6 @@ func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *
 }
 
 func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfigs []*policy.Config, param *config.Param) error {
-	defer c.vacuum.Close(logE)
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound

@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"github.com/urfave/cli/v2"
 )
 
@@ -74,8 +75,10 @@ func (i *command) action(c *cli.Context) error {
 	}
 	defer profiler.Stop()
 
+	logE := i.r.LogE
+
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "vacuum", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(c, logE, "vacuum", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
@@ -85,15 +88,21 @@ func (i *command) action(c *cli.Context) error {
 
 	ctrl := controller.InitializeVacuumCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
 
+	defer func() {
+		if err := ctrl.Close(logE); err != nil {
+			logerr.WithError(logE, err).Error("close vacuum controller")
+		}
+	}()
+
 	if c.Command.Name == "show" {
-		if err := ctrl.ListPackages(c.Context, i.r.LogE, c.Bool("expired")); err != nil {
+		if err := ctrl.ListPackages(c.Context, logE, c.Bool("expired")); err != nil {
 			return fmt.Errorf("show packages: %w", err)
 		}
 		return nil
 	}
 
 	if c.Command.Name == "run" {
-		if err := ctrl.Vacuum(c.Context, i.r.LogE); err != nil {
+		if err := ctrl.Vacuum(c.Context, logE); err != nil {
 			return fmt.Errorf("run: %w", err)
 		}
 	}
