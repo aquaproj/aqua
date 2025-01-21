@@ -72,16 +72,16 @@ func (d *DB) Get(ctx context.Context, logE *logrus.Entry, key string) (*PackageE
 	return pkgEntry, err
 }
 
-func (d *DB) view(ctx context.Context, logE *logrus.Entry, fn func(*bolt.Tx) error) error {
+func (d *DB) view(ctx context.Context, logE *logrus.Entry, fn func(*bbolt.Tx) error) error {
 	return d.withDBRetry(ctx, logE, fn, View)
 }
 
-func (d *DB) update(ctx context.Context, logE *logrus.Entry, fn func(*bolt.Tx) error) error {
+func (d *DB) update(ctx context.Context, logE *logrus.Entry, fn func(*bbolt.Tx) error) error {
 	return d.withDBRetry(ctx, logE, fn, Update)
 }
 
 // withDBRetry retries a database operation with exponential backoff.
-func (d *DB) withDBRetry(ctx context.Context, logE *logrus.Entry, fn func(*bolt.Tx) error, dbAccessType DBAccessType) error {
+func (d *DB) withDBRetry(ctx context.Context, logE *logrus.Entry, fn func(*bbolt.Tx) error, dbAccessType DBAccessType) error {
 	const (
 		retries            = 2
 		initialBackoff     = 100 * time.Millisecond
@@ -106,7 +106,7 @@ func (d *DB) withDBRetry(ctx context.Context, logE *logrus.Entry, fn func(*bolt.
 }
 
 // withDB executes a function within a database transaction.
-func (d *DB) withDB(logE *logrus.Entry, fn func(*bolt.Tx) error, dbAccessType DBAccessType) error {
+func (d *DB) withDB(logE *logrus.Entry, fn func(*bbolt.Tx) error, dbAccessType DBAccessType) error {
 	db, err := d.getDB()
 	if err != nil {
 		return err
@@ -133,7 +133,7 @@ func (d *DB) withDB(logE *logrus.Entry, fn func(*bolt.Tx) error, dbAccessType DB
 }
 
 // getDB retrieves the database instance, initializing it if necessary.
-func (d *DB) getDB() (*bolt.DB, error) {
+func (d *DB) getDB() (*bbolt.DB, error) {
 	if db := d.db.Load(); db != nil {
 		return db, nil
 	}
@@ -146,14 +146,14 @@ func (d *DB) getDB() (*bolt.DB, error) {
 	}
 
 	const dbFileMode = 0o600
-	db, err := bolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bolt.Options{
+	db, err := bbolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bbolt.Options{
 		Timeout: 1 * time.Second,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("open database %v: %w", dbFile, err)
 	}
 
-	if err := db.Update(func(tx *bolt.Tx) error {
+	if err := db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucketNamePkgs))
 		if err != nil {
 			return fmt.Errorf("create bucket '%v' in '%v': %w", bucketNamePkgs, dbFile, err)
@@ -171,7 +171,7 @@ func (d *DB) getDB() (*bolt.DB, error) {
 // Keep_DBOpen opens the database instance. This is used for testing purposes.
 func (d *DB) TestKeepDBOpen() error {
 	const dbFileMode = 0o600
-	if _, err := bolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bolt.Options{
+	if _, err := bbolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bbolt.Options{
 		Timeout: 1 * time.Second,
 	}); err != nil {
 		return fmt.Errorf("open database %v: %w", dbFile, err)
