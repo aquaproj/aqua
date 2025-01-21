@@ -4,22 +4,17 @@ import (
 	"context"
 	"io"
 	"os"
-	"sync"
-	"sync/atomic"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	bolt "go.etcd.io/bbolt"
 )
 
 type Controller struct {
-	stdout  io.Writer
-	dbMutex sync.RWMutex
-	db      atomic.Pointer[bolt.DB]
-	Param   *config.Param
-	fs      afero.Fs
-	d       *DB
+	stdout io.Writer
+	Param  *config.Param
+	fs     afero.Fs
+	d      *DB
 }
 
 // New initializes a Controller with the given context, parameters, and dependencies.

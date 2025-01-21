@@ -17,7 +17,6 @@ import (
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 	"go.etcd.io/bbolt"
-	bolt "go.etcd.io/bbolt"
 )
 
 const (
@@ -32,7 +31,7 @@ type DBAccessType string
 type DB struct {
 	stdout     io.Writer
 	dbMutex    sync.RWMutex
-	db         atomic.Pointer[bolt.DB]
+	db         atomic.Pointer[bbolt.DB]
 	Param      *config.Param
 	fs         afero.Fs
 	storeQueue *StoreQueue
