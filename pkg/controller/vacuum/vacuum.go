@@ -26,7 +26,6 @@ type PackageEntry struct {
 }
 
 type Package struct {
-	Type    string // Type of package (e.g. "github_release")
 	Name    string // Name of package (e.g. "cli/cli")
 	Version string // Version of package (e.g. "v1.0.0")
 	PkgPath string // Path to the install path without the rootDir/pkgs/ prefix
@@ -96,7 +95,6 @@ func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entr
 // getVacuumPackage converts a config
 func (vc *Controller) getVacuumPackage(configPkg *config.Package, pkgPath string) *Package {
 	return &Package{
-		Type:    configPkg.PackageInfo.Type,
 		Name:    configPkg.Package.Name,
 		Version: configPkg.Package.Version,
 		PkgPath: pkgPath,

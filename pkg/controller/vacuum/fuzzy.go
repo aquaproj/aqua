@@ -64,13 +64,11 @@ func (vc *Controller) displayPackagesFuzzyInteractive(pkgs []*PackageVacuumEntry
 			return fmt.Sprintf(
 				"Package Details:\n\n"+
 					"%s \n"+
-					"Type: %s\n"+
 					"Package: %s\n"+
 					"Version: %s\n\n"+
 					"Last Used: %s\n"+
 					"Last Used (exact): %s\n\n",
 				expiredString,
-				pkg.PackageEntry.Package.Type,
 				pkg.PackageEntry.Package.Name,
 				pkg.PackageEntry.Package.Version,
 				humanize.Time(pkg.PackageEntry.LastUsageTime),
