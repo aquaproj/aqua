@@ -20,6 +20,15 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+const (
+	dbFile         string       = "vacuum.db"
+	bucketNamePkgs string       = "packages"
+	View           DBAccessType = "view"
+	Update         DBAccessType = "update"
+)
+
+type DBAccessType string
+
 type DB struct {
 	stdout     io.Writer
 	dbMutex    sync.RWMutex
@@ -40,6 +49,10 @@ func NewDB(ctx context.Context, param *config.Param, fs afero.Fs) *DB {
 	return db
 }
 
+func (d *DB) Bucket(tx *bbolt.Tx) *bbolt.Bucket {
+	return tx.Bucket([]byte(bucketNamePkgs))
+}
+
 // Get retrieves a package entry from the database by key. for testing purposes.
 func (d *DB) Get(ctx context.Context, logE *logrus.Entry, key string) (*PackageEntry, error) {
 	var pkgEntry *PackageEntry
@@ -58,6 +71,14 @@ func (d *DB) Get(ctx context.Context, logE *logrus.Entry, key string) (*PackageE
 		return err
 	}, View)
 	return pkgEntry, err
+}
+
+func (d *DB) view(ctx context.Context, logE *logrus.Entry, fn func(*bolt.Tx) error) error {
+	return d.withDBRetry(ctx, logE, fn, View)
+}
+
+func (d *DB) update(ctx context.Context, logE *logrus.Entry, fn func(*bolt.Tx) error) error {
+	return d.withDBRetry(ctx, logE, fn, Update)
 }
 
 // withDBRetry retries a database operation with exponential backoff.

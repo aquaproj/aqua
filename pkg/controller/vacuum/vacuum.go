@@ -17,15 +17,6 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-type DBAccessType string
-
-const (
-	dbFile         string       = "vacuum.db"
-	bucketNamePkgs string       = "packages"
-	View           DBAccessType = "view"
-	Update         DBAccessType = "update"
-)
-
 type PackageVacuumEntries []PackageVacuumEntry
 
 type PackageVacuumEntry struct {
@@ -167,8 +158,8 @@ func (vc *Controller) listPackages(ctx context.Context, logE *logrus.Entry) ([]*
 
 	var pkgs []*PackageVacuumEntry
 
-	err = vc.d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketNamePkgs))
+	err = vc.d.view(ctx, logE, func(tx *bbolt.Tx) error {
+		b := vc.d.Bucket(tx)
 		if b == nil {
 			return nil
 		}
@@ -184,7 +175,7 @@ func (vc *Controller) listPackages(ctx context.Context, logE *logrus.Entry) ([]*
 			})
 			return nil
 		})
-	}, View)
+	})
 	return pkgs, err
 }
 
@@ -365,8 +356,8 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 
 // removePackages removes package entries from the database.
 func (vc *Controller) removePackages(ctx context.Context, logE *logrus.Entry, pkgs []string) error {
-	return vc.d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketNamePkgs))
+	return vc.d.update(ctx, logE, func(tx *bbolt.Tx) error {
+		b := vc.d.Bucket(tx)
 		if b == nil {
 			return errors.New("bucket not found")
 		}
@@ -378,7 +369,7 @@ func (vc *Controller) removePackages(ctx context.Context, logE *logrus.Entry, pk
 			logE.WithField("pkgKey", key).Info("removed package from vacuum database")
 		}
 		return nil
-	}, Update)
+	})
 }
 
 // removePackageVersionPath removes the specified package version directory and its parent directory if it becomes empty.
@@ -425,8 +416,8 @@ func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entr
 // retrievePackageEntry retrieves a package entry from the database by key. for testing purposes.
 func (vc *Controller) retrievePackageEntry(ctx context.Context, logE *logrus.Entry, key string) (*PackageEntry, error) {
 	var pkgEntry *PackageEntry
-	err := vc.d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketNamePkgs))
+	err := vc.d.view(ctx, logE, func(tx *bbolt.Tx) error {
+		b := vc.d.Bucket(tx)
 		if b == nil {
 			return nil
 		}
@@ -438,6 +429,6 @@ func (vc *Controller) retrievePackageEntry(ctx context.Context, logE *logrus.Ent
 		var err error
 		pkgEntry, err = decodePackageEntry(value)
 		return err
-	}, View)
+	})
 	return pkgEntry, err
 }
