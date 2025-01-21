@@ -419,8 +419,7 @@ func (vc *Controller) GetPackageLastUsed(ctx context.Context, logE *logrus.Entry
 
 // SetTimeStampPackage permit define a Timestamp for a package Manually. for testing purposes.
 func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
-	vacuumPkg := vc.getVacuumPackage(pkg, pkgPath)
-	return vc.d.StorePackageInternal(ctx, logE, vacuumPkg, datetime)
+	return vc.d.Store(ctx, logE, vc.getVacuumPackage(pkg, pkgPath), datetime)
 }
 
 // retrievePackageEntry retrieves a package entry from the database by key. for testing purposes.

@@ -25,7 +25,7 @@ type StoreQueue struct {
 }
 
 type Storage interface {
-	StorePackageInternal(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error
+	Store(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error
 }
 
 // newStoreQueue initializes the task queue with a single worker.
@@ -49,7 +49,7 @@ func (sq *StoreQueue) worker(ctx context.Context) {
 			if !ok {
 				return
 			}
-			if err := sq.vc.StorePackageInternal(ctx, task.logE, task.pkg); err != nil {
+			if err := sq.vc.Store(ctx, task.logE, task.pkg); err != nil {
 				logerr.WithError(task.logE, err).Error("store package asynchronously")
 			}
 			sq.wg.Done()
@@ -57,7 +57,7 @@ func (sq *StoreQueue) worker(ctx context.Context) {
 			// Process remaining tasks
 			for len(sq.taskQueue) > 0 {
 				task := <-sq.taskQueue
-				if err := sq.vc.StorePackageInternal(ctx, task.logE, task.pkg); err != nil {
+				if err := sq.vc.Store(ctx, task.logE, task.pkg); err != nil {
 					logerr.WithError(task.logE, err).Error("store package asynchronously during shutdown")
 				}
 				sq.wg.Done()

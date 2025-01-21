@@ -175,7 +175,7 @@ func (d *DB) Close() error {
 }
 
 // StorePackageInternal stores package entries in the database.
-func (d *DB) StorePackageInternal(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
+func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
 	lastUsedTime := time.Now()
 	if len(dateTime) > 0 {
 		lastUsedTime = dateTime[0]
