@@ -72,6 +72,70 @@ func (d *DB) Get(ctx context.Context, logE *logrus.Entry, key string) (*PackageE
 	return pkgEntry, err
 }
 
+// Store stores package entries in the database.
+func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, lastUsedTime time.Time) error {
+	return d.update(ctx, logE, func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucketNamePkgs))
+		if b == nil {
+			return errors.New("bucket not found")
+		}
+		logE.WithFields(logrus.Fields{
+			"package_name":    pkg.Name,
+			"package_version": pkg.Version,
+			"package_path":    pkg.PkgPath,
+		}).Debug("storing package in vacuum database")
+
+		pkgKey := pkg.PkgPath
+		pkgEntry := &PackageEntry{
+			LastUsageTime: lastUsedTime,
+			Package:       pkg,
+		}
+
+		data, err := encodePackageEntry(pkgEntry)
+		if err != nil {
+			logerr.WithError(logE, err).WithFields(
+				logrus.Fields{
+					"package_name":    pkg.Name,
+					"package_version": pkg.Version,
+					"package_path":    pkg.PkgPath,
+				}).Error("encode package")
+			return fmt.Errorf("encode package %s: %w", pkg.Name, err)
+		}
+
+		if err := b.Put([]byte(pkgKey), data); err != nil {
+			logerr.WithError(logE, err).WithField("package_path", pkgKey).Error("store package in vacuum database")
+			return fmt.Errorf("store package %s: %w", pkg.Name, err)
+		}
+		return nil
+	})
+}
+
+// Close closes the database instance.
+func (d *DB) Close() error {
+	d.dbMutex.Lock()
+	defer d.dbMutex.Unlock()
+
+	if d.db.Load() != nil {
+		if err := d.db.Load().Close(); err != nil {
+			return fmt.Errorf("close database: %w", err)
+		}
+		d.db.Store(nil)
+	}
+
+	return nil
+}
+
+// TesetKeepDBOpen opens the database instance. This is used for testing purposes.
+func (d *DB) TestKeepDBOpen() error {
+	const dbFileMode = 0o600
+	if _, err := bbolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bbolt.Options{
+		Timeout: 1 * time.Second,
+	}); err != nil {
+		return fmt.Errorf("open database %v: %w", dbFile, err)
+	}
+	return nil
+}
+
 func (d *DB) view(ctx context.Context, logE *logrus.Entry, fn func(*bbolt.Tx) error) error {
 	return d.withDBRetry(ctx, logE, fn, View)
 }
@@ -166,72 +230,4 @@ func (d *DB) getDB() (*bbolt.DB, error) {
 
 	d.db.Store(db)
 	return db, nil
-}
-
-// Keep_DBOpen opens the database instance. This is used for testing purposes.
-func (d *DB) TestKeepDBOpen() error {
-	const dbFileMode = 0o600
-	if _, err := bbolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bbolt.Options{
-		Timeout: 1 * time.Second,
-	}); err != nil {
-		return fmt.Errorf("open database %v: %w", dbFile, err)
-	}
-	return nil
-}
-
-// Close closes the database instance.
-func (d *DB) Close() error {
-	d.dbMutex.Lock()
-	defer d.dbMutex.Unlock()
-
-	if d.db.Load() != nil {
-		if err := d.db.Load().Close(); err != nil {
-			return fmt.Errorf("close database: %w", err)
-		}
-		d.db.Store(nil)
-	}
-
-	return nil
-}
-
-// Store stores package entries in the database.
-func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
-	lastUsedTime := time.Now()
-	if len(dateTime) > 0 {
-		lastUsedTime = dateTime[0]
-	}
-	return d.update(ctx, logE, func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketNamePkgs))
-		if b == nil {
-			return errors.New("bucket not found")
-		}
-		logE.WithFields(logrus.Fields{
-			"package_name":    pkg.Name,
-			"package_version": pkg.Version,
-			"package_path":    pkg.PkgPath,
-		}).Debug("storing package in vacuum database")
-
-		pkgKey := pkg.PkgPath
-		pkgEntry := &PackageEntry{
-			LastUsageTime: lastUsedTime,
-			Package:       pkg,
-		}
-
-		data, err := encodePackageEntry(pkgEntry)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(
-				logrus.Fields{
-					"package_name":    pkg.Name,
-					"package_version": pkg.Version,
-					"package_path":    pkg.PkgPath,
-				}).Error("encode package")
-			return fmt.Errorf("encode package %s: %w", pkg.Name, err)
-		}
-
-		if err := b.Put([]byte(pkgKey), data); err != nil {
-			logerr.WithError(logE, err).WithField("package_path", pkgKey).Error("store package in vacuum database")
-			return fmt.Errorf("store package %s: %w", pkg.Name, err)
-		}
-		return nil
-	})
 }
