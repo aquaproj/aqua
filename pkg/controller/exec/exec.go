@@ -18,7 +18,7 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) {
+func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) { //nolint:cyclop
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
