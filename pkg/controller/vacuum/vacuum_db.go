@@ -53,26 +53,6 @@ func (d *DB) Bucket(tx *bbolt.Tx) *bbolt.Bucket {
 	return tx.Bucket([]byte(bucketNamePkgs))
 }
 
-// Get retrieves a package entry from the database by key. for testing purposes.
-func (d *DB) Get(ctx context.Context, logE *logrus.Entry, key string) (*PackageEntry, error) {
-	var pkgEntry *PackageEntry
-	err := d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketNamePkgs))
-		if b == nil {
-			return nil
-		}
-		value := b.Get([]byte(key))
-		if value == nil {
-			return nil
-		}
-
-		var err error
-		pkgEntry, err = decodePackageEntry(value)
-		return err
-	}, View)
-	return pkgEntry, err
-}
-
 // Store stores package entries in the database.
 func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, lastUsedTime time.Time) error {
 	return d.update(ctx, logE, func(tx *bbolt.Tx) error {
@@ -144,32 +124,6 @@ func (d *DB) List(ctx context.Context, logE *logrus.Entry) ([]*PackageVacuumEntr
 	return pkgs, err
 }
 
-// Close closes the database instance.
-func (d *DB) Close() error {
-	d.dbMutex.Lock()
-	defer d.dbMutex.Unlock()
-
-	if db := d.db.Load(); db != nil {
-		if err := db.Close(); err != nil {
-			return fmt.Errorf("close database: %w", err)
-		}
-		d.db.Store(nil)
-	}
-
-	return nil
-}
-
-// TesetKeepDBOpen opens the database instance. This is used for testing purposes.
-func (d *DB) TestKeepDBOpen() error {
-	const dbFileMode = 0o600
-	if _, err := bbolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bbolt.Options{
-		Timeout: 1 * time.Second,
-	}); err != nil {
-		return fmt.Errorf("open database %v: %w", dbFile, err)
-	}
-	return nil
-}
-
 // RemovePackages removes package entries from the database.
 func (d *DB) RemovePackages(ctx context.Context, logE *logrus.Entry, pkgs []string) error {
 	return d.update(ctx, logE, func(tx *bbolt.Tx) error {
@@ -186,6 +140,52 @@ func (d *DB) RemovePackages(ctx context.Context, logE *logrus.Entry, pkgs []stri
 		}
 		return nil
 	})
+}
+
+// Close closes the database instance.
+func (d *DB) Close() error {
+	d.dbMutex.Lock()
+	defer d.dbMutex.Unlock()
+
+	if db := d.db.Load(); db != nil {
+		if err := db.Close(); err != nil {
+			return fmt.Errorf("close database: %w", err)
+		}
+		d.db.Store(nil)
+	}
+
+	return nil
+}
+
+// Get retrieves a package entry from the database by key. for testing purposes.
+func (d *DB) Get(ctx context.Context, logE *logrus.Entry, key string) (*PackageEntry, error) {
+	var pkgEntry *PackageEntry
+	err := d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucketNamePkgs))
+		if b == nil {
+			return nil
+		}
+		value := b.Get([]byte(key))
+		if value == nil {
+			return nil
+		}
+
+		var err error
+		pkgEntry, err = decodePackageEntry(value)
+		return err
+	}, View)
+	return pkgEntry, err
+}
+
+// TesetKeepDBOpen opens the database instance. This is used for testing purposes.
+func (d *DB) TestKeepDBOpen() error {
+	const dbFileMode = 0o600
+	if _, err := bbolt.Open(filepath.Join(d.Param.RootDir, dbFile), dbFileMode, &bbolt.Options{
+		Timeout: 1 * time.Second,
+	}); err != nil {
+		return fmt.Errorf("open database %v: %w", dbFile, err)
+	}
+	return nil
 }
 
 func (d *DB) view(ctx context.Context, logE *logrus.Entry, fn func(*bbolt.Tx) error) error {
