@@ -110,7 +110,7 @@ func (vc *Controller) handleAsyncStorePackage(logE *logrus.Entry, vacuumPkg *Pac
 	if vacuumPkg == nil {
 		return errors.New("vacuumPkg is nil")
 	}
-	vc.storeQueue.enqueue(logE, vacuumPkg)
+	vc.d.storeQueue.enqueue(logE, vacuumPkg)
 	return nil
 }
 
@@ -156,7 +156,7 @@ func (vc *Controller) isPackageExpired(pkg *PackageVacuumEntry) bool {
 
 // listPackages lists all stored package entries.
 func (vc *Controller) listPackages(ctx context.Context, logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
-	db, err := vc.getDB()
+	db, err := vc.d.getDB()
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (vc *Controller) listPackages(ctx context.Context, logE *logrus.Entry) ([]*
 
 	var pkgs []*PackageVacuumEntry
 
-	err = vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
+	err = vc.d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return nil
@@ -363,51 +363,9 @@ func (vc *Controller) processExpiredPackages(logE *logrus.Entry, expired []*Pack
 	return pathsToRemove, errors
 }
 
-// storePackageInternal stores package entries in the database.
-func (vc *Controller) storePackageInternal(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
-	lastUsedTime := time.Now()
-	if len(dateTime) > 0 {
-		lastUsedTime = dateTime[0]
-	}
-	return vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucketNamePkgs))
-		if b == nil {
-			return errors.New("bucket not found")
-		}
-		logE.WithFields(logrus.Fields{
-			"package_name":    pkg.Name,
-			"package_version": pkg.Version,
-			"package_path":    pkg.PkgPath,
-		}).Debug("storing package in vacuum database")
-
-		pkgKey := pkg.PkgPath
-		pkgEntry := &PackageEntry{
-			LastUsageTime: lastUsedTime,
-			Package:       pkg,
-		}
-
-		data, err := encodePackageEntry(pkgEntry)
-		if err != nil {
-			logerr.WithError(logE, err).WithFields(
-				logrus.Fields{
-					"package_name":    pkg.Name,
-					"package_version": pkg.Version,
-					"package_path":    pkg.PkgPath,
-				}).Error("encode package")
-			return fmt.Errorf("encode package %s: %w", pkg.Name, err)
-		}
-
-		if err := b.Put([]byte(pkgKey), data); err != nil {
-			logerr.WithError(logE, err).WithField("package_path", pkgKey).Error("store package in vacuum database")
-			return fmt.Errorf("store package %s: %w", pkg.Name, err)
-		}
-		return nil
-	}, Update)
-}
-
 // removePackages removes package entries from the database.
 func (vc *Controller) removePackages(ctx context.Context, logE *logrus.Entry, pkgs []string) error {
-	return vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
+	return vc.d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return errors.New("bucket not found")
@@ -462,13 +420,13 @@ func (vc *Controller) GetPackageLastUsed(ctx context.Context, logE *logrus.Entry
 // SetTimeStampPackage permit define a Timestamp for a package Manually. for testing purposes.
 func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
 	vacuumPkg := vc.getVacuumPackage(pkg, pkgPath)
-	return vc.storePackageInternal(ctx, logE, vacuumPkg, datetime)
+	return vc.d.StorePackageInternal(ctx, logE, vacuumPkg, datetime)
 }
 
 // retrievePackageEntry retrieves a package entry from the database by key. for testing purposes.
 func (vc *Controller) retrievePackageEntry(ctx context.Context, logE *logrus.Entry, key string) (*PackageEntry, error) {
 	var pkgEntry *PackageEntry
-	err := vc.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
+	err := vc.d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return nil

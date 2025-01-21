@@ -3,6 +3,7 @@ package vacuum
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -18,13 +19,17 @@ type StoreRequest struct {
 type StoreQueue struct {
 	taskQueue chan StoreRequest
 	wg        sync.WaitGroup
-	vc        *Controller
+	vc        Storage
 	done      chan struct{}
 	closeOnce sync.Once
 }
 
+type Storage interface {
+	StorePackageInternal(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error
+}
+
 // newStoreQueue initializes the task queue with a single worker.
-func newStoreQueue(ctx context.Context, vc *Controller) *StoreQueue {
+func newStoreQueue(ctx context.Context, vc Storage) *StoreQueue {
 	const maxTasks = 100
 	sq := &StoreQueue{
 		taskQueue: make(chan StoreRequest, maxTasks),
@@ -44,8 +49,7 @@ func (sq *StoreQueue) worker(ctx context.Context) {
 			if !ok {
 				return
 			}
-			err := sq.vc.storePackageInternal(ctx, task.logE, task.pkg)
-			if err != nil {
+			if err := sq.vc.StorePackageInternal(ctx, task.logE, task.pkg); err != nil {
 				logerr.WithError(task.logE, err).Error("store package asynchronously")
 			}
 			sq.wg.Done()
@@ -53,8 +57,7 @@ func (sq *StoreQueue) worker(ctx context.Context) {
 			// Process remaining tasks
 			for len(sq.taskQueue) > 0 {
 				task := <-sq.taskQueue
-				err := sq.vc.storePackageInternal(ctx, task.logE, task.pkg)
-				if err != nil {
+				if err := sq.vc.StorePackageInternal(ctx, task.logE, task.pkg); err != nil {
 					logerr.WithError(task.logE, err).Error("store package asynchronously during shutdown")
 				}
 				sq.wg.Done()
