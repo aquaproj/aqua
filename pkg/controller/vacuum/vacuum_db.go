@@ -194,13 +194,13 @@ func (d *DB) Close() error {
 	return nil
 }
 
-// StorePackageInternal stores package entries in the database.
+// Store stores package entries in the database.
 func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTime ...time.Time) error {
 	lastUsedTime := time.Now()
 	if len(dateTime) > 0 {
 		lastUsedTime = dateTime[0]
 	}
-	return d.withDBRetry(ctx, logE, func(tx *bbolt.Tx) error {
+	return d.update(ctx, logE, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketNamePkgs))
 		if b == nil {
 			return errors.New("bucket not found")
@@ -233,5 +233,5 @@ func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, dateTi
 			return fmt.Errorf("store package %s: %w", pkg.Name, err)
 		}
 		return nil
-	}, Update)
+	})
 }
