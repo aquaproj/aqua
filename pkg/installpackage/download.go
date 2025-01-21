@@ -37,6 +37,9 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 				}
 				return err
 			}
+			if err := is.vacuum.StorePackage(logE, param.Package, param.PkgPath); err != nil {
+				logerr.WithError(logE, err).Error("store the package")
+			}
 			return nil
 		}
 		if !finfo.IsDir() {

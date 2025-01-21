@@ -186,6 +186,7 @@ type DownloadParam struct {
 	Checksum        *checksum.Checksum
 	Dest            string
 	Asset           string
+	PkgPath         string
 	RequireChecksum bool
 }
 
@@ -283,15 +284,11 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 	if err != nil {
 		return fmt.Errorf("get the package install path: %w", err)
 	}
-
-	if err := is.vacuum.StorePackage(logE, pkg, pkgPath); err != nil {
-		logerr.WithError(logE, err).Error("store the package")
-	}
-	pkgPath = filepath.Join(is.rootDir, pkgPath)
-
+	absPkgPath := filepath.Join(is.rootDir, pkgPath)
 	if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
 		Package:         pkg,
-		Dest:            pkgPath,
+		Dest:            absPkgPath,
+		PkgPath:         pkgPath,
 		Asset:           assetName,
 		Checksums:       param.Checksums,
 		RequireChecksum: param.RequireChecksum,
@@ -303,5 +300,5 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 		return err
 	}
 
-	return is.checkFilesWrap(ctx, logE, param, pkgPath)
+	return is.checkFilesWrap(ctx, logE, param, absPkgPath)
 }

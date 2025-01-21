@@ -19,6 +19,7 @@ type FindResult struct {
 	File           *registry.File
 	Config         *aqua.Config
 	ExePath        string
+	PkgPath        string
 	ConfigFilePath string
 	EnableChecksum bool
 }
@@ -161,12 +162,21 @@ func (c *Controller) findExecFileFromPkg(logE *logrus.Entry, registries map[stri
 		return nil, nil //nolint:nilnil
 	}
 
+	cPkg := &config.Package{
+		Package:     pkg,
+		PackageInfo: pkgInfo,
+	}
+	pkgPath, err := cPkg.PkgPath(c.runtime)
+	if err != nil {
+		return nil, fmt.Errorf("get a package path: %w", err)
+	}
 	for _, file := range pkgInfo.GetFiles() {
 		findResult, err := c.findExecFileFromFile(logE, exeName, pkg, pkgInfo, file)
 		if err != nil {
 			return nil, err
 		}
 		if findResult != nil {
+			findResult.PkgPath = pkgPath
 			return findResult, nil
 		}
 	}

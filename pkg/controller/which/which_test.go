@@ -3,6 +3,7 @@ package which_test
 import (
 	"context"
 	"net/http"
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -105,6 +106,7 @@ packages:
 					},
 				},
 
+				PkgPath:        filepath.FromSlash("pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer"),
 				ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 				ConfigFilePath: "/home/foo/workspace/aqua.yaml",
 			},
@@ -231,6 +233,7 @@ packages:
 						},
 					},
 				},
+				PkgPath:        filepath.FromSlash("pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer"),
 				ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
 				ConfigFilePath: "/etc/aqua/aqua.yaml",
 			},

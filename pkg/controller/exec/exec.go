@@ -99,6 +99,13 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 	}); err != nil {
 		return fmt.Errorf("install the package: %w", err)
 	}
+	if err := c.vacuum.StorePackage(logE, findResult.Package, findResult.PkgPath); err != nil {
+		logerr.WithError(logE, err).Error("store the package")
+	}
+	return c.checkExePath(ctx, logE, findResult)
+}
+
+func (c *Controller) checkExePath(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult) error {
 	for i := range 10 {
 		logE.Debug("check if exec file exists")
 		if fi, err := c.fs.Stat(findResult.ExePath); err == nil {

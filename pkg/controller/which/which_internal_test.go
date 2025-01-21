@@ -51,6 +51,7 @@ func TestController_findExecFileFromPkg(t *testing.T) { //nolint:funlen
 					Name: "kubectl",
 				},
 				ExePath: filepath.Join("/home", "foo", ".local", "share", "aquaproj-aqua", "pkgs", "http", "storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl/kubectl"),
+				PkgPath: filepath.FromSlash("pkgs/http/storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl"),
 			},
 			registries: map[string]*registry.Config{
 				"standard": {

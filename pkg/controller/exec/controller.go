@@ -64,4 +64,5 @@ type WhichController interface {
 
 type VacuumController interface {
 	Close(logE *logrus.Entry) error
+	StorePackage(logE *logrus.Entry, pkg *config.Package, pkgPath string) error
 }
