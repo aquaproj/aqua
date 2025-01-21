@@ -18,7 +18,7 @@ func (vc *Controller) ListPackages(ctx context.Context, logE *logrus.Entry, expi
 
 // handleListPackages retrieves a list of packages and displays them using a fuzzy search.
 func (vc *Controller) handleListPackages(ctx context.Context, logE *logrus.Entry, args ...string) error {
-	pkgs, err := vc.d.List(ctx, logE)
+	pkgs, err := vc.db.List(ctx, logE)
 	if err != nil {
 		return err
 	}

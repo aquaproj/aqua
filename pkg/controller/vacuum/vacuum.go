@@ -45,14 +45,14 @@ func (vc *Controller) Close(logE *logrus.Entry) error {
 		return nil
 	}
 	logE.Debug("closing vacuum controller")
-	if vc.d.storeQueue != nil {
-		vc.d.storeQueue.close()
+	if vc.db.storeQueue != nil {
+		vc.db.storeQueue.close()
 	}
-	return vc.d.Close()
+	return vc.db.Close()
 }
 
 func (vc *Controller) TestKeepDBOpen() error {
-	return vc.d.TestKeepDBOpen()
+	return vc.db.TestKeepDBOpen()
 }
 
 // StorePackage stores the given package if vacuum is enabled.
@@ -80,7 +80,7 @@ func (vc *Controller) IsVacuumEnabled(logE *logrus.Entry) bool {
 // GetPackageLastUsed retrieves the last used time of a package. for testing purposes.
 func (vc *Controller) GetPackageLastUsed(ctx context.Context, logE *logrus.Entry, pkgPath string) *time.Time {
 	var lastUsedTime time.Time
-	pkgEntry, _ := vc.d.Get(ctx, logE, pkgPath)
+	pkgEntry, _ := vc.db.Get(ctx, logE, pkgPath)
 	if pkgEntry != nil {
 		lastUsedTime = pkgEntry.LastUsageTime
 	}
@@ -89,7 +89,7 @@ func (vc *Controller) GetPackageLastUsed(ctx context.Context, logE *logrus.Entry
 
 // SetTimeStampPackage permit define a Timestamp for a package Manually. for testing purposes.
 func (vc *Controller) SetTimestampPackage(ctx context.Context, logE *logrus.Entry, pkg *config.Package, pkgPath string, datetime time.Time) error {
-	return vc.d.Store(ctx, logE, vc.getVacuumPackage(pkg, pkgPath), datetime)
+	return vc.db.Store(ctx, logE, vc.getVacuumPackage(pkg, pkgPath), datetime)
 }
 
 // getVacuumPackage converts a config
@@ -106,7 +106,7 @@ func (vc *Controller) handleAsyncStorePackage(logE *logrus.Entry, vacuumPkg *Pac
 	if vacuumPkg == nil {
 		return errors.New("vacuumPkg is nil")
 	}
-	vc.d.storeQueue.enqueue(logE, vacuumPkg)
+	vc.db.storeQueue.enqueue(logE, vacuumPkg)
 	return nil
 }
 
@@ -127,7 +127,7 @@ func (vc *Controller) isPackageExpired(pkg *PackageVacuumEntry) bool {
 
 // listExpiredPackages lists all packages that have expired based on the vacuum configuration.
 func (vc *Controller) listExpiredPackages(ctx context.Context, logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
-	pkgs, err := vc.d.List(ctx, logE)
+	pkgs, err := vc.db.List(ctx, logE)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (vc *Controller) vacuumExpiredPackages(ctx context.Context, logE *logrus.En
 	}
 
 	if len(successfulRemovals) > 0 {
-		if err := vc.d.RemovePackages(ctx, logE, successfulRemovals); err != nil {
+		if err := vc.db.RemovePackages(ctx, logE, successfulRemovals); err != nil {
 			return fmt.Errorf("remove packages from database: %w", err)
 		}
 	}

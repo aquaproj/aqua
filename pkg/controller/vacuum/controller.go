@@ -13,7 +13,7 @@ type Controller struct {
 	stdout io.Writer
 	Param  *config.Param
 	fs     afero.Fs
-	d      *DB
+	db     *DB
 }
 
 // New initializes a Controller with the given context, parameters, and dependencies.
@@ -22,7 +22,7 @@ func New(ctx context.Context, param *config.Param, fs afero.Fs) *Controller {
 		stdout: os.Stdout,
 		Param:  param,
 		fs:     fs,
-		d:      NewDB(ctx, param, fs),
+		db:     NewDB(ctx, param, fs),
 	}
 	return vc
 }
