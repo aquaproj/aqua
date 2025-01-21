@@ -102,9 +102,6 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 	}); err != nil {
 		return fmt.Errorf("install the package: %w", err)
 	}
-	if err := c.vacuum.StorePackage(logE, findResult.Package, findResult.PkgPath); err != nil {
-		logerr.WithError(logE, err).Error("store the package")
-	}
 	return c.checkExePath(ctx, logE, findResult)
 }
 
