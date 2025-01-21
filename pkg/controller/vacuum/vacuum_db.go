@@ -2,6 +2,7 @@ package vacuum
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -110,6 +111,39 @@ func (d *DB) Store(ctx context.Context, logE *logrus.Entry, pkg *Package, lastUs
 	})
 }
 
+// List lists all stored package entries.
+func (d *DB) List(ctx context.Context, logE *logrus.Entry) ([]*PackageVacuumEntry, error) {
+	db, err := d.getDB()
+	if err != nil {
+		return nil, err
+	}
+	if db == nil {
+		return nil, nil
+	}
+
+	var pkgs []*PackageVacuumEntry
+
+	err = d.view(ctx, logE, func(tx *bbolt.Tx) error {
+		b := d.Bucket(tx)
+		if b == nil {
+			return nil
+		}
+		return b.ForEach(func(k, value []byte) error {
+			pkgEntry, err := decodePackageEntry(value)
+			if err != nil {
+				logerr.WithError(logE, err).WithField("pkg_key", string(k)).Warn("unable to decode entry")
+				return err
+			}
+			pkgs = append(pkgs, &PackageVacuumEntry{
+				PkgPath:      append([]byte{}, k...),
+				PackageEntry: pkgEntry,
+			})
+			return nil
+		})
+	})
+	return pkgs, err
+}
+
 // Close closes the database instance.
 func (d *DB) Close() error {
 	d.dbMutex.Lock()
@@ -134,6 +168,24 @@ func (d *DB) TestKeepDBOpen() error {
 		return fmt.Errorf("open database %v: %w", dbFile, err)
 	}
 	return nil
+}
+
+// RemovePackages removes package entries from the database.
+func (d *DB) RemovePackages(ctx context.Context, logE *logrus.Entry, pkgs []string) error {
+	return d.update(ctx, logE, func(tx *bbolt.Tx) error {
+		b := d.Bucket(tx)
+		if b == nil {
+			return errors.New("bucket not found")
+		}
+
+		for _, key := range pkgs {
+			if err := b.Delete([]byte(key)); err != nil {
+				return fmt.Errorf("delete package %s: %w", key, err)
+			}
+			logE.WithField("pkg_key", key).Info("removed package from vacuum database")
+		}
+		return nil
+	})
 }
 
 func (d *DB) view(ctx context.Context, logE *logrus.Entry, fn func(*bbolt.Tx) error) error {
@@ -230,4 +282,22 @@ func (d *DB) getDB() (*bbolt.DB, error) {
 
 	d.db.Store(db)
 	return db, nil
+}
+
+// encodePackageEntry encodes a PackageEntry into a JSON byte slice.
+func encodePackageEntry(pkgEntry *PackageEntry) ([]byte, error) {
+	data, err := json.Marshal(pkgEntry)
+	if err != nil {
+		return nil, fmt.Errorf("marshal package entry: %w", err)
+	}
+	return data, nil
+}
+
+// decodePackageEntry decodes a JSON byte slice into a PackageEntry.
+func decodePackageEntry(data []byte) (*PackageEntry, error) {
+	var pkgEntry PackageEntry
+	if err := json.Unmarshal(data, &pkgEntry); err != nil {
+		return nil, fmt.Errorf("unmarshal package entry: %w", err)
+	}
+	return &pkgEntry, nil
 }
