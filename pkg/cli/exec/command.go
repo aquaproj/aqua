@@ -56,6 +56,5 @@ func (i *command) action(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("parse args: %w", err)
 	}
-	defer ctrl.CloseVacuum(logE)
 	return ctrl.Exec(c.Context, logE, param, exeName, args...) //nolint:wrapcheck
 }
