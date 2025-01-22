@@ -3,6 +3,7 @@ package vacuum
 import (
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
@@ -35,6 +36,12 @@ func New(r *util.Param) *cli.Command {
 		Aliases:     []string{"v"},
 		Description: description,
 		Action:      i.action,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "init",
+				Usage: "Create timestamp files.",
+			},
+		},
 	}
 }
 
@@ -52,8 +59,16 @@ func (i *command) action(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
+	if c.Bool("init") {
+		ctrl := controller.InitializeVacuumInitCommandController(c.Context, param, i.r.Runtime, &http.Client{})
+		if err := ctrl.Init(c.Context, logE, param); err != nil {
+			return err //nolint:wrapcheck
+		}
+		return nil
+	}
+
 	if param.VacuumDays == 0 {
-		return errors.New("vacuum is not enabled, please set the AQUA_VACUUM_DAYS environment variable")
+		return errors.New("vacuum-days is required")
 	}
 
 	ctrl := controller.InitializeVacuumCommandController(c.Context, param, i.r.Runtime)

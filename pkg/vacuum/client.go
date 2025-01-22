@@ -50,10 +50,25 @@ func (c *Client) Remove(pkgPath string) error {
 
 func (c *Client) Update(pkgPath string, timestamp time.Time) error {
 	dir := c.dir(pkgPath)
+	file := filepath.Join(dir, fileName)
+	return c.update(file, dir, timestamp)
+}
+
+func (c *Client) Create(pkgPath string, timestamp time.Time) error {
+	dir := c.dir(pkgPath)
+	file := filepath.Join(dir, fileName)
+	if f, err := afero.Exists(c.fs, file); err != nil {
+		return fmt.Errorf("check whether a package timestamp file exists: %w", err)
+	} else if f {
+		return nil
+	}
+	return c.update(file, dir, timestamp)
+}
+
+func (c *Client) update(file, dir string, timestamp time.Time) error {
 	if err := osfile.MkdirAll(c.fs, dir); err != nil {
 		return fmt.Errorf("create a package metadata directory: %w", err)
 	}
-	file := filepath.Join(dir, fileName)
 	timestampStr := timestamp.Format(time.RFC3339)
 	if err := afero.WriteFile(c.fs, file, []byte(timestampStr+"\n"), filePermission); err != nil {
 		return fmt.Errorf("create a package timestamp file: %w", err)

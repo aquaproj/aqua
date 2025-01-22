@@ -30,6 +30,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
 	vacuum2 "github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
+	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum/initialize"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
@@ -392,5 +393,23 @@ func InitializeVacuumCommandController(ctx context.Context, param *config.Param,
 	fs := afero.NewOsFs()
 	client := vacuum.New(fs, param)
 	controller := vacuum2.New(param, rt, fs, client)
+	return controller
+}
+
+func InitializeVacuumInitCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) *initialize.Controller {
+	fs := afero.NewOsFs()
+	client := vacuum.New(fs, param)
+	configFinder := finder.NewConfigFinder(fs)
+	configReader := reader.New(fs, param)
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	executor := osexec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	executorImpl := slsa.NewExecutor(executor, param)
+	slsaVerifier := slsa.New(downloader, fs, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	controller := initialize.New(param, rt, fs, client, configFinder, configReader, installer)
 	return controller
 }
