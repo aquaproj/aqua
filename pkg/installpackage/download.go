@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
@@ -36,6 +37,13 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 					continue
 				}
 				return err
+			}
+			pkgPath, err := param.Package.PkgPath(is.runtime)
+			if err != nil {
+				return err
+			}
+			if err := is.vacuum.Update(pkgPath, time.Now()); err != nil {
+				logerr.WithError(logE, err).Warn("update the last used datetime")
 			}
 			return nil
 		}

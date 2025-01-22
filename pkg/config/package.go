@@ -31,7 +31,7 @@ func (p *Package) ExePath(rootDir string, file *registry.File, rt *runtime.Runti
 		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, p.Package.Version, "bin", file.Name), nil
 	}
 
-	pkgPath, err := p.PkgPath(rootDir, rt)
+	pkgPath, err := p.AbsPkgPath(rootDir, rt)
 	if err != nil {
 		return "", err
 	}
@@ -80,7 +80,7 @@ func (p *Package) RenderPath() (string, error) {
 	return p.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
 }
 
-func (p *Package) PkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
+func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
 	assetName, err := p.RenderAsset(rt)
@@ -89,23 +89,23 @@ func (p *Package) PkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
 	}
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
+		return filepath.Join("pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGoBuild:
-		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
+		return filepath.Join("pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, "src"), nil
 	case PkgInfoTypeGoInstall:
 		p, err := p.RenderPath()
 		if err != nil {
 			return "", fmt.Errorf("render Go Module Path: %w", err)
 		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, p, pkg.Version, "bin"), nil
+		return filepath.Join("pkgs", pkgInfo.Type, p, pkg.Version, "bin"), nil
 	case PkgInfoTypeCargo:
 		registry := "crates.io"
-		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, registry, pkgInfo.Crate, strings.TrimPrefix(pkg.Version, "v")), nil
+		return filepath.Join("pkgs", pkgInfo.Type, registry, pkgInfo.Crate, strings.TrimPrefix(pkg.Version, "v")), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
-			return filepath.Join(rootDir, "internal", "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+			return filepath.Join("internal", "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		return filepath.Join("pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {
@@ -115,9 +115,17 @@ func (p *Package) PkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("parse the URL: %w", err)
 		}
-		return filepath.Join(rootDir, "pkgs", pkgInfo.Type, u.Host, u.Path), nil
+		return filepath.Join("pkgs", pkgInfo.Type, u.Host, u.Path), nil
 	}
 	return "", nil
+}
+
+func (p *Package) AbsPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
+	pkgPath, err := p.PkgPath(rt)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(rootDir, pkgPath), nil
 }
 
 func (p *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
@@ -250,7 +258,6 @@ type RemoveMode struct {
 }
 
 type Param struct {
-	GlobalConfigFilePaths             []string
 	ConfigFilePath                    string
 	LogLevel                          string
 	File                              string
@@ -265,7 +272,11 @@ type Param struct {
 	OutTestData                       string
 	Limit                             int
 	MaxParallelism                    int
+	VacuumDays                        int
+	GlobalConfigFilePaths             []string
 	Args                              []string
+	PolicyConfigFilePaths             []string
+	Commands                          []string
 	Tags                              map[string]struct{}
 	ExcludedTags                      map[string]struct{}
 	DisableLazyInstall                bool
@@ -292,8 +303,6 @@ type Param struct {
 	GitHubArtifactAttestationDisabled bool
 	SLSADisabled                      bool
 	Installed                         bool
-	PolicyConfigFilePaths             []string
-	Commands                          []string
 }
 
 func appendExt(s, format string) string {

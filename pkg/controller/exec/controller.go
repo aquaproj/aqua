@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
@@ -26,13 +27,18 @@ type Controller struct {
 	fs               afero.Fs
 	policyReader     PolicyReader
 	enabledXSysExec  bool
+	vacuum           Vacuum
+}
+
+type Vacuum interface {
+	Update(pkgPath string, timestamp time.Time) error
 }
 
 type Installer interface {
 	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
 }
 
-func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyReader PolicyReader) *Controller {
+func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyReader PolicyReader, vacuum Vacuum) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
@@ -43,6 +49,7 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 		enabledXSysExec:  getEnabledXSysExec(osEnv, runtime.GOOS),
 		fs:               fs,
 		policyReader:     policyReader,
+		vacuum:           vacuum,
 	}
 }
 

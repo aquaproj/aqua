@@ -29,6 +29,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
+	cvacuum "github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
@@ -45,6 +46,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 
@@ -348,6 +350,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
+		),
 	)
 	return &install.Controller{}, nil
 }
@@ -538,6 +544,11 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
+			wire.Bind(new(cexec.Vacuum), new(*vacuum.Client)),
+		),
 	)
 	return &cexec.Controller{}, nil
 }
@@ -629,6 +640,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
 		),
 	)
 	return &updateaqua.Controller{}, nil
@@ -769,6 +784,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
 		),
 	)
 	return &cp.Controller{}, nil
@@ -1039,4 +1058,16 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 		),
 	)
 	return &remove.Controller{}
+}
+
+func InitializeVacuumCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *cvacuum.Controller {
+	wire.Build(
+		cvacuum.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(cvacuum.Vacuum), new(*vacuum.Client)),
+		),
+	)
+	return &cvacuum.Controller{}
 }

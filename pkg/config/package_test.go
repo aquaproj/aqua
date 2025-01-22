@@ -210,7 +210,7 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgPath, err := d.pkg.PkgPath(rootDir, rt)
+			pkgPath, err := d.pkg.AbsPkgPath(rootDir, rt)
 			if err != nil {
 				t.Fatal(err)
 			}

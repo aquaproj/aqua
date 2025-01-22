@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -62,6 +63,15 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 	if err := c.install(ctx, logE, findResult, policyCfgs, param); err != nil {
 		return err
 	}
+
+	pkgPath, err := findResult.Package.PkgPath(runtime.New())
+	if err != nil {
+		return err
+	}
+	if err := c.vacuum.Update(pkgPath, time.Now()); err != nil {
+		logerr.WithError(logE, err).Warn("update the last used datetime")
+	}
+
 	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
 }
 
