@@ -1,6 +1,7 @@
 package vacuum
 
 import (
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -8,7 +9,9 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 const (
@@ -40,7 +43,7 @@ func (c *Client) file(pkgPath string) string {
 func (c *Client) Remove(pkgPath string) error {
 	file := c.file(pkgPath)
 	if err := c.fs.Remove(file); err != nil {
-		return err
+		return fmt.Errorf("reamove a package timestamp file: %w", err)
 	}
 	return nil
 }
@@ -48,21 +51,21 @@ func (c *Client) Remove(pkgPath string) error {
 func (c *Client) Update(pkgPath string, timestamp time.Time) error {
 	dir := c.dir(pkgPath)
 	if err := osfile.MkdirAll(c.fs, dir); err != nil {
-		return err
+		return fmt.Errorf("create a package metadata directory: %w", err)
 	}
 	file := filepath.Join(dir, fileName)
 	timestampStr := timestamp.Format(time.RFC3339)
 	if err := afero.WriteFile(c.fs, file, []byte(timestampStr), filePermission); err != nil {
-		return err
+		return fmt.Errorf("create a package timestamp file: %w", err)
 	}
 	return nil
 }
 
-func (c *Client) FindAll() (map[string]time.Time, error) {
+func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
 	timestamps := map[string]time.Time{}
 	if err := afero.Walk(c.fs, c.rootDir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("walk directory to find timestamp files: %w", err)
 		}
 		name := info.Name()
 		if name != fileName {
@@ -70,20 +73,24 @@ func (c *Client) FindAll() (map[string]time.Time, error) {
 		}
 		b, err := afero.ReadFile(c.fs, path)
 		if err != nil {
-			return err
+			return fmt.Errorf("read a timestamp file: %w", err)
 		}
 		t, err := time.Parse(time.RFC3339, strings.TrimSpace(string(b)))
 		if err != nil {
-			return err
+			logerr.WithError(logE, err).WithField("timestamp_file", path).Warn("a timestamp file is broken, so removing it")
+			if err := c.fs.Remove(path); err != nil {
+				return fmt.Errorf("reamove a broken package timestamp file: %w", err)
+			}
+			return nil
 		}
 		rel, err := filepath.Rel(c.rootDir, filepath.Dir(path))
 		if err != nil {
-			return err
+			return fmt.Errorf("get a relative file path: %w", err)
 		}
 		timestamps[rel] = t
 		return nil
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find timestamp files: %w", err)
 	}
 	return timestamps, nil
 }

@@ -136,6 +136,7 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 		}
 		param.EnforceRequireChecksum = requireChecksum
 	}
+	param.VacuumDays = c.Int("vacuum-days")
 	return nil
 }
 

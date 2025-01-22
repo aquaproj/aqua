@@ -1,7 +1,6 @@
 package vacuum
 
 import (
-	"context"
 	"path/filepath"
 	"time"
 
@@ -10,8 +9,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (c *Controller) Vacuum(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	timestamps, err := c.vacuum.FindAll()
+func (c *Controller) Vacuum(logE *logrus.Entry, param *config.Param) error {
+	timestamps, err := c.vacuum.FindAll(logE)
 	if err != nil {
 		return err
 	}

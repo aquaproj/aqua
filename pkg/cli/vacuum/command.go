@@ -57,7 +57,7 @@ func (i *command) action(c *cli.Context) error {
 	}
 
 	ctrl := controller.InitializeVacuumCommandController(c.Context, param, i.r.Runtime)
-	if err := ctrl.Vacuum(c.Context, logE, param); err != nil {
+	if err := ctrl.Vacuum(logE, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

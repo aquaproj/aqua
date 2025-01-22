@@ -83,6 +83,11 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 				Name:  "cpu-profile",
 				Usage: "cpu profile output file path",
 			},
+			&cli.IntFlag{
+				Name:    "vacuum-days",
+				Usage:   "Vacuum days",
+				EnvVars: []string{"AQUA_VACUUM_DAYS"},
+			},
 		},
 		EnableBashCompletion: true,
 		Commands: commands(
