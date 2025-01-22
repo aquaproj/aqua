@@ -55,7 +55,7 @@ func (c *Client) Update(pkgPath string, timestamp time.Time) error {
 	}
 	file := filepath.Join(dir, fileName)
 	timestampStr := timestamp.Format(time.RFC3339)
-	if err := afero.WriteFile(c.fs, file, []byte(timestampStr), filePermission); err != nil {
+	if err := afero.WriteFile(c.fs, file, []byte(timestampStr+"\n"), filePermission); err != nil {
 		return fmt.Errorf("create a package timestamp file: %w", err)
 	}
 	return nil
