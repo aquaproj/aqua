@@ -20,7 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Test_installer_InstallAqua(t *testing.T) {
+func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name               string
