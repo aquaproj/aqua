@@ -3,6 +3,7 @@ package initialize
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -10,6 +11,7 @@ import (
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -67,6 +69,13 @@ func (c *Controller) create(ctx context.Context, logE *logrus.Entry, cfgFilePath
 		pkgPath, err := pkg.PkgPath(c.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).Warn("get a package path")
+			continue
+		}
+		absPkgPath := filepath.Join(c.rootDir, pkgPath)
+		if f, err := afero.Exists(c.fs, absPkgPath); err != nil {
+			logerr.WithError(logE, err).Warn("check if the package is installed")
+			continue
+		} else if !f {
 			continue
 		}
 		if err := c.vacuum.Create(pkgPath, now); err != nil {
