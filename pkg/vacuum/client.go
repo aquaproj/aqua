@@ -77,9 +77,9 @@ func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
 		}
 		t, err := time.Parse(time.RFC3339, strings.TrimSpace(string(b)))
 		if err != nil {
-			logerr.WithError(logE, err).WithField("timestamp_file", path).Warn("a timestamp file is broken, so removing it")
-			if err := c.fs.Remove(path); err != nil {
-				return fmt.Errorf("reamove a broken package timestamp file: %w", err)
+			logerr.WithError(logE, err).WithField("timestamp_file", path).Warn("a timestamp file is broken, so recreating it")
+			if err := c.Update(path, time.Now()); err != nil {
+				return fmt.Errorf("recreate a broken package timestamp file: %w", err)
 			}
 			return nil
 		}
