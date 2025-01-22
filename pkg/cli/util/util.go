@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -138,7 +139,7 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 	}
 	param.VacuumDays = c.Int("vacuum-days")
 	if param.VacuumDays <= 0 {
-		return fmt.Errorf("vacuum-days must be greater than 0")
+		return errors.New("vacuum-days must be greater than 0")
 	}
 	return nil
 }
