@@ -1,6 +1,7 @@
 package vacuum
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -71,6 +72,11 @@ func (i *command) action(c *cli.Context) error {
 			return err //nolint:wrapcheck
 		}
 		return nil
+	}
+
+	param.VacuumDays = c.Int("days")
+	if param.VacuumDays <= 0 {
+		return errors.New("vacuum days must be greater than 0")
 	}
 
 	ctrl := controller.InitializeVacuumCommandController(c.Context, param, i.r.Runtime)

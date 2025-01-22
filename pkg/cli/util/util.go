@@ -1,7 +1,6 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -136,10 +135,6 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 			return fmt.Errorf("parse the environment variable AQUA_ENFORCE_REQUIRE_CHECKSUM as bool: %w", err)
 		}
 		param.EnforceRequireChecksum = requireChecksum
-	}
-	param.VacuumDays = c.Int("days")
-	if param.VacuumDays <= 0 {
-		return errors.New("vacuum days must be greater than 0")
 	}
 	return nil
 }
