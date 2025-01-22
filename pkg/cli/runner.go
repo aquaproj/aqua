@@ -20,6 +20,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/update"
 	"github.com/aquaproj/aqua/v2/pkg/cli/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
+	"github.com/aquaproj/aqua/v2/pkg/cli/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/cli/version"
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
 	"github.com/urfave/cli/v2"
@@ -110,6 +111,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 			upc.New,
 			remove.New,
 			update.New,
+			vacuum.New,
 		),
 	}
 
