@@ -1,7 +1,6 @@
 package vacuum
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -41,6 +40,13 @@ func New(r *util.Param) *cli.Command {
 				Name:  "init",
 				Usage: "Create timestamp files.",
 			},
+			&cli.IntFlag{
+				Name:    "days",
+				Aliases: []string{"d"},
+				Usage:   "Vacuum days",
+				EnvVars: []string{"AQUA_VACUUM_DAYS"},
+				Value:   60, //nolint:mnd
+			},
 		},
 	}
 }
@@ -65,10 +71,6 @@ func (i *command) action(c *cli.Context) error {
 			return err //nolint:wrapcheck
 		}
 		return nil
-	}
-
-	if param.VacuumDays == 0 {
-		return errors.New("vacuum-days is required")
 	}
 
 	ctrl := controller.InitializeVacuumCommandController(c.Context, param, i.r.Runtime)
