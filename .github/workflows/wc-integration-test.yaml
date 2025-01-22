@@ -203,6 +203,19 @@ jobs:
           git checkout -- .
         working-directory: tests/update3
 
+      - name: Test aqua install with AQUA_VACUUM_DAYS
+        env:
+          AQUA_VACUUM_DAYS: 1
+        run: aqua install
+      - name: Test aqua exec with AQUA_VACUUM_DAYS
+        env:
+          AQUA_VACUUM_DAYS: 1
+        run: cmdx -v
+      - name: Test vacuum Run command
+        env:
+          AQUA_VACUUM_DAYS: 1
+        run: aqua vacuum
+
       - run: aqua update-checksum -a
 
       - run: terraform --help
