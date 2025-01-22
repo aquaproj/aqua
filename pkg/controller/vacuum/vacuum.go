@@ -1,18 +1,20 @@
 package vacuum
 
 import (
+	"fmt"
 	"path/filepath"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 func (c *Controller) Vacuum(logE *logrus.Entry, param *config.Param) error {
 	timestamps, err := c.vacuum.FindAll(logE)
 	if err != nil {
-		return err
+		return fmt.Errorf("find timestamp files: %w", err)
 	}
 	timestampChecker := vacuum.NewTimestampChecker(time.Now(), param.VacuumDays)
 	for pkgPath, timestamp := range timestamps {
@@ -23,11 +25,13 @@ func (c *Controller) Vacuum(logE *logrus.Entry, param *config.Param) error {
 		// remove the package
 		p := filepath.Join(c.rootDir, pkgPath)
 		if err := c.fs.RemoveAll(p); err != nil {
-			return err
+			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
+				"package_path": p,
+			}))
 		}
 		// remove the timestamp file
 		if err := c.vacuum.Remove(pkgPath); err != nil {
-			return err
+			return fmt.Errorf("remove a timestamp file: %w", err)
 		}
 		logE.Info("removed the package")
 	}

@@ -120,7 +120,7 @@ func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	return "", nil
 }
 
-func (p *Package) AbsPkgPath(rootDir string, rt *runtime.Runtime) (string, error) { //nolint:cyclop
+func (p *Package) AbsPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
 	pkgPath, err := p.PkgPath(rt)
 	if err != nil {
 		return "", err

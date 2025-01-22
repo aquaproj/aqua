@@ -40,7 +40,7 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 			}
 			pkgPath, err := param.Package.PkgPath(is.runtime)
 			if err != nil {
-				return err
+				return fmt.Errorf("get a package path: %w", err)
 			}
 			if err := is.vacuum.Update(pkgPath, time.Now()); err != nil {
 				logerr.WithError(logE, err).Warn("update the last used datetime")
