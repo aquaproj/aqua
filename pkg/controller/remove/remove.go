@@ -191,20 +191,6 @@ func (c *Controller) removeCommand(ctx context.Context, logE *logrus.Entry, para
 	return nil
 }
 
-func (c *Controller) removeTimestamp(pkg *config.Package) error {
-	pkgPath, err := pkg.PkgPath(c.runtime)
-	if err != nil {
-		return fmt.Errorf("get a package path: %w", err)
-	}
-	if err := c.vacuum.Remove(pkgPath); err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return nil
-		}
-		return fmt.Errorf("remove the last used datetime: %w", err)
-	}
-	return nil
-}
-
 func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
 	var gErr error
 	logE.Info("removing a package")
