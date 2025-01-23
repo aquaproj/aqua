@@ -20,6 +20,14 @@ const (
 	baseDir        = "metadata"
 )
 
+func FormatTime(t time.Time) string {
+	return t.Format(time.RFC3339)
+}
+
+func ParseTime(s string) (time.Time, error) {
+	return time.Parse(time.RFC3339, s) //nolint:wrapcheck
+}
+
 type Client struct {
 	fs      afero.Fs
 	rootDir string
@@ -69,7 +77,7 @@ func (c *Client) update(file, dir string, timestamp time.Time) error {
 	if err := osfile.MkdirAll(c.fs, dir); err != nil {
 		return fmt.Errorf("create a package metadata directory: %w", err)
 	}
-	timestampStr := timestamp.Format(time.RFC3339)
+	timestampStr := FormatTime(timestamp)
 	if err := afero.WriteFile(c.fs, file, []byte(timestampStr+"\n"), filePermission); err != nil {
 		return fmt.Errorf("create a package timestamp file: %w", err)
 	}
@@ -90,7 +98,7 @@ func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
 		if err != nil {
 			return fmt.Errorf("read a timestamp file: %w", err)
 		}
-		t, err := time.Parse(time.RFC3339, strings.TrimSpace(string(b)))
+		t, err := ParseTime(strings.TrimSpace(string(b)))
 		if err != nil {
 			logerr.WithError(logE, err).WithField("timestamp_file", path).Warn("a timestamp file is broken, so recreating it")
 			if err := c.Update(path, time.Now()); err != nil {
