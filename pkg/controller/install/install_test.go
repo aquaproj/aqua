@@ -23,6 +23,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/sirupsen/logrus"
 )
 
@@ -103,7 +104,8 @@ packages:
 			}
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 			executor := &osexec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{})
+			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			policyFinder := policy.NewConfigFinder(fs)
 			policyReader := policy.NewReader(fs, &policy.MockValidator{}, policyFinder, policy.NewConfigReader(fs))
 			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader)

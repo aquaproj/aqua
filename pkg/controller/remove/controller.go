@@ -24,6 +24,7 @@ type Controller struct {
 	fuzzyFinder       FuzzyFinder
 	which             WhichController
 	mode              *config.RemoveMode
+	vacuum            Vacuum
 }
 
 type WhichController interface {
@@ -38,7 +39,7 @@ type FuzzyFinder interface {
 	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(param *config.Param, target *config.RemoveMode, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
+func New(param *config.Param, target *config.RemoveMode, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController, vacuum Vacuum) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		fs:                fs,
@@ -49,6 +50,7 @@ func New(param *config.Param, target *config.RemoveMode, fs afero.Fs, rt *runtim
 		fuzzyFinder:       fuzzyFinder,
 		which:             whichController,
 		mode:              target,
+		vacuum:            vacuum,
 	}
 }
 
@@ -58,4 +60,8 @@ type ConfigFinder interface {
 
 type RegistryInstaller interface {
 	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
+}
+
+type Vacuum interface {
+	Remove(pkgPath string) error
 }

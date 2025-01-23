@@ -29,6 +29,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updatechecksum"
+	cvacuum "github.com/aquaproj/aqua/v2/pkg/controller/vacuum"
+	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum/initialize"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
@@ -45,6 +47,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 
@@ -348,6 +351,10 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
+		),
 	)
 	return &install.Controller{}, nil
 }
@@ -538,6 +545,11 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
 		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
+			wire.Bind(new(cexec.Vacuum), new(*vacuum.Client)),
+		),
 	)
 	return &cexec.Controller{}, nil
 }
@@ -629,6 +641,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
 		),
 	)
 	return &updateaqua.Controller{}, nil
@@ -769,6 +785,10 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 		wire.NewSet(
 			installpackage.NewCargoPackageInstallerImpl,
 			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
 		),
 	)
 	return &cp.Controller{}, nil
@@ -1037,6 +1057,79 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
 			wire.Bind(new(which.Linker), new(*link.Linker)),
 		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(remove.Vacuum), new(*vacuum.Client)),
+		),
 	)
 	return &remove.Controller{}
+}
+
+func InitializeVacuumCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *cvacuum.Controller {
+	wire.Build(
+		cvacuum.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(cvacuum.Vacuum), new(*vacuum.Client)),
+		),
+	)
+	return &cvacuum.Controller{}
+}
+
+func InitializeVacuumInitCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) *initialize.Controller {
+	wire.Build(
+		initialize.New,
+		afero.NewOsFs,
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(initialize.Vacuum), new(*vacuum.Client)),
+		),
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(initialize.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(initialize.ConfigReader), new(*reader.ConfigReader)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(initialize.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			osexec.New,
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+	)
+	return &initialize.Controller{}
 }

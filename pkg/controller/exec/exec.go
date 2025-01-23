@@ -13,12 +13,13 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) {
+func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) { //nolint:cyclop
 	logE = logE.WithField("exe_name", exeName)
 	defer func() {
 		if gErr != nil {
@@ -62,7 +63,23 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 	if err := c.install(ctx, logE, findResult, policyCfgs, param); err != nil {
 		return err
 	}
+
+	if err := c.updateTimestamp(findResult.Package); err != nil {
+		logerr.WithError(logE, err).Warn("update the last used datetime")
+	}
+
 	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+}
+
+func (c *Controller) updateTimestamp(pkg *config.Package) error {
+	pkgPath, err := pkg.PkgPath(runtime.New())
+	if err != nil {
+		return fmt.Errorf("get a package path: %w", err)
+	}
+	if err := c.vacuum.Update(pkgPath, time.Now()); err != nil {
+		return fmt.Errorf("update the last used datetime: %w", err)
+	}
+	return nil
 }
 
 func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config, param *config.Param) error {
