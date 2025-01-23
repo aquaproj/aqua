@@ -51,22 +51,6 @@ jobs:
               - Dockerfile-prebuilt
               - .github/workflows/wc-test-docker-prebuilt.yaml
 
-  enable-automerge:
-    uses: ./.github/workflows/wc-enable-auto-merge.yaml
-    needs:
-      - status-check
-    permissions:
-      contents: write # For enable automerge
-      pull-requests: write # For enable automerge
-    # "! failure() && ! cancelled()" is required. success() returns false if dependent jobs are skipped.
-    # https://github.com/community/community/discussions/45058
-    # By default success() is used so we have to override success() by "! failure() && ! cancelled()"
-    if: |
-      ! failure() && ! cancelled() && github.event.pull_request.user.login == 'renovate[bot]' && contains(github.event.pull_request.body, ' **Automerge**: Enabled.')
-    secrets:
-      gh_app_id: ${{secrets.APP_ID}}
-      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
-
   status-check:
     uses: ./.github/workflows/wc-status-check.yaml
     permissions: {}
