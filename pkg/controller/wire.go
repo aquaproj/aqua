@@ -1057,6 +1057,10 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
 			wire.Bind(new(which.Linker), new(*link.Linker)),
 		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(remove.Vacuum), new(*vacuum.Client)),
+		),
 	)
 	return &remove.Controller{}
 }

@@ -191,6 +191,20 @@ func (c *Controller) removeCommand(ctx context.Context, logE *logrus.Entry, para
 	return nil
 }
 
+func (c *Controller) removeTimestamp(pkg *config.Package) error {
+	pkgPath, err := pkg.PkgPath(c.runtime)
+	if err != nil {
+		return fmt.Errorf("get a package path: %w", err)
+	}
+	if err := c.vacuum.Remove(pkgPath); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("remove the last used datetime: %w", err)
+	}
+	return nil
+}
+
 func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
 	var gErr error
 	logE.Info("removing a package")
@@ -218,12 +232,30 @@ func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *regi
 		if err := c.removePath(logE, rootDir, path); err != nil {
 			return err
 		}
+		if err := c.removeMetadataPath(logE, rootDir, path); err != nil {
+			return err
+		}
 	}
 	return gErr
 }
 
 func (c *Controller) removePath(logE *logrus.Entry, rootDir string, path string) error {
 	pkgPath := filepath.Join(rootDir, "pkgs", path)
+	arr, err := afero.Glob(c.fs, pkgPath)
+	if err != nil {
+		return fmt.Errorf("find directories: %w", err)
+	}
+	for _, p := range arr {
+		logE.WithField("removed_path", p).Debug("removing a directory")
+		if err := c.fs.RemoveAll(p); err != nil {
+			return fmt.Errorf("remove directories: %w", err)
+		}
+	}
+	return nil
+}
+
+func (c *Controller) removeMetadataPath(logE *logrus.Entry, rootDir string, path string) error {
+	pkgPath := filepath.Join(rootDir, "metadata", "pkgs", path)
 	arr, err := afero.Glob(c.fs, pkgPath)
 	if err != nil {
 		return fmt.Errorf("find directories: %w", err)
@@ -272,6 +304,9 @@ func (c *Controller) removeAll(rootDir string) error {
 	}
 	if err := c.fs.RemoveAll(filepath.Join(rootDir, "pkgs")); err != nil {
 		return fmt.Errorf("remove all packages: %w", err)
+	}
+	if err := c.fs.RemoveAll(filepath.Join(rootDir, "metadata")); err != nil {
+		return fmt.Errorf("remove all package metadata: %w", err)
 	}
 	return gErr
 }

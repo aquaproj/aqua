@@ -385,7 +385,8 @@ func InitializeRemoveCommandController(ctx context.Context, param *config.Param,
 	osEnv := osenv.New()
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	removeController := remove.New(param, target, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller)
+	client := vacuum.New(fs, param)
+	removeController := remove.New(param, target, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, client)
 	return removeController
 }
 
