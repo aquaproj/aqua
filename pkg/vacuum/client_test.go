@@ -13,9 +13,10 @@ import (
 	"github.com/spf13/afero"
 )
 
+const rootDir = "/home/foo/.local/share/aquaproj-aqua"
+
 func TestClient_Create(t *testing.T) { //nolint:dupl
 	t.Parallel()
-	rootDir := "/home/foo/.local/share/aquaproj-aqua"
 	data := []struct {
 		name       string
 		pkgPath    string
@@ -77,7 +78,6 @@ func TestClient_Create(t *testing.T) { //nolint:dupl
 
 func TestClient_Update(t *testing.T) { //nolint:dupl
 	t.Parallel()
-	rootDir := "/home/foo/.local/share/aquaproj-aqua"
 	data := []struct {
 		name       string
 		pkgPath    string
@@ -139,7 +139,6 @@ func TestClient_Update(t *testing.T) { //nolint:dupl
 
 func TestClient_Remove(t *testing.T) {
 	t.Parallel()
-	rootDir := "/home/foo/.local/share/aquaproj-aqua"
 	data := []struct {
 		name    string
 		pkgPath string
@@ -184,7 +183,6 @@ func TestClient_Remove(t *testing.T) {
 
 func TestClient_FindAll(t *testing.T) {
 	t.Parallel()
-	rootDir := "/home/foo/.local/share/aquaproj-aqua"
 	data := []struct {
 		name  string
 		files map[string]string
