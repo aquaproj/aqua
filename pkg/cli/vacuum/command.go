@@ -12,14 +12,32 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const description = `Perform vacuuming tasks.
+const description = `Remove unused installed packages.
 
-Enable vacuuming by setting the AQUA_VACUUM_DAYS environment variable to a value greater than 0.
-This command removes versions of packages that have not been used for the specified number of days.
-
-You can list all packages managed by the vacuum system or only expired packages.
+This command removes unused installed packages, which is useful to save storage and keep your machine clean.
 
 	$ aqua vacuum
+
+It removes installed packages which haven't been used for over the expiration days.
+The default expiration days is 60, but you can change it by the environment variable $AQUA_VACUUM_DAYS or the command line option "-days <expiration days>".
+
+e.g.
+
+	$ export AQUA_VACUUM_DAYS=90
+
+	$ aqua vacuum -d 30
+
+As of aqua v2.43.0, aqua records packages' last used date times.
+Date times are updated when packages are installed or executed.
+Packages installed by aqua v2.42.2 or older don't have records of last used date times, so aqua can't remove them.
+To solve the problem, "aqua vacuum --init" is available.
+
+	aqua vacuum --init
+
+"aqua vacuum --init" searches installed packages from aqua.yaml including $AQUA_GLOBAL_CONFIG and records the current date time as the last used date time of those packages if their last used date times aren't recorded.
+
+"aqua vacuum --init" can't record date times of install packages which are not found in aqua.yaml.
+If you want to record their date times, you need to remove them by "aqua rm" command and re-install them.
 `
 
 type command struct {
@@ -32,8 +50,7 @@ func New(r *util.Param) *cli.Command {
 	}
 	return &cli.Command{
 		Name:        "vacuum",
-		Usage:       "Operate vacuuming tasks (If AQUA_VACUUM_DAYS is set)",
-		Aliases:     []string{"v"},
+		Usage:       "Remove unused installed packages",
 		Description: description,
 		Action:      i.action,
 		Flags: []cli.Flag{
@@ -44,7 +61,7 @@ func New(r *util.Param) *cli.Command {
 			&cli.IntFlag{
 				Name:    "days",
 				Aliases: []string{"d"},
-				Usage:   "Vacuum days",
+				Usage:   "Expiration days",
 				EnvVars: []string{"AQUA_VACUUM_DAYS"},
 				Value:   60, //nolint:mnd
 			},
