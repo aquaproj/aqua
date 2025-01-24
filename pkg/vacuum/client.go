@@ -86,7 +86,7 @@ func (c *Client) update(file, dir string, timestamp time.Time) error {
 
 func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
 	timestamps := map[string]time.Time{}
-	if err := afero.Walk(c.fs, c.rootDir, func(path string, info fs.FileInfo, err error) error {
+	if err := afero.Walk(c.fs, filepath.Join(c.rootDir, "pkgs"), func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("walk directory to find timestamp files: %w", err)
 		}
