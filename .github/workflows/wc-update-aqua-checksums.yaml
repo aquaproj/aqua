@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: read
     with:
-      aqua_version: v2.42.2
+      aqua_version: v2.43.0
       prune: true
     secrets:
       gh_app_id: ${{secrets.gh_app_id}}
