@@ -190,7 +190,7 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:funlen,cyclop
+func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:cyclop
 	pkgs, failed := config.ListPackages(logE, param.Config, is.runtime, param.Registries)
 	if !param.SkipLink {
 		if failedCreateLinks := is.createLinks(logE, pkgs); failedCreateLinks {
@@ -219,16 +219,16 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 	eg.SetLimit(is.maxParallelism)
 
 	for _, pkg := range pkgs {
+		logE := logE.WithFields(logrus.Fields{
+			"package_name":    pkg.Package.Name,
+			"package_version": pkg.Package.Version,
+			"registry":        pkg.Package.Registry,
+		})
+		if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
+			logE.Debug("skip installing the package because package tags are unmatched")
+			continue
+		}
 		eg.Go(func() error {
-			logE := logE.WithFields(logrus.Fields{
-				"package_name":    pkg.Package.Name,
-				"package_version": pkg.Package.Version,
-				"registry":        pkg.Package.Registry,
-			})
-			if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
-				logE.Debug("skip installing the package because package tags are unmatched")
-				return nil
-			}
 			if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
