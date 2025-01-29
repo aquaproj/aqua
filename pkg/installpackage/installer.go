@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -23,6 +22,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -215,24 +215,11 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 		return nil
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(pkgs))
-	var flagMutex sync.Mutex
-	maxInstallChan := make(chan struct{}, is.maxParallelism)
-
-	handleFailure := func() {
-		flagMutex.Lock()
-		failed = true
-		flagMutex.Unlock()
-	}
+	eg := &errgroup.Group{}
+	eg.SetLimit(is.maxParallelism)
 
 	for _, pkg := range pkgs {
-		go func(pkg *config.Package) {
-			defer wg.Done()
-			maxInstallChan <- struct{}{}
-			defer func() {
-				<-maxInstallChan
-			}()
+		eg.Go(func() error {
 			logE := logE.WithFields(logrus.Fields{
 				"package_name":    pkg.Package.Name,
 				"package_version": pkg.Package.Version,
@@ -240,7 +227,7 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 			})
 			if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
 				logE.Debug("skip installing the package because package tags are unmatched")
-				return
+				return nil
 			}
 			if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
@@ -250,13 +237,12 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 				DisablePolicy:   param.DisablePolicy,
 			}); err != nil {
 				logerr.WithError(logE, err).Error("install the package")
-				handleFailure()
-				return
+				return err
 			}
-		}(pkg)
+			return nil
+		})
 	}
-	wg.Wait()
-	if failed {
+	if err := eg.Wait(); err != nil {
 		return errInstallFailure
 	}
 	return nil
