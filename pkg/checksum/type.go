@@ -36,7 +36,7 @@ func Open(logE *logrus.Entry, fs afero.Fs, cfgFilePath string, enabled bool) (*C
 	}
 	checksumFilePath, err := GetChecksumFilePathFromConfigFilePath(fs, cfgFilePath)
 	if err != nil {
-		return nil, nil, err //nolint:wrapcheck
+		return nil, nil, err
 	}
 	checksums := New()
 	if err := checksums.ReadFile(fs, checksumFilePath); err != nil {

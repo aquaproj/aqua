@@ -32,7 +32,7 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, param *config
 	return nil
 }
 
-func (c *Controller) create(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *config.Param) error { //nolint:cyclop
+func (c *Controller) create(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *config.Param) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound

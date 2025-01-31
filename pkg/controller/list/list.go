@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
+func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if param.Installed {
 		return c.listInstalled(logE, param)
 	}
