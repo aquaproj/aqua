@@ -6,11 +6,16 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 )
 
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
+
+func (p *Param) ChecksumEnabled(cfg *aqua.Config) bool {
+	return cfg.ChecksumEnabled(p.EnforceChecksum, p.Checksum)
+}
 
 func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 	assetName, err := p.RenderAsset(rt)

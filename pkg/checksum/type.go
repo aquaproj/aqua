@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -27,6 +28,25 @@ func New() *Checksums {
 		newM:    map[string]*Checksum{},
 		rwmutex: &sync.RWMutex{},
 	}
+}
+
+func Open(logE *logrus.Entry, fs afero.Fs, cfgFilePath string, enabled bool) (*Checksums, func(), error) {
+	if !enabled {
+		return nil, func() {}, nil
+	}
+	checksumFilePath, err := GetChecksumFilePathFromConfigFilePath(fs, cfgFilePath)
+	if err != nil {
+		return nil, nil, err
+	}
+	checksums := New()
+	if err := checksums.ReadFile(fs, checksumFilePath); err != nil {
+		return nil, nil, fmt.Errorf("read a checksum JSON: %w", err)
+	}
+	return checksums, func() {
+		if err := checksums.UpdateFile(fs, checksumFilePath); err != nil {
+			logE.WithError(err).Error("update a checksum file")
+		}
+	}, nil
 }
 
 func (c *Checksums) EnableOutput() {

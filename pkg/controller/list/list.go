@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
+func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	if param.Installed {
 		return c.listInstalled(logE, param)
 	}
@@ -24,22 +24,13 @@ func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config
 		return err //nolint:wrapcheck
 	}
 
-	var checksums *checksum.Checksums
-	if cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
-		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
-		if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
-			return fmt.Errorf("read a checksum JSON: %w", err)
-		}
-		defer func() {
-			if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
-				logE.WithError(err).Error("update a checksum file")
-			}
-		}()
+	checksums, updateChecksum, err := checksum.Open(
+		logE, c.fs, cfgFilePath,
+		param.ChecksumEnabled(cfg))
+	if err != nil {
+		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
+	defer updateChecksum()
 
 	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
 	if err != nil {
