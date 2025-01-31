@@ -54,5 +54,4 @@ func core(logE *logrus.Entry, rt *runtime.Runtime) error {
 		LogE:    logE,
 		Runtime: rt,
 	}, os.Args...)
-
 }

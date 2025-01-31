@@ -3,6 +3,7 @@ module github.com/aquaproj/aqua/v2
 go 1.23.4
 
 require (
+	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/adrg/xdg v0.5.3
 	github.com/expr-lang/expr v1.16.9
 	github.com/forPelevin/gomoji v1.2.0
