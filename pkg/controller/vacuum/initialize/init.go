@@ -43,7 +43,7 @@ func (c *Controller) create(ctx context.Context, logE *logrus.Entry, cfgFilePath
 
 	checksums, updateChecksum, err := checksum.Open(
 		logE, c.fs, cfgFilePath,
-		cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum))
+		param.ChecksumEnabled(cfg))
 	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}

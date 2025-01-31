@@ -88,7 +88,7 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 
 	checksums, updateChecksum, err := checksum.Open(
 		logE, c.fs, cfgFilePath,
-		cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum))
+		param.ChecksumEnabled(cfg))
 	if err != nil {
 		return nil, fmt.Errorf("read a checksum JSON: %w", err)
 	}
