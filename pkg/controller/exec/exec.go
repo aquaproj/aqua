@@ -83,22 +83,13 @@ func (c *Controller) updateTimestamp(pkg *config.Package) error {
 }
 
 func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config, param *config.Param) error {
-	var checksums *checksum.Checksums
-	if findResult.Config.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
-		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, findResult.ConfigFilePath)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
-		if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
-			return fmt.Errorf("read a checksum JSON: %w", err)
-		}
-		defer func() {
-			if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
-				logE.WithError(err).Error("update a checksum file")
-			}
-		}()
+	checksums, updateChecksum, err := checksum.Open(
+		logE, c.fs, findResult.ConfigFilePath,
+		findResult.Config.ChecksumEnabled(param.EnforceChecksum, param.Checksum))
+	if err != nil {
+		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
+	defer updateChecksum()
 
 	if err := c.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,

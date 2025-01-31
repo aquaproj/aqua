@@ -79,22 +79,13 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
-	var checksums *checksum.Checksums
-	if cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum) {
-		checksums = checksum.New()
-		checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
-		if err != nil {
-			return err //nolint:wrapcheck
-		}
-		if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
-			return fmt.Errorf("read a checksum JSON: %w", err)
-		}
-		defer func() {
-			if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
-				logE.WithError(err).Error("update a checksum file")
-			}
-		}()
+	checksums, updateChecksum, err := checksum.Open(
+		logE, c.fs, cfgFilePath,
+		cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum))
+	if err != nil {
+		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
+	defer updateChecksum()
 
 	// Update packages before registries because if registries are updated before packages the function needs to install new registries then checksums of new registrires aren't added to aqua-checksums.json.
 
