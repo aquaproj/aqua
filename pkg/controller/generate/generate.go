@@ -73,8 +73,7 @@ func (c *Controller) getConfigFile(param *config.Param) (string, error) {
 
 func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
 	checksums, updateChecksum, err := checksum.Open(
-		logE, c.fs, cfgFilePath,
-		cfg.ChecksumEnabled(param.EnforceChecksum, param.Checksum))
+		logE, c.fs, cfgFilePath, param.ChecksumEnabled(cfg))
 	if err != nil {
 		return nil, fmt.Errorf("read a checksum JSON: %w", err)
 	}
