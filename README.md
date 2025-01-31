@@ -45,3 +45,4 @@ Declarative CLI Version Manager written in Go.
 [MIT](LICENSE)
 
 About the license of logo, please see [here](logo/README.md#license).
+
