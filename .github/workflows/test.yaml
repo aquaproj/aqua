@@ -10,10 +10,8 @@ jobs:
     # Get changed files to filter jobs
     timeout-minutes: 30
     outputs:
-      update-aqua-checksums: ${{steps.changes.outputs.update-aqua-checksums}}
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
       ghalint: ${{steps.changes.outputs.ghalint}}
-      go-mod-tidy: ${{steps.changes.outputs.go-mod-tidy}}
       test-docker: ${{steps.changes.outputs.test-docker}}
       test-docker-prebuilt: ${{steps.changes.outputs.test-docker-prebuilt}}
     runs-on: ubuntu-latest
@@ -23,12 +21,6 @@ jobs:
         id: changes
         with:
           filters: |
-            update-aqua-checksums:
-              - aqua/aqua.yaml
-              - aqua/imports/*.yaml
-              - aqua/aqua-checksums.json
-              - .github/workflows/test.yaml
-              - .github/workflows/wc-update-aqua-checksums.yaml
             renovate-config-validator:
               - renovate.json5
               - .github/workflows/test.yaml
@@ -38,12 +30,6 @@ jobs:
               - aqua/aqua.yaml
               - aqua/imports/ghalint.yaml
               - ghalint.yaml
-            go-mod-tidy:
-              - go.mod
-              - go.sum
-              - "**.go"
-              - .github/workflows/test.yaml
-              - .github/workflows/wc-go-mod-tidy.yaml
             test-docker:
               - Dockerfile
               - .github/workflows/wc-test.yaml
@@ -57,12 +43,10 @@ jobs:
     if: failure()
     needs:
       - renovate-config-validator
-      - update-aqua-checksums
       - ghalint
       - test
       - test-docker-prebuilt
       - integration-test
-      - go-mod-tidy
 
   renovate-config-validator:
     uses: ./.github/workflows/wc-renovate-config-validator.yaml
@@ -70,16 +54,6 @@ jobs:
     if: needs.path-filter.outputs.renovate-config-validator == 'true'
     permissions:
       contents: read
-
-  update-aqua-checksums:
-    needs: path-filter
-    if: needs.path-filter.outputs.update-aqua-checksums == 'true'
-    uses: ./.github/workflows/wc-update-aqua-checksums.yaml
-    permissions:
-      contents: read
-    secrets:
-      gh_app_id: ${{secrets.APP_ID}}
-      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
 
   ghalint:
     needs: path-filter
@@ -99,16 +73,6 @@ jobs:
     needs: path-filter
     if: needs.path-filter.outputs.test-docker-prebuilt == 'true'
     permissions: {}
-
-  go-mod-tidy:
-    uses: ./.github/workflows/wc-go-mod-tidy.yaml
-    needs: path-filter
-    if: needs.path-filter.outputs.go-mod-tidy == 'true'
-    secrets:
-      gh_app_id: ${{secrets.APP_ID}}
-      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
-    permissions:
-      contents: read
 
   integration-test:
     uses: ./.github/workflows/wc-integration-test.yaml
