@@ -23,6 +23,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/cli/version"
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
+	"github.com/suzuki-shunsuke/urfave-cli-help-all/helpall"
 	"github.com/urfave/cli/v2"
 )
 
@@ -88,27 +89,28 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 		EnableBashCompletion: true,
 		Commands: commands(
 			param,
-			info.New,
 			initcmd.New,
+			install.New,
+			generate.New,
+			updateaqua.New,
+			upc.New,
+			update.New,
+			completion.New,
+			which.New,
+			info.New,
+			remove.New,
+			vacuum.New,
+			cp.New,
 			cpolicy.New,
 			cpolicy.NewInitPolicy,
-			install.New,
-			updateaqua.New,
-			generate.New,
-			which.New,
 			exec.New,
 			list.New,
 			genr.New,
-			completion.New,
 			version.New,
-			cp.New,
 			root.New,
-			upc.New,
-			remove.New,
-			update.New,
-			vacuum.New,
 		),
 	}
+	app.Commands = append(app.Commands, helpall.New(nil))
 
 	return app.RunContext(ctx, args) //nolint:wrapcheck
 }
