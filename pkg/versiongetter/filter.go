@@ -10,11 +10,16 @@ type Filter struct {
 	Prefix     string
 	Filter     *vm.Program
 	Constraint string
+	NoAsset    bool
 }
 
 func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 	filters := make([]*Filter, 0, 1+len(pkgInfo.VersionOverrides))
-	topFilter := &Filter{}
+	topFilter := &Filter{
+		NoAsset:    pkgInfo.NoAsset || pkgInfo.ErrorMessage != "",
+		Prefix:     pkgInfo.VersionPrefix,
+		Constraint: pkgInfo.VersionConstraints,
+	}
 	if pkgInfo.VersionFilter != "" {
 		f, err := expr.CompileVersionFilter(pkgInfo.VersionFilter)
 		if err != nil {
@@ -22,17 +27,14 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 		}
 		topFilter.Filter = f
 	}
-	topFilter.Constraint = pkgInfo.VersionConstraints
-	if pkgInfo.VersionPrefix != "" {
-		topFilter.Prefix = pkgInfo.VersionPrefix
-	}
 	filters = append(filters, topFilter)
 
 	for _, vo := range pkgInfo.VersionOverrides {
 		flt := &Filter{
 			Prefix:     topFilter.Prefix,
 			Filter:     topFilter.Filter,
-			Constraint: topFilter.Constraint,
+			Constraint: vo.VersionConstraints,
+			NoAsset:    topFilter.NoAsset,
 		}
 		if vo.VersionFilter != nil {
 			f, err := expr.CompileVersionFilter(*vo.VersionFilter)
@@ -41,9 +43,14 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 			}
 			flt.Filter = f
 		}
-		flt.Constraint = vo.VersionConstraints
 		if vo.VersionPrefix != nil {
 			flt.Prefix = *vo.VersionPrefix
+		}
+		if vo.NoAsset != nil {
+			flt.NoAsset = *vo.NoAsset
+		}
+		if vo.ErrorMessage != nil {
+			flt.NoAsset = *vo.ErrorMessage != ""
 		}
 		filters = append(filters, flt)
 	}
