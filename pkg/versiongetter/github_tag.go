@@ -107,7 +107,10 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 func filterTag(tag *github.RepositoryTag, filters []*Filter) bool {
 	tagName := tag.GetName()
 	for _, filter := range filters {
-		if filterTagByFilter(tagName, filter) {
+		if matchTagByFilter(tagName, filter) {
+			if filter.NoAsset {
+				return false
+			}
 			return true
 		}
 	}

@@ -172,14 +172,17 @@ func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
 	tagName := release.GetTagName()
 
 	for _, filter := range filters {
-		if filterTagByFilter(tagName, filter) {
+		if matchTagByFilter(tagName, filter) {
+			if filter.NoAsset {
+				return false
+			}
 			return true
 		}
 	}
 	return false
 }
 
-func filterTagByFilter(tagName string, filter *Filter) bool {
+func matchTagByFilter(tagName string, filter *Filter) bool {
 	sv := tagName
 	if filter.Prefix != "" {
 		if !strings.HasPrefix(tagName, filter.Prefix) {
