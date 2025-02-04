@@ -108,10 +108,7 @@ func filterTag(tag *github.RepositoryTag, filters []*Filter) bool {
 	tagName := tag.GetName()
 	for _, filter := range filters {
 		if matchTagByFilter(tagName, filter) {
-			if filter.NoAsset {
-				return false
-			}
-			return true
+			return !filter.NoAsset
 		}
 	}
 	return false

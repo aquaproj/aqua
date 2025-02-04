@@ -173,10 +173,7 @@ func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
 
 	for _, filter := range filters {
 		if matchTagByFilter(tagName, filter) {
-			if filter.NoAsset {
-				return false
-			}
-			return true
+			return !filter.NoAsset
 		}
 	}
 	return false
