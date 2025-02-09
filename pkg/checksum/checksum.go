@@ -72,7 +72,7 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			return nil
 		}
 	}
-	if strings.Contains(s, "sha512") {
+	if strings.Contains(s, "sha512") || strings.Contains(s, "shasums512") {
 		return &registry.Checksum{
 			Type:      "github_release",
 			Algorithm: "sha512",
@@ -86,14 +86,14 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			Asset:     convertChecksumFileName(filename, version),
 		}
 	}
-	if strings.Contains(s, "sha1") {
+	if strings.Contains(s, "sha1") || strings.Contains(s, "shasums1") {
 		return &registry.Checksum{
 			Type:      "github_release",
 			Algorithm: "sha1",
 			Asset:     convertChecksumFileName(filename, version),
 		}
 	}
-	if strings.Contains(s, "sha256") || strings.Contains(s, "checksum") {
+	if strings.Contains(s, "sha256") || strings.Contains(s, "shasums") || strings.Contains(s, "checksum") {
 		return &registry.Checksum{
 			Type:      "github_release",
 			Algorithm: "sha256",
