@@ -7,6 +7,6 @@ checksum:
   require_checksum: true
 registries:
   - type: standard
-    ref: v4.310.0 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.311.0 # renovate: depName=aquaproj/aqua-registry
 packages:
   - import: imports/*.yaml
