@@ -81,6 +81,7 @@ type Config struct {
 	Packages   []*Package `validate:"dive" json:"packages"`
 	Registries Registries `validate:"dive" json:"registries"`
 	Checksum   *Checksum  `json:"checksum,omitempty"`
+	ImportDir  string     `json:"import_dir,omitempty" yaml:"import_dir,omitempty"`
 }
 
 type Registries map[string]*Registry //nolint:recvcheck

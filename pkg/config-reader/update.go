@@ -79,3 +79,24 @@ func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Conf
 	cfg.Packages = pkgs
 	return cfgs, nil
 }
+
+func (r *ConfigReader) readImportToUpdate(configFilePath, importPath string, cfg *aqua.Config, cfgs map[string]*aqua.Config) (map[string]*aqua.Config, error) { //nolint:cyclop
+	p := filepath.Join(filepath.Dir(configFilePath), importPath)
+	filePaths, err := afero.Glob(r.fs, p)
+	if err != nil {
+		return nil, fmt.Errorf("read files with glob pattern (%s): %w", p, err)
+	}
+	sort.Strings(filePaths)
+	for _, filePath := range filePaths {
+		subCfg := &aqua.Config{}
+		subCfgs, err := r.ReadToUpdate(filePath, subCfg)
+		if err != nil {
+			return nil, err
+		}
+		subCfg.Registries = cfg.Registries
+		cfgs[filePath] = subCfg
+		for k, subCfg := range subCfgs {
+			cfgs[k] = subCfg
+		}
+	}
+}

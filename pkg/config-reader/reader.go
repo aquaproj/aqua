@@ -86,6 +86,24 @@ func (r *ConfigReader) readPackages(logE *logrus.Entry, configFilePath string, c
 		pkgs = append(pkgs, subPkgs...)
 	}
 	cfg.Packages = pkgs
+	if cfg.ImportDir != "" {
+		cfg.Packages = append(cfg.Packages, r.readImportDir(logE, configFilePath, cfg)...)
+	}
+}
+
+func (r *ConfigReader) readImportDir(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) []*aqua.Package {
+	if cfg.ImportDir == "" {
+		return nil
+	}
+	pkgs1, err := r.importFiles(logE, configFilePath, filepath.Join(cfg.ImportDir, "*.yml"))
+	if err != nil {
+		logerr.WithError(logE, err).Error("read import files")
+	}
+	pkgs2, err := r.importFiles(logE, configFilePath, filepath.Join(cfg.ImportDir, "*.yaml"))
+	if err != nil {
+		logerr.WithError(logE, err).Error("read import files")
+	}
+	return append(pkgs1, pkgs2...)
 }
 
 func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pkg *aqua.Package) ([]*aqua.Package, error) {
@@ -116,7 +134,11 @@ func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pk
 	}
 	// import
 	logE = logE.WithField("import", pkg.Import)
-	p := filepath.Join(filepath.Dir(configFilePath), pkg.Import)
+	return r.importFiles(logE, configFilePath, pkg.Import)
+}
+
+func (r *ConfigReader) importFiles(logE *logrus.Entry, configFilePath string, importGlob string) ([]*aqua.Package, error) {
+	p := filepath.Join(filepath.Dir(configFilePath), importGlob)
 	filePaths, err := afero.Glob(r.fs, p)
 	if err != nil {
 		return nil, fmt.Errorf("find files with a glob pattern: %w", err)
