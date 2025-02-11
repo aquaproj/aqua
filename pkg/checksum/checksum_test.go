@@ -55,7 +55,8 @@ func TestCalculator_Calculate(t *testing.T) {
 	}
 }
 
-func TestGetChecksumConfigFromFilename(t *testing.T) {
+func TestGetChecksumConfigFromFilename(t *testing.T) { //nolint:funlen
+	t.Parallel()
 	tests := []struct {
 		filename string
 		version  string
@@ -151,6 +152,7 @@ func TestGetChecksumConfigFromFilename(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
+			t.Parallel()
 			got := checksum.GetChecksumConfigFromFilename(tt.filename, tt.version)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("wanted %v, got %v", tt.want, got)
