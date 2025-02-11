@@ -50,6 +50,9 @@
         },
         "checksum": {
           "$ref": "#/$defs/Checksum"
+        },
+        "import_dir": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
