@@ -43,7 +43,7 @@ func (r *ConfigReader) ReadToUpdate(configFilePath string, cfg *aqua.Config) (ma
 	return cfgs, nil
 }
 
-func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) { //nolint:cyclop
+func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
 	cfgs := map[string]*aqua.Config{}
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
