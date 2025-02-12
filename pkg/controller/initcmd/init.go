@@ -3,8 +3,10 @@ package initcmd
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -55,21 +57,39 @@ func New(gh RepositoriesService, fs afero.Fs) *Controller {
 
 type Param struct {
 	ImportDir string
+	IsDir     bool
+}
+
+func (c *Controller) cfgFilePath(cfgFilePath string, param *Param) string {
+	if cfgFilePath != "" {
+		return cfgFilePath
+	}
+	if !param.IsDir {
+		return "aqua.yaml"
+	}
+	return filepath.Join("aqua", "aqua.yaml")
 }
 
 func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *Param) error {
-	if cfgFilePath == "" {
-		cfgFilePath = "aqua.yaml"
-	}
-	if _, err := c.fs.Stat(cfgFilePath); err == nil {
-		// configuration file already exists, then do nothing.
-		logE.WithFields(logrus.Fields{
-			"configuration_file_path": cfgFilePath,
-		}).Info("configuration file already exists")
-		return nil
+	cfgFilePath = c.cfgFilePath(cfgFilePath, param)
+
+	for _, name := range append(finder.DuplicateFilePaths(cfgFilePath), cfgFilePath) {
+		if _, err := c.fs.Stat(name); err == nil {
+			// configuration file already exists, then do nothing.
+			logE.WithFields(logrus.Fields{
+				"configuration_file_path": name,
+			}).Info("configuration file already exists")
+			return nil
+		}
 	}
 
-	registryVersion := "v4.311.0" // renovate: depName=aquaproj/aqua-registry
+	if param.IsDir {
+		if err := osfile.MkdirAll(c.fs, "aqua"); err != nil {
+			return err //nolint:wrapcheck
+		}
+	}
+
+	registryVersion := "v4.310.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{

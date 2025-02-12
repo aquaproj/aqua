@@ -3,6 +3,7 @@ package finder
 import (
 	"errors"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
@@ -42,7 +43,7 @@ func ParseGlobalConfigFilePaths(pwd, env string) []string {
 	return paths
 }
 
-func configFileNames() []string {
+func ConfigFileNames() []string {
 	return []string{
 		"aqua.yaml",
 		"aqua.yml",
@@ -55,11 +56,38 @@ func configFileNames() []string {
 	}
 }
 
+func DuplicateFilePaths(filePath string) []string {
+	filePaths := ConfigFileNames()
+	fileNames := map[string]struct{}{}
+	for _, p := range filePaths {
+		fileNames[filepath.Base(p)] = struct{}{}
+	}
+	fileName := filepath.Base(filePath)
+	if _, ok := fileNames[fileName]; !ok {
+		return nil
+	}
+	dir := filepath.Dir(filePath)
+	parentDir := filepath.Base(dir)
+	paths := []string{}
+	if (parentDir == "aqua" || parentDir == ".aqua") && !strings.HasPrefix(fileName, ".") {
+		// e.g. aqua/aqua.yaml
+		ddir := filepath.Dir(dir)
+		for _, p := range filePaths {
+			paths = append(paths, filepath.Join(ddir, p))
+		}
+		return paths
+	}
+	for _, p := range filePaths {
+		paths = append(paths, filepath.Join(dir, p))
+	}
+	return paths
+}
+
 func (f *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error) {
 	if configFilePath != "" {
 		return osfile.Abs(wd, configFilePath), nil
 	}
-	configFilePath = findconfig.Find(wd, f.exist, configFileNames()...)
+	configFilePath = findconfig.Find(wd, f.exist, ConfigFileNames()...)
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
@@ -74,7 +102,7 @@ func (f *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...
 
 func (f *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
-		return findconfig.Finds(wd, f.exist, configFileNames()...)
+		return findconfig.Finds(wd, f.exist, ConfigFileNames()...)
 	}
 	return []string{osfile.Abs(wd, configFilePath)}
 }

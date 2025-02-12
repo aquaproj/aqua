@@ -29,6 +29,7 @@ $ aqua init # create "aqua.yaml"
 $ aqua init foo.yaml # create foo.yaml
 $ aqua init -u # Replace "packages:" with "import_dir: imports"
 $ aqua init -i <directory path> # Replace "packages:" with "import_dir: <directory path>"
+$ aqua init -d # Create a directory "aqua" and create "aqua/aqua.yaml"
 `,
 		Action: ic.action,
 		Flags: []cli.Flag{
@@ -41,6 +42,11 @@ $ aqua init -i <directory path> # Replace "packages:" with "import_dir: <directo
 				Name:    "import-dir",
 				Aliases: []string{"i"},
 				Usage:   "import_dir",
+			},
+			&cli.BoolFlag{
+				Name:    "create-dir",
+				Aliases: []string{"d"},
+				Usage:   "Create a directory named aqua and create aqua.yaml in it",
 			},
 		},
 	}
@@ -58,8 +64,10 @@ func (ic *initCommand) action(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(c.Context, param)
-	cParam := &initcmd.Param{}
-	cParam.ImportDir = c.String("import-dir")
+	cParam := &initcmd.Param{
+		IsDir:     c.Bool("create-dir"),
+		ImportDir: c.String("import-dir"),
+	}
 	if cParam.ImportDir == "" && c.Bool("use-import-dir") {
 		cParam.ImportDir = "imports"
 	}
