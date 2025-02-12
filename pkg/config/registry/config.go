@@ -12,7 +12,7 @@ type FormatOverride struct {
 }
 
 type File struct {
-	Name string `validate:"required" json:"name,omitempty" yaml:",omitempty"`
+	Name string `json:"name,omitempty" yaml:",omitempty"`
 	Src  string `json:"src,omitempty" yaml:",omitempty"`
 	Dir  string `json:"dir,omitempty" yaml:",omitempty"`
 	// Link is the relative path from Src to the link
