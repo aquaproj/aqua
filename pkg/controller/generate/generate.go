@@ -78,13 +78,15 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 		if dest == "" && param.Insert {
 			dest = filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir, cmdName+".yaml")
 		}
-		if err := c.outputter.Output(&output.Param{ //nolint:wrapcheck
+		if err := c.outputter.Output(&output.Param{
 			Insert:         param.Insert,
 			Dest:           dest,
 			List:           []*aqua.Package{pkg.Package},
 			ConfigFilePath: cfgFilePath,
 		}); err != nil {
-			return err
+			return fmt.Errorf("output a package: %w", logerr.WithFields(err, logrus.Fields{
+				"package_name": pkg.Package.Name,
+			}))
 		}
 	}
 	return nil
