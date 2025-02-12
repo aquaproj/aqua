@@ -73,7 +73,7 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	for _, pkg := range list {
 		cmdName := pkg.PackageInfo.GetFiles()[0].Name
 		dest := param.Dest
-		if dest == "" {
+		if dest == "" && param.Insert {
 			dest = filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir, cmdName+".yaml")
 		}
 		if err := c.outputter.Output(&output.Param{ //nolint:wrapcheck
