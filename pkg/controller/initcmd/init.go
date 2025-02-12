@@ -60,21 +60,18 @@ type Param struct {
 	IsDir     bool
 }
 
-func (c *Controller) cfgFilePath(cfgFilePath string, param *Param) (string, error) {
+func (c *Controller) cfgFilePath(cfgFilePath string, param *Param) string {
 	if cfgFilePath != "" {
-		return cfgFilePath, nil
+		return cfgFilePath
 	}
 	if !param.IsDir {
-		return "aqua.yaml", nil
+		return "aqua.yaml"
 	}
-	return filepath.Join("aqua", "aqua.yaml"), nil
+	return filepath.Join("aqua", "aqua.yaml")
 }
 
 func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *Param) error {
-	cfgFilePath, err := c.cfgFilePath(cfgFilePath, param)
-	if err != nil {
-		return err
-	}
+	cfgFilePath = c.cfgFilePath(cfgFilePath, param)
 
 	for _, name := range append(finder.DuplicateFilePaths(cfgFilePath), cfgFilePath) {
 		if _, err := c.fs.Stat(name); err == nil {
