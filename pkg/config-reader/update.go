@@ -43,7 +43,7 @@ func (r *ConfigReader) ReadToUpdate(configFilePath string, cfg *aqua.Config) (ma
 	return cfgs, nil
 }
 
-func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) { //nolint:cyclop
+func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
 	cfgs := map[string]*aqua.Config{}
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
@@ -51,31 +51,44 @@ func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Conf
 			continue
 		}
 		if pkg.VersionExpr != "" || pkg.GoVersionFile != "" || pkg.Pin {
+			// Exclude them from the update targets
 			continue
 		}
 		if pkg.Import == "" {
 			pkgs = append(pkgs, pkg)
 			continue
 		}
-		p := filepath.Join(filepath.Dir(configFilePath), pkg.Import)
-		filePaths, err := afero.Glob(r.fs, p)
-		if err != nil {
-			return nil, fmt.Errorf("read files with glob pattern (%s): %w", p, err)
+		if err := r.readImportToUpdate(configFilePath, pkg.Import, cfg, cfgs); err != nil {
+			return nil, err
 		}
-		sort.Strings(filePaths)
-		for _, filePath := range filePaths {
-			subCfg := &aqua.Config{}
-			subCfgs, err := r.ReadToUpdate(filePath, subCfg)
-			if err != nil {
-				return nil, err
-			}
-			subCfg.Registries = cfg.Registries
-			cfgs[filePath] = subCfg
-			for k, subCfg := range subCfgs {
-				cfgs[k] = subCfg
-			}
+	}
+	if cfg.ImportDir != "" {
+		if err := r.readImportToUpdate(configFilePath, cfg.ImportDir, cfg, cfgs); err != nil {
+			return nil, err
 		}
 	}
 	cfg.Packages = pkgs
 	return cfgs, nil
+}
+
+func (r *ConfigReader) readImportToUpdate(configFilePath, importPath string, cfg *aqua.Config, cfgs map[string]*aqua.Config) error {
+	p := filepath.Join(filepath.Dir(configFilePath), importPath)
+	filePaths, err := afero.Glob(r.fs, p)
+	if err != nil {
+		return fmt.Errorf("read files with glob pattern (%s): %w", p, err)
+	}
+	sort.Strings(filePaths)
+	for _, filePath := range filePaths {
+		subCfg := &aqua.Config{}
+		subCfgs, err := r.ReadToUpdate(filePath, subCfg)
+		if err != nil {
+			return err
+		}
+		subCfg.Registries = cfg.Registries
+		cfgs[filePath] = subCfg
+		for k, subCfg := range subCfgs {
+			cfgs[k] = subCfg
+		}
+	}
+	return nil
 }

@@ -161,6 +161,25 @@ jobs:
         run: aqua cp --exclude-tags test -t foo
         working-directory: tests/tag
 
+      - name: Test import_dir (aqua init -u)
+        run: aqua init -u
+        working-directory: tests/import_dir
+      - name: Test import_dir
+        run: aqua g cli/cli
+        working-directory: tests/import_dir
+      - name: Test import_dir
+        run: aqua g -i cli/cli
+        working-directory: tests/import_dir
+      - name: Check imports/gh.yaml
+        run: cat imports/gh.yaml
+        working-directory: tests/import_dir
+      - name: Test import_dir (aqua up)
+        run: aqua up gh@v2.65.0
+        working-directory: tests/import_dir
+      - name: Test import_dir version
+        run: cat imports/gh.yaml
+        working-directory: tests/import_dir
+
       - name: update only registrires
         run: |
           aqua update -r

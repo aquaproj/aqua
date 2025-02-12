@@ -50,12 +50,14 @@
         },
         "checksum": {
           "$ref": "#/$defs/Checksum"
+        },
+        "import_dir": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "packages",
         "registries"
       ]
     },

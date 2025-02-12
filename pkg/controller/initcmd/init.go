@@ -26,6 +26,21 @@ registries:
 packages:
 `
 
+const importDirConfigTemplate = `---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+# checksum:
+#   enabled: true
+#   require_checksum: true
+#   supported_envs:
+#   - all
+registries:
+- type: standard
+  ref: %%STANDARD_REGISTRY_VERSION%%  # renovate: depName=aquaproj/aqua-registry
+import_dir: %%IMPORT_DIR%%
+`
+
 type Controller struct {
 	github RepositoriesService
 	fs     afero.Fs
@@ -38,7 +53,11 @@ func New(gh RepositoriesService, fs afero.Fs) *Controller {
 	}
 }
 
-func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string) error {
+type Param struct {
+	ImportDir string
+}
+
+func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *Param) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua.yaml"
 	}
@@ -67,7 +86,14 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 			registryVersion = release.GetTagName()
 		}
 	}
-	cfgStr := strings.Replace(configTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1)
+	var cfgStr string
+	if param.ImportDir == "" {
+		cfgStr = strings.Replace(configTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1)
+	} else {
+		cfgStr = strings.Replace(
+			strings.Replace(importDirConfigTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1),
+			"%%IMPORT_DIR%%", param.ImportDir, 1)
+	}
 	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(cfgStr), osfile.FilePermission); err != nil {
 		return fmt.Errorf("write a configuration file: %w", logerr.WithFields(err, logrus.Fields{
 			"configuration_file_path": cfgFilePath,

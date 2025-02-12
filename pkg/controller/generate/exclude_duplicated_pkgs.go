@@ -3,53 +3,54 @@ package generate
 import (
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/sirupsen/logrus"
 )
 
-func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*aqua.Package) []*aqua.Package {
-	ret := make([]*aqua.Package, 0, len(pkgs))
-	m := make(map[string]*aqua.Package, len(cfg.Packages))
+func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*config.Package) []*config.Package {
+	ret := make([]*config.Package, 0, len(pkgs))
+	m := make(map[string]struct{}, len(cfg.Packages))
 	for _, pkg := range cfg.Packages {
-		m[pkg.Registry+","+pkg.Name+"@"+pkg.Version] = pkg
-		m[pkg.Registry+","+pkg.Name] = pkg
+		m[pkg.Registry+","+pkg.Name+"@"+pkg.Version] = struct{}{}
+		m[pkg.Registry+","+pkg.Name] = struct{}{}
 	}
 	for _, pkg := range pkgs {
 		var keyV string
 		var key string
 		registry := registryStandard
-		if pkg.Registry != "" {
-			registry = pkg.Registry
+		if pkg.Package.Registry != "" {
+			registry = pkg.Package.Registry
 		}
-		if pkg.Version == "" {
-			keyV = registry + "," + pkg.Name
-			if pkgName, _, found := strings.Cut(pkg.Name, "@"); found {
+		if pkg.Package.Version == "" {
+			keyV = registry + "," + pkg.Package.Name
+			if pkgName, _, found := strings.Cut(pkg.Package.Name, "@"); found {
 				key = registry + "," + pkgName
 			} else {
 				key = keyV
 			}
 		} else {
-			keyV = registry + "," + pkg.Name + "@" + pkg.Version
-			key = registry + "," + pkg.Name
+			keyV = registry + "," + pkg.Package.Name + "@" + pkg.Package.Version
+			key = registry + "," + pkg.Package.Name
 		}
 		if _, ok := m[keyV]; ok {
 			logE.WithFields(logrus.Fields{
-				"package_name":     pkg.Name,
-				"package_version":  pkg.Version,
+				"package_name":     pkg.Package.Name,
+				"package_version":  pkg.Package.Version,
 				"package_registry": registry,
 			}).Warn("skip adding a duplicate package")
 			continue
 		}
-		m[keyV] = pkg
+		m[keyV] = struct{}{}
 		ret = append(ret, pkg)
 		if _, ok := m[key]; ok {
 			logE.WithFields(logrus.Fields{
-				"package_name":     pkg.Name,
+				"package_name":     pkg.Package.Name,
 				"package_registry": registry,
 			}).Warn("same package already exists")
 			continue
 		}
-		m[key] = pkg
+		m[key] = struct{}{}
 	}
 	return ret
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -12,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -19,7 +21,7 @@ import (
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
+func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error { //nolint:cyclop
 	// Find and read a configuration file (aqua.yaml).
 	// Install registries
 	// List outputted packages
@@ -53,12 +55,41 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 		return nil
 	}
 
-	return c.outputter.Output(&output.Param{ //nolint:wrapcheck
-		Insert:         param.Insert,
-		Dest:           param.Dest,
-		List:           list,
-		ConfigFilePath: cfgFilePath,
-	})
+	if cfg.ImportDir == "" {
+		pkgs := make([]*aqua.Package, len(list))
+		for i, pkg := range list {
+			pkgs[i] = pkg.Package
+		}
+		return c.outputter.Output(&output.Param{ //nolint:wrapcheck
+			Insert:         param.Insert,
+			Dest:           param.Dest,
+			List:           pkgs,
+			ConfigFilePath: cfgFilePath,
+		})
+	}
+	if param.Insert {
+		if err := osfile.MkdirAll(c.fs, filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
+			return fmt.Errorf("create a directory specified by import_dir: %w", err)
+		}
+	}
+	for _, pkg := range list {
+		cmdName := pkg.PackageInfo.GetFiles()[0].Name
+		dest := param.Dest
+		if dest == "" && param.Insert {
+			dest = filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir, cmdName+".yaml")
+		}
+		if err := c.outputter.Output(&output.Param{
+			Insert:         param.Insert,
+			Dest:           dest,
+			List:           []*aqua.Package{pkg.Package},
+			ConfigFilePath: cfgFilePath,
+		}); err != nil {
+			return fmt.Errorf("output a package: %w", logerr.WithFields(err, logrus.Fields{
+				"package_name": pkg.Package.Name,
+			}))
+		}
+	}
+	return nil
 }
 
 func (c *Controller) getConfigFile(param *config.Param) (string, error) {
@@ -71,7 +102,7 @@ func (c *Controller) getConfigFile(param *config.Param) (string, error) {
 	return param.GlobalConfigFilePaths[0], nil
 }
 
-func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*aqua.Package, error) {
+func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*config.Package, error) {
 	checksums, updateChecksum, err := checksum.Open(
 		logE, c.fs, cfgFilePath, param.ChecksumEnabled(cfg))
 	if err != nil {
@@ -91,7 +122,7 @@ func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *co
 	return c.listPkgsWithFinder(ctx, logE, param, registryContents)
 }
 
-func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*aqua.Package, error) {
+func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*config.Package, error) {
 	// maps the package and the registry
 	var items []*fuzzyfinder.Item
 	var pkgs []*fuzzyfinder.Package
@@ -117,7 +148,7 @@ func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry,
 		}
 		return nil, fmt.Errorf("find the package: %w", err)
 	}
-	arr := make([]*aqua.Package, len(idxes))
+	arr := make([]*config.Package, len(idxes))
 	for i, idx := range idxes {
 		arr[i] = c.getOutputtedPkg(ctx, logE, param, pkgs[idx])
 	}
@@ -155,11 +186,11 @@ func getGeneratePkg(s string) string {
 	return s
 }
 
-func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*aqua.Package, error) {
+func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config, pkgNames ...string) ([]*config.Package, error) {
 	m := map[string]*fuzzyfinder.Package{}
 	c.setPkgMap(logE, registryContents, m)
 
-	outputPkgs := []*aqua.Package{}
+	outputPkgs := []*config.Package{}
 	for _, pkgName := range pkgNames {
 		pkgName = getGeneratePkg(pkgName)
 		key, version, _ := strings.Cut(pkgName, "@")
@@ -182,31 +213,34 @@ func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Ent
 	return outputPkgs, nil
 }
 
-func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) *aqua.Package {
-	outputPkg := &aqua.Package{
-		Name:     pkg.PackageInfo.GetName(),
-		Registry: pkg.RegistryName,
-		Version:  pkg.Version,
+func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, param *config.Param, pkg *fuzzyfinder.Package) *config.Package {
+	outputPkg := &config.Package{
+		Package: &aqua.Package{
+			Name:     pkg.PackageInfo.GetName(),
+			Registry: pkg.RegistryName,
+			Version:  pkg.Version,
+		},
+		PackageInfo: pkg.PackageInfo,
 	}
 	if param.Detail {
-		outputPkg.Link = pkg.PackageInfo.GetLink()
-		outputPkg.Description = pkg.PackageInfo.Description
+		outputPkg.Package.Link = pkg.PackageInfo.GetLink()
+		outputPkg.Package.Description = pkg.PackageInfo.Description
 	}
-	if outputPkg.Registry == registryStandard {
-		outputPkg.Registry = ""
+	if outputPkg.Package.Registry == registryStandard {
+		outputPkg.Package.Registry = ""
 	}
-	if outputPkg.Version == "" {
+	if outputPkg.Package.Version == "" {
 		version := c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, "", param.SelectVersion, param.Limit)
 		if version == "" {
-			outputPkg.Version = "[SET PACKAGE VERSION]"
+			outputPkg.Package.Version = "[SET PACKAGE VERSION]"
 			return outputPkg
 		}
-		outputPkg.Version = version
+		outputPkg.Package.Version = version
 	}
 	if param.Pin {
 		return outputPkg
 	}
-	outputPkg.Name += "@" + outputPkg.Version
-	outputPkg.Version = ""
+	outputPkg.Package.Name += "@" + outputPkg.Package.Version
+	outputPkg.Package.Version = ""
 	return outputPkg
 }
