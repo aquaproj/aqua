@@ -112,10 +112,7 @@ func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *co
 	}
 
 	if param.File != "" || len(args) != 0 {
-		pkgs, err := c.listPkgsWithoutFinder(ctx, logE, param, registryContents, args...)
-		if err != nil {
-			return pkgs, err
-		}
+		return c.listPkgsWithoutFinder(ctx, logE, param, registryContents, args...)
 	}
 
 	return c.listPkgsWithFinder(ctx, logE, param, registryContents)
