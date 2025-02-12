@@ -21,7 +21,7 @@ import (
 // Generate searches packages in registries and outputs the configuration to standard output.
 // If no package is specified, the interactive fuzzy finder is launched.
 // If the package supports, the latest version is gotten by GitHub API.
-func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error {
+func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *config.Param, args ...string) error { //nolint:cyclop
 	// Find and read a configuration file (aqua.yaml).
 	// Install registries
 	// List outputted packages
@@ -72,9 +72,13 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	}
 	for _, pkg := range list {
 		cmdName := pkg.PackageInfo.GetFiles()[0].Name
+		dest := param.Dest
+		if dest == "" {
+			dest = filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir, cmdName+".yaml")
+		}
 		if err := c.outputter.Output(&output.Param{ //nolint:wrapcheck
 			Insert:         param.Insert,
-			Dest:           filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir, cmdName+".yaml"),
+			Dest:           dest,
 			List:           []*aqua.Package{pkg.Package},
 			ConfigFilePath: cfgFilePath,
 		}); err != nil {
