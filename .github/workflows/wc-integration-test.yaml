@@ -170,7 +170,7 @@ jobs:
       - name: Check imports/gh.yaml
         run: cat imports/gh.yaml
         working-directory: tests/import_dir
-      - name: Check imports/gh.yaml
+      - name: Test import_dir (aqua up)
         run: aqua up gh@v2.65.0
         working-directory: tests/import_dir
       - name: Test import_dir version
