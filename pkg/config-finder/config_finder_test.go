@@ -165,3 +165,46 @@ func Test_configFinderFinds(t *testing.T) {
 		})
 	}
 }
+
+func Test_DuplicateFilePaths(t *testing.T) {
+	t.Parallel()
+	cfgFilePaths := finder.ConfigFileNames()
+	data := []struct {
+		name     string
+		filePath string
+		exp      []string
+	}{
+		{
+			name:     "not file",
+			filePath: "yoo.yaml",
+			exp:      nil,
+		},
+		{
+			name:     "aqua.yaml",
+			filePath: "aqua.yaml",
+			exp:      cfgFilePaths,
+		},
+		{
+			name:     "aqua/aqua.yaml",
+			filePath: "aqua/aqua.yaml",
+			exp:      cfgFilePaths,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			arr := finder.DuplicateFilePaths(d.filePath)
+			m := make(map[string]struct{}, len(arr))
+			for _, p := range arr {
+				m[p] = struct{}{}
+			}
+			m2 := make(map[string]struct{}, len(d.exp))
+			for _, p := range d.exp {
+				m2[p] = struct{}{}
+			}
+			if diff := cmp.Diff(m2, m); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
