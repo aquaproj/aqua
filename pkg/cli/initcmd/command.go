@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
+	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
 	"github.com/urfave/cli/v2"
 )
 
@@ -25,9 +26,23 @@ func New(r *util.Param) *cli.Command {
 		Description: `Create a configuration file if it doesn't exist
 e.g.
 $ aqua init # create "aqua.yaml"
-$ aqua init foo.yaml # create foo.yaml`,
+$ aqua init foo.yaml # create foo.yaml
+$ aqua init -u # Replace "packages:" with "import_dir: imports"
+$ aqua init -i <directory path> # Replace "packages:" with "import_dir: <directory path>"
+`,
 		Action: ic.action,
-		Flags:  []cli.Flag{},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "use-import-dir",
+				Aliases: []string{"u"},
+				Usage:   "Use import_dir",
+			},
+			&cli.StringFlag{
+				Name:    "import-dir",
+				Aliases: []string{"i"},
+				Usage:   "import_dir",
+			},
+		},
 	}
 }
 
@@ -43,5 +58,10 @@ func (ic *initCommand) action(c *cli.Context) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(c.Context, param)
-	return ctrl.Init(c.Context, ic.r.LogE, c.Args().First()) //nolint:wrapcheck
+	cParam := &initcmd.Param{}
+	cParam.ImportDir = c.String("import-dir")
+	if cParam.ImportDir == "" && c.Bool("use-import-dir") {
+		cParam.ImportDir = "imports"
+	}
+	return ctrl.Init(c.Context, ic.r.LogE, c.Args().First(), cParam) //nolint:wrapcheck
 }

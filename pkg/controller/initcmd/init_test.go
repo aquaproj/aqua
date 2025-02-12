@@ -63,7 +63,7 @@ packages:
 				Releases: d.releases,
 			}
 			ctrl := initcmd.New(gh, fs)
-			if err := ctrl.Init(ctx, logE, ""); err != nil {
+			if err := ctrl.Init(ctx, logE, "", &initcmd.Param{}); err != nil {
 				if d.isErr {
 					return
 				}
