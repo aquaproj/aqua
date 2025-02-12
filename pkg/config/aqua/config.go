@@ -7,9 +7,9 @@ import (
 )
 
 type Package struct {
-	Name              string          `validate:"required" json:"name,omitempty"`
-	Registry          string          `validate:"required" yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
-	Version           string          `validate:"required" yaml:",omitempty" json:"version,omitempty"`
+	Name              string          `json:"name,omitempty"`
+	Registry          string          `yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
+	Version           string          `yaml:",omitempty" json:"version,omitempty"`
 	Import            string          `yaml:",omitempty" json:"import,omitempty"`
 	Tags              []string        `yaml:",omitempty" json:"tags,omitempty"`
 	Description       string          `yaml:",omitempty" json:"description,omitempty"`
@@ -25,8 +25,8 @@ type Package struct {
 }
 
 type CommandAlias struct {
-	Command string `validate:"required" json:"command"`
-	Alias   string `validate:"required" json:"alias"`
+	Command string `json:"command"`
+	Alias   string `json:"alias"`
 	NoLink  bool   `yaml:"no_link,omitempty" json:"no_link,omitempty"`
 }
 
@@ -78,8 +78,8 @@ func parseNameWithVersion(name string) (string, string) {
 }
 
 type Config struct {
-	Packages   []*Package `validate:"dive" json:"packages,omitempty"`
-	Registries Registries `validate:"dive" json:"registries"`
+	Packages   []*Package `json:"packages,omitempty"`
+	Registries Registries `json:"registries"`
 	Checksum   *Checksum  `json:"checksum,omitempty"`
 	ImportDir  string     `json:"import_dir,omitempty" yaml:"import_dir,omitempty"`
 }
