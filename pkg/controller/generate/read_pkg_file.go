@@ -8,13 +8,12 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
-func (c *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkgs []*aqua.Package, m map[string]*fuzzyfinder.Package) ([]*aqua.Package, error) {
+func (c *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkgs []*config.Package, m map[string]*fuzzyfinder.Package) ([]*config.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
 		file = c.stdin

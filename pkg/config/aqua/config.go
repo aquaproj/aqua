@@ -78,7 +78,7 @@ func parseNameWithVersion(name string) (string, string) {
 }
 
 type Config struct {
-	Packages   []*Package `validate:"dive" json:"packages"`
+	Packages   []*Package `validate:"dive" json:"packages,omitempty"`
 	Registries Registries `validate:"dive" json:"registries"`
 	Checksum   *Checksum  `json:"checksum,omitempty"`
 	ImportDir  string     `json:"import_dir,omitempty" yaml:"import_dir,omitempty"`

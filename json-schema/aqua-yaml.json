@@ -58,7 +58,6 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "packages",
         "registries"
       ]
     },
