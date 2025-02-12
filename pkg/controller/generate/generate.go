@@ -67,8 +67,10 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 			ConfigFilePath: cfgFilePath,
 		})
 	}
-	if err := osfile.MkdirAll(c.fs, filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
-		return fmt.Errorf("create a directory specified by import_dir: %w", err)
+	if param.Insert {
+		if err := osfile.MkdirAll(c.fs, filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
+			return fmt.Errorf("create a directory specified by import_dir: %w", err)
+		}
 	}
 	for _, pkg := range list {
 		cmdName := pkg.PackageInfo.GetFiles()[0].Name
