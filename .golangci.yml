@@ -22,4 +22,4 @@ linters:
     - depguard
     - tagalign
     - gomoddirectives # TODO remove
-    - exportloopref # WARN The linter 'exportloopref' is deprecated (since v1.60.2) due to: Since Go1.22 (loopvar) this linter is no longer relevant. Replaced by copyloopvar.
+    - tenv # WARN The linter 'tenv' is deprecated (since v1.64.0) due to: Duplicate feature another linter. Replaced by usetesting.

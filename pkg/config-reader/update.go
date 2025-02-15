@@ -43,7 +43,7 @@ func (r *ConfigReader) ReadToUpdate(configFilePath string, cfg *aqua.Config) (ma
 	return cfgs, nil
 }
 
-func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
+func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) { //nolint:cyclop
 	cfgs := map[string]*aqua.Config{}
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
@@ -63,7 +63,10 @@ func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Conf
 		}
 	}
 	if cfg.ImportDir != "" {
-		if err := r.readImportToUpdate(configFilePath, cfg.ImportDir, cfg, cfgs); err != nil {
+		if err := r.readImportToUpdate(configFilePath, filepath.Join(cfg.ImportDir, "*.yml"), cfg, cfgs); err != nil {
+			return nil, err
+		}
+		if err := r.readImportToUpdate(configFilePath, filepath.Join(cfg.ImportDir, "*.yaml"), cfg, cfgs); err != nil {
 			return nil, err
 		}
 	}

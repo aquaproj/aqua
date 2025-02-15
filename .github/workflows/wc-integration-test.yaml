@@ -173,11 +173,14 @@ jobs:
       - name: Check imports/gh.yaml
         run: cat imports/gh.yaml
         working-directory: tests/import_dir
-      - name: Test import_dir (aqua up)
+      - name: Test import_dir (aqua up <pkg>)
         run: aqua up gh@v2.65.0
         working-directory: tests/import_dir
       - name: Test import_dir version
         run: cat imports/gh.yaml
+        working-directory: tests/import_dir
+      - name: Test import_dir (aqua up)
+        run: aqua up
         working-directory: tests/import_dir
 
       - name: update only registrires
