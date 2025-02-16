@@ -293,6 +293,15 @@ jobs:
         run: aqua gr crates.io/skim
         env:
           GITHUB_TOKEN: ${{github.token}}
+      - name: Test aqua gr -init
+        run: aqua gr -init suzuki-shunsuke/mkghtag
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+      - name: Test aqua gr -c
+        run: aqua gr -l 10 -c aqua-generate-registry.yaml
+        working-directory: tests/gr-config
+        env:
+          GITHUB_TOKEN: ${{github.token}}
 
   integration-test-all-envs:
     timeout-minutes: 30
