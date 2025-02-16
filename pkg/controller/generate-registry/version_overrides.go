@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/hashicorp/go-version"
@@ -46,21 +47,42 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 	return pkgs
 }
 
-func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int) (*registry.PackageInfo, []string) {
+func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
+	f, err := expr.EvaluateVersionFilter(cfg.Version, tag)
+	if err != nil {
+		logerr.WithError(logE, err).WithField("tag_name", tag).Warn("evaluate a version filter")
+		return false
+	}
+	return !f
+}
+
+func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
+	f, err := expr.EvaluateAssetFilter(cfg.Asset, asset)
+	if err != nil {
+		logerr.WithError(logE, err).WithField("asset", asset).Warn("evaluate an asset filter")
+		return false
+	}
+	return !f
+}
+
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) (*registry.PackageInfo, []string) { //nolint:cyclop,funlen
 	ghReleases := c.listReleases(ctx, logE, pkgInfo, limit)
-	releases := make([]*Release, len(ghReleases))
-	for i, release := range ghReleases {
+	releases := make([]*Release, 0, len(ghReleases))
+	for _, release := range ghReleases {
 		tag := release.GetTagName()
+		if excludeVersion(logE, tag, cfg) {
+			continue
+		}
 		v, prefix, err := versiongetter.GetVersionAndPrefix(tag)
 		if err != nil {
 			logerr.WithError(logE, err).WithField("tag_name", tag).Warn("parse a tag as semver")
 		}
-		releases[i] = &Release{
+		releases = append(releases, &Release{
 			ID:            release.GetID(),
 			Tag:           tag,
 			Version:       v,
 			VersionPrefix: prefix,
-		}
+		})
 	}
 	sort.Slice(releases, func(i, j int) bool {
 		r1 := releases[i]
@@ -81,8 +103,15 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		if release.VersionPrefix != "" {
 			pkgInfo.VersionPrefix = release.VersionPrefix
 		}
-		assets := c.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
-		logE.WithField("num_of_assets", len(assets)).Debug("got assets")
+		arr := c.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
+		logE.WithField("num_of_assets", len(arr)).Debug("got assets")
+		assets := make([]*github.ReleaseAsset, 0, len(arr))
+		for _, asset := range arr {
+			if excludeAsset(logE, asset.GetName(), cfg) {
+				continue
+			}
+			assets = append(assets, asset)
+		}
 		if len(assets) == 0 {
 			continue
 		}

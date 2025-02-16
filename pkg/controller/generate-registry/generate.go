@@ -12,30 +12,52 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/forPelevin/gomoji"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 )
 
 var errLimitMustBeGreaterEqualThanZero = errors.New("limit must be greater equal than zero")
 
+const template = `---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-generate-registry.json
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+version: not (Version matches "-rc$")
+asset: not (Asset matches "-cli")
+`
+
 func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
+	if param.InitConfig {
+		if err := afero.WriteFile(c.fs, "aqua-generate-registry.yaml", []byte(template), osfile.FilePermission); err != nil {
+			return fmt.Errorf("write aqua-generate-registry.yaml: %w", err)
+		}
+		return nil
+	}
 	if len(args) == 0 {
 		return nil
+	}
+	cfg := &Config{}
+	if param.GenerateConfigFilePath != "" {
+		if err := readConfig(c.fs, param.GenerateConfigFilePath, cfg); err != nil {
+			return err
+		}
 	}
 	if param.Limit < 0 {
 		return errLimitMustBeGreaterEqualThanZero
 	}
 	for _, arg := range args {
-		if err := c.genRegistry(ctx, param, logE, arg); err != nil {
+		if err := c.genRegistry(ctx, param, logE, cfg, arg); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, pkgName string) error {
-	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param)
+func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, cfg *Config, pkgName string) error {
+	pkgInfo, versions := c.getPackageInfo(ctx, logE, pkgName, param, cfg)
 	if param.OutTestData != "" {
 		if err := c.testdataOutputter.Output(&output.Param{
 			List: listPkgsFromVersions(pkgName, versions),
@@ -75,8 +97,8 @@ func cleanDescription(desc string) string {
 	return strings.TrimRight(strings.TrimSpace(gomoji.RemoveEmojis(desc)), ".!?")
 }
 
-func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, param *config.Param) (*registry.PackageInfo, []string) {
-	pkgInfo, versions := c.getPackageInfoMain(ctx, logE, arg, param.Limit)
+func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, param *config.Param, cfg *Config) (*registry.PackageInfo, []string) {
+	pkgInfo, versions := c.getPackageInfoMain(ctx, logE, arg, param.Limit, cfg)
 	pkgInfo.Description = cleanDescription(pkgInfo.Description)
 	if len(param.Commands) != 0 {
 		files := make([]*registry.File, len(param.Commands))
@@ -90,7 +112,7 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	return pkgInfo, versions
 }
 
-func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry, arg string, limit int) (*registry.PackageInfo, []string) {
+func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry, arg string, limit int, cfg *Config) (*registry.PackageInfo, []string) {
 	pkgName, version, _ := strings.Cut(arg, "@")
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return c.getCargoPackageInfo(ctx, logE, pkgName)
@@ -118,7 +140,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 		pkgInfo.Description = repo.GetDescription()
 	}
 	if limit != 1 && version == "" {
-		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit)
+		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit, cfg)
 	}
 	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {
