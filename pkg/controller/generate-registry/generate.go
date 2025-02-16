@@ -183,8 +183,17 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 		return pkgInfo, []string{version}
 	}
 	logE.WithField("version", release.GetTagName()).Debug("got the release")
-	assets := c.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
-	logE.WithField("num_of_assets", len(assets)).Debug("got assets")
+
+	arr := c.listReleaseAssets(ctx, logE, pkgInfo, release.GetID())
+	logE.WithField("num_of_assets", len(arr)).Debug("got assets")
+	assets := make([]*github.ReleaseAsset, 0, len(arr))
+	for _, asset := range arr {
+		if excludeAsset(logE, asset.GetName(), cfg) {
+			continue
+		}
+		assets = append(assets, asset)
+	}
+
 	c.patchRelease(logE, pkgInfo, pkgName, release.GetTagName(), assets)
 	return pkgInfo, []string{version}
 }
