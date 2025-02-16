@@ -135,7 +135,26 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 	return pkgInfo, []string{version}
 }
 
-func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []*github.ReleaseAsset) { //nolint:funlen,cyclop
+func (c *Controller) checksum(checksumNames map[string]struct{}, assetName string) *registry.Checksum { //nolint:funlen,cyclop
+	suffixes := []string{
+		"md5",
+		"sha256",
+		"sha512",
+		"sha1",
+	}
+	for _, suffix := range suffixes {
+		if _, ok := checksumNames[assetName+"."+suffix]; ok {
+			return &registry.Checksum{
+				Type:      "github_release",
+				Asset:     "{{.Asset}}." + suffix,
+				Algorithm: suffix,
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []*github.ReleaseAsset) { //nolint:cyclop
 	if len(assets) == 0 {
 		pkgInfo.NoAsset = true
 		return
@@ -162,36 +181,8 @@ func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageI
 		assetInfos = append(assetInfos, assetInfo)
 	}
 	for assetName := range assetNames {
-		if _, ok := checksumNames[assetName+".md5"]; ok {
-			pkgInfo.Checksum = &registry.Checksum{
-				Type:      "github_release",
-				Asset:     "{{.Asset}}.md5",
-				Algorithm: "md5",
-			}
-			break
-		}
-		if _, ok := checksumNames[assetName+".sha256"]; ok {
-			pkgInfo.Checksum = &registry.Checksum{
-				Type:      "github_release",
-				Asset:     "{{.Asset}}.sha256",
-				Algorithm: "sha256",
-			}
-			break
-		}
-		if _, ok := checksumNames[assetName+".sha512"]; ok {
-			pkgInfo.Checksum = &registry.Checksum{
-				Type:      "github_release",
-				Asset:     "{{.Asset}}.sha512",
-				Algorithm: "sha512",
-			}
-			break
-		}
-		if _, ok := checksumNames[assetName+".sha1"]; ok {
-			pkgInfo.Checksum = &registry.Checksum{
-				Type:      "github_release",
-				Asset:     "{{.Asset}}.sha1",
-				Algorithm: "sha1",
-			}
+		if checksum := c.checksum(checksumNames, assetName); checksum != nil {
+			pkgInfo.Checksum = checksum
 			break
 		}
 	}
