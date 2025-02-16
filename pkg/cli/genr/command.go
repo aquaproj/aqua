@@ -123,7 +123,7 @@ func New(r *util.Param) *cli.Command {
 				Usage: "This flag was deprecated and had no meaning from aqua v2.15.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/2351",
 			},
 			&cli.BoolFlag{
-				Name:  "init-config",
+				Name:  "init",
 				Usage: "Generate a configuration file",
 			},
 		},
