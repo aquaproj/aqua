@@ -27,17 +27,22 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 	}
 
 	c.Package = raw.Package
-	r, err := expr.CompileVersionFilter(raw.Version)
-	if err != nil {
-		return fmt.Errorf("compile a version expression: %w", err)
-	}
-	c.Version = r
 
-	a, err := expr.CompileAssetFilter(raw.Asset)
-	if err != nil {
-		return fmt.Errorf("compile an asset expression: %w", err)
+	if raw.Version != "" {
+		r, err := expr.CompileVersionFilter(raw.Version)
+		if err != nil {
+			return fmt.Errorf("compile a version expression: %w", err)
+		}
+		c.Version = r
 	}
-	c.Asset = a
+
+	if raw.Asset != "" {
+		a, err := expr.CompileAssetFilter(raw.Asset)
+		if err != nil {
+			return fmt.Errorf("compile an asset expression: %w", err)
+		}
+		c.Asset = a
+	}
 
 	return nil
 }
