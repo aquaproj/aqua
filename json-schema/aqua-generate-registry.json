@@ -8,7 +8,7 @@
         "version_filter": {
           "type": "string"
         },
-        "asset": {
+        "all_assets_filter": {
           "type": "string"
         },
         "name": {

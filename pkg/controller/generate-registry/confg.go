@@ -10,15 +10,15 @@ import (
 )
 
 type Config struct {
-	VersionFilter *vm.Program
-	Asset         *vm.Program
-	Package       string
+	VersionFilter   *vm.Program
+	AllAssetsFilter *vm.Program
+	Package         string
 }
 
 type RawConfig struct {
-	VersionFilter string `json:"version_filter,omitempty"`
-	Asset         string `json:"asset,omitempty"`
-	Package       string `json:"name" yaml:"name"`
+	VersionFilter   string `json:"version_filter,omitempty"`
+	AllAssetsFilter string `json:"all_assets_filter,omitempty" yaml:"all_assets_filter"`
+	Package         string `json:"name" yaml:"name"`
 }
 
 func (c *Config) FromRaw(raw *RawConfig) error {
@@ -36,12 +36,12 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 		c.VersionFilter = r
 	}
 
-	if raw.Asset != "" {
-		a, err := expr.CompileAssetFilter(raw.Asset)
+	if raw.AllAssetsFilter != "" {
+		a, err := expr.CompileAssetFilter(raw.AllAssetsFilter)
 		if err != nil {
 			return fmt.Errorf("compile an asset expression: %w", err)
 		}
-		c.Asset = a
+		c.AllAssetsFilter = a
 	}
 
 	return nil

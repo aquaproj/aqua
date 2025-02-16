@@ -60,10 +60,10 @@ func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
 }
 
 func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
-	if cfg.Asset == nil {
+	if cfg.AllAssetsFilter == nil {
 		return false
 	}
-	f, err := expr.EvaluateAssetFilter(cfg.Asset, asset)
+	f, err := expr.EvaluateAssetFilter(cfg.AllAssetsFilter, asset)
 	if err != nil {
 		logerr.WithError(logE, err).WithField("asset", asset).Warn("evaluate an asset filter")
 		return false

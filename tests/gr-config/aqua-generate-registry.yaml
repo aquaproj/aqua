@@ -3,4 +3,4 @@
 # https://aquaproj.github.io/
 name: fission/fission
 version_filter: Version matches "^v?\\d"
-asset: not ((Asset matches "\\.json$") or (Asset matches "\\.yaml$"))
+all_assets_filter: not ((Asset matches "\\.json$") or (Asset matches "\\.yaml$"))

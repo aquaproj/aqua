@@ -15,7 +15,7 @@ const template = `---
 # https://aquaproj.github.io/
 name: %%PACKAGE%%
 version_filter: not (Version matches "-rc$")
-asset: not (Asset matches "-cli")
+all_assets_filter: not (Asset matches "-cli")
 `
 
 func (c *Controller) initConfig(args ...string) error {
