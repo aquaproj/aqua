@@ -153,15 +153,37 @@ func (is *Installer) createLink(logE *logrus.Entry, linkPath, linkDest string) e
 			if err := is.fs.Remove(linkPath); err != nil {
 				return fmt.Errorf("remove a file to create a symbolic link (%s): %w", linkPath, err)
 			}
+			if is.realRuntime.IsWindows() {
+				if err := is.linker.Hardlink(linkDest, linkPath); err != nil {
+					return fmt.Errorf("create a hard link: %w", err)
+				}
+				return nil
+			}
 			if err := is.linker.Symlink(linkDest, linkPath); err != nil {
 				return fmt.Errorf("create a symbolic link: %w", err)
 			}
 			return nil
 		case mode&os.ModeSymlink != 0:
+			if is.realRuntime.IsWindows() {
+				if err := is.fs.Remove(linkPath); err != nil {
+					return fmt.Errorf("remove a file to create a symbolic link (%s): %w", linkPath, err)
+				}
+				if err := is.linker.Hardlink(linkDest, linkPath); err != nil {
+					return fmt.Errorf("create a hard link: %w", err)
+				}
+				return nil
+			}
 			return is.recreateLink(logE, linkPath, linkDest)
 		default:
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
+	}
+	if is.realRuntime.IsWindows() {
+		logE.Info("create a hard link")
+		if err := is.linker.Hardlink(linkDest, linkPath); err != nil {
+			return fmt.Errorf("create a hard link: %w", err)
+		}
+		return nil
 	}
 	logE.Info("create a symbolic link")
 	if err := is.linker.Symlink(linkDest, linkPath); err != nil {
