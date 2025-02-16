@@ -12,34 +12,13 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/forPelevin/gomoji"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 var errLimitMustBeGreaterEqualThanZero = errors.New("limit must be greater equal than zero")
-
-const template = `---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-generate-registry.json
-# aqua - Declarative CLI Version Manager
-# https://aquaproj.github.io/
-package: %%PACKAGE%%
-version: not (Version matches "-rc$")
-asset: not (Asset matches "-cli")
-`
-
-func (c *Controller) initConfig(args ...string) error {
-	if len(args) == 0 {
-		return errors.New("package name is required")
-	}
-	if err := afero.WriteFile(c.fs, "aqua-generate-registry.yaml", []byte(strings.Replace(template, "%%PACKAGE%%", args[0], 1)), osfile.FilePermission); err != nil {
-		return fmt.Errorf("write aqua-generate-registry.yaml: %w", err)
-	}
-	return nil
-}
 
 func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
 	if param.InitConfig {
