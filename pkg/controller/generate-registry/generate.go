@@ -52,18 +52,12 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 		}
 	}
 
+	args, err := parseArgs(args, cfg)
+	if err != nil {
+		return err
+	}
 	if len(args) == 0 {
-		if cfg.Package == "" {
-			return nil
-		}
-		args = []string{cfg.Package}
-	} else {
-		if cfg.Package != "" && cfg.Package != args[0] {
-			return logerr.WithFields(errors.New("a given package name is different from the package name in the configuration file"), logrus.Fields{ //nolint:wrapcheck
-				"arg":               args[0],
-				"package_in_config": cfg.Package,
-			})
-		}
+		return nil
 	}
 
 	if param.Limit < 0 {
@@ -76,6 +70,22 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 		}
 	}
 	return nil
+}
+
+func parseArgs(args []string, cfg *Config) ([]string, error) {
+	if len(args) == 0 {
+		if cfg.Package == "" {
+			return nil, nil //nolint:nilnil
+		}
+		return []string{cfg.Package}, nil
+	}
+	if cfg.Package != "" && cfg.Package != args[0] {
+		return nil, logerr.WithFields(errors.New("a given package name is different from the package name in the configuration file"), logrus.Fields{ //nolint:wrapcheck
+			"arg":               args[0],
+			"package_in_config": cfg.Package,
+		})
+	}
+	return args, nil
 }
 
 func (c *Controller) genRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, cfg *Config, pkgName string) error {
