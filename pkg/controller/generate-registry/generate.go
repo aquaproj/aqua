@@ -186,6 +186,12 @@ func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageI
 			break
 		}
 	}
+	for assetName := range assetNames {
+		if p := checkSLSAProvenance(assetName, tagName); p != nil {
+			pkgInfo.SLSAProvenance = p
+			break
+		}
+	}
 	if len(checksumNames) > 0 && pkgInfo.Checksum == nil {
 		for checksumName := range checksumNames {
 			chksum := checksum.GetChecksumConfigFromFilename(checksumName, tagName)
@@ -221,4 +227,15 @@ func (c *Controller) listReleaseAssets(ctx context.Context, logE *logrus.Entry, 
 		opts.Page++
 	}
 	return arr
+}
+
+func checkSLSAProvenance(assetName, tagName string) *registry.SLSAProvenance {
+	if !strings.HasSuffix(assetName, ".intoto.jsonl") {
+		return nil
+	}
+	assetInfo := asset.ParseAssetName(assetName, tagName)
+	return &registry.SLSAProvenance{
+		Type:  "github_release",
+		Asset: &assetInfo.Template,
+	}
 }

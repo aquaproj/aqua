@@ -9,7 +9,7 @@ type SLSAProvenance struct {
 	RepoName  string  `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Asset     *string `json:"asset,omitempty" yaml:",omitempty"`
 	URL       *string `json:"url,omitempty" yaml:",omitempty"`
-	SourceURI *string `json:"source_uri,omitempty" yaml:"source_uri"`
+	SourceURI *string `json:"source_uri,omitempty" yaml:"source_uri,omitempty"`
 }
 
 func (sp *SLSAProvenance) ToDownloadedFile() *DownloadedFile {
