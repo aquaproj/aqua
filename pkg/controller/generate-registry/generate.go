@@ -58,7 +58,7 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 		}
 		args = []string{cfg.Package}
 	} else {
-		if cfg.Package != args[0] {
+		if cfg.Package != "" && cfg.Package != args[0] {
 			return logerr.WithFields(errors.New("a given package name is different from the package name in the configuration file"), logrus.Fields{ //nolint:wrapcheck
 				"arg":               args[0],
 				"package_in_config": cfg.Package,
