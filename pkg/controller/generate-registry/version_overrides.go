@@ -53,7 +53,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		tag := release.GetTagName()
 		v, prefix, err := versiongetter.GetVersionAndPrefix(tag)
 		if err != nil {
-			logE.WithField("tag_name", tag).WithError(err).Warn("parse a tag as semver")
+			logerr.WithError(logE, err).WithField("tag_name", tag).Warn("parse a tag as semver")
 		}
 		releases[i] = &Release{
 			ID:            release.GetID(),
