@@ -5,7 +5,7 @@
   "$defs": {
     "RawConfig": {
       "properties": {
-        "version": {
+        "version_filter": {
           "type": "string"
         },
         "asset": {
