@@ -5,17 +5,11 @@
   "$defs": {
     "RawConfig": {
       "properties": {
-        "excluded_versions": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
+        "version": {
+          "type": "string"
         },
-        "excluded_assets": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
+        "asset": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
