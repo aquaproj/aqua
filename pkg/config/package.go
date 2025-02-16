@@ -259,6 +259,7 @@ type RemoveMode struct {
 
 type Param struct {
 	ConfigFilePath                    string
+	GenerateConfigFilePath            string
 	LogLevel                          string
 	File                              string
 	AQUAVersion                       string
@@ -303,6 +304,7 @@ type Param struct {
 	GitHubArtifactAttestationDisabled bool
 	SLSADisabled                      bool
 	Installed                         bool
+	InitConfig                        bool
 }
 
 func appendExt(s, format string) string {

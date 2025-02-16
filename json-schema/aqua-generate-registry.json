@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aquaproj/aqua/v2/pkg/controller/generate-registry/raw-config",
+  "$ref": "#/$defs/RawConfig",
+  "$defs": {
+    "RawConfig": {
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "package"
+      ]
+    }
+  }
+}

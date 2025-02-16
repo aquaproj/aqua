@@ -43,9 +43,11 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 		param.LogLevel = logLevel
 	}
 	param.ConfigFilePath = c.String("config")
+	param.GenerateConfigFilePath = c.String("generate-config")
 	param.Dest = c.String("o")
 	param.OutTestData = c.String("out-testdata")
 	param.OnlyLink = c.Bool("only-link")
+	param.InitConfig = c.Bool("init")
 	if commandName == "generate-registry" {
 		param.InsertFile = c.String("i")
 	} else {
