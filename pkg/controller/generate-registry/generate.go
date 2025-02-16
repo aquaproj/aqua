@@ -135,7 +135,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 	return pkgInfo, []string{version}
 }
 
-func (c *Controller) checksum(checksumNames map[string]struct{}, assetName string) *registry.Checksum { //nolint:funlen,cyclop
+func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.Checksum { //nolint:funlen,cyclop
 	suffixes := []string{
 		"md5",
 		"sha256",
@@ -181,7 +181,7 @@ func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageI
 		assetInfos = append(assetInfos, assetInfo)
 	}
 	for assetName := range assetNames {
-		if checksum := c.checksum(checksumNames, assetName); checksum != nil {
+		if checksum := getChecksum(checksumNames, assetName); checksum != nil {
 			pkgInfo.Checksum = checksum
 			break
 		}
