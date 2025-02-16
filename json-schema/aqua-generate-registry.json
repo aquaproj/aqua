@@ -11,14 +11,14 @@
         "asset": {
           "type": "string"
         },
-        "package": {
+        "name": {
           "type": "string"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "package"
+        "name"
       ]
     }
   }
