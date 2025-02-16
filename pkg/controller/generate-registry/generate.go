@@ -75,7 +75,7 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 func parseArgs(args []string, cfg *Config) ([]string, error) {
 	if len(args) == 0 {
 		if cfg.Package == "" {
-			return nil, nil //nolint:nilnil
+			return nil, nil
 		}
 		return []string{cfg.Package}, nil
 	}
