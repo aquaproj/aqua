@@ -48,10 +48,10 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 }
 
 func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
-	if cfg.Version == nil {
+	if cfg.VersionFilter == nil {
 		return false
 	}
-	f, err := expr.EvaluateVersionFilter(cfg.Version, tag)
+	f, err := expr.EvaluateVersionFilter(cfg.VersionFilter, tag)
 	if err != nil {
 		logerr.WithError(logE, err).WithField("tag_name", tag).Warn("evaluate a version filter")
 		return false
@@ -60,10 +60,10 @@ func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
 }
 
 func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
-	if cfg.Asset == nil {
+	if cfg.AllAssetsFilter == nil {
 		return false
 	}
-	f, err := expr.EvaluateAssetFilter(cfg.Asset, asset)
+	f, err := expr.EvaluateAssetFilter(cfg.AllAssetsFilter, asset)
 	if err != nil {
 		logerr.WithError(logE, err).WithField("asset", asset).Warn("evaluate an asset filter")
 		return false

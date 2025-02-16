@@ -1,6 +1,6 @@
 ---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
-package: fission/fission
-version: Version matches "^v?\\d"
-asset: not ((Asset matches "\\.json$") or (Asset matches "\\.yaml$"))
+name: fission/fission
+version_filter: Version matches "^v?\\d"
+all_assets_filter: not ((Asset matches "\\.json$") or (Asset matches "\\.yaml$"))

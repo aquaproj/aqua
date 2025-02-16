@@ -5,20 +5,20 @@
   "$defs": {
     "RawConfig": {
       "properties": {
-        "version": {
+        "version_filter": {
           "type": "string"
         },
-        "asset": {
+        "all_assets_filter": {
           "type": "string"
         },
-        "package": {
+        "name": {
           "type": "string"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "package"
+        "name"
       ]
     }
   }

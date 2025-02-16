@@ -13,9 +13,9 @@ const template = `---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-generate-registry.json
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
-package: %%PACKAGE%%
-version: not (Version matches "-rc$")
-asset: not (Asset matches "-cli")
+name: %%PACKAGE%%
+version_filter: not (Version matches "-rc$")
+all_assets_filter: not (Asset matches "-cli")
 `
 
 func (c *Controller) initConfig(args ...string) error {
