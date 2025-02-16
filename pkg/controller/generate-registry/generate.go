@@ -135,7 +135,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 	return pkgInfo, []string{version}
 }
 
-func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.Checksum { //nolint:funlen,cyclop
+func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.Checksum {
 	suffixes := []string{
 		"md5",
 		"sha256",
