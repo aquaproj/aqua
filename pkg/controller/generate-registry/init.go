@@ -14,7 +14,7 @@ const template = `---
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
 package: %%PACKAGE%%
-version: not (Version matches "-rc$")
+version_filter: not (Version matches "-rc$")
 asset: not (Asset matches "-cli")
 `
 

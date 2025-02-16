@@ -48,10 +48,10 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 }
 
 func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
-	if cfg.Version == nil {
+	if cfg.VersionFilter == nil {
 		return false
 	}
-	f, err := expr.EvaluateVersionFilter(cfg.Version, tag)
+	f, err := expr.EvaluateVersionFilter(cfg.VersionFilter, tag)
 	if err != nil {
 		logerr.WithError(logE, err).WithField("tag_name", tag).Warn("evaluate a version filter")
 		return false

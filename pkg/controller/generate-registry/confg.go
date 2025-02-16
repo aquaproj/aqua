@@ -10,15 +10,15 @@ import (
 )
 
 type Config struct {
-	Version *vm.Program
-	Asset   *vm.Program
-	Package string
+	VersionFilter *vm.Program
+	Asset         *vm.Program
+	Package       string
 }
 
 type RawConfig struct {
-	Version string `json:"version,omitempty"`
-	Asset   string `json:"asset,omitempty"`
-	Package string `json:"package"`
+	VersionFilter string `json:"version_filter,omitempty"`
+	Asset         string `json:"asset,omitempty"`
+	Package       string `json:"package"`
 }
 
 func (c *Config) FromRaw(raw *RawConfig) error {
@@ -28,12 +28,12 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 
 	c.Package = raw.Package
 
-	if raw.Version != "" {
-		r, err := expr.CompileVersionFilter(raw.Version)
+	if raw.VersionFilter != "" {
+		r, err := expr.CompileVersionFilter(raw.VersionFilter)
 		if err != nil {
 			return fmt.Errorf("compile a version expression: %w", err)
 		}
-		c.Version = r
+		c.VersionFilter = r
 	}
 
 	if raw.Asset != "" {
