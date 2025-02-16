@@ -17,6 +17,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 var errLimitMustBeGreaterEqualThanZero = errors.New("limit must be greater equal than zero")
@@ -25,19 +26,24 @@ const template = `---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-generate-registry.json
 # aqua - Declarative CLI Version Manager
 # https://aquaproj.github.io/
+package: %%PACKAGE%%
 version: not (Version matches "-rc$")
 asset: not (Asset matches "-cli")
 `
 
+func (c *Controller) initConfig(args ...string) error {
+	if len(args) == 0 {
+		return errors.New("package name is required")
+	}
+	if err := afero.WriteFile(c.fs, "aqua-generate-registry.yaml", []byte(strings.Replace(template, "%%PACKAGE%%", args[0], 1)), osfile.FilePermission); err != nil {
+		return fmt.Errorf("write aqua-generate-registry.yaml: %w", err)
+	}
+	return nil
+}
+
 func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, logE *logrus.Entry, args ...string) error {
 	if param.InitConfig {
-		if err := afero.WriteFile(c.fs, "aqua-generate-registry.yaml", []byte(template), osfile.FilePermission); err != nil {
-			return fmt.Errorf("write aqua-generate-registry.yaml: %w", err)
-		}
-		return nil
-	}
-	if len(args) == 0 {
-		return nil
+		return c.initConfig(args...)
 	}
 	cfg := &Config{}
 	if param.GenerateConfigFilePath != "" {
@@ -45,9 +51,25 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 			return err
 		}
 	}
+
+	if len(args) == 0 {
+		if cfg.Package == "" {
+			return nil
+		}
+		args = []string{cfg.Package}
+	} else {
+		if cfg.Package != args[0] {
+			return logerr.WithFields(errors.New("a given package name is different from the package name in the configuration file"), logrus.Fields{ //nolint:wrapcheck
+				"arg":               args[0],
+				"package_in_config": cfg.Package,
+			})
+		}
+	}
+
 	if param.Limit < 0 {
 		return errLimitMustBeGreaterEqualThanZero
 	}
+
 	for _, arg := range args {
 		if err := c.genRegistry(ctx, param, logE, cfg, arg); err != nil {
 			return err

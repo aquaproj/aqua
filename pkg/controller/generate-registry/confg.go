@@ -12,11 +12,13 @@ import (
 type Config struct {
 	Version *vm.Program
 	Asset   *vm.Program
+	Package string
 }
 
 type RawConfig struct {
 	Version string `json:"version,omitempty"`
 	Asset   string `json:"asset,omitempty"`
+	Package string `json:"package"`
 }
 
 func (c *Config) FromRaw(raw *RawConfig) error {
@@ -24,6 +26,7 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 		return nil
 	}
 
+	c.Package = raw.Package
 	r, err := expr.CompileVersionFilter(raw.Version)
 	if err != nil {
 		return fmt.Errorf("compile a version expression: %w", err)
