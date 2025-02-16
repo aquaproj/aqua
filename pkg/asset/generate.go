@@ -100,6 +100,9 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 				} else {
 					supportedEnvs = append(supportedEnvs, goos+"/"+goarch)
 				}
+				if assetInfo.CompleteWindowsExt != nil {
+					pkgInfo.CompleteWindowsExt = assetInfo.CompleteWindowsExt
+				}
 			}
 		}
 		if len(overrides) == 2 { //nolint:mnd
@@ -147,14 +150,6 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	pkgInfo.Overrides = normalizeOverridesByAsset(pkgInfo.Asset, pkgInfo.Overrides)
 
 	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo)
-
-	// Set CompleteWindowsExt
-	for _, assetInfo := range assetInfos {
-		if assetInfo.CompleteWindowsExt != nil {
-			pkgInfo.CompleteWindowsExt = assetInfo.CompleteWindowsExt
-			break
-		}
-	}
 }
 
 func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
