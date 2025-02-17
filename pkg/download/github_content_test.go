@@ -18,7 +18,7 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 	data := []struct {
 		name       string
 		param      *domain.GitHubContentFileParam
-		github     github.RepositoriesService
+		github     download.GitHub
 		httpClient *http.Client
 		isErr      bool
 		exp        string

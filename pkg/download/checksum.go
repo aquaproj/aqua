@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
@@ -17,13 +19,20 @@ import (
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
 type ChecksumDownloaderImpl struct {
-	github    github.RepositoriesService
+	github    GitHub
 	runtime   *runtime.Runtime
 	http      HTTPDownloader
 	ghRelease domain.GitHubReleaseDownloader
 }
 
-func NewChecksumDownloader(gh github.RepositoriesService, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloaderImpl {
+type GitHub interface {
+	GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error)
+	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
+	DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
+	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
+}
+
+func NewChecksumDownloader(gh GitHub, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloaderImpl {
 	return &ChecksumDownloaderImpl{
 		github:    gh,
 		runtime:   rt,
