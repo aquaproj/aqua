@@ -13,7 +13,7 @@ type (
 	ReleaseAsset                = github.ReleaseAsset
 	ListOptions                 = github.ListOptions
 	RepositoryRelease           = github.RepositoryRelease
-	RepositoriesServiceImpl     = github.RepositoriesService
+	RepositoriesService         = github.RepositoriesService
 	Repository                  = github.Repository
 	RepositoryContentGetOptions = github.RepositoryContentGetOptions
 	RepositoryContent           = github.RepositoryContent
@@ -24,7 +24,7 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context) *RepositoriesServiceImpl {
+func New(ctx context.Context) *RepositoriesService {
 	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
 }
 
