@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -25,13 +24,13 @@ type File struct {
 }
 
 type Downloader struct {
-	github    github.RepositoriesService
+	github    GitHub
 	http      HTTPDownloader
 	ghContent domain.GitHubContentFileDownloader
 	ghRelease domain.GitHubReleaseDownloader
 }
 
-func NewDownloader(gh github.RepositoriesService, httpDownloader HTTPDownloader) *Downloader {
+func NewDownloader(gh GitHub, httpDownloader HTTPDownloader) *Downloader {
 	return &Downloader{
 		github:    gh,
 		http:      httpDownloader,
