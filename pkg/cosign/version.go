@@ -1,6 +1,6 @@
 package cosign
 
-const Version = "v2.4.2"
+const Version = "v2.4.3"
 
 func Checksums() map[string]string {
 	return map[string]string{
