@@ -36,7 +36,36 @@ func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
 	}
 }
 
-func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint:cyclop,funlen
+func (g *Group) VersionConstraint() (string, *Release) {
+	switch {
+	case len(g.releases) == 1:
+		v := g.releases[0].Tag
+		vc := fmt.Sprintf(`Version == "%s"`, v)
+		if !g.pkg.Info.NoAsset {
+			return vc, g.releases[0]
+		}
+		return vc, nil
+	case g.fixed:
+		tags := make([]string, len(g.releases))
+		for i, release := range g.releases {
+			tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
+		}
+		vc := fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
+		if !g.pkg.Info.NoAsset {
+			return vc, g.releases[0]
+		}
+		return vc, nil
+	default:
+		release := g.releases[len(g.releases)-1]
+		vc := fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
+		if !g.pkg.Info.NoAsset {
+			return vc, release
+		}
+		return vc, nil
+	}
+}
+
+func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint:cyclop
 	if len(groups) == 0 {
 		return nil
 	}
@@ -47,28 +76,10 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 		}
 		pkgInfo := group.pkg.Info
 		vo := ConvertPkgToVO(pkgInfo)
-		switch {
-		case len(group.releases) == 1:
-			v := group.releases[0].Tag
-			vo.VersionConstraints = fmt.Sprintf(`Version == "%s"`, v)
-			if !group.pkg.Info.NoAsset {
-				releases = append(releases, group.releases[0])
-			}
-		case group.fixed:
-			tags := make([]string, len(group.releases))
-			for i, release := range group.releases {
-				tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
-			}
-			vo.VersionConstraints = fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
-			if !group.pkg.Info.NoAsset {
-				releases = append(releases, group.releases[0])
-			}
-		default:
-			release := group.releases[len(group.releases)-1]
-			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
-			if !group.pkg.Info.NoAsset {
-				releases = append(releases, release)
-			}
+		var release *Release
+		vo.VersionConstraints, release = group.VersionConstraint()
+		if release != nil {
+			releases = append(releases, release)
 		}
 		if pkgInfo.NoAsset {
 			vo.NoAsset = ptr.Bool(true)
