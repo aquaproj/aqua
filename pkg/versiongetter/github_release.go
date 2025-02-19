@@ -3,11 +3,8 @@ package versiongetter
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/hashicorp/go-version"
@@ -177,43 +174,4 @@ func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
 		}
 	}
 	return false
-}
-
-func matchTagByFilter(tagName string, filter *Filter) bool {
-	sv := tagName
-	if filter.Prefix != "" {
-		if !strings.HasPrefix(tagName, filter.Prefix) {
-			return false
-		}
-		sv = strings.TrimPrefix(tagName, filter.Prefix)
-	}
-	if filter.Filter != nil {
-		if f, err := expr.EvaluateVersionFilter(filter.Filter, tagName); err != nil || !f {
-			return false
-		}
-	}
-	if filter.Constraint == "" {
-		return true
-	}
-	if f, err := expr.EvaluateVersionConstraints(filter.Constraint, tagName, sv); err == nil && f {
-		return true
-	}
-	return false
-}
-
-var versionPattern = regexp.MustCompile(`^(.*?)v?((?:\d+)(?:\.\d+)?(?:\.\d+)?(?:(\.|-).+)?)$`)
-
-func GetVersionAndPrefix(tag string) (*version.Version, string, error) {
-	if v, err := version.NewVersion(tag); err == nil {
-		return v, "", nil
-	}
-	a := versionPattern.FindStringSubmatch(tag)
-	if a == nil {
-		return nil, "", nil
-	}
-	v, err := version.NewVersion(a[2])
-	if err != nil {
-		return nil, "", err //nolint:wrapcheck
-	}
-	return v, a[1], nil
 }
