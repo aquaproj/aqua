@@ -47,13 +47,14 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 		}
 		pkgInfo := group.pkg.Info
 		vo := ConvertPkgToVO(pkgInfo)
-		if len(group.releases) == 1 { //nolint:nestif
+		switch {
+		case len(group.releases) == 1:
 			v := group.releases[0].Tag
 			vo.VersionConstraints = fmt.Sprintf(`Version == "%s"`, v)
 			if !group.pkg.Info.NoAsset {
 				versions = append(versions, v)
 			}
-		} else if group.fixed {
+		case group.fixed:
 			tags := make([]string, len(group.releases))
 			for i, release := range group.releases {
 				tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
@@ -62,7 +63,7 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 			if !group.pkg.Info.NoAsset {
 				versions = append(versions, tags[0])
 			}
-		} else {
+		default:
 			release := group.releases[len(group.releases)-1]
 			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
 			if !group.pkg.Info.NoAsset {
