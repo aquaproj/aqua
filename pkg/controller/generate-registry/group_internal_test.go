@@ -73,6 +73,7 @@ tfcmt_windows_amd64.tar.gz
 					allAsset: `tfcmt_darwin_amd64.tar.gz
 tfcmt_linux_amd64.tar.gz
 `,
+					fixed: true,
 				},
 				{
 					releases: []*Release{
@@ -84,6 +85,7 @@ tfcmt_linux_amd64.tar.gz
 tfcmt_linux_amd64.tar.gz
 tfcmt_windows_amd64.tar.gz
 `,
+					fixed: true,
 				},
 				{
 					releases: []*Release{
