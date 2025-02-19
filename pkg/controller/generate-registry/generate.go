@@ -123,14 +123,18 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	return pkgInfo, versions
 }
 
-func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry, arg string, limit int, cfg *Config) (*registry.PackageInfo, []string) {
+func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry, arg string, limit int, cfg *Config) (*registry.PackageInfo, []string) { //nolint:cyclop
 	pkgName, version, _ := strings.Cut(arg, "@")
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return c.getCargoPackageInfo(ctx, logE, pkgName)
 	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
-		Type: "github_release",
+		Type:          "github_release",
+		VersionPrefix: cfg.VersionPrefix,
+	}
+	if cfg.VersionFilter != nil {
+		pkgInfo.VersionFilter = cfg.VersionFilter.Source().String()
 	}
 	if len(splitPkgNames) == 1 {
 		pkgInfo.Name = pkgName
@@ -151,7 +155,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 		pkgInfo.Description = repo.GetDescription()
 	}
 	if limit != 1 && version == "" {
-		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit, cfg)
+		return pkgInfo, c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit, cfg)
 	}
 	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {

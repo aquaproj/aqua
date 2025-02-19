@@ -33,10 +33,9 @@ func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
 	}
 }
 
-func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:cyclop
-	pkg := &registry.PackageInfo{}
+func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint:cyclop
 	if len(groups) == 0 {
-		return pkg, nil
+		return nil
 	}
 	versions := make([]string, 0, len(groups))
 	for _, group := range groups {
@@ -52,10 +51,10 @@ func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:c
 				versions = append(versions, v)
 			}
 		} else {
-			v := group.releases[len(group.releases)-1].Tag
-			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(v, "v"))
+			release := group.releases[len(group.releases)-1]
+			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
 			if !group.pkg.Info.NoAsset {
-				versions = append(versions, v)
+				versions = append(versions, release.Tag)
 			}
 		}
 		if pkgInfo.NoAsset {
@@ -77,7 +76,7 @@ func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:c
 	}
 	pkg.VersionOverrides[len(pkg.VersionOverrides)-1].VersionConstraints = "true"
 	reverse(versions)
-	return pkg, versions
+	return versions
 }
 
 func reverse(versions []string) {
@@ -207,6 +206,6 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 	return newGroups
 }
 
-func (c *Controller) generatePackage(logE *logrus.Entry, pkgName string, releases []*Release) (*registry.PackageInfo, []string) {
-	return mergeGroups(c.group(logE, pkgName, releases))
+func (c *Controller) generatePackage(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
+	return mergeGroups(pkgInfo, c.group(logE, pkgName, releases))
 }
