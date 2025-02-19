@@ -52,10 +52,10 @@ func mergeGroups(groups []*Group) (*registry.PackageInfo, []string) { //nolint:c
 				versions = append(versions, v)
 			}
 		} else {
-			v := group.releases[len(group.releases)-1].Tag
-			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(v, "v"))
+			release := group.releases[len(group.releases)-1]
+			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
 			if !group.pkg.Info.NoAsset {
-				versions = append(versions, v)
+				versions = append(versions, release.Tag)
 			}
 		}
 		if pkgInfo.NoAsset {
