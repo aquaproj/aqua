@@ -163,6 +163,13 @@ func mergeFixedGroups(groups []*Group) []*Group {
 	sort.Slice(arr, func(i, j int) bool {
 		return arr[i].releases[0].Tag < arr[j].releases[0].Tag
 	})
+
+	// Move the group with NoAsset to the top.
+	for i, a := range arr {
+		if a.pkg.Info.NoAsset {
+			return append(append([]*Group{a}, arr[:i]...), arr[i+1:]...)
+		}
+	}
 	return arr
 }
 
