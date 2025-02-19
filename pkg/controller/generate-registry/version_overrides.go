@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -48,15 +49,22 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 }
 
 func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
-	if cfg.VersionFilter == nil {
-		return false
+	if cfg.VersionFilter != nil {
+		f, err := expr.EvaluateVersionFilter(cfg.VersionFilter, tag)
+		if err != nil {
+			logerr.WithError(logE, err).WithField("tag_name", tag).Warn("evaluate a version filter")
+			return false
+		}
+		if !f {
+			return true
+		}
 	}
-	f, err := expr.EvaluateVersionFilter(cfg.VersionFilter, tag)
-	if err != nil {
-		logerr.WithError(logE, err).WithField("tag_name", tag).Warn("evaluate a version filter")
-		return false
+	if cfg.VersionPrefix != "" {
+		if !strings.HasPrefix(tag, cfg.VersionPrefix) {
+			return true
+		}
 	}
-	return !f
+	return false
 }
 
 func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
