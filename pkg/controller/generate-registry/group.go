@@ -146,8 +146,7 @@ func sortAndMergeGroups(groups []*Group) []*Group {
 		}
 		newGroups = append(newGroups, group)
 	}
-	groupByExcludedAsset(newGroups)
-	return append(fixedGroups, newGroups...)
+	return append(fixedGroups, groupByExcludedAsset(newGroups)...)
 }
 
 func excludeGroupAssets(group *Group, pkgName string) {
@@ -182,6 +181,9 @@ func groupByExcludedAsset(groups []*Group) []*Group {
 		}
 		newGroups = append(newGroups, prevGroup)
 		prevGroup = group
+	}
+	if len(newGroups) == 0 {
+		return []*Group{prevGroup}
 	}
 	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
 		return append(newGroups, prevGroup)
