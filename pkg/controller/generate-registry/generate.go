@@ -155,7 +155,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 		pkgInfo.Description = repo.GetDescription()
 	}
 	if limit != 1 && version == "" {
-		return c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit, cfg)
+		return pkgInfo, c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit, cfg)
 	}
 	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {

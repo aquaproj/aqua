@@ -79,7 +79,7 @@ func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
 	return !f
 }
 
-func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) (*registry.PackageInfo, []string) { //nolint:cyclop,funlen
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string { //nolint:cyclop,funlen
 	ghReleases := c.listReleases(ctx, logE, pkgInfo, limit)
 	releases := make([]*Release, 0, len(ghReleases))
 	for _, release := range ghReleases {
@@ -132,16 +132,11 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		release.assets = assets
 	}
 
-	p, versions := c.generatePackage(logE, pkgName, releases)
-	p.Type = pkgInfo.Type
-	p.RepoOwner = pkgInfo.RepoOwner
-	p.RepoName = pkgInfo.RepoName
-	p.Description = pkgInfo.Description
-	p.Name = pkgInfo.Name
-	if len(p.VersionOverrides) != 0 {
-		p.VersionConstraints = "false"
+	versions := c.generatePackage(logE, pkgInfo, pkgName, releases)
+	if len(pkgInfo.VersionOverrides) != 0 {
+		pkgInfo.VersionConstraints = "false"
 	}
-	return p, versions
+	return versions
 }
 
 func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, limit int) []*github.RepositoryRelease {
