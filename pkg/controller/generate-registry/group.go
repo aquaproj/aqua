@@ -2,7 +2,9 @@ package genrgst
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
@@ -17,6 +19,7 @@ type Group struct {
 	allAsset   string
 	pkg        *Package
 	assetNames []string
+	fixed      bool
 }
 
 func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
@@ -44,13 +47,23 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 		}
 		pkgInfo := group.pkg.Info
 		vo := ConvertPkgToVO(pkgInfo)
-		if len(group.releases) == 1 {
+		switch {
+		case len(group.releases) == 1:
 			v := group.releases[0].Tag
 			vo.VersionConstraints = fmt.Sprintf(`Version == "%s"`, v)
 			if !group.pkg.Info.NoAsset {
 				versions = append(versions, v)
 			}
-		} else {
+		case group.fixed:
+			tags := make([]string, len(group.releases))
+			for i, release := range group.releases {
+				tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
+			}
+			vo.VersionConstraints = fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
+			if !group.pkg.Info.NoAsset {
+				versions = append(versions, tags[0])
+			}
+		default:
 			release := group.releases[len(group.releases)-1]
 			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
 			if !group.pkg.Info.NoAsset {
@@ -136,17 +149,35 @@ func groupByAllAsset(releases []*Release) []*Group {
 	return groups
 }
 
+func mergeFixedGroups(groups []*Group) []*Group {
+	m := map[string]*Group{}
+	for _, group := range groups {
+		a, ok := m[group.allAsset]
+		if !ok {
+			m[group.allAsset] = group
+			continue
+		}
+		a.releases = append(a.releases, group.releases...)
+	}
+	arr := slices.Collect(maps.Values(m))
+	sort.Slice(arr, func(i, j int) bool {
+		return arr[i].releases[0].Tag < arr[j].releases[0].Tag
+	})
+	return arr
+}
+
 func sortAndMergeGroups(groups []*Group) []*Group {
 	newGroups := make([]*Group, 0, len(groups))
 	fixedGroups := make([]*Group, 0, len(groups))
 	for _, group := range groups {
 		if len(group.releases) == 1 {
+			group.fixed = true
 			fixedGroups = append(fixedGroups, group)
 			continue
 		}
 		newGroups = append(newGroups, group)
 	}
-	return append(fixedGroups, groupByExcludedAsset(newGroups)...)
+	return append(mergeFixedGroups(fixedGroups), groupByExcludedAsset(newGroups)...)
 }
 
 func excludeGroupAssets(group *Group, pkgName string) {
@@ -220,7 +251,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
 			continue
 		}
-		newGroups = append(newGroups, group)
+		newGroups = append(newGroups, prevGroup)
 		prevGroup = group
 	}
 
