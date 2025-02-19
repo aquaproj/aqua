@@ -169,9 +169,8 @@ func excludeGroupsAssets(groups []*Group, pkgName string) {
 }
 
 func groupByExcludedAsset(groups []*Group) []*Group {
-	newGroups := make([]*Group, 1, len(groups))
+	newGroups := make([]*Group, 0, len(groups))
 	prevGroup := groups[0]
-	newGroups[0] = prevGroup
 	for _, group := range groups[1:] {
 		if prevGroup.allAsset == group.allAsset {
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
@@ -185,7 +184,7 @@ func groupByExcludedAsset(groups []*Group) []*Group {
 		prevGroup = group
 	}
 	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
-		newGroups = append(newGroups, prevGroup)
+		return append(newGroups, prevGroup)
 	}
 	return newGroups
 }
@@ -213,8 +212,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		return groups
 	}
 	prevGroup := groups[0]
-	newGroups := make([]*Group, 1, len(groups))
-	newGroups[0] = prevGroup
+	newGroups := make([]*Group, 0, len(groups))
 	for _, group := range groups[1:] {
 		if reflect.DeepEqual(group.pkg.Info, prevGroup.pkg.Info) {
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
@@ -232,9 +230,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		return newGroups[:len(newGroups)-1]
 	}
 
-	sortAndMergeGroups(newGroups)
-
-	return newGroups
+	return sortAndMergeGroups(newGroups)
 }
 
 func (c *Controller) generatePackage(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
