@@ -36,39 +36,50 @@ func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
 	}
 }
 
+func (g *Group) VersionConstraint() (string, *Release) {
+	switch {
+	case len(g.releases) == 1:
+		v := g.releases[0].Tag
+		vc := fmt.Sprintf(`Version == "%s"`, v)
+		if !g.pkg.Info.NoAsset {
+			return vc, g.releases[0]
+		}
+		return vc, nil
+	case g.fixed:
+		tags := make([]string, len(g.releases))
+		for i, release := range g.releases {
+			tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
+		}
+		vc := fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
+		if !g.pkg.Info.NoAsset {
+			return vc, g.releases[0]
+		}
+		return vc, nil
+	default:
+		release := g.releases[len(g.releases)-1]
+		vc := fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
+		if !g.pkg.Info.NoAsset {
+			return vc, release
+		}
+		return vc, nil
+	}
+}
+
 func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint:cyclop
 	if len(groups) == 0 {
 		return nil
 	}
-	versions := make([]string, 0, len(groups))
+	releases := make([]*Release, 0, len(groups))
 	for _, group := range groups {
 		if len(group.releases) == 0 {
 			continue
 		}
 		pkgInfo := group.pkg.Info
 		vo := ConvertPkgToVO(pkgInfo)
-		switch {
-		case len(group.releases) == 1:
-			v := group.releases[0].Tag
-			vo.VersionConstraints = fmt.Sprintf(`Version == "%s"`, v)
-			if !group.pkg.Info.NoAsset {
-				versions = append(versions, v)
-			}
-		case group.fixed:
-			tags := make([]string, len(group.releases))
-			for i, release := range group.releases {
-				tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
-			}
-			vo.VersionConstraints = fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
-			if !group.pkg.Info.NoAsset {
-				versions = append(versions, tags[0])
-			}
-		default:
-			release := group.releases[len(group.releases)-1]
-			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
-			if !group.pkg.Info.NoAsset {
-				versions = append(versions, release.Tag)
-			}
+		var release *Release
+		vo.VersionConstraints, release = group.VersionConstraint()
+		if release != nil {
+			releases = append(releases, release)
 		}
 		if pkgInfo.NoAsset {
 			vo.NoAsset = ptr.Bool(true)
@@ -88,17 +99,14 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 		pkg.VersionOverrides = append(pkg.VersionOverrides, vo)
 	}
 	pkg.VersionOverrides[len(pkg.VersionOverrides)-1].VersionConstraints = "true"
-	reverse(versions)
-	return versions
-}
-
-func reverse(versions []string) {
-	// sort.Reverse doesn't work well.
-	// https://qiita.com/shibukawa/items/0e6e01dc41c352ccedb5
-	size := len(versions)
-	for i := range size / 2 {
-		versions[i], versions[size-i-1] = versions[size-i-1], versions[i]
+	sort.Slice(releases, func(i, j int) bool {
+		return releases[i].Version.GreaterThan(releases[j].Version)
+	})
+	versions := make([]string, len(releases))
+	for i, release := range releases {
+		versions[i] = release.Tag
 	}
+	return versions
 }
 
 func replaceVersion(assetName, version string) string {
@@ -161,7 +169,7 @@ func mergeFixedGroups(groups []*Group) []*Group {
 	}
 	arr := slices.Collect(maps.Values(m))
 	sort.Slice(arr, func(i, j int) bool {
-		return arr[i].releases[0].Tag < arr[j].releases[0].Tag
+		return arr[i].releases[0].Version.LessThan(arr[j].releases[0].Version)
 	})
 
 	// Move the group with NoAsset to the top.
