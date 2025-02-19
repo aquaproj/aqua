@@ -250,7 +250,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
 			continue
 		}
-		newGroups = append(newGroups, group)
+		newGroups = append(newGroups, prevGroup)
 		prevGroup = group
 	}
 
