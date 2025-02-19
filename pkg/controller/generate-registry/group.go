@@ -36,7 +36,7 @@ func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
 	}
 }
 
-func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint:cyclop
+func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint:cyclop,funlen
 	if len(groups) == 0 {
 		return nil
 	}
@@ -96,15 +96,6 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 		versions[i] = release.Tag
 	}
 	return versions
-}
-
-func reverse(versions []string) {
-	// sort.Reverse doesn't work well.
-	// https://qiita.com/shibukawa/items/0e6e01dc41c352ccedb5
-	size := len(versions)
-	for i := range size / 2 {
-		versions[i], versions[size-i-1] = versions[size-i-1], versions[i]
-	}
 }
 
 func replaceVersion(assetName, version string) string {
