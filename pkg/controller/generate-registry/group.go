@@ -40,7 +40,7 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 	if len(groups) == 0 {
 		return nil
 	}
-	versions := make([]string, 0, len(groups))
+	releases := make([]*Release, 0, len(groups))
 	for _, group := range groups {
 		if len(group.releases) == 0 {
 			continue
@@ -52,7 +52,7 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 			v := group.releases[0].Tag
 			vo.VersionConstraints = fmt.Sprintf(`Version == "%s"`, v)
 			if !group.pkg.Info.NoAsset {
-				versions = append(versions, v)
+				releases = append(releases, group.releases[0])
 			}
 		case group.fixed:
 			tags := make([]string, len(group.releases))
@@ -61,13 +61,13 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 			}
 			vo.VersionConstraints = fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
 			if !group.pkg.Info.NoAsset {
-				versions = append(versions, tags[0])
+				releases = append(releases, group.releases[0])
 			}
 		default:
 			release := group.releases[len(group.releases)-1]
 			vo.VersionConstraints = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
 			if !group.pkg.Info.NoAsset {
-				versions = append(versions, release.Tag)
+				releases = append(releases, release)
 			}
 		}
 		if pkgInfo.NoAsset {
@@ -88,7 +88,13 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 		pkg.VersionOverrides = append(pkg.VersionOverrides, vo)
 	}
 	pkg.VersionOverrides[len(pkg.VersionOverrides)-1].VersionConstraints = "true"
-	reverse(versions)
+	sort.Slice(releases, func(i, j int) bool {
+		return releases[i].Version.GreaterThan(releases[j].Version)
+	})
+	versions := make([]string, len(releases))
+	for i, release := range releases {
+		versions[i] = release.Tag
+	}
 	return versions
 }
 
@@ -161,7 +167,7 @@ func mergeFixedGroups(groups []*Group) []*Group {
 	}
 	arr := slices.Collect(maps.Values(m))
 	sort.Slice(arr, func(i, j int) bool {
-		return arr[i].releases[0].Tag < arr[j].releases[0].Tag
+		return arr[i].releases[0].Version.LessThan(arr[j].releases[0].Version)
 	})
 
 	// Move the group with NoAsset to the top.
