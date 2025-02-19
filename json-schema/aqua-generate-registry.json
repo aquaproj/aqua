@@ -8,6 +8,9 @@
         "version_filter": {
           "type": "string"
         },
+        "version_prefix": {
+          "type": "string"
+        },
         "all_assets_filter": {
           "type": "string"
         },
