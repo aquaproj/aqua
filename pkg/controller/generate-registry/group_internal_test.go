@@ -3,6 +3,8 @@ package genrgst
 import (
 	"reflect"
 	"testing"
+
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
 
 func Test_sortAndMergeGroups(t *testing.T) { //nolint:funlen
@@ -27,6 +29,9 @@ func Test_sortAndMergeGroups(t *testing.T) { //nolint:funlen
 					allAsset: `tfcmt_{{.Version}}_darwin_amd64.tar.gz
 tfcmt_{{.Version}}_linux_amd64.tar.gz
 `,
+					pkg: &Package{
+						Info: &registry.PackageInfo{},
+					},
 				},
 				{
 					releases: []*Release{
@@ -37,6 +42,9 @@ tfcmt_{{.Version}}_linux_amd64.tar.gz
 					allAsset: `tfcmt_darwin_amd64.tar.gz
 tfcmt_linux_amd64.tar.gz
 `,
+					pkg: &Package{
+						Info: &registry.PackageInfo{},
+					},
 				},
 				{
 					releases: []*Release{
@@ -50,6 +58,9 @@ tfcmt_linux_amd64.tar.gz
 					allAsset: `tfcmt_{{.Version}}_darwin_amd64.tar.gz
 tfcmt_{{.Version}}_linux_amd64.tar.gz
 `,
+					pkg: &Package{
+						Info: &registry.PackageInfo{},
+					},
 				},
 				{
 					releases: []*Release{
@@ -61,6 +72,9 @@ tfcmt_{{.Version}}_linux_amd64.tar.gz
 tfcmt_linux_amd64.tar.gz
 tfcmt_windows_amd64.tar.gz
 `,
+					pkg: &Package{
+						Info: &registry.PackageInfo{},
+					},
 				},
 			},
 			exp: []*Group{
@@ -74,6 +88,9 @@ tfcmt_windows_amd64.tar.gz
 tfcmt_linux_amd64.tar.gz
 `,
 					fixed: true,
+					pkg: &Package{
+						Info: &registry.PackageInfo{},
+					},
 				},
 				{
 					releases: []*Release{
@@ -86,6 +103,9 @@ tfcmt_linux_amd64.tar.gz
 tfcmt_windows_amd64.tar.gz
 `,
 					fixed: true,
+					pkg: &Package{
+						Info: &registry.PackageInfo{},
+					},
 				},
 				{
 					releases: []*Release{
@@ -105,6 +125,9 @@ tfcmt_windows_amd64.tar.gz
 					allAsset: `tfcmt_{{.Version}}_darwin_amd64.tar.gz
 tfcmt_{{.Version}}_linux_amd64.tar.gz
 `,
+					pkg: &Package{
+						Info: &registry.PackageInfo{},
+					},
 				},
 			},
 		},
