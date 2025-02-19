@@ -42,7 +42,7 @@ func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logE *l
 		ArtifactPath:   file,
 		SignerWorkflow: g.gaa.SignerWorkflow,
 	}); err != nil {
-		return fmt.Errorf("verify a package with minisign: %w", err)
+		return fmt.Errorf("verify a package with gh attestation: %w", err)
 	}
 	return nil
 }

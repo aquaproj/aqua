@@ -49,7 +49,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	logE.WithFields(logrus.Fields{
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
-	}).Info("gh attestation verify failed temporarily, retring")
+	}).Info("gh attestation verify failed temporarily, retrying")
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running gh attestation verify: %w", err)
 	}
