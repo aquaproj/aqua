@@ -136,29 +136,57 @@ func groupByAllAsset(releases []*Release) []*Group {
 	return groups
 }
 
-func groupByExcludedAsset(groups []*Group, pkgName string) []*Group {
-	newGroups := make([]*Group, 1, len(groups))
-	prevGroup := groups[0]
-	newGroups[0] = prevGroup
-	for _, group := range groups[1:] {
-		assetNames := make([]string, 0, len(group.assetNames))
-		for _, assetName := range group.assetNames {
-			if asset.Exclude(pkgName, assetName) {
-				continue
-			}
-			assetNames = append(assetNames, assetName)
+func sortAndMergeGroups(groups []*Group) []*Group {
+	newGroups := make([]*Group, 0, len(groups))
+	fixedGroups := make([]*Group, 0, len(groups))
+	for _, group := range groups {
+		if len(group.releases) == 1 {
+			fixedGroups = append(fixedGroups, group)
+			continue
 		}
-		group.assetNames = assetNames
-		group.allAsset = strings.Join(assetNames, "\n")
+		newGroups = append(newGroups, group)
+	}
+	return append(fixedGroups, groupByExcludedAsset(newGroups)...)
+}
+
+func excludeGroupAssets(group *Group, pkgName string) {
+	assetNames := make([]string, 0, len(group.assetNames))
+	for _, assetName := range group.assetNames {
+		if asset.Exclude(pkgName, assetName) {
+			continue
+		}
+		assetNames = append(assetNames, assetName)
+	}
+	group.assetNames = assetNames
+	group.allAsset = strings.Join(assetNames, "\n")
+}
+
+func excludeGroupsAssets(groups []*Group, pkgName string) {
+	for _, group := range groups {
+		excludeGroupAssets(group, pkgName)
+	}
+}
+
+func groupByExcludedAsset(groups []*Group) []*Group {
+	newGroups := make([]*Group, 0, len(groups))
+	prevGroup := groups[0]
+	for _, group := range groups[1:] {
 		if prevGroup.allAsset == group.allAsset {
+			prevGroup.releases = append(prevGroup.releases, group.releases...)
+			continue
+		}
+		if prevGroup.pkg != nil && group.pkg != nil && reflect.DeepEqual(prevGroup.pkg.Info, group.pkg.Info) {
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
 			continue
 		}
 		newGroups = append(newGroups, prevGroup)
 		prevGroup = group
 	}
+	if len(newGroups) == 0 {
+		return []*Group{prevGroup}
+	}
 	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
-		newGroups = append(newGroups, prevGroup)
+		return append(newGroups, prevGroup)
 	}
 	return newGroups
 }
@@ -167,7 +195,9 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 	if len(releases) == 0 {
 		return nil
 	}
-	groups := groupByExcludedAsset(groupByAllAsset(releases), pkgName)
+	groups := groupByAllAsset(releases)
+	excludeGroupsAssets(groups, pkgName)
+	groups = groupByExcludedAsset(groups)
 
 	for _, group := range groups {
 		release := group.releases[0]
@@ -184,8 +214,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		return groups
 	}
 	prevGroup := groups[0]
-	newGroups := make([]*Group, 1, len(groups))
-	newGroups[0] = prevGroup
+	newGroups := make([]*Group, 0, len(groups))
 	for _, group := range groups[1:] {
 		if reflect.DeepEqual(group.pkg.Info, prevGroup.pkg.Info) {
 			prevGroup.releases = append(prevGroup.releases, group.releases...)
@@ -203,7 +232,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		return newGroups[:len(newGroups)-1]
 	}
 
-	return newGroups
+	return sortAndMergeGroups(newGroups)
 }
 
 func (c *Controller) generatePackage(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
