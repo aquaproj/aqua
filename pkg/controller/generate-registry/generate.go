@@ -130,7 +130,11 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
-		Type: "github_release",
+		Type:          "github_release",
+		VersionPrefix: cfg.VersionPrefix,
+	}
+	if cfg.VersionFilter != nil {
+		pkgInfo.VersionFilter = cfg.VersionFilter.Source().String()
 	}
 	if len(splitPkgNames) == 1 {
 		pkgInfo.Name = pkgName
