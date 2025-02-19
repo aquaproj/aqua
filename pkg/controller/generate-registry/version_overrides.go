@@ -79,7 +79,7 @@ func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
 	return !f
 }
 
-func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string { //nolint:cyclop,funlen
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string { //nolint:cyclop
 	ghReleases := c.listReleases(ctx, logE, pkgInfo, limit)
 	releases := make([]*Release, 0, len(ghReleases))
 	for _, release := range ghReleases {
