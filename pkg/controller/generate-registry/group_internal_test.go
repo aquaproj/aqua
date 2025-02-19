@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/hashicorp/go-version"
 )
 
 func Test_sortAndMergeGroups(t *testing.T) { //nolint:funlen
@@ -20,10 +21,12 @@ func Test_sortAndMergeGroups(t *testing.T) { //nolint:funlen
 				{
 					releases: []*Release{
 						{
-							Tag: "v0.1.0",
+							Tag:     "v0.1.0",
+							Version: version.Must(version.NewSemver("v0.1.0")),
 						},
 						{
-							Tag: "v0.2.0",
+							Tag:     "v0.2.0",
+							Version: version.Must(version.NewSemver("v0.2.0")),
 						},
 					},
 					allAsset: `tfcmt_{{.Version}}_darwin_amd64.tar.gz
@@ -36,7 +39,8 @@ tfcmt_{{.Version}}_linux_amd64.tar.gz
 				{
 					releases: []*Release{
 						{
-							Tag: "v0.3.0",
+							Tag:     "v0.3.0",
+							Version: version.Must(version.NewSemver("v0.3.0")),
 						},
 					},
 					allAsset: `tfcmt_darwin_amd64.tar.gz
@@ -49,10 +53,12 @@ tfcmt_linux_amd64.tar.gz
 				{
 					releases: []*Release{
 						{
-							Tag: "v0.4.0",
+							Tag:     "v0.4.0",
+							Version: version.Must(version.NewSemver("v0.4.0")),
 						},
 						{
-							Tag: "v0.5.0",
+							Tag:     "v0.5.0",
+							Version: version.Must(version.NewSemver("v0.5.0")),
 						},
 					},
 					allAsset: `tfcmt_{{.Version}}_darwin_amd64.tar.gz
@@ -65,7 +71,8 @@ tfcmt_{{.Version}}_linux_amd64.tar.gz
 				{
 					releases: []*Release{
 						{
-							Tag: "v0.6.0",
+							Tag:     "v0.6.0",
+							Version: version.Must(version.NewSemver("v0.6.0")),
 						},
 					},
 					allAsset: `tfcmt_darwin_amd64.tar.gz
@@ -81,7 +88,8 @@ tfcmt_windows_amd64.tar.gz
 				{
 					releases: []*Release{
 						{
-							Tag: "v0.3.0",
+							Tag:     "v0.3.0",
+							Version: version.Must(version.NewSemver("v0.3.0")),
 						},
 					},
 					allAsset: `tfcmt_darwin_amd64.tar.gz
@@ -95,7 +103,8 @@ tfcmt_linux_amd64.tar.gz
 				{
 					releases: []*Release{
 						{
-							Tag: "v0.6.0",
+							Tag:     "v0.6.0",
+							Version: version.Must(version.NewSemver("v0.6.0")),
 						},
 					},
 					allAsset: `tfcmt_darwin_amd64.tar.gz
@@ -110,16 +119,20 @@ tfcmt_windows_amd64.tar.gz
 				{
 					releases: []*Release{
 						{
-							Tag: "v0.1.0",
+							Tag:     "v0.1.0",
+							Version: version.Must(version.NewSemver("v0.1.0")),
 						},
 						{
-							Tag: "v0.2.0",
+							Tag:     "v0.2.0",
+							Version: version.Must(version.NewSemver("v0.2.0")),
 						},
 						{
-							Tag: "v0.4.0",
+							Tag:     "v0.4.0",
+							Version: version.Must(version.NewSemver("v0.4.0")),
 						},
 						{
-							Tag: "v0.5.0",
+							Tag:     "v0.5.0",
+							Version: version.Must(version.NewSemver("v0.5.0")),
 						},
 					},
 					allAsset: `tfcmt_{{.Version}}_darwin_amd64.tar.gz
