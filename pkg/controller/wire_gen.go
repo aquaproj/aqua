@@ -8,9 +8,6 @@ package controller
 
 import (
 	"context"
-	"io"
-	"net/http"
-
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -52,8 +49,11 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"io"
+	"net/http"
 )
 
 // Injectors from wire.go:
@@ -123,7 +123,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	return controller
 }
 
-func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
+func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
@@ -140,7 +140,7 @@ func InitializeInstallCommandController(ctx context.Context, param *config.Param
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	unarchiver := unarchive.New(executor, fs)
-	minisignExecutorImpl, err := minisign.NewExecutor(executor, param)
+	minisignExecutorImpl, err := minisign.NewExecutor(logE, executor, param)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return controller
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*exec.Controller, error) {
+func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*exec.Controller, error) {
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
@@ -195,7 +195,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	minisignExecutorImpl, err := minisign.NewExecutor(executor, param)
+	minisignExecutorImpl, err := minisign.NewExecutor(logE, executor, param)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	return execController, nil
 }
 
-func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
+func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
 	fs := afero.NewOsFs()
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
@@ -237,7 +237,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	minisignExecutorImpl, err := minisign.NewExecutor(executor, param)
+	minisignExecutorImpl, err := minisign.NewExecutor(logE, executor, param)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	return controller, nil
 }
 
-func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
+func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
 	repositoriesService := github.New(ctx)
 	httpDownloader := download.NewHTTPDownloader(httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
@@ -269,7 +269,7 @@ func InitializeCopyCommandController(ctx context.Context, param *config.Param, h
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	minisignExecutorImpl, err := minisign.NewExecutor(executor, param)
+	minisignExecutorImpl, err := minisign.NewExecutor(logE, executor, param)
 	if err != nil {
 		return nil, err
 	}
