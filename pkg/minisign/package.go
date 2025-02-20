@@ -14,9 +14,10 @@ func Package() *config.Package { //nolint:funlen
 			Version: Version,
 		},
 		PackageInfo: &registry.PackageInfo{
-			Type:      "github_release",
-			RepoOwner: "jedisct1",
-			RepoName:  "minisign",
+			Type:               "github_release",
+			RepoOwner:          "jedisct1",
+			RepoName:           "minisign",
+			VersionConstraints: `false`,
 			VersionOverrides: []*registry.VersionOverride{
 				{
 					VersionConstraints:  `Version == "0.11"`,
