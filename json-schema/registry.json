@@ -254,6 +254,9 @@
         "enabled": {
           "type": "boolean"
         },
+        "signer_workflow": {
+          "type": "string"
+        },
         "signer-workflow": {
           "type": "string"
         }
