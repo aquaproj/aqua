@@ -12,7 +12,7 @@
     },
     {
       "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.0/slsa-verifier-linux-amd64",
-      "checksum": "499BEFB675EFCCA9001AFE6E5156891B91E71F9C07AB120A8943979F85CC82E0",
+      "checksum": "499BEFB675EFCCA9001AFE6E5156891B91E71F9C07AB120A8943979F85CC82E6",
       "algorithm": "sha256"
     },
     {
