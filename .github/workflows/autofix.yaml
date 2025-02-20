@@ -14,7 +14,7 @@ jobs:
       - run: aqua upc -prune
         working-directory: pkg/cosign
       - run: aqua upc -prune
-        working-directory: pkg/slsa-verifier
+        working-directory: pkg/slsa
       - run: aqua upc -prune
         working-directory: pkg/minisign
       - run: aqua upc -prune
