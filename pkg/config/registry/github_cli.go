@@ -1,8 +1,21 @@
 package registry
 
 type GitHubArtifactAttestations struct {
-	Enabled        *bool  `json:"enabled,omitempty"`
-	SignerWorkflow string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
+	// https://github.com/aquaproj/aqua/issues/3581
+	SignerWorkflow2 string `yaml:"signer_workflow,omitempty" json:"signer_workflow,omitempty"`
+	// Deprecated: We'll remove signer-workflow at aqua v3.
+	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty"`
+}
+
+func (m *GitHubArtifactAttestations) SignerWorkflow() string {
+	if m == nil {
+		return ""
+	}
+	if m.SignerWorkflow2 != "" {
+		return m.SignerWorkflow2
+	}
+	return m.SignerWorkflow3
 }
 
 func (m *GitHubArtifactAttestations) GetEnabled() bool {
