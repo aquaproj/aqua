@@ -43,7 +43,7 @@ func NewExecutor(logE *logrus.Entry, executor CommandExecutor, param *config.Par
 	}
 	if !supported {
 		logE.Debug("the package isn't supported in the environment")
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 	pkg.PackageInfo = pkgInfo
 	exePath, err := pkg.ExePath(param.RootDir, pkgInfo.GetFiles()[0], rt)
