@@ -6,14 +6,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 )
 
-var Version string
-
+var Version string //nolint:gochecknoglobals
 //go:embed aqua.yaml
-var aquaBytes []byte
-
+var aquaBytes []byte //nolint:gochecknoglobals
 //go:embed aqua-checksums.json
-var checksumBytes []byte
-var checksums = checksum.New()
+var checksumBytes []byte       //nolint:gochecknoglobals
+var checksums = checksum.New() //nolint:gochecknoglobals
 
 func init() { //nolint:gochecknoinits
 	Version = checksum.ReadEmbeddedTool(checksums, aquaBytes, checksumBytes)
