@@ -45,7 +45,7 @@ func NewExecutor(logE *logrus.Entry, executor CommandExecutor, param *config.Par
 		logE.Debug("the package isn't supported in the environment")
 		return nil, nil
 	}
-
+	pkg.PackageInfo = pkgInfo
 	exePath, err := pkg.ExePath(param.RootDir, pkgInfo.GetFiles()[0], rt)
 	if err != nil {
 		return nil, fmt.Errorf("get an executable file path of minisign: %w", err)
