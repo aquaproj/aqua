@@ -12,7 +12,7 @@
     },
     {
       "id": "github_release/github.com/sigstore/cosign/v2.4.3/cosign-linux-amd64",
-      "checksum": "CAAAD125ACEF1CB81D58DCDC454A1E429D09A750D1E9E2B3ED1AED8964454708",
+      "checksum": "CAAAD125ACEF1CB81D58DCDC454A1E429D09A750D1E9E2B3ED1AED8964454700",
       "algorithm": "sha256"
     },
     {
