@@ -1,0 +1,34 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/sigstore/cosign/v2.4.3/cosign-darwin-amd64",
+      "checksum": "98A3BFD691F42C6A5B721880116F89210D8FDFF61CC0224CD3EF2F8E55A466FB",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v2.4.3/cosign-darwin-arm64",
+      "checksum": "EDFC761B27CED77F0F9CA288FF4FAC7CAA898E1E9DB38F4DFDF72160CDF8E638",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v2.4.3/cosign-linux-amd64",
+      "checksum": "CAAAD125ACEF1CB81D58DCDC454A1E429D09A750D1E9E2B3ED1AED8964454708",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v2.4.3/cosign-linux-arm64",
+      "checksum": "BD0F9763BCA54DE88699C3656ADE2F39C9A1C7A2916FF35601CAF23A79BE0629",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v2.4.3/cosign-windows-amd64.exe",
+      "checksum": "A2AC24E197111C9430CB2A98F10A641164381AFB83DF036504868E4EA5720800",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.318.0/registry.yaml",
+      "checksum": "13CCEEAE0251D67A361510DFFFC60D803B364132513BF6F5B2923C7E1104F8BE",
+      "algorithm": "sha256"
+    }
+  ]
+}

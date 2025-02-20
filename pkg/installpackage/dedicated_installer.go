@@ -14,10 +14,10 @@ type DedicatedInstaller struct {
 	installer *Installer
 	mutex     *sync.Mutex
 	pkg       func() *config.Package
-	checksums map[string]string
+	checksums *checksum.Checksums
 }
 
-func newDedicatedInstaller(installer *Installer, pkg func() *config.Package, checksums map[string]string) *DedicatedInstaller {
+func newDedicatedInstaller(installer *Installer, pkg func() *config.Package, checksums *checksum.Checksums) *DedicatedInstaller {
 	return &DedicatedInstaller{
 		installer: installer,
 		mutex:     &sync.Mutex{},
@@ -50,15 +50,10 @@ func (di *DedicatedInstaller) install(ctx context.Context, logE *logrus.Entry) e
 	}
 
 	pkg.PackageInfo = pkgInfo
-	chksum := di.checksums[fmt.Sprintf("%s/%s", di.installer.runtime.GOOS, di.installer.runtime.Arch(pkg.PackageInfo.Rosetta2, pkg.PackageInfo.WindowsARMEmulation))]
 
 	if err := di.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
-		Checksums: checksum.New(), // Check checksum but not update aqua-checksums.json
-		Pkg:       pkg,
-		Checksum: &checksum.Checksum{
-			Algorithm: "sha256",
-			Checksum:  chksum,
-		},
+		Pkg:           pkg,
+		Checksums:     di.checksums,
 		DisablePolicy: true,
 	}); err != nil {
 		return err

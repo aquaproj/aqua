@@ -1,14 +1,34 @@
 package ghattestation
 
-const Version = "v2.57.0"
+import (
+	_ "embed"
+	"encoding/json"
 
-func Checksums() map[string]string {
-	return map[string]string{
-		"darwin/amd64":  "7fc0310baa48b0de034ffb632022f4633547d4bebf3ce7b42ea3e77da22ca390",
-		"darwin/arm64":  "58f90d614f557b81ff4ee09a747ab68d13793a2f306d4e0102ad8beb9ae490fb",
-		"linux/amd64":   "d6b3621aa0ca383866716fc664d827a21bd1ac4a918a10c047121d8031892bf8",
-		"linux/arm64":   "a85069b7469846ee4afb5ca758aa1d8d3f801039598d521737b0caa407eeea36",
-		"windows/amd64": "54bda7bc0ea27feb495a0f465493d9422be9e145aabeb72ab11d65d93c1ceba6",
-		"windows/arm64": "7c16069d838eca957a4252ba5bbfc7c0eeebb06dd4d99cfb967301d7a197e1b2",
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"gopkg.in/yaml.v3"
+)
+
+var Version string
+
+//go:embed aqua.yaml
+var aquaBytes []byte
+
+//go:embed aqua-checksums.json
+var checksumBytes []byte
+var checksums = checksum.New()
+
+func init() { //nolint:gochecknoinits
+	if err := json.Unmarshal(checksumBytes, checksums); err != nil {
+		panic(err)
 	}
+	cfg := &aqua.Config{}
+	if err := yaml.Unmarshal(aquaBytes, cfg); err != nil {
+		panic(err)
+	}
+	Version = cfg.Packages[0].Version
+}
+
+func Checksums() *checksum.Checksums {
+	return checksums
 }
