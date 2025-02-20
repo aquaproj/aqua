@@ -330,7 +330,7 @@ jobs:
       - run: aqua policy allow
 
       - name: Test minisign
-        run: aqua i
+        run: aqua -c aqua.yaml i
         working-directory: tests/minisign
       - name: test Cosign, SLSA, and GitHub Artifact Attestations
         run: aqua i
