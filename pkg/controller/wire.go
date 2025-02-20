@@ -50,6 +50,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
+	"github.com/sirupsen/logrus"
 
 	"github.com/google/wire"
 	"github.com/spf13/afero"
@@ -231,7 +232,7 @@ func InitializeGenerateCommandController(ctx context.Context, param *config.Para
 	return &generate.Controller{}
 }
 
-func InitializeInstallCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
+func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
 	wire.Build(
 		install.New,
 		wire.NewSet(
@@ -418,7 +419,7 @@ func InitializeWhichCommandController(ctx context.Context, param *config.Param, 
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
+func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
 	wire.Build(
 		cexec.New,
 		wire.NewSet(
@@ -554,7 +555,7 @@ func InitializeExecCommandController(ctx context.Context, param *config.Param, h
 	return &cexec.Controller{}, nil
 }
 
-func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
+func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
 	wire.Build(
 		updateaqua.New,
 		wire.NewSet(
@@ -650,7 +651,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, param *config.Pa
 	return &updateaqua.Controller{}, nil
 }
 
-func InitializeCopyCommandController(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
+func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
 	wire.Build(
 		cp.New,
 		wire.NewSet(

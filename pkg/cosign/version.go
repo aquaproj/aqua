@@ -1,13 +1,24 @@
 package cosign
 
-const Version = "v2.4.3"
+import (
+	_ "embed"
 
-func Checksums() map[string]string {
-	return map[string]string{
-		"darwin/amd64":  "98A3BFD691F42C6A5B721880116F89210D8FDFF61CC0224CD3EF2F8E55A466FB",
-		"darwin/arm64":  "EDFC761B27CED77F0F9CA288FF4FAC7CAA898E1E9DB38F4DFDF72160CDF8E638",
-		"linux/amd64":   "CAAAD125ACEF1CB81D58DCDC454A1E429D09A750D1E9E2B3ED1AED8964454708",
-		"linux/arm64":   "BD0F9763BCA54DE88699C3656ADE2F39C9A1C7A2916FF35601CAF23A79BE0629",
-		"windows/amd64": "A2AC24E197111C9430CB2A98F10A641164381AFB83DF036504868E4EA5720800",
-	}
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+)
+
+var (
+	//go:embed aqua.yaml
+	aquaBytes []byte
+	//go:embed aqua-checksums.json
+	checksumBytes []byte
+	Version       string           //nolint:gochecknoglobals
+	checksums     = checksum.New() //nolint:gochecknoglobals
+)
+
+func init() { //nolint:gochecknoinits
+	Version = checksum.ReadEmbeddedTool(checksums, aquaBytes, checksumBytes)
+}
+
+func Checksums() *checksum.Checksums {
+	return checksums
 }

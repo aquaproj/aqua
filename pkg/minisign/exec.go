@@ -29,11 +29,24 @@ type ExecutorImpl struct {
 	minisignExePath string
 }
 
-func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
+func NewExecutor(logE *logrus.Entry, executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
 	rt := runtime.NewR()
 	pkg := Package()
-	pkg.PackageInfo.OverrideByRuntime(rt)
-	exePath, err := pkg.ExePath(param.RootDir, pkg.PackageInfo.GetFiles()[0], rt)
+
+	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, rt)
+	if err != nil {
+		return nil, fmt.Errorf("evaluate version constraints: %w", err)
+	}
+	supported, err := pkgInfo.CheckSupported(rt, rt.Env())
+	if err != nil {
+		return nil, fmt.Errorf("check if the package is supported in the environment: %w", err)
+	}
+	if !supported {
+		logE.Debug("the package isn't supported in the environment")
+		return nil, nil //nolint:nilnil
+	}
+	pkg.PackageInfo = pkgInfo
+	exePath, err := pkg.ExePath(param.RootDir, pkgInfo.GetFiles()[0], rt)
 	if err != nil {
 		return nil, fmt.Errorf("get an executable file path of minisign: %w", err)
 	}

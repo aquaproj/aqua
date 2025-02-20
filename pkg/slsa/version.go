@@ -1,14 +1,24 @@
 package slsa
 
-const Version = "v2.7.0"
+import (
+	_ "embed"
 
-func Checksums() map[string]string {
-	return map[string]string{
-		"darwin/amd64":  "36694B43AB23BE234ADD09272E5FAF77349D7E267BF65C01DC9BCDF58C4F496E",
-		"darwin/arm64":  "84D9122CE12E0C79080844285FD5C4976407ED3463E434A1B21B0979C46B1E55",
-		"linux/amd64":   "499BEFB675EFCCA9001AFE6E5156891B91E71F9C07AB120A8943979F85CC82E6",
-		"linux/arm64":   "DC3845D7605F666A0938389C1C5735230E50B32A547867FFD351FB14DF928167",
-		"windows/amd64": "61FF8B1CCA6AC0012B0BA906367836F64A389444766BE437DF2A69F71285F43B",
-		"windows/arm64": "DDF58798049599C44CAF299B6A9CF8A41760DAA94EE208BDAE8AA78FC75DCB2B",
-	}
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+)
+
+var (
+	//go:embed aqua.yaml
+	aquaBytes []byte
+	//go:embed aqua-checksums.json
+	checksumBytes []byte
+	Version       string           //nolint:gochecknoglobals
+	checksums     = checksum.New() //nolint:gochecknoglobals
+)
+
+func init() { //nolint:gochecknoinits
+	Version = checksum.ReadEmbeddedTool(checksums, aquaBytes, checksumBytes)
+}
+
+func Checksums() *checksum.Checksums {
+	return checksums
 }

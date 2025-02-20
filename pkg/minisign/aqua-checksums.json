@@ -1,0 +1,39 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/jedisct1/minisign/0.11/minisign-0.11-linux.tar.gz",
+      "checksum": "F0A0954413DF8531BEFED169E447A66DA6868D79052ED7E892E50A4291AF7AE0",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jedisct1/minisign/0.11/minisign-0.11-macos.zip",
+      "checksum": "E7C410AE8B8960D7087392472B040BDA9B2F307C76DF0384AC37F9AD103FC893",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jedisct1/minisign/0.11/minisign-0.11-win64.zip",
+      "checksum": "B9C31C2C3034F81F0E5F5D92CBCC20E67A9671B6E5455661588638848DC58031",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jedisct1/minisign/0.12/minisign-0.12-linux.tar.gz",
+      "checksum": "9A599B48BA6EB7B1E80F12F36B94CECA7C00B7A5173C95C3EFC88D9822957E73",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jedisct1/minisign/0.12/minisign-0.12-macos.zip",
+      "checksum": "89000B19535765F9CFFC65A65D64A820F433EF6DB8020667F7570E06BF6AAC63",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jedisct1/minisign/0.12/minisign-0.12-win64.zip",
+      "checksum": "37B600344E20C19314B2E82813DB2BFDCC408B77B876F7727889DBD46D539479",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.318.1/registry.yaml",
+      "checksum": "9DB3A693F12638B62765B62F293041B7BD99F74F521EAE75ADB669872BE4B168E9CB3C18D9680F584B38B71780AB0735D7AEF1AF14188070923235A2971E5974",
+      "algorithm": "sha512"
+    }
+  ]
+}

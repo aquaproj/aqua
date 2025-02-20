@@ -95,6 +95,19 @@ type Checksum struct {
 	Algorithm string `json:"algorithm"`
 }
 
+func (c *Checksums) UnmarshalJSON(b []byte) error {
+	chkJSON := &checksumsJSON{}
+	if err := json.Unmarshal(b, chkJSON); err != nil {
+		return fmt.Errorf("parse a checksum file as JSON: %w", err)
+	}
+	m := make(map[string]*Checksum, len(chkJSON.Checksums))
+	for _, chk := range chkJSON.Checksums {
+		m[chk.ID] = chk
+	}
+	c.m = m
+	return nil
+}
+
 func (c *Checksums) ReadFile(fs afero.Fs, p string) error {
 	if f, err := afero.Exists(fs, p); err != nil {
 		return fmt.Errorf("check if checksum file exists: %w", err)
@@ -106,15 +119,9 @@ func (c *Checksums) ReadFile(fs afero.Fs, p string) error {
 		return fmt.Errorf("open a checksum file: %w", err)
 	}
 	defer f.Close()
-	chkJSON := &checksumsJSON{}
-	if err := json.NewDecoder(f).Decode(chkJSON); err != nil {
+	if err := json.NewDecoder(f).Decode(c); err != nil {
 		return fmt.Errorf("parse a checksum file as JSON: %w", err)
 	}
-	m := make(map[string]*Checksum, len(chkJSON.Checksums))
-	for _, chk := range chkJSON.Checksums {
-		m[chk.ID] = chk
-	}
-	c.m = m
 	return nil
 }
 

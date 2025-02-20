@@ -11,3 +11,12 @@ jobs:
       - uses: suzuki-shunsuke/go-autofix-action@559f0cb21668a975222826fa376dbec951abc2f6 # v0.1.4
         with:
           aqua_version: v2.44.1
+      - run: aqua upc -prune
+        working-directory: pkg/cosign
+      - run: aqua upc -prune
+        working-directory: pkg/slsa
+      - run: aqua upc -prune
+        working-directory: pkg/minisign
+      - run: aqua upc -prune
+        working-directory: pkg/ghattestation
+      - uses: autofix-ci/action@2891949f3779a1cafafae1523058501de3d4e944 # v1.3.1
