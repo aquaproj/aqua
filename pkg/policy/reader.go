@@ -89,7 +89,7 @@ func (r *Reader) read(logE *logrus.Entry, policyFilePath string) (*Config, error
 	if err := r.validator.Validate(policyFilePath); err != nil {
 		r.set(policyFilePath, &Config{})
 		if err := r.validator.Warn(logE, policyFilePath, errors.Is(err, errPolicyUpdated)); err != nil {
-			logE.WithError(err).Warn("warn an denied policy file")
+			logE.WithError(err).Warn("warn a denied policy file")
 		}
 		return nil, nil //nolint:nilnil
 	}

@@ -37,7 +37,7 @@ func CalculateReader(file io.Reader, algorithm string) (string, error) {
 		return "", err
 	}
 	if _, err := io.Copy(h, file); err != nil {
-		return "", fmt.Errorf("copy a io.Reader to hash object: %w", err)
+		return "", fmt.Errorf("copy an io.Reader to hash object: %w", err)
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }

@@ -86,7 +86,7 @@ func (i *command) action(c *cli.Context) error {
 	}
 	ctrl, err := controller.InitializeInstallCommandController(c.Context, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
-		return fmt.Errorf("initialize a InstallController: %w", err)
+		return fmt.Errorf("initialize an InstallController: %w", err)
 	}
 	return ctrl.Install(c.Context, i.r.LogE, param) //nolint:wrapcheck
 }

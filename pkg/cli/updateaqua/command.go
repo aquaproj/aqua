@@ -54,7 +54,7 @@ func (ua *updateAquaCommand) action(c *cli.Context) error {
 	}
 	ctrl, err := controller.InitializeUpdateAquaCommandController(c.Context, ua.r.LogE, param, http.DefaultClient, ua.r.Runtime)
 	if err != nil {
-		return fmt.Errorf("initialize a UpdateAquaController: %w", err)
+		return fmt.Errorf("initialize an UpdateAquaController: %w", err)
 	}
 	return ctrl.UpdateAqua(c.Context, ua.r.LogE, param) //nolint:wrapcheck
 }
