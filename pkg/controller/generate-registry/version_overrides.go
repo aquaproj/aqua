@@ -30,6 +30,20 @@ type Release struct {
 	assets        []*github.ReleaseAsset
 }
 
+func (r *Release) LessThan(r2 *Release) bool {
+	if r.Version != nil && r2.Version != nil {
+		return r.Version.LessThan(r2.Version)
+	}
+	return r.Tag < r2.Tag
+}
+
+func (r *Release) GreaterThan(r2 *Release) bool {
+	if r.Version != nil && r2.Version != nil {
+		return r.Version.GreaterThan(r2.Version)
+	}
+	return r.Tag > r2.Tag
+}
+
 func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 	if len(versions) == 0 {
 		return nil

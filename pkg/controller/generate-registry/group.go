@@ -100,7 +100,9 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 	}
 	pkg.VersionOverrides[len(pkg.VersionOverrides)-1].VersionConstraints = "true"
 	sort.Slice(releases, func(i, j int) bool {
-		return releases[i].Version.GreaterThan(releases[j].Version)
+		rI := releases[i]
+		rJ := releases[j]
+		return rI.GreaterThan(rJ)
 	})
 	versions := make([]string, len(releases))
 	for i, release := range releases {
@@ -169,7 +171,9 @@ func mergeFixedGroups(groups []*Group) []*Group {
 	}
 	arr := slices.Collect(maps.Values(m))
 	sort.Slice(arr, func(i, j int) bool {
-		return arr[i].releases[0].Version.LessThan(arr[j].releases[0].Version)
+		rI := arr[i].releases[0]
+		rJ := arr[j].releases[0]
+		return rI.LessThan(rJ)
 	})
 
 	// Move the group with NoAsset to the top.
