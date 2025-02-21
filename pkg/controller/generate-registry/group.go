@@ -274,7 +274,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 		prevGroup = group
 	}
 
-	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
+	if len(newGroups) == 0 || newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
 		newGroups = append(newGroups, prevGroup)
 	}
 	group := newGroups[len(newGroups)-1]
