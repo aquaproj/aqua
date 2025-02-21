@@ -232,10 +232,7 @@ func groupByExcludedAsset(groups []*Group) []*Group {
 		newGroups = append(newGroups, prevGroup)
 		prevGroup = group
 	}
-	if len(newGroups) == 0 {
-		return []*Group{prevGroup}
-	}
-	if newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
+	if len(newGroups) == 0 || newGroups[len(newGroups)-1].allAsset != prevGroup.allAsset {
 		return append(newGroups, prevGroup)
 	}
 	return newGroups
