@@ -48,7 +48,7 @@ func (i *command) action(c *cli.Context) error {
 	}
 	ctrl, err := controller.InitializeExecCommandController(c.Context, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
-		return fmt.Errorf("initialize a ExecController: %w", err)
+		return fmt.Errorf("initialize an ExecController: %w", err)
 	}
 	exeName, args, err := which.ParseExecArgs(c.Args().Slice())
 	if err != nil {
