@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 )
 
 type CommandExecutor interface {
-	ExecStderr(cmd *osexec.Cmd) (int, error)
+	ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error)
 }
 
 type Executor interface {
@@ -56,8 +57,28 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	return nil
 }
 
+type AuthError struct {
+	err error
+}
+
+func (e *AuthError) Error() string {
+	return e.err.Error()
+}
+
+func (e *AuthError) Unwrap() error {
+	return e.err
+}
+
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	_, err := e.executor.ExecStderr(osexec.Command(ctx, e.exePath, args...))
+	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.exePath, args...))
+	if err == nil {
+		return nil
+	}
+	// https://github.com/aquaproj/aqua/issues/3157
+	// Ignore error if authentifaction fails
+	if strings.Contains(out, "gh auth login") || strings.Contains(out, "set the GH_TOKEN environment variable") {
+		return &AuthError{err: err}
+	}
 	return err //nolint:wrapcheck
 }
 
@@ -83,6 +104,11 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 	for i := range 5 {
 		err := e.exec(ctx, args)
 		if err == nil {
+			return nil
+		}
+		ae := &AuthError{}
+		if errors.As(err, &ae) {
+			logerr.WithError(logE, err).Warn("skip verifying GitHub Artifact Attestations because of authentication error")
 			return nil
 		}
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
