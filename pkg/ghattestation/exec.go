@@ -108,7 +108,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		}
 		ae := &AuthError{}
 		if errors.As(err, &ae) {
-			logerr.WithError(logE, err).Warn("skip verifying GitHub Artifact Attestations because of authentication error")
+			logerr.WithError(logE, err).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
 			return nil
 		}
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
