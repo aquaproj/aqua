@@ -29,7 +29,7 @@ require (
 	github.com/suzuki-shunsuke/urfave-cli-help-all v0.0.4
 	github.com/urfave/cli/v2 v2.27.5
 	github.com/wk8/go-ordered-map/v2 v2.1.8
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sync v0.11.0
 	golang.org/x/sys v0.30.0
 	gopkg.in/yaml.v2 v2.4.0
