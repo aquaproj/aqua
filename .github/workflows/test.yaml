@@ -8,7 +8,7 @@ concurrency:
 jobs:
   path-filter:
     # Get changed files to filter jobs
-    timeout-minutes: 30
+    timeout-minutes: 10
     outputs:
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
       ghalint: ${{steps.changes.outputs.ghalint}}
@@ -36,17 +36,6 @@ jobs:
             test-docker-prebuilt:
               - Dockerfile-prebuilt
               - .github/workflows/wc-test-docker-prebuilt.yaml
-
-  status-check:
-    uses: ./.github/workflows/wc-status-check.yaml
-    permissions: {}
-    if: failure()
-    needs:
-      - renovate-config-validator
-      - ghalint
-      - test
-      - test-docker-prebuilt
-      - integration-test
 
   renovate-config-validator:
     uses: ./.github/workflows/wc-renovate-config-validator.yaml
