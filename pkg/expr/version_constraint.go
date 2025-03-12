@@ -5,12 +5,12 @@ func emptySemver(_ string) bool {
 }
 
 func EvaluateVersionConstraints(constraint, v, semver string) (bool, error) {
-	return evaluateBool(constraint, map[string]interface{}{
+	return evaluateBool(constraint, map[string]any{
 		"Version":           "",
 		"SemVer":            "",
 		"semver":            emptySemver,
 		"semverWithVersion": compare,
-	}, map[string]interface{}{
+	}, map[string]any{
 		"Version":           v,
 		"SemVer":            semver,
 		"semver":            getCompareFunc(semver),

@@ -542,7 +542,7 @@ func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 			envs = append(envs, osValue+"/"+archValue)
 		}
 	}
-	s := make([]interface{}, len(envs))
+	s := make([]any, len(envs))
 	for i, value := range envs {
 		s[i] = value
 	}

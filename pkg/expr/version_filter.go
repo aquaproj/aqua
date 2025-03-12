@@ -6,7 +6,7 @@ import (
 )
 
 func CompileVersionFilter(versionFilter string) (*vm.Program, error) {
-	return expr.Compile(versionFilter, expr.AsBool(), expr.Env(map[string]interface{}{ //nolint:wrapcheck
+	return expr.Compile(versionFilter, expr.AsBool(), expr.Env(map[string]any{ //nolint:wrapcheck
 		"Version":           "",
 		"semver":            emptySemver,
 		"semverWithVersion": compare,
@@ -14,7 +14,7 @@ func CompileVersionFilter(versionFilter string) (*vm.Program, error) {
 }
 
 func CompileVersionFilterForTest(versionFilter string) *vm.Program {
-	p, err := expr.Compile(versionFilter, expr.AsBool(), expr.Env(map[string]interface{}{
+	p, err := expr.Compile(versionFilter, expr.AsBool(), expr.Env(map[string]any{
 		"Version":           "",
 		"semver":            emptySemver,
 		"semverWithVersion": compare,
@@ -26,7 +26,7 @@ func CompileVersionFilterForTest(versionFilter string) *vm.Program {
 }
 
 func EvaluateVersionFilter(prog *vm.Program, v string) (bool, error) {
-	return evaluateBoolProg(prog, map[string]interface{}{
+	return evaluateBoolProg(prog, map[string]any{
 		"Version":           v,
 		"semver":            getCompareFunc(v),
 		"semverWithVersion": compare,

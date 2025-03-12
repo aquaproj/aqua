@@ -11,14 +11,14 @@ func TestExecute(t *testing.T) {
 	data := []struct {
 		name  string
 		s     string
-		input interface{}
+		input any
 		exp   string
 		isErr bool
 	}{
 		{
 			name: "normal",
 			s:    "foo-{{trimV .Version}}-{{.GOOS}}-{{.GOARCH}}.tar.gz",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"Version": "v1.0.0",
 				"GOOS":    "darwin",
 				"GOARCH":  "amd64",
@@ -28,7 +28,7 @@ func TestExecute(t *testing.T) {
 		{
 			name: "invalid template",
 			s:    "foo-{{trimV .Version",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"Version": "v1.0.0",
 				"GOOS":    "darwin",
 				"GOARCH":  "amd64",

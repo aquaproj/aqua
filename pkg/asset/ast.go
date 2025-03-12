@@ -8,7 +8,7 @@ import (
 	"github.com/goccy/go-yaml/ast"
 )
 
-func UpdateASTFile(file *ast.File, pkgs interface{}) error { //nolint:cyclop
+func UpdateASTFile(file *ast.File, pkgs any) error { //nolint:cyclop
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {
 		return fmt.Errorf("convert packages to node: %w", err)

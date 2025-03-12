@@ -7,7 +7,7 @@ import (
 	"github.com/expr-lang/expr/vm"
 )
 
-func evaluateBool(expression string, env, input interface{}) (bool, error) {
+func evaluateBool(expression string, env, input any) (bool, error) {
 	compiled, err := expr.Compile(expression, expr.AsBool(), expr.Env(env))
 	if err != nil {
 		return false, fmt.Errorf("parse the expression: %w", err)
@@ -15,7 +15,7 @@ func evaluateBool(expression string, env, input interface{}) (bool, error) {
 	return evaluateBoolProg(compiled, input)
 }
 
-func evaluateBoolProg(prog *vm.Program, input interface{}) (bool, error) {
+func evaluateBoolProg(prog *vm.Program, input any) (bool, error) {
 	a, err := expr.Run(prog, input)
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)

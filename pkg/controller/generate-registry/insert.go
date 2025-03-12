@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) insert(cfgFilePath string, pkgs interface{}) error {
+func (c *Controller) insert(cfgFilePath string, pkgs any) error {
 	b, err := afero.ReadFile(c.fs, cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)

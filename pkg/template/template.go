@@ -22,7 +22,7 @@ func Compile(s string) (*template.Template, error) {
 	}).Parse(s)
 }
 
-func Execute(s string, input interface{}) (string, error) {
+func Execute(s string, input any) (string, error) {
 	tpl, err := Compile(s)
 	if err != nil {
 		return "", fmt.Errorf("parse a template: %w", err)
@@ -30,7 +30,7 @@ func Execute(s string, input interface{}) (string, error) {
 	return ExecuteTemplate(tpl, input)
 }
 
-func ExecuteTemplate(tpl *template.Template, input interface{}) (string, error) {
+func ExecuteTemplate(tpl *template.Template, input any) (string, error) {
 	buf := &bytes.Buffer{}
 	if err := tpl.Execute(buf, input); err != nil {
 		return "", fmt.Errorf("render a template: %w", err)
