@@ -62,7 +62,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	logE.WithFields(logrus.Fields{
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
-	}).Info("Verification by minisign failed temporarily, retring")
+	}).Info("Verification by minisign failed temporarily, retrying")
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running minisign: %w", err)
 	}
