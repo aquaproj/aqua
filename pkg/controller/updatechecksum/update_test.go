@@ -23,17 +23,17 @@ import (
 func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
-		name             string
-		param            *config.Param
-		cfgFinder        updatechecksum.ConfigFinder
-		cfgReader        updatechecksum.ConfigReader
+		name               string
+		param              *config.Param
+		cfgFinder          updatechecksum.ConfigFinder
+		cfgReader          updatechecksum.ConfigReader
 		registryInstaller  updatechecksum.RegistryInstaller
 		registryDownloader updatechecksum.GitHubContentFileDownloader
-		fs               afero.Fs
-		rt               *runtime.Runtime
-		chkDL            download.ChecksumDownloader
-		downloader       download.ClientAPI
-		isErr            bool
+		fs                 afero.Fs
+		rt                 *runtime.Runtime
+		chkDL              download.ChecksumDownloader
+		downloader         download.ClientAPI
+		isErr              bool
 	}{
 		{
 			name: "normal",
