@@ -28,12 +28,12 @@ type Controller struct {
 	skipLink          bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
-		registryInstaller: registInstaller,
+		registryInstaller: registryInstaller,
 		packageInstaller:  pkgInstaller,
 		fs:                fs,
 		runtime:           rt,

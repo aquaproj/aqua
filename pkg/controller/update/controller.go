@@ -52,13 +52,13 @@ type RepositoriesService interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
+func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
 	return &Controller{
 		gh:                gh,
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
-		registryInstaller: registInstaller,
+		registryInstaller: registryInstaller,
 		fs:                fs,
 		runtime:           rt,
 		fuzzyGetter:       fuzzyGetter,

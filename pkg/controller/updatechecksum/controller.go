@@ -27,13 +27,13 @@ type Controller struct {
 	prune              bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registDownloader GitHubContentFileDownloader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registryDownloader GitHubContentFileDownloader) *Controller {
 	return &Controller{
 		rootDir:            param.RootDir,
 		configFinder:       configFinder,
 		configReader:       configReader,
-		registryInstaller:  registInstaller,
-		registryDownloader: registDownloader,
+		registryInstaller:  registryInstaller,
+		registryDownloader: registryDownloader,
 		fs:                 fs,
 		runtime:            rt,
 		chkDL:              chkDL,

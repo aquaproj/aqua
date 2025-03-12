@@ -27,8 +27,8 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		param            *config.Param
 		cfgFinder        updatechecksum.ConfigFinder
 		cfgReader        updatechecksum.ConfigReader
-		registInstaller  updatechecksum.RegistryInstaller
-		registDownloader updatechecksum.GitHubContentFileDownloader
+		registryInstaller  updatechecksum.RegistryInstaller
+		registryDownloader updatechecksum.GitHubContentFileDownloader
 		fs               afero.Fs
 		rt               *runtime.Runtime
 		chkDL            download.ChecksumDownloader
@@ -63,7 +63,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registInstaller: &rgst.MockInstaller{
+			registryInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
@@ -77,7 +77,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			registDownloader: &domain.MockGitHubContentFileDownloader{
+			registryDownloader: &domain.MockGitHubContentFileDownloader{
 				File: &domain.GitHubContentFile{
 					String: `type: github_release
 repo_owner: cli
@@ -124,7 +124,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 					},
 				},
 			},
-			registInstaller: &rgst.MockInstaller{
+			registryInstaller: &rgst.MockInstaller{
 				M: map[string]*registry.Config{
 					"standard": {
 						PackageInfos: registry.PackageInfos{
@@ -148,7 +148,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 					},
 				},
 			},
-			registDownloader: &domain.MockGitHubContentFileDownloader{
+			registryDownloader: &domain.MockGitHubContentFileDownloader{
 				File: &domain.GitHubContentFile{
 					String: `type: github_release
 repo_owner: cli
@@ -187,7 +187,7 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registDownloader)
+			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registryInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registryDownloader)
 			if err := ctrl.UpdateChecksum(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return
