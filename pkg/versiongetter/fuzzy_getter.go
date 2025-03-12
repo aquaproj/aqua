@@ -38,7 +38,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry
 	repoName := pkg.RepoOwner + "/" + pkg.RepoName
 	logE = logE.WithField("repository", repoName)
 	if useFinder { //nolint:nestif
-		logE := logE.WithFields(nil) // Copy logE becuse g.getter.List has a side effect to change logE
+		logE := logE.WithFields(nil) // Copy logE because g.getter.List has a side effect to change logE
 		start := time.Now()
 		versions, err := g.getter.List(ctx, logE, pkg, filters, limit)
 		elapsed := time.Since(start)

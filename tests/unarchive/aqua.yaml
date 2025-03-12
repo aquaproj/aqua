@@ -23,7 +23,7 @@ packages:
   # brotli (.br)
   # bzip2 (.bz2)
   - name: github-release/github-release@v0.10.0
-  # flate (.zip)
+  # flat (.zip)
   - name: 1xyz/pryrite
     version: 0.10.20
   # gzip (.gz)
