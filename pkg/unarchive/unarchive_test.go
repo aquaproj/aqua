@@ -38,7 +38,7 @@ func TestIsUnarchived(t *testing.T) {
 			exp:         true,
 		},
 		{
-			title:       "archiveTyps is set and isn't raw",
+			title:       "archiveType is set and isn't raw",
 			assetName:   "foo",
 			archiveType: "tar.gz",
 			exp:         false,
