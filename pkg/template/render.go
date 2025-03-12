@@ -17,8 +17,8 @@ type Artifact struct {
 	Vars            map[string]any
 }
 
-func renderParam(art *Artifact, rt *runtime.Runtime) map[string]interface{} {
-	return map[string]interface{}{
+func renderParam(art *Artifact, rt *runtime.Runtime) map[string]any {
+	return map[string]any{
 		"Version":         art.Version,
 		"SemVer":          art.SemVer,
 		"GOOS":            rt.GOOS,

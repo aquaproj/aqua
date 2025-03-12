@@ -98,7 +98,7 @@ func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
 	replacements := pkgInfo.GetChecksumReplacements()
-	m := map[string]interface{}{
+	m := map[string]any{
 		"Version": pkg.Version,
 		"SemVer":  p.semVer(),
 		"GOOS":    rt.GOOS,

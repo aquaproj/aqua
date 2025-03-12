@@ -51,7 +51,7 @@ func (o *Outputter) Output(param *Param) error {
 	}
 	defer f.Close()
 
-	if err := goccyYAML.NewEncoder(f, goccyYAML.IndentSequence(true)).Encode(map[string]interface{}{
+	if err := goccyYAML.NewEncoder(f, goccyYAML.IndentSequence(true)).Encode(map[string]any{
 		"packages": param.List,
 	}); err != nil {
 		return fmt.Errorf("encode YAML: %w", err)

@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"maps"
 	"net/url"
 	"path"
 	"path/filepath"
@@ -429,12 +430,8 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 		p.Replacements = ov.Replacements
 	} else {
 		replacements := make(Replacements, len(p.Replacements))
-		for k, v := range p.Replacements {
-			replacements[k] = v
-		}
-		for k, v := range ov.Replacements {
-			replacements[k] = v
-		}
+		maps.Copy(replacements, p.Replacements)
+		maps.Copy(replacements, ov.Replacements)
 		p.Replacements = replacements
 	}
 
@@ -542,7 +539,7 @@ func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 			envs = append(envs, osValue+"/"+archValue)
 		}
 	}
-	s := make([]interface{}, len(envs))
+	s := make([]any, len(envs))
 	for i, value := range envs {
 		s[i] = value
 	}
@@ -608,12 +605,8 @@ func (p *PackageInfo) GetChecksumReplacements() Replacements {
 		return cr
 	}
 	m := Replacements{}
-	for k, v := range p.Replacements {
-		m[k] = v
-	}
-	for k, v := range cr {
-		m[k] = v
-	}
+	maps.Copy(m, p.Replacements)
+	maps.Copy(m, cr)
 	return m
 }
 

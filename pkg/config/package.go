@@ -170,7 +170,7 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 	pkgInfo := p.PackageInfo
 	format := pkgInfo.GetFormat()
 	assetWithoutExt, _ := asset.RemoveExtFromAsset(assetName)
-	s, err := template.Execute(file.Src, map[string]interface{}{
+	s, err := template.Execute(file.Src, map[string]any{
 		"Version":         pkg.Version,
 		"SemVer":          p.semVer(),
 		"GOOS":            rt.GOOS,
@@ -357,7 +357,7 @@ func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string,
 		return "", fmt.Errorf("parse a template: %w", err)
 	}
 	replacements := pkgInfo.GetChecksumReplacements()
-	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
+	uS, err := template.ExecuteTemplate(tpl, map[string]any{
 		"Version": pkg.Version,
 		"SemVer":  p.semVer(),
 		"GOOS":    rt.GOOS,
@@ -377,7 +377,7 @@ func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string,
 func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
-	uS, err := template.ExecuteTemplate(tpl, map[string]interface{}{
+	uS, err := template.ExecuteTemplate(tpl, map[string]any{
 		"Version": pkg.Version,
 		"SemVer":  p.semVer(),
 		"GOOS":    rt.GOOS,
@@ -405,7 +405,7 @@ func (p *Package) semVer() string {
 func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
-	return template.Execute(file.Dir, map[string]interface{}{ //nolint:wrapcheck
+	return template.Execute(file.Dir, map[string]any{ //nolint:wrapcheck
 		"Version":  pkg.Version,
 		"SemVer":   p.semVer(),
 		"GOOS":     rt.GOOS,

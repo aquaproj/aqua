@@ -57,7 +57,7 @@ func (r *Registry) validateGitHubContent() error {
 	return nil
 }
 
-func (r *Registry) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (r *Registry) UnmarshalYAML(unmarshal func(any) error) error {
 	type alias Registry
 	a := alias(*r)
 	if err := unmarshal(&a); err != nil {

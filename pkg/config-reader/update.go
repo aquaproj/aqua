@@ -2,6 +2,7 @@ package reader
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -89,9 +90,7 @@ func (r *ConfigReader) readImportToUpdate(configFilePath, importPath string, cfg
 		}
 		subCfg.Registries = cfg.Registries
 		cfgs[filePath] = subCfg
-		for k, subCfg := range subCfgs {
-			cfgs[k] = subCfg
-		}
+		maps.Copy(cfgs, subCfgs)
 	}
 	return nil
 }

@@ -50,7 +50,7 @@ func (u *Update) GetEnabled() bool {
 	return u == nil || u.Enabled == nil || *u.Enabled
 }
 
-func (p *Package) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (p *Package) UnmarshalYAML(unmarshal func(any) error) error {
 	type alias Package
 	a := alias(*p)
 	if err := unmarshal(&a); err != nil {
@@ -103,7 +103,7 @@ const (
 	PkgInfoTypeCargo         = "cargo"
 )
 
-func (r *Registries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (r *Registries) UnmarshalYAML(unmarshal func(any) error) error {
 	arr := []*Registry{}
 	if err := unmarshal(&arr); err != nil {
 		return err

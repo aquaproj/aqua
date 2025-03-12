@@ -9,19 +9,19 @@ func Test_evaluateBool(t *testing.T) { //nolint:funlen
 	data := []struct {
 		title      string
 		expression string
-		env        interface{}
-		input      interface{}
+		env        any
+		input      any
 		exp        bool
 		isErr      bool
 	}{
 		{
 			title:      "true",
 			expression: `GOOS == "darwin"`,
-			env: map[string]interface{}{
+			env: map[string]any{
 				"GOOS":   "",
 				"GOARCH": "",
 			},
-			input: map[string]interface{}{
+			input: map[string]any{
 				"GOOS":   "darwin",
 				"GOARCH": "arm64",
 			},
@@ -30,11 +30,11 @@ func Test_evaluateBool(t *testing.T) { //nolint:funlen
 		{
 			title:      "false",
 			expression: `GOOS == "linux"`,
-			env: map[string]interface{}{
+			env: map[string]any{
 				"GOOS":   "",
 				"GOARCH": "",
 			},
-			input: map[string]interface{}{
+			input: map[string]any{
 				"GOOS":   "darwin",
 				"GOARCH": "arm64",
 			},
@@ -43,11 +43,11 @@ func Test_evaluateBool(t *testing.T) { //nolint:funlen
 		{
 			title:      "error",
 			expression: `GOOS == darwin`,
-			env: map[string]interface{}{
+			env: map[string]any{
 				"GOOS":   "",
 				"GOARCH": "",
 			},
-			input: map[string]interface{}{
+			input: map[string]any{
 				"GOOS":   "darwin",
 				"GOARCH": "arm64",
 			},
