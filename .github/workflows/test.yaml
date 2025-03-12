@@ -66,3 +66,7 @@ jobs:
   integration-test:
     uses: ./.github/workflows/wc-integration-test.yaml
     permissions: {}
+
+  typos:
+    uses: ./.github/workflows/wc-typos.yaml
+    permissions: {}
