@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"maps"
 	"reflect"
 	"strings"
 
@@ -67,13 +68,9 @@ func mergeReplacements(goos string, m1, m2 map[string]string) (map[string]string
 	v1, ok1 := m1[goos]
 	v2, ok2 := m2[goos]
 	if (ok1 && ok2 && v1 == v2) || (!ok1 && !ok2) {
-		m := map[string]string{}
-		for k, v := range m1 {
-			m[k] = v
-		}
-		for k, v := range m2 {
-			m[k] = v
-		}
+		m := make(map[string]string, len(m1)+len(m2))
+		maps.Copy(m, m1)
+		maps.Copy(m, m2)
 		if len(m) == 0 {
 			return nil, true
 		}
