@@ -78,7 +78,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 			}
 		}
 		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
-			return "", fmt.Errorf("verifiy the checksum file: %w", err)
+			return "", fmt.Errorf("verify the checksum file: %w", err)
 		}
 	}
 

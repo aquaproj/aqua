@@ -45,7 +45,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	logE.WithFields(logrus.Fields{
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
-	}).Info("Verification by slsa-verifier failed temporarily, retring")
+	}).Info("Verification by slsa-verifier failed temporarily, retrying")
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running slsa-verifier: %w", err)
 	}
