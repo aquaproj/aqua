@@ -27,13 +27,13 @@ type Controller struct {
 	linker            Linker
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker Linker) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker Linker) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
-		registryInstaller: registInstaller,
+		registryInstaller: registryInstaller,
 		runtime:           rt,
 		osenv:             osEnv,
 		fs:                fs,

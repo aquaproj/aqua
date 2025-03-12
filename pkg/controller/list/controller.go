@@ -20,12 +20,12 @@ type Controller struct {
 	fs                afero.Fs
 }
 
-func NewController(configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, fs afero.Fs) *Controller {
+func NewController(configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fs afero.Fs) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
 		configReader:      configReader,
-		registryInstaller: registInstaller,
+		registryInstaller: registryInstaller,
 		fs:                fs,
 	}
 }

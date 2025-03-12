@@ -39,12 +39,12 @@ type FuzzyFinder interface {
 	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(configFinder ConfigFinder, configReader ConfigReader, registInstaller RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, fuzzyGetter FuzzyGetter) *Controller {
+func New(configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, gh RepositoriesService, fs afero.Fs, fuzzyFinder FuzzyFinder, fuzzyGetter FuzzyGetter) *Controller {
 	return &Controller{
 		stdin:             os.Stdin,
 		configFinder:      configFinder,
 		configReader:      configReader,
-		registryInstaller: registInstaller,
+		registryInstaller: registryInstaller,
 		github:            gh,
 		fs:                fs,
 		fuzzyFinder:       fuzzyFinder,
