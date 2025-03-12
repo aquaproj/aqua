@@ -74,7 +74,7 @@ func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 				t.Fatal(err)
 			}
 			if d.isErr {
-				t.Fatal("error must be returend")
+				t.Fatal("error must be returned")
 			}
 			if p != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, p)

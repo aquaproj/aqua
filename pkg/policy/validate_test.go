@@ -55,7 +55,7 @@ func TestValidator_Allow(t *testing.T) { //nolint:dupl
 				t.Fatal(err)
 			}
 			if d.isErr {
-				t.Fatal("error must be returend")
+				t.Fatal("error must be returned")
 			}
 		})
 	}
@@ -107,7 +107,7 @@ func TestValidator_Deny(t *testing.T) { //nolint:dupl
 				t.Fatal(err)
 			}
 			if d.isErr {
-				t.Fatal("error must be returend")
+				t.Fatal("error must be returned")
 			}
 		})
 	}
@@ -160,7 +160,7 @@ func TestValidator_Warn(t *testing.T) {
 				t.Fatal(err)
 			}
 			if d.isErr {
-				t.Fatal("error must be returend")
+				t.Fatal("error must be returned")
 			}
 		})
 	}
@@ -223,7 +223,7 @@ func TestValidator_Validate(t *testing.T) {
 				t.Fatal(err)
 			}
 			if d.isErr {
-				t.Fatal("error must be returend")
+				t.Fatal("error must be returned")
 			}
 		})
 	}
