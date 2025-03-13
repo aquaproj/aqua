@@ -56,28 +56,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.7.0/goreleaser_Darwin_all.tar.gz",
-      "checksum": "A3D431D41E48A6A699B51BAA41221E1712420AD6C53B426710324966877EE1D0",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.8.0/goreleaser_Darwin_all.tar.gz",
+      "checksum": "9F908C88CE6A85F209B379CEAD2299705FF6271C135B91D81362162C751E9530",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.7.0/goreleaser_Linux_arm64.tar.gz",
-      "checksum": "5B3646CEF976EA610019D4EE5523E4FB1B243E4E89A416FF9B9AC645C7E26342",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.8.0/goreleaser_Linux_arm64.tar.gz",
+      "checksum": "D0C25EAC5B6D8E384DEA86220DF3157D25C90F1F2C69E4569FCE1725E15EBDB8",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.7.0/goreleaser_Linux_x86_64.tar.gz",
-      "checksum": "075CB78E414664E50EE6900DD93FF1748C2D3FCE19C9830F40186E99FC90BA0E",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.8.0/goreleaser_Linux_x86_64.tar.gz",
+      "checksum": "F1994D20E67A0B5108FE891123CB0E685D052A8D58A462FC8E0FDB572DC603F9",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.7.0/goreleaser_Windows_arm64.zip",
-      "checksum": "D89FFED2D0AA3D25DF6E8CA627E60C3D061945710B346539A03C45D9C7A68E04",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.8.0/goreleaser_Windows_arm64.zip",
+      "checksum": "581DD5669EE71B63CF2C5049556D474E05D4194097B09E6A33205DB541C4241C",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.7.0/goreleaser_Windows_x86_64.zip",
-      "checksum": "CEB6EA7136E4D5F166E1C3FA35CBB993E1FD50546A557C12731C90556633E5E1",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.8.0/goreleaser_Windows_x86_64.zip",
+      "checksum": "D75833121F68DE10A5E9C42DDE92AE3F25C2EF844EEFAB18A16870398B3A3B1F",
       "algorithm": "sha256"
     },
     {
