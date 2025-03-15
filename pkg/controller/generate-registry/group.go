@@ -238,7 +238,7 @@ func groupByExcludedAsset(groups []*Group) []*Group {
 	return newGroups
 }
 
-func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Release) []*Group {
+func (c *Controller) group(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []*Group {
 	if len(releases) == 0 {
 		return nil
 	}
@@ -248,7 +248,10 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 
 	for _, group := range groups {
 		release := group.releases[0]
-		pkgInfo := &registry.PackageInfo{}
+		pkgInfo := &registry.PackageInfo{
+			RepoOwner: pkgInfo.RepoOwner,
+			RepoName:  pkgInfo.RepoName,
+		}
 		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, release.assets)
 		group.pkg = &Package{
 			Info:    pkgInfo,
@@ -283,5 +286,5 @@ func (c *Controller) group(logE *logrus.Entry, pkgName string, releases []*Relea
 }
 
 func (c *Controller) generatePackage(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
-	return mergeGroups(pkgInfo, c.group(logE, pkgName, releases))
+	return mergeGroups(pkgInfo, c.group(logE, pkgInfo, pkgName, releases))
 }

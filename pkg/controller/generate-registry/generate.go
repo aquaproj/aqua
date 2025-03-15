@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
@@ -244,6 +245,7 @@ func (c *Controller) patchRelease(logE *logrus.Entry, pkgInfo *registry.PackageI
 			if chksum != nil {
 				assetInfo := asset.ParseAssetName(checksumName, tagName)
 				chksum.Asset = assetInfo.Template
+				chksum.Cosign = checkChecksumCosign(pkgInfo, checksumName, assetNames)
 				pkgInfo.Checksum = chksum
 				break
 			}
@@ -283,5 +285,47 @@ func checkSLSAProvenance(assetName, tagName string) *registry.SLSAProvenance {
 	return &registry.SLSAProvenance{
 		Type:  "github_release",
 		Asset: &assetInfo.Template,
+	}
+}
+
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
+	var signatureAssetName string
+	for _, suf := range []string{"-keyless.sig", ".sig"} {
+		if _, ok := assetNames[checksumAssetName+suf]; ok {
+			signatureAssetName = checksumAssetName + suf
+			break
+		}
+	}
+	if signatureAssetName == "" {
+		return nil
+	}
+	var certificateAssetName string
+	for _, suf := range []string{"-keyless.pem", ".pem"} {
+		if _, ok := assetNames[checksumAssetName+suf]; ok {
+			certificateAssetName = checksumAssetName + suf
+			break
+		}
+	}
+	if certificateAssetName == "" {
+		return nil
+	}
+
+	downloadURL := fmt.Sprintf("https://github.com/%s/%s/releases/download/{{.Version}}/",
+		pkgInfo.RepoOwner, pkgInfo.RepoName)
+	return &registry.Cosign{
+		Opts: []string{
+			"--certificate-identity-regexp",
+			fmt.Sprintf(
+				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/`,
+				regexp.QuoteMeta(pkgInfo.RepoOwner),
+				regexp.QuoteMeta(pkgInfo.RepoName),
+			),
+			"--certificate-oidc-issuer",
+			"https://token.actions.githubusercontent.com",
+			"--signature",
+			downloadURL + signatureAssetName,
+			"--certificate",
+			downloadURL + certificateAssetName,
+		},
 	}
 }
