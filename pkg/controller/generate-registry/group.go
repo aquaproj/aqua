@@ -218,6 +218,9 @@ func excludeGroupsAssets(groups []*Group, pkgName string) {
 }
 
 func groupByExcludedAsset(groups []*Group) []*Group {
+	if len(groups) == 0 {
+		return groups
+	}
 	newGroups := make([]*Group, 0, len(groups))
 	prevGroup := groups[0]
 	for _, group := range groups[1:] {
