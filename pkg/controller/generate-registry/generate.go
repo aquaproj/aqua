@@ -287,7 +287,7 @@ func checkSLSAProvenance(assetName, tagName string) *registry.SLSAProvenance {
 	}
 }
 
-func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
 	var signatureAssetName string
 	for _, suf := range []string{"-keyless.sig", ".sig"} {
 		if _, ok := assetNames[checksumAssetName+suf]; ok {
@@ -319,13 +319,14 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 
 	downloadURL := fmt.Sprintf("https://github.com/%s/%s/releases/download/{{.Version}}/",
 		pkgInfo.RepoOwner, pkgInfo.RepoName)
-	opts := make([]string, 0, 8)
-	if pubKeyAssetName != "" {
+	opts := make([]string, 0, 8) //nolint:mnd // we generate max 8 arguments
+	switch {
+	case pubKeyAssetName != "":
 		opts = append(opts,
 			"--key",
 			downloadURL+pubKeyAssetName,
 		)
-	} else if certificateAssetName != "" {
+	case certificateAssetName != "":
 		opts = append(opts,
 			"--certificate",
 			downloadURL+certificateAssetName,
@@ -338,7 +339,7 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 			"--certificate-oidc-issuer",
 			"https://token.actions.githubusercontent.com",
 		)
-	} else {
+	default:
 		panic("unreachable, should have either pubkey or cert asset name")
 	}
 	opts = append(opts,
