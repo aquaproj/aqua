@@ -35,6 +35,14 @@ func TestExecute(t *testing.T) {
 			},
 			isErr: true,
 		},
+		{
+			name: "asset ext",
+			s:    "{{trimAssetExt .Asset}}",
+			input: map[string]string{
+				"Asset": "foo-1.0.0-darwin-amd64.tar.gz",
+			},
+			exp: "foo-1.0.0-darwin-amd64",
+		},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {

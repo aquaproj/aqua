@@ -7,6 +7,8 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 )
 
 func Compile(s string) (*template.Template, error) {
@@ -16,6 +18,10 @@ func Compile(s string) (*template.Template, error) {
 	delete(fncs, "expandenv")
 	delete(fncs, "getHostByName")
 	return template.New("_").Funcs(fncs).Funcs(template.FuncMap{ //nolint:wrapcheck
+		"trimAssetExt": func(s string) string {
+			s, _ = asset.RemoveExtFromAsset(s)
+			return s
+		},
 		"trimV": func(s string) string {
 			return strings.TrimPrefix(s, "v")
 		},
