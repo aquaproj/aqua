@@ -111,10 +111,14 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 	return versions
 }
 
-func replaceVersion(assetName, version string) string {
-	return strings.Replace(
-		strings.Replace(assetName, version, "{{.Version}}", 1),
-		strings.TrimPrefix(version, "v"), "{{trimV .Version}}", 1)
+func replaceVersion(assetName, version, semver string) string {
+	s := strings.ReplaceAll(
+		strings.ReplaceAll(assetName, version, "{{.Version}}"),
+		strings.TrimPrefix(version, "v"), "{{trimV .Version}}")
+	if semver == version {
+		return s
+	}
+	return strings.ReplaceAll(s, semver, "{{.SemVer}}")
 }
 
 func groupByAllAsset(releases []*Release) []*Group {
@@ -122,8 +126,9 @@ func groupByAllAsset(releases []*Release) []*Group {
 	var group *Group
 	for _, release := range releases {
 		assetNames := make([]string, len(release.assets))
+		semver := strings.TrimPrefix(release.Tag, release.VersionPrefix)
 		for i, asset := range release.assets {
-			assetNames[i] = replaceVersion(asset.GetName(), release.Tag)
+			assetNames[i] = replaceVersion(asset.GetName(), release.Tag, semver)
 		}
 		sort.Strings(assetNames)
 		allAsset := strings.Join(assetNames, "\n")
@@ -255,7 +260,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pk
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 		}
-		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, release.assets)
+		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, group.assetNames)
 		group.pkg = &Package{
 			Info:    pkgInfo,
 			Version: release.Tag,
