@@ -112,13 +112,13 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 }
 
 func replaceVersion(assetName, version, semver string) string {
-	s := strings.Replace(
-		strings.Replace(assetName, version, "{{.Version}}", -1),
-		strings.TrimPrefix(version, "v"), "{{trimV .Version}}", -1)
+	s := strings.ReplaceAll(
+		strings.ReplaceAll(assetName, version, "{{.Version}}"),
+		strings.TrimPrefix(version, "v"), "{{trimV .Version}}")
 	if semver == version {
 		return s
 	}
-	return strings.Replace(s, semver, "{{.SemVer}}", -1)
+	return strings.ReplaceAll(s, semver, "{{.SemVer}}")
 }
 
 func groupByAllAsset(releases []*Release) []*Group {
