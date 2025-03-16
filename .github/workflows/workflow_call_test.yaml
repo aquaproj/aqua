@@ -1,0 +1,69 @@
+---
+name: test (workflow_call)
+on: workflow_call
+permissions: {}
+jobs:
+  path-filter:
+    # Get changed files to filter jobs
+    timeout-minutes: 10
+    outputs:
+      renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
+      ghalint: ${{steps.changes.outputs.ghalint}}
+      test-docker: ${{steps.changes.outputs.test-docker}}
+      test-docker-prebuilt: ${{steps.changes.outputs.test-docker-prebuilt}}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: changes
+        with:
+          filters: |
+            renovate-config-validator:
+              - renovate.json5
+              - .github/workflows/test.yaml
+              - .github/workflows/wc-renovate-config-validator.yaml
+            ghalint:
+              - .github/workflows/*.yaml
+              - aqua/aqua.yaml
+              - aqua/imports/ghalint.yaml
+              - ghalint.yaml
+            test-docker:
+              - Dockerfile
+              - .github/workflows/wc-test.yaml
+            test-docker-prebuilt:
+              - Dockerfile-prebuilt
+              - .github/workflows/wc-test-docker-prebuilt.yaml
+
+  renovate-config-validator:
+    uses: ./.github/workflows/wc-renovate-config-validator.yaml
+    needs: path-filter
+    if: needs.path-filter.outputs.renovate-config-validator == 'true'
+    permissions:
+      contents: read
+
+  ghalint:
+    needs: path-filter
+    if: needs.path-filter.outputs.ghalint == 'true'
+    uses: ./.github/workflows/wc-ghalint.yaml
+    permissions: {}
+
+  test:
+    uses: ./.github/workflows/wc-test.yaml
+    needs: path-filter
+    permissions: {}
+    with:
+      docker_is_changed: ${{needs.path-filter.outputs.test-docker == 'true'}}
+
+  test-docker-prebuilt:
+    uses: ./.github/workflows/wc-test-docker-prebuilt.yaml
+    needs: path-filter
+    if: needs.path-filter.outputs.test-docker-prebuilt == 'true'
+    permissions: {}
+
+  integration-test:
+    uses: ./.github/workflows/wc-integration-test.yaml
+    permissions: {}
+
+  typos:
+    uses: ./.github/workflows/wc-typos.yaml
+    permissions: {}
