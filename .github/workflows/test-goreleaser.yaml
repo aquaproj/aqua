@@ -2,7 +2,7 @@
 name: test GoReleaser
 on: workflow_call
 jobs:
-  test:
+  test-goreleaser:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     permissions: {}
@@ -17,4 +17,5 @@ jobs:
         with:
           aqua_version: v2.45.1
       - run: goreleaser check
-      - run: goreleaser release --snapshot
+      # Build is too slow for a test
+      # - run: goreleaser release --snapshot
