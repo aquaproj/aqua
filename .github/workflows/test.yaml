@@ -17,4 +17,5 @@ jobs:
       - run: exit 1
   test:
     uses: ./.github/workflows/workflow_call_test.yaml
-    permissions: {}
+    permissions:
+      contents: read
