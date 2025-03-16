@@ -315,7 +315,7 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 		Opts: []string{
 			"--certificate-identity-regexp",
 			fmt.Sprintf(
-				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/`,
+				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
 				regexp.QuoteMeta(pkgInfo.RepoOwner),
 				regexp.QuoteMeta(pkgInfo.RepoName),
 			),
