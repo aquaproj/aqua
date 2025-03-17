@@ -287,7 +287,7 @@ func checkSLSAProvenance(assetName, tagName string) *registry.SLSAProvenance {
 	}
 }
 
-func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
 	var signatureAssetName string
 	for _, suf := range []string{"-keyless.sig", ".sig"} {
 		if _, ok := assetNames[checksumAssetName+suf]; ok {
@@ -298,21 +298,38 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 	if signatureAssetName == "" {
 		return nil
 	}
-	var certificateAssetName string
-	for _, suf := range []string{"-keyless.pem", ".pem"} {
-		if _, ok := assetNames[checksumAssetName+suf]; ok {
-			certificateAssetName = checksumAssetName + suf
+	var certificateAssetName, pubKeyAssetName string
+	for assetName := range assetNames {
+		if strings.HasSuffix(assetName, "cosign.pub") {
+			pubKeyAssetName = assetName
 			break
 		}
 	}
-	if certificateAssetName == "" {
-		return nil
+	if pubKeyAssetName == "" {
+		for _, suf := range []string{"-keyless.pem", ".pem"} {
+			if _, ok := assetNames[checksumAssetName+suf]; ok {
+				certificateAssetName = checksumAssetName + suf
+				break
+			}
+		}
+		if certificateAssetName == "" {
+			return nil
+		}
 	}
 
 	downloadURL := fmt.Sprintf("https://github.com/%s/%s/releases/download/{{.Version}}/",
 		pkgInfo.RepoOwner, pkgInfo.RepoName)
-	return &registry.Cosign{
-		Opts: []string{
+	opts := make([]string, 0, 8) //nolint:mnd // we generate max 8 arguments
+	switch {
+	case pubKeyAssetName != "":
+		opts = append(opts,
+			"--key",
+			downloadURL+pubKeyAssetName,
+		)
+	case certificateAssetName != "":
+		opts = append(opts,
+			"--certificate",
+			downloadURL+certificateAssetName,
 			"--certificate-identity-regexp",
 			fmt.Sprintf(
 				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
@@ -321,10 +338,15 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 			),
 			"--certificate-oidc-issuer",
 			"https://token.actions.githubusercontent.com",
-			"--signature",
-			downloadURL + signatureAssetName,
-			"--certificate",
-			downloadURL + certificateAssetName,
-		},
+		)
+	default:
+		panic("unreachable, should have either pubkey or cert asset name")
+	}
+	opts = append(opts,
+		"--signature",
+		downloadURL+signatureAssetName,
+	)
+	return &registry.Cosign{
+		Opts: opts,
 	}
 }
