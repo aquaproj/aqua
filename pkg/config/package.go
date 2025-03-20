@@ -61,17 +61,19 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	return p.completeWindowsExtToAsset(asset), nil
 }
 
-func (p *Package) TemplateArtifact(rt *runtime.Runtime, asset string) *template.Artifact {
+func (p *Package) TemplateArtifact(rt *runtime.Runtime, aset string) *template.Artifact {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
+	assetWithoutExt, _ := asset.RemoveExtFromAsset(aset)
 	return &template.Artifact{
-		Version: pkg.Version,
-		SemVer:  p.semVer(),
-		OS:      replace(rt.GOOS, pkgInfo.Replacements),
-		Arch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
-		Format:  pkgInfo.GetFormat(),
-		Asset:   asset,
-		Vars:    pkg.Vars,
+		Version:         pkg.Version,
+		SemVer:          p.semVer(),
+		OS:              replace(rt.GOOS, pkgInfo.Replacements),
+		Arch:            getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
+		Format:          pkgInfo.GetFormat(),
+		Asset:           aset,
+		AssetWithoutExt: assetWithoutExt,
+		Vars:            pkg.Vars,
 	}
 }
 
