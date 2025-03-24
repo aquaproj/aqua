@@ -1,25 +1,47 @@
----
-issues:
-  exclude-files:
-    - "mock\\.go$"
-    - "mock_[^/]*\\.go$"
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
+    - depguard
     - err113
-    - wsl
-    - lll
-    - godot
-    - nlreturn
-    - godox
-    - tagliatelle
-    - ireturn
-    - varnamelen
     - exhaustive
     - exhaustruct
-    - nonamedreturns
+    - godot
+    - godox
+    - gomoddirectives
+    - ireturn
+    - lll
     - musttag
-    - depguard
+    - nlreturn
+    - nonamedreturns
     - tagalign
-    - gomoddirectives # TODO remove
-    - tenv # WARN The linter 'tenv' is deprecated (since v1.64.0) due to: Duplicate feature another linter. Replaced by usetesting.
+    - tagliatelle
+    - varnamelen
+    - wsl
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - mock\.go$
+      - mock_[^/]*\.go$
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - mock\.go$
+      - mock_[^/]*\.go$
+      - third_party$
+      - builtin$
+      - examples$
