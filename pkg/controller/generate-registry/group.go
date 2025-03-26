@@ -194,6 +194,9 @@ func sortAndMergeGroups(groups []*Group) []*Group {
 	newGroups := make([]*Group, 0, len(groups))
 	fixedGroups := make([]*Group, 0, len(groups))
 	lastIdx := len(groups) - 1
+	if lastIdx < 0 {
+		return groups
+	}
 	for _, group := range groups[:lastIdx] {
 		if len(group.releases) == 1 {
 			group.fixed = true
