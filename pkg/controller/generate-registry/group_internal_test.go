@@ -33,7 +33,9 @@ func Test_sortAndMergeGroups(t *testing.T) { //nolint:funlen
 tfcmt_{{.Version}}_linux_amd64.tar.gz
 `,
 					pkg: &Package{
-						Info: &registry.PackageInfo{},
+						Info: &registry.PackageInfo{
+							Asset: "tfcmt_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz",
+						},
 					},
 				},
 				{
@@ -47,7 +49,9 @@ tfcmt_{{.Version}}_linux_amd64.tar.gz
 tfcmt_linux_amd64.tar.gz
 `,
 					pkg: &Package{
-						Info: &registry.PackageInfo{},
+						Info: &registry.PackageInfo{
+							Asset: "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
 					},
 				},
 				{
@@ -65,7 +69,9 @@ tfcmt_linux_amd64.tar.gz
 tfcmt_{{.Version}}_linux_amd64.tar.gz
 `,
 					pkg: &Package{
-						Info: &registry.PackageInfo{},
+						Info: &registry.PackageInfo{
+							Asset: "tfcmt_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz",
+						},
 					},
 				},
 				{
@@ -80,7 +86,9 @@ tfcmt_linux_amd64.tar.gz
 tfcmt_windows_amd64.tar.gz
 `,
 					pkg: &Package{
-						Info: &registry.PackageInfo{},
+						Info: &registry.PackageInfo{
+							Asset: "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
 					},
 				},
 			},
@@ -97,23 +105,9 @@ tfcmt_linux_amd64.tar.gz
 `,
 					fixed: true,
 					pkg: &Package{
-						Info: &registry.PackageInfo{},
-					},
-				},
-				{
-					releases: []*Release{
-						{
-							Tag:     "v0.6.0",
-							Version: version.Must(version.NewSemver("v0.6.0")),
+						Info: &registry.PackageInfo{
+							Asset: "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
 						},
-					},
-					allAsset: `tfcmt_darwin_amd64.tar.gz
-tfcmt_linux_amd64.tar.gz
-tfcmt_windows_amd64.tar.gz
-`,
-					fixed: true,
-					pkg: &Package{
-						Info: &registry.PackageInfo{},
 					},
 				},
 				{
@@ -139,7 +133,26 @@ tfcmt_windows_amd64.tar.gz
 tfcmt_{{.Version}}_linux_amd64.tar.gz
 `,
 					pkg: &Package{
-						Info: &registry.PackageInfo{},
+						Info: &registry.PackageInfo{
+							Asset: "tfcmt_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz",
+						},
+					},
+				},
+				{
+					releases: []*Release{
+						{
+							Tag:     "v0.6.0",
+							Version: version.Must(version.NewSemver("v0.6.0")),
+						},
+					},
+					allAsset: `tfcmt_darwin_amd64.tar.gz
+tfcmt_linux_amd64.tar.gz
+tfcmt_windows_amd64.tar.gz
+`,
+					pkg: &Package{
+						Info: &registry.PackageInfo{
+							Asset: "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+						},
 					},
 				},
 			},
