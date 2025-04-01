@@ -5,7 +5,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type Profiler struct {

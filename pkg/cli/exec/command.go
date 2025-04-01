@@ -9,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {

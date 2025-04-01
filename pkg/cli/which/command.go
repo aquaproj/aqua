@@ -13,7 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {

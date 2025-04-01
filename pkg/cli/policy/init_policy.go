@@ -2,7 +2,7 @@ package policy
 
 import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func NewInitPolicy(r *util.Param) *cli.Command {
