@@ -191,33 +191,23 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.7/cmdx_darwin_amd64.tar.gz",
-      "checksum": "71CAED1B9BF653D58E4EF1BE7994E95469D94A96962FF412C55E81647502F3FD",
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v2.0.0/cmdx_darwin_amd64.tar.gz",
+      "checksum": "FA519CA09D05A2A42BD689C08DA250A0DD810544DB63964552B7BB7BA5C6BBCA",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.7/cmdx_darwin_arm64.tar.gz",
-      "checksum": "D23AF956F833DECC29FC7E7F9511965ED284167DB5F9CC3C81FD9A0DD3F3399E",
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v2.0.0/cmdx_darwin_arm64.tar.gz",
+      "checksum": "CFFD82C124A0C08E54E3240367A9CC7C8B77A634A2D5309ED6DA3D907FBDC14A",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.7/cmdx_linux_amd64.tar.gz",
-      "checksum": "CF6AD4506170220C06976ACD713289EB574D2311F049AF5692D532F9FAF5E86A",
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v2.0.0/cmdx_linux_amd64.tar.gz",
+      "checksum": "D1E025530942497FE5730F9F5AC9261D7949518E132857FAF0B5727B820E1D1C",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.7/cmdx_linux_arm64.tar.gz",
-      "checksum": "E717D43C231BA84B46D560C0962A5FFB33309BA3260CBF909B48395C03C47FB8",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.7/cmdx_windows_amd64.tar.gz",
-      "checksum": "817244714BF2660C313098A7CE860354118B9FBB5F1D0F72C527588C461702AC",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v1.7.7/cmdx_windows_arm64.tar.gz",
-      "checksum": "3C2081F29CD2A2C5C4B3FBD02C4576FDFAFBFEB3DEDAD84EAA5CD0B60AC86771",
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v2.0.0/cmdx_linux_arm64.tar.gz",
+      "checksum": "D17622F65BEC01549B7A1E8101A58C9A55BA7535A6E608424DA2E6B996C00F8E",
       "algorithm": "sha256"
     },
     {
