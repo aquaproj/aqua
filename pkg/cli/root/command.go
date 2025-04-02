@@ -34,7 +34,7 @@ $ export "PATH=$(aqua root-dir)/bin:PATH"
 	}
 }
 
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+func (i *command) action(_ context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
