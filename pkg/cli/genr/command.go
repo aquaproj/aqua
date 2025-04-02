@@ -1,6 +1,7 @@
 package genr
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -130,17 +131,17 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "generate-registry", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "generate-registry", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateRegistryCommandController(c.Context, param, http.DefaultClient, os.Stdout)
-	return ctrl.GenerateRegistry(c.Context, param, i.r.LogE, c.Args().Slice()...) //nolint:wrapcheck
+	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, param, http.DefaultClient, os.Stdout)
+	return ctrl.GenerateRegistry(ctx, param, i.r.LogE, cmd.Args().Slice()...) //nolint:wrapcheck
 }

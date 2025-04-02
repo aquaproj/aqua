@@ -1,6 +1,7 @@
 package update
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -128,7 +129,7 @@ func New(r *util.Param) *cli.Command {
 				Name:    "limit",
 				Aliases: []string{"l"},
 				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   config.DefaultVerCnt,
+				Value:   int64(config.DefaultVerCnt),
 			},
 			&cli.StringFlag{
 				Name:    "tags",
@@ -143,17 +144,17 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "update", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "update", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeUpdateCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
-	return ctrl.Update(c.Context, i.r.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeUpdateCommandController(ctx, param, http.DefaultClient, i.r.Runtime)
+	return ctrl.Update(ctx, i.r.LogE, param) //nolint:wrapcheck
 }

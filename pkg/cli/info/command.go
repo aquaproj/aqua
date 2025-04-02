@@ -1,6 +1,7 @@
 package info
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
@@ -29,17 +30,17 @@ $ aqua info`,
 	}
 }
 
-func (i *infoCommand) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *infoCommand) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "info", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "info", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInfoCommandController(c.Context, param, i.r.Runtime)
-	return ctrl.Info(c.Context, i.r.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeInfoCommandController(ctx, param, i.r.Runtime)
+	return ctrl.Info(ctx, i.r.LogE, param) //nolint:wrapcheck
 }

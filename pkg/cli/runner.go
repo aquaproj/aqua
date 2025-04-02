@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/completion"
 	"github.com/aquaproj/aqua/v2/pkg/cli/cp"
@@ -23,7 +22,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/cli/version"
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
-	"github.com/suzuki-shunsuke/urfave-cli-help-all/helpall"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-help-all/helpall"
 	"github.com/urfave/cli/v3"
 )
 
@@ -40,42 +39,37 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 }
 
 func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
-	compiledDate, err := time.Parse(time.RFC3339, param.LDFlags.Date)
-	if err != nil {
-		compiledDate = time.Now()
-	}
-	app := cli.App{
+	return helpall.With(&cli.Command{ //nolint:wrapcheck
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
 		Version:        param.LDFlags.Version + " (" + param.LDFlags.Commit + ")",
-		Compiled:       compiledDate,
 		ExitErrHandler: exitErrHandlerFunc,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "log-level",
 				Usage:   "log level",
-				EnvVars: []string{"AQUA_LOG_LEVEL"},
+				Sources: cli.EnvVars("AQUA_LOG_LEVEL"),
 			},
 			&cli.StringFlag{
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "configuration file path",
-				EnvVars: []string{"AQUA_CONFIG"},
+				Sources: cli.EnvVars("AQUA_CONFIG"),
 			},
 			&cli.BoolFlag{
 				Name:    "disable-cosign",
 				Usage:   "Disable Cosign verification",
-				EnvVars: []string{"AQUA_DISABLE_COSIGN"},
+				Sources: cli.EnvVars("AQUA_DISABLE_COSIGN"),
 			},
 			&cli.BoolFlag{
 				Name:    "disable-slsa",
 				Usage:   "Disable SLSA verification",
-				EnvVars: []string{"AQUA_DISABLE_SLSA"},
+				Sources: cli.EnvVars("AQUA_DISABLE_SLSA"),
 			},
 			&cli.BoolFlag{
 				Name:    "disable-github-artifact-attestation",
 				Usage:   "Disable GitHub Artifact Attestations verification",
-				EnvVars: []string{"AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION"},
+				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION"),
 			},
 			&cli.StringFlag{
 				Name:  "trace",
@@ -86,7 +80,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 				Usage: "cpu profile output file path",
 			},
 		},
-		EnableBashCompletion: true,
+		EnableShellCompletion: true,
 		Commands: commands(
 			param,
 			initcmd.New,
@@ -109,14 +103,11 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 			version.New,
 			root.New,
 		),
-	}
-	app.Commands = append(app.Commands, helpall.New(nil))
-
-	return app.RunContext(ctx, args) //nolint:wrapcheck
+	}, nil).Run(ctx, args)
 }
 
-func exitErrHandlerFunc(c *cli.Context, err error) {
-	if c.Command.Name != "exec" {
+func exitErrHandlerFunc(_ context.Context, cmd *cli.Command, err error) {
+	if cmd.Name != "exec" {
 		cli.HandleExitCoder(err)
 		return
 	}

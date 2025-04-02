@@ -1,6 +1,7 @@
 package updateaqua
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -41,20 +42,20 @@ $ aqua update-aqua v1.20.0 # Install v1.20.0
 	}
 }
 
-func (ua *updateAquaCommand) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (ua *updateAquaCommand) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, ua.r.LogE, "update-aqua", param, ua.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, ua.r.LogE, "update-aqua", param, ua.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeUpdateAquaCommandController(c.Context, ua.r.LogE, param, http.DefaultClient, ua.r.Runtime)
+	ctrl, err := controller.InitializeUpdateAquaCommandController(ctx, ua.r.LogE, param, http.DefaultClient, ua.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an UpdateAquaController: %w", err)
 	}
-	return ctrl.UpdateAqua(c.Context, ua.r.LogE, param) //nolint:wrapcheck
+	return ctrl.UpdateAqua(ctx, ua.r.LogE, param) //nolint:wrapcheck
 }

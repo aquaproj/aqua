@@ -33,39 +33,39 @@ type LDFlags struct {
 	Date    string
 }
 
-func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *LDFlags) error { //nolint:funlen,cyclop
+func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *LDFlags) error { //nolint:funlen,cyclop
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
-	param.Args = c.Args().Slice()
-	if logLevel := c.String("log-level"); logLevel != "" {
+	param.Args = cmd.Args().Slice()
+	if logLevel := cmd.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
-	param.ConfigFilePath = c.String("config")
-	param.GenerateConfigFilePath = c.String("generate-config")
-	param.Dest = c.String("o")
-	param.OutTestData = c.String("out-testdata")
-	param.OnlyLink = c.Bool("only-link")
-	param.InitConfig = c.Bool("init")
+	param.ConfigFilePath = cmd.String("config")
+	param.GenerateConfigFilePath = cmd.String("generate-config")
+	param.Dest = cmd.String("o")
+	param.OutTestData = cmd.String("out-testdata")
+	param.OnlyLink = cmd.Bool("only-link")
+	param.InitConfig = cmd.Bool("init")
 	if commandName == "generate-registry" {
-		param.InsertFile = c.String("i")
+		param.InsertFile = cmd.String("i")
 	} else {
-		param.Insert = c.Bool("i")
+		param.Insert = cmd.Bool("i")
 	}
-	param.All = c.Bool("all")
-	param.Global = c.Bool("g")
-	param.Detail = c.Bool("detail")
-	param.Prune = c.Bool("prune")
-	param.CosignDisabled = c.Bool("disable-cosign")
-	param.GitHubArtifactAttestationDisabled = c.Bool("disable-github-artifact-attestation")
-	param.SLSADisabled = c.Bool("disable-slsa")
-	param.Limit = c.Int("limit")
-	param.SelectVersion = c.Bool("select-version")
-	param.Installed = c.Bool("installed")
-	param.ShowVersion = c.Bool("version")
-	param.File = c.String("f")
-	if cmd := c.String("cmd"); cmd != "" {
+	param.All = cmd.Bool("all")
+	param.Global = cmd.Bool("g")
+	param.Detail = cmd.Bool("detail")
+	param.Prune = cmd.Bool("prune")
+	param.CosignDisabled = cmd.Bool("disable-cosign")
+	param.GitHubArtifactAttestationDisabled = cmd.Bool("disable-github-artifact-attestation")
+	param.SLSADisabled = cmd.Bool("disable-slsa")
+	param.Limit = int(cmd.Int("limit"))
+	param.SelectVersion = cmd.Bool("select-version")
+	param.Installed = cmd.Bool("installed")
+	param.ShowVersion = cmd.Bool("version")
+	param.File = cmd.String("f")
+	if cmd := cmd.String("cmd"); cmd != "" {
 		param.Commands = strings.Split(cmd, ",")
 	}
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
@@ -78,14 +78,14 @@ func SetParam(c *cli.Context, logE *logrus.Entry, commandName string, param *con
 	log.SetColor(param.LogColor, logE)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
-	param.Deep = c.Bool("deep")
-	param.Pin = c.Bool("pin")
-	param.OnlyPackage = c.Bool("only-package")
-	param.OnlyRegistry = c.Bool("only-registry")
+	param.Deep = cmd.Bool("deep")
+	param.Pin = cmd.Bool("pin")
+	param.OnlyPackage = cmd.Bool("only-package")
+	param.OnlyRegistry = cmd.Bool("only-registry")
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
-	param.Tags = parseTags(strings.Split(c.String("tags"), ","))
-	param.ExcludedTags = parseTags(strings.Split(c.String("exclude-tags"), ","))
+	param.Tags = parseTags(strings.Split(cmd.String("tags"), ","))
+	param.ExcludedTags = parseTags(strings.Split(cmd.String("exclude-tags"), ","))
 
 	if a := os.Getenv("AQUA_DISABLE_LAZY_INSTALL"); a != "" {
 		disableLazyInstall, err := strconv.ParseBool(a)

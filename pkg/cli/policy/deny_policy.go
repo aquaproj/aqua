@@ -1,6 +1,7 @@
 package policy //nolint:dupl
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
@@ -29,17 +30,17 @@ $ aqua policy deny [<policy file path>]
 	}
 }
 
-func (pd *policyDenyCommand) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (pd *policyDenyCommand) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, pd.r.LogE, "deny-policy", param, pd.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, pd.r.LogE, "deny-policy", param, pd.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeDenyPolicyCommandController(c.Context, param)
-	return ctrl.Deny(pd.r.LogE, param, c.Args().First()) //nolint:wrapcheck
+	ctrl := controller.InitializeDenyPolicyCommandController(ctx, param)
+	return ctrl.Deny(pd.r.LogE, param, cmd.Args().First()) //nolint:wrapcheck
 }

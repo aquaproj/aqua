@@ -1,6 +1,7 @@
 package root
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
@@ -33,8 +34,8 @@ $ export "PATH=$(aqua root-dir)/bin:PATH"
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}

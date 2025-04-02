@@ -37,7 +37,7 @@ fi
 
 aqua completion fish > ~/.config/fish/completions/aqua.fish
 `,
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:   "bash",
 				Usage:  "Output shell completion script for bash",

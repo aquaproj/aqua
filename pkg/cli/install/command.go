@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -73,20 +74,20 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "install", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "install", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeInstallCommandController(c.Context, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeInstallCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an InstallController: %w", err)
 	}
-	return ctrl.Install(c.Context, i.r.LogE, param) //nolint:wrapcheck
+	return ctrl.Install(ctx, i.r.LogE, param) //nolint:wrapcheck
 }

@@ -1,12 +1,13 @@
 package completion
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/urfave/cli/v3"
 )
 
-func (cm *command) bash(*cli.Context) error {
+func (cm *command) bash(context.Context, *cli.Command) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/bash_autocomplete
 	// https://github.com/urfave/cli/blob/c3f51bed6fffdf84227c5b59bd3f2e90683314df/autocomplete/bash_autocomplete#L5-L20
 	fmt.Fprintln(cm.r.Stdout, `

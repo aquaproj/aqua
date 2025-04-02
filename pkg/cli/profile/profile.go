@@ -18,12 +18,12 @@ func (p *Profiler) Stop() {
 	p.tracer.Stop()
 }
 
-func Start(c *cli.Context) (*Profiler, error) {
-	t, err := tracer.Start(c.String("trace"))
+func Start(cmd *cli.Command) (*Profiler, error) {
+	t, err := tracer.Start(cmd.String("trace"))
 	if err != nil {
 		return nil, fmt.Errorf("start tracing: %w", err)
 	}
-	cpuProfiler, err := cpuprofile.Start(c.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(cmd.String("cpu-profile"))
 	if err != nil {
 		t.Stop()
 		return nil, fmt.Errorf("start CPU Profile: %w", err)

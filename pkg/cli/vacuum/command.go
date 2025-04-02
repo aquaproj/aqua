@@ -1,6 +1,7 @@
 package vacuum
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -62,15 +63,15 @@ func New(r *util.Param) *cli.Command {
 				Name:    "days",
 				Aliases: []string{"d"},
 				Usage:   "Expiration days",
-				EnvVars: []string{"AQUA_VACUUM_DAYS"},
+				Sources: cli.EnvVars("AQUA_VACUUM_DAYS"),
 				Value:   60, //nolint:mnd
 			},
 		},
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
@@ -79,24 +80,24 @@ func (i *command) action(c *cli.Context) error {
 	logE := i.r.LogE
 
 	param := &config.Param{}
-	if err := util.SetParam(c, logE, "vacuum", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, logE, "vacuum", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	if c.Bool("init") {
-		ctrl := controller.InitializeVacuumInitCommandController(c.Context, param, i.r.Runtime, &http.Client{})
-		if err := ctrl.Init(c.Context, logE, param); err != nil {
+	if cmd.Bool("init") {
+		ctrl := controller.InitializeVacuumInitCommandController(ctx, param, i.r.Runtime, &http.Client{})
+		if err := ctrl.Init(ctx, logE, param); err != nil {
 			return err //nolint:wrapcheck
 		}
 		return nil
 	}
 
-	param.VacuumDays = c.Int("days")
+	param.VacuumDays = int(cmd.Int("days"))
 	if param.VacuumDays <= 0 {
 		return errors.New("vacuum days must be greater than 0")
 	}
 
-	ctrl := controller.InitializeVacuumCommandController(c.Context, param, i.r.Runtime)
+	ctrl := controller.InitializeVacuumCommandController(ctx, param, i.r.Runtime)
 	if err := ctrl.Vacuum(logE, param); err != nil {
 		return err //nolint:wrapcheck
 	}
