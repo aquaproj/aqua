@@ -1,8 +1,10 @@
 package version
 
 import (
+	"context"
+
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {
@@ -20,7 +22,7 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	cli.ShowVersion(c)
+func (i *command) action(_ context.Context, cmd *cli.Command) error {
+	cli.ShowVersion(cmd)
 	return nil
 }

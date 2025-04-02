@@ -1,6 +1,7 @@
 package list
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {
@@ -60,17 +61,17 @@ $ aqua list -installed -a
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "list", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "list", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeListCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
-	return ctrl.List(c.Context, i.r.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeListCommandController(ctx, param, http.DefaultClient, i.r.Runtime)
+	return ctrl.List(ctx, i.r.LogE, param) //nolint:wrapcheck
 }

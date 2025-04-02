@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {
@@ -35,24 +36,24 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "exec", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "exec", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeExecCommandController(c.Context, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeExecCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an ExecController: %w", err)
 	}
-	exeName, args, err := which.ParseExecArgs(c.Args().Slice())
+	exeName, args, err := which.ParseExecArgs(cmd.Args().Slice())
 	if err != nil {
 		return fmt.Errorf("parse args: %w", err)
 	}
-	return ctrl.Exec(c.Context, i.r.LogE, param, exeName, args...) //nolint:wrapcheck
+	return ctrl.Exec(ctx, i.r.LogE, param, exeName, args...) //nolint:wrapcheck
 }

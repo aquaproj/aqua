@@ -1,6 +1,7 @@
 package cp
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {
@@ -73,23 +74,23 @@ $ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "cp", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "cp", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl, err := controller.InitializeCopyCommandController(c.Context, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a CopyController: %w", err)
 	}
-	if err := ctrl.Copy(c.Context, i.r.LogE, param); err != nil {
+	if err := ctrl.Copy(ctx, i.r.LogE, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

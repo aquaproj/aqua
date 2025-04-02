@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {
@@ -47,7 +48,7 @@ func New(r *util.Param) *cli.Command {
 				Name:    "detail",
 				Aliases: []string{"d"},
 				Usage:   `Output additional fields such as description and link`,
-				EnvVars: []string{"AQUA_GENERATE_WITH_DETAIL"},
+				Sources: cli.EnvVars("AQUA_GENERATE_WITH_DETAIL"),
 			},
 			&cli.StringFlag{
 				Name:  "o",
@@ -62,25 +63,25 @@ func New(r *util.Param) *cli.Command {
 				Name:    "limit",
 				Aliases: []string{"l"},
 				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   config.DefaultVerCnt,
+				Value:   int64(config.DefaultVerCnt),
 			},
 		},
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "generate", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "generate", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
-	return ctrl.Generate(c.Context, i.r.LogE, param, c.Args().Slice()...) //nolint:wrapcheck
+	ctrl := controller.InitializeGenerateCommandController(ctx, param, http.DefaultClient, i.r.Runtime)
+	return ctrl.Generate(ctx, i.r.LogE, param, cmd.Args().Slice()...) //nolint:wrapcheck
 }
 
 const generateDescription = `Search packages in registries and output the configuration interactively.

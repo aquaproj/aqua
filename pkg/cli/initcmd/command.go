@@ -1,6 +1,7 @@
 package initcmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
@@ -8,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type initCommand struct {
@@ -52,24 +53,24 @@ $ aqua init -d # Create a directory "aqua" and create "aqua/aqua.yaml"
 	}
 }
 
-func (ic *initCommand) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInitCommandController(c.Context, param)
+	ctrl := controller.InitializeInitCommandController(ctx, param)
 	cParam := &initcmd.Param{
-		IsDir:     c.Bool("create-dir"),
-		ImportDir: c.String("import-dir"),
+		IsDir:     cmd.Bool("create-dir"),
+		ImportDir: cmd.String("import-dir"),
 	}
-	if cParam.ImportDir == "" && c.Bool("use-import-dir") {
+	if cParam.ImportDir == "" && cmd.Bool("use-import-dir") {
 		cParam.ImportDir = "imports"
 	}
-	return ctrl.Init(c.Context, ic.r.LogE, c.Args().First(), cParam) //nolint:wrapcheck
+	return ctrl.Init(ctx, ic.r.LogE, cmd.Args().First(), cParam) //nolint:wrapcheck
 }

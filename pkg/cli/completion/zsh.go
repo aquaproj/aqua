@@ -1,12 +1,13 @@
 package completion
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
-func (cm *command) zsh(*cli.Context) error {
+func (cm *command) zsh(context.Context, *cli.Command) error {
 	// https://github.com/urfave/cli/blob/main/autocomplete/zsh_autocomplete
 	// https://github.com/urfave/cli/blob/947f9894eef4725a1c15ed75459907b52dde7616/autocomplete/zsh_autocomplete
 	fmt.Fprintln(cm.r.Stdout, `#compdef aqua

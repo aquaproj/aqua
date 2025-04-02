@@ -1,6 +1,7 @@
 package remove
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const description = `Uninstall packages.
@@ -58,7 +59,7 @@ func New(r *util.Param) *cli.Command {
 			&cli.StringFlag{
 				Name:    "mode",
 				Aliases: []string{"m"},
-				EnvVars: []string{"AQUA_REMOVE_MODE"},
+				Sources: cli.EnvVars("AQUA_REMOVE_MODE"),
 				Usage:   "Removed target modes. l: link, p: package",
 			},
 			&cli.BoolFlag{
@@ -71,25 +72,25 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
-	mode, err := parseRemoveMode(c.String("mode"))
+	mode, err := parseRemoveMode(cmd.String("mode"))
 	if err != nil {
 		return fmt.Errorf("parse the mode option: %w", err)
 	}
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "remove", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "remove", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl := controller.InitializeRemoveCommandController(c.Context, param, http.DefaultClient, i.r.Runtime, mode)
-	if err := ctrl.Remove(c.Context, i.r.LogE, param); err != nil {
+	ctrl := controller.InitializeRemoveCommandController(ctx, param, http.DefaultClient, i.r.Runtime, mode)
+	if err := ctrl.Remove(ctx, i.r.LogE, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

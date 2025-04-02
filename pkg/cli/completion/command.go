@@ -2,7 +2,7 @@ package completion
 
 import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {
@@ -37,7 +37,7 @@ fi
 
 aqua completion fish > ~/.config/fish/completions/aqua.fish
 `,
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:   "bash",
 				Usage:  "Output shell completion script for bash",

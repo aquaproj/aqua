@@ -1,6 +1,7 @@
 package which
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type command struct {
@@ -59,24 +60,24 @@ v2.4.0
 	}
 }
 
-func (i *command) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (i *command) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, i.r.LogE, "which", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.LogE, "which", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeWhichCommandController(c.Context, param, http.DefaultClient, i.r.Runtime)
-	exeName, _, err := ParseExecArgs(c.Args().Slice())
+	ctrl := controller.InitializeWhichCommandController(ctx, param, http.DefaultClient, i.r.Runtime)
+	exeName, _, err := ParseExecArgs(cmd.Args().Slice())
 	if err != nil {
 		return err
 	}
 	logE := i.r.LogE.WithField("exe_name", exeName)
-	which, err := ctrl.Which(c.Context, logE, param, exeName)
+	which, err := ctrl.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 			"exe_name": exeName,

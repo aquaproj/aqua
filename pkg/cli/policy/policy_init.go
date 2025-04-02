@@ -1,13 +1,14 @@
 package policy
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type policyInitCommand struct {
@@ -30,17 +31,17 @@ $ aqua policy init foo.yaml # create foo.yaml`,
 	}
 }
 
-func (pi *policyInitCommand) action(c *cli.Context) error {
-	profiler, err := profile.Start(c)
+func (pi *policyInitCommand) action(ctx context.Context, cmd *cli.Command) error {
+	profiler, err := profile.Start(cmd)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(c, pi.r.LogE, "init-policy", param, pi.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, pi.r.LogE, "init-policy", param, pi.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInitPolicyCommandController(c.Context)
-	return ctrl.Init(pi.r.LogE, c.Args().First()) //nolint:wrapcheck
+	ctrl := controller.InitializeInitPolicyCommandController(ctx)
+	return ctrl.Init(pi.r.LogE, cmd.Args().First()) //nolint:wrapcheck
 }
