@@ -305,16 +305,19 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 			break
 		}
 	}
-	if pubKeyAssetName == "" {
-		for _, suf := range []string{"-keyless.pem", ".pem"} {
-			if _, ok := assetNames[checksumAssetName+suf]; ok {
-				certificateAssetName = checksumAssetName + suf
-				break
-			}
+	for _, suf := range []string{"-keyless.pem", ".pem"} {
+		if _, ok := assetNames[checksumAssetName+suf]; ok {
+			certificateAssetName = checksumAssetName + suf
+			break
 		}
-		if certificateAssetName == "" {
-			return nil
-		}
+	}
+
+	if strings.HasSuffix(signatureAssetName, "-keyless.sig") {
+		// Do not try with pubkey
+		pubKeyAssetName = ""
+	}
+	if pubKeyAssetName == "" && certificateAssetName == "" {
+		return nil
 	}
 
 	downloadURL := fmt.Sprintf("https://github.com/%s/%s/releases/download/{{.Version}}/",
