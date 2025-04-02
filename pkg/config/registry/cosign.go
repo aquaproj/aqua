@@ -13,6 +13,7 @@ type Cosign struct {
 	Signature   *DownloadedFile `json:"signature,omitempty"`
 	Certificate *DownloadedFile `json:"certificate,omitempty"`
 	Key         *DownloadedFile `json:"key,omitempty"`
+	Bundle      *DownloadedFile `json:"bundle,omitempty"`
 }
 
 type DownloadedFile struct {
