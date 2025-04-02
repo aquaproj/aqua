@@ -316,7 +316,7 @@ func findCertificate(assetNames map[string]struct{}, checksumAssetName string) s
 	return ""
 }
 
-func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
 	signatureAssetName := findSignature(assetNames, checksumAssetName)
 	if signatureAssetName == "" {
 		return nil
