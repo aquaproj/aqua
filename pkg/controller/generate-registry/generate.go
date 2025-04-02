@@ -287,35 +287,47 @@ func checkSLSAProvenance(assetName, tagName string) *registry.SLSAProvenance {
 	}
 }
 
-func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
-	var signatureAssetName string
+func findSignature(assetNames map[string]struct{}, checksumAssetName string) string {
 	for _, suf := range []string{"-keyless.sig", ".sig"} {
-		if _, ok := assetNames[checksumAssetName+suf]; ok {
-			signatureAssetName = checksumAssetName + suf
-			break
+		sig := checksumAssetName + suf
+		if _, ok := assetNames[sig]; ok {
+			return sig
 		}
 	}
+	return ""
+}
+
+func findPubKey(assetNames map[string]struct{}) string {
+	for assetName := range assetNames {
+		if strings.HasSuffix(assetName, "cosign.pub") {
+			return assetName
+		}
+	}
+	return ""
+}
+
+func findCertificate(assetNames map[string]struct{}, checksumAssetName string) string {
+	for _, suf := range []string{"-keyless.pem", ".pem"} {
+		cert := checksumAssetName + suf
+		if _, ok := assetNames[cert]; ok {
+			return cert
+		}
+	}
+	return ""
+}
+
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
+	signatureAssetName := findSignature(assetNames, checksumAssetName)
 	if signatureAssetName == "" {
 		return nil
 	}
-	var certificateAssetName, pubKeyAssetName string
-	for assetName := range assetNames {
-		if strings.HasSuffix(assetName, "cosign.pub") {
-			pubKeyAssetName = assetName
-			break
-		}
+	var pubKeyAssetName string
+	if !strings.HasSuffix(signatureAssetName, "-keyless.sig") {
+		// If the signature is keyless, a public key isn't used
+		pubKeyAssetName = findPubKey(assetNames)
 	}
-	for _, suf := range []string{"-keyless.pem", ".pem"} {
-		if _, ok := assetNames[checksumAssetName+suf]; ok {
-			certificateAssetName = checksumAssetName + suf
-			break
-		}
-	}
+	certificateAssetName := findCertificate(assetNames, checksumAssetName)
 
-	if strings.HasSuffix(signatureAssetName, "-keyless.sig") {
-		// Do not try with pubkey
-		pubKeyAssetName = ""
-	}
 	if pubKeyAssetName == "" && certificateAssetName == "" {
 		return nil
 	}
