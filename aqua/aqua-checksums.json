@@ -211,6 +211,16 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v2.0.0/cmdx_windows_amd64.zip",
+      "checksum": "A2FE88A88BC09780FF0A57A107EB90D424293C0FBDD94D04E6860883B08A8349",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/cmdx/v2.0.0/cmdx_windows_arm64.zip",
+      "checksum": "9E06E2CEFE60E0810A8EE8BAF01A81453ADEBEF6A943B4CDE9C1D4BEB646D8A5",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/suzuki-shunsuke/ghalint/v1.3.0/ghalint_1.3.0_darwin_amd64.tar.gz",
       "checksum": "6E4C1C4BD7759EFD3288F7403A83012E7A180A442296FC35AE32AA2AD42729CF",
       "algorithm": "sha256"
