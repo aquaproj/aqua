@@ -86,6 +86,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		"signature":   cos.Signature,
 		"key":         cos.Key,
 		"certificate": cos.Certificate,
+		"bundle":      cos.Bundle,
 	}
 	for name, df := range files {
 		if df == nil {

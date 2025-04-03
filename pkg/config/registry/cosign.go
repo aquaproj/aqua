@@ -13,6 +13,7 @@ type Cosign struct {
 	Signature   *DownloadedFile `json:"signature,omitempty"`
 	Certificate *DownloadedFile `json:"certificate,omitempty"`
 	Key         *DownloadedFile `json:"key,omitempty"`
+	Bundle      *DownloadedFile `json:"bundle,omitempty"`
 }
 
 type DownloadedFile struct {
@@ -30,7 +31,7 @@ func (c *Cosign) GetEnabled() bool {
 	if c.Enabled != nil {
 		return *c.Enabled
 	}
-	return len(c.Opts) != 0 || c.Signature != nil || c.Certificate != nil || c.Key != nil
+	return len(c.Opts) != 0 || c.Signature != nil || c.Certificate != nil || c.Key != nil || c.Bundle != nil
 }
 
 func (c *Cosign) RenderOpts(rt *runtime.Runtime, art *template.Artifact) ([]string, error) {
