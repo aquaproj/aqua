@@ -15,7 +15,7 @@ require (
 	github.com/invopop/jsonschema v0.13.0
 	github.com/ktr0731/go-fuzzyfinder v0.8.0
 	github.com/mattn/go-colorable v0.1.14
-	github.com/mholt/archives v0.1.0
+	github.com/mholt/archives v0.1.1
 	github.com/otiai10/copy v1.14.1
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/sirupsen/logrus v1.9.3
@@ -64,11 +64,12 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/minio/minlz v1.0.0 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/nsf/termbox-go v1.1.1 // indirect
-	github.com/nwaples/rardecode/v2 v2.0.0-beta.4.0.20241112120701-034e449c6e78 // indirect
+	github.com/nwaples/rardecode/v2 v2.1.0 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
