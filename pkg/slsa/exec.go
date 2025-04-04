@@ -63,6 +63,9 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) 
 var errVerify = errors.New("verify with slsa-verifier")
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
+	if param.SourceTag == "" {
+		return errors.New("source tag is empty")
+	}
 	args := []string{
 		"verify-artifact",
 		param.ArtifactPath,
@@ -70,8 +73,9 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		provenancePath,
 		"--source-uri",
 		param.SourceURI,
-		"--source-tag",
-		param.SourceTag,
+	}
+	if param.SourceTag != "-" {
+		args = append(args, "--source-tag", param.SourceTag)
 	}
 	for i := range 5 {
 		if _, err := e.exec(ctx, args); err == nil {
