@@ -33,6 +33,7 @@ type ParamVerify struct {
 	// e.g. v0.1.0-7
 	SourceTag    string
 	ArtifactPath string
+	Inputs       map[string]string
 }
 
 func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
