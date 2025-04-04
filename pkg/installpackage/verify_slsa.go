@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -13,13 +12,12 @@ import (
 )
 
 type slsaVerifier struct {
-	disabled   bool
-	pkg        *config.Package
-	provenance *registry.SLSAProvenance
-	installer  *DedicatedInstaller
-	verifier   SLSAVerifier
-	runtime    *runtime.Runtime
-	asset      string
+	disabled  bool
+	pkg       *config.Package
+	installer *DedicatedInstaller
+	verifier  SLSAVerifier
+	runtime   *runtime.Runtime
+	asset     string
 }
 
 func (s *slsaVerifier) Enabled(logE *logrus.Entry) (bool, error) {
@@ -27,7 +25,7 @@ func (s *slsaVerifier) Enabled(logE *logrus.Entry) (bool, error) {
 		logE.Debug("slsa verification is disabled")
 		return false, nil
 	}
-	return s.provenance.GetEnabled(), nil
+	return s.pkg.PackageInfo.SLSAProvenance.GetEnabled(), nil
 }
 
 func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
@@ -38,18 +36,22 @@ func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file stri
 
 	pkg := s.pkg
 	pkgInfo := s.pkg.PackageInfo
-	sp := s.provenance
 
 	art := pkg.TemplateArtifact(s.runtime, s.asset)
+	sourceTag := pkg.Package.Version
+	if pkgInfo.SLSAProvenance.DisableSourceTag {
+		sourceTag = ""
+	}
 
-	if err := s.verifier.Verify(ctx, logE, s.runtime, sp, art, &download.File{
+	if err := s.verifier.Verify(ctx, logE, s.runtime, pkgInfo.SLSAProvenance, art, &download.File{
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
 		Version:   pkg.Package.Version,
 	}, &slsa.ParamVerify{
 		SourceURI:    pkgInfo.SLSASourceURI(),
-		SourceTag:    pkg.Package.Version,
+		SourceTag:    sourceTag,
 		ArtifactPath: file,
+		Inputs:       pkgInfo.SLSAProvenance.Inputs,
 	}); err != nil {
 		return fmt.Errorf("verify a package with slsa-verifier: %w", err)
 	}

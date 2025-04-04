@@ -70,8 +70,12 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		provenancePath,
 		"--source-uri",
 		param.SourceURI,
-		"--source-tag",
-		param.SourceTag,
+	}
+	if param.SourceTag != "" {
+		args = append(args, "--source-tag", param.SourceTag)
+	}
+	for k, v := range param.Inputs {
+		args = append(args, "--build-workflow-input", fmt.Sprintf("%s=%s", k, v))
 	}
 	for i := range 5 {
 		if _, err := e.exec(ctx, args); err == nil {
