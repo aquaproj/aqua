@@ -624,6 +624,15 @@
         },
         "source_uri": {
           "type": "string"
+        },
+        "disable_source_tag": {
+          "type": "boolean"
+        },
+        "inputs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,
