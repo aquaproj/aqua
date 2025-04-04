@@ -23,7 +23,7 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
-func (i *command) action(_ context.Context, cmd *cli.Command) error {
+func (i *command) action(context.Context, *cli.Command) error {
 	fmt.Fprintln(i.r.Stdout, "aqua version "+i.r.LDFlags.GetVersion())
 	return nil
 }
