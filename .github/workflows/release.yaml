@@ -11,7 +11,7 @@ jobs:
       homebrew: true
       go-version-file: go.mod
       aqua_policy_allow: true
-      aqua_version: v2.47.0
+      aqua_version: v2.47.1
       app_token_repositories: >-
         [
           "${{github.event.repository.name}}",
