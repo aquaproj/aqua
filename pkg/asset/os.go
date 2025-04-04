@@ -31,6 +31,10 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 			OS:   "linux",
 		},
 		{
+			Name: "linux-gnu",
+			OS:   "linux",
+		},
+		{
 			Name: "pc-windows-msvc",
 			OS:   "windows",
 		},
@@ -56,6 +60,10 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 		},
 		{
 			Name: "apple",
+			OS:   osDarwin,
+		},
+		{
+			Name: "macosx",
 			OS:   osDarwin,
 		},
 		{
