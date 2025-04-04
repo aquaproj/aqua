@@ -10,6 +10,7 @@ type SLSAProvenance struct {
 	Asset     *string `json:"asset,omitempty" yaml:",omitempty"`
 	URL       *string `json:"url,omitempty" yaml:",omitempty"`
 	SourceURI *string `json:"source_uri,omitempty" yaml:"source_uri,omitempty"`
+	SourceTag string  `json:"source_tag,omitempty" yaml:"source_tag,omitempty"`
 }
 
 func (sp *SLSAProvenance) ToDownloadedFile() *DownloadedFile {

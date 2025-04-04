@@ -38,6 +38,10 @@ func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file stri
 	pkgInfo := s.pkg.PackageInfo
 
 	art := pkg.TemplateArtifact(s.runtime, s.asset)
+	sourceTag := pkgInfo.SLSAProvenance.SourceTag
+	if sourceTag == "" {
+		sourceTag = pkg.Package.Version
+	}
 
 	if err := s.verifier.Verify(ctx, logE, s.runtime, pkgInfo.SLSAProvenance, art, &download.File{
 		RepoOwner: pkgInfo.RepoOwner,
@@ -45,7 +49,7 @@ func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file stri
 		Version:   pkg.Package.Version,
 	}, &slsa.ParamVerify{
 		SourceURI:    pkgInfo.SLSASourceURI(),
-		SourceTag:    pkg.Package.Version,
+		SourceTag:    sourceTag,
 		ArtifactPath: file,
 	}); err != nil {
 		return fmt.Errorf("verify a package with slsa-verifier: %w", err)

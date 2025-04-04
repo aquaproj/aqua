@@ -624,6 +624,9 @@
         },
         "source_uri": {
           "type": "string"
+        },
+        "source_tag": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
