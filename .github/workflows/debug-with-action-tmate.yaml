@@ -27,7 +27,7 @@ jobs:
           GITHUB_TOKEN: ${{github.token}}
       - uses: aquaproj/aqua-installer@e2d0136abcf70b7a2f6f505720640750557c4b33 # v3.1.1
         with:
-          aqua_version: v2.47.0
+          aqua_version: v2.47.1
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
