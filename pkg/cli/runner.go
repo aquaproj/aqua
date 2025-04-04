@@ -42,7 +42,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 	return helpall.With(&cli.Command{ //nolint:wrapcheck
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
-		Version:        param.LDFlags.Version + " (" + param.LDFlags.Commit + ")",
+		Version:        param.LDFlags.GetVersion(),
 		ExitErrHandler: exitErrHandlerFunc,
 		Flags: []cli.Flag{
 			&cli.StringFlag{

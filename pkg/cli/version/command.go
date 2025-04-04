@@ -2,6 +2,7 @@ package version
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/urfave/cli/v3"
@@ -23,6 +24,6 @@ func New(r *util.Param) *cli.Command {
 }
 
 func (i *command) action(_ context.Context, cmd *cli.Command) error {
-	cli.ShowVersion(cmd)
+	fmt.Fprintln(i.r.Stdout, "aqua version "+i.r.LDFlags.GetVersion())
 	return nil
 }
