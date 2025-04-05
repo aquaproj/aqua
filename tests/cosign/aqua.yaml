@@ -10,4 +10,4 @@ registries:
   - type: standard
     ref: f9cce37273a70e2f5664fb4c3708169ffe7e320c # TODO update
 packages:
-  - name: suzuki-shunsuke/mkghtag@v0.1.6
+  - name: suzuki-shunsuke/mkghtag@v0.1.7
