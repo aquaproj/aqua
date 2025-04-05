@@ -17,9 +17,9 @@ _aqua() {
   local cur
   cur=${words[-1]}
   if [[ "$cur" == "-"* ]]; then
-    opts=("${(@f)$(${words[@]:0:#words[@]-1} ${cur} --generate-bash-completion)}")
+    opts=("${(@f)$(${words[@]:0:#words[@]-1} ${cur} --generate-shell-completion)}")
   else
-    opts=("${(@f)$(${words[@]:0:#words[@]-1} --generate-bash-completion)}")
+    opts=("${(@f)$(${words[@]:0:#words[@]-1} --generate-shell-completion)}")
   fi
 
   if [[ "${opts[1]}" != "" ]]; then
