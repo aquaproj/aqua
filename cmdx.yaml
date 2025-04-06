@@ -17,19 +17,6 @@ tasks:
     description: lint the go code
     usage: lint the go code
     script: golangci-lint run
-  - name: release
-    short: r
-    description: release the new version
-    usage: release the new version
-    script: |
-      set -eux
-      git tag -m "chore: release {{.version}}" "{{.version}}"
-      git push origin "{{.version}}"
-    args:
-      - name: version
-        required: true
-        validate:
-          - regexp: "^v\\d+\\.\\d+.\\d+(-.+)?$"
   - name: build
     description: go build
     usage: go build

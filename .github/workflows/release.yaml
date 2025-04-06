@@ -6,22 +6,11 @@ on:
 permissions: {}
 jobs:
   release:
-    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@7f97a226912ee2978126019b1e95311d7d15c97a # v2.0.0
+    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@f5bf21f5c80c1f64949838a6f3dbebe7807b9300 # v4.0.0
     with:
-      homebrew: true
       go-version-file: go.mod
       aqua_policy_allow: true
       aqua_version: v2.48.1
-      app_token_repositories: >-
-        [
-          "${{github.event.repository.name}}",
-          "homebrew-${{github.event.repository.name}}",
-          "scoop-bucket"
-        ]
-    secrets:
-      gh_app_id: ${{secrets.APP_ID}}
-      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
-      winget_github_token: ${{secrets.WINGET_GITHUB_TOKEN}}
     permissions:
       contents: write
       id-token: write
