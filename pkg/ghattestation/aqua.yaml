@@ -5,6 +5,6 @@ checksum:
   require_checksum: true
 registries:
 - type: standard
-  ref: v4.339.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.340.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: cli/cli@v2.69.0
