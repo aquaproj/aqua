@@ -1,7 +1,6 @@
 package slsa_test
 
 import (
-	"context"
 	"io"
 	"strings"
 	"testing"
@@ -69,11 +68,11 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			exe: &slsa.MockExecutor{},
 		},
 	}
-	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			verifier := slsa.New(d.downloader, d.fs, d.exe)
 			if err := verifier.Verify(ctx, logE, d.rt, d.sp, d.art, d.file, d.param); err != nil {
 				if d.isErr {

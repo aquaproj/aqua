@@ -1,7 +1,6 @@
 package cosign_test
 
 import (
-	"context"
 	"io"
 	"strings"
 	"testing"
@@ -117,11 +116,11 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			verifier := cosign.NewVerifier(d.executor, d.fs, d.downloader, d.param)
 			if err := verifier.Verify(ctx, logE, d.rt, d.file, d.cos, d.art, d.verifiedFilePath); err != nil {
 				if d.isErr {

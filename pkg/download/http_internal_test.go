@@ -1,7 +1,6 @@
 package download
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"testing"
@@ -48,10 +47,10 @@ func Test_fromURL(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			httpDownloader := NewHTTPDownloader(d.httpClient)
 			readCloser, _, err := httpDownloader.Download(ctx, d.url)
 			if readCloser != nil {

@@ -1,7 +1,6 @@
 package genrgst
 
 import (
-	"context"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
@@ -126,11 +125,11 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Assets:   d.assets,

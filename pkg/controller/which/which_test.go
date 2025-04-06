@@ -1,7 +1,6 @@
 package which_test
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -237,10 +236,10 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)

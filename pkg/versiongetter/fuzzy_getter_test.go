@@ -1,7 +1,6 @@
 package versiongetter_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -75,7 +74,7 @@ func TestFuzzyGetter_Get(t *testing.T) { //nolint:funlen
 			finder := fuzzyfinder.NewMock(d.idxs, nil)
 			vg := versiongetter.NewMockVersionGetter(d.versions)
 			fg := versiongetter.NewFuzzy(finder, vg)
-			version := fg.Get(context.Background(), logE, d.pkg, d.currentVersion, d.useFinder, -1)
+			version := fg.Get(t.Context(), logE, d.pkg, d.currentVersion, d.useFinder, -1)
 			if version != d.version {
 				t.Fatalf("wanted %s, got %s", d.version, version)
 			}

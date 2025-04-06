@@ -1,7 +1,6 @@
 package installpackage_test
 
 import (
-	"context"
 	"io"
 	"strings"
 	"testing"
@@ -59,10 +58,10 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
