@@ -7,7 +7,7 @@ USER foo
 RUN mkdir /home/foo/workspace
 WORKDIR /home/foo/workspace
 RUN curl -sSfL -O https://raw.githubusercontent.com/aquaproj/aqua-installer/v3.1.2/aqua-installer
-RUN echo "e9d4c99577c6b2ce0b62edf61f089e9b9891af1708e88c6592907d2de66e3714  aqua-installer" | sha256sum -c -
+RUN echo "9a5afb16da7191fbbc0c0240a67e79eecb0f765697ace74c70421377c99f0423  aqua-installer" | sha256sum -c -
 RUN chmod +x aqua-installer
 RUN ./aqua-installer -v "v2.48.1"
 ENV PATH=/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
