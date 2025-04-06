@@ -1,7 +1,6 @@
 package versiongetter_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -49,10 +48,10 @@ func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 		},
 	}
 
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
 			ghTagGetter := versiongetter.NewGitHubTag(ghTagClient)
 			version, err := ghTagGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
@@ -118,10 +117,10 @@ func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 		},
 	}
 
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
 			ghTagGetter := versiongetter.NewGitHubTag(ghTagClient)
 			items, err := ghTagGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)

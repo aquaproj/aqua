@@ -103,12 +103,12 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 			},
 		},
 	}
-	ctx := context.Background()
 	httpDownloader := download.NewHTTPDownloader(http.DefaultClient)
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			fs := afero.NewOsFs()
 			body, _, err := getReadCloser(ctx, httpDownloader, d.body, d.url)
 			if body != nil {

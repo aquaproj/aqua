@@ -1,7 +1,6 @@
 package install_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -87,11 +86,11 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	registryDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(http.DefaultClient))
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			fs, err := testutil.NewFs(d.files, d.dirs...)
 			if err != nil {
 				t.Fatal(err)

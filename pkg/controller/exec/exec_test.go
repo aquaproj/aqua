@@ -1,7 +1,6 @@
 package exec_test
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -134,10 +133,10 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			fs, err := testutil.NewFs(d.files, d.dirs...)
 			if err != nil {
 				t.Fatal(err)
@@ -218,10 +217,10 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	for _, d := range data {
 		b.Run("normal", func(b *testing.B) {
 			tempDir := b.TempDir()
+			ctx := b.Context()
 			d.param.ConfigFilePath = filepath.Join(tempDir, "aqua.yaml")
 			d.files[d.param.ConfigFilePath] = `registries:
 - type: local

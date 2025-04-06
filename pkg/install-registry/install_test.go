@@ -1,7 +1,6 @@
 package registry_test
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -157,7 +156,6 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	rt := &runtime.Runtime{
 		GOOS:   "linux",
 		GOARCH: "amd64",
@@ -165,6 +163,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)

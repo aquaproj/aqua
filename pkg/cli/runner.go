@@ -20,9 +20,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/updateaqua"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/cli/vacuum"
-	"github.com/aquaproj/aqua/v2/pkg/cli/version"
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-help-all/helpall"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/helpall"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/vcmd"
 	"github.com/urfave/cli/v3"
 )
 
@@ -31,11 +31,16 @@ type Runner struct{}
 type newC func(r *util.Param) *cli.Command
 
 func commands(param *util.Param, newCs ...newC) []*cli.Command {
-	cs := make([]*cli.Command, len(newCs))
-	for i, newC := range newCs {
-		cs[i] = newC(param)
+	cs := make([]*cli.Command, 0, len(newCs))
+	for _, newC := range newCs {
+		cs = append(cs, newC(param))
 	}
-	return cs
+	return append(cs,
+		vcmd.New(&vcmd.Command{
+			Name:    "aqua",
+			Version: param.LDFlags.GetVersion(),
+			SHA:     param.LDFlags.Commit,
+		}))
 }
 
 func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
@@ -100,7 +105,6 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 			exec.New,
 			list.New,
 			genr.New,
-			version.New,
 			root.New,
 		),
 	}, nil).Run(ctx, args)

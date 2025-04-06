@@ -1,7 +1,6 @@
 package versiongetter_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -40,10 +39,10 @@ func TestCargoVersionGetter_Get(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)
 			cargoGetter := versiongetter.NewCargo(cargoClient)
 			version, err := cargoGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
@@ -102,10 +101,10 @@ func TestCargoVersionGetter_List(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)
 			cargoGetter := versiongetter.NewCargo(cargoClient)
 			items, err := cargoGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)

@@ -1,7 +1,6 @@
 package download_test
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"testing"
@@ -97,10 +96,10 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	ctx := context.Background()
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			downloader := download.NewGitHubContentFileDownloader(d.github, download.NewHTTPDownloader(d.httpClient))
 			file, err := downloader.DownloadGitHubContentFile(ctx, logE, d.param)
 			if err != nil {

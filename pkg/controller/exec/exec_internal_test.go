@@ -1,7 +1,6 @@
 package exec
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -24,11 +23,11 @@ func TestController_execCommand(t *testing.T) {
 			executor: &osexec.Mock{},
 		},
 	}
-	ctx := context.Background()
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 			ctrl := &Controller{
 				stdin:    os.Stdin,
 				stdout:   os.Stdout,
