@@ -36,6 +36,14 @@ func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
 	}
 }
 
+func toVersionInString(releases []*Release) string {
+	tags := make([]string, len(releases))
+	for i, release := range releases {
+		tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
+	}
+	return fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
+}
+
 func (g *Group) VersionConstraint() (string, *Release) {
 	switch {
 	case len(g.releases) == 1:
@@ -46,22 +54,35 @@ func (g *Group) VersionConstraint() (string, *Release) {
 		}
 		return vc, nil
 	case g.fixed:
-		tags := make([]string, len(g.releases))
-		for i, release := range g.releases {
-			tags[i] = fmt.Sprintf(`"%s"`, release.Tag)
-		}
-		vc := fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
+		vc := toVersionInString(g.releases)
 		if !g.pkg.Info.NoAsset {
 			return vc, g.releases[0]
 		}
 		return vc, nil
 	default:
-		release := g.releases[len(g.releases)-1]
-		vc := fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
-		if !g.pkg.Info.NoAsset {
-			return vc, release
+		nonSemvers := make([]*Release, 0, len(g.releases))
+		for i := len(g.releases) - 1; i >= 0; i-- {
+			release := g.releases[len(g.releases)-1]
+			if release.Version == nil {
+				nonSemvers = append(nonSemvers, release)
+				continue
+			}
+			var vc string
+			if len(nonSemvers) > 0 {
+				vc = fmt.Sprintf(`semver("<= %s") or %s`, strings.TrimPrefix(release.Version.String(), "v"), toVersionInString(nonSemvers))
+			} else {
+				vc = fmt.Sprintf(`semver("<= %s")`, strings.TrimPrefix(release.Version.String(), "v"))
+			}
+			if !g.pkg.Info.NoAsset {
+				return vc, release
+			}
+			return vc, nil
 		}
-		return vc, nil
+		vc := toVersionInString(nonSemvers)
+		if g.pkg.Info.NoAsset {
+			return vc, nil
+		}
+		return vc, g.releases[0]
 	}
 }
 
