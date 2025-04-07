@@ -44,7 +44,7 @@ func toVersionInString(releases []*Release) string {
 	return fmt.Sprintf("Version in [%s]", strings.Join(tags, ", "))
 }
 
-func (g *Group) VersionConstraint() (string, *Release) {
+func (g *Group) VersionConstraint() (string, *Release) { //nolint:cyclop
 	switch {
 	case len(g.releases) == 1:
 		v := g.releases[0].Tag
