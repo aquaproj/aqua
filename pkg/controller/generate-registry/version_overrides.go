@@ -63,6 +63,13 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 }
 
 func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
+	excludedVersions := map[string]struct{}{
+		"latest":  {},
+		"nightly": {},
+	}
+	if _, ok := excludedVersions[tag]; ok {
+		return true
+	}
 	if cfg.VersionFilter != nil {
 		f, err := expr.EvaluateVersionFilter(cfg.VersionFilter, tag)
 		if err != nil {
