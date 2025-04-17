@@ -6,17 +6,20 @@ import (
 )
 
 type command struct {
-	r *util.Param
+	r   *util.Param
+	cmd *cli.Command
 }
 
-func New(r *util.Param) *cli.Command {
-	i := &command{
-		r: r,
-	}
-	return &cli.Command{
-		Name:  "completion",
-		Usage: "Output shell completion script for bash, zsh, or fish",
-		Description: `Output shell completion script for bash, zsh, or fish.
+func New(cmd *cli.Command) func(r *util.Param) *cli.Command {
+	return func(r *util.Param) *cli.Command {
+		i := &command{
+			r:   r,
+			cmd: cmd,
+		}
+		return &cli.Command{
+			Name:  "completion",
+			Usage: "Output shell completion script for bash, zsh, or fish",
+			Description: `Output shell completion script for bash, zsh, or fish.
 Source the output to enable completion.
 
 e.g.
@@ -37,22 +40,23 @@ fi
 
 aqua completion fish > ~/.config/fish/completions/aqua.fish
 `,
-		Commands: []*cli.Command{
-			{
-				Name:   "bash",
-				Usage:  "Output shell completion script for bash",
-				Action: i.bash,
+			Commands: []*cli.Command{
+				{
+					Name:   "bash",
+					Usage:  "Output shell completion script for bash",
+					Action: i.bash,
+				},
+				{
+					Name:   "zsh",
+					Usage:  "Output shell completion script for zsh",
+					Action: i.zsh,
+				},
+				{
+					Name:   "fish",
+					Usage:  "Output shell completion script for fish",
+					Action: i.fish,
+				},
 			},
-			{
-				Name:   "zsh",
-				Usage:  "Output shell completion script for zsh",
-				Action: i.zsh,
-			},
-			{
-				Name:   "fish",
-				Usage:  "Output shell completion script for fish",
-				Action: i.fish,
-			},
-		},
+		}
 	}
 }

@@ -31,23 +31,18 @@ type Runner struct{}
 type newC func(r *util.Param) *cli.Command
 
 func commands(param *util.Param, newCs ...newC) []*cli.Command {
-	cs := make([]*cli.Command, 0, len(newCs))
-	for _, newC := range newCs {
-		cs = append(cs, newC(param))
+	cs := make([]*cli.Command, len(newCs))
+	for i, newC := range newCs {
+		cs[i] = newC(param)
 	}
-	return append(cs,
-		vcmd.New(&vcmd.Command{
-			Name:    "aqua",
-			Version: param.LDFlags.GetVersion(),
-			SHA:     param.LDFlags.Commit,
-		}))
+	return cs
 }
 
 func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
-	return helpall.With(&cli.Command{ //nolint:wrapcheck
+	cmd := helpall.With(vcmd.With(&cli.Command{
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
-		Version:        param.LDFlags.GetVersion(),
+		Version:        param.LDFlags.Version,
 		ExitErrHandler: exitErrHandlerFunc,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -86,28 +81,29 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 			},
 		},
 		EnableShellCompletion: true,
-		Commands: commands(
-			param,
-			initcmd.New,
-			install.New,
-			generate.New,
-			updateaqua.New,
-			upc.New,
-			update.New,
-			completion.New,
-			which.New,
-			info.New,
-			remove.New,
-			vacuum.New,
-			cp.New,
-			cpolicy.New,
-			cpolicy.NewInitPolicy,
-			exec.New,
-			list.New,
-			genr.New,
-			root.New,
-		),
-	}, nil).Run(ctx, args)
+	}, param.LDFlags.Commit), nil)
+	cmd.Commands = commands(
+		param,
+		initcmd.New,
+		install.New,
+		generate.New,
+		updateaqua.New,
+		upc.New,
+		update.New,
+		completion.New(cmd),
+		which.New,
+		info.New,
+		remove.New,
+		vacuum.New,
+		cp.New,
+		cpolicy.New,
+		cpolicy.NewInitPolicy,
+		exec.New,
+		list.New,
+		genr.New,
+		root.New,
+	)
+	return cmd.Run(ctx, args) //nolint:wrapcheck
 }
 
 func exitErrHandlerFunc(_ context.Context, cmd *cli.Command, err error) {

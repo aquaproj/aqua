@@ -8,7 +8,7 @@ import (
 )
 
 func (cm *command) fish(_ context.Context, cmd *cli.Command) error {
-	s, err := cmd.ToFishCompletion()
+	s, err := cm.cmd.ToFishCompletion()
 	if err != nil {
 		return fmt.Errorf("generate fish completion: %w", err)
 	}
