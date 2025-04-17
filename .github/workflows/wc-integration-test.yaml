@@ -29,6 +29,8 @@ jobs:
       - run: aqua version
       - run: aqua version -j
       - run: aqua -v
+      - run: aqua --help
+      - run: aqua help
       - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
       - run: echo "x-motemen/ghq" | aqua g -f -
       - run: echo "local,aquaproj/aqua-installer" | aqua -c tests/main/aqua-global.yaml g -f -
