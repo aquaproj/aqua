@@ -49,7 +49,14 @@ tasks:
     short: i
     description: Build and install aqua
     usage: Build and install aqua by "go install" command
-    script: go install ./cmd/aqua
+    script: |
+      sha=""
+      if git diff --quiet; then
+        sha=$(git rev-parse HEAD)
+      fi
+      go install \
+        -ldflags "-X main.version=v1.0.0-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" \
+        ./cmd/aqua
   - name: run
     description: Run aqua via go run
     usage: Run aqua via go run
