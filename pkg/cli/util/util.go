@@ -33,10 +33,6 @@ type LDFlags struct {
 	Date    string
 }
 
-func (l *LDFlags) GetVersion() string {
-	return l.Version + " (" + l.Commit + ")"
-}
-
 func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *LDFlags) error { //nolint:funlen,cyclop
 	wd, err := os.Getwd()
 	if err != nil {
