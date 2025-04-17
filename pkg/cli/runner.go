@@ -39,7 +39,7 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 }
 
 func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
-	cmd := helpall.With(vcmd.With(&cli.Command{
+	cmd := &cli.Command{
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
 		Version:        param.LDFlags.Version,
@@ -81,7 +81,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 			},
 		},
 		EnableShellCompletion: true,
-	}, param.LDFlags.Commit), nil)
+	}
 	cmd.Commands = commands(
 		param,
 		initcmd.New,
@@ -103,7 +103,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 		genr.New,
 		root.New,
 	)
-	return cmd.Run(ctx, args) //nolint:wrapcheck
+	return helpall.With(vcmd.With(cmd, param.LDFlags.Commit), nil).Run(ctx, args) //nolint:wrapcheck
 }
 
 func exitErrHandlerFunc(_ context.Context, cmd *cli.Command, err error) {
