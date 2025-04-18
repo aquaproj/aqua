@@ -66,6 +66,7 @@ func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
 	excludedVersions := map[string]struct{}{
 		"latest":  {},
 		"nightly": {},
+		"stable":  {},
 	}
 	if _, ok := excludedVersions[tag]; ok {
 		return true
