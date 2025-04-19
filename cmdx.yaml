@@ -1,4 +1,5 @@
 ---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/v2.0.1/json-schema/cmdx.json
 # the configuration file of cmdx - task runner
 # https://github.com/suzuki-shunsuke/cmdx
 tasks:
@@ -67,14 +68,11 @@ tasks:
       Build and run a new container and attach a pseudo-TTY.
       You can test aqua in a clean environment.
     usage: Test aqua in a clean container
-    script: |
-      set -eux
-      {{if .latest}}
-      bash scripts/docker.sh latest
-      {{else}}
-      bash scripts/docker.sh
-      {{end}}
+    script: bash scripts/docker.sh
     flags:
-      - name: latest
-        short: l
+      - name: build
+        short: b
         type: bool
+        script_envs:
+          - BUILD
+        

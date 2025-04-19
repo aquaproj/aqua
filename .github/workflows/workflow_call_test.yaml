@@ -31,7 +31,7 @@ jobs:
               - Dockerfile
               - .github/workflows/wc-test.yaml
             test-docker-prebuilt:
-              - Dockerfile-prebuilt
+              - Dockerfile
               - .github/workflows/wc-test-docker-prebuilt.yaml
 
   renovate-config-validator:

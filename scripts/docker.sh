@@ -2,12 +2,14 @@
 
 set -eux
 
-version=${1:-}
-if [ "$version" = latest ]; then
-	docker build -t aquaproj-aqua-dev -f Dockerfile-prebuilt .
-else
+if [ "$BUILD" = true ]; then
 	GOOS=linux go build -o dist/aqua-docker ./cmd/aqua
-	docker build -t aquaproj-aqua-dev .
+	target=build
+	image=aquaproj-aqua-build
+else
+	image=aquaproj-aqua-prebuilt
+	target=prebuilt
 fi
 
-docker run --rm -ti aquaproj-aqua-dev bash
+docker build -t "$image" --target "$target" .
+docker run --rm -ti "$image" bash
