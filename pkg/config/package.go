@@ -155,6 +155,39 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	return p.completeWindowsExtToURL(s), nil
 }
 
+func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
+	pkgInfo := p.PackageInfo
+	pkg := p.Package
+	return template.Execute(file.Dir, map[string]any{ //nolint:wrapcheck
+		"Version":  pkg.Version,
+		"SemVer":   p.semVer(),
+		"GOOS":     rt.GOOS,
+		"GOARCH":   rt.GOARCH,
+		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
+		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
+		"Format":   pkgInfo.GetFormat(),
+		"FileName": file.Name,
+		"Vars":     pkg.Vars,
+	})
+}
+
+func (p *Package) ApplyVars() error {
+	if p.PackageInfo.Vars == nil {
+		return nil
+	}
+	for _, v := range p.PackageInfo.Vars {
+		if v.Name == "" {
+			return errors.New("a variable name is empty")
+		}
+		if err := p.applyVar(v); err != nil {
+			return fmt.Errorf("apply a variable: %w", logerr.WithFields(err, logrus.Fields{
+				"var_name": v.Name,
+			}))
+		}
+	}
+	return nil
+}
+
 type FileNotFoundError struct {
 	Err error
 }
@@ -402,39 +435,6 @@ func (p *Package) semVer() string {
 		return v
 	}
 	return strings.TrimPrefix(v, prefix)
-}
-
-func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
-	pkgInfo := p.PackageInfo
-	pkg := p.Package
-	return template.Execute(file.Dir, map[string]any{ //nolint:wrapcheck
-		"Version":  pkg.Version,
-		"SemVer":   p.semVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
-		"Vars":     pkg.Vars,
-	})
-}
-
-func (p *Package) ApplyVars() error {
-	if p.PackageInfo.Vars == nil {
-		return nil
-	}
-	for _, v := range p.PackageInfo.Vars {
-		if v.Name == "" {
-			return errors.New("a variable name is empty")
-		}
-		if err := p.applyVar(v); err != nil {
-			return fmt.Errorf("apply a variable: %w", logerr.WithFields(err, logrus.Fields{
-				"var_name": v.Name,
-			}))
-		}
-	}
-	return nil
 }
 
 func (p *Package) applyVar(v *registry.Var) error {

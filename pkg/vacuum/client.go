@@ -40,14 +40,6 @@ func New(fs afero.Fs, param *config.Param) *Client {
 	}
 }
 
-func (c *Client) dir(pkgPath string) string {
-	return filepath.Join(c.rootDir, pkgPath)
-}
-
-func (c *Client) file(pkgPath string) string {
-	return filepath.Join(c.dir(pkgPath), fileName)
-}
-
 func (c *Client) Remove(pkgPath string) error {
 	file := c.file(pkgPath)
 	if err := c.fs.Remove(file); err != nil {
@@ -71,17 +63,6 @@ func (c *Client) Create(pkgPath string, timestamp time.Time) error {
 		return nil
 	}
 	return c.update(file, dir, timestamp)
-}
-
-func (c *Client) update(file, dir string, timestamp time.Time) error {
-	if err := osfile.MkdirAll(c.fs, dir); err != nil {
-		return fmt.Errorf("create a package metadata directory: %w", err)
-	}
-	timestampStr := FormatTime(timestamp)
-	if err := afero.WriteFile(c.fs, file, []byte(timestampStr+"\n"), filePermission); err != nil {
-		return fmt.Errorf("create a package timestamp file: %w", err)
-	}
-	return nil
 }
 
 func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
@@ -116,4 +97,23 @@ func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
 		return nil, fmt.Errorf("find timestamp files: %w", err)
 	}
 	return timestamps, nil
+}
+
+func (c *Client) update(file, dir string, timestamp time.Time) error {
+	if err := osfile.MkdirAll(c.fs, dir); err != nil {
+		return fmt.Errorf("create a package metadata directory: %w", err)
+	}
+	timestampStr := FormatTime(timestamp)
+	if err := afero.WriteFile(c.fs, file, []byte(timestampStr+"\n"), filePermission); err != nil {
+		return fmt.Errorf("create a package timestamp file: %w", err)
+	}
+	return nil
+}
+
+func (c *Client) dir(pkgPath string) string {
+	return filepath.Join(c.rootDir, pkgPath)
+}
+
+func (c *Client) file(pkgPath string) string {
+	return filepath.Join(c.dir(pkgPath), fileName)
 }

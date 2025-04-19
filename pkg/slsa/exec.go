@@ -52,14 +52,6 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	return nil
 }
 
-func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) {
-	mutex := cosign.GetMutex()
-	mutex.Lock()
-	defer mutex.Unlock()
-	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.verifierExePath, args...))
-	return out, err //nolint:wrapcheck
-}
-
 var errVerify = errors.New("verify with slsa-verifier")
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
@@ -89,4 +81,12 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		}
 	}
 	return errVerify
+}
+
+func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) {
+	mutex := cosign.GetMutex()
+	mutex.Lock()
+	defer mutex.Unlock()
+	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.verifierExePath, args...))
+	return out, err //nolint:wrapcheck
 }

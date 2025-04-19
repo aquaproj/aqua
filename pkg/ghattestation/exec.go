@@ -69,19 +69,6 @@ func (e *AuthError) Unwrap() error {
 	return e.err
 }
 
-func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.exePath, args...))
-	if err == nil {
-		return nil
-	}
-	// https://github.com/aquaproj/aqua/issues/3157
-	// Ignore error if authentifaction fails
-	if strings.Contains(out, "gh auth login") || strings.Contains(out, "set the GH_TOKEN environment variable") {
-		return &AuthError{err: err}
-	}
-	return err //nolint:wrapcheck
-}
-
 var errVerify = errors.New("verify GitHub Artifact Attestations")
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
@@ -123,4 +110,17 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		}
 	}
 	return errVerify
+}
+
+func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
+	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.exePath, args...))
+	if err == nil {
+		return nil
+	}
+	// https://github.com/aquaproj/aqua/issues/3157
+	// Ignore error if authentifaction fails
+	if strings.Contains(out, "gh auth login") || strings.Contains(out, "set the GH_TOKEN environment variable") {
+		return &AuthError{err: err}
+	}
+	return err //nolint:wrapcheck
 }

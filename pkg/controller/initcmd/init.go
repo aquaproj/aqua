@@ -60,16 +60,6 @@ type Param struct {
 	IsDir     bool
 }
 
-func (c *Controller) cfgFilePath(cfgFilePath string, param *Param) string {
-	if cfgFilePath != "" {
-		return cfgFilePath
-	}
-	if !param.IsDir {
-		return "aqua.yaml"
-	}
-	return filepath.Join("aqua", "aqua.yaml")
-}
-
 func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *Param) error {
 	cfgFilePath = c.cfgFilePath(cfgFilePath, param)
 
@@ -120,4 +110,14 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 		}))
 	}
 	return nil
+}
+
+func (c *Controller) cfgFilePath(cfgFilePath string, param *Param) string {
+	if cfgFilePath != "" {
+		return cfgFilePath
+	}
+	if !param.IsDir {
+		return "aqua.yaml"
+	}
+	return filepath.Join("aqua", "aqua.yaml")
 }

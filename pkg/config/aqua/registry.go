@@ -37,26 +37,6 @@ func (r *Registry) Validate() error {
 	}
 }
 
-func (r *Registry) validateLocal() error {
-	if r.Path == "" {
-		return errPathIsRequired
-	}
-	return nil
-}
-
-func (r *Registry) validateGitHubContent() error {
-	if r.RepoOwner == "" {
-		return errRepoOwnerIsRequired
-	}
-	if r.RepoName == "" {
-		return errRepoNameIsRequired
-	}
-	if r.Ref == "" {
-		return errRefIsRequired
-	}
-	return nil
-}
-
 func (r *Registry) UnmarshalYAML(unmarshal func(any) error) error {
 	type alias Registry
 	a := alias(*r)
@@ -90,4 +70,24 @@ func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 		return filepath.Join(rootDir, "registries", r.Type, "github.com", r.RepoOwner, r.RepoName, r.Ref, r.Path), nil
 	}
 	return "", errInvalidRegistryType
+}
+
+func (r *Registry) validateLocal() error {
+	if r.Path == "" {
+		return errPathIsRequired
+	}
+	return nil
+}
+
+func (r *Registry) validateGitHubContent() error {
+	if r.RepoOwner == "" {
+		return errRepoOwnerIsRequired
+	}
+	if r.RepoName == "" {
+		return errRepoNameIsRequired
+	}
+	if r.Ref == "" {
+		return errRefIsRequired
+	}
+	return nil
 }

@@ -22,15 +22,6 @@ type handler struct {
 	logE     *logrus.Entry
 }
 
-func (h *handler) normalizePath(nameInArchive string) string {
-	slashCount := strings.Count(nameInArchive, "/")
-	backSlashCount := strings.Count(nameInArchive, "\\")
-	if backSlashCount > slashCount && filepath.Separator != '\\' {
-		return strings.ReplaceAll(nameInArchive, "\\", string(filepath.Separator))
-	}
-	return nameInArchive
-}
-
 func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
 	parentDir := filepath.Dir(dstPath)
@@ -93,6 +84,15 @@ func (h *handler) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) err
 		})
 	}
 	return nil
+}
+
+func (h *handler) normalizePath(nameInArchive string) string {
+	slashCount := strings.Count(nameInArchive, "/")
+	backSlashCount := strings.Count(nameInArchive, "\\")
+	if backSlashCount > slashCount && filepath.Separator != '\\' {
+		return strings.ReplaceAll(nameInArchive, "\\", string(filepath.Separator))
+	}
+	return nameInArchive
 }
 
 func (h *handler) unarchive(ctx context.Context, fileName, file string) error {

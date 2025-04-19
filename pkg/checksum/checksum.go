@@ -16,11 +16,11 @@ import (
 	"github.com/spf13/afero"
 )
 
+type Calculator struct{}
+
 func NewCalculator() *Calculator {
 	return &Calculator{}
 }
-
-type Calculator struct{}
 
 func (*Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
 	f, err := fs.Open(filename)
