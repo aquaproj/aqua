@@ -354,6 +354,7 @@ jobs:
         working-directory: tests/pnpm
       - name: Test pnpm (hardlink)
         run: pnpm install
+        shell: bash
         working-directory: tests/pnpm
 
       - name: Test minisign
