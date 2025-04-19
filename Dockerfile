@@ -1,5 +1,5 @@
 # This Dockerfile is used by `cmdx docker`.
-FROM mirror.gcr.io/ubuntu:24.04 AS base
+FROM mirror.gcr.io/ubuntu:24.04@sha256:1e622c5f073b4f6bfad6632f2616c7f59ef256e96fe78bf6a595d1dc4376ac02 AS base
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y sudo vim ca-certificates
