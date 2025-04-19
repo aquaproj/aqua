@@ -75,4 +75,3 @@ tasks:
         type: bool
         script_envs:
           - BUILD
-        
