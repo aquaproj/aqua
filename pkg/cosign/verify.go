@@ -51,25 +51,6 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 	}
 }
 
-func (v *Verifier) downloadFile(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, art *template.Artifact, downloadedFile *registry.DownloadedFile) (string, error) {
-	// --signature cos.Signature - Download a signature file
-	sigFile, err := afero.TempFile(v.fs, "", "")
-	if err != nil {
-		return "", fmt.Errorf("create a temporary file: %w", err)
-	}
-	fileName := sigFile.Name()
-
-	f, err := download.ConvertDownloadedFileToFile(downloadedFile, file, rt, art)
-	if err != nil {
-		return fileName, err //nolint:wrapcheck
-	}
-
-	if err := v.downloadCosignFile(ctx, logE, f, sigFile); err != nil {
-		return fileName, err
-	}
-	return fileName, nil
-}
-
 // art is used to render the template.
 func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
 	if v.disabled {
@@ -175,4 +156,23 @@ func (v *Verifier) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f
 		return fmt.Errorf("download a file: %w", err)
 	}
 	return nil
+}
+
+func (v *Verifier) downloadFile(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, art *template.Artifact, downloadedFile *registry.DownloadedFile) (string, error) {
+	// --signature cos.Signature - Download a signature file
+	sigFile, err := afero.TempFile(v.fs, "", "")
+	if err != nil {
+		return "", fmt.Errorf("create a temporary file: %w", err)
+	}
+	fileName := sigFile.Name()
+
+	f, err := download.ConvertDownloadedFileToFile(downloadedFile, file, rt, art)
+	if err != nil {
+		return fileName, err //nolint:wrapcheck
+	}
+
+	if err := v.downloadCosignFile(ctx, logE, f, sigFile); err != nil {
+		return fileName, err
+	}
+	return fileName, nil
 }

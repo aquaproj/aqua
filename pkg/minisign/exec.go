@@ -69,17 +69,6 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 	return nil
 }
 
-func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	if e == nil {
-		return errors.New("executor is nil")
-	}
-	if e.executor == nil {
-		return errors.New("e.executor is nil")
-	}
-	_, err := e.executor.ExecStderr(osexec.Command(ctx, e.minisignExePath, args...))
-	return err //nolint:wrapcheck
-}
-
 var errVerify = errors.New("verify with minisign")
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, signature string) error {
@@ -112,4 +101,15 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		}
 	}
 	return errVerify
+}
+
+func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
+	if e == nil {
+		return errors.New("executor is nil")
+	}
+	if e.executor == nil {
+		return errors.New("e.executor is nil")
+	}
+	_, err := e.executor.ExecStderr(osexec.Command(ctx, e.minisignExePath, args...))
+	return err //nolint:wrapcheck
 }

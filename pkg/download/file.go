@@ -60,14 +60,6 @@ func (f *DownloadedFile) ReadLast() (io.ReadCloser, error) {
 	return f.read()
 }
 
-func (f *DownloadedFile) read() (io.ReadCloser, error) {
-	file, err := f.fs.Open(f.path)
-	if err != nil {
-		return nil, fmt.Errorf("open a file: %w", err)
-	}
-	return file, nil
-}
-
 func (f *DownloadedFile) Wrap(w io.Writer) io.Writer {
 	if f.pb != nil && f.path == "" {
 		return io.MultiWriter(w, f.pb)
@@ -89,4 +81,12 @@ func (f *DownloadedFile) copy() error {
 		return fmt.Errorf("copy a file: %w", err)
 	}
 	return nil
+}
+
+func (f *DownloadedFile) read() (io.ReadCloser, error) {
+	file, err := f.fs.Open(f.path)
+	if err != nil {
+		return nil, fmt.Errorf("open a file: %w", err)
+	}
+	return file, nil
 }

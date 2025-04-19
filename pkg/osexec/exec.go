@@ -54,14 +54,6 @@ func (e *Executor) ExecAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
 	return 0, nil
 }
 
-func (e *Executor) execAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
-	out := &bytes.Buffer{}
-	cmd.Stdout = io.MultiWriter(cmd.Stdout, out)
-	cmd.Stderr = io.MultiWriter(cmd.Stderr, out)
-	code, err := e.Exec(cmd)
-	return out.String(), code, err
-}
-
 func (e *Executor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
 	cmd.Stdout = cmd.Stderr
 	return e.execAndGetCombinedOutput(cmd)
@@ -70,4 +62,12 @@ func (e *Executor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, e
 func (e *Executor) ExecStderr(cmd *exec.Cmd) (int, error) {
 	cmd.Stdout = cmd.Stderr
 	return e.Exec(cmd)
+}
+
+func (e *Executor) execAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
+	out := &bytes.Buffer{}
+	cmd.Stdout = io.MultiWriter(cmd.Stdout, out)
+	cmd.Stderr = io.MultiWriter(cmd.Stderr, out)
+	code, err := e.Exec(cmd)
+	return out.String(), code, err
 }

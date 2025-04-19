@@ -204,182 +204,6 @@ func (p *PackageInfo) Copy() *PackageInfo {
 	return pkg
 }
 
-func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
-	switch typ {
-	case PkgInfoTypeGitHubRelease:
-		p.URL = ""
-		p.Path = ""
-		p.Crate = ""
-		p.GoVersionPath = ""
-		p.Cargo = nil
-	case PkgInfoTypeGitHubContent:
-		p.URL = ""
-		p.Asset = ""
-		p.Crate = ""
-		p.GoVersionPath = ""
-		p.Cargo = nil
-	case PkgInfoTypeGitHubArchive:
-		p.URL = ""
-		p.Path = ""
-		p.Asset = ""
-		p.Crate = ""
-		p.GoVersionPath = ""
-		p.Cargo = nil
-		p.Format = ""
-	case PkgInfoTypeHTTP:
-		p.Path = ""
-		p.Asset = ""
-		p.GoVersionPath = ""
-	case PkgInfoTypeGoInstall:
-		p.URL = ""
-		p.Asset = ""
-		p.Crate = ""
-		p.Cargo = nil
-		p.WindowsExt = ""
-		p.CompleteWindowsExt = nil
-		p.Cosign = nil
-		p.SLSAProvenance = nil
-		p.Minisign = nil
-		p.GitHubArtifactAttestations = nil
-		p.Format = ""
-		p.Rosetta2 = false
-		p.WindowsARMEmulation = false
-		p.AppendExt = nil
-	case PkgInfoTypeGoBuild:
-		p.URL = ""
-		p.Asset = ""
-		p.Crate = ""
-		p.Cargo = nil
-		p.WindowsExt = ""
-		p.CompleteWindowsExt = nil
-		p.Cosign = nil
-		p.SLSAProvenance = nil
-		p.Minisign = nil
-		p.GitHubArtifactAttestations = nil
-		p.Format = ""
-		p.Rosetta2 = false
-		p.WindowsARMEmulation = false
-		p.AppendExt = nil
-	case PkgInfoTypeCargo:
-		p.URL = ""
-		p.Asset = ""
-		p.Path = ""
-		p.WindowsExt = ""
-		p.CompleteWindowsExt = nil
-		p.Cosign = nil
-		p.SLSAProvenance = nil
-		p.Minisign = nil
-		p.GitHubArtifactAttestations = nil
-		p.Format = ""
-		p.Rosetta2 = false
-		p.WindowsARMEmulation = false
-		p.AppendExt = nil
-		p.GoVersionPath = ""
-	}
-}
-
-func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
-	pkg := p.Copy()
-	if child.Type != "" {
-		pkg.resetByPkgType(child.Type)
-		pkg.Type = child.Type
-	}
-	if child.RepoOwner != "" {
-		pkg.RepoOwner = child.RepoOwner
-	}
-	if child.RepoName != "" {
-		pkg.RepoName = child.RepoName
-	}
-	if child.Asset != "" {
-		pkg.Asset = child.Asset
-	}
-	if child.Crate != "" {
-		pkg.Crate = child.Crate
-	}
-	if child.Cargo != nil {
-		pkg.Cargo = child.Cargo
-	}
-	if child.Path != "" {
-		pkg.Path = child.Path
-	}
-	if child.Format != "" {
-		pkg.Format = child.Format
-	}
-	if child.Files != nil {
-		pkg.Files = child.Files
-	}
-	if child.URL != "" {
-		pkg.URL = child.URL
-	}
-	if child.Replacements != nil {
-		pkg.Replacements = child.Replacements
-	}
-	if child.Overrides != nil {
-		pkg.Overrides = child.Overrides
-	}
-	if child.FormatOverrides != nil {
-		pkg.FormatOverrides = child.FormatOverrides
-	}
-	if child.SupportedEnvs != nil {
-		pkg.SupportedEnvs = child.SupportedEnvs
-	}
-	if child.VersionFilter != nil {
-		pkg.VersionFilter = *child.VersionFilter
-	}
-	if child.VersionPrefix != nil {
-		pkg.VersionPrefix = *child.VersionPrefix
-	}
-	if child.GoVersionPath != nil {
-		pkg.GoVersionPath = *child.GoVersionPath
-	}
-	if child.Rosetta2 != nil {
-		pkg.Rosetta2 = *child.Rosetta2
-	}
-	if child.WindowsARMEmulation != nil {
-		pkg.WindowsARMEmulation = *child.WindowsARMEmulation
-	}
-	if child.VersionSource != "" {
-		pkg.VersionSource = child.VersionSource
-	}
-	if child.CompleteWindowsExt != nil {
-		pkg.CompleteWindowsExt = child.CompleteWindowsExt
-	}
-	if child.WindowsExt != "" {
-		pkg.WindowsExt = child.WindowsExt
-	}
-	if child.Checksum != nil {
-		pkg.Checksum = child.Checksum
-	}
-	if child.Cosign != nil {
-		pkg.Cosign = child.Cosign
-	}
-	if child.SLSAProvenance != nil {
-		pkg.SLSAProvenance = child.SLSAProvenance
-	}
-	if child.Minisign != nil {
-		pkg.Minisign = child.Minisign
-	}
-	if child.GitHubArtifactAttestations != nil {
-		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
-	}
-	if child.ErrorMessage != nil {
-		pkg.ErrorMessage = *child.ErrorMessage
-	}
-	if child.NoAsset != nil {
-		pkg.NoAsset = *child.NoAsset
-	}
-	if child.AppendExt != nil {
-		pkg.AppendExt = child.AppendExt
-	}
-	if child.Build != nil {
-		pkg.Build = child.Build
-	}
-	if child.Vars != nil {
-		pkg.Vars = child.Vars
-	}
-	return pkg
-}
-
 func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
 	for _, fo := range p.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
@@ -673,23 +497,40 @@ func (p *PackageInfo) GetFiles() []*File {
 	return p.Files
 }
 
-func (p *PackageInfo) defaultCmdName() string {
-	if p.HasRepo() {
-		if p.Name == "" {
-			return p.RepoName
-		}
-		if i := strings.LastIndex(p.Name, "/"); i != -1 {
-			return p.Name[i+1:]
-		}
-		return p.Name
+var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
+
+func (p *PackageInfo) PkgPaths() map[string]struct{} {
+	m := map[string]struct{}{}
+	for _, a := range p.pkgPaths() {
+		m[a] = struct{}{}
 	}
-	if p.Type == PkgInfoTypeGoInstall {
-		return path.Base(p.GetPath())
+	for _, vo := range p.VersionOverrides {
+		pkg := p.overrideVersion(vo)
+		for _, a := range pkg.pkgPaths() {
+			m[a] = struct{}{}
+		}
 	}
-	return path.Base(p.GetName())
+	return m
 }
 
-var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
+func (p *PackageInfo) SLSASourceURI() string {
+	sp := p.SLSAProvenance
+	if sp == nil {
+		return ""
+	}
+	if sp.SourceURI != nil {
+		return *sp.SourceURI
+	}
+	repoOwner := sp.RepoOwner
+	repoName := sp.RepoName
+	if repoOwner == "" {
+		repoOwner = p.RepoOwner
+	}
+	if repoName == "" {
+		repoName = p.RepoName
+	}
+	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
+}
 
 func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
@@ -725,35 +566,194 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	return nil
 }
 
-func (p *PackageInfo) PkgPaths() map[string]struct{} {
-	m := map[string]struct{}{}
-	for _, a := range p.pkgPaths() {
-		m[a] = struct{}{}
-	}
-	for _, vo := range p.VersionOverrides {
-		pkg := p.overrideVersion(vo)
-		for _, a := range pkg.pkgPaths() {
-			m[a] = struct{}{}
+func (p *PackageInfo) defaultCmdName() string {
+	if p.HasRepo() {
+		if p.Name == "" {
+			return p.RepoName
 		}
+		if i := strings.LastIndex(p.Name, "/"); i != -1 {
+			return p.Name[i+1:]
+		}
+		return p.Name
 	}
-	return m
+	if p.Type == PkgInfoTypeGoInstall {
+		return path.Base(p.GetPath())
+	}
+	return path.Base(p.GetName())
 }
 
-func (p *PackageInfo) SLSASourceURI() string {
-	sp := p.SLSAProvenance
-	if sp == nil {
-		return ""
+func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
+	pkg := p.Copy()
+	if child.Type != "" {
+		pkg.resetByPkgType(child.Type)
+		pkg.Type = child.Type
 	}
-	if sp.SourceURI != nil {
-		return *sp.SourceURI
+	if child.RepoOwner != "" {
+		pkg.RepoOwner = child.RepoOwner
 	}
-	repoOwner := sp.RepoOwner
-	repoName := sp.RepoName
-	if repoOwner == "" {
-		repoOwner = p.RepoOwner
+	if child.RepoName != "" {
+		pkg.RepoName = child.RepoName
 	}
-	if repoName == "" {
-		repoName = p.RepoName
+	if child.Asset != "" {
+		pkg.Asset = child.Asset
 	}
-	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
+	if child.Crate != "" {
+		pkg.Crate = child.Crate
+	}
+	if child.Cargo != nil {
+		pkg.Cargo = child.Cargo
+	}
+	if child.Path != "" {
+		pkg.Path = child.Path
+	}
+	if child.Format != "" {
+		pkg.Format = child.Format
+	}
+	if child.Files != nil {
+		pkg.Files = child.Files
+	}
+	if child.URL != "" {
+		pkg.URL = child.URL
+	}
+	if child.Replacements != nil {
+		pkg.Replacements = child.Replacements
+	}
+	if child.Overrides != nil {
+		pkg.Overrides = child.Overrides
+	}
+	if child.FormatOverrides != nil {
+		pkg.FormatOverrides = child.FormatOverrides
+	}
+	if child.SupportedEnvs != nil {
+		pkg.SupportedEnvs = child.SupportedEnvs
+	}
+	if child.VersionFilter != nil {
+		pkg.VersionFilter = *child.VersionFilter
+	}
+	if child.VersionPrefix != nil {
+		pkg.VersionPrefix = *child.VersionPrefix
+	}
+	if child.GoVersionPath != nil {
+		pkg.GoVersionPath = *child.GoVersionPath
+	}
+	if child.Rosetta2 != nil {
+		pkg.Rosetta2 = *child.Rosetta2
+	}
+	if child.WindowsARMEmulation != nil {
+		pkg.WindowsARMEmulation = *child.WindowsARMEmulation
+	}
+	if child.VersionSource != "" {
+		pkg.VersionSource = child.VersionSource
+	}
+	if child.CompleteWindowsExt != nil {
+		pkg.CompleteWindowsExt = child.CompleteWindowsExt
+	}
+	if child.WindowsExt != "" {
+		pkg.WindowsExt = child.WindowsExt
+	}
+	if child.Checksum != nil {
+		pkg.Checksum = child.Checksum
+	}
+	if child.Cosign != nil {
+		pkg.Cosign = child.Cosign
+	}
+	if child.SLSAProvenance != nil {
+		pkg.SLSAProvenance = child.SLSAProvenance
+	}
+	if child.Minisign != nil {
+		pkg.Minisign = child.Minisign
+	}
+	if child.GitHubArtifactAttestations != nil {
+		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
+	}
+	if child.ErrorMessage != nil {
+		pkg.ErrorMessage = *child.ErrorMessage
+	}
+	if child.NoAsset != nil {
+		pkg.NoAsset = *child.NoAsset
+	}
+	if child.AppendExt != nil {
+		pkg.AppendExt = child.AppendExt
+	}
+	if child.Build != nil {
+		pkg.Build = child.Build
+	}
+	if child.Vars != nil {
+		pkg.Vars = child.Vars
+	}
+	return pkg
+}
+
+func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
+	switch typ {
+	case PkgInfoTypeGitHubRelease:
+		p.URL = ""
+		p.Path = ""
+		p.Crate = ""
+		p.GoVersionPath = ""
+		p.Cargo = nil
+	case PkgInfoTypeGitHubContent:
+		p.URL = ""
+		p.Asset = ""
+		p.Crate = ""
+		p.GoVersionPath = ""
+		p.Cargo = nil
+	case PkgInfoTypeGitHubArchive:
+		p.URL = ""
+		p.Path = ""
+		p.Asset = ""
+		p.Crate = ""
+		p.GoVersionPath = ""
+		p.Cargo = nil
+		p.Format = ""
+	case PkgInfoTypeHTTP:
+		p.Path = ""
+		p.Asset = ""
+		p.GoVersionPath = ""
+	case PkgInfoTypeGoInstall:
+		p.URL = ""
+		p.Asset = ""
+		p.Crate = ""
+		p.Cargo = nil
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Minisign = nil
+		p.GitHubArtifactAttestations = nil
+		p.Format = ""
+		p.Rosetta2 = false
+		p.WindowsARMEmulation = false
+		p.AppendExt = nil
+	case PkgInfoTypeGoBuild:
+		p.URL = ""
+		p.Asset = ""
+		p.Crate = ""
+		p.Cargo = nil
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Minisign = nil
+		p.GitHubArtifactAttestations = nil
+		p.Format = ""
+		p.Rosetta2 = false
+		p.WindowsARMEmulation = false
+		p.AppendExt = nil
+	case PkgInfoTypeCargo:
+		p.URL = ""
+		p.Asset = ""
+		p.Path = ""
+		p.WindowsExt = ""
+		p.CompleteWindowsExt = nil
+		p.Cosign = nil
+		p.SLSAProvenance = nil
+		p.Minisign = nil
+		p.GitHubArtifactAttestations = nil
+		p.Format = ""
+		p.Rosetta2 = false
+		p.WindowsARMEmulation = false
+		p.AppendExt = nil
+		p.GoVersionPath = ""
+	}
 }
