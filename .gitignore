@@ -1,5 +1,6 @@
 dist
 .coverage
+node_modules
 
 # ignore goland files
 .idea
