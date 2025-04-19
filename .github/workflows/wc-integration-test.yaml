@@ -342,7 +342,7 @@ jobs:
       - run: |
           go install -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" ./cmd/aqua
 
-      - run: echo "$(aqua root-dir)\bin" >> "$GITHUB_PATH"
+      - run: printf "%s\\\\bin\n" "$(aqua root-dir)" >> "$GITHUB_PATH"
         if: runner.os == 'Windows'
       - run: echo "$(aqua root-dir)/bin" >> "$GITHUB_PATH"
         if: runner.os != 'Windows'
@@ -359,6 +359,11 @@ jobs:
       - name: Test pnpm (hardlink)
         run: pnpm install
         working-directory: tests/pnpm
+      - name: Test pnpm (hardlink)
+        run: pnpm install
+        working-directory: tests/pnpm
+        shell: bash
+        if: runner.os == 'Windows'
 
       - name: Test minisign
         run: aqua -c aqua.yaml i
