@@ -19,9 +19,19 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - run: go install ./cmd/aqua
+      - run: |
+          go install \
+            -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" \
+            ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
+
+      - run: aqua version
+      - run: aqua version -j
+      - run: aqua -v
+      - run: aqua --help
+      - run: aqua help
+      - run: aqua help-all
 
       - run: echo "standard,kubernetes-sigs/kind" | aqua g -f -
       - run: echo "x-motemen/ghq" | aqua g -f -
@@ -275,7 +285,10 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - run: go install ./cmd/aqua
+      - run: |
+          go install \
+            -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" \
+            ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
 
@@ -326,9 +339,31 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - run: go install ./cmd/aqua
-      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
+      - run: |
+          go install -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" ./cmd/aqua
+
+      - run: printf "%s\\\\bin\n" "$(aqua root-dir)" >> "$GITHUB_PATH"
+        if: runner.os == 'Windows'
+      - run: echo "$(aqua root-dir)/bin" >> "$GITHUB_PATH"
+        if: runner.os != 'Windows'
+      - run: |
+          ("$(aqua root-dir)\bin") | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: pwsh
+        if: runner.os == 'Windows'
+
       - run: aqua policy allow
+
+      - name: Test pnpm (hardlink)
+        run: aqua -c aqua.yaml i
+        working-directory: tests/pnpm
+      - name: Test pnpm (hardlink)
+        run: pnpm install
+        working-directory: tests/pnpm
+      - name: Test pnpm (hardlink)
+        run: pnpm install
+        working-directory: tests/pnpm
+        shell: bash
+        if: runner.os == 'Windows'
 
       - name: Test minisign
         run: aqua -c aqua.yaml i

@@ -4,12 +4,9 @@
 # https://aquaproj.github.io/
 checksum:
   enabled: true
-  require_checksum: false
-#   supported_envs:
-#   - all
+  require_checksum: true
 registries:
-- type: standard
-  ref: v4.346.0 # renovate: depName=aquaproj/aqua-registry
+  - type: standard
+    ref: 1f20d0c2211df45694e762fcb20830d5c3cedf95 # renovate: depName=aquaproj/aqua-registry
 packages:
-- name: suzuki-shunsuke/cmdx
-  version: v1.7.4
+  - name: pnpm/pnpm@v10.8.1

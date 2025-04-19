@@ -21,7 +21,10 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - run: go build -o /usr/local/bin/aqua ./cmd/aqua
+      - run: |
+          go install \
+            -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" \
+            ./cmd/aqua
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua i -l
         env:
@@ -33,7 +36,7 @@ jobs:
 
       - run: mkdir -p dist
         if: inputs.docker_is_changed
-      - run: cp /usr/local/bin/aqua dist/aqua-docker
+      - run: cp ~/go/bin/aqua dist/aqua-docker
         if: inputs.docker_is_changed
       - run: docker build -t aquaproj-aqua-dev .
         if: inputs.docker_is_changed

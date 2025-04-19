@@ -205,6 +205,9 @@
         },
         "link": {
           "type": "string"
+        },
+        "hard": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
