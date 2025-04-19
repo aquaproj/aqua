@@ -83,7 +83,7 @@ func (is *Installer) createCmdLink(logE *logrus.Entry, file *registry.File, cmd 
 		})
 	}
 	if is.realRuntime.IsWindows() {
-		if err := is.createHardLink(logE, cmd, aquaProxyPathOnWindows); err != nil {
+		if err := is.createHardLinkToProxy(logE, cmd, aquaProxyPathOnWindows); err != nil {
 			return fmt.Errorf("create a hard link to aqua-proxy: %w", err)
 		}
 		return nil
@@ -94,7 +94,7 @@ func (is *Installer) createCmdLink(logE *logrus.Entry, file *registry.File, cmd 
 	return nil
 }
 
-func (is *Installer) createHardLink(logE *logrus.Entry, cmd string, aquaProxyPathOnWindows string) error {
+func (is *Installer) createHardLinkToProxy(logE *logrus.Entry, cmd, aquaProxyPathOnWindows string) error {
 	hardLink := filepath.Join(is.rootDir, "bin", cmd+".exe")
 	if f, err := afero.Exists(is.fs, hardLink); err != nil {
 		return fmt.Errorf("check if a hard link to aqua-proxy exists: %w", err)
