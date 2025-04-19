@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
@@ -148,6 +149,18 @@ func (is *Installer) checkFileSrc(ctx context.Context, logE *logrus.Entry, pkg *
 func (is *Installer) createFileLink(logE *logrus.Entry, file *registry.File, exePath string) error {
 	if file.Link == "" {
 		return nil
+	}
+	if file.Hard {
+		link := filepath.Join(filepath.Dir(exePath), file.Link)
+		if f, err := afero.Exists(is.fs, link); err != nil {
+			return fmt.Errorf("check if a hardlink exists: %w", err)
+		} else if f {
+			// do nothing
+			return nil
+		}
+		if err := is.linker.Hardlink(exePath, link); err != nil {
+			return fmt.Errorf("create a hard link: %w", err)
+		}
 	}
 	// file.Link is the relative path from exePath to the link
 	link := filepath.Join(filepath.Dir(exePath), file.Link)

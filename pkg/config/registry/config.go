@@ -17,6 +17,7 @@ type File struct {
 	Dir  string `json:"dir,omitempty" yaml:",omitempty"`
 	// Link is the relative path from Src to the link
 	Link string `json:"link,omitempty" yaml:",omitempty"`
+	Hard bool   `json:"hard,omitempty" yaml:",omitempty"`
 }
 
 func (p *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {
