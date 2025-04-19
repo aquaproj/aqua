@@ -146,26 +146,30 @@ func (is *Installer) checkFileSrc(ctx context.Context, logE *logrus.Entry, pkg *
 	return exePath, nil
 }
 
+func (is *Installer) createFileHardLink(logE *logrus.Entry, file *registry.File, exePath string) error {
+	link := filepath.Join(filepath.Dir(exePath), file.Link)
+	if is.runtime.IsWindows() && filepath.Ext(link) == "" {
+		link += ".exe"
+	}
+	if f, err := afero.Exists(is.fs, link); err != nil {
+		return fmt.Errorf("check if a hardlink exists: %w", err)
+	} else if f {
+		// do nothing
+		return nil
+	}
+	logE.Info("creating a hard link")
+	if err := is.linker.Hardlink(exePath, link); err != nil {
+		return fmt.Errorf("create a hard link: %w", err)
+	}
+	return nil
+}
+
 func (is *Installer) createFileLink(logE *logrus.Entry, file *registry.File, exePath string) error {
 	if file.Link == "" {
 		return nil
 	}
 	if file.Hard {
-		link := filepath.Join(filepath.Dir(exePath), file.Link)
-		if is.runtime.IsWindows() && filepath.Ext(link) == "" {
-			link += ".exe"
-		}
-		if f, err := afero.Exists(is.fs, link); err != nil {
-			return fmt.Errorf("check if a hardlink exists: %w", err)
-		} else if f {
-			// do nothing
-			return nil
-		}
-		logE.Info("creating a hard link")
-		if err := is.linker.Hardlink(exePath, link); err != nil {
-			return fmt.Errorf("create a hard link: %w", err)
-		}
-		return nil
+		return is.createFileHardLink(logE, file, exePath)
 	}
 	// file.Link is the relative path from exePath to the link
 	link := filepath.Join(filepath.Dir(exePath), file.Link)
