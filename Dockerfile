@@ -1,3 +1,4 @@
+# This Dockerfile is used by `cmdx docker`.
 FROM mirror.gcr.io/ubuntu:24.04 AS base
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update

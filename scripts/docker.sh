@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# This script is run by `cmdx docker`.
 
 set -eux
 
