@@ -161,6 +161,7 @@ func (is *Installer) createFileLink(logE *logrus.Entry, file *registry.File, exe
 		if err := is.linker.Hardlink(exePath, link); err != nil {
 			return fmt.Errorf("create a hard link: %w", err)
 		}
+		return nil
 	}
 	// file.Link is the relative path from exePath to the link
 	link := filepath.Join(filepath.Dir(exePath), file.Link)
