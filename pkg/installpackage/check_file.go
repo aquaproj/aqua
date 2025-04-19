@@ -152,6 +152,9 @@ func (is *Installer) createFileLink(logE *logrus.Entry, file *registry.File, exe
 	}
 	if file.Hard {
 		link := filepath.Join(filepath.Dir(exePath), file.Link)
+		if is.runtime.IsWindows() && filepath.Ext(link) == "" {
+			link += ".exe"
+		}
 		if f, err := afero.Exists(is.fs, link); err != nil {
 			return fmt.Errorf("check if a hardlink exists: %w", err)
 		} else if f {
