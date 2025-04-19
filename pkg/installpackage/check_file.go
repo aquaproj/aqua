@@ -158,6 +158,7 @@ func (is *Installer) createFileLink(logE *logrus.Entry, file *registry.File, exe
 			// do nothing
 			return nil
 		}
+		logE.Info("creating a hard link")
 		if err := is.linker.Hardlink(exePath, link); err != nil {
 			return fmt.Errorf("create a hard link: %w", err)
 		}
