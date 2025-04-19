@@ -168,7 +168,7 @@ func (is *Installer) createFileLink(logE *logrus.Entry, file *registry.File, exe
 	if file.Link == "" {
 		return nil
 	}
-	if file.Hard {
+	if file.Hard || is.runtime.IsWindows() {
 		return is.createFileHardLink(logE, file, exePath)
 	}
 	// file.Link is the relative path from exePath to the link
