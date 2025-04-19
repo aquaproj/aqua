@@ -342,10 +342,7 @@ jobs:
       - run: |
           go install -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" ./cmd/aqua
 
-      - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
-        if: runner.os != 'Windows'
-      - run: echo "${AQUA_ROOT_DIR:-$HOME/AppData/Local/aquaproj-aqua}/bin" >> "$GITHUB_PATH"
-        if: runner.os == 'Windows'
+      - run: echo "$(aqua root-dir)/bin" >> "$GITHUB_PATH"
 
       - run: aqua policy allow
 
@@ -354,7 +351,6 @@ jobs:
         working-directory: tests/pnpm
       - name: Test pnpm (hardlink)
         run: pnpm install
-        shell: bash
         working-directory: tests/pnpm
 
       - name: Test minisign
