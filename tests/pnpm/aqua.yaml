@@ -7,6 +7,6 @@ checksum:
   require_checksum: true
 registries:
   - type: standard
-    ref: 1f20d0c2211df45694e762fcb20830d5c3cedf95 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.346.1 # renovate: depName=aquaproj/aqua-registry
 packages:
   - name: pnpm/pnpm@v10.8.1
