@@ -1,7 +1,8 @@
 package registry
 
 type GitHubArtifactAttestations struct {
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled       *bool  `json:"enabled,omitempty"`
+	PredicateType string `json:"predicate_type,omitempty"`
 	// https://github.com/aquaproj/aqua/issues/3581
 	SignerWorkflow2 string `yaml:"signer_workflow,omitempty" json:"signer_workflow,omitempty"`
 	// Deprecated: We'll remove signer-workflow at aqua v3.
