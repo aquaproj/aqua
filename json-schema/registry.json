@@ -260,6 +260,9 @@
         "enabled": {
           "type": "boolean"
         },
+        "predicate_type": {
+          "type": "string"
+        },
         "signer_workflow": {
           "type": "string"
         },
