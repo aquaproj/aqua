@@ -88,6 +88,9 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 	if param.SignerWorkflow != "" {
 		args = append(args, "--signer-workflow", param.SignerWorkflow)
 	}
+	if param.PredicateType != "" {
+		args = append(args, "--predicate-type", param.PredicateType)
+	}
 	for i := range 5 {
 		err := e.exec(ctx, args)
 		if err == nil {

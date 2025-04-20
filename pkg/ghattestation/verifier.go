@@ -20,6 +20,7 @@ type ParamVerify struct {
 	ArtifactPath   string
 	Repository     string
 	SignerWorkflow string
+	PredicateType  string
 }
 
 func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
