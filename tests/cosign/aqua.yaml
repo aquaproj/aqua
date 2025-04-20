@@ -9,5 +9,10 @@ checksum:
 registries:
   - type: standard
     ref: f9cce37273a70e2f5664fb4c3708169ffe7e320c # TODO update
+  - type: standard
+    ref: 98524ca5b420af9115275d110b2cadeab60f49e2 # TODO update
+    name: soulshack
 packages:
   - name: suzuki-shunsuke/mkghtag@v0.1.7
+  - name: pkdindustries/soulshack@v0.74
+    registry: soulshack
