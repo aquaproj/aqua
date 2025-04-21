@@ -1,7 +1,7 @@
 {
   extends: [
-    'github>suzuki-shunsuke/renovate-config#3.2.0',
-    'github>suzuki-shunsuke/renovate-config:nolimit#3.2.0',
+    'github>suzuki-shunsuke/renovate-config#3.2.1',
+    'github>suzuki-shunsuke/renovate-config:nolimit#3.2.1',
     'github>aquaproj/aqua-renovate-config#2.7.5',
     'github>aquaproj/aqua-renovate-config:file#2.7.5(tests/aqua.*\\.yaml)',
     'github>aquaproj/aqua-renovate-config:file#2.7.5(aqua/imports/.*\\.ya?ml)',
