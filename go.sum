@@ -237,8 +237,8 @@ github.com/suzuki-shunsuke/gomic v0.6.0 h1:oSmoXR1nmt7X05TssjBTcX9BCTNnFCcNlA5ys
 github.com/suzuki-shunsuke/gomic v0.6.0/go.mod h1:/+uhQJ1H5f9ythus/MbXOotAZDmkN1QOjKlsSiH2v+I=
 github.com/suzuki-shunsuke/logrus-error v0.1.4 h1:nWo98uba1fANHdZ9Y5pJ2RKs/PpVjrLzRp5m+mRb9KE=
 github.com/suzuki-shunsuke/logrus-error v0.1.4/go.mod h1:WsVvvw6SKSt08/fB2qbnsKIMJA4K1MYCUprqsBJbMiM=
-github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.2 h1:sgCdlcfyY/EE7K6bbL5fw1nhxnOv3ETEAQRJsBp1hq8=
-github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.2/go.mod h1:hnKvR1IZskaS3isZPuO1Ndw9++o+W66pL2kzBAGsglE=
+github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.3 h1:WlB8FC2BH3uVsDoPug7wIFdkb+aAlaKpp07H6x/GjFg=
+github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.3/go.mod h1:B/O/TfFHRZoSeFqZHgwIRf4aWhZiIU46A+UK4ThS2sQ=
 github.com/therootcompany/xz v1.0.1 h1:CmOtsn1CbtmyYiusbfmhmkpAAETj0wBIH6kCYaX+xzw=
 github.com/therootcompany/xz v1.0.1/go.mod h1:3K3UH1yCKgBneZYhuQUvJ9HPD19UEXEI0BWbMn8qNMY=
 github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
