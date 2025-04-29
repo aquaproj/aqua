@@ -139,7 +139,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 		if err != nil {
 			return nil, fmt.Errorf("get a registry file path: %w", err)
 		}
-		pkgInfo := rCache.Get(rgPath, pkg.Name)
+		pkgInfo = rCache.Get(rgPath, pkg.Name)
 		if pkgInfo == nil {
 			logerr.WithError(logE, err).Warn("get a package from registry cache")
 			rc, err := c.registryInstaller.InstallRegistry(ctx, logE, rg, cfgFilePath, checksums)
@@ -151,9 +151,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 				logE.Warn("package isn't found")
 				return nil, nil //nolint:nilnil
 			}
-			if pkgInfo != nil {
-				rCache.Add(rgPath, pkgInfo)
-			}
+			rCache.Add(rgPath, pkgInfo)
 		}
 	}
 	if pkgInfo == nil {
