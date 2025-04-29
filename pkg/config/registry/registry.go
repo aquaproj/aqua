@@ -15,3 +15,12 @@ func (c *Config) Packages(logE *logrus.Entry) map[string]*PackageInfo {
 	c.m = m
 	return m
 }
+
+func (c *Config) Package(logE *logrus.Entry, pkgName string) *PackageInfo {
+	m := c.Packages(logE)
+	pkg, ok := m[pkgName]
+	if !ok {
+		return nil
+	}
+	return pkg
+}
