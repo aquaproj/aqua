@@ -179,7 +179,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if diff := cmp.Diff(d.exp, registries); diff != "" {
+			if diff := cmp.Diff(d.exp, registries, cmp.AllowUnexported(cfgRegistry.Config{})); diff != "" {
 				t.Fatal(diff)
 			}
 		})

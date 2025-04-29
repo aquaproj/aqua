@@ -128,7 +128,7 @@ func (c *Controller) findExecFileFromPkg(logE *logrus.Entry, registries map[stri
 		return nil, nil //nolint:nilnil
 	}
 
-	m := registry.PackageInfos.ToMap(logE)
+	m := registry.Packages(logE)
 
 	pkgInfo, ok := m[pkg.Name]
 	if !ok {
