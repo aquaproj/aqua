@@ -144,7 +144,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 			logE.Debug("get a package from registry cache")
 			rc, err := c.registryInstaller.InstallRegistry(ctx, logE, rg, cfgFilePath, checksums)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("install a registry: %w", err)
 			}
 			pkgInfo = rc.Package(logE, pkg.Name)
 			if pkgInfo == nil {
@@ -157,7 +157,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 	if pkgInfo == nil {
 		rc, err := c.registryInstaller.InstallRegistry(ctx, logE, rg, cfgFilePath, checksums)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("install a registry: %w", err)
 		}
 		pkgInfo = rc.Package(logE, pkg.Name)
 	}
