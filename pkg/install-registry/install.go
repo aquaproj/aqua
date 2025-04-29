@@ -41,7 +41,7 @@ func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, 
 				return
 			}
 			maxInstallChan <- struct{}{}
-			registryContent, err := is.installRegistry(ctx, logE, registry, cfgFilePath, checksums)
+			registryContent, err := is.InstallRegistry(ctx, logE, registry, cfgFilePath, checksums)
 			if err != nil {
 				<-maxInstallChan
 				logerr.WithError(logE, err).WithFields(logrus.Fields{
@@ -66,9 +66,9 @@ func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, 
 	return registryContents, nil
 }
 
-// installRegistry installs and reads the registry file and returns the registry content.
+// InstallRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (is *Installer) installRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *Installer) InstallRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	registryFilePath, err := regist.FilePath(is.param.RootDir, cfgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
