@@ -145,6 +145,9 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 			return nil, err
 		}
 		pkgInfo = rc.Package(logE, pkg.Name)
+		if pkgInfo != nil {
+			rCache.Add(rgPath, pkgInfo)
+		}
 	}
 
 	if pkgInfo == nil {

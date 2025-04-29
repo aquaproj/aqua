@@ -35,15 +35,15 @@ func (is *Installer) ReadCache(logE *logrus.Entry, cfgFilePath string) (*registr
 					"cache_path": cachePath,
 				}).Debug("remove a registry cache file")
 			}
-			return nil, nil
+			return m, nil
 		}
-		return nil, nil
+		return m, nil
 	}
 	if f != nil {
 		defer f.Close()
 	}
 	if err := json.NewDecoder(f).Decode(&m); err != nil {
-		return nil, fmt.Errorf("parse the registry cache file: %w", err)
+		return m, fmt.Errorf("parse the registry cache file: %w", err)
 	}
 
 	return m, nil
