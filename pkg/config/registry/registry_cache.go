@@ -26,6 +26,23 @@ func NewCache(fs afero.Fs, rootDir, cfgFilePath string) (*Cache, error) {
 	return c, c.read()
 }
 
+func (c *Cache) Clean(keys map[string]map[string]struct{}) {
+	for rgPath, pkgInfos := range c.m {
+		a, ok := keys[rgPath]
+		if !ok {
+			delete(c.m, rgPath)
+			c.updated = true
+			continue
+		}
+		for pkgName := range pkgInfos {
+			if _, ok := a[pkgName]; !ok {
+				delete(pkgInfos, pkgName)
+				c.updated = true
+			}
+		}
+	}
+}
+
 func (c *Cache) Write() error {
 	if !c.updated {
 		return nil

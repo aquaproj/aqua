@@ -100,15 +100,22 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 	if err != nil {
 		logerr.WithError(logE, err).WithField("config_file_path", cfgFilePath).Debug("read a registry cache file")
 	}
+
+	rgPaths := map[string]string{}
+	registries := map[string]*registry.Config{}
+
+	cacheKeys := map[string]map[string]struct{}{}
+	if err := c.setRegistryCacheKeys(cfg, cfgFilePath, rgPaths, cacheKeys); err != nil {
+		logerr.WithError(logE, err).Warn("set registry cache keys")
+	}
+
 	defer func() {
 		logE.Debug("updating registry cache")
+		registryCache.Clean(cacheKeys)
 		if err := registryCache.Write(); err != nil {
 			logerr.WithError(logE, err).Warn("write a registry cache file")
 		}
 	}()
-
-	rgPaths := map[string]string{}
-	registries := map[string]*registry.Config{}
 
 	for _, pkg := range cfg.Packages {
 		findResult, err := c.findExecFileFromPkg(ctx, logE, cfgFilePath, cfg, registryCache, rgPaths, registries, exeName, pkg, checksums)
@@ -123,6 +130,36 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 		}
 	}
 	return nil, nil //nolint:nilnil
+}
+
+func (c *Controller) setRegistryCacheKeys(cfg *aqua.Config, cfgFilePath string, rgPaths map[string]string, cacheKeys map[string]map[string]struct{}) error {
+	for _, pkg := range cfg.Packages {
+		rg, ok := cfg.Registries[pkg.Registry]
+		if !ok {
+			continue
+		}
+		if rg.Type != aqua.RegistryTypeGitHubContent {
+			continue
+		}
+		rgPath, ok := rgPaths[pkg.Registry]
+		if !ok {
+			p, err := rg.FilePath(c.rootDir, cfgFilePath)
+			if err != nil {
+				return fmt.Errorf("get a registry file path: %w", err)
+			}
+			rgPath = p
+			rgPaths[pkg.Registry] = rgPath
+		}
+		keys, ok := cacheKeys[rgPath]
+		if !ok {
+			cacheKeys[rgPath] = map[string]struct{}{
+				pkg.Name: {},
+			}
+			continue
+		}
+		keys[pkg.Name] = struct{}{}
+	}
+	return nil
 }
 
 func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, pkg *aqua.Package, checksums *checksum.Checksums) (*FindResult, error) { //nolint:cyclop
