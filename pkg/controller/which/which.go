@@ -29,6 +29,7 @@ func (c *Controller) Which(ctx context.Context, logE *logrus.Entry, param *confi
 		filePaths = []string{osfile.Abs(param.PWD, param.ConfigFilePath)}
 	}
 	for _, cfgFilePath := range append(filePaths, c.configFinder.Finds(param.PWD, "")...) {
+		logE := logE.WithField("config_file_path", cfgFilePath)
 		findResult, err := c.findExecFile(ctx, logE, param, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
@@ -94,18 +95,23 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 	}
 	defer updateChecksum()
 
-	registryCache, err := c.registryInstaller.ReadCache(logE, cfgFilePath)
+	logE.Debug("reading registry cache")
+	registryCache, err := registry.NewCache(c.fs, param.RootDir, cfgFilePath)
 	if err != nil {
-		logerr.WithError(logE, err).WithField("config_file_path", cfgFilePath).Warn("read a registry cache file")
+		logerr.WithError(logE, err).WithField("config_file_path", cfgFilePath).Debug("read a registry cache file")
 	}
 	defer func() {
+		logE.Debug("updating registry cache")
 		if err := registryCache.Write(); err != nil {
 			logerr.WithError(logE, err).Warn("write a registry cache file")
 		}
 	}()
 
+	rgPaths := map[string]string{}
+	registries := map[string]*registry.Config{}
+
 	for _, pkg := range cfg.Packages {
-		findResult, err := c.findExecFileFromPkg(ctx, logE, cfgFilePath, cfg, registryCache, exeName, pkg, checksums)
+		findResult, err := c.findExecFileFromPkg(ctx, logE, cfgFilePath, cfg, registryCache, rgPaths, registries, exeName, pkg, checksums)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +125,7 @@ func (c *Controller) findExecFile(ctx context.Context, logE *logrus.Entry, param
 	return nil, nil //nolint:nilnil
 }
 
-func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, exeName string, pkg *aqua.Package, checksums *checksum.Checksums) (*FindResult, error) { //nolint:cyclop
+func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, pkg *aqua.Package, checksums *checksum.Checksums) (*FindResult, error) { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logE.Debug("ignore a package because the package name or package registry name is empty")
 		return nil, nil //nolint:nilnil
@@ -128,38 +134,9 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 		"registry_name": pkg.Registry,
 		"package_name":  pkg.Name,
 	})
-	rg, ok := cfg.Registries[pkg.Registry]
-	if !ok {
-		logE.Debug("ignore a package because the registry isn't found")
-		return nil, nil //nolint:nilnil
-	}
-	var pkgInfo *registry.PackageInfo
-	if rg.Type == aqua.RegistryTypeGitHubContent {
-		rgPath, err := rg.FilePath(c.rootDir, cfgFilePath)
-		if err != nil {
-			return nil, fmt.Errorf("get a registry file path: %w", err)
-		}
-		pkgInfo = rCache.Get(rgPath, pkg.Name)
-		if pkgInfo == nil {
-			logE.Debug("get a package from registry cache")
-			rc, err := c.registryInstaller.InstallRegistry(ctx, logE, rg, cfgFilePath, checksums)
-			if err != nil {
-				return nil, fmt.Errorf("install a registry: %w", err)
-			}
-			pkgInfo = rc.Package(logE, pkg.Name)
-			if pkgInfo == nil {
-				logE.Warn("package isn't found")
-				return nil, nil //nolint:nilnil
-			}
-			rCache.Add(rgPath, pkgInfo)
-		}
-	}
-	if pkgInfo == nil {
-		rc, err := c.registryInstaller.InstallRegistry(ctx, logE, rg, cfgFilePath, checksums)
-		if err != nil {
-			return nil, fmt.Errorf("install a registry: %w", err)
-		}
-		pkgInfo = rc.Package(logE, pkg.Name)
+	pkgInfo, err := c.findPkgInfo(ctx, logE, cfgFilePath, cfg, rCache, rgPaths, registries, pkg, checksums)
+	if err != nil {
+		return nil, err
 	}
 
 	if pkgInfo == nil {
@@ -167,7 +144,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 		return nil, nil //nolint:nilnil
 	}
 
-	pkgInfo, err := pkgInfo.Override(logE, pkg.Version, c.runtime)
+	pkgInfo, err = pkgInfo.Override(logE, pkg.Version, c.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
 		return nil, nil //nolint:nilnil
@@ -193,6 +170,61 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 		}
 	}
 	return nil, nil //nolint:nilnil
+}
+
+func (c *Controller) findPkgInfo(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) { //nolint:cyclop
+	rg, ok := cfg.Registries[pkg.Registry]
+	if !ok {
+		logE.Debug("ignore a package because the registry isn't found")
+		return nil, nil //nolint:nilnil
+	}
+	if rg.Type != aqua.RegistryTypeGitHubContent {
+		logE.Debug("getting a package from a registry")
+		rc, ok := registries[pkg.Registry]
+		if !ok {
+			a, err := c.registryInstaller.InstallRegistry(ctx, logE, rg, cfgFilePath, checksums)
+			if err != nil {
+				return nil, fmt.Errorf("install a registry: %w", err)
+			}
+			rc = a
+			registries[pkg.Registry] = rc
+		}
+		return rc.Package(logE, pkg.Name), nil
+	}
+	rgPath, ok := rgPaths[pkg.Registry]
+	if !ok {
+		p, err := rg.FilePath(c.rootDir, cfgFilePath)
+		if err != nil {
+			return nil, fmt.Errorf("get a registry file path: %w", err)
+		}
+		rgPath = p
+		rgPaths[pkg.Registry] = rgPath
+	}
+	logE.WithFields(logrus.Fields{
+		"registry_file_path": rgPath,
+		"package_name":       pkg.Name,
+	}).Debug("getting a package from a registry cache")
+	if pkgInfo := rCache.Get(rgPath, pkg.Name); pkgInfo != nil {
+		return pkgInfo, nil
+	}
+	logE.Debug("a package isn't found in a registry cache. Getting it from a registry")
+	rc, ok := registries[pkg.Registry]
+	if !ok {
+		a, err := c.registryInstaller.InstallRegistry(ctx, logE, rg, cfgFilePath, checksums)
+		if err != nil {
+			return nil, fmt.Errorf("install a registry: %w", err)
+		}
+		rc = a
+		registries[pkg.Registry] = rc
+	}
+	pkgInfo := rc.Package(logE, pkg.Name)
+	if pkgInfo == nil {
+		logE.Warn("package isn't found")
+		return nil, nil //nolint:nilnil
+	}
+	logE.Debug("adding a package to the registry cache")
+	rCache.Add(rgPath, pkgInfo)
+	return pkgInfo, nil
 }
 
 func (c *Controller) findExecFileFromFile(logE *logrus.Entry, exeName string, pkg *aqua.Package, pkgInfo *registry.PackageInfo, file *registry.File) (*FindResult, error) {
