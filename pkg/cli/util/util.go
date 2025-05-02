@@ -55,7 +55,7 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 	param.CosignDisabled = cmd.Bool("disable-cosign")
 	param.GitHubArtifactAttestationDisabled = cmd.Bool("disable-github-artifact-attestation")
 	param.SLSADisabled = cmd.Bool("disable-slsa")
-	param.Limit = int(cmd.Int("limit"))
+	param.Limit = cmd.Int("limit")
 	param.SelectVersion = cmd.Bool("select-version")
 	param.Installed = cmd.Bool("installed")
 	param.ShowVersion = cmd.Bool("version")
