@@ -63,7 +63,7 @@ func New(r *util.Param) *cli.Command {
 				Name:    "limit",
 				Aliases: []string{"l"},
 				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   int64(config.DefaultVerCnt),
+				Value:   config.DefaultVerCnt,
 			},
 		},
 	}

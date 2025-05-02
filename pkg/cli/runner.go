@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 
-	"github.com/aquaproj/aqua/v2/pkg/cli/completion"
 	"github.com/aquaproj/aqua/v2/pkg/cli/cp"
 	"github.com/aquaproj/aqua/v2/pkg/cli/exec"
 	"github.com/aquaproj/aqua/v2/pkg/cli/generate"
@@ -21,8 +20,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/cli/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/helpall"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/vcmd"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
@@ -39,10 +37,9 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 }
 
 func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
-	cmd := &cli.Command{
+	return urfave.Command(param.LogE, param.LDFlags, &cli.Command{
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
-		Version:        param.LDFlags.Version,
 		ExitErrHandler: exitErrHandlerFunc,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -80,30 +77,27 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 				Usage: "cpu profile output file path",
 			},
 		},
-		EnableShellCompletion: true,
-	}
-	cmd.Commands = commands(
-		param,
-		initcmd.New,
-		install.New,
-		generate.New,
-		updateaqua.New,
-		upc.New,
-		update.New,
-		completion.New(cmd),
-		which.New,
-		info.New,
-		remove.New,
-		vacuum.New,
-		cp.New,
-		cpolicy.New,
-		cpolicy.NewInitPolicy,
-		exec.New,
-		list.New,
-		genr.New,
-		root.New,
-	)
-	return helpall.With(vcmd.With(cmd, param.LDFlags.Commit), nil).Run(ctx, args) //nolint:wrapcheck
+		Commands: commands(
+			param,
+			initcmd.New,
+			install.New,
+			generate.New,
+			updateaqua.New,
+			upc.New,
+			update.New,
+			which.New,
+			info.New,
+			remove.New,
+			vacuum.New,
+			cp.New,
+			cpolicy.New,
+			cpolicy.NewInitPolicy,
+			exec.New,
+			list.New,
+			genr.New,
+			root.New,
+		),
+	}).Run(ctx, args)
 }
 
 func exitErrHandlerFunc(_ context.Context, cmd *cli.Command, err error) {

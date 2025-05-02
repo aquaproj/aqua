@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
 
@@ -22,18 +23,12 @@ type Param struct {
 	Stdin   io.Reader
 	Stdout  io.Writer
 	Stderr  io.Writer
-	LDFlags *LDFlags
+	LDFlags *urfave.LDFlags
 	LogE    *logrus.Entry
 	Runtime *runtime.Runtime
 }
 
-type LDFlags struct {
-	Version string
-	Commit  string
-	Date    string
-}
-
-func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *LDFlags) error { //nolint:funlen,cyclop
+func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *urfave.LDFlags) error { //nolint:funlen,cyclop
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
