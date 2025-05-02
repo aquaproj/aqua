@@ -239,6 +239,8 @@ github.com/suzuki-shunsuke/logrus-error v0.1.4 h1:nWo98uba1fANHdZ9Y5pJ2RKs/PpVjr
 github.com/suzuki-shunsuke/logrus-error v0.1.4/go.mod h1:WsVvvw6SKSt08/fB2qbnsKIMJA4K1MYCUprqsBJbMiM=
 github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.3 h1:WlB8FC2BH3uVsDoPug7wIFdkb+aAlaKpp07H6x/GjFg=
 github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.3/go.mod h1:B/O/TfFHRZoSeFqZHgwIRf4aWhZiIU46A+UK4ThS2sQ=
+github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.4 h1:cwI1g8vDJZnH/A8Pfc4Vkuc6MIcO4eulf1qiFHYbLB4=
+github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.4/go.mod h1:XzvaaJ7L21jH7CqwZj4FlYCRJYqiEUHMqiFp54je7/M=
 github.com/therootcompany/xz v1.0.1 h1:CmOtsn1CbtmyYiusbfmhmkpAAETj0wBIH6kCYaX+xzw=
 github.com/therootcompany/xz v1.0.1/go.mod h1:3K3UH1yCKgBneZYhuQUvJ9HPD19UEXEI0BWbMn8qNMY=
 github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
@@ -247,6 +249,8 @@ github.com/ulikunitz/xz v0.5.12/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0o
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli/v3 v3.1.1 h1:bNnl8pFI5dxPOjeONvFCDFoECLQsceDG4ejahs4Jtxk=
 github.com/urfave/cli/v3 v3.1.1/go.mod h1:FJSKtM/9AiiTOJL4fJ6TbMUkxBXn7GO9guZqoZtpYpo=
+github.com/urfave/cli/v3 v3.3.2 h1:BYFVnhhZ8RqT38DxEYVFPPmGFTEf7tJwySTXsVRrS/o=
+github.com/urfave/cli/v3 v3.3.2/go.mod h1:FJSKtM/9AiiTOJL4fJ6TbMUkxBXn7GO9guZqoZtpYpo=
 github.com/wk8/go-ordered-map/v2 v2.1.8 h1:5h/BUHu93oj4gIdvHHHGsScSTMijfx5PeYkE/fJgbpc=
 github.com/wk8/go-ordered-map/v2 v2.1.8/go.mod h1:5nJHM5DyteebpVlHnWMV0rPz6Zp7+xBAnxjb1X5vnTw=
 github.com/xyproto/randomstring v1.0.5 h1:YtlWPoRdgMu3NZtP45drfy1GKoojuR7hmRcnhZqKjWU=
