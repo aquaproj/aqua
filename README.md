@@ -7,9 +7,7 @@
 
 #
 
-[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/aquaproj/aqua/main/LICENSE) | [Scorecard](https://securityscorecards.dev/viewer/?uri=github.com/aquaproj/aqua)
-
-[Document](https://aquaproj.github.io/) | [Contributing](CONTRIBUTING.md) | [Logo](logo)
+[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/aquaproj/aqua/main/LICENSE) | [Document](https://aquaproj.github.io/) | [Contributing](CONTRIBUTING.md) | [Logo](logo) | [Scorecard](https://securityscorecards.dev/viewer/?uri=github.com/aquaproj/aqua)
 
 Declarative CLI Version Manager written in Go.
 
