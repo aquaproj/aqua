@@ -92,7 +92,7 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
-	param.VacuumDays = int(cmd.Int("days"))
+	param.VacuumDays = cmd.Int("days")
 	if param.VacuumDays <= 0 {
 		return errors.New("vacuum days must be greater than 0")
 	}

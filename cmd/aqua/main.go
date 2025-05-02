@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 )
 
 var (
@@ -46,7 +47,7 @@ func core(logE *logrus.Entry, rt *runtime.Runtime) error {
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
-		LDFlags: &util.LDFlags{
+		LDFlags: &urfave.LDFlags{
 			Version: version,
 			Commit:  commit,
 			Date:    date,
