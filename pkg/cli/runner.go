@@ -37,7 +37,7 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	return cs
 }
 
-func Run(ctx context.Context, param *util.Param, args ...string) error {
+func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
 	return urfave.Command(param.LogE, param.LDFlags, &cli.Command{ //nolint:wrapcheck
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
