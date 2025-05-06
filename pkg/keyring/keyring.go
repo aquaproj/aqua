@@ -28,14 +28,6 @@ func NewTokenManager() *TokenManager {
 	return &TokenManager{}
 }
 
-func (tm *TokenManager) Get() (string, error) {
-	s, err := keyring.Get(keyService, keyName)
-	if err != nil {
-		return "", fmt.Errorf("get a GitHub Access token from keyring: %w", err)
-	}
-	return s, nil
-}
-
 func (tm *TokenManager) Set(token string) error {
 	if err := keyring.Set(keyService, keyName, token); err != nil {
 		return fmt.Errorf("set a GitHub Access token in keyring: %w", err)
