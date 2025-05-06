@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
@@ -56,17 +57,22 @@ func (tm *TokenManager) Remove(logE *logrus.Entry) error {
 type TokenSource struct {
 	token *oauth2.Token
 	logE  *logrus.Entry
+	mutex *sync.RWMutex
 }
 
 func NewTokenSource(logE *logrus.Entry) *TokenSource {
 	return &TokenSource{
-		logE: logE,
+		logE:  logE,
+		mutex: &sync.RWMutex{},
 	}
 }
 
 func (ks *TokenSource) Token() (*oauth2.Token, error) {
-	if ks.token != nil {
-		return ks.token, nil
+	ks.mutex.RLock()
+	token := ks.token
+	ks.mutex.RUnlock()
+	if token != nil {
+		return token, nil
 	}
 	ks.logE.Debug("getting a GitHub Access toke from keyring")
 	s, err := keyring.Get(keyService, keyName)
@@ -74,8 +80,11 @@ func (ks *TokenSource) Token() (*oauth2.Token, error) {
 		return nil, fmt.Errorf("get a GitHub Access token from keyring: %w", err)
 	}
 	ks.logE.Debug("got a GitHub Access toke from keyring")
-	ks.token = &oauth2.Token{
+	token = &oauth2.Token{
 		AccessToken: s,
 	}
-	return ks.token, nil
+	ks.mutex.Lock()
+	ks.token = token
+	ks.mutex.Unlock()
+	return token, nil
 }
