@@ -14,6 +14,7 @@ import (
 	cpolicy "github.com/aquaproj/aqua/v2/pkg/cli/policy"
 	"github.com/aquaproj/aqua/v2/pkg/cli/remove"
 	"github.com/aquaproj/aqua/v2/pkg/cli/root"
+	"github.com/aquaproj/aqua/v2/pkg/cli/token"
 	"github.com/aquaproj/aqua/v2/pkg/cli/upc"
 	"github.com/aquaproj/aqua/v2/pkg/cli/update"
 	"github.com/aquaproj/aqua/v2/pkg/cli/updateaqua"
@@ -36,7 +37,7 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	return cs
 }
 
-func Run(ctx context.Context, param *util.Param, args ...string) error {
+func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
 	return urfave.Command(param.LogE, param.LDFlags, &cli.Command{ //nolint:wrapcheck
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
@@ -89,6 +90,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error {
 			info.New,
 			remove.New,
 			vacuum.New,
+			token.New,
 			cp.New,
 			cpolicy.New,
 			cpolicy.NewInitPolicy,
