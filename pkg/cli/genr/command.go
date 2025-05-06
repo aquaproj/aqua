@@ -142,6 +142,6 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	if err := util.SetParam(cmd, i.r.LogE, "generate-registry", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, param, http.DefaultClient, os.Stdout)
+	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, i.r.LogE, param, http.DefaultClient, os.Stdout)
 	return ctrl.GenerateRegistry(ctx, param, i.r.LogE, cmd.Args().Slice()...) //nolint:wrapcheck
 }

@@ -72,6 +72,6 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	if err := util.SetParam(cmd, i.r.LogE, "list", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeListCommandController(ctx, param, http.DefaultClient, i.r.Runtime)
+	ctrl := controller.InitializeListCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	return ctrl.List(ctx, i.r.LogE, param) //nolint:wrapcheck
 }
