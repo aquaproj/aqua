@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aquaproj/aqua/v2/pkg/keyring"
 	"github.com/google/go-github/v71/github"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -24,8 +26,8 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context) *RepositoriesService {
-	return github.NewClient(getHTTPClientForGitHub(ctx, getGitHubToken())).Repositories
+func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
+	return github.NewClient(getHTTPClientForGitHub(ctx, logE, getGitHubToken())).Repositories
 }
 
 func getGitHubToken() string {
@@ -35,8 +37,11 @@ func getGitHubToken() string {
 	return os.Getenv("GITHUB_TOKEN")
 }
 
-func getHTTPClientForGitHub(ctx context.Context, token string) *http.Client {
+func getHTTPClientForGitHub(ctx context.Context, logE *logrus.Entry, token string) *http.Client {
 	if token == "" {
+		if keyring.Enabled() {
+			return oauth2.NewClient(ctx, keyring.NewTokenSource(logE))
+		}
 		return http.DefaultClient
 	}
 	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(

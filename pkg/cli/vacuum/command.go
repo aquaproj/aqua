@@ -85,7 +85,7 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if cmd.Bool("init") {
-		ctrl := controller.InitializeVacuumInitCommandController(ctx, param, i.r.Runtime, &http.Client{})
+		ctrl := controller.InitializeVacuumInitCommandController(ctx, i.r.LogE, param, i.r.Runtime, &http.Client{})
 		if err := ctrl.Init(ctx, logE, param); err != nil {
 			return err //nolint:wrapcheck
 		}

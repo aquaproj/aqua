@@ -71,7 +71,7 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	if err := util.SetParam(cmd, i.r.LogE, "which", param, i.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeWhichCommandController(ctx, param, http.DefaultClient, i.r.Runtime)
+	ctrl := controller.InitializeWhichCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	exeName, _, err := ParseExecArgs(cmd.Args().Slice())
 	if err != nil {
 		return err

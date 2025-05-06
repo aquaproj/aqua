@@ -64,7 +64,7 @@ func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
 	if err := util.SetParam(cmd, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInitCommandController(ctx, param)
+	ctrl := controller.InitializeInitCommandController(ctx, ic.r.LogE, param)
 	cParam := &initcmd.Param{
 		IsDir:     cmd.Bool("create-dir"),
 		ImportDir: cmd.String("import-dir"),
