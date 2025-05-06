@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/controller/rmtoken"
 	"github.com/aquaproj/aqua/v2/pkg/controller/settoken"
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
@@ -11,11 +12,10 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func New(logE *logrus.Entry) *cli.Command {
-	r := &runner{
-		logE: logE,
-	}
-	return r.Command()
+func New(r *util.Param) *cli.Command {
+	return (&runner{
+		logE: r.LogE,
+	}).Command()
 }
 
 type runner struct {

@@ -14,6 +14,7 @@ import (
 	cpolicy "github.com/aquaproj/aqua/v2/pkg/cli/policy"
 	"github.com/aquaproj/aqua/v2/pkg/cli/remove"
 	"github.com/aquaproj/aqua/v2/pkg/cli/root"
+	"github.com/aquaproj/aqua/v2/pkg/cli/token"
 	"github.com/aquaproj/aqua/v2/pkg/cli/upc"
 	"github.com/aquaproj/aqua/v2/pkg/cli/update"
 	"github.com/aquaproj/aqua/v2/pkg/cli/updateaqua"
@@ -89,6 +90,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error {
 			info.New,
 			remove.New,
 			vacuum.New,
+			token.New,
 			cp.New,
 			cpolicy.New,
 			cpolicy.NewInitPolicy,
