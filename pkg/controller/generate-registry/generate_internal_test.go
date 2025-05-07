@@ -1,6 +1,7 @@
 package genrgst
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
@@ -138,7 +139,8 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			cargoClient := &cargo.MockClient{
 				CratePayload: d.crate,
 			}
-			ctrl := NewController(nil, gh, nil, cargoClient)
+			var buf bytes.Buffer
+			ctrl := NewController(nil, gh, nil, cargoClient, &buf)
 			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, &config.Param{}, &Config{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)

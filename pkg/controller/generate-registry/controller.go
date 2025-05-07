@@ -3,7 +3,6 @@ package genrgst
 import (
 	"context"
 	"io"
-	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
@@ -22,9 +21,9 @@ type TestdataOutputter interface {
 	Output(param *output.Param) error
 }
 
-func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter TestdataOutputter, cargoClient CargoClient) *Controller {
+func NewController(fs afero.Fs, gh RepositoriesService, testdataOutputter TestdataOutputter, cargoClient CargoClient, stdout io.Writer) *Controller {
 	return &Controller{
-		stdout:            os.Stdout,
+		stdout:            stdout,
 		fs:                fs,
 		github:            gh,
 		testdataOutputter: testdataOutputter,
