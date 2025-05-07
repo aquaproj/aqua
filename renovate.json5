@@ -14,8 +14,8 @@
   customManagers: [
     {
       customType: 'regex',
-      fileMatch: [
-        '.*\\.go',
+      managerFilePatterns: [
+        '/.*\\.go/',
       ],
       depNameTemplate: 'aquaproj/aqua-proxy',
       datasourceTemplate: 'github-releases',
@@ -25,8 +25,8 @@
     },
     {
       customType: 'regex',
-      fileMatch: [
-        '.*\\.go',
+      managerFilePatterns: [
+        '/.*\\.go/',
       ],
       depNameTemplate: 'aquaproj/aqua-registry',
       datasourceTemplate: 'github-releases',
