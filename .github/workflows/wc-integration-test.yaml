@@ -26,7 +26,13 @@ jobs:
       - run: echo "${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua/bin" >> "$GITHUB_PATH"
       - run: aqua policy allow
 
-      - run: aqua version
+      - run: |
+          aqua version
+          version=$(aqua version)
+          if [ "$version" = unknown ]; then
+            echo "::error:: aqua version is unknown"
+            exit 1
+          fi
       - run: aqua version -j
       - run: aqua -v
       - run: aqua --help
