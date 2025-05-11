@@ -27,6 +27,7 @@ jobs:
       - run: aqua policy allow
 
       - run: |
+          aqua version
           version=$(aqua version)
           if [ "$version" = unknown ]; then
             echo "::error:: aqua version is unknown"
