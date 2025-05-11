@@ -26,7 +26,7 @@ require (
 	github.com/suzuki-shunsuke/go-findconfig v1.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
-	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.4
+	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.5
 	github.com/urfave/cli/v3 v3.3.3
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zalando/go-keyring v0.2.6
