@@ -15,7 +15,7 @@ require (
 	github.com/invopop/jsonschema v0.13.0
 	github.com/ktr0731/go-fuzzyfinder v0.9.0
 	github.com/mattn/go-colorable v0.1.14
-	github.com/mholt/archives v0.1.1
+	github.com/mholt/archives v0.1.2
 	github.com/otiai10/copy v1.14.1
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/sirupsen/logrus v1.9.3
@@ -44,7 +44,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/STARRY-S/zip v0.2.1 // indirect
-	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/andybalholm/brotli v1.1.2-0.20250424173009-453214e765f3 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/sevenzip v1.6.0 // indirect
