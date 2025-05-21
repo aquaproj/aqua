@@ -13,7 +13,7 @@ jobs:
     steps:
       - run: exit 1
   main:
-    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@1af1919efef445ad960f5ab4cf370e47e961d721 # v2.0.0
+    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@dbe6151b36d408b24ca5c41a34291b2b6d1bff76 # v2.0.1
     permissions:
       pull-requests: write
       contents: read
