@@ -316,35 +316,37 @@ func findCertificate(assetNames map[string]struct{}, checksumAssetName string) s
 	return ""
 }
 
+func findCosignBundle(assetNames map[string]struct{}, assetName string) string {
+	for _, suf := range []string{".cosign.bundle", ".bundle", ".sigstore", ".sigstore.json"} {
+		bundle := assetName + suf
+		if _, ok := assetNames[bundle]; ok {
+			return bundle
+		}
+	}
+	return ""
+}
+
 func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
-	signatureAssetName := findSignature(assetNames, checksumAssetName)
-	if signatureAssetName == "" {
-		return nil
+	cosign := &registry.Cosign{
+		Opts: make([]string, 0, 8), //nolint:mnd // we generate max 8 arguments (certificate case)
 	}
-	var pubKeyAssetName string
-	if !strings.HasSuffix(signatureAssetName, "-keyless.sig") {
-		// If the signature is keyless, a public key isn't used
-		pubKeyAssetName = findPubKey(assetNames)
-	}
-	certificateAssetName := findCertificate(assetNames, checksumAssetName)
-
-	if pubKeyAssetName == "" && certificateAssetName == "" {
-		return nil
-	}
-
 	downloadURL := fmt.Sprintf("https://github.com/%s/%s/releases/download/{{.Version}}/",
 		pkgInfo.RepoOwner, pkgInfo.RepoName)
-	opts := make([]string, 0, 8) //nolint:mnd // we generate max 8 arguments
-	switch {
-	case pubKeyAssetName != "":
-		opts = append(opts,
-			"--key",
-			downloadURL+pubKeyAssetName,
-		)
-	case certificateAssetName != "":
-		opts = append(opts,
+
+	var bundleAssetName, certificateAssetName string
+	if bundleAssetName = findCosignBundle(assetNames, checksumAssetName); bundleAssetName != "" {
+		cosign.Bundle = &registry.DownloadedFile{
+			Type:  "github_release",
+			Asset: &bundleAssetName,
+		}
+	} else if certificateAssetName = findCertificate(assetNames, checksumAssetName); certificateAssetName != "" {
+		cosign.Opts = append(cosign.Opts,
 			"--certificate",
 			downloadURL+certificateAssetName,
+		)
+	}
+	if bundleAssetName != "" || certificateAssetName != "" {
+		cosign.Opts = append(cosign.Opts,
 			"--certificate-identity-regexp",
 			fmt.Sprintf(
 				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
@@ -354,14 +356,38 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 			"--certificate-oidc-issuer",
 			"https://token.actions.githubusercontent.com",
 		)
-	default:
-		panic("unreachable, should have either pubkey or cert asset name")
 	}
-	opts = append(opts,
+
+	// If a bundle was found, nothing else is needed
+	if bundleAssetName != "" {
+		return cosign
+	}
+
+	// For all other cases, signature is needed
+	signatureAssetName := findSignature(assetNames, checksumAssetName)
+	if signatureAssetName == "" {
+		return nil
+	}
+
+	// If we do not have a certificate and the signature is not keyless, try public key
+	if certificateAssetName == "" && !strings.HasSuffix(signatureAssetName, "-keyless.sig") {
+		pubKeyAssetName := findPubKey(assetNames)
+		if pubKeyAssetName != "" {
+			cosign.Opts = append(cosign.Opts,
+				"--key",
+				downloadURL+pubKeyAssetName,
+			)
+		}
+	}
+
+	// Bail out if nothing we can use was found yet
+	if len(cosign.Opts) == 0 {
+		return nil
+	}
+
+	cosign.Opts = append(cosign.Opts,
 		"--signature",
 		downloadURL+signatureAssetName,
 	)
-	return &registry.Cosign{
-		Opts: opts,
-	}
+	return cosign
 }
