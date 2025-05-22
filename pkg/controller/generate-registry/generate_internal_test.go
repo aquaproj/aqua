@@ -153,7 +153,8 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestController_checkChecksumCosign(t *testing.T) {
+func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
+	t.Parallel()
 	tests := []struct {
 		name             string
 		pkgInfo          *registry.PackageInfo
@@ -352,6 +353,7 @@ func TestController_checkChecksumCosign(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := checkChecksumCosign(tt.pkgInfo, tt.checksumFileName, tt.assetNames)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("checkChecksumCosign() mismatch (-want +got):\n%s", diff)

@@ -326,7 +326,7 @@ func findCosignBundle(assetNames map[string]struct{}, assetName string) string {
 	return ""
 }
 
-func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
 	cosign := &registry.Cosign{
 		Opts: make([]string, 0, 8), //nolint:mnd // we generate max 8 arguments (certificate case)
 	}
