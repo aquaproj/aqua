@@ -29,7 +29,7 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 				errorSubstrings := []string{"file already exists", "download and unarchive the package"}
 				found := false
 				for _, substring := range errorSubstrings {
-				    if strings.Contains(errorMessage, substring) {
+				    if strings.Contains(err.Error(), substring) {
 				        found = true
 				        break
 				    }
