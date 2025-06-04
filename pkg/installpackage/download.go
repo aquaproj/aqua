@@ -24,9 +24,17 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 		logE.Debug("check if the package is already installed")
 		finfo, err := is.fs.Stat(param.Dest)
 		if err != nil { //nolint:nestif
-			// file doesn't exist
+			// file doesn't exist or download fails
 			if err := is.download(ctx, logE, param); err != nil {
-				if strings.Contains(err.Error(), "file already exists") {
+				errorSubstrings := []string{"file already exists", "download and unarchive the package"}
+				found := false
+				for _, substring := range errorSubstrings {
+				    if strings.Contains(errorMessage, substring) {
+				        found = true
+				        break
+				    }
+				}
+				if found {
 					if retryCount >= maxRetryDownload {
 						return err
 					}
