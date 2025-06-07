@@ -5,9 +5,9 @@ go 1.24.2
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/adrg/xdg v0.5.3
-	github.com/expr-lang/expr v1.17.3
+	github.com/expr-lang/expr v1.17.5
 	github.com/forPelevin/gomoji v1.3.0
-	github.com/goccy/go-yaml v1.17.1
+	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v72 v72.0.0
 	github.com/google/wire v0.6.0
@@ -31,7 +31,7 @@ require (
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/sync v0.14.0
+	golang.org/x/sync v0.15.0
 	golang.org/x/sys v0.33.0
 	golang.org/x/term v0.32.0
 	gopkg.in/yaml.v2 v2.4.0
