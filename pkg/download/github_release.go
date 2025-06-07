@@ -35,7 +35,7 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		// So at first aqua tries to download assets without GitHub API.
 		// And if it failed, aqua tries again with GitHub API.
 		// It avoids the rate limit of the access token.
-		b, length, err := dl.http.Download(ctx, fmt.Sprintf(
+		b, length, err := dl.http.Download(ctx, logE, fmt.Sprintf(
 			"https://github.com/%s/%s/releases/download/%s/%s",
 			param.RepoOwner, param.RepoName, param.Version, param.Asset))
 		if err == nil {
@@ -68,7 +68,7 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		// DownloadReleaseAsset doesn't return a http.Response, so the content length is zero.
 		return body, 0, nil
 	}
-	b, length, err := dl.http.Download(ctx, redirectURL)
+	b, length, err := dl.http.Download(ctx, logE, redirectURL)
 	if err != nil {
 		if b != nil {
 			b.Close()

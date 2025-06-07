@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
@@ -52,7 +53,8 @@ func Test_fromURL(t *testing.T) { //nolint:funlen
 			t.Parallel()
 			ctx := t.Context()
 			httpDownloader := NewHTTPDownloader(d.httpClient)
-			readCloser, _, err := httpDownloader.Download(ctx, d.url)
+			logE := logrus.NewEntry(logrus.New())
+			readCloser, _, err := httpDownloader.Download(ctx, logE, d.url)
 			if readCloser != nil {
 				defer readCloser.Close()
 			}

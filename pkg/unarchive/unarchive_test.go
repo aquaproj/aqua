@@ -69,7 +69,8 @@ func getReadCloser(ctx context.Context, downloader download.HTTPDownloader, body
 	if body != "" {
 		return io.NopCloser(strings.NewReader(body)), 0, nil
 	}
-	return downloader.Download(ctx, url) //nolint:wrapcheck
+	logE := logrus.NewEntry(logrus.New())
+	return downloader.Download(ctx, logE, url) //nolint:wrapcheck
 }
 
 func TestUnarchiver_Unarchive(t *testing.T) {
