@@ -35,10 +35,8 @@ func (dl *httpDownloader) Download(ctx context.Context, u string) (io.ReadCloser
 
 	const retryDelay = 100 * time.Millisecond
 
-	var resp *http.Response
-
 	for cnt := range 5 {
-		resp, err = dl.client.Do(req)
+		resp, err := dl.client.Do(req)
 		if err != nil {
 			return nil, 0, fmt.Errorf("send http request: %w", err)
 		}
