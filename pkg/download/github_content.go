@@ -27,10 +27,10 @@ func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) 
 	}
 }
 
-func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, _ *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
+func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
 	if !param.Private {
 		// https://github.com/aquaproj/aqua/issues/391
-		body, _, err := dl.http.Download(ctx, fmt.Sprintf(
+		body, _, err := dl.http.Download(ctx, logE, fmt.Sprintf(
 			"https://raw.githubusercontent.com/%s/%s/%s/%s",
 			param.RepoOwner, param.RepoName, param.Ref, param.Path,
 		))

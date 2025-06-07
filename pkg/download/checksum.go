@@ -64,7 +64,7 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *lo
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 		}
-		rc, code, err := dl.http.Download(ctx, u)
+		rc, code, err := dl.http.Download(ctx, logE, u)
 		if err != nil {
 			return rc, code, fmt.Errorf("download a checksum file: %w", logerr.WithFields(err, logrus.Fields{
 				"download_url": u,
