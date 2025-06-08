@@ -34,6 +34,10 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 			Name: "aarch64",
 			Arch: "arm64",
 		},
+		{
+			Name: "arm",
+			Arch: "arm64",
+		},
 	}
 	for _, o := range archList {
 		if idx := strings.Index(lowAssetName, o.Name); idx != -1 {
