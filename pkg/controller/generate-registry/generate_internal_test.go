@@ -13,6 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func strp(s string) *string {
+	return &s
+}
+
 func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
@@ -144,6 +148,215 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, &config.Param{}, &Config{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
+			}
+		})
+	}
+}
+
+func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	tests := []struct {
+		name             string
+		pkgInfo          *registry.PackageInfo
+		checksumFileName string
+		assetNames       map[string]struct{}
+		want             *registry.Cosign
+	}{
+		{
+			name: "with bundle",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":               {},
+				"checksums.txt.cosign.bundle": {},
+			},
+			want: &registry.Cosign{
+				Bundle: &registry.DownloadedFile{
+					Type:  "github_release",
+					Asset: strp("checksums.txt.cosign.bundle"),
+				},
+				Opts: []string{
+					"--certificate-identity-regexp",
+					`^https://github\.com/owner/repo/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
+					"--certificate-oidc-issuer",
+					"https://token.actions.githubusercontent.com",
+				},
+			},
+		},
+		{
+			name: "with certificate and signature",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":             {},
+				"checksums.txt-keyless.sig": {},
+				"checksums.txt-keyless.pem": {},
+			},
+			want: &registry.Cosign{
+				Opts: []string{
+					"--certificate",
+					"https://github.com/owner/repo/releases/download/{{.Version}}/checksums.txt-keyless.pem",
+					"--certificate-identity-regexp",
+					`^https://github\.com/owner/repo/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
+					"--certificate-oidc-issuer",
+					"https://token.actions.githubusercontent.com",
+					"--signature",
+					"https://github.com/owner/repo/releases/download/{{.Version}}/checksums.txt-keyless.sig",
+				},
+			},
+		},
+		{
+			name: "with public key and signature",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":     {},
+				"checksums.txt.sig": {},
+				"cosign.pub":        {},
+			},
+			want: &registry.Cosign{
+				Opts: []string{
+					"--key",
+					"https://github.com/owner/repo/releases/download/{{.Version}}/cosign.pub",
+					"--signature",
+					"https://github.com/owner/repo/releases/download/{{.Version}}/checksums.txt.sig",
+				},
+			},
+		},
+		{
+			name: "no cosign files",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt": {},
+			},
+			want: nil,
+		},
+		{
+			name: "signature only returns nil",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":     {},
+				"checksums.txt.sig": {},
+			},
+			want: nil,
+		},
+		{
+			name: "keyless signature ignores public key",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":             {},
+				"checksums.txt-keyless.sig": {},
+				"cosign.pub":                {},
+			},
+			want: nil,
+		},
+		{
+			name: "bundle takes precedence over certificate",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":             {},
+				"checksums.txt.bundle":      {},
+				"checksums.txt-keyless.sig": {},
+				"checksums.txt-keyless.pem": {},
+			},
+			want: &registry.Cosign{
+				Bundle: &registry.DownloadedFile{
+					Type:  "github_release",
+					Asset: strp("checksums.txt.bundle"),
+				},
+				Opts: []string{
+					"--certificate-identity-regexp",
+					`^https://github\.com/owner/repo/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
+					"--certificate-oidc-issuer",
+					"https://token.actions.githubusercontent.com",
+				},
+			},
+		},
+		{
+			name: "bundle takes precedence over public key",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":        {},
+				"checksums.txt.bundle": {},
+				"checksums.txt.sig":    {},
+				"cosign.pub":           {},
+			},
+			want: &registry.Cosign{
+				Bundle: &registry.DownloadedFile{
+					Type:  "github_release",
+					Asset: strp("checksums.txt.bundle"),
+				},
+				Opts: []string{
+					"--certificate-identity-regexp",
+					`^https://github\.com/owner/repo/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
+					"--certificate-oidc-issuer",
+					"https://token.actions.githubusercontent.com",
+				},
+			},
+		},
+		{
+			name: "certificate takes precedence over public key",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: "owner",
+				RepoName:  "repo",
+			},
+			checksumFileName: "checksums.txt",
+			assetNames: map[string]struct{}{
+				"checksums.txt":             {},
+				"checksums.txt-keyless.pem": {},
+				"checksums.txt-keyless.sig": {},
+				"cosign.pub":                {},
+			},
+			want: &registry.Cosign{
+				Opts: []string{
+					"--certificate",
+					"https://github.com/owner/repo/releases/download/{{.Version}}/checksums.txt-keyless.pem",
+					"--certificate-identity-regexp",
+					`^https://github\.com/owner/repo/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
+					"--certificate-oidc-issuer",
+					"https://token.actions.githubusercontent.com",
+					"--signature",
+					"https://github.com/owner/repo/releases/download/{{.Version}}/checksums.txt-keyless.sig",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := checkChecksumCosign(tt.pkgInfo, tt.checksumFileName, tt.assetNames)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("checkChecksumCosign() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
