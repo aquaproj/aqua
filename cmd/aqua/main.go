@@ -9,10 +9,10 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/cli"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
-	"github.com/aquaproj/aqua/v2/pkg/log"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/log"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 )
 
@@ -28,7 +28,7 @@ type HasExitCode interface {
 
 func main() {
 	rt := runtime.New()
-	logE := log.New(rt, version)
+	logE := log.New("aqua", version).WithField("env", rt.Env())
 	if err := core(logE, rt); err != nil {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
