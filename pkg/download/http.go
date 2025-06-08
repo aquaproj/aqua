@@ -47,11 +47,11 @@ func (dl *httpDownloader) Download(ctx context.Context, logE *logrus.Entry, u st
 		}
 		resp.Body.Close()
 
-		if cnt != 0 && resp.StatusCode >= http.StatusInternalServerError {
+		if cnt != 4 && resp.StatusCode >= http.StatusInternalServerError {
 			// wait and retry
 			logE.WithFields(logrus.Fields{
 				"http_status_code": resp.StatusCode,
-			}).Info("downloading a file failed. Retrying...")
+			}).Warn("downloading a file failed. Retrying...")
 			if err := timer.Wait(ctx, retryDelay); err != nil {
 				// Context was canceled during wait
 				return nil, 0, fmt.Errorf("context canceled while waiting to retry: %w", err)
