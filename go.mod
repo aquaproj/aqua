@@ -25,7 +25,7 @@ require (
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
-	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.0-20250608145619-5e878a740420
+	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.5
 	github.com/urfave/cli/v3 v3.3.3
