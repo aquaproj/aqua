@@ -10,11 +10,11 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
-	"github.com/aquaproj/aqua/v2/pkg/log"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/log"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
@@ -69,8 +69,9 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 	param.RootDir = config.GetRootDir(osenv.New())
 	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
-	log.SetLevel(param.LogLevel, logE)
-	log.SetColor(param.LogColor, logE)
+	if err := log.Set(logE, param.LogLevel, param.LogColor); err != nil {
+		return fmt.Errorf("configure logger: %w", err)
+	}
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = cmd.Bool("deep")
