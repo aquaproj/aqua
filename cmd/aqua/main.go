@@ -28,7 +28,7 @@ type HasExitCode interface {
 
 func main() {
 	rt := runtime.New()
-	logE := log.New("aqua", version)
+	logE := log.New("aqua", version).WithField("env", rt.Env())
 	if err := core(logE, rt); err != nil {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
