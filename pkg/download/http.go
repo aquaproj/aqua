@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
@@ -14,9 +15,9 @@ type HTTPDownloader interface {
 	Download(ctx context.Context, u string) (io.ReadCloser, int64, error)
 }
 
-func NewHTTPDownloader(httpClient *http.Client) HTTPDownloader {
+func NewHTTPDownloader(logE *logrus.Entry, httpClient *http.Client) HTTPDownloader {
 	return &httpDownloader{
-		client: httpClient,
+		client: github.MakeRetryable(httpClient, logE),
 	}
 }
 

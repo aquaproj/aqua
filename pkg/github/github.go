@@ -7,7 +7,9 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
 	"github.com/google/go-github/v72/github"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/go-retryablehttp-logrus/rlog"
 	"golang.org/x/oauth2"
 )
 
@@ -27,7 +29,7 @@ type (
 const Tarball = github.Tarball
 
 func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
-	return github.NewClient(getHTTPClientForGitHub(ctx, logE, getGitHubToken())).Repositories
+	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)).Repositories
 }
 
 func getGitHubToken() string {
@@ -35,6 +37,13 @@ func getGitHubToken() string {
 		return token
 	}
 	return os.Getenv("GITHUB_TOKEN")
+}
+
+func MakeRetryable(client *http.Client, logE *logrus.Entry) *http.Client {
+	c := retryablehttp.NewClient()
+	c.HTTPClient = client
+	c.Logger = rlog.New(logE)
+	return c.StandardClient()
 }
 
 func getHTTPClientForGitHub(ctx context.Context, logE *logrus.Entry, token string) *http.Client {
