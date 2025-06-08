@@ -25,7 +25,7 @@ require (
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
-	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.0-20250608134511-f6cef5c903e9
+	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.0-20250608145619-5e878a740420
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.5
 	github.com/urfave/cli/v3 v3.3.3
@@ -38,6 +38,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
+
+replace github.com/hashicorp/go-retryablehttp v0.7.7 => github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-0.20250608151404-89ccceec3913
 
 require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect

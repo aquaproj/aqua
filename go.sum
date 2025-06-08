@@ -131,8 +131,6 @@ github.com/hashicorp/go-hclog v1.6.3 h1:Qr2kF+eVWjTiYmU7Y31tYlP1h0q/X3Nl3tPGdaB1
 github.com/hashicorp/go-hclog v1.6.3/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/hashicorp/go-retryablehttp v0.7.7 h1:C8hUCYzor8PIfXHa4UrZkU4VvK8o9ISHxT2Q8+VepXU=
-github.com/hashicorp/go-retryablehttp v0.7.7/go.mod h1:pkQpWZeYWskR+D1tR2O5OcBFOxfA7DoAO6xtkuQnHTk=
 github.com/hashicorp/go-version v1.7.0 h1:5tqGy27NaOTB8yJKUZELlFAS/LTKJkrmONwQKeRZfjY=
 github.com/hashicorp/go-version v1.7.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
@@ -251,8 +249,10 @@ github.com/suzuki-shunsuke/go-jsoneq v0.1.2 h1:A4czEbmFqSELTbrEtXVo4dSgfz2e2Z0y6
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2/go.mod h1:ETXAwfruZTqMMKDxc9CYoS34CNSsnzcdcVIAW3+RujI=
 github.com/suzuki-shunsuke/go-osenv v0.1.0 h1:hBQ7yaeO1WBZsEWuDj1wrOWF+N7HSWSOpEiEZqfCjjk=
 github.com/suzuki-shunsuke/go-osenv v0.1.0/go.mod h1:ZlSVi4kYvV51JEtYpdHh9hAxXKLOWExXel3Jo74aacQ=
-github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.0-20250608134511-f6cef5c903e9 h1:i9LGzU81vLmC59RsjtMhw1qYoUa+HlVhKg2YDyt7Qrs=
-github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.0-20250608134511-f6cef5c903e9/go.mod h1:5AZJWWx3A7KudKLEkW8cwxSKWLHXElP9odOD+721oKQ=
+github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-0.20250608151404-89ccceec3913 h1:ohyNnPzetlnZI6eIwpMLejsXXMRb9K0hB5mFLocwuBA=
+github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-0.20250608151404-89ccceec3913/go.mod h1:rjiScheydd+CxvumBsIrFKlx3iS0jrZ7LvzFGFmuKbw=
+github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.0-20250608145619-5e878a740420 h1:puut4gTw4uZqKOwqtp+zYCvJnaz7xfyB/ink8VejnGk=
+github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.0-20250608145619-5e878a740420/go.mod h1:5AZJWWx3A7KudKLEkW8cwxSKWLHXElP9odOD+721oKQ=
 github.com/suzuki-shunsuke/gomic v0.6.0 h1:oSmoXR1nmt7X05TssjBTcX9BCTNnFCcNlA5yshaTjsk=
 github.com/suzuki-shunsuke/gomic v0.6.0/go.mod h1:/+uhQJ1H5f9ythus/MbXOotAZDmkN1QOjKlsSiH2v+I=
 github.com/suzuki-shunsuke/logrus-error v0.1.4 h1:nWo98uba1fANHdZ9Y5pJ2RKs/PpVjrLzRp5m+mRb9KE=
