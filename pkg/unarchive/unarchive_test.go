@@ -103,8 +103,8 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 			},
 		},
 	}
-	httpDownloader := download.NewHTTPDownloader(http.DefaultClient)
 	logE := logrus.NewEntry(logrus.New())
+	httpDownloader := download.NewHTTPDownloader(logE, http.DefaultClient)
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()

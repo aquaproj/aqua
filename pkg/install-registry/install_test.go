@@ -20,6 +20,7 @@ import (
 
 func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	t.Parallel()
+	logE := logrus.NewEntry(logrus.New())
 	data := []struct {
 		name        string
 		files       map[string]string
@@ -101,7 +102,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			downloader: download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(&http.Client{
+			downloader: download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
 						{
@@ -155,7 +156,6 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 			})),
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
 	rt := &runtime.Runtime{
 		GOOS:   "linux",
 		GOARCH: "amd64",

@@ -29,7 +29,7 @@ type (
 const Tarball = github.Tarball
 
 func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
-	return github.NewClient(retryHTTPClient(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)).Repositories
+	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)).Repositories
 }
 
 func getGitHubToken() string {
@@ -39,7 +39,7 @@ func getGitHubToken() string {
 	return os.Getenv("GITHUB_TOKEN")
 }
 
-func retryHTTPClient(client *http.Client, logE *logrus.Entry) *http.Client {
+func MakeRetryable(client *http.Client, logE *logrus.Entry) *http.Client {
 	c := retryablehttp.NewClient()
 	c.HTTPClient = client
 	c.Logger = rlog.New(logE)
