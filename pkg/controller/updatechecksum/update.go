@@ -269,6 +269,29 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 		})
 		return nil
 	}
+	if len(m) == 1 {
+		// get the asset name
+		asset, err := pkg.RenderAsset(rt)
+		if err != nil {
+			return fmt.Errorf("render an asset: %w", err)
+		}
+		chksum, ok := m[asset]
+		if !ok {
+			// if the asset name is different, skip
+			return nil
+		}
+		// update the checksum
+		logE.WithFields(logrus.Fields{
+			"checksum_id": checksumID,
+			"checksum":    chksum,
+		}).Debug("set a checksum")
+		checksums.Set(checksumID, &checksum.Checksum{
+			ID:        checksumID,
+			Checksum:  chksum,
+			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+		})
+		return nil
+	}
 	for assetName, chksum := range m {
 		if _, ok := assetNames[assetName]; !ok {
 			continue
