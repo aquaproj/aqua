@@ -11,7 +11,6 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v72 v72.0.0
 	github.com/google/wire v0.6.0
-	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/go-version v1.7.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/ktr0731/go-fuzzyfinder v0.9.0
@@ -25,6 +24,7 @@ require (
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
+	github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-1
 	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.5
@@ -38,8 +38,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-replace github.com/hashicorp/go-retryablehttp v0.7.7 => github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-0.20250608151404-89ccceec3913
 
 require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect

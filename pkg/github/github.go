@@ -7,8 +7,8 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
 	"github.com/google/go-github/v72/github"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/go-retryablehttp"
 	"github.com/suzuki-shunsuke/go-retryablehttp-logrus/rlog"
 	"golang.org/x/oauth2"
 )
