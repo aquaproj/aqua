@@ -28,7 +28,7 @@ require (
 	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.5
-	github.com/urfave/cli/v3 v3.3.5
+	github.com/urfave/cli/v3 v3.3.7
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/oauth2 v0.30.0
