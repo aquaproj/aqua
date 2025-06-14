@@ -27,14 +27,12 @@ require (
 	github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-1
 	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
-	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.5
+	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.6-0.20250614221103-c1b65392ff87
 	github.com/urfave/cli/v3 v3.3.7
 	github.com/wk8/go-ordered-map/v2 v2.1.8
-	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.15.0
 	golang.org/x/sys v0.33.0
-	golang.org/x/term v0.32.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -90,8 +88,10 @@ require (
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
+	github.com/zalando/go-keyring v0.2.6 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

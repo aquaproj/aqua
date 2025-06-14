@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-retryablehttp"
 	"github.com/suzuki-shunsuke/go-retryablehttp-logrus/rlog"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/keyring/ghtoken"
 	"golang.org/x/oauth2"
 )
 
@@ -49,7 +50,7 @@ func MakeRetryable(client *http.Client, logE *logrus.Entry) *http.Client {
 func getHTTPClientForGitHub(ctx context.Context, logE *logrus.Entry, token string) *http.Client {
 	if token == "" {
 		if keyring.Enabled() {
-			return oauth2.NewClient(ctx, keyring.NewTokenSource(logE))
+			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logE, keyring.KeyService))
 		}
 		return http.DefaultClient
 	}
