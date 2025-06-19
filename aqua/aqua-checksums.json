@@ -81,28 +81,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/int128/ghcp/v1.13.5/ghcp_darwin_amd64.zip",
-      "checksum": "6728BD668888A64C71BF01D9AFBA373F38D353B79D181B1401A4E5E4B329289D",
+      "id": "github_release/github.com/int128/ghcp/v1.14.0/ghcp_darwin_amd64.zip",
+      "checksum": "3474F39BDD6740C82A22E51E01C0E66A24DDB0F5075C341EF1FA97A41EF3BF6A",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/int128/ghcp/v1.13.5/ghcp_darwin_arm64.zip",
-      "checksum": "6533FA0396CA6F4B9D3A74C2F0A5C4C89575A0D79F90684BAF6CD8B1511C95AC",
+      "id": "github_release/github.com/int128/ghcp/v1.14.0/ghcp_darwin_arm64.zip",
+      "checksum": "541F06056883EF7CD0F81E4BF4914A510091F07470152C72FE16928A4991CEE3",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/int128/ghcp/v1.13.5/ghcp_linux_amd64.zip",
-      "checksum": "3C808E566F0B663182AD5B5DD6E6B05DC8346610EA5613EA8C22AB19F47A4493",
+      "id": "github_release/github.com/int128/ghcp/v1.14.0/ghcp_linux_amd64.zip",
+      "checksum": "25C736DF285D04FB1E47088598615AAFBFD7D87B24C6546232959B45B5CC23C7",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/int128/ghcp/v1.13.5/ghcp_linux_arm64.zip",
-      "checksum": "14068BF35B2ED187EE7D8DB854DF2E7913C2BBC981979D3F8AE533D058E35F16",
+      "id": "github_release/github.com/int128/ghcp/v1.14.0/ghcp_linux_arm64.zip",
+      "checksum": "F85A39C758016F62882033A4B3B7A954EA349574B1F3699F7AD6313A0B5E6A3F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/int128/ghcp/v1.13.5/ghcp_windows_amd64.zip",
-      "checksum": "1A90AD7927F720EB8996AE143DF5D7AA2DF70689B7B5B9074D6FD32C244D688E",
+      "id": "github_release/github.com/int128/ghcp/v1.14.0/ghcp_windows_amd64.zip",
+      "checksum": "D9052C1F6A7E133F993EBA924EF11C303921E00603E526D498125C934D993282",
       "algorithm": "sha256"
     },
     {
