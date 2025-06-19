@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.32.0/typos-v1.32.0-aarch64-apple-darwin.tar.gz",
-      "checksum": "9DA6598CC38A800273BB5D3C7866AD19995D65D69BD399D8B49A97F770C5F0DB",
+      "id": "github_release/github.com/crate-ci/typos/v1.33.1/typos-v1.33.1-aarch64-apple-darwin.tar.gz",
+      "checksum": "A537968E6AB0A6845BD18A889105CF6F67B605CCEAA18CC6AFBE5785BBB9EE5B",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.32.0/typos-v1.32.0-aarch64-unknown-linux-musl.tar.gz",
-      "checksum": "53404115FE58E196506F0A5DCF7D9060CB462429458FAEE0AB3F6DD7EA461C37",
+      "id": "github_release/github.com/crate-ci/typos/v1.33.1/typos-v1.33.1-aarch64-unknown-linux-musl.tar.gz",
+      "checksum": "9A0A3B70B36B0726D52A80DA51AF10BB9BF22532BF71B779FEA07CD5B011B5BB",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.32.0/typos-v1.32.0-x86_64-apple-darwin.tar.gz",
-      "checksum": "8E70BCA52B726969DF784D5896D45CA4A39E30DF3259FFA283BD7F53F25E5DB4",
+      "id": "github_release/github.com/crate-ci/typos/v1.33.1/typos-v1.33.1-x86_64-apple-darwin.tar.gz",
+      "checksum": "3696BBBDEE5CED572B3CDBCF30148DA3059593477ADE58F29B6E57302FF8E196",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.32.0/typos-v1.32.0-x86_64-pc-windows-msvc.zip",
-      "checksum": "18DD1D26DBD674EB467AB2BC1AF26D3EE2210F8620297F38949A364BBAD47541",
+      "id": "github_release/github.com/crate-ci/typos/v1.33.1/typos-v1.33.1-x86_64-pc-windows-msvc.zip",
+      "checksum": "E2EC599862E5D5EDA5C365CBA8BABB0594CA0FC180549163504766F687E01990",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.32.0/typos-v1.32.0-x86_64-unknown-linux-musl.tar.gz",
-      "checksum": "4C8E7E360FC855A6F9B721C2EAB22966A0F33AA0F284772B136EA8847F136864",
+      "id": "github_release/github.com/crate-ci/typos/v1.33.1/typos-v1.33.1-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "AB807B29E9D759428C8A0444C14973225B6710A286F264574892972428C3D18B",
       "algorithm": "sha256"
     },
     {
