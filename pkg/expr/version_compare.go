@@ -59,7 +59,7 @@ func compare(constr, ver string) bool {
 	if err != nil {
 		panic(err)
 	}
-	for _, constraint := range strings.Split(strings.TrimSpace(constr), ",") {
+	for constraint := range strings.SplitSeq(strings.TrimSpace(constr), ",") {
 		c := strings.TrimSpace(constraint)
 		matched := false
 		for _, comp := range comparisons(sv1) {

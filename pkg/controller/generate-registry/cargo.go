@@ -24,7 +24,7 @@ func (c *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry
 		if payload.Crate.Homepage != payload.Crate.Repository {
 			pkgInfo.Link = payload.Crate.Homepage
 		}
-		if repo := strings.TrimPrefix(payload.Crate.Repository, "https://github.com/"); repo != payload.Crate.Repository {
+		if repo, ok := strings.CutPrefix(payload.Crate.Repository, "https://github.com/"); ok {
 			if repoOwner, repoName, found := strings.Cut(repo, "/"); found {
 				pkgInfo.RepoOwner = repoOwner
 				pkgInfo.RepoName = repoName

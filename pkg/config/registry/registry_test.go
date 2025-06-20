@@ -45,7 +45,7 @@ func BenchmarkReadRegistry(b *testing.B) {
 			b.Fatal(err)
 		}
 		b.ResetTimer()
-		for range b.N {
+		for b.Loop() {
 			func() {
 				f, err := os.Open(registryYAML)
 				if err != nil {
@@ -65,7 +65,7 @@ func BenchmarkReadRegistry(b *testing.B) {
 			b.Fatal(err)
 		}
 		b.ResetTimer()
-		for range b.N {
+		for b.Loop() {
 			func() {
 				f, err := os.Open(registryJSON)
 				if err != nil {

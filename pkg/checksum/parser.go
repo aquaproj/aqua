@@ -98,8 +98,8 @@ func parseRegex(content string, checksumPattern *registry.ChecksumPattern) (map[
 	}
 
 	if checksumPattern.File == "" {
-		lines := strings.Split(content, "\n")
-		for _, line := range lines {
+		lines := strings.SplitSeq(content, "\n")
+		for line := range lines {
 			chksum := extractByRegex(line, checksumRegexp)
 			if chksum == "" {
 				continue
