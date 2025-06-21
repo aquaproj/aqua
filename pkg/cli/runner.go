@@ -39,9 +39,10 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 
 func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
 	return urfave.Command(param.LogE, param.LDFlags, &cli.Command{ //nolint:wrapcheck
-		Name:           "aqua",
-		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
-		ExitErrHandler: exitErrHandlerFunc,
+		Name:                  "aqua",
+		Usage:                 "Version Manager of CLI. https://aquaproj.github.io/",
+		ExitErrHandler:        exitErrHandlerFunc,
+		EnableShellCompletion: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "log-level",
