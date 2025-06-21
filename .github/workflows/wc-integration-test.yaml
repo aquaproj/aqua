@@ -99,6 +99,8 @@ jobs:
       - run: github-compare -v
       - run: terrafmt version
 
+      - name: Test --generate-shell-completion
+        run: aqua --generate-shell-completion
       - name: output bash completion
         run: aqua completion bash
       - name: output zsh completion
