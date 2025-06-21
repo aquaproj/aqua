@@ -56,28 +56,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.9.0/goreleaser_Darwin_all.tar.gz",
-      "checksum": "82953B65C4B64E73B1077827663D97BF8E32592B4FC2CDB55C738BD484260A47",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.10.2/goreleaser_Darwin_all.tar.gz",
+      "checksum": "939101B7495E00FD24FFBACAE3232F5E805591054E97BB09593B7BB2D6F584BC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.9.0/goreleaser_Linux_arm64.tar.gz",
-      "checksum": "574E83F5F0FC97803FF734C9342F8FD446D77E5E7CCAC53DEBF09B4A8DBDED80",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.10.2/goreleaser_Linux_arm64.tar.gz",
+      "checksum": "708050EBCF0A60D3007317920E1851F168DFF7BA0A8388437ACB016D3B0DBE61",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.9.0/goreleaser_Linux_x86_64.tar.gz",
-      "checksum": "A066FCD713684ABED0D750D7559F1A5D794FA2FAA8E8F1AD2EECEC8C373668A7",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.10.2/goreleaser_Linux_x86_64.tar.gz",
+      "checksum": "7557D103D66EFAD2CC3C61C458B6EC948D8CB0C49F734FBB94075E9F774076DF",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.9.0/goreleaser_Windows_arm64.zip",
-      "checksum": "EA19CAE5A322FEC6794252D3E9FE77D43201CC831D939964730E556BF3C1CC2C",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.10.2/goreleaser_Windows_arm64.zip",
+      "checksum": "DCA65FC4F29DAC06A86207DA0E510F8D1C0B18AEFBA1ED29C63F2AB43228CD39",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.9.0/goreleaser_Windows_x86_64.zip",
-      "checksum": "F56E85F8FD52875102DFC2B01DC07FC174486CAEBBAC7E3AA9F29B4F0057D495",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.10.2/goreleaser_Windows_x86_64.zip",
+      "checksum": "F36077748B3E4CD466D407685CEE9C105890203AD7E4EFE9D89C99EBEB8F8EEA",
       "algorithm": "sha256"
     },
     {
