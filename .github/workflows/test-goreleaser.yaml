@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: go.mod
-      - uses: aquaproj/aqua-installer@9ebf656952a20c45a5d66606f083ff34f58b8ce0 # v4.0.0
+      - uses: aquaproj/aqua-installer@5c140f8fcd4035d84e5d893f1e4a9dc1283e1e4a # v4.0.1
         with:
           aqua_version: v2.53.3
       - run: goreleaser check
