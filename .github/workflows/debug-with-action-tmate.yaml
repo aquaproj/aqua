@@ -25,7 +25,7 @@ jobs:
         if: inputs.pr_number != ''
         env:
           GITHUB_TOKEN: ${{github.token}}
-      - uses: aquaproj/aqua-installer@5c140f8fcd4035d84e5d893f1e4a9dc1283e1e4a # v4.0.1
+      - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
         with:
           aqua_version: v2.53.3
         env:
