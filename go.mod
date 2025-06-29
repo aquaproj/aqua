@@ -87,7 +87,6 @@ require (
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
-	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/zalando/go-keyring v0.2.6 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
