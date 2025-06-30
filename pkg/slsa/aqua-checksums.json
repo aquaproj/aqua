@@ -1,33 +1,33 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.0/slsa-verifier-darwin-amd64",
-      "checksum": "36694B43AB23BE234ADD09272E5FAF77349D7E267BF65C01DC9BCDF58C4F496E",
+      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.1/slsa-verifier-darwin-amd64",
+      "checksum": "4BAF25415727821F847A38BCCEDC86C3E5B17CBFC2EB534CD554FEB6C856D6F1",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.0/slsa-verifier-darwin-arm64",
-      "checksum": "84D9122CE12E0C79080844285FD5C4976407ED3463E434A1B21B0979C46B1E55",
+      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.1/slsa-verifier-darwin-arm64",
+      "checksum": "39ABFCF5F1D690C3E889CE3D2D6A8B87711424D83368511868D414E8F8BCB05C",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.0/slsa-verifier-linux-amd64",
-      "checksum": "499BEFB675EFCCA9001AFE6E5156891B91E71F9C07AB120A8943979F85CC82E6",
+      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.1/slsa-verifier-linux-amd64",
+      "checksum": "946DBEC729094195E88EF78E1734324A27869F03E2C6BD2F61CBC06BD5350339",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.0/slsa-verifier-linux-arm64",
-      "checksum": "DC3845D7605F666A0938389C1C5735230E50B32A547867FFD351FB14DF928167",
+      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.1/slsa-verifier-linux-arm64",
+      "checksum": "5D3B2349EDE7BFEC19E7A21569F18B9F7410145AD12E9584B175370669E14061",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.0/slsa-verifier-windows-amd64.exe",
-      "checksum": "61FF8B1CCA6AC0012B0BA906367836F64A389444766BE437DF2A69F71285F43B",
+      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.1/slsa-verifier-windows-amd64.exe",
+      "checksum": "1D8F61AD747ECC3D375D2A563CEBF2991748B7DA1A9BDA9A500804C3C499E3C0",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.0/slsa-verifier-windows-arm64.exe",
-      "checksum": "DDF58798049599C44CAF299B6A9CF8A41760DAA94EE208BDAE8AA78FC75DCB2B",
+      "id": "github_release/github.com/slsa-framework/slsa-verifier/v2.7.1/slsa-verifier-windows-arm64.exe",
+      "checksum": "44144E98328D221F0490EF6B4A58A465DEFE8F697F387ABBBF07EF5ADB68D4AC",
       "algorithm": "sha256"
     },
     {
