@@ -3,7 +3,7 @@ checksum:
   require_checksum: false
 registries:
 - type: standard
-  ref: v4.382.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.383.0 # renovate: depName=aquaproj/aqua-registry
 - null
 
 packages:
