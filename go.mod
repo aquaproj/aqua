@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/adrg/xdg v0.5.3
 	github.com/expr-lang/expr v1.17.5
-	github.com/forPelevin/gomoji v1.3.0
+	github.com/forPelevin/gomoji v1.3.1
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v73 v73.0.0
