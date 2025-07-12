@@ -18,6 +18,10 @@ linters:
     - tagliatelle
     - varnamelen
     - wsl
+    - wsl_v5
+    - embeddedstructfieldcheck
+    - noinlineerr
+    - revive
   exclusions:
     generated: lax
     presets:
