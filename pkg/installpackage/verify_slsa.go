@@ -25,12 +25,14 @@ func (s *slsaVerifier) Enabled(logE *logrus.Entry) (bool, error) {
 		logE.Debug("slsa verification is disabled")
 		return false, nil
 	}
+
 	return s.pkg.PackageInfo.SLSAProvenance.GetEnabled(), nil
 }
 
 func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
 	logE.Info("verify a package with slsa-verifier")
-	if err := s.installer.install(ctx, logE); err != nil {
+	err := s.installer.install(ctx, logE)
+	if err != nil {
 		return fmt.Errorf("install slsa-verifier: %w", err)
 	}
 
@@ -38,12 +40,13 @@ func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file stri
 	pkgInfo := s.pkg.PackageInfo
 
 	art := pkg.TemplateArtifact(s.runtime, s.asset)
+
 	sourceTag := pkgInfo.SLSAProvenance.SourceTag
 	if sourceTag == "" {
 		sourceTag = pkg.Package.Version
 	}
 
-	if err := s.verifier.Verify(ctx, logE, s.runtime, pkgInfo.SLSAProvenance, art, &download.File{
+	err := s.verifier.Verify(ctx, logE, s.runtime, pkgInfo.SLSAProvenance, art, &download.File{
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
 		Version:   pkg.Package.Version,
@@ -51,8 +54,10 @@ func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file stri
 		SourceURI:    pkgInfo.SLSASourceURI(),
 		SourceTag:    sourceTag,
 		ArtifactPath: file,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("verify a package with slsa-verifier: %w", err)
 	}
+
 	return nil
 }

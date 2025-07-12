@@ -9,6 +9,7 @@ import (
 
 func TestGetRootDir(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name string
 		env  map[string]string
@@ -39,6 +40,7 @@ func TestGetRootDir(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			rootDir := config.GetRootDir(osenv.NewMock(d.env))
 			if rootDir != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, rootDir)

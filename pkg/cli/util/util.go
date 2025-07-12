@@ -33,21 +33,25 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
 	}
+
 	param.Args = cmd.Args().Slice()
 	if logLevel := cmd.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}
+
 	param.ConfigFilePath = cmd.String("config")
 	param.GenerateConfigFilePath = cmd.String("generate-config")
 	param.Dest = cmd.String("o")
 	param.OutTestData = cmd.String("out-testdata")
 	param.OnlyLink = cmd.Bool("only-link")
+
 	param.InitConfig = cmd.Bool("init")
 	if commandName == "generate-registry" {
 		param.InsertFile = cmd.String("i")
 	} else {
 		param.Insert = cmd.Bool("i")
 	}
+
 	param.All = cmd.Bool("all")
 	param.Global = cmd.Bool("g")
 	param.Detail = cmd.Bool("detail")
@@ -59,19 +63,24 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 	param.SelectVersion = cmd.Bool("select-version")
 	param.Installed = cmd.Bool("installed")
 	param.ShowVersion = cmd.Bool("version")
+
 	param.File = cmd.String("f")
 	if cmd := cmd.String("cmd"); cmd != "" {
 		param.Commands = strings.Split(cmd, ",")
 	}
+
 	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
 	param.AQUAVersion = ldFlags.Version
 	param.AquaCommitHash = ldFlags.Commit
 	param.RootDir = config.GetRootDir(osenv.New())
 	homeDir, _ := os.UserHomeDir()
+
 	param.HomeDir = homeDir
-	if err := log.Set(logE, param.LogLevel, param.LogColor); err != nil {
+	err := log.Set(logE, param.LogLevel, param.LogColor)
+	if err != nil {
 		return fmt.Errorf("configure logger: %w", err)
 	}
+
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = cmd.Bool("deep")
@@ -88,6 +97,7 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 		if err != nil {
 			return fmt.Errorf("parse the environment variable AQUA_DISABLE_LAZY_INSTALL as bool: %w", err)
 		}
+
 		param.DisableLazyInstall = disableLazyInstall
 	}
 
@@ -96,8 +106,10 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 		if err != nil {
 			return fmt.Errorf("parse the environment variable AQUA_DISABLE_POLICY as bool: %w", err)
 		}
+
 		param.DisablePolicy = disablePolicy
 	}
+
 	if !param.DisablePolicy {
 		param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
 		for i, p := range param.PolicyConfigFilePaths {
@@ -106,45 +118,57 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 			}
 		}
 	}
+
 	if a := os.Getenv("AQUA_CHECKSUM"); a != "" {
 		chksm, err := strconv.ParseBool(a)
 		if err != nil {
 			return fmt.Errorf("parse the environment variable AQUA_CHECKSUM as bool: %w", err)
 		}
+
 		param.Checksum = chksm
 	}
+
 	if a := os.Getenv("AQUA_REQUIRE_CHECKSUM"); a != "" {
 		requireChecksum, err := strconv.ParseBool(a)
 		if err != nil {
 			return fmt.Errorf("parse the environment variable AQUA_REQUIRE_CHECKSUM as bool: %w", err)
 		}
+
 		param.RequireChecksum = requireChecksum
 	}
+
 	if a := os.Getenv("AQUA_ENFORCE_CHECKSUM"); a != "" {
 		chksm, err := strconv.ParseBool(a)
 		if err != nil {
 			return fmt.Errorf("parse the environment variable AQUA_ENFORCE_CHECKSUM as bool: %w", err)
 		}
+
 		param.EnforceChecksum = chksm
 	}
+
 	if a := os.Getenv("AQUA_ENFORCE_REQUIRE_CHECKSUM"); a != "" {
 		requireChecksum, err := strconv.ParseBool(a)
 		if err != nil {
 			return fmt.Errorf("parse the environment variable AQUA_ENFORCE_REQUIRE_CHECKSUM as bool: %w", err)
 		}
+
 		param.EnforceRequireChecksum = requireChecksum
 	}
+
 	return nil
 }
 
 func parseTags(tags []string) map[string]struct{} {
 	tagsM := map[string]struct{}{}
+
 	for _, tag := range tags {
 		tag = strings.TrimSpace(tag)
 		if tag == "" {
 			continue
 		}
+
 		tagsM[tag] = struct{}{}
 	}
+
 	return tagsM
 }

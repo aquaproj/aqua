@@ -19,6 +19,7 @@ func newPolicyDeny(r *util.Param) *cli.Command {
 	i := &policyDenyCommand{
 		r: r,
 	}
+
 	return &cli.Command{
 		Action: i.action,
 		Name:   "deny",
@@ -38,9 +39,12 @@ func (pd *policyDenyCommand) action(ctx context.Context, cmd *cli.Command) error
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, pd.r.LogE, "deny-policy", param, pd.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, pd.r.LogE, "deny-policy", param, pd.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeDenyPolicyCommandController(ctx, param)
+
 	return ctrl.Deny(pd.r.LogE, param, cmd.Args().First()) //nolint:wrapcheck
 }

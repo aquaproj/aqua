@@ -8,6 +8,7 @@ import (
 
 func TestGetRuntimesFromEnvs(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		envs  []string
@@ -67,16 +68,20 @@ func TestGetRuntimesFromEnvs(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			rts, err := GetRuntimesFromEnvs(d.envs)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must occur")
 			}
+
 			if diff := cmp.Diff(d.rts, rts); diff != "" {
 				t.Fatal(diff)
 			}

@@ -19,9 +19,11 @@ type rawUnarchiver struct {
 
 func (u *rawUnarchiver) Unarchive(_ context.Context, _ *logrus.Entry, src *File) error {
 	dest := u.dest
-	if err := osfile.MkdirAll(u.fs, filepath.Dir(dest)); err != nil {
+	err := osfile.MkdirAll(u.fs, filepath.Dir(dest))
+	if err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
+
 	f, err := u.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("open the file (%s): %w", dest, err)
@@ -32,8 +34,10 @@ func (u *rawUnarchiver) Unarchive(_ context.Context, _ *logrus.Entry, src *File)
 	if err != nil {
 		return fmt.Errorf("read a file: %w", err)
 	}
+
 	if _, err := io.Copy(src.Body.Wrap(f), body); err != nil {
 		return fmt.Errorf("copy the body to %s: %w", dest, err)
 	}
+
 	return nil
 }

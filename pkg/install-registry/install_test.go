@@ -20,6 +20,7 @@ import (
 
 func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	logE := logrus.NewEntry(logrus.New())
 	data := []struct {
 		name        string
@@ -160,25 +161,32 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 		GOOS:   "linux",
 		GOARCH: "amd64",
 	}
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+
 			registries, err := inst.InstallRegistries(ctx, logE, d.cfg, d.cfgFilePath, nil)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(d.exp, registries, cmp.AllowUnexported(cfgRegistry.Config{})); diff != "" {
 				t.Fatal(diff)
 			}

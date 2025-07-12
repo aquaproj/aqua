@@ -34,16 +34,19 @@ func NewCargoPackageInstallerImpl(exec Executor, cleaner Cleaner) *CargoPackageI
 
 func getCargoArgs(version string, opts *registry.Cargo) []string {
 	args := []string{"install", "--version", version}
+
 	if opts != nil {
 		if opts.AllFeatures {
 			args = append(args, "--all-features")
 		} else if len(opts.Features) != 0 {
 			args = append(args, "--features", strings.Join(opts.Features, ","))
 		}
+
 		if opts.Locked {
 			args = append(args, "--locked")
 		}
 	}
+
 	return args
 }
 
@@ -53,14 +56,17 @@ func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus.E
 		// Clean up root
 		logE := logE.WithField("install_dir", root)
 		logE.Info("removing the install directory because the installation failed")
-		if err := is.cleaner.RemoveAll(root); err != nil {
+		err := is.cleaner.RemoveAll(root)
+		if err != nil {
 			logE.WithError(err).Error("aqua tried to remove the install directory because the installation failed, but it failed")
 		}
+
 		return fmt.Errorf("install a crate: %w", logerr.WithFields(err, logrus.Fields{
 			"doc":           "https://aquaproj.github.io/docs/reference/codes/005",
 			"cargo_command": strings.Join(append(append([]string{"cargo"}, args...), crate), " "),
 		}))
 	}
+
 	return nil
 }
 
@@ -73,11 +79,16 @@ func (is *Installer) downloadCargo(ctx context.Context, logE *logrus.Entry, pkg 
 			logE = logE.WithField("cargo_features", strings.Join(cargoOpts.Features, ","))
 		}
 	}
+
 	logE.Info("Installing a crate")
+
 	crate := pkg.PackageInfo.Crate
+
 	version := strings.TrimPrefix(strings.TrimPrefix(pkg.Package.Version, pkg.PackageInfo.VersionPrefix), "v")
-	if err := is.cargoPackageInstaller.Install(ctx, logE, crate, version, root, cargoOpts); err != nil {
+	err := is.cargoPackageInstaller.Install(ctx, logE, crate, version, root, cargoOpts)
+	if err != nil {
 		return fmt.Errorf("cargo install: %w", err)
 	}
+
 	return nil
 }

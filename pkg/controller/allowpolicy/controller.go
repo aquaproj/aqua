@@ -29,14 +29,17 @@ func (c *Controller) Allow(logE *logrus.Entry, param *config.Param, policyFilePa
 	if err != nil {
 		return fmt.Errorf("find a policy file: %w", err)
 	}
+
 	if policyFile == "" {
 		logE.Info("no policy file is found")
 		return nil
 	}
-	if err := c.policyValidator.Allow(policyFile); err != nil {
+	err := c.policyValidator.Allow(policyFile)
+	if err != nil {
 		return logerr.WithFields(fmt.Errorf("allow a policy file: %w", err), logrus.Fields{ //nolint:wrapcheck
 			"policy_file": policyFile,
 		})
 	}
+
 	return nil
 }

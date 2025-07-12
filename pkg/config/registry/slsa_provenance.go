@@ -27,6 +27,7 @@ func (sp *SLSAProvenance) GetSourceURI() string {
 	if sp.SourceURI != nil {
 		return *sp.SourceURI
 	}
+
 	return fmt.Sprintf("github.com/%s/%s", sp.RepoOwner, sp.RepoName)
 }
 
@@ -34,9 +35,11 @@ func (sp *SLSAProvenance) GetEnabled() bool {
 	if sp == nil {
 		return false
 	}
+
 	if sp.Enabled != nil {
 		return *sp.Enabled
 	}
+
 	return sp.Type != ""
 }
 

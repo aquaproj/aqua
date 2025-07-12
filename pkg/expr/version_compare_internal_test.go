@@ -4,6 +4,7 @@ import "testing"
 
 func Test_compare(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name       string
 		constraint string
@@ -20,6 +21,7 @@ func Test_compare(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			f := compare(d.constraint, d.version)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)

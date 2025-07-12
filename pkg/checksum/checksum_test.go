@@ -12,6 +12,7 @@ import (
 
 func TestCalculator_Calculate(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name      string
 		filename  string
@@ -31,23 +32,30 @@ func TestCalculator_Calculate(t *testing.T) {
 		},
 	}
 	calculator := &checksum.Calculator{}
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
-			if err := afero.WriteFile(fs, d.filename, []byte(d.content), osfile.FilePermission); err != nil {
+			err := afero.WriteFile(fs, d.filename, []byte(d.content), osfile.FilePermission)
+			if err != nil {
 				t.Fatal(err)
 			}
+
 			c, err := calculator.Calculate(fs, d.filename, d.algorithm)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must occur")
 			}
+
 			if c != d.checksum {
 				t.Fatalf("wanted %s, got %s", d.checksum, c)
 			}
@@ -57,6 +65,7 @@ func TestCalculator_Calculate(t *testing.T) {
 
 func TestGetChecksumConfigFromFilename(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	tests := []struct {
 		filename string
 		version  string
@@ -153,6 +162,7 @@ func TestGetChecksumConfigFromFilename(t *testing.T) { //nolint:funlen
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
 			t.Parallel()
+
 			got := checksum.GetChecksumConfigFromFilename(tt.filename, tt.version)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("wanted %v, got %v", tt.want, got)

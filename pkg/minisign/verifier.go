@@ -37,7 +37,8 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 	if err != nil {
 		return err
 	}
-	defer v.fs.Remove(sigFile)                     //nolint:errcheck
+	defer v.fs.Remove(sigFile) //nolint:errcheck
+
 	return v.exe.Verify(ctx, logE, param, sigFile) //nolint:wrapcheck
 }
 
@@ -58,8 +59,10 @@ func (v *Verifier) downloadSignature(ctx context.Context, logE *logrus.Entry, rt
 		return "", fmt.Errorf("create a temporary file: %w", err)
 	}
 	defer signatureFile.Close()
+
 	if _, err := io.Copy(signatureFile, rc); err != nil {
 		return signatureFile.Name(), fmt.Errorf("copy a signature to a temporary file: %w", err)
 	}
+
 	return signatureFile.Name(), nil
 }

@@ -9,6 +9,7 @@ import (
 
 func Test_getAssetIDFromAssets(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title     string
 		assets    []*github.ReleaseAsset
@@ -44,16 +45,20 @@ func Test_getAssetIDFromAssets(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			assetID, err := getAssetIDFromAssets(d.assets, d.assetName)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("error should be returned")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if d.assetID != assetID {
 				t.Fatalf("wanted %v, got %v", d.assetID, assetID)
 			}

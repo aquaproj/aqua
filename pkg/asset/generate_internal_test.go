@@ -9,6 +9,7 @@ import (
 
 func Test_mergeReplacements(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name string
 		goos string
@@ -52,10 +53,12 @@ func Test_mergeReplacements(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			m, f := mergeReplacements(d.goos, d.m1, d.m2)
 			if f != d.f {
 				t.Fatalf("wanted %v, got %v", d.f, f)
 			}
+
 			if diff := cmp.Diff(d.m, m); diff != "" {
 				t.Fatal(diff)
 			}
@@ -65,6 +68,7 @@ func Test_mergeReplacements(t *testing.T) {
 
 func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name         string
 		overrides    []*registry.Override
@@ -157,12 +161,14 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			m, overrides := normalizeOverridesByReplacements(&registry.PackageInfo{
 				Overrides: d.overrides,
 			})
 			if diff := cmp.Diff(d.replacements, m); diff != "" {
 				t.Fatal(diff)
 			}
+
 			if diff := cmp.Diff(d.exp, overrides); diff != "" {
 				t.Fatal(diff)
 			}

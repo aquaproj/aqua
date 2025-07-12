@@ -6,6 +6,7 @@ import (
 
 func Test_evaluateBool(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title      string
 		expression string
@@ -58,16 +59,20 @@ func Test_evaluateBool(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			b, err := evaluateBool(d.expression, d.env, d.input)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if b != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, b)
 			}

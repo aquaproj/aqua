@@ -24,6 +24,7 @@ import (
 
 func TestController_Update(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		isErr          bool
@@ -506,14 +507,17 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Tags:     d.tags,
@@ -528,21 +532,27 @@ packages:
 				FindResults: d.findResults,
 			}
 			fuzzyGetter := versiongetter.NewMockFuzzyGetter(d.versions)
+
 			ctrl := update.New(d.param, gh, configFinder, configReader, registryInstaller, fs, d.rt, fuzzyGetter, fuzzyFinder, whichCtrl)
-			if err := ctrl.Update(ctx, logE, d.param); err != nil {
+			err := ctrl.Update(ctx, logE, d.param)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			for path, expBody := range d.expFiles {
 				b, err := afero.ReadFile(fs, path)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				if diff := cmp.Diff(expBody, string(b)); diff != "" {
 					t.Fatal(diff)
 				}

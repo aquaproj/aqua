@@ -24,9 +24,11 @@ func (m *Minisign) GetEnabled() bool {
 	if m == nil {
 		return false
 	}
+
 	if m.Enabled != nil {
 		return *m.Enabled
 	}
+
 	return true
 }
 

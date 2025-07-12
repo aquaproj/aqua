@@ -31,9 +31,11 @@ type Param struct {
 
 func (o *Outputter) Output(param *Param) error {
 	if !param.Insert && param.Dest == "" {
-		if err := yaml.NewEncoder(o.stdout).Encode(param.List); err != nil {
+		err := yaml.NewEncoder(o.stdout).Encode(param.List)
+		if err != nil {
 			return fmt.Errorf("output generated package configuration: %w", err)
 		}
+
 		return nil
 	}
 
@@ -51,10 +53,12 @@ func (o *Outputter) Output(param *Param) error {
 	}
 	defer f.Close()
 
-	if err := goccyYAML.NewEncoder(f, goccyYAML.IndentSequence(true)).Encode(map[string]any{
+	err := goccyYAML.NewEncoder(f, goccyYAML.IndentSequence(true)).Encode(map[string]any{
 		"packages": param.List,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("encode YAML: %w", err)
 	}
+
 	return nil
 }

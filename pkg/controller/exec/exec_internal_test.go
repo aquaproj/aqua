@@ -10,6 +10,7 @@ import (
 
 func TestController_execCommand(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title    string
 		exePath  string
@@ -24,6 +25,7 @@ func TestController_execCommand(t *testing.T) {
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
@@ -34,6 +36,7 @@ func TestController_execCommand(t *testing.T) {
 				stderr:   os.Stderr,
 				executor: d.executor,
 			}
+
 			err := ctrl.execCommandWithRetry(ctx, logE, d.exePath, d.args...)
 			if err != nil {
 				t.Fatal(err)

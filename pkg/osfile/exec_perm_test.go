@@ -9,6 +9,7 @@ import (
 
 func TestIsOwnerExecutable(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name string
 		mode os.FileMode
@@ -28,6 +29,7 @@ func TestIsOwnerExecutable(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			f := osfile.IsOwnerExecutable(d.mode)
 			if f != d.exp {
 				t.Fatalf("watnted %v, got %v", d.exp, f)
@@ -38,6 +40,7 @@ func TestIsOwnerExecutable(t *testing.T) {
 
 func TestAllowOwnerExec(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name string
 		mode os.FileMode
@@ -57,6 +60,7 @@ func TestAllowOwnerExec(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			mode := osfile.AllowOwnerExec(d.mode)
 			if mode != d.exp {
 				t.Fatalf("watnted %v, got %v", d.exp, mode)

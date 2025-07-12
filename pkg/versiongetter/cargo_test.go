@@ -12,6 +12,7 @@ import (
 
 func TestCargoVersionGetter_Get(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		versions map[string][]string
@@ -45,16 +46,20 @@ func TestCargoVersionGetter_Get(t *testing.T) {
 			ctx := t.Context()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)
 			cargoGetter := versiongetter.NewCargo(cargoClient)
+
 			version, err := cargoGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if version != d.version {
 				t.Fatalf("wanted %s, got %s", d.version, version)
 			}
@@ -64,6 +69,7 @@ func TestCargoVersionGetter_Get(t *testing.T) {
 
 func TestCargoVersionGetter_List(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		versions map[string][]string
@@ -107,16 +113,20 @@ func TestCargoVersionGetter_List(t *testing.T) {
 			ctx := t.Context()
 			cargoClient := versiongetter.NewMockCargoClient(d.versions)
 			cargoGetter := versiongetter.NewCargo(cargoClient)
+
 			items, err := cargoGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(items, d.items); diff != "" {
 				t.Fatal(diff)
 			}

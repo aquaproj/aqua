@@ -23,15 +23,17 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 	}
 	defer updateChecksum()
 
-	if err := c.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
+	err := c.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(param.EnforceRequireChecksum, param.RequireChecksum),
 		ConfigFileDir:   filepath.Dir(findResult.ConfigFilePath),
 		PolicyConfigs:   policyConfigs,
 		DisablePolicy:   param.DisablePolicy,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("install a package: %w", logerr.WithFields(err, logE.Data))
 	}
+
 	return c.packageInstaller.WaitExe(ctx, logE, findResult.ExePath) //nolint:wrapcheck
 }

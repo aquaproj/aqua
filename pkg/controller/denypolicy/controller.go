@@ -29,14 +29,18 @@ func (c *Controller) Deny(logE *logrus.Entry, param *config.Param, policyFilePat
 	if err != nil {
 		return fmt.Errorf("find a policy file: %w", err)
 	}
+
 	if policyFilePath == "" {
 		logE.Info("no policy file is found")
 		return nil
 	}
-	if err := c.policyValidator.Deny(policyFilePath); err != nil {
+
+	err := c.policyValidator.Deny(policyFilePath)
+	if err != nil {
 		return logerr.WithFields(fmt.Errorf("deny a policy file: %w", err), logrus.Fields{ //nolint:wrapcheck
 			"policy_file": policyFilePath,
 		})
 	}
+
 	return nil
 }

@@ -85,9 +85,11 @@ func (b *Build) CheckEnabled() bool {
 	if b == nil {
 		return false
 	}
+
 	if b.Enabled == nil {
 		return true
 	}
+
 	return *b.Enabled
 }
 
@@ -95,6 +97,7 @@ func (p *PackageInfo) GetAppendExt() bool {
 	if p.AppendExt == nil {
 		return true
 	}
+
 	return *p.AppendExt
 }
 
@@ -201,6 +204,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		Build:                      p.Build,
 		Vars:                       p.Vars,
 	}
+
 	return pkg
 }
 
@@ -305,9 +309,11 @@ func (p *PackageInfo) OverrideByBuild() {
 		p.resetByPkgType(p.Build.Type)
 		p.Type = p.Build.Type
 	}
+
 	if p.Build.Path != "" {
 		p.Path = p.Build.Path
 	}
+
 	if p.Build.Files != nil {
 		p.Files = p.Build.Files
 	}
@@ -345,6 +351,7 @@ func (Replacements) JSONSchema() *jsonschema.Schema {
 			Type: "string",
 		})
 	}
+
 	return &jsonschema.Schema{
 		Type:       "object",
 		Properties: Map,
@@ -358,15 +365,18 @@ func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 	archList := runtime.GOARCHList()
 	envs := make([]string, 0, len(osList)*len(archList)+len(osList)+len(archList)+1)
 	envs = append(append(append(envs, "all"), osList...), archList...)
+
 	for _, osValue := range runtime.GOOSList() {
 		for _, archValue := range runtime.GOARCHList() {
 			envs = append(envs, osValue+"/"+archValue)
 		}
 	}
+
 	s := make([]any, len(envs))
 	for i, value := range envs {
 		s[i] = value
 	}
+
 	return &jsonschema.Schema{
 		Type: "array",
 		Items: &jsonschema.Schema{
@@ -384,12 +394,15 @@ func (p *PackageInfo) GetName() string {
 	if p.Name != "" {
 		return p.Name
 	}
+
 	if p.HasRepo() {
 		return p.RepoOwner + "/" + p.RepoName
 	}
+
 	if p.Type == PkgInfoTypeGoInstall && p.Path != "" {
 		return p.Path
 	}
+
 	return ""
 }
 
@@ -397,9 +410,11 @@ func (p *PackageInfo) GetPath() string {
 	if p.Path != "" {
 		return p.Path
 	}
+
 	if p.Type == PkgInfoTypeGoInstall && p.HasRepo() {
 		return "github.com/" + p.RepoOwner + "/" + p.RepoName
 	}
+
 	return ""
 }
 
@@ -407,9 +422,11 @@ func (p *PackageInfo) GetLink() string {
 	if p.Link != "" {
 		return p.Link
 	}
+
 	if p.HasRepo() {
 		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
 	}
+
 	return ""
 }
 
@@ -417,6 +434,7 @@ func (p *PackageInfo) GetFormat() string {
 	if p.Type == PkgInfoTypeGitHubArchive || p.Type == PkgInfoTypeGoBuild {
 		return "tar.gz"
 	}
+
 	return p.Format
 }
 
@@ -425,12 +443,15 @@ func (p *PackageInfo) GetChecksumReplacements() Replacements {
 	if cr == nil {
 		return p.Replacements
 	}
+
 	if len(cr) == 0 {
 		return cr
 	}
+
 	m := Replacements{}
 	maps.Copy(m, p.Replacements)
 	maps.Copy(m, cr)
+
 	return m
 }
 
@@ -438,47 +459,58 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	if p.GetName() == "" {
 		return errPkgNameIsRequired
 	}
+
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
 	}
+
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		if !p.HasRepo() {
 			return errRepoRequired
 		}
+
 		return nil
 	case PkgInfoTypeGoInstall:
 		if p.GetPath() == "" {
 			return errGoInstallRequirePath
 		}
+
 		return nil
 	case PkgInfoTypeCargo:
 		if p.Crate == "" {
 			return errCargoRequireCrate
 		}
+
 		return nil
 	case PkgInfoTypeGitHubContent:
 		if !p.HasRepo() {
 			return errRepoRequired
 		}
+
 		if p.Path == "" {
 			return errGitHubContentRequirePath
 		}
+
 		return nil
 	case PkgInfoTypeGitHubRelease:
 		if !p.HasRepo() {
 			return errRepoRequired
 		}
+
 		if p.Asset == "" {
 			return errAssetRequired
 		}
+
 		return nil
 	case PkgInfoTypeHTTP:
 		if p.URL == "" {
 			return errURLRequired
 		}
+
 		return nil
 	}
+
 	return errInvalidPackageType
 }
 
@@ -494,6 +526,7 @@ func (p *PackageInfo) GetFiles() []*File {
 			},
 		}
 	}
+
 	return p.Files
 }
 
@@ -504,12 +537,14 @@ func (p *PackageInfo) PkgPaths() map[string]struct{} {
 	for _, a := range p.pkgPaths() {
 		m[a] = struct{}{}
 	}
+
 	for _, vo := range p.VersionOverrides {
 		pkg := p.overrideVersion(vo)
 		for _, a := range pkg.pkgPaths() {
 			m[a] = struct{}{}
 		}
 	}
+
 	return m
 }
 
@@ -518,17 +553,22 @@ func (p *PackageInfo) SLSASourceURI() string {
 	if sp == nil {
 		return ""
 	}
+
 	if sp.SourceURI != nil {
 		return *sp.SourceURI
 	}
+
 	repoOwner := sp.RepoOwner
 	repoName := sp.RepoName
+
 	if repoOwner == "" {
 		repoOwner = p.RepoOwner
 	}
+
 	if repoName == "" {
 		repoName = p.RepoName
 	}
+
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }
 
@@ -536,33 +576,40 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
 	}
+
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		if p.RepoOwner == "" || p.RepoName == "" {
 			return nil
 		}
+
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
 		if p.Crate == "" {
 			return nil
 		}
+
 		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
 	case PkgInfoTypeGoInstall:
 		a := p.GetPath()
 		if a == "" {
 			return nil
 		}
+
 		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(a, "*")))}
 	case PkgInfoTypeHTTP:
 		if p.URL == "" {
 			return nil
 		}
+
 		u, err := url.Parse(placeHolderTemplate.ReplaceAllLiteralString(p.URL, "*"))
 		if err != nil {
 			return nil
 		}
+
 		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
 	}
+
 	return nil
 }
 
@@ -571,14 +618,18 @@ func (p *PackageInfo) defaultCmdName() string {
 		if p.Name == "" {
 			return p.RepoName
 		}
+
 		if i := strings.LastIndex(p.Name, "/"); i != -1 {
 			return p.Name[i+1:]
 		}
+
 		return p.Name
 	}
+
 	if p.Type == PkgInfoTypeGoInstall {
 		return path.Base(p.GetPath())
 	}
+
 	return path.Base(p.GetName())
 }
 
@@ -588,99 +639,131 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 		pkg.resetByPkgType(child.Type)
 		pkg.Type = child.Type
 	}
+
 	if child.RepoOwner != "" {
 		pkg.RepoOwner = child.RepoOwner
 	}
+
 	if child.RepoName != "" {
 		pkg.RepoName = child.RepoName
 	}
+
 	if child.Asset != "" {
 		pkg.Asset = child.Asset
 	}
+
 	if child.Crate != "" {
 		pkg.Crate = child.Crate
 	}
+
 	if child.Cargo != nil {
 		pkg.Cargo = child.Cargo
 	}
+
 	if child.Path != "" {
 		pkg.Path = child.Path
 	}
+
 	if child.Format != "" {
 		pkg.Format = child.Format
 	}
+
 	if child.Files != nil {
 		pkg.Files = child.Files
 	}
+
 	if child.URL != "" {
 		pkg.URL = child.URL
 	}
+
 	if child.Replacements != nil {
 		pkg.Replacements = child.Replacements
 	}
+
 	if child.Overrides != nil {
 		pkg.Overrides = child.Overrides
 	}
+
 	if child.FormatOverrides != nil {
 		pkg.FormatOverrides = child.FormatOverrides
 	}
+
 	if child.SupportedEnvs != nil {
 		pkg.SupportedEnvs = child.SupportedEnvs
 	}
+
 	if child.VersionFilter != nil {
 		pkg.VersionFilter = *child.VersionFilter
 	}
+
 	if child.VersionPrefix != nil {
 		pkg.VersionPrefix = *child.VersionPrefix
 	}
+
 	if child.GoVersionPath != nil {
 		pkg.GoVersionPath = *child.GoVersionPath
 	}
+
 	if child.Rosetta2 != nil {
 		pkg.Rosetta2 = *child.Rosetta2
 	}
+
 	if child.WindowsARMEmulation != nil {
 		pkg.WindowsARMEmulation = *child.WindowsARMEmulation
 	}
+
 	if child.VersionSource != "" {
 		pkg.VersionSource = child.VersionSource
 	}
+
 	if child.CompleteWindowsExt != nil {
 		pkg.CompleteWindowsExt = child.CompleteWindowsExt
 	}
+
 	if child.WindowsExt != "" {
 		pkg.WindowsExt = child.WindowsExt
 	}
+
 	if child.Checksum != nil {
 		pkg.Checksum = child.Checksum
 	}
+
 	if child.Cosign != nil {
 		pkg.Cosign = child.Cosign
 	}
+
 	if child.SLSAProvenance != nil {
 		pkg.SLSAProvenance = child.SLSAProvenance
 	}
+
 	if child.Minisign != nil {
 		pkg.Minisign = child.Minisign
 	}
+
 	if child.GitHubArtifactAttestations != nil {
 		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
 	}
+
 	if child.ErrorMessage != nil {
 		pkg.ErrorMessage = *child.ErrorMessage
 	}
+
 	if child.NoAsset != nil {
 		pkg.NoAsset = *child.NoAsset
 	}
+
 	if child.AppendExt != nil {
 		pkg.AppendExt = child.AppendExt
 	}
+
 	if child.Build != nil {
 		pkg.Build = child.Build
 	}
+
 	if child.Vars != nil {
 		pkg.Vars = child.Vars
 	}
+
 	return pkg
 }
 

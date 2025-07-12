@@ -16,11 +16,13 @@ func (is *Installer) Copy(dest, src string) error {
 		return fmt.Errorf("create a file: %w", err)
 	}
 	defer dst.Close()
+
 	srcFile, err := is.fs.Open(src)
 	if err != nil {
 		return fmt.Errorf("open a file: %w", err)
 	}
 	defer srcFile.Close()
+
 	if _, err := io.Copy(dst, srcFile); err != nil {
 		return fmt.Errorf("copy a file: %w", err)
 	}

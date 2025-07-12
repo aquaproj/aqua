@@ -19,6 +19,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:  "root-dir",
 		Usage: "Output the aqua root directory (AQUA_ROOT_DIR)",
@@ -42,5 +43,6 @@ func (i *command) action(_ context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	fmt.Fprintln(i.r.Stdout, config.GetRootDir(osenv.New()))
+
 	return nil
 }

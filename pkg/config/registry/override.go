@@ -10,7 +10,9 @@ func (p *PackageInfo) Override(logE *logrus.Entry, v string, rt *runtime.Runtime
 	if err != nil {
 		return nil, err
 	}
+
 	pkg.OverrideByRuntime(rt)
+
 	return pkg, nil
 }
 
@@ -20,6 +22,7 @@ func (p *PackageInfo) getOverride(rt *runtime.Runtime) *Override {
 			return ov
 		}
 	}
+
 	return nil
 }
 
@@ -27,13 +30,16 @@ func (ov *Override) Match(rt *runtime.Runtime) bool {
 	if ov.GOOS != "" && ov.GOOS != rt.GOOS {
 		return false
 	}
+
 	if ov.GOArch != "" && ov.GOArch != rt.GOARCH {
 		return false
 	}
+
 	if ov.Envs != nil {
 		if !matchEnvs(ov.Envs, rt.GOOS, rt.GOARCH, rt.GOOS+"/"+rt.GOARCH, false, false) {
 			return false
 		}
 	}
+
 	return true
 }

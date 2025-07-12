@@ -34,10 +34,12 @@ func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, 
 	rt := runtime.NewR()
 	pkg := Package()
 	pkg.PackageInfo.OverrideByRuntime(rt)
+
 	exePath, err := pkg.ExePath(param.RootDir, pkg.PackageInfo.GetFiles()[0], rt)
 	if err != nil {
 		return nil, fmt.Errorf("get an executable file path of GitHub CLI: %w", err)
 	}
+
 	return &ExecutorImpl{
 		executor: executor,
 		exePath:  exePath,
@@ -51,9 +53,11 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
 	}).Info("gh attestation verify failed temporarily, retrying")
-	if err := timer.Wait(ctx, waitTime); err != nil {
+	err := timer.Wait(ctx, waitTime)
+	if err != nil {
 		return fmt.Errorf("wait running gh attestation verify: %w", err)
 	}
+
 	return nil
 }
 
@@ -77,7 +81,6 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		  -R suzuki-shunsuke/test-github-artifact-attestation \
 		  --signer-workflow suzuki-shunsuke/test-github-artifact-attestation/.github/workflows/release.yaml
 	*/
-
 	args := []string{
 		"attestation",
 		"verify",
@@ -88,30 +91,37 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 	if param.SignerWorkflow != "" {
 		args = append(args, "--signer-workflow", param.SignerWorkflow)
 	}
+
 	if param.PredicateType != "" {
 		args = append(args, "--predicate-type", param.PredicateType)
 	}
+
 	for i := range 5 {
 		err := e.exec(ctx, args)
 		if err == nil {
 			return nil
 		}
+
 		ae := &AuthError{}
 		if errors.As(err, &ae) {
 			logerr.WithError(logE, err).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
 			return nil
 		}
+
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
 			"exe":  e.exePath,
 			"args": strings.Join(args, " "),
 		}).Warn("execute gh attestation verify")
+
 		if i == 4 { //nolint:mnd
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+		err := wait(ctx, logE, i+1)
+		if err != nil {
 			return err
 		}
 	}
+
 	return errVerify
 }
 
@@ -125,5 +135,6 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 	if strings.Contains(out, "gh auth login") || strings.Contains(out, "set the GH_TOKEN environment variable") {
 		return &AuthError{err: err}
 	}
+
 	return err //nolint:wrapcheck
 }

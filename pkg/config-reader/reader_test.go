@@ -13,6 +13,7 @@ import (
 
 func Test_configReader_Read(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		exp            *aqua.Config
@@ -100,26 +101,34 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			reader := reader.New(fs, &config.Param{
 				HomeDir: d.homeDir,
 			})
+
 			cfg := &aqua.Config{}
-			if err := reader.Read(logE, d.configFilePath, cfg); err != nil {
+			err := reader.Read(logE, d.configFilePath, cfg)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(d.exp, cfg); diff != "" {
 				t.Fatal(diff)
 			}

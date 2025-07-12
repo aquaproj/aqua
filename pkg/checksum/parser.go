@@ -15,13 +15,16 @@ func showFileContent(logE *logrus.Entry, content string) {
 	if len(content) > 10000 { //nolint:mnd
 		content = content[:10000]
 		logE.Error("Checksum isn't found in a checksum file. Checksum file content (10000):\n" + content)
+
 		return
 	}
+
 	logE.Error("Checksum isn't found in a checksum file. Checksum file content:\n" + content)
 }
 
 func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, checksumConfig *registry.Checksum) (string, error) {
 	m, s, err := ParseChecksumFile(checksumFileContent, checksumConfig)
+
 	logE = logE.WithField("checksum_file_format", checksumConfig.FileFormat)
 	if checksumConfig.Pattern != nil {
 		logE = logE.WithFields(logrus.Fields{
@@ -29,20 +32,26 @@ func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, chec
 			"checksum_pattern_file":     checksumConfig.Pattern.File,
 		})
 	}
+
 	if err != nil {
 		if errors.Is(err, ErrNoChecksumExtracted) {
 			showFileContent(logE, checksumFileContent)
 		}
+
 		return "", fmt.Errorf("parse a checksum file: %w", err)
 	}
+
 	if s != "" {
 		return s, nil
 	}
+
 	a, ok := m[assetName]
 	if ok {
 		return a, nil
 	}
+
 	showFileContent(logE, checksumFileContent)
+
 	return "", ErrNoChecksumIsFound
 }
 
@@ -51,9 +60,11 @@ func ParseChecksumFile(content string, checksumConfig *registry.Checksum) (map[s
 	if err != nil {
 		return nil, "", err
 	}
+
 	if len(m) == 0 && s == "" {
 		return nil, "", ErrNoChecksumExtracted
 	}
+
 	return m, s, nil
 }
 
@@ -66,6 +77,7 @@ func parseChecksumFile(content string, checksumConfig *registry.Checksum) (map[s
 	case "":
 		return parseDefault(content)
 	}
+
 	return nil, "", errUnknownChecksumFileFormat
 }
 
@@ -74,6 +86,7 @@ func parseDefault(content string) (map[string]string, string, error) {
 	if len(lines) == 1 && !strings.Contains(lines[0], " ") && !strings.Contains(lines[0], "\t") {
 		return nil, lines[0], nil
 	}
+
 	m := make(map[string]string, len(lines))
 	for _, line := range lines {
 		idx := strings.Index(line, " ")
@@ -83,11 +96,14 @@ func parseDefault(content string) (map[string]string, string, error) {
 				continue
 			}
 		}
+
 		m[strings.TrimPrefix(path.Base(strings.TrimSpace(line[idx:])), "*")] = line[:idx]
 	}
+
 	if len(m) == 0 {
 		return nil, "", ErrNoChecksumExtracted
 	}
+
 	return m, "", nil
 }
 
@@ -104,6 +120,7 @@ func parseRegex(content string, checksumPattern *registry.ChecksumPattern) (map[
 			if chksum == "" {
 				continue
 			}
+
 			return nil, chksum, nil
 		}
 	}
@@ -112,19 +129,24 @@ func parseRegex(content string, checksumPattern *registry.ChecksumPattern) (map[
 	if err != nil {
 		return nil, "", fmt.Errorf("compile the checksum file name regular expression: %w", err)
 	}
+
 	lines := strings.Split(content, "\n")
+
 	m := make(map[string]string, len(lines))
 	for _, line := range lines {
 		chksum := extractByRegex(line, checksumRegexp)
 		if chksum == "" {
 			continue
 		}
+
 		file := extractByRegex(line, fileRegexp)
 		if file == "" {
 			continue
 		}
+
 		m[file] = chksum
 	}
+
 	return m, "", nil
 }
 
@@ -134,5 +156,6 @@ func extractByRegex(line string, pattern *regexp.Regexp) string {
 			return match[1]
 		}
 	}
+
 	return ""
 }

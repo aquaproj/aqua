@@ -11,6 +11,7 @@ import (
 
 func TestUpdatePackages(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name        string
 		updated     bool
@@ -50,22 +51,27 @@ func TestUpdatePackages(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			file, err := parser.ParseBytes([]byte(d.file), parser.ParseComments)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			updated, err := ast.UpdatePackages(logE, file, d.newVersions)
 			if err != nil {
 				if !d.isErr {
 					t.Fatal(err)
 				}
 			}
+
 			if updated != d.updated {
 				t.Fatalf("updated: wanted %v, got %v", d.updated, updated)
 			}
+
 			if diff := cmp.Diff(file.String(), d.expFile); diff != "" {
 				t.Fatal(diff)
 			}

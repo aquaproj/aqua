@@ -13,9 +13,11 @@ func (m *GitHubArtifactAttestations) SignerWorkflow() string {
 	if m == nil {
 		return ""
 	}
+
 	if m.SignerWorkflow2 != "" {
 		return m.SignerWorkflow2
 	}
+
 	return m.SignerWorkflow3
 }
 
@@ -23,8 +25,10 @@ func (m *GitHubArtifactAttestations) GetEnabled() bool {
 	if m == nil {
 		return false
 	}
+
 	if m.Enabled != nil {
 		return *m.Enabled
 	}
+
 	return true
 }

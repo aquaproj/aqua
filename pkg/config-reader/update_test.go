@@ -12,6 +12,7 @@ import (
 
 func Test_configReader_ReadToUpdate(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		cfg            *aqua.Config
@@ -117,27 +118,34 @@ packages:
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			reader := reader.New(fs, &config.Param{
 				HomeDir: d.homeDir,
 			})
 			cfg := &aqua.Config{}
+
 			cfgs, err := reader.ReadToUpdate(d.configFilePath, cfg)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(d.cfg, cfg); diff != "" {
 				t.Fatal("cfg:", diff)
 			}
+
 			if diff := cmp.Diff(d.cfgs, cfgs); diff != "" {
 				t.Fatal("cfgs:", diff)
 			}

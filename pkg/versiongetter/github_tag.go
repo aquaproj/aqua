@@ -26,6 +26,7 @@ type GitHubTagClient interface {
 
 func convTag(tag *github.RepositoryTag) *Release {
 	v, prefix, _ := GetVersionAndPrefix(tag.GetName())
+
 	return &Release{
 		Tag:           tag.GetName(),
 		Version:       v,
@@ -42,6 +43,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 	}
 
 	var respToLog *github.Response
+
 	defer func() {
 		logGHRateLimit(logE, respToLog)
 	}()
@@ -51,20 +53,25 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		respToLog = resp
+
 		if err != nil {
 			return "", fmt.Errorf("list tags: %w", err)
 		}
+
 		for _, tag := range tags {
 			if filterTag(tag, filters) {
 				candidates = append(candidates, convTag(tag))
 			}
 		}
+
 		if len(candidates) > 0 {
 			return getLatestRelease(candidates).Tag, nil
 		}
+
 		if resp.NextPage == 0 {
 			return "", nil
 		}
+
 		opt.Page = resp.NextPage
 	}
 }
@@ -77,29 +84,36 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 	}
 
 	var versions []string
+
 	tagNames := map[string]struct{}{}
+
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			*logE = *withRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
+
 		for _, tag := range tags {
 			tagName := tag.GetName()
 			if _, ok := tagNames[tagName]; ok {
 				continue
 			}
+
 			tagNames[tagName] = struct{}{}
 			if filterTag(tag, filters) {
 				versions = append(versions, tagName)
 			}
 		}
+
 		if limit > 0 && len(versions) >= limit { // Reach the limit
 			return fuzzyfinder.ConvertStringsToItems(versions[:limit]), nil
 		}
+
 		if resp.NextPage == 0 {
 			return fuzzyfinder.ConvertStringsToItems(versions), nil
 		}
+
 		opt.Page = resp.NextPage
 	}
 }
@@ -111,5 +125,6 @@ func filterTag(tag *github.RepositoryTag, filters []*Filter) bool {
 			return !filter.NoAsset
 		}
 	}
+
 	return false
 }

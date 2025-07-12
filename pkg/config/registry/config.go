@@ -26,6 +26,7 @@ func (p *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {
 
 func (p *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[string]*PackageInfo {
 	m := make(map[string]*PackageInfo, len(*p))
+
 	logE = logE.WithField("package_name", "")
 	for _, pkgInfo := range *p {
 		logE := logE
@@ -33,32 +34,40 @@ func (p *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[stri
 			logE.Log(logLevel, "ignore an empty package")
 			continue
 		}
+
 		name := pkgInfo.GetName()
 		if name == "" {
 			logE.Log(logLevel, "ignore a package in the registry because the name is empty")
 			continue
 		}
+
 		if _, ok := m[name]; ok {
 			logE.WithField("registry_package_name", name).Log(logLevel, "ignore a package in the registry because the package name is duplicate")
 			continue
 		}
+
 		m[name] = pkgInfo
 		for _, alias := range pkgInfo.Aliases {
 			if alias.Name == "" {
 				logE.WithFields(logrus.Fields{
 					"registry_package_name": name,
 				}).Log(logLevel, "ignore an empty package alias in the registry")
+
 				continue
 			}
+
 			if _, ok := m[alias.Name]; ok {
 				logE.WithFields(logrus.Fields{
 					"registry_package_name":  name,
 					"registry_package_alias": alias,
 				}).Log(logLevel, "ignore a package alias in the registry because the alias is duplicate")
+
 				continue
 			}
+
 			m[alias.Name] = pkgInfo
 		}
 	}
+
 	return m
 }

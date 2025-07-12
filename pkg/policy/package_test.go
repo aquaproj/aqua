@@ -12,6 +12,7 @@ import (
 
 func TestValidatePackage(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		isErr    bool
@@ -79,15 +80,19 @@ func TestValidatePackage(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			if err := policy.ValidatePackage(logE, d.pkg, d.policies); err != nil {
+			err := policy.ValidatePackage(logE, d.pkg, d.policies)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

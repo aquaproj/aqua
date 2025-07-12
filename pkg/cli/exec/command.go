@@ -21,6 +21,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:  "exec",
 		Usage: "Execute tool",
@@ -44,16 +45,20 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "exec", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "exec", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl, err := controller.InitializeExecCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an ExecController: %w", err)
 	}
+
 	exeName, args, err := which.ParseExecArgs(cmd.Args().Slice())
 	if err != nil {
 		return fmt.Errorf("parse args: %w", err)
 	}
+
 	return ctrl.Exec(ctx, i.r.LogE, param, exeName, args...) //nolint:wrapcheck
 }

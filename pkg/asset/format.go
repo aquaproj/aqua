@@ -43,6 +43,7 @@ func RemoveExtFromAsset(assetName string) (string, string) {
 			return s, format
 		}
 	}
+
 	return assetName, "raw"
 }
 

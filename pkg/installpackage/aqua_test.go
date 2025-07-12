@@ -21,6 +21,7 @@ import (
 
 func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name               string
 		files              map[string]string
@@ -58,24 +59,31 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
+
 			ctrl := installpackage.New(d.param, &download.Mock{
 				RC: io.NopCloser(strings.NewReader("xxx")),
 			}, d.rt, fs, installpackage.NewMockLinker(fs), d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			if err := ctrl.InstallAqua(ctx, logE, d.version); err != nil {
+			err := ctrl.InstallAqua(ctx, logE, d.version)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

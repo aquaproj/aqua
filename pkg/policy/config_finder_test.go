@@ -10,6 +10,7 @@ import (
 
 func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		wd             string
@@ -54,28 +55,37 @@ func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
+				err := afero.WriteFile(fs, name, []byte(body), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			for name := range d.dirs {
-				if err := osfile.MkdirAll(fs, name); err != nil {
+				err := osfile.MkdirAll(fs, name)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			configFinder := policy.NewConfigFinder(fs)
+
 			p, err := configFinder.Find(d.configFilePath, d.wd)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if p != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, p)
 			}

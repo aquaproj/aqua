@@ -6,6 +6,7 @@ import (
 
 func Test_parseNameWithVersion(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title      string
 		name       string
@@ -40,10 +41,12 @@ func Test_parseNameWithVersion(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			name, version := parseNameWithVersion(d.name)
 			if name != d.expName {
 				t.Fatalf("name is got %s, wanted %s", name, d.expName)
 			}
+
 			if version != d.expVersion {
 				t.Fatalf("version is got %s, wanted %s", version, d.expVersion)
 			}

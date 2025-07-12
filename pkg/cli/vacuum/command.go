@@ -49,6 +49,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:        "vacuum",
 		Usage:       "Remove unused installed packages",
@@ -80,15 +81,18 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	logE := i.r.LogE
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, logE, "vacuum", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, logE, "vacuum", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
 	if cmd.Bool("init") {
 		ctrl := controller.InitializeVacuumInitCommandController(ctx, i.r.LogE, param, i.r.Runtime, &http.Client{})
-		if err := ctrl.Init(ctx, logE, param); err != nil {
+		err := ctrl.Init(ctx, logE, param)
+		if err != nil {
 			return err //nolint:wrapcheck
 		}
+
 		return nil
 	}
 
@@ -98,8 +102,10 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	ctrl := controller.InitializeVacuumCommandController(ctx, param, i.r.Runtime)
-	if err := ctrl.Vacuum(logE, param); err != nil {
+	err := ctrl.Vacuum(logE, param)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	return nil
 }

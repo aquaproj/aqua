@@ -22,10 +22,12 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 		// Create a "bin" directory and install aqua-proxy in advance.
 		// If param.Dest isn't empty, this means this method is called by "copy" command.
 		// If the command is "copy", this block is skipped.
-		if err := c.mkBinDir(); err != nil {
+		err := c.mkBinDir()
+		if err != nil {
 			return err
 		}
-		if err := c.packageInstaller.InstallProxy(ctx, logE); err != nil {
+		err := c.packageInstaller.InstallProxy(ctx, logE)
+		if err != nil {
 			return fmt.Errorf("install aqua-proxy: %w", err)
 		}
 	}
@@ -45,7 +47,8 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
-		if err := c.install(ctx, logE, cfgFilePath, policyCfgs, param); err != nil {
+		err := c.install(ctx, logE, cfgFilePath, policyCfgs, param)
+		if err != nil {
 			return err
 		}
 	}
@@ -54,14 +57,18 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 }
 
 func (c *Controller) mkBinDir() error {
-	if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bin")); err != nil {
+	err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bin"))
+	if err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
+
 	if c.runtime.IsWindows() {
-		if err := c.fs.RemoveAll(filepath.Join(c.rootDir, "bat")); err != nil {
+		err := c.fs.RemoveAll(filepath.Join(c.rootDir, "bat"))
+		if err != nil {
 			return fmt.Errorf("remove the bat directory: %w", err)
 		}
 	}
+
 	return nil
 }
 
@@ -69,27 +76,33 @@ func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *
 	if !param.All {
 		return nil
 	}
+
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
+
 		policyConfigs, err := c.policyReader.Append(logE, cfgFilePath, policyConfigs, globalPolicyPaths)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
-		if err := c.install(ctx, logE, cfgFilePath, policyConfigs, param); err != nil {
+		err := c.install(ctx, logE, cfgFilePath, policyConfigs, param)
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfigs []*policy.Config, param *config.Param) error {
 	cfg := &aqua.Config{}
+
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	err := c.configReader.Read(logE, cfgFilePath, cfg)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
 

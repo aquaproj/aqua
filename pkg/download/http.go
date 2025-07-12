@@ -30,14 +30,17 @@ func (dl *httpDownloader) Download(ctx context.Context, u string) (io.ReadCloser
 	if err != nil {
 		return nil, 0, fmt.Errorf("create a http request: %w", err)
 	}
+
 	resp, err := dl.client.Do(req)
 	if err != nil {
 		return nil, 0, fmt.Errorf("send http request: %w", err)
 	}
+
 	if resp.StatusCode >= http.StatusBadRequest {
 		return resp.Body, 0, logerr.WithFields(errInvalidHTTPStatusCode, logrus.Fields{ //nolint:wrapcheck
 			"http_status_code": resp.StatusCode,
 		})
 	}
+
 	return resp.Body, resp.ContentLength, nil
 }

@@ -63,21 +63,28 @@ type ConfigFinder interface {
 var errCopyFailure = errors.New("it failed to copy some tools")
 
 func (c *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if err := osfile.MkdirAll(c.fs, param.Dest); err != nil {
+	err := osfile.MkdirAll(c.fs, param.Dest)
+	if err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
+
 	if len(param.Args) == 0 {
 		return c.installer.Install(ctx, logE, param) //nolint:wrapcheck
 	}
 
 	maxInstallChan := make(chan struct{}, param.MaxParallelism)
+
 	var wg sync.WaitGroup
 	wg.Add(len(param.Args))
+
 	var flagMutex sync.Mutex
+
 	failed := false
 	handleFailure := func() {
 		flagMutex.Lock()
+
 		failed = true
+
 		flagMutex.Unlock()
 	}
 
@@ -96,22 +103,30 @@ func (c *Controller) Copy(ctx context.Context, logE *logrus.Entry, param *config
 	for _, exeName := range param.Args {
 		go func(exeName string) {
 			defer wg.Done()
+
 			maxInstallChan <- struct{}{}
+
 			defer func() {
 				<-maxInstallChan
 			}()
+
 			logE := logE.WithField("exe_name", exeName)
-			if err := c.installAndCopy(ctx, logE, param, exeName, policyCfgs, globalPolicyPaths); err != nil {
+			err := c.installAndCopy(ctx, logE, param, exeName, policyCfgs, globalPolicyPaths)
+			if err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				handleFailure()
+
 				return
 			}
 		}(exeName)
 	}
+
 	wg.Wait()
+
 	if failed {
 		return errCopyFailure
 	}
+
 	return nil
 }
 
@@ -120,6 +135,7 @@ func (c *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, par
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	if findResult.Package != nil {
 		logE = logE.WithField("package", findResult.Package.Package.Name)
 
@@ -128,13 +144,16 @@ func (c *Controller) installAndCopy(ctx context.Context, logE *logrus.Entry, par
 			return err //nolint:wrapcheck
 		}
 
-		if err := c.install(ctx, logE, findResult, policyConfigs, param); err != nil {
+		err := c.install(ctx, logE, findResult, policyConfigs, param)
+		if err != nil {
 			return err
 		}
 	}
 
-	if err := c.copy(logE, param, findResult.ExePath, exeName); err != nil {
+	err := c.copy(logE, param, findResult.ExePath, exeName)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }

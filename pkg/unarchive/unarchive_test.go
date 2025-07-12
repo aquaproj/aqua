@@ -15,6 +15,7 @@ import (
 
 func TestIsUnarchived(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title       string
 		archiveType string
@@ -57,6 +58,7 @@ func TestIsUnarchived(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			f := unarchive.IsUnarchived(d.archiveType, d.assetName)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)
@@ -69,11 +71,13 @@ func getReadCloser(ctx context.Context, downloader download.HTTPDownloader, body
 	if body != "" {
 		return io.NopCloser(strings.NewReader(body)), 0, nil
 	}
+
 	return downloader.Download(ctx, url) //nolint:wrapcheck
 }
 
 func TestUnarchiver_Unarchive(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title string
 		src   *unarchive.File
@@ -105,26 +109,34 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 	}
 	logE := logrus.NewEntry(logrus.New())
 	httpDownloader := download.NewHTTPDownloader(logE, http.DefaultClient)
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 			fs := afero.NewOsFs()
+
 			body, _, err := getReadCloser(ctx, httpDownloader, d.body, d.url)
 			if body != nil {
 				defer body.Close()
 			}
+
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			d.src.Body = download.NewDownloadedFile(fs, body, nil)
+
 			unarchiver := unarchive.New(nil, fs)
-			if err := unarchiver.Unarchive(ctx, logE, d.src, t.TempDir()); err != nil {
+			err := unarchiver.Unarchive(ctx, logE, d.src, t.TempDir())
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

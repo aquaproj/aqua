@@ -16,6 +16,7 @@ func (p *Package) RenderCosign(cos *registry.Cosign, rt *runtime.Runtime) (*regi
 		if err != nil {
 			return nil, err
 		}
+
 		opts[i] = s
 	}
 

@@ -24,8 +24,10 @@ func (c *Controller) initConfig(args ...string) error {
 	if len(args) == 0 {
 		return errors.New("package name is required")
 	}
-	if err := afero.WriteFile(c.fs, "aqua-generate-registry.yaml", []byte(strings.Replace(template, "%%PACKAGE%%", args[0], 1)), osfile.FilePermission); err != nil {
+	err := afero.WriteFile(c.fs, "aqua-generate-registry.yaml", []byte(strings.Replace(template, "%%PACKAGE%%", args[0], 1)), osfile.FilePermission)
+	if err != nil {
 		return fmt.Errorf("write aqua-generate-registry.yaml: %w", err)
 	}
+
 	return nil
 }

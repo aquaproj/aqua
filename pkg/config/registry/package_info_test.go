@@ -9,6 +9,7 @@ import (
 
 func TestPackageInfo_GetName(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		exp     string
@@ -35,6 +36,7 @@ func TestPackageInfo_GetName(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			if name := d.pkgInfo.GetName(); name != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, name)
 			}
@@ -44,6 +46,7 @@ func TestPackageInfo_GetName(t *testing.T) {
 
 func TestPackageInfo_GetLink(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		exp     string
@@ -70,6 +73,7 @@ func TestPackageInfo_GetLink(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			if link := d.pkgInfo.GetLink(); link != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, link)
 			}
@@ -79,6 +83,7 @@ func TestPackageInfo_GetLink(t *testing.T) {
 
 func TestPackageInfo_GetFormat(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		exp     string
@@ -100,6 +105,7 @@ func TestPackageInfo_GetFormat(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			if format := d.pkgInfo.GetFormat(); format != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, format)
 			}
@@ -109,6 +115,7 @@ func TestPackageInfo_GetFormat(t *testing.T) {
 
 func TestPackageInfo_GetFiles(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		exp     []*registry.File
@@ -166,6 +173,7 @@ func TestPackageInfo_GetFiles(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			files := d.pkgInfo.GetFiles()
 			if diff := cmp.Diff(d.exp, files); diff != "" {
 				t.Fatal(diff)
@@ -176,6 +184,7 @@ func TestPackageInfo_GetFiles(t *testing.T) { //nolint:funlen
 
 func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		pkgInfo *registry.PackageInfo
@@ -270,12 +279,15 @@ func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if err := d.pkgInfo.Validate(); err != nil {
+			err := d.pkgInfo.Validate()
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

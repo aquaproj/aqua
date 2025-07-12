@@ -32,6 +32,7 @@ func (g *GeneralVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg 
 	if getter == nil {
 		return "", nil
 	}
+
 	return getter.Get(ctx, logE, pkg, filters) //nolint:wrapcheck
 }
 
@@ -40,6 +41,7 @@ func (g *GeneralVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg
 	if getter == nil {
 		return nil, nil
 	}
+
 	return getter.List(ctx, logE, pkg, filters, limit) //nolint:wrapcheck
 }
 
@@ -47,18 +49,23 @@ func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 	if pkg.Type == "cargo" {
 		return g.cargo
 	}
+
 	if pkg.GoVersionPath != "" {
 		return g.goGetter
 	}
+
 	if g.ghTag == nil {
 		return nil
 	}
+
 	if !pkg.HasRepo() {
 		return nil
 	}
+
 	if pkg.VersionSource == "github_tag" {
 		return g.ghTag
 	}
+
 	return g.ghRelease
 }
 
@@ -70,6 +77,7 @@ func itemNumPerPage(limit, filterNum int) int {
 	if limit > 0 && filterNum == 0 && ghMaxPerPage > limit {
 		return limit
 	}
+
 	return ghMaxPerPage
 }
 
@@ -78,6 +86,7 @@ func logGHRateLimit(logE *logrus.Entry, resp *github.Response) {
 	if resp == nil {
 		return
 	}
+
 	withRateLimitInfo(logE, resp).Debug("GitHub API Rate Limit info")
 }
 
@@ -85,6 +94,7 @@ func withRateLimitInfo(logE *logrus.Entry, resp *github.Response) *logrus.Entry 
 	if resp == nil {
 		return logE
 	}
+
 	return logE.WithFields(logrus.Fields{
 		"github_api_rate_limit":     resp.Rate.Limit,
 		"github_api_rate_remaining": resp.Rate.Remaining,

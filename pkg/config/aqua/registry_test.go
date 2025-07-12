@@ -8,6 +8,7 @@ import (
 
 func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title    string
 		registry *aqua.Registry
@@ -78,12 +79,15 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if err := d.registry.Validate(); err != nil {
+			err := d.registry.Validate()
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -93,6 +97,7 @@ func TestRegistry_Validate(t *testing.T) { //nolint:funlen
 
 func TestRegistry_FilePath(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title       string
 		exp         string
@@ -129,16 +134,20 @@ func TestRegistry_FilePath(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			p, err := d.registry.FilePath(d.rootDir, d.cfgFilePath)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if p != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, p)
 			}

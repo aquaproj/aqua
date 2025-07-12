@@ -20,6 +20,7 @@ func New(r *util.Param) *cli.Command {
 	ic := &initCommand{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:      "init",
 		Usage:     "Create a configuration file if it doesn't exist",
@@ -61,10 +62,13 @@ func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, ic.r.LogE, "init", param, ic.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeInitCommandController(ctx, ic.r.LogE, param)
+
 	cParam := &initcmd.Param{
 		IsDir:     cmd.Bool("create-dir"),
 		ImportDir: cmd.String("import-dir"),
@@ -72,5 +76,6 @@ func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
 	if cParam.ImportDir == "" && cmd.Bool("use-import-dir") {
 		cParam.ImportDir = "imports"
 	}
+
 	return ctrl.Init(ctx, ic.r.LogE, cmd.Args().First(), cParam) //nolint:wrapcheck
 }

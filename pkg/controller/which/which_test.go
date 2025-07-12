@@ -24,6 +24,7 @@ import (
 
 func Test_controller_Which(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		files   map[string]string
@@ -236,32 +237,41 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(d.env), fs, linker)
+
 			which, err := ctrl.Which(ctx, logE, d.param, d.exeName)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(d.exp, which); diff != "" {
 				t.Fatal(diff)
 			}

@@ -8,13 +8,16 @@ func (p *PackageInfo) CheckSupported(rt *runtime.Runtime, env string) (bool, err
 	if p.CheckSupportedEnvs(rt.GOOS, rt.GOARCH, env) {
 		return true, nil
 	}
+
 	if !p.Build.CheckEnabled() {
 		return false, nil
 	}
+
 	if p.checkExcludedEnvs(rt.GOOS, rt.GOARCH, env) {
 		p.OverrideByBuild()
 		return true, nil
 	}
+
 	return false, nil
 }
 
@@ -22,6 +25,7 @@ func (p *PackageInfo) CheckSupportedEnvs(goos, goarch, env string) bool {
 	if p.SupportedEnvs == nil {
 		return true
 	}
+
 	return matchEnvs(p.SupportedEnvs, goos, goarch, env, p.Rosetta2, p.WindowsARMEmulation)
 }
 
@@ -29,6 +33,7 @@ func (p *PackageInfo) checkExcludedEnvs(goos, goarch, env string) bool {
 	if p.Build.ExcludedEnvs == nil {
 		return true
 	}
+
 	return !matchEnvs(p.Build.ExcludedEnvs, goos, goarch, env, p.Rosetta2, p.WindowsARMEmulation)
 }
 
@@ -39,6 +44,7 @@ func matchEnvs(envs []string, goos, goarch, env string, rosetta2, windowsARMEmul
 			return true
 		}
 	}
+
 	if goos == "darwin" && goarch == "arm64" && rosetta2 {
 		for _, elem := range envs {
 			switch elem {
@@ -47,6 +53,7 @@ func matchEnvs(envs []string, goos, goarch, env string, rosetta2, windowsARMEmul
 			}
 		}
 	}
+
 	if goos == "windows" && goarch == "arm64" && windowsARMEmulation {
 		for _, elem := range envs {
 			switch elem {
@@ -55,5 +62,6 @@ func matchEnvs(envs []string, goos, goarch, env string, rosetta2, windowsARMEmul
 			}
 		}
 	}
+
 	return false
 }

@@ -54,6 +54,7 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 	})
 
 	logE.Debug("install the proxy")
+
 	assetName, err := pkg.RenderAsset(is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -66,17 +67,19 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 
 	// create a symbolic link
 	binName := proxyName
+
 	a, err := filepath.Rel(is.rootDir, filepath.Join(pkgPath, binName))
 	if err != nil {
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
 	logE.Debug("check if aqua-proxy is already installed")
+
 	finfo, err := is.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
 		chksum := ProxyChecksums()[is.runtime.Env()]
-		if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
+		err := is.downloadWithRetry(ctx, logE, &DownloadParam{
 			Package: pkg,
 			Dest:    pkgPath,
 			Asset:   assetName,
@@ -84,9 +87,11 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 				Algorithm: "sha256",
 				Checksum:  chksum,
 			},
-		}); err != nil {
+		})
+		if err != nil {
 			return err
 		}
+
 		if is.realRuntime.IsWindows() {
 			return is.recreateHardLinks()
 		}

@@ -6,6 +6,7 @@ import (
 
 func Exclude(pkgName, assetName string) bool {
 	asset := strings.ToLower(assetName)
+
 	words := []string{
 		"32-bit",
 		"32bit",
@@ -39,6 +40,7 @@ func Exclude(pkgName, assetName string) bool {
 			return true
 		}
 	}
+
 	exts := []string{
 		".deb",
 		".rpm",
@@ -49,5 +51,6 @@ func Exclude(pkgName, assetName string) bool {
 			return true
 		}
 	}
+
 	return false
 }

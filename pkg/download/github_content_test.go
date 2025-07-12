@@ -14,6 +14,7 @@ import (
 
 func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name       string
 		param      *domain.GitHubContentFileParam
@@ -96,32 +97,40 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 			downloader := download.NewGitHubContentFileDownloader(d.github, download.NewHTTPDownloader(logE, d.httpClient))
+
 			file, err := downloader.DownloadGitHubContentFile(ctx, logE, d.param)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if file.String != "" {
 				if file.String != d.exp {
 					t.Fatalf("wanted %s, got %s", d.exp, file.String)
 				}
+
 				return
 			}
 			defer file.ReadCloser.Close()
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			b, err := io.ReadAll(file.ReadCloser)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			s := string(b)
 			if s != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, s)

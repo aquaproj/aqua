@@ -11,6 +11,7 @@ import (
 
 func TestChecksums_Get(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name string
 		m    map[string]*checksum.Checksum
@@ -42,10 +43,12 @@ func TestChecksums_Get(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			checksums := checksum.New()
 			for k, v := range d.m {
 				checksums.Set(k, v)
 			}
+
 			v := checksums.Get(d.key)
 			if diff := cmp.Diff(v, d.exp); diff != "" {
 				t.Fatal(diff)
@@ -56,6 +59,7 @@ func TestChecksums_Get(t *testing.T) {
 
 func TestChecksums_ReadFile(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		m     map[string]string
@@ -79,17 +83,22 @@ func TestChecksums_ReadFile(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs, err := testutil.NewFs(d.m)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			checksums := checksum.New()
-			if err := checksums.ReadFile(fs, d.p); err != nil {
+			err := checksums.ReadFile(fs, d.p)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -99,6 +108,7 @@ func TestChecksums_ReadFile(t *testing.T) {
 
 func TestChecksums_UpdateFile(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		m     []*checksum.Checksum
@@ -120,17 +130,22 @@ func TestChecksums_UpdateFile(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
+
 			checksums := checksum.New()
 			for _, v := range d.m {
 				checksums.Set(v.ID, v)
 			}
-			if err := checksums.UpdateFile(fs, d.p); err != nil {
+			err := checksums.UpdateFile(fs, d.p)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -140,6 +155,7 @@ func TestChecksums_UpdateFile(t *testing.T) {
 
 func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name        string
 		cfgFilePath string
@@ -194,14 +210,17 @@ func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			p, err := checksum.GetChecksumFilePathFromConfigFilePath(fs, d.cfgFilePath)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if p != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, p)
 			}

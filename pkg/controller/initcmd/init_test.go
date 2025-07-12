@@ -13,6 +13,7 @@ import (
 
 func TestController_Init(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		files    map[string]string
@@ -50,24 +51,31 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 			}
+
 			ctrl := initcmd.New(gh, fs)
-			if err := ctrl.Init(ctx, logE, "", &initcmd.Param{}); err != nil {
+			err := ctrl.Init(ctx, logE, "", &initcmd.Param{})
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

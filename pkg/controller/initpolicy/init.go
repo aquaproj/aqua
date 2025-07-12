@@ -49,18 +49,22 @@ func (c *Controller) Init(logE *logrus.Entry, cfgFilePath string) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua-policy.yaml"
 	}
+
 	if _, err := c.fs.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.
 		logE.WithFields(logrus.Fields{
 			"policy_file_path": cfgFilePath,
 		}).Info("policy file already exists")
+
 		return nil
 	}
 
-	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(configTemplate), osfile.FilePermission); err != nil {
+	err := afero.WriteFile(c.fs, cfgFilePath, []byte(configTemplate), osfile.FilePermission)
+	if err != nil {
 		return fmt.Errorf("write a policy file: %w", logerr.WithFields(err, logrus.Fields{
 			"policy_file_path": cfgFilePath,
 		}))
 	}
+
 	return nil
 }

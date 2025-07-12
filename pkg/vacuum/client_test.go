@@ -17,6 +17,7 @@ const rootDir = "/home/foo/.local/share/aquaproj-aqua"
 
 func TestClient_Create(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name       string
 		pkgPath    string
@@ -46,29 +47,39 @@ func TestClient_Create(t *testing.T) { //nolint:dupl
 	for _, tt := range data {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for k, v := range tt.files {
-				if err := osfile.MkdirAll(fs, filepath.Dir(k)); err != nil {
+				err := osfile.MkdirAll(fs, filepath.Dir(k))
+				if err != nil {
 					t.Fatal(err)
 				}
-				if err := afero.WriteFile(fs, k, []byte(v), 0o644); err != nil {
+
+				err := afero.WriteFile(fs, k, []byte(v), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			client := vacuum.New(fs, &config.Param{
 				RootDir: rootDir,
 			})
+
 			ts, err := vacuum.ParseTime(tt.timestamp)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := client.Create(tt.pkgPath, ts); err != nil {
+
+			err := client.Create(tt.pkgPath, ts)
+			if err != nil {
 				t.Fatal(err)
 			}
+
 			b, err := afero.ReadFile(fs, tt.expPath)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if diff := cmp.Diff(tt.expContent, string(b)); diff != "" {
 				t.Fatal(diff)
 			}
@@ -78,6 +89,7 @@ func TestClient_Create(t *testing.T) { //nolint:dupl
 
 func TestClient_Update(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name       string
 		pkgPath    string
@@ -107,29 +119,39 @@ func TestClient_Update(t *testing.T) { //nolint:dupl
 	for _, tt := range data {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for k, v := range tt.files {
-				if err := osfile.MkdirAll(fs, filepath.Dir(k)); err != nil {
+				err := osfile.MkdirAll(fs, filepath.Dir(k))
+				if err != nil {
 					t.Fatal(err)
 				}
-				if err := afero.WriteFile(fs, k, []byte(v), 0o644); err != nil {
+
+				err := afero.WriteFile(fs, k, []byte(v), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			client := vacuum.New(fs, &config.Param{
 				RootDir: rootDir,
 			})
+
 			ts, err := vacuum.ParseTime(tt.timestamp)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := client.Update(tt.pkgPath, ts); err != nil {
+
+			err := client.Update(tt.pkgPath, ts)
+			if err != nil {
 				t.Fatal(err)
 			}
+
 			b, err := afero.ReadFile(fs, tt.expPath)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if diff := cmp.Diff(tt.expContent, string(b)); diff != "" {
 				t.Fatal(diff)
 			}
@@ -139,6 +161,7 @@ func TestClient_Update(t *testing.T) { //nolint:dupl
 
 func TestClient_Remove(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		pkgPath string
@@ -157,21 +180,28 @@ func TestClient_Remove(t *testing.T) {
 	for _, tt := range data {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for k, v := range tt.files {
-				if err := osfile.MkdirAll(fs, filepath.Dir(k)); err != nil {
+				err := osfile.MkdirAll(fs, filepath.Dir(k))
+				if err != nil {
 					t.Fatal(err)
 				}
-				if err := afero.WriteFile(fs, k, []byte(v), 0o644); err != nil {
+
+				err := afero.WriteFile(fs, k, []byte(v), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			client := vacuum.New(fs, &config.Param{
 				RootDir: rootDir,
 			})
-			if err := client.Remove(tt.pkgPath); err != nil {
+			err := client.Remove(tt.pkgPath)
+			if err != nil {
 				t.Fatal(err)
 			}
+
 			if a, err := afero.Exists(fs, tt.expPath); err != nil {
 				t.Fatal(err)
 			} else if a {
@@ -183,6 +213,7 @@ func TestClient_Remove(t *testing.T) {
 
 func TestClient_FindAll(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		files map[string]string
@@ -201,29 +232,38 @@ func TestClient_FindAll(t *testing.T) {
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, tt := range data {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for k, v := range tt.files {
-				if err := osfile.MkdirAll(fs, filepath.Dir(k)); err != nil {
+				err := osfile.MkdirAll(fs, filepath.Dir(k))
+				if err != nil {
 					t.Fatal(err)
 				}
-				if err := afero.WriteFile(fs, k, []byte(v), 0o644); err != nil {
+
+				err := afero.WriteFile(fs, k, []byte(v), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			client := vacuum.New(fs, &config.Param{
 				RootDir: rootDir,
 			})
+
 			timestamps, err := client.FindAll(logE)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			a := make(map[string]string, len(timestamps))
 			for k, v := range timestamps {
 				a[k] = vacuum.FormatTime(v)
 			}
+
 			if diff := cmp.Diff(tt.exp, a); diff != "" {
 				t.Fatal(diff)
 			}

@@ -24,6 +24,7 @@ var safeVersionRegexp = regexp.MustCompile(safeVersionPattern)
 
 func EvalVersionExpr(fs afero.Fs, pwd string, expression string) (string, error) {
 	r := Reader{fs: fs, pwd: pwd}
+
 	compiled, err := expr.Compile(expression, expr.Env(map[string]any{
 		"readFile": r.readFile,
 		"readJSON": r.readJSON,
@@ -32,6 +33,7 @@ func EvalVersionExpr(fs afero.Fs, pwd string, expression string) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("parse the expression: %w", err)
 	}
+
 	a, err := expr.Run(compiled, map[string]any{
 		"readFile": r.readFile,
 		"readJSON": r.readJSON,
@@ -42,6 +44,7 @@ func EvalVersionExpr(fs afero.Fs, pwd string, expression string) (string, error)
 		// Maybe malicious users tries to read a secret file
 		return "", errors.New("evaluate the expression")
 	}
+
 	s, ok := a.(string)
 	if !ok {
 		return "", errMustBeString
@@ -53,6 +56,7 @@ func EvalVersionExpr(fs afero.Fs, pwd string, expression string) (string, error)
 		// Maybe malicious users tries to read a secret file
 		return "", errors.New("the evaluation result of version_expr must match with " + safeVersionPattern)
 	}
+
 	return s, nil
 }
 
@@ -60,10 +64,12 @@ func (r *Reader) read(s string) []byte {
 	if !filepath.IsAbs(s) {
 		s = filepath.Join(r.pwd, s)
 	}
+
 	b, err := afero.ReadFile(r.fs, s)
 	if err != nil {
 		panic(err)
 	}
+
 	return b
 }
 
@@ -73,22 +79,28 @@ func (r *Reader) readFile(s string) string {
 
 func (r *Reader) readJSON(s string) any {
 	b := r.read(s)
+
 	var a any
-	if err := json.Unmarshal(b, &a); err != nil {
+	err := json.Unmarshal(b, &a)
+	if err != nil {
 		// Don't output error to prevent leaking sensitive information
 		// Maybe malicious users tries to read a secret file
 		panic("failed to unmarshal JSON")
 	}
+
 	return a
 }
 
 func (r *Reader) readYAML(s string) any {
 	b := r.read(s)
+
 	var a any
-	if err := yaml.Unmarshal(b, &a); err != nil {
+	err := yaml.Unmarshal(b, &a)
+	if err != nil {
 		// Don't output error to prevent leaking sensitive information
 		// Maybe malicious users tries to read a secret file
 		panic("failed to unmarshal YAML")
 	}
+
 	return a
 }

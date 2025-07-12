@@ -49,31 +49,40 @@ func (c *Config) Init() error {
 		if rgst.Type == registryTypeStandard {
 			rgst.Type = "github_content"
 			rgst.RepoOwner = "aquaproj"
+
 			rgst.RepoName = "aqua-registry"
 			if rgst.Path == "" {
 				rgst.Path = "registry.yaml"
 			}
+
 			if rgst.Name == "" {
 				rgst.Name = registryTypeStandard
 			}
 		}
+
 		if rgst.Type == "local" {
 			if rgst.Path == "" {
 				return errLocalPathIsRequired
 			}
+
 			rgst.Path = osfile.Abs(filepath.Dir(c.Path), rgst.Path)
 		}
+
 		m[rgst.Name] = rgst
 	}
+
 	for _, pkg := range c.YAML.Packages {
 		if pkg.RegistryName == "" {
 			pkg.RegistryName = registryTypeStandard
 		}
+
 		rgst, ok := m[pkg.RegistryName]
 		if !ok {
 			return errUnknownRegistry
 		}
+
 		pkg.Registry = rgst
 	}
+
 	return nil
 }

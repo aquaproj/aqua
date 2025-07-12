@@ -17,6 +17,7 @@ func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry,
 	}
 
 	logE.Debug("getting the latest release of a registry")
+
 	release, _, err := c.gh.GetLatestRelease(ctx, rgst.RepoOwner, rgst.RepoName)
 	if err != nil {
 		return "", fmt.Errorf("get the latest release by GitHub API: %w", err)
@@ -27,6 +28,7 @@ func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry,
 
 func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config) error { //nolint:cyclop
 	newVersions := map[string]string{}
+
 	for _, rgst := range cfg.Registries {
 		logE := logE.WithFields(logrus.Fields{
 			"registry_name": rgst.Name,
@@ -35,13 +37,16 @@ func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, c
 			logE.Debug("skip a registry whose version is a commit hash")
 			continue
 		}
+
 		newVersion, err := c.newRegistryVersion(ctx, logE, rgst)
 		if err != nil {
 			return err
 		}
+
 		if newVersion == "" {
 			continue
 		}
+
 		newVersions[rgst.Name] = newVersion
 	}
 
@@ -66,9 +71,11 @@ func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, c
 		if err != nil {
 			return fmt.Errorf("get configuration file stat: %w", err)
 		}
-		if err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()), stat.Mode()); err != nil {
+		err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()), stat.Mode())
+		if err != nil {
 			return fmt.Errorf("write the configuration file: %w", err)
 		}
 	}
+
 	return nil
 }

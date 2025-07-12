@@ -45,12 +45,15 @@ func (rt *Runtime) Arch(rosetta2, windowsARMEmulation bool) string {
 	if rt.GOARCH == amd64 {
 		return amd64
 	}
+
 	if rt.GOOS == darwin && rosetta2 {
 		return amd64
 	}
+
 	if rt.IsWindows() && windowsARMEmulation {
 		return amd64
 	}
+
 	return rt.GOARCH
 }
 
@@ -58,6 +61,7 @@ func goos() string {
 	if s := os.Getenv("AQUA_GOOS"); s != "" {
 		return s
 	}
+
 	return runtime.GOOS
 }
 
@@ -65,6 +69,7 @@ func goarch() string {
 	if s := os.Getenv("AQUA_GOARCH"); s != "" {
 		return s
 	}
+
 	return runtime.GOARCH
 }
 

@@ -34,6 +34,7 @@ import (
 
 func Test_controller_Exec(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		files   map[string]string
@@ -133,20 +134,25 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files, d.dirs...)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
@@ -154,13 +160,17 @@ packages:
 			executor := &osexec.Mock{}
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuum.NewMock(d.param.RootDir, nil, nil))
 			policyFinder := policy.NewConfigFinder(fs)
+
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policy.NewValidator(d.param, fs), policyFinder, policy.NewConfigReader(fs)), vacuum.NewMock(d.param.RootDir, nil, nil))
-			if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...); err != nil {
+			err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -173,19 +183,24 @@ func downloadTestFile(uri, tempDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("create a request: %w", err)
 	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("send a HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
+
 	filePath := filepath.Join(tempDir, "registry.yaml")
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		return "", fmt.Errorf("create a file: %w", err)
 	}
+
 	if _, err := io.Copy(f, resp.Body); err != nil {
 		return "", fmt.Errorf("write a response body to a file: %w", err)
 	}
+
 	return filePath, nil
 }
 
@@ -217,6 +232,7 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		b.Run("normal", func(b *testing.B) {
 			tempDir := b.TempDir()
@@ -229,19 +245,24 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `
+
 			if _, err := downloadTestFile("https://raw.githubusercontent.com/aquaproj/aqua-registry/v2.19.0/registry.yaml", tempDir); err != nil {
 				b.Fatal(err)
 			}
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				b.Fatal(err)
 			}
+
 			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					b.Fatal(err)
 				}
 			}
+
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
@@ -250,15 +271,20 @@ packages:
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, &policy.MockReader{}, vacuumMock)
+
 			b.ResetTimer()
+
 			for b.Loop() {
 				func() {
-					if err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...); err != nil {
+					err := ctrl.Exec(ctx, logE, d.param, d.exeName, d.args...)
+					if err != nil {
 						if d.isErr {
 							return
 						}
+
 						b.Fatal(err)
 					}
+
 					if d.isErr {
 						b.Fatal("error must be returned")
 					}

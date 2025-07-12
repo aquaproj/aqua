@@ -38,6 +38,7 @@ func GetRuntimes(env string) ([]*Runtime, error) {
 	if env == "all" {
 		return allRuntimes(), nil
 	}
+
 	o, a, f := strings.Cut(env, "/")
 	if f {
 		return []*Runtime{
@@ -47,6 +48,7 @@ func GetRuntimes(env string) ([]*Runtime, error) {
 			},
 		}, nil
 	}
+
 	switch o {
 	case darwin, linux, windows:
 		return []*Runtime{
@@ -75,6 +77,7 @@ func GetRuntimes(env string) ([]*Runtime, error) {
 			},
 		}, nil
 	}
+
 	return nil, errors.New("unsupported runtime")
 }
 
@@ -84,24 +87,31 @@ func GetRuntimesFromEnvs(envs []string) ([]*Runtime, error) {
 	if envs == nil {
 		return allRuntimes(), nil
 	}
+
 	ids := make(map[string]struct{}, numOfAllRuntimes)
 	ret := make([]*Runtime, 0, numOfAllRuntimes)
+
 	for _, env := range envs {
 		rts, err := GetRuntimes(env)
 		if err != nil {
 			return nil, err
 		}
+
 		if len(rts) == numOfAllRuntimes {
 			return rts, nil
 		}
+
 		for _, rt := range rts {
 			id := rt.Env()
 			if _, ok := ids[id]; ok {
 				continue
 			}
+
 			ids[id] = struct{}{}
+
 			ret = append(ret, rt)
 		}
 	}
+
 	return ret, nil
 }

@@ -30,11 +30,14 @@ func (r *ConfigReaderImpl) Read(files []string) ([]*Config, error) {
 			Path: cfgFilePath,
 			YAML: &ConfigYAML{},
 		}
-		if err := r.read(policyCfg); err != nil {
+		err := r.read(policyCfg)
+		if err != nil {
 			return nil, fmt.Errorf("read the policy config file: %w", err)
 		}
+
 		policyCfgs[i] = policyCfg
 	}
+
 	return policyCfgs, nil
 }
 
@@ -43,9 +46,11 @@ func (r *ConfigReaderImpl) ReadFile(file string) (*Config, error) {
 		Path: file,
 		YAML: &ConfigYAML{},
 	}
-	if err := r.read(policyCfg); err != nil {
+	err := r.read(policyCfg)
+	if err != nil {
 		return nil, fmt.Errorf("read the policy config file: %w", err)
 	}
+
 	return policyCfg, nil
 }
 
@@ -55,28 +60,35 @@ func (r *ConfigReaderImpl) read(cfg *Config) error {
 		return err //nolint:wrapcheck
 	}
 	defer file.Close()
-	if err := yaml.NewDecoder(file).Decode(cfg.YAML); err != nil {
+	err := yaml.NewDecoder(file).Decode(cfg.YAML)
+	if err != nil {
 		return fmt.Errorf("parse a configuration file as YAML %s: %w", cfg.Path, err)
 	}
-	if err := cfg.Init(); err != nil {
+	err := cfg.Init()
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func ParseEnv(env string) []string {
 	src := filepath.SplitList(env)
 	paths := make([]string, 0, len(src))
+
 	m := make(map[string]struct{}, len(src))
 	for _, s := range src {
 		if s == "" {
 			continue
 		}
+
 		if _, ok := m[s]; ok {
 			continue
 		}
+
 		m[s] = struct{}{}
 		paths = append(paths, s)
 	}
+
 	return paths
 }

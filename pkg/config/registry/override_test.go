@@ -11,6 +11,7 @@ import (
 
 func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		exp     *registry.PackageInfo
@@ -109,19 +110,24 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			pkgInfo, err := d.pkgInfo.Override(logE, d.version, d.rt)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}
@@ -131,6 +137,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 
 func TestOverride_Match(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title    string
 		exp      bool
@@ -172,6 +179,7 @@ func TestOverride_Match(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			if f := d.override.Match(d.rt); f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)
 			}

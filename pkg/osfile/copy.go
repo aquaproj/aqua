@@ -13,6 +13,7 @@ func Copy(fs afero.Fs, src, dst string) error {
 	if _, ok := fs.(*afero.OsFs); ok {
 		return copy.Copy(src, dst) //nolint:wrapcheck
 	}
+
 	return cpDir(fs, src, dst)
 }
 
@@ -27,14 +28,17 @@ func cpDir(fs afero.Fs, src, dst string) error {
 		dstPath := filepath.Join(dst, fileInfo.Name())
 
 		if fileInfo.IsDir() {
-			if err := MkdirAll(fs, dstPath); err != nil {
+			err := MkdirAll(fs, dstPath)
+			if err != nil {
 				return fmt.Errorf("create a directory: %w", err)
 			}
-			if err := cpDir(fs, srcPath, dstPath); err != nil {
+			err := cpDir(fs, srcPath, dstPath)
+			if err != nil {
 				return fmt.Errorf("copy a directory: %w", err)
 			}
 		} else {
-			if err := cpFile(fs, srcPath, dstPath); err != nil {
+			err := cpFile(fs, srcPath, dstPath)
+			if err != nil {
 				return fmt.Errorf("copy a file: %w", err)
 			}
 		}

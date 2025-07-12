@@ -12,6 +12,7 @@ func evaluateBool(expression string, env, input any) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("parse the expression: %w", err)
 	}
+
 	return evaluateBoolProg(compiled, input)
 }
 
@@ -20,9 +21,11 @@ func evaluateBoolProg(prog *vm.Program, input any) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("evaluate the expression: %w", err)
 	}
+
 	f, ok := a.(bool)
 	if !ok {
 		return false, errMustBeBoolean
 	}
+
 	return f, nil
 }

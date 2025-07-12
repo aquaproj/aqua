@@ -19,6 +19,7 @@ import (
 
 func TestController_List(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name              string
 		files             map[string]string
@@ -53,21 +54,27 @@ packages:
 	logE := logrus.NewEntry(logrus.New())
 	downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 	rt := &runtime.Runtime{}
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
-			if err := ctrl.List(ctx, logE, d.param); err != nil {
+			err := ctrl.List(ctx, logE, d.param)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

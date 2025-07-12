@@ -20,36 +20,47 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 		"registry":        param.Package.Package.Registry,
 	})
 	retryCount := 0
+
 	for {
 		logE.Debug("check if the package is already installed")
+
 		finfo, err := is.fs.Stat(param.Dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := is.download(ctx, logE, param); err != nil {
+			err := is.download(ctx, logE, param)
+			if err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err
 					}
+
 					retryCount++
 					logerr.WithError(logE, err).WithFields(logrus.Fields{
 						"retry_count": retryCount,
 					}).Info("retry installing the package")
+
 					continue
 				}
+
 				return err
 			}
+
 			pkgPath, err := param.Package.PkgPath(is.runtime)
 			if err != nil {
 				return fmt.Errorf("get a package path: %w", err)
 			}
-			if err := is.vacuum.Update(pkgPath, time.Now()); err != nil {
+			err := is.vacuum.Update(pkgPath, time.Now())
+			if err != nil {
 				logerr.WithError(logE, err).Warn("update the last used datetime")
 			}
+
 			return nil
 		}
+
 		if !finfo.IsDir() {
 			return fmt.Errorf("%s isn't a directory", param.Dest)
 		}
+
 		return nil
 	}
 }
@@ -78,10 +89,12 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	body, cl, err := is.downloader.ReadCloser(ctx, logE, file)
 	if body != nil {
 		defer body.Close()
 	}
+
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
@@ -93,9 +106,12 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 			fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
 		)
 	}
+
 	bodyFile := download.NewDownloadedFile(is.fs, body, pb)
+
 	defer func() {
-		if err := bodyFile.Remove(); err != nil {
+		err := bodyFile.Remove()
+		if err != nil {
 			logE.WithError(err).Warn("remove a temporary file")
 		}
 	}()
@@ -136,27 +152,33 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 	}
 
 	var tempFilePath string
+
 	for _, verifier := range verifiers {
 		a, err := verifier.Enabled(logE)
 		if err != nil {
 			return fmt.Errorf("check if the verifier is enabled: %w", err)
 		}
+
 		if !a {
 			continue
 		}
+
 		if tempFilePath == "" {
 			a, err := bodyFile.Path()
 			if err != nil {
 				return fmt.Errorf("get a temporary file path: %w", err)
 			}
+
 			tempFilePath = a
 		}
-		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
+		err := verifier.Verify(ctx, logE, tempFilePath)
+		if err != nil {
 			return fmt.Errorf("verify the asset: %w", err)
 		}
 	}
 
-	if err := is.verifyChecksumWrap(ctx, logE, param, bodyFile); err != nil {
+	err := is.verifyChecksumWrap(ctx, logE, param, bodyFile)
+	if err != nil {
 		return err
 	}
 

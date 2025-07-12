@@ -88,6 +88,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:        "generate-registry",
 		Aliases:     []string{"gr"},
@@ -139,9 +140,12 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "generate-registry", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "generate-registry", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, i.r.LogE, param, http.DefaultClient, os.Stdout)
+
 	return ctrl.GenerateRegistry(ctx, param, i.r.LogE, cmd.Args().Slice()...) //nolint:wrapcheck
 }

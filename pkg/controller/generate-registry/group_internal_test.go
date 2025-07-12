@@ -10,6 +10,7 @@ import (
 
 func Test_sortAndMergeGroups(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name   string
 		groups []*Group
@@ -161,6 +162,7 @@ tfcmt_windows_amd64.tar.gz
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			groups := sortAndMergeGroups(d.groups)
 			if !reflect.DeepEqual(d.exp, groups) {
 				t.Errorf("groups are unexpected")
@@ -171,6 +173,7 @@ tfcmt_windows_amd64.tar.gz
 
 func Test_groupByExcludedAsset(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name   string
 		groups []*Group
@@ -314,6 +317,7 @@ tfcmt_{{.Version}}_linux_amd64.tar.gz
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			groups := groupByExcludedAsset(d.groups)
 			if !reflect.DeepEqual(d.exp, groups) {
 				t.Errorf("groups are unexpected")

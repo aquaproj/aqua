@@ -28,6 +28,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 	}
 
 	var tempFilePath string
+
 	pkgInfo := pkg.PackageInfo
 
 	verifiers := []FileVerifier{
@@ -62,22 +63,27 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 		if err != nil {
 			return "", fmt.Errorf("check if the verifier is enabled: %w", err)
 		}
+
 		if !a {
 			continue
 		}
+
 		if tempFilePath == "" {
 			f, err := afero.TempFile(is.fs, "", "")
 			if err != nil {
 				return "", fmt.Errorf("create a temporary file: %w", err)
 			}
+
 			tempFilePath = f.Name()
 			defer f.Close()
 			defer is.fs.Remove(tempFilePath) //nolint:errcheck
+
 			if _, err := f.Write(b); err != nil {
 				return "", fmt.Errorf("write a checksum to a temporary file: %w", err)
 			}
 		}
-		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
+		err := verifier.Verify(ctx, logE, tempFilePath)
+		if err != nil {
 			return "", fmt.Errorf("verify the checksum file: %w", err)
 		}
 	}
@@ -99,11 +105,14 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry,
 	if param.Checksum == nil && param.Checksums == nil {
 		return nil
 	}
+
 	ppkg := param.Package
+
 	tempFilePath, err := bodyFile.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
+
 	paramVerifyChecksum := &ParamVerifyChecksum{
 		Checksum:        param.Checksum,
 		Checksums:       param.Checksums,
@@ -115,10 +124,12 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry,
 
 	if param.Checksum == nil {
 		paramVerifyChecksum.SkipSetChecksum = false
+
 		cid, err := ppkg.ChecksumID(is.runtime)
 		if err != nil {
 			return err //nolint:wrapcheck
 		}
+
 		paramVerifyChecksum.ChecksumID = cid
 		// Even if SLSA Provenance is enabled checksum verification is run
 		paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
@@ -129,9 +140,11 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry,
 		}
 	}
 
-	if err := is.verifyChecksum(ctx, logE, paramVerifyChecksum); err != nil {
+	err := is.verifyChecksum(ctx, logE, paramVerifyChecksum)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -160,12 +173,14 @@ func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, par
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
 		logE.Info("downloading a checksum file")
+
 		c, err := is.dlAndExtractChecksum(ctx, logE, pkg, assetName)
 		if err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"asset_name": assetName,
 			})
 		}
+
 		chksum = &checksum.Checksum{
 			ID:        checksumID,
 			Checksum:  c,
@@ -178,6 +193,7 @@ func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, par
 	if chksum != nil {
 		algorithm = chksum.Algorithm
 	}
+
 	calculatedSum, err := is.checksumCalculator.Calculate(is.fs, tempFilePath, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
@@ -203,8 +219,10 @@ func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, par
 			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 		}
 	}
+
 	if !param.SkipSetChecksum {
 		checksums.Set(checksumID, chksum)
 	}
+
 	return nil
 }

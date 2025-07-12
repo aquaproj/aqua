@@ -17,27 +17,33 @@ import (
 
 func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		if err := c.create(ctx, logE, cfgFilePath, param); err != nil {
+		err := c.create(ctx, logE, cfgFilePath, param)
+		if err != nil {
 			return err
 		}
 	}
+
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := c.create(ctx, logE, cfgFilePath, param); err != nil {
+		err := c.create(ctx, logE, cfgFilePath, param)
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (c *Controller) create(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *config.Param) error {
 	cfg := &aqua.Config{}
+
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	err := c.configReader.Read(logE, cfgFilePath, cfg)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
@@ -56,12 +62,14 @@ func (c *Controller) create(ctx context.Context, logE *logrus.Entry, cfgFilePath
 
 	pkgs, _ := config.ListPackages(logE, cfg, c.runtime, registryContents)
 	now := time.Now()
+
 	for _, pkg := range pkgs {
 		pkgPath, err := pkg.PkgPath(c.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).Warn("get a package path")
 			continue
 		}
+
 		absPkgPath := filepath.Join(c.rootDir, pkgPath)
 		if f, err := afero.Exists(c.fs, absPkgPath); err != nil {
 			logerr.WithError(logE, err).Warn("check if the package is installed")
@@ -69,9 +77,11 @@ func (c *Controller) create(ctx context.Context, logE *logrus.Entry, cfgFilePath
 		} else if !f {
 			continue
 		}
-		if err := c.vacuum.Create(pkgPath, now); err != nil {
+		err := c.vacuum.Create(pkgPath, now)
+		if err != nil {
 			logerr.WithError(logE, err).Warn("create a timestamp file")
 		}
 	}
+
 	return nil
 }

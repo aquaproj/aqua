@@ -8,6 +8,7 @@ import (
 
 func TestExecute(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		s     string
@@ -39,16 +40,20 @@ func TestExecute(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			s, err := template.Execute(d.s, d.input)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if d.exp != s {
 				t.Fatalf("wanted %s, got %s", d.exp, s)
 			}

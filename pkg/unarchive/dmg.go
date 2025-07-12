@@ -23,7 +23,8 @@ type Executor interface {
 }
 
 func (u *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error {
-	if err := osfile.MkdirAll(u.fs, u.dest); err != nil {
+	err := osfile.MkdirAll(u.fs, u.dest)
+	if err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 
@@ -38,21 +39,26 @@ func (u *dmgUnarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *
 	}
 
 	if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "hdiutil", "attach", tempFilePath, "-mountpoint", tmpMountPoint)); err != nil {
-		if err := u.fs.Remove(tmpMountPoint); err != nil {
+		err := u.fs.Remove(tmpMountPoint)
+		if err != nil {
 			logE.WithError(err).Warn("remove a temporary directory created to attach a DMG file")
 		}
+
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
+
 	defer func() {
 		if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "hdiutil", "detach", tmpMountPoint)); err != nil {
 			logE.WithError(err).Warn("detach a DMG file")
 		}
-		if err := u.fs.Remove(tmpMountPoint); err != nil {
+		err := u.fs.Remove(tmpMountPoint)
+		if err != nil {
 			logE.WithError(err).Warn("remove a temporary directory created to attach a DMG file")
 		}
 	}()
 
-	if err := osfile.Copy(u.fs, tmpMountPoint, u.dest); err != nil {
+	err := osfile.Copy(u.fs, tmpMountPoint, u.dest)
+	if err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
 	}
 

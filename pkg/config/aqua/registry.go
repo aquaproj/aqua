@@ -39,26 +39,34 @@ func (r *Registry) Validate() error {
 
 func (r *Registry) UnmarshalYAML(unmarshal func(any) error) error {
 	type alias Registry
+
 	a := alias(*r)
-	if err := unmarshal(&a); err != nil {
+	err := unmarshal(&a)
+	if err != nil {
 		return err
 	}
+
 	if a.Type == RegistryTypeStandard {
 		a.Type = RegistryTypeGitHubContent
 		if a.Name == "" {
 			a.Name = RegistryTypeStandard
 		}
+
 		if a.RepoOwner == "" {
 			a.RepoOwner = "aquaproj"
 		}
+
 		if a.RepoName == "" {
 			a.RepoName = "aqua-registry"
 		}
+
 		if a.Path == "" {
 			a.Path = "registry.yaml"
 		}
 	}
+
 	*r = Registry(a)
+
 	return nil
 }
 
@@ -69,6 +77,7 @@ func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 	case RegistryTypeGitHubContent:
 		return filepath.Join(rootDir, "registries", r.Type, "github.com", r.RepoOwner, r.RepoName, r.Ref, r.Path), nil
 	}
+
 	return "", errInvalidRegistryType
 }
 
@@ -76,6 +85,7 @@ func (r *Registry) validateLocal() error {
 	if r.Path == "" {
 		return errPathIsRequired
 	}
+
 	return nil
 }
 
@@ -83,11 +93,14 @@ func (r *Registry) validateGitHubContent() error {
 	if r.RepoOwner == "" {
 		return errRepoOwnerIsRequired
 	}
+
 	if r.RepoName == "" {
 		return errRepoNameIsRequired
 	}
+
 	if r.Ref == "" {
 		return errRefIsRequired
 	}
+
 	return nil
 }

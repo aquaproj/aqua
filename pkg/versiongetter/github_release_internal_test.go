@@ -10,6 +10,7 @@ import (
 
 func Test_filterRelease(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		release *github.RepositoryRelease
@@ -103,6 +104,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			f := filterRelease(d.release, d.filters)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)

@@ -6,6 +6,7 @@ import (
 
 func Test_replace(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title        string
 		key          string
@@ -30,6 +31,7 @@ func Test_replace(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			val := replace(d.key, d.replacements)
 			if val != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, val)

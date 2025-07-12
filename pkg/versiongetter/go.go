@@ -30,29 +30,38 @@ func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.Pa
 	if err != nil {
 		return "", fmt.Errorf("list versions: %w", err)
 	}
-	var latest *version.Version
-	var preLatest *version.Version
+
+	var (
+		latest    *version.Version
+		preLatest *version.Version
+	)
+
 	for _, vs := range versions {
 		v, err := version.NewSemver(vs)
 		if err != nil {
 			logE.WithError(err).WithField("version", vs).Warn("parse a version")
 			continue
 		}
+
 		if v.Prerelease() == "" && (latest == nil || v.GreaterThan(latest)) {
 			latest = v
 			continue
 		}
+
 		if v.Prerelease() != "" && (preLatest == nil || v.GreaterThan(preLatest)) {
 			preLatest = v
 			continue
 		}
 	}
+
 	if latest != nil {
 		return latest.Original(), nil
 	}
+
 	if preLatest != nil {
 		return preLatest.Original(), nil
 	}
+
 	return "", nil
 }
 
@@ -61,6 +70,7 @@ func (g *GoGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.P
 	if err != nil {
 		return nil, fmt.Errorf("list versions: %w", err)
 	}
+
 	versions := make(version.Collection, 0, len(vs))
 	for _, v := range vs {
 		v, err := version.NewSemver(v)
@@ -68,14 +78,18 @@ func (g *GoGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.P
 			logE.WithError(err).WithField("version", vs).Warn("parse a version")
 			continue
 		}
+
 		versions = append(versions, v)
 	}
+
 	sort.Sort(sort.Reverse(versions))
+
 	items := make([]*fuzzyfinder.Item, len(versions))
 	for i, version := range versions {
 		items[i] = &fuzzyfinder.Item{
 			Item: version.Original(),
 		}
 	}
+
 	return items, nil
 }

@@ -11,6 +11,7 @@ import (
 
 func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name       string
 		pkg        *config.Package
@@ -95,16 +96,20 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			checksumID, err := d.pkg.ChecksumID(d.rt)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if checksumID != d.checksumID {
 				t.Fatalf("wanted %s, got %s", d.checksumID, checksumID)
 			}
@@ -114,6 +119,7 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 
 func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name       string
 		pkg        *config.Package
@@ -185,16 +191,20 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			checksumID, err := d.pkg.ChecksumIDFromAsset(d.asset)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if checksumID != d.checksumID {
 				t.Fatalf("wanted %s, got %s", d.checksumID, checksumID)
 			}
@@ -204,6 +214,7 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 
 func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name             string
 		pkg              *config.Package
@@ -238,16 +249,20 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			checksumFileName, err := d.pkg.RenderChecksumFileName(d.rt)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if checksumFileName != d.checksumFileName {
 				t.Fatalf("wanted %s, got %s", d.checksumFileName, checksumFileName)
 			}
@@ -257,6 +272,7 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 
 func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		pkg   *config.Package
@@ -291,16 +307,20 @@ func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			u, err := d.pkg.RenderChecksumURL(d.rt)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if u != d.url {
 				t.Fatalf("wanted %s, got %s", d.url, u)
 			}

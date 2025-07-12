@@ -10,6 +10,7 @@ import (
 
 func TestConfig_UnmarshalYAML(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title string
 		yaml  string
@@ -82,10 +83,13 @@ packages:
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			cfg := &aqua.Config{}
-			if err := yaml.Unmarshal([]byte(d.yaml), cfg); err != nil {
+			err := yaml.Unmarshal([]byte(d.yaml), cfg)
+			if err != nil {
 				t.Fatal(err)
 			}
+
 			if diff := cmp.Diff(d.exp, cfg); diff != "" {
 				t.Fatal(diff)
 			}

@@ -40,6 +40,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("download a SLSA Provenance: %w", err)
@@ -52,6 +53,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 	}
 	defer provenanceFile.Close()
 	defer v.fs.Remove(provenanceFile.Name()) //nolint:errcheck
+
 	if _, err := io.Copy(provenanceFile, rc); err != nil {
 		return fmt.Errorf("copy a provenance to a temporary file: %w", err)
 	}

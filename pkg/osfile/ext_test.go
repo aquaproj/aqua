@@ -8,6 +8,7 @@ import (
 
 func TestExt(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		ext     string
@@ -24,6 +25,7 @@ func TestExt(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			ext := osfile.Ext(d.s, d.version)
 			if ext != d.ext {
 				t.Fatalf("wanted %s, got %s", d.ext, ext)

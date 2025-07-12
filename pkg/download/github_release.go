@@ -41,9 +41,11 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		if err == nil {
 			return b, length, nil
 		}
+
 		if b != nil {
 			b.Close()
 		}
+
 		logE.WithError(err).WithFields(logrus.Fields{
 			"repo_owner":    param.RepoOwner,
 			"repo_name":     param.RepoName,
@@ -56,25 +58,31 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 	if err != nil {
 		return nil, 0, fmt.Errorf("get the GitHub Release by Tag: %w", err)
 	}
+
 	assetID, err := getAssetIDFromAssets(release.Assets, param.Asset)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	body, redirectURL, err := dl.github.DownloadReleaseAsset(ctx, param.RepoOwner, param.RepoName, assetID, http.DefaultClient)
 	if err != nil {
 		return nil, 0, fmt.Errorf("download the release asset (asset id: %d): %w", assetID, err)
 	}
+
 	if body != nil {
 		// DownloadReleaseAsset doesn't return a http.Response, so the content length is zero.
 		return body, 0, nil
 	}
+
 	b, length, err := dl.http.Download(ctx, redirectURL)
 	if err != nil {
 		if b != nil {
 			b.Close()
 		}
+
 		return nil, 0, fmt.Errorf("download asset from redirect URL: %w", err)
 	}
+
 	return b, length, nil
 }
 
@@ -84,5 +92,6 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 			return asset.GetID(), nil
 		}
 	}
+
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
 }

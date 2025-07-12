@@ -22,6 +22,7 @@ import (
 
 func Test_installer_InstallProxy(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		files    map[string]string
@@ -49,29 +50,38 @@ func Test_installer_InstallProxy(t *testing.T) {
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
+
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			if err := ctrl.InstallProxy(ctx, logE); err != nil {
+			err := ctrl.InstallProxy(ctx, logE)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

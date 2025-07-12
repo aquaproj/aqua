@@ -23,6 +23,7 @@ func NewCache(fs afero.Fs, rootDir, cfgFilePath string) (*Cache, error) {
 		fs:   fs,
 		path: filepath.Join(rootDir, "registry-cache", base64.StdEncoding.EncodeToString([]byte(cfgFilePath))+".json"),
 	}
+
 	return c, c.read()
 }
 
@@ -32,11 +33,14 @@ func (c *Cache) Clean(keys map[string]map[string]struct{}) {
 		if !ok {
 			delete(c.m, rgPath)
 			c.updated = true
+
 			continue
 		}
+
 		for pkgName := range pkgInfos {
 			if _, ok := a[pkgName]; !ok {
 				delete(pkgInfos, pkgName)
+
 				c.updated = true
 			}
 		}
@@ -47,27 +51,35 @@ func (c *Cache) Write() error {
 	if !c.updated {
 		return nil
 	}
-	if err := osfile.MkdirAll(c.fs, filepath.Dir(c.path)); err != nil {
+
+	err := osfile.MkdirAll(c.fs, filepath.Dir(c.path))
+	if err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
+
 	f, err := c.fs.Create(c.path)
 	if err != nil {
 		return fmt.Errorf("create a registry cache: %w", err)
 	}
 	defer f.Close()
-	if err := json.NewEncoder(f).Encode(c.m); err != nil {
+
+	err := json.NewEncoder(f).Encode(c.m)
+	if err != nil {
 		return fmt.Errorf("encode registry cache: %w", err)
 	}
+
 	return nil
 }
 
 func (c *Cache) Add(rgPath string, pkgInfo *PackageInfo) {
 	c.updated = true
+
 	m, ok := c.m[rgPath]
 	if !ok {
 		m = map[string]*PackageInfo{}
 		c.m[rgPath] = m
 	}
+
 	m[pkgInfo.GetName()] = pkgInfo
 }
 
@@ -76,6 +88,7 @@ func (c *Cache) Get(rgPath, pkgName string) *PackageInfo {
 	if !ok {
 		return nil
 	}
+
 	return pkgInfos[pkgName]
 }
 
@@ -85,8 +98,11 @@ func (c *Cache) read() error {
 		return fmt.Errorf("open a registry cache: %w", err)
 	}
 	defer f.Close()
-	if err := json.NewDecoder(f).Decode(&c.m); err != nil {
+
+	err := json.NewDecoder(f).Decode(&c.m)
+	if err != nil {
 		return fmt.Errorf("parse the registry cache file: %w", err)
 	}
+
 	return nil
 }

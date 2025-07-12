@@ -28,6 +28,7 @@ func (*Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, e
 		return "", fmt.Errorf("open a file to calculate the checksum: %w", err)
 	}
 	defer f.Close()
+
 	return CalculateReader(f, algorithm)
 }
 
@@ -36,9 +37,11 @@ func CalculateReader(file io.Reader, algorithm string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if _, err := io.Copy(h, file); err != nil {
 		return "", fmt.Errorf("copy an io.Reader to hash object: %w", err)
 	}
+
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
@@ -72,6 +75,7 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			return nil
 		}
 	}
+
 	arr := []struct {
 		words     []string
 		algorithm string
@@ -104,5 +108,6 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 			}
 		}
 	}
+
 	return nil
 }

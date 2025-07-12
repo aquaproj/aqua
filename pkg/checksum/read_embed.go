@@ -8,12 +8,16 @@ import (
 )
 
 func ReadEmbeddedTool(checksums *Checksums, aquaBytes, checksumBytes []byte) string {
-	if err := json.Unmarshal(checksumBytes, checksums); err != nil {
+	err := json.Unmarshal(checksumBytes, checksums)
+	if err != nil {
 		panic(err)
 	}
+
 	cfg := &aqua.Config{}
-	if err := yaml.Unmarshal(aquaBytes, cfg); err != nil {
+	err := yaml.Unmarshal(aquaBytes, cfg)
+	if err != nil {
 		panic(err)
 	}
+
 	return cfg.Packages[0].Version
 }

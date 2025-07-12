@@ -20,6 +20,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:    "install",
 		Aliases: []string{"i"},
@@ -82,12 +83,15 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "install", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "install", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl, err := controller.InitializeInstallCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an InstallController: %w", err)
 	}
+
 	return ctrl.Install(ctx, i.r.LogE, param) //nolint:wrapcheck
 }

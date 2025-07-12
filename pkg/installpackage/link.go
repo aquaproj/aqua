@@ -17,13 +17,17 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 	failed := false
 
 	var aquaProxyPathOnWindows string
+
 	if is.runtime.IsWindows() {
 		pkg := proxyPkg()
+
 		pkgPath, err := pkg.AbsPkgPath(is.rootDir, is.runtime)
 		if err != nil {
 			logerr.WithError(logE, err).Error("get a path to aqua-proxy")
+
 			failed = true
 		}
+
 		aquaProxyPathOnWindows = filepath.Join(pkgPath, "aqua-proxy.exe")
 	}
 
@@ -36,11 +40,13 @@ func (is *Installer) createLinks(logE *logrus.Entry, pkgs []*config.Package) boo
 			failed = true
 		}
 	}
+
 	return failed
 }
 
 func (is *Installer) createPackageLinks(logE *logrus.Entry, pkg *config.Package, aquaProxyPathOnWindows string) bool {
 	failed := false
+
 	pkgInfo := pkg.PackageInfo
 	for _, file := range pkgInfo.GetFiles() {
 		logE := logE.WithFields(logrus.Fields{
@@ -50,11 +56,13 @@ func (is *Installer) createPackageLinks(logE *logrus.Entry, pkg *config.Package,
 			failed = true
 		}
 	}
+
 	return failed
 }
 
 func (is *Installer) createFileLinks(logE *logrus.Entry, pkg *config.Package, file *registry.File, aquaProxyPathOnWindows string) bool {
 	failed := false
+
 	cmds := map[string]struct{}{
 		file.Name: {},
 	}
@@ -62,17 +70,23 @@ func (is *Installer) createFileLinks(logE *logrus.Entry, pkg *config.Package, fi
 		if file.Name != alias.Command {
 			continue
 		}
+
 		if alias.NoLink {
 			continue
 		}
+
 		cmds[alias.Alias] = struct{}{}
 	}
+
 	for cmd := range cmds {
-		if err := is.createCmdLink(logE, file, cmd, aquaProxyPathOnWindows); err != nil {
+		err := is.createCmdLink(logE, file, cmd, aquaProxyPathOnWindows)
+		if err != nil {
 			logerr.WithError(logE, err).Error("create a link to aqua-proxy")
+
 			failed = true
 		}
 	}
+
 	return failed
 }
 
@@ -82,15 +96,20 @@ func (is *Installer) createCmdLink(logE *logrus.Entry, file *registry.File, cmd 
 			"command_alias": cmd,
 		})
 	}
+
 	if is.realRuntime.IsWindows() {
-		if err := is.createHardLinkToProxy(logE, cmd, aquaProxyPathOnWindows); err != nil {
+		err := is.createHardLinkToProxy(logE, cmd, aquaProxyPathOnWindows)
+		if err != nil {
 			return fmt.Errorf("create a hard link to aqua-proxy: %w", err)
 		}
+
 		return nil
 	}
-	if err := is.createLink(logE, filepath.Join(is.rootDir, "bin", cmd), filepath.Join("..", proxyName)); err != nil {
+	err := is.createLink(logE, filepath.Join(is.rootDir, "bin", cmd), filepath.Join("..", proxyName))
+	if err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
+
 	return nil
 }
 
@@ -101,41 +120,52 @@ func (is *Installer) createHardLinkToProxy(logE *logrus.Entry, cmd, aquaProxyPat
 	} else if f {
 		return nil
 	}
+
 	logE.Info("creating a hard link to aqua-proxy")
-	if err := is.linker.Hardlink(aquaProxyPathOnWindows, hardLink); err != nil {
+	err := is.linker.Hardlink(aquaProxyPathOnWindows, hardLink)
+	if err != nil {
 		return fmt.Errorf("create a hard link to aqua-proxy: %w", err)
 	}
+
 	return nil
 }
 
 func (is *Installer) recreateHardLinks() error {
 	binDir := filepath.Join(is.rootDir, "bin")
+
 	infos, err := afero.ReadDir(is.fs, binDir)
 	if err != nil {
 		return fmt.Errorf("read a bin dir: %w", err)
 	}
 
 	pkg := proxyPkg()
+
 	pkgPath, err := pkg.AbsPkgPath(is.rootDir, is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	a := filepath.Join(pkgPath, "aqua-proxy.exe")
 
 	for _, info := range infos {
 		if info.Name() == "aqua.exe" {
 			continue
 		}
+
 		p := filepath.Join(binDir, info.Name())
-		if err := is.fs.Remove(p); err != nil {
+		err := is.fs.Remove(p)
+		if err != nil {
 			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
 		}
+
 		if strings.HasSuffix(info.Name(), ".exe") {
-			if err := is.linker.Hardlink(a, p); err != nil {
+			err := is.linker.Hardlink(a, p)
+			if err != nil {
 				return fmt.Errorf("create a hard link: %w", err)
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -150,12 +180,15 @@ func (is *Installer) createLink(logE *logrus.Entry, linkPath, linkDest string) e
 			return fmt.Errorf("%s has already existed and is a named pipe", linkPath)
 		case mode.IsRegular():
 			// if file is a regular file, remove it and create a symlink.
-			if err := is.fs.Remove(linkPath); err != nil {
+			err := is.fs.Remove(linkPath)
+			if err != nil {
 				return fmt.Errorf("remove a file to create a symbolic link (%s): %w", linkPath, err)
 			}
-			if err := is.linker.Symlink(linkDest, linkPath); err != nil {
+			err := is.linker.Symlink(linkDest, linkPath)
+			if err != nil {
 				return fmt.Errorf("create a symbolic link: %w", err)
 			}
+
 			return nil
 		case mode&os.ModeSymlink != 0:
 			return is.recreateLink(logE, linkPath, linkDest)
@@ -163,10 +196,13 @@ func (is *Installer) createLink(logE *logrus.Entry, linkPath, linkDest string) e
 			return fmt.Errorf("unexpected file mode %s: %s", linkPath, mode.String())
 		}
 	}
+
 	logE.Info("create a symbolic link")
-	if err := is.linker.Symlink(linkDest, linkPath); err != nil {
+	err := is.linker.Symlink(linkDest, linkPath)
+	if err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
+
 	return nil
 }
 
@@ -175,6 +211,7 @@ func (is *Installer) recreateLink(logE *logrus.Entry, linkPath, linkDest string)
 	if err != nil {
 		return fmt.Errorf("read a symbolic link (%s): %w", linkPath, err)
 	}
+
 	if linkDest == lnDest {
 		return nil
 	}
@@ -185,11 +222,14 @@ func (is *Installer) recreateLink(logE *logrus.Entry, linkPath, linkDest string)
 		"old":       lnDest,
 		"new":       linkDest,
 	}).Debug("recreate a symbolic link")
-	if err := is.fs.Remove(linkPath); err != nil {
+	err := is.fs.Remove(linkPath)
+	if err != nil {
 		return fmt.Errorf("remove a symbolic link (%s): %w", linkPath, err)
 	}
-	if err := is.linker.Symlink(linkDest, linkPath); err != nil {
+	err := is.linker.Symlink(linkDest, linkPath)
+	if err != nil {
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
+
 	return nil
 }

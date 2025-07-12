@@ -55,31 +55,40 @@ func compare(constr, ver string) bool {
 	if commitHash.MatchString(ver) {
 		return false
 	}
+
 	sv1, err := version.NewVersion(ver)
 	if err != nil {
 		panic(err)
 	}
+
 	for constraint := range strings.SplitSeq(strings.TrimSpace(constr), ",") {
 		c := strings.TrimSpace(constraint)
 		matched := false
+
 		for _, comp := range comparisons(sv1) {
 			s := strings.TrimPrefix(c, comp.op)
 			if s == c {
 				continue
 			}
+
 			sv2, err := version.NewVersion(strings.TrimSpace(s))
 			if err != nil {
 				panic(err)
 			}
+
 			if !comp.compare(sv2) {
 				return false
 			}
+
 			matched = true
+
 			break
 		}
+
 		if !matched {
 			panic("invalid operator. Operator must be one of >=, >, <, <=, !=, =")
 		}
 	}
+
 	return true
 }

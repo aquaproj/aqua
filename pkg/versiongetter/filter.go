@@ -17,6 +17,7 @@ type Filter struct {
 
 func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 	filters := make([]*Filter, 0, 1+len(pkgInfo.VersionOverrides))
+
 	topFilter := &Filter{
 		NoAsset:    pkgInfo.NoAsset || pkgInfo.ErrorMessage != "",
 		Prefix:     pkgInfo.VersionPrefix,
@@ -27,8 +28,10 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}
+
 		topFilter.Filter = f
 	}
+
 	filters = append(filters, topFilter)
 
 	for _, vo := range pkgInfo.VersionOverrides {
@@ -43,19 +46,25 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 			if err != nil {
 				return nil, err //nolint:wrapcheck
 			}
+
 			flt.Filter = f
 		}
+
 		if vo.VersionPrefix != nil {
 			flt.Prefix = *vo.VersionPrefix
 		}
+
 		if vo.NoAsset != nil {
 			flt.NoAsset = *vo.NoAsset
 		}
+
 		if vo.ErrorMessage != nil {
 			flt.NoAsset = *vo.ErrorMessage != ""
 		}
+
 		filters = append(filters, flt)
 	}
+
 	return filters, nil
 }
 
@@ -65,18 +74,23 @@ func matchTagByFilter(tagName string, filter *Filter) bool {
 		if !strings.HasPrefix(tagName, filter.Prefix) {
 			return false
 		}
+
 		sv = strings.TrimPrefix(tagName, filter.Prefix)
 	}
+
 	if filter.Filter != nil {
 		if f, err := expr.EvaluateVersionFilter(filter.Filter, tagName); err != nil || !f {
 			return false
 		}
 	}
+
 	if filter.Constraint == "" {
 		return true
 	}
+
 	if f, err := expr.EvaluateVersionConstraints(filter.Constraint, tagName, sv); err == nil && f {
 		return true
 	}
+
 	return false
 }

@@ -16,24 +16,31 @@ func (c *Controller) Vacuum(logE *logrus.Entry, param *config.Param) error {
 	if err != nil {
 		return fmt.Errorf("find timestamp files: %w", err)
 	}
+
 	timestampChecker := vacuum.NewTimestampChecker(time.Now(), param.VacuumDays)
+
 	for pkgPath, timestamp := range timestamps {
 		logE := logE.WithField("package_path", pkgPath)
+
 		if !timestampChecker.Expired(timestamp) {
 			continue
 		}
 		// remove the package
 		p := filepath.Join(c.rootDir, pkgPath)
-		if err := c.fs.RemoveAll(p); err != nil {
+		err := c.fs.RemoveAll(p)
+		if err != nil {
 			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
 				"package_path": p,
 			}))
 		}
 		// remove the timestamp file
-		if err := c.vacuum.Remove(pkgPath); err != nil {
+		err := c.vacuum.Remove(pkgPath)
+		if err != nil {
 			return fmt.Errorf("remove a timestamp file: %w", err)
 		}
+
 		logE.Info("removed the package")
 	}
+
 	return nil
 }

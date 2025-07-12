@@ -19,6 +19,7 @@ func newPolicyAllow(r *util.Param) *cli.Command {
 	i := &policyAllowCommand{
 		r: r,
 	}
+
 	return &cli.Command{
 		Action: i.action,
 		Name:   "allow",
@@ -38,9 +39,12 @@ func (pa *policyAllowCommand) action(ctx context.Context, cmd *cli.Command) erro
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, pa.r.LogE, "allow-policy", param, pa.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, pa.r.LogE, "allow-policy", param, pa.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeAllowPolicyCommandController(ctx, param)
+
 	return ctrl.Allow(pa.r.LogE, param, cmd.Args().First()) //nolint:wrapcheck
 }

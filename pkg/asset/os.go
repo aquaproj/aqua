@@ -92,20 +92,25 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 		if assetInfo.OS != "" && assetInfo.OS != o.OS {
 			continue
 		}
+
 		if idx := strings.Index(lowAssetName, o.Name); idx != -1 {
 			assetInfo.OS = o.OS
+
 			osName := assetName[idx : idx+len(o.Name)]
 			if osName != o.OS {
 				if assetInfo.Replacements == nil {
 					assetInfo.Replacements = map[string]string{}
 				}
+
 				assetInfo.Replacements[o.OS] = osName
 			}
+
 			assetInfo.Template = strings.Replace(assetInfo.Template, osName, "{{.OS}}", 1)
 			if osName == "unknown-linux-gnu" || osName == "pc-windows-gnu" {
 				// "unknown-linux-musl" and "pc-windows-msvc" take precedence over "unknown-linux-gnu" and "pc-windows-gnu".
 				assetInfo.Score = -1
 			}
+
 			return
 		}
 	}

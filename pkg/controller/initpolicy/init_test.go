@@ -11,6 +11,7 @@ import (
 
 func TestController_Init(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		files map[string]string
@@ -37,20 +38,26 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			ctrl := initpolicy.New(fs)
-			if err := ctrl.Init(logE, ""); err != nil {
+			err := ctrl.Init(logE, "")
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

@@ -8,6 +8,7 @@ import (
 
 func TestRemoveExtFromAsset(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name      string
 		assetName string
@@ -54,10 +55,12 @@ func TestRemoveExtFromAsset(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			assetWithoutExt, format := asset.RemoveExtFromAsset(d.assetName)
 			if assetWithoutExt != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, assetWithoutExt)
 			}
+
 			if format != d.format {
 				t.Fatalf("wanted %v, got %v", d.format, format)
 			}

@@ -11,9 +11,11 @@ func GetRuntimesFromSupportedEnvs(cfgSupportedEnvs, pkgSupportedEnvs []string) (
 	if err != nil {
 		return nil, fmt.Errorf("get supported platforms: %w", err)
 	}
+
 	if len(cfgSupportedEnvs) == 0 {
 		return rts, nil
 	}
+
 	cfgRTs, err := runtime.GetRuntimesFromEnvs(cfgSupportedEnvs)
 	if err != nil {
 		return nil, fmt.Errorf("get supported platforms: %w", err)
@@ -36,5 +38,6 @@ func GetRuntimesFromSupportedEnvs(cfgSupportedEnvs, pkgSupportedEnvs []string) (
 	for _, rt := range rtMap {
 		rts = append(rts, rt)
 	}
+
 	return rts, nil
 }

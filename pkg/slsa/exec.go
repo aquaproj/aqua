@@ -30,6 +30,7 @@ type ExecutorImpl struct {
 
 func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
 	rt := runtime.NewR()
+
 	return &ExecutorImpl{
 		executor: executor,
 		verifierExePath: ExePath(&ParamExePath{
@@ -46,9 +47,12 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
 	}).Info("Verification by slsa-verifier failed temporarily, retrying")
-	if err := timer.Wait(ctx, waitTime); err != nil {
+
+	err := timer.Wait(ctx, waitTime)
+	if err != nil {
 		return fmt.Errorf("wait running slsa-verifier: %w", err)
 	}
+
 	return nil
 }
 
@@ -58,6 +62,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 	if param.SourceTag == "" {
 		return errors.New("source tag is empty")
 	}
+
 	args := []string{
 		"verify-artifact",
 		param.ArtifactPath,
@@ -69,24 +74,32 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 	if param.SourceTag != "-" {
 		args = append(args, "--source-tag", param.SourceTag)
 	}
+
 	for i := range 5 {
 		if _, err := e.exec(ctx, args); err == nil {
 			return nil
 		}
+
 		if i == 4 { //nolint:mnd
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+
+		err := wait(ctx, logE, i+1)
+		if err != nil {
 			return err
 		}
 	}
+
 	return errVerify
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) {
 	mutex := cosign.GetMutex()
+
 	mutex.Lock()
 	defer mutex.Unlock()
+
 	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.verifierExePath, args...))
+
 	return out, err //nolint:wrapcheck
 }

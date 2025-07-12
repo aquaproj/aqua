@@ -8,6 +8,7 @@ import (
 
 func TestCompileVersionFilter(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title         string
 		versionFilter string
@@ -27,16 +28,20 @@ func TestCompileVersionFilter(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			prog, err := expr.CompileVersionFilter(d.versionFilter)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if prog == nil {
 				t.Fatal("prog must not be nil")
 			}

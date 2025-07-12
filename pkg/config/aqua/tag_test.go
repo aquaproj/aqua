@@ -8,6 +8,7 @@ import (
 
 func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name         string
 		pkg          *aqua.Package
@@ -125,6 +126,7 @@ func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			f := aqua.FilterPackageByTag(d.pkg, d.tags, d.excludedTags)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)

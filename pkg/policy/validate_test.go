@@ -11,6 +11,7 @@ import (
 
 func TestValidator_Allow(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		rootDir        string
@@ -39,21 +40,27 @@ func TestValidator_Allow(t *testing.T) { //nolint:dupl
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
+				err := afero.WriteFile(fs, name, []byte(body), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			validator := policy.NewValidator(&config.Param{
 				RootDir: d.rootDir,
 			}, fs)
-			if err := validator.Allow(d.configFilePath); err != nil {
+			err := validator.Allow(d.configFilePath)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -63,6 +70,7 @@ func TestValidator_Allow(t *testing.T) { //nolint:dupl
 
 func TestValidator_Deny(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		rootDir        string
@@ -91,21 +99,27 @@ func TestValidator_Deny(t *testing.T) { //nolint:dupl
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
+				err := afero.WriteFile(fs, name, []byte(body), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			validator := policy.NewValidator(&config.Param{
 				RootDir: d.rootDir,
 			}, fs)
-			if err := validator.Deny(d.configFilePath); err != nil {
+			err := validator.Deny(d.configFilePath)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -115,6 +129,7 @@ func TestValidator_Deny(t *testing.T) { //nolint:dupl
 
 func TestValidator_Warn(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		rootDir        string
@@ -141,24 +156,31 @@ func TestValidator_Warn(t *testing.T) {
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
+				err := afero.WriteFile(fs, name, []byte(body), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			validator := policy.NewValidator(&config.Param{
 				RootDir: d.rootDir,
 			}, fs)
-			if err := validator.Warn(logE, d.configFilePath, false); err != nil {
+			err := validator.Warn(logE, d.configFilePath, false)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -168,6 +190,7 @@ func TestValidator_Warn(t *testing.T) {
 
 func TestValidator_Validate(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		rootDir        string
@@ -207,21 +230,27 @@ func TestValidator_Validate(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs := afero.NewMemMapFs()
 			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
+				err := afero.WriteFile(fs, name, []byte(body), 0o644)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			validator := policy.NewValidator(&config.Param{
 				RootDir: d.rootDir,
 			}, fs)
-			if err := validator.Validate(d.configFilePath); err != nil {
+			err := validator.Validate(d.configFilePath)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

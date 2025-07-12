@@ -28,22 +28,27 @@ func (g *gitHubArtifactAttestationsVerifier) Enabled(logE *logrus.Entry) (bool, 
 		logE.Debug("GitHub Artifact Attestation is disabled")
 		return false, nil
 	}
+
 	return g.gaa.GetEnabled(), nil
 }
 
 func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
 	logE.Info("verify GitHub Artifact Attestations")
-	if err := g.ghInstaller.install(ctx, logE); err != nil {
+
+	err := g.ghInstaller.install(ctx, logE)
+	if err != nil {
 		return fmt.Errorf("install GitHub CLI: %w", err)
 	}
 
-	if err := g.ghVerifier.Verify(ctx, logE, &ghattestation.ParamVerify{
+	err := g.ghVerifier.Verify(ctx, logE, &ghattestation.ParamVerify{
 		Repository:     g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName,
 		ArtifactPath:   file,
 		PredicateType:  g.gaa.PredicateType,
 		SignerWorkflow: g.gaa.SignerWorkflow(),
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("verify a package with gh attestation: %w", err)
 	}
+
 	return nil
 }

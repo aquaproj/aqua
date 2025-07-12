@@ -39,6 +39,7 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 				ReadCloser: body,
 			}, nil
 		}
+
 		if body != nil {
 			body.Close()
 		}
@@ -50,10 +51,12 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 	if err != nil {
 		return nil, fmt.Errorf("get a file by Get GitHub Content API: %w", err)
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		file.Close()
 		return nil, fmt.Errorf("get a file by Get GitHub Content API: status code %d", resp.StatusCode)
 	}
+
 	return &domain.GitHubContentFile{
 		ReadCloser: file,
 	}, nil

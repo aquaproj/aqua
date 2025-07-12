@@ -14,9 +14,11 @@ import (
 )
 
 func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
-	if err := c.updateCommands(ctx, logE, param); err != nil {
+	err := c.updateCommands(ctx, logE, param)
+	if err != nil {
 		return err
 	}
+
 	if len(param.Args) != 0 {
 		return nil
 	}
@@ -25,24 +27,29 @@ func (c *Controller) Update(ctx context.Context, logE *logrus.Entry, param *conf
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)
 	}
-	if err := c.update(ctx, logE, param, cfgFilePath); err != nil {
+	err := c.update(ctx, logE, param, cfgFilePath)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (c *Controller) updateCommands(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	newVersions := map[string]string{}
 	for _, arg := range param.Args {
-		if err := c.updateCommand(ctx, logE, param, newVersions, arg); err != nil {
+		err := c.updateCommand(ctx, logE, param, newVersions, arg)
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, param *config.Param, newVersions map[string]string, cmd string) error {
 	command, newVersion, _ := strings.Cut(cmd, "@")
+
 	findResult, err := c.which.Which(ctx, logE, param, command)
 	if err != nil {
 		return fmt.Errorf("find a command: %w", err)
@@ -60,22 +67,27 @@ func (c *Controller) updateCommand(ctx context.Context, logE *logrus.Entry, para
 		newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
 		newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
 	}
+
 	filePath := findResult.ConfigFilePath
 	if pkg.Package.FilePath != "" {
 		filePath = pkg.Package.FilePath
 	}
-	if err := c.updateFile(logE, filePath, newVersions); err != nil {
+	err := c.updateFile(logE, filePath, newVersions)
+	if err != nil {
 		return fmt.Errorf("update a package: %w", err)
 	}
+
 	return nil
 }
 
 func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string) error { //nolint:cyclop
 	cfg := &aqua.Config{}
+
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	err := c.configReader.Read(logE, cfgFilePath, cfg)
+	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
@@ -95,7 +107,8 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 			return err //nolint:wrapcheck
 		}
 
-		if err := c.updatePackages(ctx, logE, param, cfgFilePath, registryConfigs); err != nil {
+		err := c.updatePackages(ctx, logE, param, cfgFilePath, registryConfigs)
+		if err != nil {
 			return err
 		}
 	}
@@ -104,8 +117,10 @@ func (c *Controller) update(ctx context.Context, logE *logrus.Entry, param *conf
 		return nil
 	}
 
-	if err := c.updateRegistries(ctx, logE, cfgFilePath, cfg); err != nil {
+	err := c.updateRegistries(ctx, logE, cfgFilePath, cfg)
+	if err != nil {
 		return fmt.Errorf("update registries: %w", err)
 	}
+
 	return nil
 }

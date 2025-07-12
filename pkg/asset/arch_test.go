@@ -9,6 +9,7 @@ import (
 
 func Test_SetArch(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name         string
 		assetName    string
@@ -68,6 +69,7 @@ func Test_SetArch(t *testing.T) { //nolint:funlen
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			asset.SetArch(d.assetName, d.lowAssetName, d.assetInfo)
+
 			if diff := cmp.Diff(d.assetInfo, d.exp); diff != "" {
 				t.Fatal(diff)
 			}

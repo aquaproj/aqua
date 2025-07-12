@@ -11,6 +11,7 @@ import (
 
 func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		content string
@@ -111,19 +112,24 @@ d3e8e4d8da6b6f5e0a77335864944fc3e74c109c3d4959c976c1caec1dc1807c  ./imgpkg-windo
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			m, s, err := checksum.ParseChecksumFile(d.content, d.pkg.PackageInfo.Checksum)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must occur")
 			}
+
 			if diff := cmp.Diff(m, d.m); diff != "" {
 				t.Fatal(diff)
 			}
+
 			if s != d.s {
 				t.Fatalf("wanted %s, got %s", d.s, s)
 			}

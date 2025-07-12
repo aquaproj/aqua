@@ -36,6 +36,7 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 		if err != nil {
 			return fmt.Errorf("compile a version expression: %w", err)
 		}
+
 		c.VersionFilter = r
 	}
 
@@ -44,6 +45,7 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 		if err != nil {
 			return fmt.Errorf("compile an asset expression: %w", err)
 		}
+
 		c.AllAssetsFilter = a
 	}
 
@@ -54,14 +56,18 @@ func readConfig(fs afero.Fs, path string, cfg *Config) error {
 	if path == "" {
 		return nil
 	}
+
 	f, err := fs.Open(path)
 	if err != nil {
 		return fmt.Errorf("open a generate configuration file: %w", err)
 	}
 	defer f.Close()
+
 	raw := &RawConfig{}
-	if err := yaml.NewDecoder(f).Decode(raw); err != nil {
+	err := yaml.NewDecoder(f).Decode(raw)
+	if err != nil {
 		return fmt.Errorf("decode a generate configuration file as YAML: %w", err)
 	}
+
 	return cfg.FromRaw(raw)
 }

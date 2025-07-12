@@ -14,6 +14,7 @@ const (
 
 func TestConfig_Init(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		cfg   *policy.Config
@@ -87,15 +88,19 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			if err := d.cfg.Init(); err != nil {
+			err := d.cfg.Init()
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(d.exp, d.cfg); diff != "" {
 				t.Fatal(diff)
 			}

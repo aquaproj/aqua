@@ -9,6 +9,7 @@ import (
 
 func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		pkgInfo *registry.PackageInfo
@@ -97,16 +98,20 @@ func TestPackageInfo_CheckSupported(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			b, err := d.pkgInfo.CheckSupported(d.rt, d.rt.Env())
 			if d.isErr {
 				if err == nil {
 					t.Fatal("error must be returned")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if d.exp != b {
 				t.Fatalf("wanted %v, got %v", d.exp, b)
 			}

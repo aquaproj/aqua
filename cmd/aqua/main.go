@@ -28,14 +28,17 @@ type HasExitCode interface {
 
 func main() {
 	rt := runtime.New()
+
 	logE := log.New("aqua", version).WithField("env", rt.Env())
-	if err := core(logE, rt); err != nil {
+	err := core(logE, rt)
+	if err != nil {
 		var hasExitCode HasExitCode
 		if errors.As(err, &hasExitCode) {
 			code := hasExitCode.ExitCode()
 			logerr.WithError(logE.WithField("exit_code", code), err).Debug("command failed")
 			os.Exit(code)
 		}
+
 		logerr.WithError(logE, err).Fatal("aqua failed")
 	}
 }
@@ -43,6 +46,7 @@ func main() {
 func core(logE *logrus.Entry, rt *runtime.Runtime) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
 	return cli.Run(ctx, &util.Param{ //nolint:wrapcheck
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,

@@ -34,6 +34,7 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	for i, newC := range newCs {
 		cs[i] = newC(param)
 	}
+
 	return cs
 }
 

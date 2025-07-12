@@ -14,6 +14,7 @@ import (
 
 func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		tags    map[string][]*github.RepositoryTag
@@ -54,16 +55,20 @@ func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 			ctx := t.Context()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
 			ghTagGetter := versiongetter.NewGitHubTag(ghTagClient)
+
 			version, err := ghTagGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if version != d.version {
 				t.Fatalf("wanted %s, got %s", d.version, version)
 			}
@@ -73,6 +78,7 @@ func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 
 func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		tags    map[string][]*github.RepositoryTag
@@ -123,16 +129,20 @@ func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 			ctx := t.Context()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
 			ghTagGetter := versiongetter.NewGitHubTag(ghTagClient)
+
 			items, err := ghTagGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(items, d.items); diff != "" {
 				t.Fatal(diff)
 			}

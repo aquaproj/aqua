@@ -19,7 +19,8 @@ import (
 
 func (c *Controller) UpdateChecksum(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		if err := c.updateChecksum(ctx, logE, cfgFilePath); err != nil {
+		err := c.updateChecksum(ctx, logE, cfgFilePath)
+		if err != nil {
 			return err
 		}
 	}
@@ -31,33 +32,40 @@ func (c *Controller) updateChecksumAll(ctx context.Context, logE *logrus.Entry, 
 	if !param.All {
 		return nil
 	}
+
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := c.updateChecksum(ctx, logE, cfgFilePath); err != nil {
+		err := c.updateChecksum(ctx, logE, cfgFilePath)
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (c *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfgFilePath string) (namedErr error) { //nolint:cyclop
 	cfg := &aqua.Config{}
+
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	err := c.configReader.Read(logE, cfgFilePath, cfg)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
 	checksums := checksum.New()
 	checksums.EnableOutput()
+
 	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
+	err := checksums.ReadFile(c.fs, checksumFilePath)
+	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
 
@@ -65,13 +73,16 @@ func (c *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfg
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	pkgs, _ := config.ListPackagesNotOverride(logE, cfg, registryContents)
 	failed := false
+
 	defer func() {
 		if c.prune {
 			checksums.Prune()
 		}
-		if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
+		err := checksums.UpdateFile(c.fs, checksumFilePath)
+		if err != nil {
 			namedErr = fmt.Errorf("update a checksum file: %w", err)
 		}
 	}()
@@ -82,8 +93,10 @@ func (c *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfg
 	}
 
 	for _, rgst := range cfg.Registries {
-		if err := c.updateRegistry(ctx, logE, checksums, rgst); err != nil {
+		err := c.updateRegistry(ctx, logE, checksums, rgst)
+		if err != nil {
 			failed = true
+
 			logerr.WithError(logE, err).Error("update checksums")
 		}
 	}
@@ -94,14 +107,18 @@ func (c *Controller) updateChecksum(ctx context.Context, logE *logrus.Entry, cfg
 			"package_version":  pkg.Package.Version,
 			"package_registry": pkg.Package.Registry,
 		})
-		if err := c.updatePackage(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
+		err := c.updatePackage(ctx, logE, checksums, pkg, supportedEnvs)
+		if err != nil {
 			failed = true
+
 			logerr.WithError(logE, err).Error("update checksums")
 		}
 	}
+
 	if failed {
 		return errFailedToUpdateChecksum
 	}
+
 	return nil
 }
 
@@ -109,11 +126,14 @@ func (c *Controller) updateRegistry(ctx context.Context, logE *logrus.Entry, che
 	if rgst.Type != "github_content" {
 		return nil
 	}
+
 	rgstID := checksum.RegistryID(rgst)
+
 	chksum := checksums.Get(rgstID)
 	if chksum != nil {
 		return nil
 	}
+
 	ghContentFile, err := c.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
 		RepoOwner: rgst.RepoOwner,
 		RepoName:  rgst.RepoName,
@@ -124,29 +144,36 @@ func (c *Controller) updateRegistry(ctx context.Context, logE *logrus.Entry, che
 		return err //nolint:wrapcheck
 	}
 	defer ghContentFile.Close()
+
 	content := ghContentFile.Reader()
 	algorithm := "sha256"
+
 	chk, err := checksum.CalculateReader(content, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate a checksum of Registry: %w", err)
 	}
+
 	checksums.Set(rgstID, &checksum.Checksum{
 		ID:        rgstID,
 		Algorithm: algorithm,
 		Checksum:  chk,
 	})
+
 	return nil
 }
 
 func (c *Controller) updatePackage(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
-	if err := c.getChecksums(ctx, logE, checksums, pkg, supportedEnvs); err != nil {
+	err := c.getChecksums(ctx, logE, checksums, pkg, supportedEnvs)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (c *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
 	logE.Info("updating a package checksum")
+
 	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
 		return fmt.Errorf("get supported platforms: %w", err)
@@ -156,47 +183,58 @@ func (c *Controller) getChecksums(ctx context.Context, logE *logrus.Entry, check
 	if err != nil {
 		return err
 	}
+
 	checksumFiles := map[string]struct{}{}
+
 	for _, rt := range rts {
 		env := rt.Env()
 		logE := logE.WithFields(logrus.Fields{
 			"checksum_env": env,
 		})
+
 		pkg, ok := pkgs[env]
 		if !ok {
 			continue
 		}
-		if err := c.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt, assetNames); err != nil {
+		err := c.getChecksum(ctx, logE, checksums, pkg, checksumFiles, rt, assetNames)
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[string]*config.Package, map[string]struct{}, error) {
 	pkgs := make(map[string]*config.Package, len(rts))
+
 	assets := make(map[string]struct{}, len(rts))
 	for _, rt := range rts {
 		env := rt.Env()
 		pkgInfo := pkg.PackageInfo
 		pkgInfo = pkgInfo.Copy()
 		pkgInfo.OverrideByRuntime(rt)
+
 		switch pkgInfo.Type {
 		case "cargo", "go_install":
 			// Skip updating checksums of these packages
 			continue
 		}
+
 		pkgWithEnv := &config.Package{
 			Package:     pkg.Package,
 			PackageInfo: pkgInfo,
 		}
+
 		asset, err := pkgWithEnv.RenderAsset(rt)
 		if err != nil {
 			return nil, nil, fmt.Errorf("render an asset: %w", err)
 		}
+
 		assets[asset] = struct{}{}
 		pkgs[env] = pkgWithEnv
 	}
+
 	return pkgs, assets, nil
 }
 
@@ -204,9 +242,11 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 	pkgInfo := pkg.PackageInfo
 
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		if err := c.dlAssetAndGetChecksum(ctx, logE, checksums, pkg, rt); err != nil {
+		err := c.dlAssetAndGetChecksum(ctx, logE, checksums, pkg, rt)
+		if err != nil {
 			return err
 		}
+
 		return nil
 	}
 
@@ -223,23 +263,30 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 	if err != nil {
 		return fmt.Errorf("render a checksum file ID: %w", err)
 	}
+
 	if _, ok := checksumFiles[checksumFileID]; ok {
 		return nil
 	}
+
 	checksumFiles[checksumFileID] = struct{}{}
+
 	logE.Debug("downloading a checksum file")
+
 	file, _, err := c.chkDL.DownloadChecksum(ctx, logE, rt, pkg)
 	if err != nil {
 		return fmt.Errorf("download a checksum file: %w", err)
 	}
+
 	if file == nil {
 		return nil
 	}
 	defer file.Close()
+
 	b, err := io.ReadAll(file)
 	if err != nil {
 		return fmt.Errorf("read a checksum file: %w", err)
 	}
+
 	checksumFile := strings.TrimSpace(string(b))
 	if pkgInfo.Checksum.FileFormat == "raw" {
 		logE.WithFields(logrus.Fields{
@@ -251,12 +298,15 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 			Checksum:  checksumFile,
 			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 		})
+
 		return nil
 	}
+
 	m, s, err := checksum.ParseChecksumFile(checksumFile, pkgInfo.Checksum)
 	if err != nil {
 		return fmt.Errorf("parse a checksum file: %w", err)
 	}
+
 	if s != "" {
 		logE.WithFields(logrus.Fields{
 			"checksum_id": checksumID,
@@ -267,14 +317,17 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 			Checksum:  s,
 			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 		})
+
 		return nil
 	}
+
 	if len(m) == 1 {
 		// get the asset name
 		asset, err := pkg.RenderAsset(rt)
 		if err != nil {
 			return fmt.Errorf("render an asset: %w", err)
 		}
+
 		chksum, ok := m[asset]
 		if !ok {
 			// if the asset name is different, skip
@@ -290,16 +343,20 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 			Checksum:  chksum,
 			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 		})
+
 		return nil
 	}
+
 	for assetName, chksum := range m {
 		if _, ok := assetNames[assetName]; !ok {
 			continue
 		}
+
 		checksumID, err := pkg.ChecksumIDFromAsset(assetName)
 		if err != nil {
 			return fmt.Errorf("get a checksum id from asset: %w", err)
 		}
+
 		logE.WithFields(logrus.Fields{
 			"checksum_id": checksumID,
 			"checksum":    chksum,
@@ -310,6 +367,7 @@ func (c *Controller) getChecksum(ctx context.Context, logE *logrus.Entry, checks
 			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 		})
 	}
+
 	return nil
 }
 
@@ -318,42 +376,52 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logE *logrus.Ent
 	if err != nil {
 		return fmt.Errorf("get a checksum id: %w", err)
 	}
+
 	if a := checksums.Get(checksumID); a != nil {
 		return nil
 	}
+
 	assetName, err := pkg.RenderAsset(rt)
 	if err != nil {
 		return fmt.Errorf("get an asset name: %w", err)
 	}
+
 	fields := logrus.Fields{
 		"asset_name": assetName,
 	}
 	logE = logE.WithFields(fields)
 	logE.Info("downloading an asset to calculate the checksum")
+
 	defer func() {
 		if gErr != nil {
 			gErr = logerr.WithFields(gErr, fields)
 		}
 	}()
+
 	f, err := download.ConvertPackageToFile(pkg, assetName, rt)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	file, _, err := c.downloader.ReadCloser(ctx, logE, f)
 	if err != nil {
 		return fmt.Errorf("download an asset: %w", err)
 	}
 	defer file.Close()
+
 	algorithm := "sha256"
 	fields["algorithm"] = algorithm
+
 	chk, err := checksum.CalculateReader(file, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate an asset: %w", err)
 	}
+
 	checksums.Set(checksumID, &checksum.Checksum{
 		ID:        checksumID,
 		Checksum:  chk,
 		Algorithm: algorithm,
 	})
+
 	return nil
 }

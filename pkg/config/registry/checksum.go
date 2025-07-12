@@ -23,6 +23,7 @@ func (c *Checksum) GetReplacements() Replacements {
 	if c == nil {
 		return nil
 	}
+
 	return c.Replacements
 }
 
@@ -30,9 +31,11 @@ func (c *Checksum) GetEnabled() bool {
 	if c == nil {
 		return false
 	}
+
 	if c.Enabled == nil {
 		return true
 	}
+
 	return *c.Enabled
 }
 
@@ -40,6 +43,7 @@ func (c *Checksum) GetAlgorithm() string {
 	if !c.GetEnabled() {
 		return "sha256"
 	}
+
 	return c.Algorithm
 }
 
@@ -47,6 +51,7 @@ func (c *Checksum) GetCosign() *Cosign {
 	if c == nil {
 		return nil
 	}
+
 	return c.Cosign
 }
 
@@ -54,6 +59,7 @@ func (c *Checksum) GetMinisign() *Minisign {
 	if c == nil {
 		return nil
 	}
+
 	return c.Minisign
 }
 
@@ -61,5 +67,6 @@ func (c *Checksum) GetGitHubArtifactAttestations() *GitHubArtifactAttestations {
 	if c == nil {
 		return nil
 	}
+
 	return c.GitHubArtifactAttestations
 }

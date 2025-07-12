@@ -19,6 +19,7 @@ func newPolicyInit(r *util.Param) *cli.Command {
 	i := &policyInitCommand{
 		r: r,
 	}
+
 	return &cli.Command{
 		Action:    i.action,
 		Name:      "init",
@@ -39,9 +40,12 @@ func (pi *policyInitCommand) action(ctx context.Context, cmd *cli.Command) error
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, pi.r.LogE, "init-policy", param, pi.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, pi.r.LogE, "init-policy", param, pi.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeInitPolicyCommandController(ctx)
+
 	return ctrl.Init(pi.r.LogE, cmd.Args().First()) //nolint:wrapcheck
 }

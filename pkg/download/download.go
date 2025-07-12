@@ -64,9 +64,11 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *
 		if err != nil {
 			return nil, 0, fmt.Errorf("download a package from GitHub Content: %w", err)
 		}
+
 		if file.ReadCloser != nil {
 			return file.ReadCloser, 0, nil
 		}
+
 		return io.NopCloser(strings.NewReader(file.String)), 0, nil
 	case config.PkgInfoTypeGitHubArchive:
 		return dl.getReadCloserFromGitHubArchive(ctx, file)
@@ -77,6 +79,7 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *
 				"download_url": file.URL,
 			}))
 		}
+
 		return rc, code, nil
 	default:
 		return nil, 0, logerr.WithFields(errInvalidPackageType, logrus.Fields{ //nolint:wrapcheck

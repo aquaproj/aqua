@@ -8,6 +8,7 @@ import (
 
 func TestVersion_Preview(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name    string
 		version *fuzzyfinder.Version
@@ -43,6 +44,7 @@ bar`,
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			s := d.version.Preview(d.w)
 			if s != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, s)

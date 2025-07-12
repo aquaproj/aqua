@@ -17,5 +17,6 @@ func ExePath(param *ParamExePath) string {
 	if param.Runtime.GOOS == "windows" {
 		assetName += ".exe"
 	}
+
 	return filepath.Join(param.RootDir, "pkgs", "github_release", "github.com", "sigstore", "cosign", Version, assetName, assetName)
 }

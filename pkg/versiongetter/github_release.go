@@ -35,6 +35,7 @@ type Release struct {
 
 func convRelease(release *github.RepositoryRelease) *Release {
 	v, prefix, _ := GetVersionAndPrefix(release.GetTagName())
+
 	return &Release{
 		Tag:           release.GetTagName(),
 		Version:       v,
@@ -47,24 +48,31 @@ func compareRelease(latest, release *Release) bool {
 	if latest.Prerelease && !release.Prerelease {
 		return true
 	}
+
 	if !latest.Prerelease && release.Prerelease {
 		return false
 	}
+
 	if release.Version == nil {
 		if latest.Version != nil {
 			return false
 		}
+
 		if release.Tag > latest.Tag {
 			return true
 		}
+
 		return false
 	}
+
 	if latest.Version == nil {
 		return true
 	}
+
 	if release.Version.GreaterThan(latest.Version) {
 		return true
 	}
+
 	return false
 }
 
@@ -72,6 +80,7 @@ func getLatestRelease(releases []*Release) *Release {
 	if len(releases) == 0 {
 		return nil
 	}
+
 	latest := releases[0]
 	for _, release := range releases[1:] {
 		if compareRelease(latest, release) {
@@ -79,6 +88,7 @@ func getLatestRelease(releases []*Release) *Release {
 			continue
 		}
 	}
+
 	return latest
 }
 
@@ -87,6 +97,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 	repoName := pkg.RepoName
 
 	var respToLog *github.Response
+
 	defer func() {
 		logGHRateLimit(logE, respToLog)
 	}()
@@ -99,20 +110,25 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		respToLog = resp
+
 		if err != nil {
 			return "", fmt.Errorf("list tags: %w", err)
 		}
+
 		for _, release := range releases {
 			if filterRelease(release, filters) {
 				candidates = append(candidates, convRelease(release))
 			}
 		}
+
 		if len(candidates) > 0 {
 			return getLatestRelease(candidates).Tag, nil
 		}
+
 		if resp.NextPage == 0 {
 			return "", nil
 		}
+
 		opt.Page = resp.NextPage
 	}
 }
@@ -125,18 +141,22 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entr
 	}
 
 	var items []*fuzzyfinder.Item
+
 	tags := map[string]struct{}{}
+
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
 			*logE = *withRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
+
 		for _, release := range releases {
 			tagName := release.GetTagName()
 			if _, ok := tags[tagName]; ok {
 				continue
 			}
+
 			tags[tagName] = struct{}{}
 			if filterRelease(release, filters) {
 				v := &fuzzyfinder.Version{
@@ -151,12 +171,15 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entr
 				})
 			}
 		}
+
 		if limit > 0 && len(items) >= limit { // Reach the limit
 			return items[:limit], nil
 		}
+
 		if resp.NextPage == 0 {
 			return items, nil
 		}
+
 		opt.Page = resp.NextPage
 	}
 }
@@ -173,5 +196,6 @@ func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
 			return !filter.NoAsset
 		}
 	}
+
 	return false
 }

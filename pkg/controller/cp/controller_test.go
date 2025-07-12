@@ -16,6 +16,7 @@ import (
 
 func TestController_Copy(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name         string
 		param        *config.Param
@@ -67,17 +68,22 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockReader{})
-			if err := ctrl.Copy(ctx, logE, d.param); err != nil {
+			err := ctrl.Copy(ctx, logE, d.param)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error should be returned")
 			}

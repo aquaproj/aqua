@@ -19,6 +19,7 @@ func New(r *util.Param) *cli.Command {
 	i := &infoCommand{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:  "info",
 		Usage: "Show information",
@@ -38,9 +39,12 @@ func (i *infoCommand) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "info", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "info", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeInfoCommandController(ctx, param, i.r.Runtime)
+
 	return ctrl.Info(ctx, i.r.LogE, param) //nolint:wrapcheck
 }

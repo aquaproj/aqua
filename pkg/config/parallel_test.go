@@ -9,6 +9,7 @@ import (
 
 func TestGetMaxParallelism(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name              string
 		envMaxParallelism string
@@ -30,9 +31,11 @@ func TestGetMaxParallelism(t *testing.T) {
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			maxParallelism := config.GetMaxParallelism(d.envMaxParallelism, logE)
 			if maxParallelism != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, maxParallelism)

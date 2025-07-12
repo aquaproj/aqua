@@ -24,30 +24,37 @@ type handler struct {
 
 func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
+
 	parentDir := filepath.Dir(dstPath)
-	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
+	err := osfile.MkdirAll(h.fs, parentDir)
+	if err != nil {
 		logerr.WithError(h.logE, err).Warn("create a directory")
 		return nil
 	}
 
 	if f.IsDir() {
-		if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
+		err := h.fs.MkdirAll(dstPath, f.Mode()|0o700)
+		if err != nil { //nolint:mnd
 			logerr.WithError(h.logE, err).Warn("create a directory")
 			return nil
 		}
+
 		return nil
 	}
 
 	if f.LinkTarget != "" {
 		if f.Mode()&os.ModeSymlink != 0 {
-			if err := os.Symlink(f.LinkTarget, dstPath); err != nil {
+			err := os.Symlink(f.LinkTarget, dstPath)
+			if err != nil {
 				logerr.WithError(h.logE, err).WithFields(logrus.Fields{
 					"link_target": f.LinkTarget,
 					"link_dest":   dstPath,
 				}).Warn("create a symlink")
+
 				return nil
 			}
 		}
+
 		return nil
 	}
 
@@ -69,6 +76,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 		logerr.WithError(h.logE, err).Warn("copy a file")
 		return nil
 	}
+
 	return nil
 }
 
@@ -77,21 +85,26 @@ func (h *handler) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) err
 	if err != nil {
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
-	if err := h.unarchive(ctx, src.Filename, tempFilePath); err != nil {
+
+	err := h.unarchive(ctx, src.Filename, tempFilePath)
+	if err != nil {
 		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 			"archived_file":     tempFilePath,
 			"archived_filename": src.Filename,
 		})
 	}
+
 	return nil
 }
 
 func (h *handler) normalizePath(nameInArchive string) string {
 	slashCount := strings.Count(nameInArchive, "/")
+
 	backSlashCount := strings.Count(nameInArchive, "\\")
 	if backSlashCount > slashCount && filepath.Separator != '\\' {
 		return strings.ReplaceAll(nameInArchive, "\\", string(filepath.Separator))
 	}
+
 	return nameInArchive
 }
 
@@ -108,18 +121,23 @@ func (h *handler) unarchive(ctx context.Context, fileName, file string) error {
 	}
 
 	if extractor, ok := format.(archives.Extractor); ok {
-		if err := osfile.MkdirAll(h.fs, h.dest); err != nil {
+		err := osfile.MkdirAll(h.fs, h.dest)
+		if err != nil {
 			return fmt.Errorf("create a destination directory: %w", err)
 		}
 
-		if err := extractor.Extract(ctx, input, h.HandleFile); err != nil {
+		err := extractor.Extract(ctx, input, h.HandleFile)
+		if err != nil {
 			return fmt.Errorf("extract files: %w", err)
 		}
+
 		return nil
 	}
+
 	if decomp, ok := format.(archives.Decompressor); ok {
 		return h.decompress(input, decomp)
 	}
+
 	return errUnsupportedFileFormat
 }
 
@@ -129,16 +147,21 @@ func (h *handler) decompress(input io.Reader, decomp archives.Decompressor) erro
 		return fmt.Errorf("open a decompressed file: %w", err)
 	}
 	defer rc.Close()
-	if err := osfile.MkdirAll(h.fs, h.dest); err != nil {
+
+	err := osfile.MkdirAll(h.fs, h.dest)
+	if err != nil {
 		return fmt.Errorf("create a directory (%s): %w", h.dest, err)
 	}
+
 	dst, err := h.fs.Create(filepath.Join(h.dest, strings.TrimSuffix(h.filename, filepath.Ext(h.filename))))
 	if err != nil {
 		return fmt.Errorf("create a destination file: %w", err)
 	}
 	defer dst.Close()
+
 	if _, err := io.Copy(dst, rc); err != nil {
 		return fmt.Errorf("copy decompressed data: %w", err)
 	}
+
 	return nil
 }

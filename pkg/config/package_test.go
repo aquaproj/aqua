@@ -11,6 +11,7 @@ import (
 
 func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title string
 		exp   string
@@ -121,16 +122,20 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 		},
 	}
 	rt := runtime.New()
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			if d.rt == nil {
 				d.rt = rt
 			}
+
 			asset, err := d.pkg.RenderAsset(d.rt)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if asset != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, asset)
 			}
@@ -140,6 +145,7 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 
 func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	rootDir := "/tmp/aqua"
 	data := []struct {
 		title string
@@ -207,13 +213,16 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 		},
 	}
 	rt := runtime.New()
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			pkgPath, err := d.pkg.AbsPkgPath(rootDir, rt)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if pkgPath != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, pkgPath)
 			}

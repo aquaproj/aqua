@@ -28,6 +28,7 @@ import (
 
 func TestController_Install(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name              string
 		files             map[string]string
@@ -87,33 +88,42 @@ packages:
 	}
 	logE := logrus.NewEntry(logrus.New())
 	registryDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files, d.dirs...)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			policyFinder := policy.NewConfigFinder(fs)
 			policyReader := policy.NewReader(fs, &policy.MockValidator{}, policyFinder, policy.NewConfigReader(fs))
+
 			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader)
-			if err := ctrl.Install(ctx, logE, d.param); err != nil {
+			err := ctrl.Install(ctx, logE, d.param)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

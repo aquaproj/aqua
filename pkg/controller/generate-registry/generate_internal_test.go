@@ -19,6 +19,7 @@ func strp(s string) *string {
 
 func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		pkgName  string
@@ -131,6 +132,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -143,8 +145,11 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			cargoClient := &cargo.MockClient{
 				CratePayload: d.crate,
 			}
+
 			var buf bytes.Buffer
+
 			ctrl := NewController(nil, gh, nil, cargoClient, &buf)
+
 			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, &config.Param{}, &Config{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
@@ -155,6 +160,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 
 func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	tests := []struct {
 		name             string
 		pkgInfo          *registry.PackageInfo
@@ -354,6 +360,7 @@ func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			got := checkChecksumCosign(tt.pkgInfo, tt.checksumFileName, tt.assetNames)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("checkChecksumCosign() mismatch (-want +got):\n%s", diff)

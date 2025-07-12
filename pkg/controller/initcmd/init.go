@@ -69,17 +69,20 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 			logE.WithFields(logrus.Fields{
 				"configuration_file_path": name,
 			}).Info("configuration file already exists")
+
 			return nil
 		}
 	}
 
 	if param.IsDir {
-		if err := osfile.MkdirAll(c.fs, "aqua"); err != nil {
+		err := osfile.MkdirAll(c.fs, "aqua")
+		if err != nil {
 			return err //nolint:wrapcheck
 		}
 	}
 
 	registryVersion := "v4.386.0" // renovate: depName=aquaproj/aqua-registry
+
 	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
@@ -96,6 +99,7 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 			registryVersion = release.GetTagName()
 		}
 	}
+
 	var cfgStr string
 	if param.ImportDir == "" {
 		cfgStr = strings.Replace(configTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1)
@@ -104,11 +108,13 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 			strings.Replace(importDirConfigTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1),
 			"%%IMPORT_DIR%%", param.ImportDir, 1)
 	}
+
 	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(cfgStr), osfile.FilePermission); err != nil {
 		return fmt.Errorf("write a configuration file: %w", logerr.WithFields(err, logrus.Fields{
 			"configuration_file_path": cfgFilePath,
 		}))
 	}
+
 	return nil
 }
 
@@ -116,8 +122,10 @@ func (c *Controller) cfgFilePath(cfgFilePath string, param *Param) string {
 	if cfgFilePath != "" {
 		return cfgFilePath
 	}
+
 	if !param.IsDir {
 		return "aqua.yaml"
 	}
+
 	return filepath.Join("aqua", "aqua.yaml")
 }

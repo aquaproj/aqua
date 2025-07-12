@@ -11,6 +11,7 @@ const proxyName = "aqua-proxy"
 
 func TestPackageInfo_overrideVersion(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		pkgInfo *PackageInfo
@@ -52,6 +53,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			pkgInfo := d.pkgInfo.overrideVersion(d.child)
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
@@ -62,6 +64,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 
 func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title   string
 		version string
@@ -121,13 +124,16 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			pkgInfo, err := d.pkgInfo.SetVersion(logE, d.version)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if diff := cmp.Diff(pkgInfo, d.exp); diff != "" {
 				t.Fatal(diff)
 			}

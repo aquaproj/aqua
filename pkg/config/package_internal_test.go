@@ -10,6 +10,7 @@ import (
 
 func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title string
 		exp   string
@@ -165,16 +166,20 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 		},
 	}
 	rt := runtime.New()
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			if d.rt == nil {
 				d.rt = rt
 			}
+
 			asset, err := d.pkg.fileSrc(d.file, d.rt)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if asset != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, asset)
 			}

@@ -26,6 +26,7 @@ func (f *GitHubContentFile) Reader() io.Reader {
 	if f.String != "" {
 		return strings.NewReader(f.String)
 	}
+
 	return f.ReadCloser
 }
 
@@ -33,10 +34,12 @@ func (f *GitHubContentFile) Byte() ([]byte, error) {
 	if f.String != "" {
 		return []byte(f.String), nil
 	}
+
 	cnt, err := io.ReadAll(f.ReadCloser)
 	if err != nil {
 		return nil, fmt.Errorf("read the registry configuration file: %w", err)
 	}
+
 	return cnt, nil
 }
 
@@ -44,6 +47,7 @@ func (f *GitHubContentFile) Close() error {
 	if f.ReadCloser != nil {
 		return f.ReadCloser.Close() //nolint:wrapcheck
 	}
+
 	return nil
 }
 

@@ -14,7 +14,8 @@ import (
 
 func (c *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
 	rootBin := filepath.Join(c.rootDir, "bin")
-	if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
+	err := osfile.MkdirAll(c.fs, rootBin)
+	if err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 
@@ -25,11 +26,13 @@ func (c *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *
 
 	logE = logE.WithField("new_version", version)
 
-	if err := c.installer.InstallAqua(ctx, logE, version); err != nil {
+	err := c.installer.InstallAqua(ctx, logE, version)
+	if err != nil {
 		return fmt.Errorf("download aqua: %w", logerr.WithFields(err, logrus.Fields{
 			"new_version": version,
 		}))
 	}
+
 	return nil
 }
 
@@ -40,6 +43,7 @@ func (c *Controller) getVersion(ctx context.Context, param *config.Param) (strin
 		if err != nil {
 			return "", fmt.Errorf("get the latest version of aqua: %w", err)
 		}
+
 		return release.GetTagName(), nil
 	case 1:
 		return param.Args[0], nil

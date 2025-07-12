@@ -23,11 +23,13 @@ func Start(cmd *cli.Command) (*Profiler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("start tracing: %w", err)
 	}
+
 	cpuProfiler, err := cpuprofile.Start(cmd.String("cpu-profile"))
 	if err != nil {
 		t.Stop()
 		return nil, fmt.Errorf("start CPU Profile: %w", err)
 	}
+
 	return &Profiler{
 		tracer: t,
 		cpu:    cpuProfiler,

@@ -8,6 +8,7 @@ import (
 
 func Test_Exclude(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name      string
 		pkgName   string
@@ -30,6 +31,7 @@ func Test_Exclude(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			f := asset.Exclude(d.pkgName, d.assetName)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)

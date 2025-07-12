@@ -20,7 +20,8 @@ type pkgUnarchiver struct {
 }
 
 func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) error {
-	if err := osfile.MkdirAll(u.fs, filepath.Dir(u.dest)); err != nil {
+	err := osfile.MkdirAll(u.fs, filepath.Dir(u.dest))
+	if err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 

@@ -17,9 +17,11 @@ func getDefaultPolicy() ([]*Config, error) {
 			},
 		},
 	}
-	if err := cfg.Init(); err != nil {
+	err := cfg.Init()
+	if err != nil {
 		return nil, err
 	}
+
 	return []*Config{
 		cfg,
 	}, nil

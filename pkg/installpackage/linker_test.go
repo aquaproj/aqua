@@ -9,6 +9,7 @@ import (
 
 func TestMockLinker_Lstat(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		files map[string]string
@@ -32,9 +33,11 @@ func TestMockLinker_Lstat(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			linker := installpackage.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.files {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -44,8 +47,10 @@ func TestMockLinker_Lstat(t *testing.T) {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -55,6 +60,7 @@ func TestMockLinker_Lstat(t *testing.T) {
 
 func TestMockLinker_Readlink(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		files map[string]string
@@ -79,9 +85,11 @@ func TestMockLinker_Readlink(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			linker := installpackage.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.files {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -91,11 +99,14 @@ func TestMockLinker_Readlink(t *testing.T) {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if dest != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, dest)
 			}

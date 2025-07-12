@@ -12,23 +12,32 @@ import (
 )
 
 func main() {
-	if err := core(); err != nil {
+	err := core()
+	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func core() error {
-	if err := jsonschema.Write(&aqua.Config{}, "json-schema/aqua-yaml.json"); err != nil {
+	err := jsonschema.Write(&aqua.Config{}, "json-schema/aqua-yaml.json")
+	if err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := jsonschema.Write(&registry.Config{}, "json-schema/registry.json"); err != nil {
+
+	err := jsonschema.Write(&registry.Config{}, "json-schema/registry.json")
+	if err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := jsonschema.Write(&policy.ConfigYAML{}, "json-schema/policy.json"); err != nil {
+
+	err := jsonschema.Write(&policy.ConfigYAML{}, "json-schema/policy.json")
+	if err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := jsonschema.Write(&genrgst.RawConfig{}, "json-schema/aqua-generate-registry.json"); err != nil {
+
+	err := jsonschema.Write(&genrgst.RawConfig{}, "json-schema/aqua-generate-registry.json")
+	if err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
+
 	return nil
 }

@@ -33,12 +33,14 @@ func (s *minisignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
 		logE.Warn("minisign doesn't support this environment")
 		return false, nil
 	}
+
 	return true, nil
 }
 
 func (s *minisignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
 	logE.Info("verify a package with minisign")
-	if err := s.installer.install(ctx, logE); err != nil {
+	err := s.installer.install(ctx, logE)
+	if err != nil {
 		return fmt.Errorf("install minisign: %w", err)
 	}
 
@@ -48,14 +50,15 @@ func (s *minisignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file 
 
 	art := pkg.TemplateArtifact(s.runtime, s.asset)
 
-	if err := s.verifier.Verify(ctx, logE, s.runtime, m, art, &download.File{
+	err := s.verifier.Verify(ctx, logE, s.runtime, m, art, &download.File{
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
 		Version:   pkg.Package.Version,
 	}, &minisign.ParamVerify{
 		ArtifactPath: file,
 		PublicKey:    m.PublicKey,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("verify a package with minisign: %w", err)
 	}
 

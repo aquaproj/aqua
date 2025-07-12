@@ -42,7 +42,8 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	}
 
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	err := c.configReader.Read(logE, cfgFilePath, cfg)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
@@ -50,6 +51,7 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 	if err != nil {
 		return err
 	}
+
 	list = excludeDuplicatedPkgs(logE, cfg, list)
 	if len(list) == 0 {
 		return nil
@@ -60,6 +62,7 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 		for i, pkg := range list {
 			pkgs[i] = pkg.Package
 		}
+
 		return c.outputter.Output(&output.Param{ //nolint:wrapcheck
 			Insert:         param.Insert,
 			Dest:           param.Dest,
@@ -67,28 +70,34 @@ func (c *Controller) Generate(ctx context.Context, logE *logrus.Entry, param *co
 			ConfigFilePath: cfgFilePath,
 		})
 	}
+
 	if param.Insert {
-		if err := osfile.MkdirAll(c.fs, filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
+		err := osfile.MkdirAll(c.fs, filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir))
+		if err != nil {
 			return fmt.Errorf("create a directory specified by import_dir: %w", err)
 		}
 	}
+
 	for _, pkg := range list {
 		cmdName := pkg.PackageInfo.GetFiles()[0].Name
+
 		dest := param.Dest
 		if dest == "" && param.Insert {
 			dest = filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir, cmdName+".yaml")
 		}
-		if err := c.outputter.Output(&output.Param{
+		err := c.outputter.Output(&output.Param{
 			Insert:         param.Insert,
 			Dest:           dest,
 			List:           []*aqua.Package{pkg.Package},
 			ConfigFilePath: cfgFilePath,
-		}); err != nil {
+		})
+		if err != nil {
 			return fmt.Errorf("output a package: %w", logerr.WithFields(err, logrus.Fields{
 				"package_name": pkg.Package.Name,
 			}))
 		}
 	}
+
 	return nil
 }
 
@@ -96,9 +105,11 @@ func (c *Controller) getConfigFile(param *config.Param) (string, error) {
 	if param.ConfigFilePath != "" || !param.Global {
 		return c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...) //nolint:wrapcheck
 	}
+
 	if len(param.GlobalConfigFilePaths) == 0 {
 		return "", errors.New("no global configuration file is found")
 	}
+
 	return param.GlobalConfigFilePaths[0], nil
 }
 
@@ -124,8 +135,11 @@ func (c *Controller) listPkgs(ctx context.Context, logE *logrus.Entry, param *co
 
 func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) ([]*config.Package, error) {
 	// maps the package and the registry
-	var items []*fuzzyfinder.Item
-	var pkgs []*fuzzyfinder.Package
+	var (
+		items []*fuzzyfinder.Item
+		pkgs  []*fuzzyfinder.Package
+	)
+
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
 			p := &fuzzyfinder.Package{
@@ -146,8 +160,10 @@ func (c *Controller) listPkgsWithFinder(ctx context.Context, logE *logrus.Entry,
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil, nil
 		}
+
 		return nil, fmt.Errorf("find the package: %w", err)
 	}
+
 	arr := make([]*config.Package, len(idxes))
 	for i, idx := range idxes {
 		arr[i] = c.getOutputtedPkg(ctx, logE, param, pkgs[idx])
@@ -161,6 +177,7 @@ func (c *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*
 		logE := logE.WithField("registry_name", registryName)
 		for pkgName, pkg := range registryContent.PackageInfos.ToMap(logE) {
 			logE := logE.WithField("package_name", pkgName)
+
 			m[registryName+","+pkgName] = &fuzzyfinder.Package{
 				PackageInfo:  pkg,
 				RegistryName: registryName,
@@ -170,6 +187,7 @@ func (c *Controller) setPkgMap(logE *logrus.Entry, registryContents map[string]*
 					logE.Warn("ignore a package alias because the alias is empty")
 					continue
 				}
+
 				m[registryName+","+alias.Name] = &fuzzyfinder.Package{
 					PackageInfo:  pkg,
 					RegistryName: registryName,
@@ -183,6 +201,7 @@ func getGeneratePkg(s string) string {
 	if !strings.Contains(s, ",") {
 		return "standard," + s
 	}
+
 	return s
 }
 
@@ -191,13 +210,16 @@ func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Ent
 	c.setPkgMap(logE, registryContents, m)
 
 	outputPkgs := []*config.Package{}
+
 	for _, pkgName := range pkgNames {
 		pkgName = getGeneratePkg(pkgName)
 		key, version, _ := strings.Cut(pkgName, "@")
+
 		findingPkg, ok := m[key]
 		if !ok {
 			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": pkgName}) //nolint:wrapcheck
 		}
+
 		findingPkg.Version = version
 		outputPkg := c.getOutputtedPkg(ctx, logE, param, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
@@ -208,8 +230,10 @@ func (c *Controller) listPkgsWithoutFinder(ctx context.Context, logE *logrus.Ent
 		if err != nil {
 			return nil, err
 		}
+
 		outputPkgs = pkgs
 	}
+
 	return outputPkgs, nil
 }
 
@@ -226,21 +250,27 @@ func (c *Controller) getOutputtedPkg(ctx context.Context, logE *logrus.Entry, pa
 		outputPkg.Package.Link = pkg.PackageInfo.GetLink()
 		outputPkg.Package.Description = pkg.PackageInfo.Description
 	}
+
 	if outputPkg.Package.Registry == registryStandard {
 		outputPkg.Package.Registry = ""
 	}
+
 	if outputPkg.Package.Version == "" {
 		version := c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, "", param.SelectVersion, param.Limit)
 		if version == "" {
 			outputPkg.Package.Version = "[SET PACKAGE VERSION]"
 			return outputPkg
 		}
+
 		outputPkg.Package.Version = version
 	}
+
 	if param.Pin {
 		return outputPkg
 	}
+
 	outputPkg.Package.Name += "@" + outputPkg.Package.Version
 	outputPkg.Package.Version = ""
+
 	return outputPkg
 }

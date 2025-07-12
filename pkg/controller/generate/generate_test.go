@@ -24,6 +24,7 @@ import (
 
 func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
+
 	data := []struct {
 		name               string
 		files              map[string]string
@@ -376,20 +377,25 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			linker := installpackage.NewMockLinker(fs)
 			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			configFinder := finder.NewConfigFinder(fs)
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
@@ -399,13 +405,17 @@ packages:
 			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
+
 			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versiongetter.NewMockFuzzyGetter(map[string]string{}))
-			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
+			err := ctrl.Generate(ctx, logE, d.param, d.args...)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

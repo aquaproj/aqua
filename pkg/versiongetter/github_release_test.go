@@ -14,6 +14,7 @@ import (
 
 func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		releases map[string][]*github.RepositoryRelease
@@ -54,16 +55,20 @@ func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
 			ctx := t.Context()
 			ghReleaseClient := versiongetter.NewMockGitHubReleaseClient(d.releases)
 			ghReleaseGetter := versiongetter.NewGitHubRelease(ghReleaseClient)
+
 			version, err := ghReleaseGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if version != d.version {
 				t.Fatalf("wanted %s, got %s", d.version, version)
 			}
@@ -73,6 +78,7 @@ func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
 
 func TestGitHubReleaseVersionGetter_List(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		releases map[string][]*github.RepositoryRelease
@@ -141,16 +147,20 @@ body(v1)`,
 			ctx := t.Context()
 			ghReleaseClient := versiongetter.NewMockGitHubReleaseClient(d.releases)
 			ghReleaseGetter := versiongetter.NewGitHubRelease(ghReleaseClient)
+
 			items, err := ghReleaseGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if diff := cmp.Diff(items, d.items); diff != "" {
 				t.Fatal(diff)
 			}

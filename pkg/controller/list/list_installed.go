@@ -11,14 +11,17 @@ import (
 
 func (c *Controller) listInstalled(logE *logrus.Entry, param *config.Param) error {
 	cfgFilePaths := c.configFinder.Finds(param.PWD, param.ConfigFilePath)
+
 	cfgFileMap := map[string]struct{}{}
 	for _, cfgFilePath := range cfgFilePaths {
 		if _, ok := cfgFileMap[cfgFilePath]; ok {
 			continue
 		}
+
 		cfgFileMap[cfgFilePath] = struct{}{}
 
-		if err := c.listInstalledByConfig(logE, cfgFilePath); err != nil {
+		err := c.listInstalledByConfig(logE, cfgFilePath)
+		if err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"config_file_path": cfgFilePath,
 			})
@@ -34,28 +37,35 @@ func (c *Controller) listInstalled(logE *logrus.Entry, param *config.Param) erro
 		if _, ok := cfgFileMap[cfgFilePath]; ok {
 			continue
 		}
+
 		cfgFileMap[cfgFilePath] = struct{}{}
 
 		logE.Debug("checking a global configuration file")
+
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := c.listInstalledByConfig(logE, cfgFilePath); err != nil {
+		err := c.listInstalledByConfig(logE, cfgFilePath)
+		if err != nil {
 			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 				"config_file_path": cfgFilePath,
 			})
 		}
 	}
+
 	return nil
 }
 
 func (c *Controller) listInstalledByConfig(logE *logrus.Entry, cfgFilePath string) error {
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	err := c.configReader.Read(logE, cfgFilePath, cfg)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	for _, pkg := range cfg.Packages {
 		fmt.Fprintln(c.stdout, pkg.Name+"\t"+pkg.Version+"\t"+pkg.Registry)
 	}
+
 	return nil
 }

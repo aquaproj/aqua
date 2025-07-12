@@ -26,29 +26,38 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		if f.RepoOwner == "" {
 			f.RepoOwner = art.RepoOwner
 		}
+
 		if f.RepoName == "" {
 			f.RepoName = art.RepoName
 		}
+
 		if file.Asset == nil {
 			return nil, errors.New("asset is required")
 		}
+
 		asset, err := template.Render(*file.Asset, tplParam, rt)
 		if err != nil {
 			return nil, fmt.Errorf("render an asset template: %w", err)
 		}
+
 		f.Asset = asset
+
 		return f, nil
 	case "http":
 		if file.URL == nil {
 			return nil, errors.New("url is required")
 		}
+
 		u, err := template.Render(*file.URL, tplParam, rt)
 		if err != nil {
 			return nil, fmt.Errorf("render a url template: %w", err)
 		}
+
 		f.URL = u
+
 		return f, nil
 	}
+
 	return nil, logerr.WithFields(errors.New("invalid file type"), logrus.Fields{ //nolint:wrapcheck
 		"file_type": file.Type,
 	})
@@ -56,6 +65,7 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 
 func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Runtime) (*File, error) {
 	pkgInfo := pkg.PackageInfo
+
 	file := &File{
 		Type:      pkgInfo.Type,
 		RepoOwner: pkgInfo.RepoOwner,
@@ -78,7 +88,9 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}
+
 		file.URL = uS
+
 		return file, nil
 	default:
 		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck

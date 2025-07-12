@@ -12,20 +12,23 @@ func (is *Installer) validatePackage(logE *logrus.Entry, param *ParamInstallPack
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 
-	if err := pkgInfo.Validate(); err != nil {
+	err := pkgInfo.Validate()
+	if err != nil {
 		return fmt.Errorf("invalid package: %w", err)
 	}
 
 	if pkgInfo.NoAsset {
 		return errNoAsset
 	}
+
 	if pkgInfo.ErrorMessage != "" {
 		logE.Error(pkgInfo.ErrorMessage)
 		return errors.New("the package has a field `error_message`")
 	}
 
 	if !param.DisablePolicy {
-		if err := policy.ValidatePackage(logE, pkg, param.PolicyConfigs); err != nil {
+		err := policy.ValidatePackage(logE, pkg, param.PolicyConfigs)
+		if err != nil {
 			return err //nolint:wrapcheck
 		}
 	}
@@ -33,5 +36,6 @@ func (is *Installer) validatePackage(logE *logrus.Entry, param *ParamInstallPack
 	if pkgInfo.Type == "go_install" && pkg.Package.Version == "latest" {
 		return errGoInstallForbidLatest
 	}
+
 	return nil
 }

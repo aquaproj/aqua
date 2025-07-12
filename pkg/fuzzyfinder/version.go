@@ -16,15 +16,19 @@ func PreviewVersion(v *Version) string {
 	if v.Name != "" && v.Name != v.Version {
 		s += fmt.Sprintf(" (%s)", v.Name)
 	}
+
 	if v.URL != "" || v.Description != "" {
 		s += "\n"
 	}
+
 	if v.URL != "" {
 		s += "\n" + v.URL
 	}
+
 	if v.URL != "" {
 		s += "\n" + v.Description
 	}
+
 	return s
 }
 
@@ -33,15 +37,19 @@ func (v *Version) Preview(w int) string {
 	if v.Name != "" && v.Name != v.Version {
 		s += fmt.Sprintf(" (%s)", v.Name)
 	}
+
 	if v.URL != "" || v.Description != "" {
 		s += "\n"
 	}
+
 	if v.URL != "" {
 		s += "\n" + v.URL
 	}
+
 	if v.URL != "" {
 		s += "\n" + formatPreview(v.Description, w/2-8) //nolint:mnd
 	}
+
 	return s
 }
 
@@ -56,5 +64,6 @@ func ConvertStringsToItems(arr []string) []*Item {
 			Item: a,
 		}
 	}
+
 	return items
 }

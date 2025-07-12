@@ -20,6 +20,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:      "cp",
 		Usage:     "Copy executable files in a directory",
@@ -82,16 +83,22 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "cp", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "cp", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	param.SkipLink = true
+
 	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a CopyController: %w", err)
 	}
-	if err := ctrl.Copy(ctx, i.r.LogE, param); err != nil {
+
+	err := ctrl.Copy(ctx, i.r.LogE, param)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	return nil
 }

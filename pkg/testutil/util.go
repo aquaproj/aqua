@@ -8,14 +8,18 @@ import (
 func NewFs(files map[string]string, dirs ...string) (afero.Fs, error) {
 	fs := afero.NewMemMapFs()
 	for name, body := range files {
-		if err := afero.WriteFile(fs, name, []byte(body), osfile.FilePermission); err != nil {
+		err := afero.WriteFile(fs, name, []byte(body), osfile.FilePermission)
+		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}
 	}
+
 	for _, dir := range dirs {
-		if err := osfile.MkdirAll(fs, dir); err != nil {
+		err := osfile.MkdirAll(fs, dir)
+		if err != nil {
 			return nil, err //nolint:wrapcheck
 		}
 	}
+
 	return fs, nil
 }

@@ -45,6 +45,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:      "remove",
 		Aliases:   []string{"rm"},
@@ -85,14 +86,19 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "remove", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "remove", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	param.SkipLink = true
+
 	ctrl := controller.InitializeRemoveCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime, mode)
-	if err := ctrl.Remove(ctx, i.r.LogE, param); err != nil {
+	err := ctrl.Remove(ctx, i.r.LogE, param)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	return nil
 }
 
@@ -102,7 +108,9 @@ func parseRemoveMode(target string) (*config.RemoveMode, error) {
 			Package: true,
 		}, nil
 	}
+
 	t := &config.RemoveMode{}
+
 	for _, c := range target {
 		switch c {
 		case 'l':
@@ -113,5 +121,6 @@ func parseRemoveMode(target string) (*config.RemoveMode, error) {
 			return nil, fmt.Errorf("invalid mode: %c", c)
 		}
 	}
+
 	return t, nil
 }

@@ -8,6 +8,7 @@ import (
 
 func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		title       string
 		constraints string
@@ -63,16 +64,20 @@ func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			b, err := expr.EvaluateVersionConstraints(d.constraints, d.version, d.semver)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if b != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, b)
 			}

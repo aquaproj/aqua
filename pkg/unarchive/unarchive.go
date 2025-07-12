@@ -48,10 +48,13 @@ func IsUnarchived(archiveType, assetName string) bool {
 	if archiveType == "raw" {
 		return true
 	}
+
 	if archiveType != "" {
 		return false
 	}
+
 	ext := filepath.Ext(assetName)
+
 	return ext == "" || ext == ".exe"
 }
 
@@ -63,6 +66,7 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) coreUnarchiver {
 			fs:   u.fs,
 		}
 	}
+
 	if src.Type == "dmg" {
 		return &dmgUnarchiver{
 			dest:     dest,
@@ -70,6 +74,7 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) coreUnarchiver {
 			fs:       u.fs,
 		}
 	}
+
 	if src.Type == "pkg" {
 		return &pkgUnarchiver{
 			dest:     dest,
@@ -77,6 +82,7 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) coreUnarchiver {
 			fs:       u.fs,
 		}
 	}
+
 	switch ext := filepath.Ext(filename); ext {
 	case ".dmg":
 		return &dmgUnarchiver{

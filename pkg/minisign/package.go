@@ -58,6 +58,7 @@ func Package() *config.Package { //nolint:funlen
 			},
 		}
 	}
+
 	return &config.Package{
 		Package: pkg,
 		PackageInfo: &registry.PackageInfo{

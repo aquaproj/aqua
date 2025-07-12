@@ -22,6 +22,7 @@ func CompileVersionFilterForTest(versionFilter string) *vm.Program {
 	if err != nil {
 		panic(err)
 	}
+
 	return p
 }
 

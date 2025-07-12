@@ -37,12 +37,15 @@ func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("check if a policy file exists: %w", err)
 		}
+
 		if !f {
 			return "", ErrConfigFileNotFound
 		}
+
 		if filepath.IsAbs(policyFilePath) {
 			return policyFilePath, nil
 		}
+
 		return filepath.Join(wd, policyFilePath), nil
 	}
 
@@ -50,13 +53,16 @@ func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 	if gitDir == "" {
 		return "", nil
 	}
+
 	gitParentDir := filepath.Dir(gitDir)
 	for _, p := range configFileNames() {
 		if _, err := f.fs.Stat(filepath.Join(gitParentDir, p)); err != nil {
 			continue
 		}
+
 		return filepath.Join(gitParentDir, p), nil
 	}
+
 	return "", nil
 }
 
@@ -67,5 +73,6 @@ func (f *ConfigFinderImpl) exist(p string) bool {
 	if err != nil {
 		return false
 	}
+
 	return b
 }

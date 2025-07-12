@@ -11,6 +11,7 @@ const registryStandard = "standard"
 
 func TestPackage_Item(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name string
 		pkg  *fuzzyfinder.Package
@@ -97,6 +98,7 @@ func TestPackage_Item(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			s := d.pkg.Item()
 			if s != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, s)

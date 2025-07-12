@@ -33,5 +33,6 @@ func (c *CargoVersionGetter) List(ctx context.Context, _ *logrus.Entry, pkg *reg
 	if err != nil {
 		return nil, fmt.Errorf("list versions of the crate: %w", err)
 	}
+
 	return fuzzyfinder.ConvertStringsToItems(versionStrings), nil
 }

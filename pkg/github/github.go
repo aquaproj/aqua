@@ -37,6 +37,7 @@ func getGitHubToken() string {
 	if token := os.Getenv("AQUA_GITHUB_TOKEN"); token != "" {
 		return token
 	}
+
 	return os.Getenv("GITHUB_TOKEN")
 }
 
@@ -44,6 +45,7 @@ func MakeRetryable(client *http.Client, logE *logrus.Entry) *http.Client {
 	c := retryablehttp.NewClient()
 	c.HTTPClient = client
 	c.Logger = rlog.New(logE)
+
 	return c.StandardClient()
 }
 
@@ -52,8 +54,10 @@ func getHTTPClientForGitHub(ctx context.Context, logE *logrus.Entry, token strin
 		if keyring.Enabled() {
 			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logE, keyring.KeyService))
 		}
+
 		return http.DefaultClient
 	}
+
 	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	))

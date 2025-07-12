@@ -11,14 +11,15 @@ func containPath(p string) bool {
 	case "README", "README.md", "LICENSE":
 		return false
 	}
+
 	return true
 }
 
 func (is *Installer) walk(pkgPath string) ([]string, error) {
 	paths := []string{}
-	if err := filepath.WalkDir(pkgPath, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(pkgPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil //nolint:nilerr
+			return nil
 		}
 		if d.Type().IsDir() {
 			return nil
@@ -32,8 +33,10 @@ func (is *Installer) walk(pkgPath string) ([]string, error) {
 			paths = append(paths, f)
 		}
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, fmt.Errorf("walks the file tree of the unarchived package: %w", err)
 	}
+
 	return paths, nil
 }

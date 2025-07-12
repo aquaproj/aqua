@@ -20,6 +20,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:        "generate",
 		Aliases:     []string{"g"},
@@ -77,10 +78,13 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "generate", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "generate", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeGenerateCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
+
 	return ctrl.Generate(ctx, i.r.LogE, param, cmd.Args().Slice()...) //nolint:wrapcheck
 }
 

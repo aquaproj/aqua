@@ -25,6 +25,7 @@ func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
 	}
+
 	return &cli.Command{
 		Name:      "which",
 		Usage:     "Output the absolute file path of the given command",
@@ -68,31 +69,40 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "which", param, i.r.LDFlags); err != nil {
+	err := util.SetParam(cmd, i.r.LogE, "which", param, i.r.LDFlags)
+	if err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+
 	ctrl := controller.InitializeWhichCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
+
 	exeName, _, err := ParseExecArgs(cmd.Args().Slice())
 	if err != nil {
 		return err
 	}
+
 	logE := i.r.LogE.WithField("exe_name", exeName)
+
 	which, err := ctrl.Which(ctx, logE, param, exeName)
 	if err != nil {
 		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
 			"exe_name": exeName,
 		})
 	}
+
 	if !param.ShowVersion {
 		fmt.Fprintln(os.Stdout, which.ExePath)
 		return nil
 	}
+
 	if which.Package == nil {
 		return logerr.WithFields(errors.New("aqua can't get the command version because the command isn't managed by aqua"), logrus.Fields{ //nolint:wrapcheck
 			"exe_name": exeName,
 		})
 	}
+
 	fmt.Fprintln(os.Stdout, which.Package.Package.Version)
+
 	return nil
 }
 
@@ -102,5 +112,6 @@ func ParseExecArgs(args []string) (string, []string, error) {
 	if len(args) == 0 {
 		return "", nil, errCommandIsRequired
 	}
+
 	return filepath.Base(args[0]), args[1:], nil
 }

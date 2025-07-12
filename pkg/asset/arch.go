@@ -42,17 +42,22 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 	for _, o := range archList {
 		if idx := strings.Index(lowAssetName, o.Name); idx != -1 {
 			archName := assetName[idx : idx+len(o.Name)]
+
 			assetInfo.Arch = o.Arch
 			if archName != o.Arch {
 				if assetInfo.Replacements == nil {
 					assetInfo.Replacements = map[string]string{}
 				}
+
 				assetInfo.Replacements[o.Arch] = archName
 			}
+
 			assetInfo.Template = strings.Replace(assetInfo.Template, archName, "{{.Arch}}", 1)
+
 			break
 		}
 	}
+
 	if assetInfo.Arch == "" {
 		assetInfo.Arch = "amd64"
 		assetInfo.Score = -2 //nolint:mnd

@@ -112,13 +112,15 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
+
 	pkg.PackageInfo = pkgInfo
 
-	if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
-		Checksums:     checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
+	err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
+		Checksums:     checksum.New(),
 		Pkg:           pkg,
 		DisablePolicy: true,
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
 
@@ -158,15 +160,19 @@ func (is *Installer) copyAquaOnWindows(exePath string) error {
 		// afero.Tempfile can't be used
 		// > The system cannot move the file to a different disk drive
 		tempDir := filepath.Join(is.rootDir, "temp")
-		if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
+		err := osfile.MkdirAll(is.fs, tempDir)
+		if err != nil {
 			return fmt.Errorf("create a temporary directory: %w", err)
 		}
-		if err := is.fs.Rename(dest, filepath.Join(tempDir, "aqua.exe")); err != nil {
+		err := is.fs.Rename(dest, filepath.Join(tempDir, "aqua.exe"))
+		if err != nil {
 			return fmt.Errorf("rename aqua.exe to update: %w", err)
 		}
 	}
-	if err := is.linker.Hardlink(exePath, dest); err != nil {
+	err := is.linker.Hardlink(exePath, dest)
+	if err != nil {
 		return fmt.Errorf("create a hard link to aqua.exe: %w", err)
 	}
+
 	return nil
 }

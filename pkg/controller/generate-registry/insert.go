@@ -13,12 +13,14 @@ func (c *Controller) insert(cfgFilePath string, pkgs any) error {
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
+
 	file, err := parser.ParseBytes(b, parser.ParseComments)
 	if err != nil {
 		return fmt.Errorf("parse configuration file as YAML: %w", err)
 	}
 
-	if err := asset.UpdateASTFile(file, pkgs); err != nil {
+	err := asset.UpdateASTFile(file, pkgs)
+	if err != nil {
 		return fmt.Errorf("update an AST file: %w", err)
 	}
 
@@ -26,8 +28,10 @@ func (c *Controller) insert(cfgFilePath string, pkgs any) error {
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
+	err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode())
+	if err != nil {
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
+
 	return nil
 }

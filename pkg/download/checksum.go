@@ -53,6 +53,7 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *lo
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 		}
+
 		return dl.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
@@ -64,12 +65,14 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *lo
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 		}
+
 		rc, code, err := dl.http.Download(ctx, u)
 		if err != nil {
 			return rc, code, fmt.Errorf("download a checksum file: %w", logerr.WithFields(err, logrus.Fields{
 				"download_url": u,
 			}))
 		}
+
 		return rc, code, nil
 	default:
 		return nil, 0, logerr.WithFields(errUnknownChecksumFileType, logrus.Fields{ //nolint:wrapcheck

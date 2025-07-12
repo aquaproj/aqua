@@ -28,9 +28,11 @@ func (c *Cosign) GetEnabled() bool {
 	if c == nil {
 		return false
 	}
+
 	if c.Enabled != nil {
 		return *c.Enabled
 	}
+
 	return len(c.Opts) != 0 || c.Signature != nil || c.Certificate != nil || c.Key != nil || c.Bundle != nil
 }
 
@@ -41,6 +43,7 @@ func (c *Cosign) RenderOpts(rt *runtime.Runtime, art *template.Artifact) ([]stri
 		if err != nil {
 			return nil, fmt.Errorf("render a cosign option: %w", err)
 		}
+
 		opts[i] = s
 	}
 

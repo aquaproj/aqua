@@ -14,6 +14,7 @@ import (
 
 func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name  string
 		param *ParamVerifyChecksum
@@ -76,18 +77,22 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 			inst := d.inst
 
-			if err := inst.verifyChecksum(ctx, logE, d.param); err != nil {
+			err := inst.verifyChecksum(ctx, logE, d.param)
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must occur")
 			}

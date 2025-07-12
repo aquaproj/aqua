@@ -90,6 +90,7 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 		ghattestation.Package,
 		ghattestation.Checksums(),
 	)
+
 	return installer
 }
 
@@ -202,9 +203,11 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 		logE.WithFields(logrus.Fields{
 			"only_link": true,
 		}).Debug("skip downloading the package")
+
 		if failed {
 			return errInstallFailure
 		}
+
 		return nil
 	}
 
@@ -212,6 +215,7 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 		if failed {
 			return errInstallFailure
 		}
+
 		return nil
 	}
 
@@ -228,23 +232,28 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 			logE.Debug("skip installing the package because package tags are unmatched")
 			continue
 		}
+
 		eg.Go(func() error {
-			if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
+			err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
 				RequireChecksum: param.RequireChecksum,
 				PolicyConfigs:   param.PolicyConfigs,
 				DisablePolicy:   param.DisablePolicy,
-			}); err != nil {
+			})
+			if err != nil {
 				logerr.WithError(logE, err).Error("install the package")
 				return err
 			}
+
 			return nil
 		})
 	}
-	if err := eg.Wait(); err != nil {
+	err := eg.Wait()
+	if err != nil {
 		return errInstallFailure
 	}
+
 	return nil
 }
 
@@ -257,7 +266,8 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 	})
 	logE.Debug("installing the package")
 
-	if err := is.validatePackage(logE, param); err != nil {
+	err := is.validatePackage(logE, param)
+	if err != nil {
 		return err
 	}
 
@@ -271,14 +281,15 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
+	err := is.downloadWithRetry(ctx, logE, &DownloadParam{
 		Package:         pkg,
 		Dest:            pkgPath,
 		Asset:           assetName,
 		Checksums:       param.Checksums,
 		RequireChecksum: param.RequireChecksum,
 		Checksum:        param.Checksum,
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
 

@@ -7,6 +7,7 @@ import (
 
 func NewInitPolicy(r *util.Param) *cli.Command {
 	cmd := newPolicyInit(r)
+
 	return &cli.Command{
 		Name:      "init-policy",
 		Usage:     "[Deprecated] Create a policy file if it doesn't exist",

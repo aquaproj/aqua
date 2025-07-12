@@ -24,6 +24,7 @@ import (
 
 func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name       string
 		files      map[string]string
@@ -173,33 +174,42 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			linker := installpackage.NewMockLinker(afero.NewMemMapFs())
 			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+				err := linker.Symlink(dest, src)
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
+
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
+
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			if err := ctrl.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{
+			err := ctrl.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{
 				Config:         d.cfg,
 				Registries:     d.registries,
 				ConfigFilePath: d.param.ConfigFilePath,
-			}); err != nil {
+			})
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
@@ -209,6 +219,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 
 func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name     string
 		files    map[string]string
@@ -255,25 +266,32 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
+
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			if err := ctrl.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
+			err := ctrl.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
 				Pkg: d.pkg,
-			}); err != nil {
+			})
+			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}

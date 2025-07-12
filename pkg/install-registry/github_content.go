@@ -34,7 +34,8 @@ func (is *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.
 	}
 
 	if checksums != nil {
-		if err := checksum.CheckRegistry(regist, checksums, content); err != nil {
+		err := checksum.CheckRegistry(regist, checksums, content)
+		if err != nil {
 			return nil, fmt.Errorf("check a registry's checksum: %w", err)
 		}
 	}
@@ -45,18 +46,24 @@ func (is *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.
 	}
 	defer file.Close()
 
-	if err := afero.WriteFile(is.fs, registryFilePath, content, registryFilePermission); err != nil {
+	err := afero.WriteFile(is.fs, registryFilePath, content, registryFilePermission)
+	if err != nil {
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
+
 	registryContent := &registry.Config{}
 	if isJSON(registryFilePath) {
-		if err := json.Unmarshal(content, registryContent); err != nil {
+		err := json.Unmarshal(content, registryContent)
+		if err != nil {
 			return nil, fmt.Errorf("parse the registry configuration file as JSON: %w", err)
 		}
+
 		return registryContent, nil
 	}
-	if err := yaml.Unmarshal(content, registryContent); err != nil {
+	err := yaml.Unmarshal(content, registryContent)
+	if err != nil {
 		return nil, fmt.Errorf("parse the registry configuration file as YAML: %w", err)
 	}
+
 	return registryContent, nil
 }

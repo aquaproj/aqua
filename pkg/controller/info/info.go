@@ -55,6 +55,7 @@ func getCurrentUserName() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get a current user: %w", err)
 	}
+
 	userName := currentUser.Username
 	if runtime.GOOS == "windows" {
 		// On Windows, the user name is in the form of "domain\user".
@@ -62,8 +63,10 @@ func getCurrentUserName() (string, error) {
 		if ok {
 			return userName, nil
 		}
+
 		return domain, nil
 	}
+
 	return userName, nil
 }
 
@@ -74,6 +77,7 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 	}
 
 	filePaths := c.finder.Finds(param.PWD, param.ConfigFilePath)
+
 	cfgs := make([]*Config, len(filePaths))
 	for i, filePath := range filePaths {
 		cfgs[i] = &Config{
@@ -95,6 +99,7 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 	if c.rt.GOOS != runtime.GOOS {
 		info.AquaGOOS = c.rt.GOOS
 	}
+
 	if c.rt.GOARCH != runtime.GOARCH {
 		info.AquaGOARCH = c.rt.GOARCH
 	}
@@ -125,6 +130,7 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 			info.Env[envName] = maskUser(v, userName)
 		}
 	}
+
 	if _, ok := os.LookupEnv("AQUA_GITHUB_TOKEN"); ok {
 		info.Env["AQUA_GITHUB_TOKEN"] = "(masked)"
 	} else if _, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
@@ -133,9 +139,11 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(info); err != nil {
+	err := encoder.Encode(info)
+	if err != nil {
 		return fmt.Errorf("encode info as JSON and output it to stdout: %w", err)
 	}
+
 	return nil
 }
 

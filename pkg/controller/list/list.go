@@ -14,13 +14,16 @@ func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config
 	if param.Installed {
 		return c.listInstalled(logE, param)
 	}
+
 	cfg := &aqua.Config{}
+
 	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	err := c.configReader.Read(logE, cfgFilePath, cfg)
+	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
@@ -36,12 +39,14 @@ func (c *Controller) List(ctx context.Context, logE *logrus.Entry, param *config
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+
 	for registryName, registryContent := range registryContents {
 		for pkgName := range registryContent.PackageInfos.ToMap(logE) {
 			if pkgName == "" {
 				logE.Debug("ignore a package because the package name is empty")
 				continue
 			}
+
 			fmt.Fprintln(c.stdout, registryName+","+pkgName)
 		}
 	}

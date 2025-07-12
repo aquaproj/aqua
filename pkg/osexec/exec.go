@@ -31,6 +31,7 @@ func Command(ctx context.Context, name string, arg ...string) *exec.Cmd {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	setCancel(cmd)
+
 	return cmd
 }
 
@@ -46,11 +47,14 @@ func (e *Executor) ExecAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
 	buf := &bytes.Buffer{}
 	stderr := cmd.Stderr
 	cmd.Stdout = buf
+
 	cmd.Stderr = buf
-	if err := cmd.Run(); err != nil {
+	err := cmd.Run()
+	if err != nil {
 		fmt.Fprintln(stderr, buf.String())
 		return cmd.ProcessState.ExitCode(), err
 	}
+
 	return 0, nil
 }
 
@@ -69,5 +73,6 @@ func (e *Executor) execAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) 
 	cmd.Stdout = io.MultiWriter(cmd.Stdout, out)
 	cmd.Stderr = io.MultiWriter(cmd.Stderr, out)
 	code, err := e.Exec(cmd)
+
 	return out.String(), code, err
 }

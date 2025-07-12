@@ -52,23 +52,31 @@ func (u *Update) GetEnabled() bool {
 
 func (p *Package) UnmarshalYAML(unmarshal func(any) error) error {
 	type alias Package
+
 	a := alias(*p)
-	if err := unmarshal(&a); err != nil {
+	err := unmarshal(&a)
+	if err != nil {
 		return err
 	}
+
 	pin := a.Version != ""
+
 	name, version := parseNameWithVersion(a.Name)
 	if name != "" {
 		a.Name = name
 	}
+
 	if version != "" {
 		a.Version = version
 	}
+
 	*p = Package(a)
 	if p.Registry == "" {
 		p.Registry = RegistryTypeStandard
 	}
+
 	p.Pin = pin
+
 	return nil
 }
 
@@ -88,6 +96,7 @@ type Registries map[string]*Registry //nolint:recvcheck
 
 func (Registries) JSONSchema() *jsonschema.Schema {
 	s := jsonschema.Reflect(&Registry{})
+
 	return &jsonschema.Schema{
 		Type:  "array",
 		Items: s.Definitions["Registry"],
@@ -105,16 +114,21 @@ const (
 
 func (r *Registries) UnmarshalYAML(unmarshal func(any) error) error {
 	arr := []*Registry{}
-	if err := unmarshal(&arr); err != nil {
+	err := unmarshal(&arr)
+	if err != nil {
 		return err
 	}
+
 	m := make(map[string]*Registry, len(arr))
 	for _, registry := range arr {
 		if registry == nil {
 			continue
 		}
+
 		m[registry.Name] = registry
 	}
+
 	*r = m
+
 	return nil
 }

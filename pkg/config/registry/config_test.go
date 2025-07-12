@@ -10,6 +10,7 @@ import (
 
 func TestPackageInfos_ToMap(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		title    string
 		pkgInfos *registry.PackageInfos
@@ -33,9 +34,11 @@ func TestPackageInfos_ToMap(t *testing.T) {
 	}
 
 	logE := logrus.NewEntry(logrus.New())
+
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+
 			m := d.pkgInfos.ToMap(logE)
 			if diff := cmp.Diff(d.exp, m); diff != "" {
 				t.Fatal(diff)

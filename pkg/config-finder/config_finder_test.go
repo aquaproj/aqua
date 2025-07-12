@@ -11,6 +11,7 @@ import (
 
 func TestParseGlobalConfigFilePaths(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name string
 		env  string
@@ -27,9 +28,11 @@ func TestParseGlobalConfigFilePaths(t *testing.T) {
 		},
 	}
 	pwd := "/home/foo"
+
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			paths := finder.ParseGlobalConfigFilePaths(pwd, d.env)
 			if !reflect.DeepEqual(d.exp, paths) {
 				t.Fatalf("wanted %+v, got %+v", d.exp, paths)
@@ -40,6 +43,7 @@ func TestParseGlobalConfigFilePaths(t *testing.T) {
 
 func Test_configFinderFind(t *testing.T) { //nolint:funlen
 	t.Parallel()
+
 	data := []struct {
 		name                  string
 		wd                    string
@@ -84,21 +88,27 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			configFinder := finder.NewConfigFinder(fs)
+
 			p, err := configFinder.Find(d.wd, d.configFilePath, d.globalConfigFilePaths...)
 			if err != nil {
 				if d.isErr {
 					return
 				}
+
 				t.Fatal(err)
 			}
+
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+
 			if p != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, p)
 			}
@@ -108,6 +118,7 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 
 func Test_configFinderFinds(t *testing.T) {
 	t.Parallel()
+
 	data := []struct {
 		name           string
 		wd             string
@@ -153,11 +164,14 @@ func Test_configFinderFinds(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			fs, err := testutil.NewFs(d.files)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			configFinder := finder.NewConfigFinder(fs)
+
 			arr := configFinder.Finds(d.wd, d.configFilePath)
 			if diff := cmp.Diff(d.exp, arr); diff != "" {
 				t.Fatal(diff)
@@ -168,7 +182,9 @@ func Test_configFinderFinds(t *testing.T) {
 
 func Test_DuplicateFilePaths(t *testing.T) {
 	t.Parallel()
+
 	cfgFilePaths := finder.ConfigFileNames()
+
 	data := []struct {
 		name     string
 		filePath string
@@ -193,15 +209,19 @@ func Test_DuplicateFilePaths(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
+
 			arr := finder.DuplicateFilePaths(d.filePath)
+
 			m := make(map[string]struct{}, len(arr))
 			for _, p := range arr {
 				m[p] = struct{}{}
 			}
+
 			m2 := make(map[string]struct{}, len(d.exp))
 			for _, p := range d.exp {
 				m2[p] = struct{}{}
 			}
+
 			if diff := cmp.Diff(m2, m); diff != "" {
 				t.Fatal(diff)
 			}

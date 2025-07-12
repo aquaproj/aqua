@@ -19,26 +19,32 @@ func UpdateASTFile(file *ast.File, pkgs any) error { //nolint:cyclop
 		if !ok {
 			continue
 		}
+
 		for _, mapValue := range body.Values {
 			key, ok := mapValue.Key.(*ast.StringNode)
 			if !ok {
 				continue
 			}
+
 			if key.Value != "packages" {
 				continue
 			}
+
 			switch mapValue.Value.Type() {
 			case ast.NullType:
 				mapValue.Value = node
 			case ast.SequenceType:
-				if err := ast.Merge(mapValue.Value, node); err != nil {
+				err := ast.Merge(mapValue.Value, node)
+				if err != nil {
 					return fmt.Errorf("merge packages: %w", err)
 				}
 			default:
 				return errors.New("packages must be null or array")
 			}
+
 			break
 		}
 	}
+
 	return nil
 }

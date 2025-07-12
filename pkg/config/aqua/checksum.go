@@ -6,9 +6,11 @@ func (c *Config) ChecksumEnabled(enforceValue, defValue bool) bool {
 	if enforceValue {
 		return true
 	}
+
 	if c == nil || c.Checksum == nil || c.Checksum.Enabled == nil {
 		return defValue
 	}
+
 	return c.Checksum.GetEnabled()
 }
 
@@ -16,9 +18,11 @@ func (c *Config) RequireChecksum(enforceValue, defValue bool) bool {
 	if enforceValue {
 		return true
 	}
+
 	if c == nil || c.Checksum == nil || c.Checksum.RequireChecksum == nil {
 		return defValue
 	}
+
 	return *c.Checksum.RequireChecksum
 }
 

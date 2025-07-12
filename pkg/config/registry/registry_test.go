@@ -18,23 +18,29 @@ func downloadTestFile(uri, tempDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("create a request: %w", err)
 	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("send a HTTP request: %w", err)
 	}
 	defer resp.Body.Close()
+
 	fileName := "registry.yaml"
 	if filepath.Ext(uri) == ".json" {
 		fileName = "registry.json"
 	}
+
 	filePath := filepath.Join(tempDir, fileName)
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		return "", fmt.Errorf("create a file: %w", err)
 	}
+
 	if _, err := io.Copy(f, resp.Body); err != nil {
 		return "", fmt.Errorf("write a response body to a file: %w", err)
 	}
+
 	return filePath, nil
 }
 
@@ -44,7 +50,9 @@ func BenchmarkReadRegistry(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
+
 		b.ResetTimer()
+
 		for b.Loop() {
 			func() {
 				f, err := os.Open(registryYAML)
@@ -52,8 +60,10 @@ func BenchmarkReadRegistry(b *testing.B) {
 					b.Fatal(err)
 				}
 				defer f.Close()
+
 				registry := &registry.Config{}
-				if err := yaml.NewDecoder(f).Decode(registry); err != nil {
+				err := yaml.NewDecoder(f).Decode(registry)
+				if err != nil {
 					b.Fatal(err)
 				}
 			}()
@@ -64,7 +74,9 @@ func BenchmarkReadRegistry(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
+
 		b.ResetTimer()
+
 		for b.Loop() {
 			func() {
 				f, err := os.Open(registryJSON)
@@ -72,8 +84,10 @@ func BenchmarkReadRegistry(b *testing.B) {
 					b.Fatal(err)
 				}
 				defer f.Close()
+
 				registry := &registry.Config{}
-				if err := json.NewDecoder(f).Decode(registry); err != nil {
+				err := json.NewDecoder(f).Decode(registry)
+				if err != nil {
 					b.Fatal(err)
 				}
 			}()

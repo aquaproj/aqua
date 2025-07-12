@@ -37,19 +37,24 @@ func NewExecutor(logE *logrus.Entry, executor CommandExecutor, param *config.Par
 	if err != nil {
 		return nil, fmt.Errorf("evaluate version constraints: %w", err)
 	}
+
 	supported, err := pkgInfo.CheckSupported(rt, rt.Env())
 	if err != nil {
 		return nil, fmt.Errorf("check if the package is supported in the environment: %w", err)
 	}
+
 	if !supported {
 		logE.Debug("the package isn't supported in the environment")
 		return nil, nil //nolint:nilnil
 	}
+
 	pkg.PackageInfo = pkgInfo
+
 	exePath, err := pkg.ExePath(param.RootDir, pkgInfo.GetFiles()[0], rt)
 	if err != nil {
 		return nil, fmt.Errorf("get an executable file path of minisign: %w", err)
 	}
+
 	return &ExecutorImpl{
 		executor:        executor,
 		minisignExePath: exePath,
@@ -63,9 +68,12 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 		"retry_count": retryCount,
 		"wait_time":   waitTime,
 	}).Info("Verification by minisign failed temporarily, retrying")
-	if err := timer.Wait(ctx, waitTime); err != nil {
+
+	err := timer.Wait(ctx, waitTime)
+	if err != nil {
 		return fmt.Errorf("wait running minisign: %w", err)
 	}
+
 	return nil
 }
 
@@ -89,17 +97,22 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		if err == nil {
 			return nil
 		}
+
 		logerr.WithError(logE, err).WithFields(logrus.Fields{
 			"exe":  e.minisignExePath,
 			"args": strings.Join(args, " "),
 		}).Warn("execute minisign")
+
 		if i == 4 { //nolint:mnd
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+
+		err := wait(ctx, logE, i+1)
+		if err != nil {
 			return err
 		}
 	}
+
 	return errVerify
 }
 
@@ -107,9 +120,12 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 	if e == nil {
 		return errors.New("executor is nil")
 	}
+
 	if e.executor == nil {
 		return errors.New("e.executor is nil")
 	}
+
 	_, err := e.executor.ExecStderr(osexec.Command(ctx, e.minisignExePath, args...))
+
 	return err //nolint:wrapcheck
 }
