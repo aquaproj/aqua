@@ -1,6 +1,31 @@
 {
   "checksums": [
     {
+      "id": "github_release/github.com/anchore/syft/v1.28.0/syft_1.28.0_darwin_amd64.tar.gz",
+      "checksum": "15067673A0EA8AEBA31E2A53DEB1633EAC5C0024AB73BDFF91CFFB157735D90A",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/anchore/syft/v1.28.0/syft_1.28.0_darwin_arm64.tar.gz",
+      "checksum": "8666A08560B7AFB3A547A5CD596880C9FF51736A4C49B1576009AEF292C08343",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/anchore/syft/v1.28.0/syft_1.28.0_linux_amd64.tar.gz",
+      "checksum": "3EDEE7FE1CEB1F78360E547F57048930D57F00C7EC3D0B8BDFB902805F048468",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/anchore/syft/v1.28.0/syft_1.28.0_linux_arm64.tar.gz",
+      "checksum": "95C8533C46D4A952A576365F373D04FC0A4348E7335CBB82AC3EA2BC66E1E58B",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/anchore/syft/v1.28.0/syft_1.28.0_windows_amd64.zip",
+      "checksum": "A1637FDC074E9C80C6BF900DF26A883516BF32E90499E3BD9AA314493D40A0A8",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/crate-ci/typos/v1.34.0/typos-v1.34.0-aarch64-apple-darwin.tar.gz",
       "checksum": "7DF419F677DC5F3BBFB434E39632C468CDABEE599B120E74205AD9A40217A75A",
       "algorithm": "sha256"
