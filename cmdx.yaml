@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/v2.0.1/json-schema/cmdx.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/v2.0.2/json-schema/cmdx.json
 # the configuration file of cmdx - task runner
 # https://github.com/suzuki-shunsuke/cmdx
 tasks:
