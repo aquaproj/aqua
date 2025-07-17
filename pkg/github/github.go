@@ -31,18 +31,16 @@ const Tarball = github.Tarball
 
 var globalHTTPClient *http.Client //nolint:gochecknoglobals
 
-func HTTPClient() *http.Client {
+func GetHTTPClient(ctx context.Context, logE *logrus.Entry) *http.Client {
 	if globalHTTPClient != nil {
 		return globalHTTPClient
 	}
-	return http.DefaultClient
+	globalHTTPClient = MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)
+	return globalHTTPClient
 }
 
 func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
-	if globalHTTPClient == nil {
-		globalHTTPClient = MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)
-	}
-	return github.NewClient(globalHTTPClient).Repositories
+	return github.NewClient(GetHTTPClient(ctx, logE)).Repositories
 }
 
 func getGitHubToken() string {

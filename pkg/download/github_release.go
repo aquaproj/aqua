@@ -60,7 +60,7 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 	if err != nil {
 		return nil, 0, err
 	}
-	body, redirectURL, err := dl.github.DownloadReleaseAsset(ctx, param.RepoOwner, param.RepoName, assetID, github.HTTPClient())
+	body, redirectURL, err := dl.github.DownloadReleaseAsset(ctx, param.RepoOwner, param.RepoName, assetID, github.GetHTTPClient(ctx, logE))
 	if err != nil {
 		return nil, 0, fmt.Errorf("download the release asset (asset id: %d): %w", assetID, err)
 	}
