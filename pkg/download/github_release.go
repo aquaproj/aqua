@@ -17,9 +17,15 @@ type userAgentTransport struct {
 }
 
 func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Add a browser-like User-Agent to avoid being blocked by cloud storage services
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; aqua/2.0; +https://aquaproj.github.io/)")
-	return t.base.RoundTrip(req)
+	// Add a User-Agent to avoid being blocked by cloud storage services
+	// This is a workaround until the origin issue is resolved.
+	// See: https://github.com/aquaproj/aqua/pull/4019#issuecomment-3092666269
+	req.Header.Set("User-Agent", github.GetUserAgent())
+	r, err := t.base.RoundTrip(req)
+	if err != nil {
+		return nil, fmt.Errorf("round trip: %w", err)
+	}
+	return r, nil
 }
 
 type GitHubReleaseDownloader struct {
