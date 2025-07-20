@@ -29,6 +29,17 @@ type (
 
 const Tarball = github.Tarball
 
+// GetUserAgent returns a Chrome browser User-Agent string for better compatibility with cloud storage services
+// This is a workaround until the origin issue is resolved.
+// See: https://github.com/aquaproj/aqua/pull/4019#issuecomment-3092666269
+func GetUserAgent() string {
+	agent := os.Getenv("AQUA_DOWNLOAD_USER_AGENT")
+	if agent != "" {
+		return agent
+	}
+	return "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+}
+
 func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
 	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)).Repositories
 }
