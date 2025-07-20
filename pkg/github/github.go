@@ -37,7 +37,7 @@ func GetUserAgent() string {
 	if agent != "" {
 		return agent
 	}
-	return "go-github/" + github.Version
+	return "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
 }
 
 func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
