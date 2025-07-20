@@ -11,6 +11,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// userAgentTransport wraps an http.RoundTripper to add a browser-like User-Agent
+type userAgentTransport struct {
+	base http.RoundTripper
+}
+
+func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Add a browser-like User-Agent to avoid being blocked by cloud storage services
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; aqua/2.0; +https://aquaproj.github.io/)")
+	return t.base.RoundTrip(req)
+}
+
 type GitHubReleaseDownloader struct {
 	github GitHubReleaseAPI
 	http   HTTPDownloader
@@ -60,7 +71,13 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 	if err != nil {
 		return nil, 0, err
 	}
-	body, redirectURL, err := dl.github.DownloadReleaseAsset(ctx, param.RepoOwner, param.RepoName, assetID, http.DefaultClient)
+	// Create a custom client with browser-like User-Agent for Azure/S3 compatibility
+	client := &http.Client{
+		Transport: &userAgentTransport{
+			base: http.DefaultTransport,
+		},
+	}
+	body, redirectURL, err := dl.github.DownloadReleaseAsset(ctx, param.RepoOwner, param.RepoName, assetID, client)
 	if err != nil {
 		return nil, 0, fmt.Errorf("download the release asset (asset id: %d): %w", assetID, err)
 	}
