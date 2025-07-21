@@ -13,6 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 // Install is a main method of "install" command.
@@ -43,10 +44,14 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
 		policyCfgs, err := c.policyReader.Append(logE, cfgFilePath, policyCfgs, globalPolicyPaths)
 		if err != nil {
-			return err //nolint:wrapcheck
+			return fmt.Errorf("append policy configs: %w", logerr.WithFields(err, logrus.Fields{
+				"config_file_path": cfgFilePath,
+			}))
 		}
 		if err := c.install(ctx, logE, cfgFilePath, policyCfgs, param); err != nil {
-			return err
+			return fmt.Errorf("install packages: %w", logerr.WithFields(err, logrus.Fields{
+				"config_file_path": cfgFilePath,
+			}))
 		}
 	}
 
@@ -75,10 +80,14 @@ func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *
 		}
 		policyConfigs, err := c.policyReader.Append(logE, cfgFilePath, policyConfigs, globalPolicyPaths)
 		if err != nil {
-			return err //nolint:wrapcheck
+			return fmt.Errorf("append policy configs: %w", logerr.WithFields(err, logrus.Fields{
+				"config_file_path": cfgFilePath,
+			}))
 		}
 		if err := c.install(ctx, logE, cfgFilePath, policyConfigs, param); err != nil {
-			return err
+			return fmt.Errorf("install packages: %w", logerr.WithFields(err, logrus.Fields{
+				"config_file_path": cfgFilePath,
+			}))
 		}
 	}
 	return nil
@@ -91,6 +100,9 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePat
 	}
 	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
+	}
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("validate the configuration: %w", err)
 	}
 
 	checksums, updateChecksum, err := checksum.Open(

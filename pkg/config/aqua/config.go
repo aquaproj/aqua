@@ -1,9 +1,12 @@
 package aqua
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/invopop/jsonschema"
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type Package struct {
@@ -82,6 +85,17 @@ type Config struct {
 	Registries Registries `json:"registries"`
 	Checksum   *Checksum  `json:"checksum,omitempty"`
 	ImportDir  string     `json:"import_dir,omitempty" yaml:"import_dir,omitempty"`
+}
+
+func (c *Config) Validate() error {
+	for _, r := range c.Registries {
+		if err := r.Validate(); err != nil {
+			return fmt.Errorf("validate the registry: %w", logerr.WithFields(err, logrus.Fields{
+				"registry_name": r.Name,
+			}))
+		}
+	}
+	return nil
 }
 
 type Registries map[string]*Registry //nolint:recvcheck

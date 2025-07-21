@@ -209,11 +209,14 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 	return nil, nil //nolint:nilnil
 }
 
-func (c *Controller) findPkgInfo(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) { //nolint:cyclop
+func (c *Controller) findPkgInfo(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) { //nolint:cyclop,funlen
 	rg, ok := cfg.Registries[pkg.Registry]
 	if !ok {
 		logE.Debug("ignore a package because the registry isn't found")
 		return nil, nil //nolint:nilnil
+	}
+	if err := rg.Validate(); err != nil {
+		return nil, fmt.Errorf("validate the registry: %w", err)
 	}
 	if rg.Type != aqua.RegistryTypeGitHubContent {
 		logE.Debug("getting a package from a registry")
