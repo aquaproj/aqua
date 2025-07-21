@@ -89,5 +89,8 @@ func (r *Registry) validateGitHubContent() error {
 	if r.Ref == "" {
 		return errRefIsRequired
 	}
+	if r.Ref == "main" || r.Ref == "master" {
+		return errRefCannotBeMainOrMaster
+	}
 	return nil
 }
