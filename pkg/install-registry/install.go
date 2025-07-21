@@ -69,6 +69,9 @@ func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, 
 // InstallRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
 func (is *Installer) InstallRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+	if err := regist.Validate(); err != nil {
+		return nil, fmt.Errorf("validate the registry: %w", err)
+	}
 	registryFilePath, err := regist.FilePath(is.param.RootDir, cfgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
