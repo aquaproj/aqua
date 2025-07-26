@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
-	"github.com/google/go-github/v73/github"
+	"github.com/google/go-github/v74/github"
 	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-retryablehttp"
 	"github.com/suzuki-shunsuke/go-retryablehttp-logrus/rlog"
