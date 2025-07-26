@@ -116,10 +116,22 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
-	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.exePath, args...))
+	cmd := osexec.Command(ctx, e.exePath, args...)
+
+	/*
+		GitHub Artifact Attestations verification should always use github.com
+		regardless of GH_HOST environment variable settings
+
+		Cmd.Env gives preference to the last entry if there are duplicate environment variables
+		ref: https://pkg.go.dev/os/exec#Cmd
+	*/
+	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
+
+	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)
 	if err == nil {
 		return nil
 	}
+
 	// https://github.com/aquaproj/aqua/issues/3157
 	// Ignore error if authentifaction fails
 	if strings.Contains(out, "gh auth login") || strings.Contains(out, "set the GH_TOKEN environment variable") {
