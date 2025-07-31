@@ -15,6 +15,8 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+const exeExt = ".exe"
+
 func (is *Installer) checkFilesWrap(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage, pkgPath string) error {
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
@@ -72,7 +74,7 @@ func (is *Installer) checkAndCopyFile(ctx context.Context, logE *logrus.Entry, p
 	for exeName := range exeNames {
 		p := filepath.Join(is.copyDir, exeName)
 		if is.runtime.GOOS == "windows" && filepath.Ext(exeName) == "" {
-			p += ".exe"
+			p += exeExt
 		}
 		if err := is.Copy(p, exePath); err != nil {
 			return err
@@ -85,7 +87,7 @@ func (is *Installer) checkFileSrcGo(ctx context.Context, logE *logrus.Entry, pkg
 	pkgInfo := pkg.PackageInfo
 	exePath := filepath.Join(is.rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "bin", file.Name)
 	if is.runtime.IsWindows() {
-		exePath += ".exe"
+		exePath += exeExt
 	}
 	dir, err := pkg.RenderDir(file, is.runtime)
 	if err != nil {
@@ -154,7 +156,7 @@ func (is *Installer) checkFileSrc(ctx context.Context, logE *logrus.Entry, pkg *
 func (is *Installer) createFileHardLink(logE *logrus.Entry, file *registry.File, exePath string) error {
 	link := filepath.Join(filepath.Dir(exePath), file.Link)
 	if is.runtime.IsWindows() && filepath.Ext(link) == "" {
-		link += ".exe"
+		link += exeExt
 	}
 	if f, err := afero.Exists(is.fs, link); err != nil {
 		return fmt.Errorf("check if a hardlink exists: %w", err)

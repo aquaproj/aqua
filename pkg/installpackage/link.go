@@ -95,7 +95,7 @@ func (is *Installer) createCmdLink(logE *logrus.Entry, file *registry.File, cmd 
 }
 
 func (is *Installer) createHardLinkToProxy(logE *logrus.Entry, cmd, aquaProxyPathOnWindows string) error {
-	hardLink := filepath.Join(is.rootDir, "bin", cmd+".exe")
+	hardLink := filepath.Join(is.rootDir, "bin", cmd+exeExt)
 	if f, err := afero.Exists(is.fs, hardLink); err != nil {
 		return fmt.Errorf("check if a hard link to aqua-proxy exists: %w", err)
 	} else if f {
@@ -130,7 +130,7 @@ func (is *Installer) recreateHardLinks() error {
 		if err := is.fs.Remove(p); err != nil {
 			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
 		}
-		if strings.HasSuffix(info.Name(), ".exe") {
+		if strings.HasSuffix(info.Name(), exeExt) {
 			if err := is.linker.Hardlink(a, p); err != nil {
 				return fmt.Errorf("create a hard link: %w", err)
 			}
