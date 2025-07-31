@@ -34,46 +34,17 @@ sboms:
   - id: default
     disable: false
 
-signs:
-  - cmd: cosign
-    artifacts: checksum
-    signature: ${artifact}.sig
-    certificate: ${artifact}.pem
-    output: true
-    args:
-      - sign-blob
-      - "-y"
-      - --output-signature
-      - ${signature}
-      - --output-certificate
-      - ${certificate}
-      - --oidc-provider
-      - github
-      - ${artifact}
-
 homebrew_casks:
-  -
-    # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
-    # same kind. We will probably unify this in the next major version like it is done with scoop.
-
-    # GitHub/GitLab repository to push the formula to
-    repository:
+  - repository:
       owner: aquaproj
       name: homebrew-aqua
     # The project name and current git tag are used in the format string.
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    # Your app's homepage.
-    # Default is empty.
     homepage: https://github.com/aquaproj/aqua
-
-    # Template of your app's description.
-    # Default is empty.
     description: |
       Declarative CLI Version manager. Support Lazy Install and Sharable configuration mechanism named Registry. Switch versions seamlessly
     license: MIT
-
     skip_upload: true
-
     hooks:
       post:
         install: |
@@ -82,8 +53,7 @@ homebrew_casks:
           end
 
 scoops:
-  -
-    description: |
+  - description: |
       Declarative CLI Version manager written in Go.
       Support Lazy Install, Registry, and continuous update by Renovate.
       CLI version is switched seamlessly
@@ -142,9 +112,6 @@ winget:
       Support Lazy Install, Registry, and continuous update by Renovate.
       CLI version is switched seamlessly
 
-    # License URL.
-    #
-    # Templates: allowed
     license_url: https://github.com/aquaproj/aqua/blob/main/LICENSE
 
     # Copyright.
