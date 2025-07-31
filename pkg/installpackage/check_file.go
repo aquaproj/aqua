@@ -68,8 +68,13 @@ func (is *Installer) checkAndCopyFile(ctx context.Context, logE *logrus.Entry, p
 			exeNames[alias.Alias] = struct{}{}
 		}
 	}
+
 	for exeName := range exeNames {
-		if err := is.Copy(filepath.Join(is.copyDir, exeName), exePath); err != nil {
+		p := filepath.Join(is.copyDir, exeName)
+		if is.runtime.GOOS == "windows" && filepath.Ext(exeName) == "" {
+			p += ".exe"
+		}
+		if err := is.Copy(p, exePath); err != nil {
 			return err
 		}
 	}
