@@ -10,7 +10,7 @@ jobs:
     with:
       go-version-file: go.mod
       aqua_policy_allow: true
-      aqua_version: v2.53.7
+      aqua_version: v2.53.8
     permissions:
       contents: write
       id-token: write
