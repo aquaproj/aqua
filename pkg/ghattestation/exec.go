@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -118,13 +119,13 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 	cmd := osexec.Command(ctx, e.exePath, args...)
 
-	/*
-		GitHub Artifact Attestations verification should always use github.com
-		regardless of GH_HOST environment variable settings
-
-		Cmd.Env gives preference to the last entry if there are duplicate environment variables
-		ref: https://pkg.go.dev/os/exec#Cmd
-	*/
+	// https://github.com/aquaproj/aqua/issues/4035
+	// Set GH_HOST to github.com for GitHub Enterprise
+	// GitHub CLI uses the GH_HOST environment variable to determine the host for GitHub API.
+	// But packages are always hosted on github.com.
+	if cmd.Env == nil {
+		cmd.Env = os.Environ()
+	}
 	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
 
 	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)
