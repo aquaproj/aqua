@@ -8,9 +8,11 @@ checksum:
 #   supported_envs:
 #   - all
 registries:
-- type: standard
-  ref: v4.398.0 # renovate: depName=aquaproj/aqua-registry
+  - type: standard
+    # v4.398.0
+    # renovate: depName=aquaproj/aqua-registry
+    ref: 5ea884fb06c62d3e62892fa256a6aa9633ee24ec
 packages:
-- name: jedisct1/minisign@0.12
-- name: jedisct1/minisign
-  version: "0.11"
+  - name: jedisct1/minisign@0.12
+  - name: jedisct1/minisign
+    version: "0.11"

@@ -8,7 +8,9 @@ checksum:
 #   supported_envs:
 #   - all
 registries:
-- type: standard
-  ref: v4.398.0 # renovate: depName=aquaproj/aqua-registry
+  - type: standard
+    # v4.398.0
+    # renovate: depName=aquaproj/aqua-registry
+    ref: 5ea884fb06c62d3e62892fa256a6aa9633ee24ec
 packages:
-- name: slsa-framework/slsa-verifier@v2.7.1
+  - name: slsa-framework/slsa-verifier@v2.7.1
