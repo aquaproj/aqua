@@ -19,6 +19,7 @@ var (
 	errGetTar          = errors.New("failed to get tar")
 	errGetRepo         = errors.New("failed to get repo")
 	errListAssets      = errors.New("failed to list assets")
+	errGetCommitSHA1   = errors.New("failed to get a commit sha1")
 )
 
 type MockRepositoriesService struct {
@@ -29,6 +30,7 @@ type MockRepositoriesService struct {
 	Asset    string
 	Assets   []*github.ReleaseAsset
 	URL      *url.URL
+	SHA1     string
 }
 
 func (m *MockRepositoriesService) GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
@@ -96,4 +98,11 @@ func (m *MockRepositoriesService) ListReleaseAssets(ctx context.Context, owner, 
 		return nil, nil, errListAssets
 	}
 	return m.Assets, &github.Response{}, nil
+}
+
+func (m *MockRepositoriesService) GetCommitSHA1(ctx context.Context, owner, repo, ref, lastSHA string) (string, *github.Response, error) {
+	if m.Assets == nil {
+		return "", nil, errGetCommitSHA1
+	}
+	return m.SHA1, &github.Response{}, nil
 }
