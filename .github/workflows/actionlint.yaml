@@ -9,4 +9,4 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: suzuki-shunsuke/actionlint-action@c8d3c0dcc9152f1d1c7d4a38cbf4953c3a55953d # v0.1.0
+      - uses: suzuki-shunsuke/actionlint-action@29e0b7cda52e51a495d15f22759745ef6e19583a # v0.1.1
