@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type GitHubContentFileDownloader struct {
@@ -28,16 +29,19 @@ func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) 
 	}
 }
 
-func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, _ *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
+func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
+	ref := param.Ref
 	sha, _, err := dl.github.GetCommitSHA1(ctx, param.RepoOwner, param.RepoName, param.Ref, "")
 	if err != nil {
-		return nil, fmt.Errorf("get a full length commit sha: %w", err)
+		logerr.WithError(logE, err).Warn("get a full length commit sha")
+	} else {
+		ref = sha
 	}
 	if !param.Private {
 		// https://github.com/aquaproj/aqua/issues/391
 		body, _, err := dl.http.Download(ctx, fmt.Sprintf(
 			"https://raw.githubusercontent.com/%s/%s/%s/%s",
-			param.RepoOwner, param.RepoName, sha, param.Path,
+			param.RepoOwner, param.RepoName, ref, param.Path,
 		))
 		if err == nil {
 			return &domain.GitHubContentFile{
@@ -50,7 +54,7 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 	}
 
 	file, resp, err := dl.github.DownloadContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
-		Ref: sha,
+		Ref: ref,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("get a file by Get GitHub Content API: %w", err)

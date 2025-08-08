@@ -101,7 +101,7 @@ func (m *MockRepositoriesService) ListReleaseAssets(ctx context.Context, owner, 
 }
 
 func (m *MockRepositoriesService) GetCommitSHA1(ctx context.Context, owner, repo, ref, lastSHA string) (string, *github.Response, error) {
-	if m.Assets == nil {
+	if m.SHA1 == "" {
 		return "", nil, errGetCommitSHA1
 	}
 	return m.SHA1, &github.Response{}, nil

@@ -31,7 +31,7 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 				Path:      "registry.yaml",
 			},
 			exp:    "foo",
-			github: nil,
+			github: &github.MockRepositoriesService{},
 			httpClient: &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{

@@ -9,6 +9,7 @@ import (
 	cfgRegistry "github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -102,7 +103,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			downloader: download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, &http.Client{
+			downloader: download.NewGitHubContentFileDownloader(&github.MockRepositoriesService{}, download.NewHTTPDownloader(logE, &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
 						{
