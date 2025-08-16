@@ -10,7 +10,6 @@ jobs:
     steps:
       - uses: suzuki-shunsuke/release-doc-action@94de66f739174d7c4ff94db68831b2672a4e4519 # v0.0.6
         with:
-          issue_number: 4095
           source_dir: website
           publish_dir: website/build
           destination_dir: docs
