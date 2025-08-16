@@ -72,3 +72,9 @@ jobs:
   typos:
     uses: ./.github/workflows/wc-typos.yaml
     permissions: {}
+
+  test_doc:
+    uses: ./.github/workflows/workflow_call_deploy_doc.yaml
+    permissions:
+      contents: write
+      issues: write

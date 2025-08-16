@@ -1,0 +1,10 @@
+# https://github.com/lycheeverse/lychee
+# https://lychee.cli.rs/#/usage/config
+exclude = [
+  '^https://twitter.com/.*',
+  '.*\.md$',
+]
+
+exclude_path = [
+  'blog/2022-05-30-support-building-go-tools.md',
+]

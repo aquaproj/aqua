@@ -1,0 +1,15 @@
+name: Deploy document (workflow_call)
+on: workflow_call
+jobs:
+  deploy_doc:
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: suzuki-shunsuke/release-doc-action@94de66f739174d7c4ff94db68831b2672a4e4519 # v0.0.6
+        with:
+          source_dir: website
+          publish_dir: website/build
+          destination_dir: docs
