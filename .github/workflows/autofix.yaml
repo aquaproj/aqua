@@ -19,4 +19,23 @@ jobs:
         working-directory: pkg/minisign
       - run: aqua upc -prune
         working-directory: pkg/ghattestation
+
+      - run: git ls-files docs | xargs pinact run -u
+        working-directory: website
+      - name: get nested property
+        id: package_json
+        uses: notiz-dev/github-action-json-property@a5a9c668b16513c737c3e1f8956772c99c73f6e8 # v0.2.0
+        with:
+          path: website/package.json
+          prop_path: volta.node
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{steps.package_json.outputs.prop}}
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci
+        working-directory: website
+      - run: cmdx usage
+        working-directory: website
+
       - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27 # v1.3.2

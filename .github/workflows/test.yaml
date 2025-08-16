@@ -18,4 +18,5 @@ jobs:
   test:
     uses: ./.github/workflows/workflow_call_test.yaml
     permissions:
-      contents: read
+      contents: write
+      issues: write

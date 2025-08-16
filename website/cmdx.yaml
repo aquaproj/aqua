@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/v2.0.2/json-schema/cmdx.json
+# the configuration file of cmdx - task runner
+# https://github.com/suzuki-shunsuke/cmdx
+tasks:
+  - name: check-link
+    short: l
+    description: Check if links are broken
+    usage: Check if links are broken
+    require:
+      exec:
+        - lychee
+    script: |
+      set -euo pipefail
+      git ls-files | grep -E "\.md$" | xargs -n 10 lychee
+  - name: update-usage
+    short: usage
+    description: Update Usage
+    usage: Update Usage
+    shell:
+      - bash
+      - -c
+    script: bash scripts/generate-usage.sh
