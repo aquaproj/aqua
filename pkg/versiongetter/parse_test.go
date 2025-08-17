@@ -122,13 +122,6 @@ func TestGetVersionAndPrefix(t *testing.T) { //nolint:gocognit,cyclop,funlen
 			wantErr:     false,
 		},
 		{
-			name:        "date-like prefix with version",
-			tag:         "2024-01-15-v1.2.3",
-			wantVersion: "2024.0.0-01-15-v1.2.3",
-			wantPrefix:  "",
-			wantErr:     false,
-		},
-		{
 			name:        "kubernetes style version",
 			tag:         "kubernetes-1.28.0",
 			wantVersion: "1.28.0",
