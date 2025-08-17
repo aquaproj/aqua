@@ -131,6 +131,31 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.8.0/gofumpt_v0.8.0_darwin_amd64",
+      "checksum": "0DDA6600CF263B703A5AD93E792B06180C36AFDEE9638617A91DD552F2C6FB3E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.8.0/gofumpt_v0.8.0_darwin_arm64",
+      "checksum": "7E66E92B7A67D1D12839AB030FB7AE38E5E2273474AF3762E67BC7FE9471FCD9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.8.0/gofumpt_v0.8.0_linux_amd64",
+      "checksum": "11604BBAF7321ABCC2FCA2C6A37B7E9198BB1E76E5A86F297C07201E8AB1FDA9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.8.0/gofumpt_v0.8.0_linux_arm64",
+      "checksum": "787C1D3D4D20E6FE2B0BF06A5A913AC0F50343DBF9A71540724A2B8092A0E6CA",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.8.0/gofumpt_v0.8.0_windows_amd64.exe",
+      "checksum": "6D25310F322080AF6DE8193617D78495B356A5EDE65FDE6D5D0E4BCDFFF1F2A4",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/reviewdog/reviewdog/v0.20.3/reviewdog_0.20.3_Darwin_arm64.tar.gz",
       "checksum": "A7FBF41913CE5B6F1872D10C136139B7A849190F4F1F0DC1ED4BF74C636F22A2",
       "algorithm": "sha256"
