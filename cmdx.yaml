@@ -75,3 +75,9 @@ tasks:
         type: bool
         script_envs:
           - BUILD
+  - name: fmt
+    description: Format code
+    usage: Format code
+    script: |
+      git ls-files | grep -E "\.go$" | xargs gofumpt -l -w
+      git ls-files | xargs nllint -f -s
