@@ -6,3 +6,5 @@ node_modules
 .idea
 
 third_party_licenses
+
+.claude/settings.local.json
