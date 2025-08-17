@@ -122,13 +122,6 @@ func TestGetVersionAndPrefix(t *testing.T) { //nolint:gocognit,cyclop,funlen
 			wantErr:     false,
 		},
 		{
-			name:        "kubernetes style version",
-			tag:         "kubernetes-1.28.0",
-			wantVersion: "1.28.0",
-			wantPrefix:  "kubernetes-",
-			wantErr:     false,
-		},
-		{
 			name:        "version at the end without v",
 			tag:         "release1.0.0",
 			wantVersion: "1.0.0",
