@@ -79,5 +79,5 @@ tasks:
     description: Format code
     usage: Format code
     script: |
-      git ls-files | grep -E "\.go$" | xargs gofumpt -l -w
-      git ls-files | xargs nllint -f -s
+      git ls-files --modified --others --exclude-standard | (grep -E "\.go$" || true) | xargs -r gofumpt -l -w
+      git ls-files --modified --others --exclude-standard | xargs -r nllint -s
