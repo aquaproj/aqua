@@ -8,7 +8,7 @@ jobs:
     permissions: {}
     timeout-minutes: 15
     steps:
-      - uses: suzuki-shunsuke/go-autofix-action@f3658e6f845e80b18d78046fa8faa43d3ef30eed # v0.1.9
+      - uses: suzuki-shunsuke/go-autofix-action@00c2661f4665666ed7c3cb3f8a27725e3e9bf686 # v0.1.10
         with:
           aqua_version: v2.53.9
       - run: aqua upc -prune
