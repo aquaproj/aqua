@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-func TestGetVersionAndPrefix(t *testing.T) {
+func TestGetVersionAndPrefix(t *testing.T) { //nolint:gocognit,cyclop
 	t.Parallel()
 	tests := []struct {
 		name          string
