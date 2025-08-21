@@ -26,28 +26,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.35.4/typos-v1.35.4-aarch64-apple-darwin.tar.gz",
-      "checksum": "388F0012CF1368CCE8C371CFEE5F7F8C3FFD986EBC2A9EFC5E20E6273FEB72EF",
+      "id": "github_release/github.com/crate-ci/typos/v1.35.5/typos-v1.35.5-aarch64-apple-darwin.tar.gz",
+      "checksum": "3FF6E35BF5DB05EF5B10CDDBF6C712FD8521FB0EC124B3317948DAFEADE9A3AA",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.35.4/typos-v1.35.4-aarch64-unknown-linux-musl.tar.gz",
-      "checksum": "5E56840CEA93A3C9F151BC7EAD95971EDF44A47B8148C12CEBCB13A1ED4BAF3C",
+      "id": "github_release/github.com/crate-ci/typos/v1.35.5/typos-v1.35.5-aarch64-unknown-linux-musl.tar.gz",
+      "checksum": "95D9E34FDAE0FFB074EAC4158C8EA8202A6759A585429E99848934997A6128B3",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.35.4/typos-v1.35.4-x86_64-apple-darwin.tar.gz",
-      "checksum": "42E6B30AF845A8D4B334D5BFF89432AE5AE0F30EA36EB72A6B43DC0F8C601108",
+      "id": "github_release/github.com/crate-ci/typos/v1.35.5/typos-v1.35.5-x86_64-apple-darwin.tar.gz",
+      "checksum": "0EEA2B6AB9B7CC6BC5A788BE93193CBD37B9F3865178543431F3BADBD9B7B545",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.35.4/typos-v1.35.4-x86_64-pc-windows-msvc.zip",
-      "checksum": "4B74B943123D885BBBC89EE66B1B9217E6898380A4E2191E0763A5B706B9D4D2",
+      "id": "github_release/github.com/crate-ci/typos/v1.35.5/typos-v1.35.5-x86_64-pc-windows-msvc.zip",
+      "checksum": "7DF239BCB143308E6303F3F8EF53853AF422557B6FCA432A293510B1AD0B9AE2",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/crate-ci/typos/v1.35.4/typos-v1.35.4-x86_64-unknown-linux-musl.tar.gz",
-      "checksum": "FFC35804D3A83FD9E6402CF120F191804E6DB5F6D828578188156A84DDA00357",
+      "id": "github_release/github.com/crate-ci/typos/v1.35.5/typos-v1.35.5-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "723DA6DAD9662A0A50725B9D96A48A55801AE5D60852705E878D280ABE354C76",
       "algorithm": "sha256"
     },
     {
