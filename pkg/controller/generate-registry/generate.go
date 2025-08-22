@@ -110,7 +110,7 @@ func cleanDescription(desc string) string {
 }
 
 func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg string, param *config.Param, cfg *Config) (*registry.PackageInfo, []string) {
-	pkgInfo, versions := c.getPackageInfoMain(ctx, logE, arg, param.Limit, cfg)
+	pkgInfo, versions := c.getPackageInfoMain(ctx, logE, arg, param, cfg)
 	pkgInfo.Description = cleanDescription(pkgInfo.Description)
 	if len(param.Commands) != 0 {
 		files := make([]*registry.File, len(param.Commands))
@@ -124,7 +124,7 @@ func (c *Controller) getPackageInfo(ctx context.Context, logE *logrus.Entry, arg
 	return pkgInfo, versions
 }
 
-func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry, arg string, limit int, cfg *Config) (*registry.PackageInfo, []string) { //nolint:cyclop
+func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry, arg string, param *config.Param, cfg *Config) (*registry.PackageInfo, []string) { //nolint:cyclop
 	pkgName, version, _ := strings.Cut(arg, "@")
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return c.getCargoPackageInfo(ctx, logE, pkgName)
@@ -155,8 +155,8 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logE *logrus.Entry,
 	} else {
 		pkgInfo.Description = repo.GetDescription()
 	}
-	if limit != 1 && version == "" {
-		return pkgInfo, c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, limit, cfg)
+	if param.Limit != 1 && version == "" {
+		return pkgInfo, c.getPackageInfoWithVersionOverrides(ctx, logE, pkgName, pkgInfo, param, cfg)
 	}
 	release, err := c.getRelease(ctx, pkgInfo.RepoOwner, pkgInfo.RepoName, version)
 	if err != nil {
