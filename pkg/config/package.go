@@ -306,6 +306,7 @@ type Param struct {
 	Dest                              string
 	HomeDir                           string
 	OutTestData                       string
+	AssetFile                         string
 	Limit                             int
 	MaxParallelism                    int
 	VacuumDays                        int
