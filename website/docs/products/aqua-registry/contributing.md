@@ -11,7 +11,6 @@ How to contribute to Standard Registry. https://github.com/aquaproj/aqua-registr
 - :star: [OSS Contribution Guide](https://github.com/suzuki-shunsuke/oss-contribution-guide)
 - :star: [Registry Style Guide](/docs/develop-registry/registry-style-guide)
 - [Registry Configuration](/docs/reference/registry-config/)
-- [Change `GOOS` and `GOARCH` for testing](/docs/develop-registry/change-os-arch-for-test)
 
 ## Changelog of document and development workflow
 
@@ -65,14 +64,7 @@ If the language installs libraries in the same directory with it, the language c
 So before supporting a programing language, we should consider carefully if it really works well.
 Many programing languages have dedicated version managers, so maybe they are more appropriate.
 
-## Requirements
-
-- [aqua](https://aquaproj.github.io/docs/install)
-- Docker
-
-Please use the latest version.
-
-### Commit Signing
+## Commit Signing
 
 All commits of pull requests must be signed.
 Please see [the document](https://github.com/suzuki-shunsuke/oss-contribution-guide/blob/main/docs/commit-signing.md).
@@ -87,16 +79,72 @@ Please see [the document](https://github.com/suzuki-shunsuke/oss-contribution-gu
 aqua i -l
 ```
 
-## cmdx - Task Runner
+## Structure of aqua-registry
 
-We use [cmdx](https://github.com/suzuki-shunsuke/cmdx) as a task runner.
-cmdx is installed by [Set up](#set-up) already.
-We also use Docker to run tests in a container.
-Please run `cmdx help` and `cmdx help <task>` to show the help.
+Package-related code is located in the `pkgs/<package name>` directory of https://github.com/aquaproj/aqua-registry.
+e.g. [cli/cli](https://github.com/aquaproj/aqua-registry/tree/main/pkgs/cli/cli)
+Each package directory contains the following files:
+
+- pkg.yaml: List of versions installed during testing. This is essentially test data
+- registry.yaml: Configuration. Each tool's registry.yaml is merged to generate the repository root registry.yaml
+- scaffold.yaml: Optional. Configuration file for commands that auto-generate pkg.yaml and registry.yaml. Required when you want to change the auto-generation behavior
+
+:::note
+pkg.yaml is just test data. You can install versions not included in this file.
+:::
+
+There is also a registry.yaml at the repository root, which is a huge YAML file merging all registry.yaml files under `pkgs`.
+When specifying Standard Registry in aqua.yaml, this repository root registry.yaml is referenced.
+To modify the repository root registry.yaml, modify the registry.yaml under pkgs and run the `cmdx gr` command.
+
+## registry.yaml Documentation
+
+Please refer to [Registry Config](/docs/reference/registry-config/).
+There is also a [JSON Schema](https://github.com/aquaproj/aqua/blob/main/json-schema/registry.json).
+The registry.yaml files under pkgs have JSON Schema comments, so VSCode and similar editors can provide auto-completion.
+
+Additionally, there are abundant examples under pkgs in aqua-registry.
+By grepping here, you can see how much each configuration item is used and how to write them for reference.
+
+```console
+# Search with slsa_provenance
+$ git grep -l slsa_provenance pkgs  
+pkgs/Zxilly/go-size-analyzer/registry.yaml
+pkgs/aquaproj/aqua-registry-updater/registry.yaml
+pkgs/aquaproj/example-go-slsa-provenance/registry.yaml
+...
+```
+
+## Development Tools
+
+:::info
+Unfortunately, the current development tools depend on Shell Scripts and are unlikely to work on Windows (though they probably work on WSL).
+[There is an issue to rewrite them in Go.](https://github.com/aquaproj/aqua-registry/issues/32699)
+:::
+
+CLIs for developing aqua-registry are provided.
+These can be installed with aqua.
+Check out aqua-registry and run `aqua i -l`.
+
+```sh
+aqua i -l
+```
+
+We use a task runner called [cmdx](https://github.com/suzuki-shunsuke/cmdx).
+You can check tasks with `cmdx help`.
 
 ```sh
 cmdx help
-cmdx help scaffold
+```
+
+Using development tools, you can generate files for each package (pkg.yaml, registry.yaml, scaffold.yaml) and test tool installation in containers.
+Tests are performed in containers using the docker command, so you need the docker command and a compatible container engine.
+Docker Desktop would work fine of course.
+We install [docker/cli](https://github.com/docker/cli) and [abiosoft/colima](https://github.com/abiosoft/colima) with aqua.
+Please confirm that the docker command works.
+
+```sh
+docker version
 ```
 
 ### cmdx s - Scaffold configuration and test it in containers
@@ -138,11 +186,284 @@ When you edit `pkgs/**/registry.yaml`, please run `cmdx gr` to reflect the updat
 `cmdx con` is useful to look into the trouble in containers.
 By default, `<os>` is `linux` and `<arch>` is CPU architecture of your machine.
 
-## How to add a package
+## Code Auto-generation
 
-[Requirements](#requirements), [Set up](#set-up)
+Writing configuration files for each package from scratch is difficult and has quality issues.
+Therefore, commands for auto-generating code are provided.
+When adding a new package, always use this command.
+Code written manually from scratch is not quality assured, so Pull Requests will not be accepted.
+However, code auto-generation is not perfect and often generates incomplete code.
+In that case, you need to manually fix the generated code.
 
-1. Scaffold configuration: `cmdx s <package name>`
+aqua supports various package types, but currently auto-generation mainly supports only `github_release` and `cargo`.
+When generating code for other packages like `http` package, specify `-l 1` to generate only a template and write the rest manually.
+
+```sh
+cmdx s -l 1 "<package name>"
+```
+
+## GitHub Access Token
+
+Development tools execute GitHub API to get lists of GitHub Releases and assets.
+It works without an access token, but the possibility of hitting API rate limits increases.
+Hitting API rate limits can prevent normal code generation or cause tests to fail.
+You can pass an access token through environment variables `GITHUB_TOKEN` or `AQUA_GITHUB_TOKEN`.
+If these environment variables are not set, it will try to get an access token using the `gh auth token` command.
+No special permissions are needed as it only reads public repository resources.
+
+## Modifying Existing Packages
+
+When modifying existing packages, you need to modify code under `pkgs/<package name>`.
+There are several modification methods:
+
+1. Manually modify the code
+2. Regenerate the code from scratch with commands
+3. Auto-generate code for the latest version and manually modify based on that
+
+Which method to use depends on the state of the original code.
+Code auto-generation has been improved many times.
+Therefore, there is low-quality code generated before improvements.
+Such code may be better regenerated from scratch rather than manually fixed.
+
+One characteristic to identify if code is old is how `version_constraint` and `version_overrides` are written.
+In the new style, it basically looks like this:
+
+```yaml
+  version_constraint: "false" # Root version_constraint is "false"
+  version_overrides:
+    - version_constraint: semver("<= 0.1.0") # Version constraints use <, <= not >, >= (basically <=)
+      # ...
+    # ...
+    - version_constraint: "true" # End with "true" for latest version configuration
+      # ...
+```
+
+In the old style, `version_overrides` is often not defined.
+In this case, it's likely better to regenerate from scratch.
+However, as mentioned earlier, auto-generation doesn't support package types other than `github_release` or `cargo`, so manual modification will be necessary.
+
+Also, [aliases](https://aquaproj.github.io/docs/reference/registry-config/aliases) and [files](https://aquaproj.github.io/docs/reference/registry-config/files) cannot be auto-generated, so you need to modify the auto-generated code referring to the original code.
+
+`3. Auto-generate code for the latest version and manually modify based on that` is effective when the package no longer installs with the latest version but you want to reuse existing code (don't want to regenerate from scratch).
+Running the following command generates code for the latest version:
+
+```sh
+aqua gr -l 1 "<package name>"
+```
+
+Fix this and add it to the end of `version_overrides` in the original code and modify version_constraint.
+
+## Manual Modification
+
+When manual modification is necessary, you'll need to look at error messages and fix appropriately.
+
+### When Configuration Needs to Change for Specific Versions
+
+You can change configuration by version using [version_overrides and version_constraint](/docs/reference/registry-config/version-overrides).
+
+### When Configuration Needs to Change for Specific OS/Arch
+
+You can change configuration by OS/Arch with [overrides](/docs/reference/registry-config/overrides).
+
+### When Version Cannot Be Found
+
+Sometimes a released version is deleted and disappears.
+In that case, delete that version from pkg.yaml.
+And delete configuration related to that version from registry.yaml (if any).
+However, [no_asset](/docs/reference/registry-config/no_asset) and [error_message](/docs/reference/registry-config/error_message) don't need to be deleted.
+You may or may not add `no_asset` and `error_message`.
+
+### When Asset Cannot Be Found
+
+When an asset cannot be found, either the asset name is wrong or the asset hasn't been released.
+
+Running the `cmdx lsa [-r <repository name>] "<version>"` command outputs a list of assets, which is convenient.
+
+```console
+$ cmdx lsa -repo suzuki-shunsuke/pinact v3.0.0
++ REPO=${REPO#https://github.com/}
+repo=$(bash scripts/get_test_pkg.sh "$REPO")
+
+gh release view --json assets --jq ".assets[].name" -R "$repo" "$VERSION"
+
+multiple.intoto.jsonl
+pinact_3.0.0_checksums.txt
+pinact_3.0.0_checksums.txt.pem
+pinact_3.0.0_checksums.txt.sig
+pinact_darwin_amd64.tar.gz
+pinact_darwin_arm64.tar.gz
+pinact_linux_amd64.tar.gz
+pinact_linux_arm64.tar.gz
+pinact_windows_amd64.zip
+pinact_windows_arm64.zip
+```
+
+It's common for new GitHub Releases or tags to be released without assets being released.
+When there are no assets, the following causes are possible:
+
+1. Release is simply delayed. It will be released if you wait
+2. CI failed midway and wasn't released
+3. CI skipped the release
+
+These are not problems with aqua or aqua-registry.
+For example, if such a problem occurs with [suzuki-shunsuke/pinact](https://github.com/suzuki-shunsuke/pinact) and you want to take action, it would be good to create an issue or PR at https://github.com/suzuki-shunsuke/pinact.
+As aqua-registry maintainers, we often encounter these problems.
+Each time, we report problems to various repositories or fix CI.
+
+It's common for specific os/arch not to be supported.
+In that case, you need to exclude that os/arch from `supported_envs`.
+
+If the asset name is wrong, the asset naming convention may have changed from a certain version.
+For example, the GoReleaser configuration was modified and the format became zip, or the version disappeared from the asset name, etc.
+In that case, you need to modify the asset in registry.yaml.
+If the name changed due to a mistake on the tool side, it would be kind to report the problem or create a PR to fix it.
+
+### When Command Cannot Be Found
+
+When a command cannot be found, the following possibilities exist:
+
+1. Command name is wrong
+2. Command name changed
+3. Path is wrong
+4. Target os/arch is excluded by supported_envs
+
+In these cases, you need to modify the `files` configuration.
+
+```yaml
+files:
+  - name: <command name>
+    src: <relative path to command executable>
+```
+
+By default, the command name is the last element when splitting the package name by `/`.
+So for `cli/cli` it becomes `cli`, but the actual command name is `gh`, so you need to explicitly specify `files`.
+
+```yaml
+files:
+  - name: gh
+```
+
+Note that even on Windows, `.exe` is not added to the name.
+
+`src` is the relative path where the command executable is located when extracting assets like tarball or zip.
+By default, it's the same as `name`.
+For gh, since the path is different, you need to specify `src`.
+
+```yaml
+    files:
+      - name: gh
+        src: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}/bin/gh
+```
+
+https://github.com/aquaproj/aqua-registry/blob/dc98ca0c3314ae3cface74556a295a4cb0a95918/pkgs/cli/cli/registry.yaml#L7-L9
+
+The auto-generation tool currently cannot auto-generate `files`.
+Therefore, manual modification is necessary.
+
+### Adding Support for Specific OS / Architecture
+
+Sometimes a tool supports new OS/Architecture from a specific version but it's not reflected in registry.yaml and remains uninstallable.
+In that case, you need to add that OS/Architecture to `supported_envs`.
+
+### When Checksum Cannot Be Extracted from Checksum File
+
+Please see [the document](/docs/reference/registry-config/checksum).
+
+### When Checksum Verification Fails
+
+Please see [the document](/docs/reference/registry-config/checksum).
+
+1. Checksum written in checksum file is wrong => Disable checksum
+
+```yaml
+checksum:
+  enabled: false
+```
+
+Or delete the checksum configuration since it's disabled by default.
+
+:::info
+The checksum enable/disable setting in registry configuration is just a setting for "whether to download checksum file and get checksum".
+Even if this is disabled, if checksum verification is enabled in aqua.yaml, checksum verification will be performed.
+In that case, it actually downloads the asset, calculates the checksum, and records it in aqua-checksums.json.
+There is also an issue for getting checksum via GitHub API.
+:::
+
+2. Extracting wrong string from checksum file
+
+Modify extraction parameters or disable checksum.
+
+3. Wrong checksum algorithm (sha1, sha256, sha512, md5, etc) => Fix the algorithm
+
+### When cosign Verification Fails
+
+[Please see the document](/docs/reference/registry-config/cosign).
+
+### When SLSA Provenance Verification Fails
+
+[Please see the document](/docs/reference/registry-config/slsa-provenance).
+
+### When GitHub Artifact Attestations Verification Fails
+
+[Please see the document](/docs/reference/registry-config/github-artifact-attestations).
+
+`signer_workflow` might be wrong.
+If attestations are not generated for a specific version in the first place, delete the github_artifact_attestations configuration.
+
+The github_artifact_attestations configuration cannot be auto-generated currently.
+Therefore, when adding a new tool, check if attestations are generated and add the configuration if they are.
+
+### When Minisign Verification Fails
+
+[Please see the document](/docs/reference/registry-config/minisign).
+
+The minisign configuration might be wrong.
+If minisign signing is not performed for a specific version in the first place, delete the minisign configuration.
+
+## Tool Naming Convention
+
+To avoid name conflicts, tool names must include `/` (namespace-like meaning).
+
+- NG: `terraform`
+- OK: `hashicorp/terraform`
+
+If the tool code is managed on GitHub, match the repository name.
+If multiple tools are managed in that repository, change the name for each tool.
+
+e.g. [winebarrel/cronplan](https://github.com/winebarrel/cronplan)
+
+- `winebarrel/cronplan/cronmatch`
+- `winebarrel/cronplan/cronplan`
+- `winebarrel/cronplan/cronviz`
+
+Packages hosted outside GitHub should have naming that distinguishes them from GitHub.
+`cargo` packages become [crates.io/{crate name}](https://github.com/aquaproj/aqua-registry/tree/main/pkgs/crates.io).
+Platforms other than GitHub like GitLab are not actively supported, but some are supported as http type packages.
+[GitLab uses `gitlab.com/<repository name>`.](https://github.com/aquaproj/aqua-registry/tree/main/pkgs/gitlab.com)
+
+## Adding New Tools
+
+When submitting a Pull Request to add a new tool, there's no need to create an Issue.
+
+Run `cmdx s` to auto-generate code.
+
+```sh
+cmdx s "<tool name>"
+```
+
+e.g.
+
+```sh
+cmdx s cli/cli
+```
+
+For package types other than github_release, specify `-l 1`.
+
+```sh
+cmdx s -l 1 "<package name>"
+```
+
+cmdx s generates a branch `feat/<package name>`, code, and commit, and tests using containers.
 
 :::caution
 `cmdx s` creates a commit, but please don't edit the commit by `git commit --amend`, `git rebase`, or somehow.
@@ -150,25 +471,86 @@ By default, `<os>` is `linux` and `<arch>` is CPU architecture of your machine.
 Please add new commits if you update code.
 :::
 
-:::caution
-Sometimes `cmdx s <package name>` would fail, but this is expected.
-In this case, please check the error message and fix `pkgs/<package name>/{pkg.yaml,registry.yaml}`.
-Please check [Troubleshooting](/docs/trouble-shooting) too.
-If you can't figure out how to fix, please open a pull request and ask us for help.
+:::info
+This command may sometimes fail tests and output a large amount of error messages, but don't be overwhelmed by those error messages.
+Test failures are expected.
 :::
 
-2. Fix generated files `pkgs/<package name>/{pkg.yaml,registry.yaml}` if necessary
-2. Run test: `cmdx t [<package name>]`
-2. Update registry.yaml: `cmdx gr`
-2. Commit `registry.yaml` and `pkgs/<package name>/{pkg.yaml,registry.yaml`
-2. Repeat the step 2 ~ 5 until packages are installed properly
-2. Create a pull request
-2. (Optional) Stop containers: `cmdx stop`
+### Customizing cmdx s with Configuration File
 
-:::info
-We removed `cmdx new` from the guide.
-You can still use `cmdx new`, but if you have any trouble with `cmdx new`, you can create a pull request without `cmdx new`.
-[Please see the changelog for details.](changelog.md#why-did-we-remove-cmdx-new-from-the-guide)
+:::note
+In many cases, this is unnecessary.
+Also, you should not use this feature carelessly.
+:::
+
+Sometimes `cmdx s` generation doesn't work in one go.
+For github_release packages, `cmdx s` gets lists of GitHub Releases and assets via GitHub API and auto-generates configuration based on that.
+However, sometimes you need to exclude specific versions or assets.
+For example, if multiple CLIs are published in the same repository, if you don't exclude assets from other CLIs, code might be generated based on asset names from other CLIs.
+Also, if multiple tools are published in the same repository, versions might have different prefixes for different tools.
+In that case, if you don't ignore versions from other tools, code likely won't be generated correctly.
+
+In such cases, follow these steps:
+
+1. Generate a template configuration file `aqua-generate-registry.yaml` for `cmdx s` with `aqua gr -init <package name>`
+2. Modify the configuration file `aqua-generate-registry.yaml`
+3. Generate code with `cmdx s -c "<configuration file>" "<package name>"`
+
+You can configure the following:
+
+- `version_filter`: Versions not matching this condition are excluded
+- `version_prefix`: Versions without this prefix are excluded
+- `all_assets_filter`: Assets not matching this condition are excluded
+
+However, using this feature carelessly can exclude things that shouldn't be excluded, so it shouldn't be used lightly.
+`all_assets_filter` in particular requires caution. This is because it can accidentally exclude checksum files like `SHA256SUM` or `checksums.txt`, and it's difficult to notice if you've excluded them.
+Therefore, you should first generate code without exclusion settings, and if unnecessary things are mixed in the generated code, write settings that explicitly exclude only those (without making the scope too broad to avoid excluding extra things).
+
+:::caution
+Note that `version_filter` is not a feature for dropping support for old versions.
+`version_constraint`, `no_asset`, and `error_message` are used for dropping support for old versions.
+
+https://github.com/aquaproj/aqua-registry/blob/191f2136c10b1eb962dd43c8f421af417b1b3a16/pkgs/Shopify/ejson/registry.yaml#L8-L10
+:::
+
+### Retrying `cmdx s` Until It Works
+
+:::note
+In many cases, this is unnecessary.
+:::
+
+As mentioned earlier, code generation with `cmdx s` doesn't always work on the first try.
+Sometimes you need to repeat it several times.
+
+1. Generate code without configuration file `cmdx s`
+2. Check the generated code, and if extra versions or assets are included, delete the generated branch
+
+`cmdx s` generates a branch and commit, but if it's before opening a Pull Request, you can delete them without problems.
+
+```sh
+git checkout main
+git branch -D "feat/<package name>"
+```
+
+3. Generate configuration file `aqua gr -init`
+4. Modify configuration file and generate code `cmdx s`
+5. Repeat 2, 4 until extra versions and assets are excluded
+
+### Modifying Manually
+
+If installation of multiple versions is failing and the log is hard to read, it's good to comment out some versions in pkg.yaml and tackle problems one by one.
+When modifying configuration, refer to [Manual Modification](#manual-modification) and [Style Guide](/docs/develop-registry/registry-style-guide/).
+After modification, run `cmdx t` to confirm it can be installed correctly.
+Repeat modification and confirmation until it can be installed.
+
+When you're done with modifications, or if you're not sure how to fix it, submit a Pull Request.
+
+:::note
+The `cmdx new` command has been removed from the standard procedure.
+However, the command itself remains and can still be used.
+This command has large environment dependencies and didn't work well for some users, making troubleshooting and support difficult.
+Since you can create Pull Requests without using `cmdx new`, we decided to remove it from the standard procedure.
+[See also changelog.](/docs/products/aqua-registry/changelog#why-did-we-remove-cmdx-new-from-the-guide)
 :::
 
 ### Use `cmdx s` definitely
@@ -238,16 +620,6 @@ version_filter: not (Version startsWith "varcon-")
 
 ```sh
 cmdx s -c aqua-generate-registry.yaml
-```
-
-### :bulb: Set a GitHub Access token to avoid GitHub API rate limiting
-
-If you face GitHub API rate limiting, please set the GitHub Access token with environment variable `GITHUB_TOKEN` or `AQUA_GITHUB_TOKEN`.
-
-e.g.
-
-```sh
-export GITHUB_TOKEN=<YOUR PERSONAL ACCESS TOKEN>
 ```
 
 ### How to execute a package in your machine during development
