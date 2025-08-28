@@ -14,5 +14,5 @@ registries:
     name: soulshack
 packages:
   - name: suzuki-shunsuke/mkghtag@v0.1.11
-  - name: pkdindustries/soulshack@v0.74
+  - name: pkdindustries/soulshack@v0.89
     registry: soulshack
