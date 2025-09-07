@@ -1,6 +1,6 @@
 module github.com/aquaproj/aqua/v2
 
-go 1.24.6
+go 1.25.1
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
@@ -30,8 +30,8 @@ require (
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.7
 	github.com/urfave/cli/v3 v3.4.1
 	github.com/wk8/go-ordered-map/v2 v2.1.8
-	golang.org/x/oauth2 v0.30.0
-	golang.org/x/sync v0.16.0
+	golang.org/x/oauth2 v0.31.0
+	golang.org/x/sync v0.17.0
 	golang.org/x/sys v0.36.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1

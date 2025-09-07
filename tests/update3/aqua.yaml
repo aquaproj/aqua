@@ -1,6 +1,6 @@
 registries:
   - type: standard
-    ref: v4.407.2 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.408.0 # renovate: depName=aquaproj/aqua-registry
 packages:
   - name: hashicorp/terraform
     version_expr: readFile(".terraform-version")

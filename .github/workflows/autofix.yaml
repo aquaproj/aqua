@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: suzuki-shunsuke/go-autofix-action@00c2661f4665666ed7c3cb3f8a27725e3e9bf686 # v0.1.10
         with:
-          aqua_version: v2.53.9
+          aqua_version: v2.53.10
       - run: aqua upc -prune
         working-directory: pkg/cosign
       - run: aqua upc -prune
@@ -28,7 +28,7 @@ jobs:
         with:
           path: website/package.json
           prop_path: volta.node
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{steps.package_json.outputs.prop}}
           cache: npm

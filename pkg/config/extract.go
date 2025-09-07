@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -107,16 +108,16 @@ func listPackage(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, regi
 	}
 	pkgInfo, err := getPkgInfoFromRegistries(logE, registries, pkg, m)
 	if err != nil {
-		return nil, errors.New("install the package")
+		return nil, fmt.Errorf("install the package: %w", err)
 	}
 
 	pkgInfo, err = pkgInfo.Override(logE, pkg.Version, rt)
 	if err != nil {
-		return nil, errors.New("evaluate version constraints")
+		return nil, fmt.Errorf("evaluate version constraints: %w", err)
 	}
 	supported, err := pkgInfo.CheckSupported(rt, env)
 	if err != nil {
-		return nil, errors.New("check if the package is supported")
+		return nil, fmt.Errorf("check if the package is supported: %w", err)
 	}
 	if !supported {
 		logE.Debug("the package isn't supported on this environment")
@@ -128,7 +129,7 @@ func listPackage(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, regi
 		Registry:    rgst,
 	}
 	if err := p.ApplyVars(); err != nil {
-		return nil, errors.New("apply the package variable")
+		return nil, fmt.Errorf("apply the package variable: %w", err)
 	}
 	return p, nil
 }
