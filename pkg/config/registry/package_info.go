@@ -134,6 +134,10 @@ type VersionOverride struct {
 	SupportedEnvs              SupportedEnvs               `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 }
 
+func (vo *VersionOverride) Excluded() bool {
+	return (vo.NoAsset != nil && *vo.NoAsset) || (vo.ErrorMessage != nil && *vo.ErrorMessage != "")
+}
+
 type Override struct {
 	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
 	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
