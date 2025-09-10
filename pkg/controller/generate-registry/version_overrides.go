@@ -2,10 +2,12 @@ package genrgst
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
@@ -101,8 +103,21 @@ func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
 	return !f
 }
 
-func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string { //nolint:cyclop
-	ghReleases := c.listReleases(ctx, logE, pkgInfo, limit)
+func (c *Controller) getReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, param *config.Param, cfg *Config) ([]*Release, error) {
+	if param.AssetFile != "" {
+		hrs := map[string][]string{}
+		f, err := c.fs.Open(param.AssetFile)
+		if err != nil {
+			return nil, fmt.Errorf("open the asset file: %w", err)
+		}
+		defer f.Close()
+		if err := json.NewDecoder(f).Decode(&hrs); err != nil {
+			return nil, fmt.Errorf("read the asset file as JSON: %w", err)
+		}
+		return convHTTPReleases(logE, cfg, hrs), nil
+	}
+
+	ghReleases := c.listReleases(ctx, logE, pkgInfo, param.Limit)
 	releases := make([]*Release, 0, len(ghReleases))
 	for _, release := range ghReleases {
 		tag := release.GetTagName()
@@ -153,7 +168,14 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		}
 		release.assets = assets
 	}
+	return releases, nil
+}
 
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, param *config.Param, cfg *Config) []string { //nolint:cyclop
+	releases, err := c.getReleases(ctx, logE, pkgInfo, param, cfg)
+	if err != nil {
+		logerr.WithError(logE, err).WithField("pkg_name", pkgName).Error("get releases")
+	}
 	versions := c.generatePackage(logE, pkgInfo, pkgName, releases)
 	if len(pkgInfo.VersionOverrides) != 0 {
 		pkgInfo.VersionConstraints = "false"
