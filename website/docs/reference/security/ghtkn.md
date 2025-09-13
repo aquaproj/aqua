@@ -33,3 +33,5 @@ Note that ghtkn CLI isn't required.
 ```sh
 export AQUA_GHTKN_ENABLED=true
 ```
+
+Remove environment variables such as `GITHUB_TOKEN`, `AQUA_GITHUB_TOKEN`, and `AQUA_KEYRING_ENABLED`.
