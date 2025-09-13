@@ -8,8 +8,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
 	"github.com/google/go-github/v74/github"
 	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/ghtkn-go-sdk/ghtkn"
 	"github.com/suzuki-shunsuke/go-retryablehttp"
 	"github.com/suzuki-shunsuke/go-retryablehttp-logrus/rlog"
+	"github.com/suzuki-shunsuke/slog-logrus/slogrus"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/keyring/ghtoken"
 	"golang.org/x/oauth2"
 )
@@ -51,6 +53,10 @@ func getHTTPClientForGitHub(ctx context.Context, logE *logrus.Entry, token strin
 	if token == "" {
 		if keyring.Enabled() {
 			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logE, keyring.KeyService))
+		}
+		if os.Getenv("AQUA_GHTKN_ENABLED") == "true" {
+			client := ghtkn.New()
+			return oauth2.NewClient(ctx, client.TokenSource(slogrus.Convert(logE), &ghtkn.InputGet{}))
 		}
 		return http.DefaultClient
 	}
