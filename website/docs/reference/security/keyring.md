@@ -4,6 +4,10 @@ sidebar_position: 410
 
 # Manage a GitHub access token using Keyring
 
+:::info
+We recommend [ghtkn integration](./ghtkn.md) because it is securer than managing a long-lived personal access token using Keyring.
+:::
+
 aqua >= v2.51.0 [#3852](https://github.com/aquaproj/aqua/pull/3852)
 
 You can manage a GitHub Access token using secret store such as [Windows Credential Manager](https://support.microsoft.com/en-us/windows/accessing-credential-manager-1b5c916a-6a16-889f-8581-fc16e8165ac0), [macOS Keychain](https://en.wikipedia.org/wiki/Keychain_(software)), and [GNOME Keyring](https://wiki.gnome.org/Projects/GnomeKeyring).
