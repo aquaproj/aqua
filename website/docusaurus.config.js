@@ -44,9 +44,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       announcementBar: {
-        id: 'security-keyring',
+        id: 'security-ghtkn',
         content:
-          '<a href="/docs/reference/security/keyring">Manage a GitHub access token using Keyring (2025-05-06)</a>',
+          '<a href="/docs/reference/security/ghtkn">ghtkn integration (2025-09-13)</a>',
         backgroundColor: '#7FFF00',
         textColor: '#091E42',
         isCloseable: true,
