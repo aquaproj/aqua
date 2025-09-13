@@ -1,11 +1,5 @@
 name: Deploy document (workflow_call)
-on:
-  workflow_call:
-    inputs:
-      issue_number:
-        description: 'The issue number to post a comment'
-        required: false
-        type: string
+on: workflow_call
 jobs:
   deploy_doc:
     timeout-minutes: 15
@@ -19,4 +13,3 @@ jobs:
           source_dir: website
           publish_dir: website/build
           destination_dir: docs
-          issue_number: ${{ inputs.issue_number }}
