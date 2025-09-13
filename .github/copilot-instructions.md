@@ -1,10 +1,10 @@
 # GitHub Copilot Instructions for aqua
 
-This document contains GitHub Copilot-specific instructions. For general project guidelines, see [AI_GUIDE.md](../AI_GUIDE.md).
+This document contains GitHub Copilot-specific instructions. For general project guidelines, see [AGENTS.md](../AGENTS.md).
 
 ## Core Guidelines
 
-Refer to [AI_GUIDE.md](../AI_GUIDE.md) for all project conventions, including:
+Refer to [AGENTS.md](../AGENTS.md) for all project conventions, including:
 - Language, commit messages, code style
 - Project structure and package responsibilities
 - Testing and validation commands
@@ -33,4 +33,4 @@ When suggesting code completions:
 
 ## Quick Reference
 
-See [AI_GUIDE.md](../AI_GUIDE.md) for project-specific patterns and commands.
+See [AGENTS.md](../AGENTS.md) for project-specific patterns and commands.

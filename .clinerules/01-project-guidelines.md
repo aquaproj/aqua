@@ -1,6 +1,6 @@
 # Project Guidelines Reference
 
-For all project guidelines, conventions, and commands, please refer to [AI_GUIDE.md](../AI_GUIDE.md).
+For all project guidelines, conventions, and commands, please refer to [AGENTS.md](../AGENTS.md).
 
 This includes:
 - Language conventions
