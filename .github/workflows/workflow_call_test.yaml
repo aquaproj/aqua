@@ -22,7 +22,7 @@ jobs:
   test:
     uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@3429e3ed1cb719d01112a04a07ff8754510cd9df # v4.0.0
     with:
-      aqua_version: v2.54.0
+      aqua_version: v2.54.1
       golangci-lint-timeout: 120s
     permissions:
       pull-requests: write
