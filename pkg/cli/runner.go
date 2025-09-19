@@ -69,6 +69,11 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 				Usage:   "Disable GitHub Artifact Attestations verification",
 				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION"),
 			},
+			&cli.BoolFlag{
+				Name:    "disable-github-release-attestation",
+				Usage:   "Disable GitHub Release Attestations verification",
+				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_RELEASE_ATTESTATION"),
+			},
 			&cli.StringFlag{
 				Name:  "trace",
 				Usage: "trace output file path",
