@@ -1,3 +1,6 @@
+// Package install implements the aqua install command for downloading and installing tools.
+// The install command downloads packages according to configuration files,
+// creates symbolic links, and manages package installations with various filtering options.
 package install
 
 import (
@@ -12,10 +15,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// command holds the parameters and configuration for the install command.
 type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for installing tools.
+// The returned command handles tool installation with options for
+// link-only mode, tag filtering, and global configuration inclusion.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -74,6 +81,9 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 	}
 }
 
+// action implements the main logic for the install command.
+// It initializes the install controller and executes the tool installation
+// process based on configuration files and command line options.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {
