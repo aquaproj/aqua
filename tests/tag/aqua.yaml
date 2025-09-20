@@ -13,7 +13,7 @@ packages:
   tags:
     - test
     - foo
-- name: suzuki-shunsuke/github-comment@v6.3.4
+- name: suzuki-shunsuke/github-comment@v6.3.5
 - name: cli/cli@v2.79.0
   tags:
     - bar
