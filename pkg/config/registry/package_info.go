@@ -669,6 +669,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.GitHubArtifactAttestations != nil {
 		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
 	}
+	if child.GitHubReleaseAttestation != nil {
+		pkg.GitHubReleaseAttestation = child.GitHubReleaseAttestation
+	}
 	if child.ErrorMessage != nil {
 		pkg.ErrorMessage = *child.ErrorMessage
 	}
@@ -724,6 +727,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubReleaseAttestation = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -739,6 +743,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubReleaseAttestation = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -753,6 +758,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubReleaseAttestation = nil
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
