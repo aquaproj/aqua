@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestUpdateASTFile(t *testing.T) {
+func TestUpdateASTFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string

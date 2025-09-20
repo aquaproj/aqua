@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestParseAssetName(t *testing.T) {
+func TestParseAssetName(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name      string
