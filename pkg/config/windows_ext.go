@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/afero"
 )
 
+// RenameFile renames files with appropriate Windows extensions when necessary.
+// It handles Windows-specific file extension requirements for executable files.
 func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	s, err := p.fileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
@@ -27,6 +29,8 @@ func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, fi
 	return p.renameFile(logE, fs, pkgPath, s)
 }
 
+// renameFile performs the actual file renaming with Windows extension.
+// It checks if the target file already exists before attempting to rename.
 func (p *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldName string) (string, error) {
 	newName := oldName + p.windowsExt()
 	newPath := filepath.Join(pkgPath, newName)
@@ -49,6 +53,8 @@ func (p *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldName s
 	return newName, nil
 }
 
+// windowsExt returns the appropriate Windows file extension for the package.
+// It uses package-specific configuration or defaults based on package type.
 func (p *Package) windowsExt() string {
 	if p.PackageInfo.WindowsExt == "" {
 		if p.PackageInfo.Type == registry.PkgInfoTypeGitHubContent || p.PackageInfo.Type == registry.PkgInfoTypeGitHubArchive {
@@ -59,6 +65,8 @@ func (p *Package) windowsExt() string {
 	return p.PackageInfo.WindowsExt
 }
 
+// completeWindowsExt adds Windows extension to a string if needed.
+// It respects package configuration for extension completion behavior.
 func (p *Package) completeWindowsExt(s string) string {
 	if p.PackageInfo.CompleteWindowsExt != nil {
 		if *p.PackageInfo.CompleteWindowsExt {
@@ -72,6 +80,8 @@ func (p *Package) completeWindowsExt(s string) string {
 	return s + p.windowsExt()
 }
 
+// completeWindowsExtToAsset adds Windows extension to asset names when appropriate.
+// It considers file format and existing extensions to determine if completion is needed.
 func (p *Package) completeWindowsExtToAsset(asset string) string {
 	if strings.HasSuffix(asset, ".exe") {
 		return asset
@@ -88,10 +98,14 @@ func (p *Package) completeWindowsExtToAsset(asset string) string {
 	return asset
 }
 
+// completeWindowsExtToURL adds Windows extension to URLs when appropriate.
+// It delegates to asset extension logic for consistent behavior.
 func (p *Package) completeWindowsExtToURL(url string) string {
 	return p.completeWindowsExtToAsset(url)
 }
 
+// completeWindowsExtToFileSrc adds Windows extension to file source paths.
+// It checks for existing extensions before adding the Windows extension.
 func (p *Package) completeWindowsExtToFileSrc(src string) string {
 	if osfile.Ext(src, p.Package.Version) == "" {
 		return src + p.windowsExt()

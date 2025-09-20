@@ -13,10 +13,14 @@ import (
 
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
+// ChecksumEnabled determines if checksum validation is enabled based on configuration and parameters.
+// It checks both the global configuration and parameter settings to determine the final checksum state.
 func (p *Param) ChecksumEnabled(cfg *aqua.Config) bool {
 	return cfg.ChecksumEnabled(p.EnforceChecksum, p.Checksum)
 }
 
+// ChecksumID generates a unique identifier for a package's checksum based on package type and runtime.
+// The ID format varies by package type (GitHub, HTTP, etc.) and includes version and asset information.
 func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 	assetName, err := p.RenderAsset(rt)
 	if err != nil {
@@ -43,6 +47,8 @@ func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 	return "", nil
 }
 
+// getRuntimeFromAsset finds the runtime that matches the given asset name.
+// It iterates through supported environments to find the runtime that produces the asset.
 func (p *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error) {
 	rts, err := runtime.GetRuntimesFromEnvs(p.PackageInfo.SupportedEnvs)
 	if err != nil {
@@ -60,6 +66,8 @@ func (p *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error) {
 	return nil, nil //nolint:nilnil
 }
 
+// ChecksumIDFromAsset generates a checksum ID from an asset name.
+// It determines the appropriate runtime for the asset and creates the corresponding checksum identifier.
 func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
@@ -81,6 +89,8 @@ func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 	return "", nil
 }
 
+// RenderChecksumFileName renders the checksum file name for a given runtime.
+// It uses templates to generate platform-specific checksum file names.
 func (p *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	switch pkgInfo.Checksum.Type { //nolint:gocritic
@@ -94,6 +104,8 @@ func (p *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
 	return "", errUnknownChecksumFileType
 }
 
+// RenderChecksumURL renders the URL where the checksum file can be downloaded.
+// It populates template variables and generates the final checksum URL for the given runtime.
 func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
@@ -118,6 +130,8 @@ func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 	return template.Execute(p.PackageInfo.Checksum.URL, m) //nolint:wrapcheck
 }
 
+// RenderChecksumFileID renders the identifier for a checksum file.
+// Returns either a filename for GitHub releases or URL for HTTP packages.
 func (p *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	switch pkgInfo.Checksum.Type {
