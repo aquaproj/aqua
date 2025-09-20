@@ -10,6 +10,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
+// GetOSArch finds the best matching asset for a given OS and architecture combination.
+// It scores assets based on format preferences and template complexity, preferring
+// non-raw formats and simpler templates for better compatibility.
 func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
@@ -64,6 +67,8 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 	return rawA
 }
 
+// mergeReplacements combines two replacement maps if they have compatible values for the given OS.
+// Returns the merged map and true if merging is possible, otherwise nil and false.
 func mergeReplacements(goos string, m1, m2 map[string]string) (map[string]string, bool) {
 	v1, ok1 := m1[goos]
 	v2, ok2 := m2[goos]
@@ -79,6 +84,9 @@ func mergeReplacements(goos string, m1, m2 map[string]string) (map[string]string
 	return nil, false
 }
 
+// ParseAssetInfos processes asset information and populates package registry metadata.
+// It generates overrides for different OS/architecture combinations, determines supported
+// environments, and optimizes the configuration for cross-platform compatibility.
 func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,cyclop
 	for _, goos := range []string{"linux", osDarwin, "windows"} {
 		var overrides []*registry.Override
@@ -149,6 +157,9 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo)
 }
 
+// normalizeOverridesByReplacements extracts common replacements from overrides to reduce duplication.
+// It analyzes replacement patterns across overrides and promotes frequently used replacements
+// to the package level, simplifying the configuration.
 func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
 	overrides := pkgInfo.Overrides
 	var replacements map[string]string
@@ -227,6 +238,8 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 	return replacements, ret
 }
 
+// isKeyUsed determines if a template key (OS or Arch) is referenced in asset templates.
+// It checks both the main asset template and checksum asset template for template variables.
 func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key string) bool {
 	isOS := runtime.IsOS(key)
 	var asset string
@@ -247,6 +260,8 @@ func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key s
 	return strings.Contains(asset, "{{.Arch}}") || strings.Contains(checksumAsset, "{{.Arch}}")
 }
 
+// normalizeOverridesByAsset removes redundant asset specifications from overrides.
+// If an override uses the default asset, the asset field is cleared to reduce duplication.
 func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Override) []*registry.Override {
 	ret := []*registry.Override{}
 	for _, override := range overrides {
@@ -262,6 +277,8 @@ func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Overri
 	return ret
 }
 
+// getDefaultAsset determines the most commonly used asset template for the default format.
+// It counts asset usage and returns the most frequent one as the default.
 func getDefaultAsset(defaultFormat string, overrides []*registry.Override) string {
 	assetCounts := map[string]int{}
 	for _, override := range overrides {
@@ -283,6 +300,8 @@ func getDefaultAsset(defaultFormat string, overrides []*registry.Override) strin
 	return defaultAsset
 }
 
+// getDefaultFormat determines the most commonly used format across all overrides.
+// It prefers non-raw formats when counts are equal to optimize for archive handling.
 func getDefaultFormat(overrides []*registry.Override) string {
 	formatCounts := map[string]int{}
 	for _, override := range overrides {
@@ -300,18 +319,24 @@ func getDefaultFormat(overrides []*registry.Override) string {
 	return format
 }
 
+// checkRosetta2 determines if a package supports Rosetta2 emulation on macOS.
+// Returns true if only amd64 assets are available for Darwin with arch templating.
 func checkRosetta2(assetInfos []*AssetInfo) bool {
 	darwinAmd64 := GetOSArch(osDarwin, "amd64", assetInfos)
 	darwinArm64 := GetOSArch(osDarwin, "arm64", assetInfos)
 	return darwinAmd64 != nil && darwinArm64 == nil && strings.Contains(darwinAmd64.Template, "{{.Arch}}")
 }
 
+// checkWindowsARMEmulation determines if a package supports ARM emulation on Windows.
+// Returns true if only amd64 assets are available for Windows with arch templating.
 func checkWindowsARMEmulation(assetInfos []*AssetInfo) bool {
 	windowsAmd64 := GetOSArch(osWindows, "amd64", assetInfos)
 	windowsArm64 := GetOSArch(osWindows, "arm64", assetInfos)
 	return windowsAmd64 != nil && windowsArm64 == nil && strings.Contains(windowsAmd64.Template, "{{.Arch}}")
 }
 
+// normalizeSupportedEnvs simplifies supported environment lists by removing redundant entries.
+// It collapses common platform combinations into more concise representations.
 func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
 	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", osDarwin, "windows"}) {
 		return nil
@@ -325,6 +350,9 @@ func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
 	return envs
 }
 
+// ParseAssetName analyzes a release asset name to extract platform, architecture, and format information.
+// It generates templates with placeholders for version, OS, architecture, and format,
+// enabling dynamic asset URL generation for different platforms.
 func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 	assetInfo := &AssetInfo{
 		Template: strings.Replace(assetName, version, "{{.Version}}", 1),

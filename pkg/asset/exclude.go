@@ -4,6 +4,9 @@ import (
 	"strings"
 )
 
+// Exclude determines whether an asset should be excluded from consideration.
+// It filters out assets for unsupported architectures, platforms, and file types
+// that are not compatible with aqua's installation process.
 func Exclude(pkgName, assetName string) bool {
 	asset := strings.ToLower(assetName)
 	words := []string{
