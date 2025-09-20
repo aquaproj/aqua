@@ -6,6 +6,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
+// GetRuntimesFromSupportedEnvs filters package supported environments against configuration supported environments.
+// It returns the intersection of both lists as Runtime objects. If cfgSupportedEnvs is empty,
+// all package supported environments are returned. This is used to determine which platforms
+// should have checksums validated based on both package capabilities and user configuration.
 func GetRuntimesFromSupportedEnvs(cfgSupportedEnvs, pkgSupportedEnvs []string) ([]*runtime.Runtime, error) {
 	rts, err := runtime.GetRuntimesFromEnvs(pkgSupportedEnvs)
 	if err != nil {
