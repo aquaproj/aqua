@@ -1,3 +1,6 @@
+// Package exec implements the aqua exec command for executing installed tools.
+// The exec command is primarily used internally by aqua-proxy to execute tools
+// installed by aqua, handling tool discovery, version resolution, and execution.
 package exec
 
 import (
@@ -13,10 +16,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// command holds the parameters and configuration for the exec command.
 type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for executing tools.
+// The returned command is used internally by aqua-proxy to execute
+// installed tools with proper version resolution and argument handling.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -36,6 +43,9 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 	}
 }
 
+// action implements the main logic for the exec command.
+// It parses the command arguments, initializes the exec controller,
+// and executes the specified tool with the provided arguments.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

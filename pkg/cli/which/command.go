@@ -1,3 +1,6 @@
+// Package which implements the aqua which command for locating executable files.
+// The which command outputs the absolute file path of installed tools,
+// helping users understand which version and location of a tool is being used.
 package which
 
 import (
@@ -17,10 +20,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// command holds the parameters and configuration for the which command.
 type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for locating executables.
+// The returned command provides functionality to find the absolute path
+// of installed tools managed by aqua.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,

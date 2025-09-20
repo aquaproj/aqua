@@ -1,3 +1,6 @@
+// Package info implements the aqua info command for displaying system information.
+// The info command shows various details about the aqua installation,
+// configuration, and environment for debugging and troubleshooting purposes.
 package info
 
 import (
@@ -11,10 +14,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// infoCommand holds the parameters and configuration for the info command.
 type infoCommand struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for displaying information.
+// The returned command shows system information about aqua installation,
+// configuration paths, and environment details for troubleshooting.
 func New(r *util.Param) *cli.Command {
 	i := &infoCommand{
 		r: r,
@@ -30,6 +37,9 @@ $ aqua info`,
 	}
 }
 
+// action implements the main logic for the info command.
+// It initializes the info controller and displays comprehensive
+// information about the aqua installation and configuration.
 func (i *infoCommand) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {
