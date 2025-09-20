@@ -6,6 +6,9 @@ import (
 
 const formatRaw string = "raw"
 
+// RemoveExtFromAsset removes file extensions from asset names and returns the format.
+// It recognizes various archive formats including tar variants, compression formats,
+// and platform-specific formats. Returns the asset name without extension and the format.
 func RemoveExtFromAsset(assetName string) (string, string) {
 	formats := []string{
 		"tar.br",
@@ -46,6 +49,8 @@ func RemoveExtFromAsset(assetName string) (string, string) {
 	return assetName, "raw"
 }
 
+// getFormat extracts the file format from an asset name.
+// It uses RemoveExtFromAsset to determine the format type.
 func getFormat(assetName string) string {
 	_, format := RemoveExtFromAsset(assetName)
 	return format
