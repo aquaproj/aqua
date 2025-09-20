@@ -6,7 +6,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 )
 
-func TestReadEmbeddedTool(t *testing.T) {
+func TestReadEmbeddedTool(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name         string

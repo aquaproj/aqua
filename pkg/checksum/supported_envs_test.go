@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestGetRuntimesFromSupportedEnvs(t *testing.T) {
+func TestGetRuntimesFromSupportedEnvs(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name              string

@@ -7,7 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 )
 
-func TestCalculateReader(t *testing.T) {
+func TestCalculateReader(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name      string
@@ -101,10 +101,10 @@ func TestCalculateReader(t *testing.T) {
 				if result == "" {
 					t.Error("Expected non-empty hash result")
 				}
-			} else {
-				if result != d.expected {
-					t.Errorf("Expected %s, got %s", d.expected, result)
-				}
+				return
+			}
+			if result != d.expected {
+				t.Errorf("Expected %s, got %s", d.expected, result)
 			}
 		})
 	}
