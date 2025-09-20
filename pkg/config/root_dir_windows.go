@@ -10,6 +10,8 @@ import (
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
+// GetRootDir determines the root directory for aqua installation on Windows systems.
+// It checks AQUA_ROOT_DIR environment variable first, then uses XDG data directory with Windows-specific defaults.
 func GetRootDir(osEnv osenv.OSEnv) string {
 	if rootDir := osEnv.Getenv("AQUA_ROOT_DIR"); rootDir != "" {
 		return rootDir

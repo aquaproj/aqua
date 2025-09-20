@@ -12,10 +12,14 @@ import (
 )
 
 var (
+	// errRegistryNotFound is returned when a referenced registry is not found
 	errRegistryNotFound = errors.New("registry isn't found")
-	errPkgNotFound      = errors.New("package isn't found in the registry")
+	// errPkgNotFound is returned when a package is not found in any registry
+	errPkgNotFound = errors.New("package isn't found in the registry")
 )
 
+// ListPackagesNotOverride extracts packages from configuration without applying version overrides.
+// It validates package definitions and resolves registry information but skips version constraints.
 func ListPackagesNotOverride(logE *logrus.Entry, cfg *aqua.Config, registries map[string]*registry.Config) ([]*Package, bool) {
 	pkgs := make([]*Package, 0, len(cfg.Packages))
 	failed := false
@@ -63,6 +67,8 @@ func ListPackagesNotOverride(logE *logrus.Entry, cfg *aqua.Config, registries ma
 	return pkgs, failed
 }
 
+// ListPackages extracts and validates all packages from configuration.
+// It applies version overrides, checks platform support, and processes package variables.
 func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, registries map[string]*registry.Config) ([]*Package, bool) {
 	pkgs := make([]*Package, 0, len(cfg.Packages))
 	failed := false
@@ -99,6 +105,8 @@ func ListPackages(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, reg
 	return pkgs, failed
 }
 
+// listPackage processes a single package definition with full validation.
+// It applies overrides, checks platform support, and validates package configuration.
 func listPackage(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo, env string) (*Package, error) {
 	rgst, ok := cfg.Registries[pkg.Registry]
 	if ok {
@@ -134,6 +142,8 @@ func listPackage(logE *logrus.Entry, cfg *aqua.Config, rt *runtime.Runtime, regi
 	return p, nil
 }
 
+// getPkgInfoFromRegistries retrieves package information from the appropriate registry.
+// It caches registry lookups for performance and validates package existence.
 func getPkgInfoFromRegistries(logE *logrus.Entry, registries map[string]*registry.Config, pkg *aqua.Package, m map[string]map[string]*registry.PackageInfo) (*registry.PackageInfo, error) {
 	pkgInfoMap, ok := m[pkg.Registry]
 	if !ok {
