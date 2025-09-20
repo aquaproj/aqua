@@ -14,6 +14,10 @@ func (m *MockVerifier) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 	return m.err
 }
 
+func (m *MockVerifier) VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ParamVerifyRelease) error {
+	return m.err
+}
+
 type MockExecutor struct {
 	Err error
 }
