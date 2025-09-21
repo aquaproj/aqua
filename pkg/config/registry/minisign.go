@@ -42,15 +42,3 @@ func (m *Minisign) GetEnabled() bool {
 	}
 	return true
 }
-
-// GetDownloadedFile returns a DownloadedFile for the signature file.
-// This is an alias for ToDownloadedFile for consistency with other verification types.
-func (m *Minisign) GetDownloadedFile() *DownloadedFile {
-	return &DownloadedFile{
-		Type:      m.Type,
-		RepoOwner: m.RepoOwner,
-		RepoName:  m.RepoName,
-		Asset:     m.Asset,
-		URL:       m.URL,
-	}
-}
