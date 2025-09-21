@@ -273,15 +273,6 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "GitHubReleaseAttestation": {
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
     "Minisign": {
       "properties": {
         "enabled": {
@@ -565,8 +556,8 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
-        "github_release_attestation": {
-          "$ref": "#/$defs/GitHubReleaseAttestation"
+        "immutable_release": {
+          "type": "boolean"
         },
         "vars": {
           "items": {
@@ -793,8 +784,8 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
-        "github_release_attestation": {
-          "$ref": "#/$defs/GitHubReleaseAttestation"
+        "immutable_release": {
+          "type": "boolean"
         },
         "build": {
           "$ref": "#/$defs/Build"
