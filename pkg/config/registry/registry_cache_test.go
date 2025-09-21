@@ -24,7 +24,10 @@ func TestNewCache_WithExistingFile(t *testing.T) {
 	// Create sample cache data
 	data := map[string]map[string]*registry.PackageInfo{
 		"registry1": {
-			"package1": {Name: "package1", Type: "github_release"},
+			"package1": {
+				Name: "package1",
+				Type: "github_release",
+			},
 		},
 	}
 
