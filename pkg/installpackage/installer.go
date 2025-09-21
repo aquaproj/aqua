@@ -58,6 +58,7 @@ type Installer struct {
 	cosignDisabled        bool
 	slsaDisabled          bool
 	gaaDisabled           bool
+	graDisabled           bool
 	vacuum                Vacuum
 }
 
@@ -109,6 +110,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		cosignDisabled:        param.CosignDisabled,
 		slsaDisabled:          param.SLSADisabled,
 		gaaDisabled:           param.GitHubArtifactAttestationDisabled,
+		graDisabled:           param.GitHubReleaseAttestationDisabled,
 		copyDir:               param.Dest,
 		unarchiver:            unarchiver,
 		cosign:                cosignVerifier,
@@ -139,6 +141,7 @@ type MinisignVerifier interface {
 
 type GitHubArtifactAttestationsVerifier interface {
 	Verify(ctx context.Context, logE *logrus.Entry, param *ghattestation.ParamVerify) error
+	VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ghattestation.ParamVerifyRelease) error
 }
 
 type CosignVerifier interface {

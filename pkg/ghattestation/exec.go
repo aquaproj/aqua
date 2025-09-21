@@ -24,6 +24,7 @@ type CommandExecutor interface {
 
 type Executor interface {
 	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error
+	VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ParamVerifyRelease) error
 }
 
 type ExecutorImpl struct {
@@ -106,6 +107,50 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 			"exe":  e.exePath,
 			"args": strings.Join(args, " "),
 		}).Warn("execute gh attestation verify")
+		if i == 4 { //nolint:mnd
+			break
+		}
+		if err := wait(ctx, logE, i+1); err != nil {
+			return err
+		}
+	}
+	return errVerify
+}
+
+type ParamVerifyRelease struct {
+	ArtifactPath string
+	Repository   string
+	Version      string
+}
+
+func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ParamVerifyRelease) error {
+	/*
+		$ gh release verify-asset hello \
+		  -R suzuki-shunsuke/test-github-artifact-attestation
+	*/
+
+	args := []string{
+		"release",
+		"verify-asset",
+		"-R",
+		param.Repository,
+		param.Version,
+		param.ArtifactPath,
+	}
+	for i := range 5 {
+		err := e.exec(ctx, args)
+		if err == nil {
+			return nil
+		}
+		ae := &AuthError{}
+		if errors.As(err, &ae) {
+			logerr.WithError(logE, err).Warn("skip verifying GitHub Release Attestations because of the authentication error")
+			return nil
+		}
+		logerr.WithError(logE, err).WithFields(logrus.Fields{
+			"exe":  e.exePath,
+			"args": strings.Join(args, " "),
+		}).Warn("execute gh release verify-asset")
 		if i == 4 { //nolint:mnd
 			break
 		}
