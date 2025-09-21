@@ -81,28 +81,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.1/goreleaser_Darwin_all.tar.gz",
-      "checksum": "680D9B4811CBBAFC479029C087EDE44D7F5B457702427F40AD3976ED22D55A57",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.2/goreleaser_Darwin_all.tar.gz",
+      "checksum": "28E7DB397DC342ED751A91B66CB8F71694BF30FE1F0850E8C7FB225A05435E9D",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.1/goreleaser_Linux_arm64.tar.gz",
-      "checksum": "1794690FAF948020593451ACEA5BFA9F947A984513CB01ED7E8CBF33F69851EA",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.2/goreleaser_Linux_arm64.tar.gz",
+      "checksum": "F0F4562928DA5F3CC680752B1DAC9E3B361D4CA65D4F4B5045076C354BFC1854",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.1/goreleaser_Linux_x86_64.tar.gz",
-      "checksum": "CF22083B2702283A0BF29114F453DF8843679A343616F42FBD203BFFABC63862",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.2/goreleaser_Linux_x86_64.tar.gz",
+      "checksum": "B7C923E1FF208A5AA4C800EE0331D9FDC8D3EA434F1126E43088676B34D5717B",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.1/goreleaser_Windows_arm64.zip",
-      "checksum": "F9EBBD8BF3C52EE2965109DC4DE2441362B21BFC86011C6C52D46FC22AAAF424",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.2/goreleaser_Windows_arm64.zip",
+      "checksum": "557ACA29DC94314DA683320DCE0F86B2B1CC25803ABBAB63C1CF6C838AE1CD7B",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.1/goreleaser_Windows_x86_64.zip",
-      "checksum": "40FA2213DCB3F1A3F626494F19DEECBEE943D6C4C28FB6BFE0E51806A655AC61",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.12.2/goreleaser_Windows_x86_64.zip",
+      "checksum": "278F887C410BD0B2F02E99F77A67D5277B511944BD26108631B8F878BDA53711",
       "algorithm": "sha256"
     },
     {
