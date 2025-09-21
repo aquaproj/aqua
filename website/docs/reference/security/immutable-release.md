@@ -2,7 +2,7 @@
 sidebar_position: 1260
 ---
 
-# GitHub Release Attestation
+# Immutable Releases
 
 - `aqua >= v2.55.0` [#4195](https://github.com/aquaproj/aqua/pull/4195)
 
@@ -19,7 +19,7 @@ aqua uses [GitHub CLI](https://cli.github.com/) internally, but aqua installs it
 We recommend enabling the verification for security, but you can disable the verification by the environment variable.
 
 ```sh
-export AQUA_DISABLE_GITHUB_RELEASE_ATTESTATION=true
+export AQUA_DISABLE_GITHUB_IMMUTABLE_RElEASE=true
 ```
 
 ## Registry Settings
@@ -33,6 +33,5 @@ packages:
     repo_name: tfcmt
     asset: tfcmt_{{.OS}}_{{.Arch}}.{{.Format}}
     format: tar.gz
-    github_release_attestation:
-      enabled: true
+    immutable_release: true
 ```

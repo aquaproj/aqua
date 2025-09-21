@@ -80,9 +80,9 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION"),
 			},
 			&cli.BoolFlag{
-				Name:    "disable-github-release-attestation",
+				Name:    "disable-github-immutable-release",
 				Usage:   "Disable GitHub Release Attestations verification",
-				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_RELEASE_ATTESTATION"),
+				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE"),
 			},
 			&cli.StringFlag{
 				Name:  "trace",
