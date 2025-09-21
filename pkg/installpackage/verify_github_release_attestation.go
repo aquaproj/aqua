@@ -35,6 +35,7 @@ func (g *gitHubReleaseAttestationsVerifier) Verify(ctx context.Context, logE *lo
 	if err := g.ghVerifier.VerifyRelease(ctx, logE, &ghattestation.ParamVerifyRelease{
 		Repository:   g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName,
 		ArtifactPath: file,
+		Version:      g.pkg.Package.Version,
 	}); err != nil {
 		return fmt.Errorf("verify a package with gh attestation: %w", err)
 	}

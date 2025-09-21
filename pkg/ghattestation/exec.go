@@ -120,6 +120,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 type ParamVerifyRelease struct {
 	ArtifactPath string
 	Repository   string
+	Version      string
 }
 
 func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ParamVerifyRelease) error {
@@ -131,9 +132,10 @@ func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logE *logrus.Entry, pa
 	args := []string{
 		"release",
 		"verify-asset",
-		param.ArtifactPath,
 		"-R",
 		param.Repository,
+		param.Version,
+		param.ArtifactPath,
 	}
 	for i := range 5 {
 		err := e.exec(ctx, args)
