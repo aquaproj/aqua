@@ -84,7 +84,7 @@ type PackageInfo struct {
 	SLSAProvenance             *SLSAProvenance             `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `json:"minisign,omitempty" yaml:",omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
-	ImmutableRelease           bool                        `json:"immutable_release,omitempty" yaml:"immutable_release,omitempty"`
+	GitHubImmutableRelease     bool                        `json:"github_immutable_release,omitempty" yaml:"github_immutable_release,omitempty"`
 	Vars                       []*Var                      `json:"vars,omitempty" yaml:",omitempty"`
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides           []*VersionOverride          `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
@@ -171,7 +171,7 @@ type VersionOverride struct {
 	SLSAProvenance             *SLSAProvenance             `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `json:"minisign,omitempty" yaml:",omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
-	ImmutableRelease           *bool                       `json:"immutable_release,omitempty" yaml:"immutable_release,omitempty"`
+	GitHubImmutableRelease     *bool                       `json:"github_immutable_release,omitempty" yaml:"github_immutable_release,omitempty"`
 	Build                      *Build                      `json:"build,omitempty" yaml:",omitempty"`
 	Vars                       []*Var                      `json:"vars,omitempty" yaml:",omitempty"`
 	Overrides                  Overrides                   `yaml:",omitempty" json:"overrides,omitempty"`
@@ -243,7 +243,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		SLSAProvenance:             p.SLSAProvenance,
 		Minisign:                   p.Minisign,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
-		ImmutableRelease:           p.ImmutableRelease,
+		GitHubImmutableRelease:     p.GitHubImmutableRelease,
 		Private:                    p.Private,
 		ErrorMessage:               p.ErrorMessage,
 		NoAsset:                    p.NoAsset,
@@ -765,8 +765,8 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.GitHubArtifactAttestations != nil {
 		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
 	}
-	if child.ImmutableRelease != nil {
-		pkg.ImmutableRelease = *child.ImmutableRelease
+	if child.GitHubImmutableRelease != nil {
+		pkg.GitHubImmutableRelease = *child.GitHubImmutableRelease
 	}
 	if child.ErrorMessage != nil {
 		pkg.ErrorMessage = *child.ErrorMessage
@@ -825,7 +825,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
-		p.ImmutableRelease = false
+		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -841,7 +841,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
-		p.ImmutableRelease = false
+		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -856,7 +856,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
-		p.ImmutableRelease = false
+		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false

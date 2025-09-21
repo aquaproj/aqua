@@ -40,7 +40,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 		},
 		&gitHubReleaseAttestationsVerifier{
 			disabled:    is.graDisabled,
-			gra:         pkgInfo.ImmutableRelease,
+			gra:         pkgInfo.GitHubImmutableRelease,
 			pkg:         pkg,
 			ghInstaller: is.ghInstaller,
 			ghVerifier:  is.ghVerifier,

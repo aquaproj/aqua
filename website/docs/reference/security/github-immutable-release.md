@@ -2,7 +2,7 @@
 sidebar_position: 1260
 ---
 
-# Immutable Releases
+# GitHub Immutable Releases
 
 - `aqua >= v2.55.0` [#4195](https://github.com/aquaproj/aqua/pull/4195)
 
@@ -33,5 +33,5 @@ packages:
     repo_name: tfcmt
     asset: tfcmt_{{.OS}}_{{.Arch}}.{{.Format}}
     format: tar.gz
-    immutable_release: true
+    github_immutable_release: true
 ```

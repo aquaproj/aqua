@@ -556,7 +556,7 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
-        "immutable_release": {
+        "github_immutable_release": {
           "type": "boolean"
         },
         "vars": {
@@ -784,7 +784,7 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
-        "immutable_release": {
+        "github_immutable_release": {
           "type": "boolean"
         },
         "build": {

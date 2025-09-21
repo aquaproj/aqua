@@ -300,17 +300,17 @@ func TestPackageInfo_JSONEncode_VersionOverrides_ImmutableRelease(t *testing.T) 
 		Asset:     "asset.tar.gz",
 		VersionOverrides: []*registry.VersionOverride{
 			{
-				VersionConstraints: ">=v1.0.0",
-				ImmutableRelease:   boolPtr(true),
+				VersionConstraints:     ">=v1.0.0",
+				GitHubImmutableRelease: boolPtr(true),
 			},
 			{
-				VersionConstraints: ">=v2.0.0",
-				ImmutableRelease:   boolPtr(false),
+				VersionConstraints:     ">=v2.0.0",
+				GitHubImmutableRelease: boolPtr(false),
 			},
 			{
 				VersionConstraints: ">=v3.0.0",
 				// ImmutableRelease with nil (should be omitted due to omitempty)
-				ImmutableRelease: nil,
+				GitHubImmutableRelease: nil,
 			},
 		},
 	}
@@ -337,37 +337,37 @@ func TestPackageInfo_JSONEncode_VersionOverrides_ImmutableRelease(t *testing.T) 
 		t.Fatalf("expected 3 version overrides, got %d", len(versionOverrides))
 	}
 
-	// Test first version override (immutable_release: true)
+	// Test first version override (github_immutable_release: true)
 	vo1, ok := versionOverrides[0].(map[string]any)
 	if !ok {
 		t.Fatal("first version override is not a map")
 	}
 
-	immutableRelease1, ok := vo1["immutable_release"].(bool)
+	immutableRelease1, ok := vo1["github_immutable_release"].(bool)
 	if !ok || !immutableRelease1 {
-		t.Errorf("expected immutable_release: true in first version override, got %v", vo1["immutable_release"])
+		t.Errorf("expected github_immutable_release: true in first version override, got %v", vo1["github_immutable_release"])
 	}
 
-	// Test second version override (immutable_release: false)
+	// Test second version override (github_immutable_release: false)
 	vo2, ok := versionOverrides[1].(map[string]any)
 	if !ok {
 		t.Fatal("second version override is not a map")
 	}
 
-	immutableRelease2, ok := vo2["immutable_release"].(bool)
+	immutableRelease2, ok := vo2["github_immutable_release"].(bool)
 	if !ok || immutableRelease2 {
-		t.Errorf("expected immutable_release: false in second version override, got %v", vo2["immutable_release"])
+		t.Errorf("expected github_immutable_release: false in second version override, got %v", vo2["github_immutable_release"])
 	}
 
-	// Test third version override (immutable_release: nil - should be omitted due to omitempty)
+	// Test third version override (github_immutable_release: nil - should be omitted due to omitempty)
 	vo3, ok := versionOverrides[2].(map[string]any)
 	if !ok {
 		t.Fatal("third version override is not a map")
 	}
 
-	// With omitempty, nil immutable_release should be omitted from JSON
-	if _, exists := vo3["immutable_release"]; exists {
-		t.Errorf("expected immutable_release field to be omitted in third version override, but found: %v", vo3["immutable_release"])
+	// With omitempty, nil github_immutable_release should be omitted from JSON
+	if _, exists := vo3["github_immutable_release"]; exists {
+		t.Errorf("expected github_immutable_release field to be omitted in third version override, but found: %v", vo3["github_immutable_release"])
 	}
 }
 
@@ -385,9 +385,9 @@ func TestPackageInfo_JSONEncode_RoundTrip(t *testing.T) {
 		Asset:     "kubectl",
 		VersionOverrides: []*registry.VersionOverride{
 			{
-				VersionConstraints: ">=v1.25.0",
-				Asset:              "kubectl-new",
-				ImmutableRelease:   boolPtr(true),
+				VersionConstraints:     ">=v1.25.0",
+				Asset:                  "kubectl-new",
+				GitHubImmutableRelease: boolPtr(true),
 			},
 		},
 	}
@@ -410,17 +410,17 @@ func TestPackageInfo_JSONEncode_RoundTrip(t *testing.T) {
 	}
 
 	vo := decoded.VersionOverrides[0]
-	if vo.ImmutableRelease == nil {
+	if vo.GitHubImmutableRelease == nil {
 		t.Fatal("ImmutableRelease should not be nil after JSON round trip")
 	}
 
-	if !*vo.ImmutableRelease {
+	if !*vo.GitHubImmutableRelease {
 		t.Error("ImmutableRelease should be true after JSON round trip")
 	}
 
 	// Compare original and decoded using deep comparison
-	if diff := cmp.Diff(*original.VersionOverrides[0].ImmutableRelease,
-		*decoded.VersionOverrides[0].ImmutableRelease); diff != "" {
+	if diff := cmp.Diff(*original.VersionOverrides[0].GitHubImmutableRelease,
+		*decoded.VersionOverrides[0].GitHubImmutableRelease); diff != "" {
 		t.Errorf("ImmutableRelease value differs after JSON round trip (-want +got):\n%s", diff)
 	}
 }
@@ -437,11 +437,11 @@ repo_name: repo
 asset: asset.tar.gz
 version_overrides:
   - version_constraint: ">=v1.0.0"
-    immutable_release: true
+    github_immutable_release: true
   - version_constraint: ">=v2.0.0"
-    immutable_release: false
+    github_immutable_release: false
   - version_constraint: ">=v3.0.0"
-    # No immutable_release field (should be nil)
+    # No github_immutable_release field (should be nil)
 `
 
 	var pkgInfo registry.PackageInfo
@@ -463,42 +463,42 @@ version_overrides:
 		t.Fatalf("expected 3 version overrides, got %d", len(pkgInfo.VersionOverrides))
 	}
 
-	// Test first version override (immutable_release: true)
+	// Test first version override (github_immutable_release: true)
 	vo1 := pkgInfo.VersionOverrides[0]
 	if vo1.VersionConstraints != ">=v1.0.0" {
 		t.Errorf("expected version constraint '>=v1.0.0', got %q", vo1.VersionConstraints)
 	}
 
-	if vo1.ImmutableRelease == nil {
+	if vo1.GitHubImmutableRelease == nil {
 		t.Fatal("ImmutableRelease should not be nil in first version override")
 	}
 
-	if !*vo1.ImmutableRelease {
+	if !*vo1.GitHubImmutableRelease {
 		t.Error("ImmutableRelease should be true in first version override")
 	}
 
-	// Test second version override (immutable_release: false)
+	// Test second version override (github_immutable_release: false)
 	vo2 := pkgInfo.VersionOverrides[1]
 	if vo2.VersionConstraints != ">=v2.0.0" {
 		t.Errorf("expected version constraint '>=v2.0.0', got %q", vo2.VersionConstraints)
 	}
 
-	if vo2.ImmutableRelease == nil {
+	if vo2.GitHubImmutableRelease == nil {
 		t.Fatal("ImmutableRelease should not be nil in second version override")
 	}
 
-	if *vo2.ImmutableRelease {
+	if *vo2.GitHubImmutableRelease {
 		t.Error("ImmutableRelease should be false in second version override")
 	}
 
-	// Test third version override (immutable_release: nil)
+	// Test third version override (github_immutable_release: nil)
 	vo3 := pkgInfo.VersionOverrides[2]
 	if vo3.VersionConstraints != ">=v3.0.0" {
 		t.Errorf("expected version constraint '>=v3.0.0', got %q", vo3.VersionConstraints)
 	}
 
-	if vo3.ImmutableRelease != nil {
-		t.Errorf("ImmutableRelease should be nil in third version override, got %v", *vo3.ImmutableRelease)
+	if vo3.GitHubImmutableRelease != nil {
+		t.Errorf("ImmutableRelease should be nil in third version override, got %v", *vo3.GitHubImmutableRelease)
 	}
 }
 
@@ -516,9 +516,9 @@ func TestPackageInfo_YAMLDecode_RoundTrip(t *testing.T) {
 		Asset:     "kubectl",
 		VersionOverrides: []*registry.VersionOverride{
 			{
-				VersionConstraints: ">=v1.25.0",
-				Asset:              "kubectl-new",
-				ImmutableRelease:   boolPtr(true),
+				VersionConstraints:     ">=v1.25.0",
+				Asset:                  "kubectl-new",
+				GitHubImmutableRelease: boolPtr(true),
 			},
 		},
 	}
@@ -541,17 +541,17 @@ func TestPackageInfo_YAMLDecode_RoundTrip(t *testing.T) {
 	}
 
 	vo := decoded.VersionOverrides[0]
-	if vo.ImmutableRelease == nil {
+	if vo.GitHubImmutableRelease == nil {
 		t.Fatal("ImmutableRelease should not be nil after YAML round trip")
 	}
 
-	if !*vo.ImmutableRelease {
+	if !*vo.GitHubImmutableRelease {
 		t.Error("ImmutableRelease should be true after YAML round trip")
 	}
 
 	// Compare original and decoded using deep comparison
-	if diff := cmp.Diff(*original.VersionOverrides[0].ImmutableRelease,
-		*decoded.VersionOverrides[0].ImmutableRelease); diff != "" {
+	if diff := cmp.Diff(*original.VersionOverrides[0].GitHubImmutableRelease,
+		*decoded.VersionOverrides[0].GitHubImmutableRelease); diff != "" {
 		t.Errorf("ImmutableRelease value differs after YAML round trip (-want +got):\n%s", diff)
 	}
 
@@ -578,14 +578,14 @@ asset: package.tar.gz
 version_overrides:
   - version_constraint: ">=v1.0.0"
     asset: package-v1.tar.gz
-    immutable_release: true
+    github_immutable_release: true
     cosign:
       enabled: true
     minisign:
       enabled: false
   - version_constraint: ">=v2.0.0"
     asset: package-v2.tar.gz
-    immutable_release: false
+    github_immutable_release: false
     slsa_provenance:
       enabled: true
       type: github_release
@@ -607,11 +607,11 @@ version_overrides:
 		t.Errorf("expected asset 'package-v1.tar.gz', got %q", vo1.Asset)
 	}
 
-	if vo1.ImmutableRelease == nil {
+	if vo1.GitHubImmutableRelease == nil {
 		t.Fatal("ImmutableRelease should not be nil in first version override")
 	}
 
-	if !*vo1.ImmutableRelease {
+	if !*vo1.GitHubImmutableRelease {
 		t.Error("ImmutableRelease should be true in first version override")
 	}
 
@@ -637,11 +637,11 @@ version_overrides:
 		t.Errorf("expected asset 'package-v2.tar.gz', got %q", vo2.Asset)
 	}
 
-	if vo2.ImmutableRelease == nil {
+	if vo2.GitHubImmutableRelease == nil {
 		t.Fatal("ImmutableRelease should not be nil in second version override")
 	}
 
-	if *vo2.ImmutableRelease {
+	if *vo2.GitHubImmutableRelease {
 		t.Error("ImmutableRelease should be false in second version override")
 	}
 
