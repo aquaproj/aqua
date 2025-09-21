@@ -1,3 +1,4 @@
+//nolint:funlen
 package registry_test
 
 import (

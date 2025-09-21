@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestSLSAProvenance_GetEnabled(t *testing.T) {
+func TestSLSAProvenance_GetEnabled(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -139,7 +139,7 @@ func TestSLSAProvenance_GetSourceURI(t *testing.T) {
 	}
 }
 
-func TestSLSAProvenance_ToDownloadedFile(t *testing.T) {
+func TestSLSAProvenance_ToDownloadedFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string

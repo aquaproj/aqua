@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestPackageInfo_SetVersion(t *testing.T) {
+func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	logE := logrus.NewEntry(logrus.New())
 
@@ -217,7 +217,7 @@ func TestPackageInfo_SetVersion(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_SetVersion_Integration(t *testing.T) {
+func TestPackageInfo_SetVersion_Integration(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	logE := logrus.NewEntry(logrus.New())
 
@@ -271,6 +271,7 @@ func TestPackageInfo_SetVersion_Integration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.version, func(t *testing.T) {
+			t.Parallel()
 			result, err := pkg.SetVersion(logE, tt.version)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -295,7 +296,7 @@ func TestPackageInfo_SetVersion_Integration(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_setTopVersion(t *testing.T) {
+func TestPackageInfo_setTopVersion(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	logE := logrus.NewEntry(logrus.New())
 

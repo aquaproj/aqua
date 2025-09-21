@@ -1,3 +1,4 @@
+//nolint:funlen
 package aqua_test
 
 import (
@@ -7,7 +8,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
 
-func TestConfig_ChecksumEnabled(t *testing.T) {
+func TestConfig_ChecksumEnabled(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name         string
@@ -81,7 +82,7 @@ func TestConfig_ChecksumEnabled(t *testing.T) {
 	}
 }
 
-func TestConfig_RequireChecksum(t *testing.T) {
+func TestConfig_RequireChecksum(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name         string

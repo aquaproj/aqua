@@ -1,3 +1,4 @@
+//nolint:funlen
 package registry_test
 
 import (
@@ -199,7 +200,7 @@ func boolPtr(b bool) *bool {
 	return &b
 }
 
-func TestChecksum_GetCosign(t *testing.T) {
+func TestChecksum_GetCosign(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -250,7 +251,7 @@ func TestChecksum_GetCosign(t *testing.T) {
 	}
 }
 
-func TestChecksum_GetMinisign(t *testing.T) {
+func TestChecksum_GetMinisign(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -301,7 +302,7 @@ func TestChecksum_GetMinisign(t *testing.T) {
 	}
 }
 
-func TestChecksum_GetGitHubArtifactAttestations(t *testing.T) {
+func TestChecksum_GetGitHubArtifactAttestations(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
 		name     string

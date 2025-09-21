@@ -1,3 +1,4 @@
+//nolint:funlen
 package registry_test
 
 import (
@@ -9,12 +10,13 @@ import (
 	"github.com/spf13/afero"
 )
 
+const cacheDir = "/tmp/test/registry-cache"
+
 func TestNewCache_WithExistingFile(t *testing.T) {
 	t.Parallel()
 	fs := afero.NewMemMapFs()
 
 	// Create cache directory and valid cache file
-	cacheDir := "/tmp/test/registry-cache"
 	if err := fs.MkdirAll(cacheDir, 0o755); err != nil {
 		t.Fatalf("failed to create cache dir: %v", err)
 	}
@@ -62,7 +64,6 @@ func TestNewCache_WithInvalidJSON(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	// Create cache directory and invalid cache file
-	cacheDir := "/tmp/test/registry-cache"
 	if err := fs.MkdirAll(cacheDir, 0o755); err != nil {
 		t.Fatalf("failed to create cache dir: %v", err)
 	}
@@ -87,12 +88,11 @@ func TestNewCache_WithInvalidJSON(t *testing.T) {
 }
 
 // Test cache operations without using NewCache
-func TestCache_Operations(t *testing.T) {
+func TestCache_Operations(t *testing.T) { //nolint:cyclop
 	t.Parallel()
 
 	// Create cache with valid data using direct setup
 	fs := afero.NewMemMapFs()
-	cacheDir := "/tmp/test/registry-cache"
 	if err := fs.MkdirAll(cacheDir, 0o755); err != nil {
 		t.Fatalf("failed to create cache dir: %v", err)
 	}
@@ -177,12 +177,11 @@ func TestCache_Operations(t *testing.T) {
 	}
 }
 
-func TestCache_WriteReadRoundTrip(t *testing.T) {
+func TestCache_WriteReadRoundTrip(t *testing.T) { //nolint:cyclop
 	t.Parallel()
 	fs := afero.NewMemMapFs()
 
 	// Create initial empty cache file
-	cacheDir := "/tmp/test/registry-cache"
 	if err := fs.MkdirAll(cacheDir, 0o755); err != nil {
 		t.Fatalf("failed to create cache dir: %v", err)
 	}
@@ -247,7 +246,6 @@ func TestCache_WriteError(t *testing.T) {
 
 	// Start with a working filesystem to create the cache
 	normalFs := afero.NewMemMapFs()
-	cacheDir := "/tmp/test/registry-cache"
 	if err := normalFs.MkdirAll(cacheDir, 0o755); err != nil {
 		t.Fatalf("failed to create cache dir: %v", err)
 	}

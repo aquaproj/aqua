@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestMinisign_GetEnabled(t *testing.T) {
+func TestMinisign_GetEnabled(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -71,7 +71,7 @@ func TestMinisign_GetEnabled(t *testing.T) {
 	}
 }
 
-func TestMinisign_ToDownloadedFile(t *testing.T) {
+func TestMinisign_ToDownloadedFile(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string

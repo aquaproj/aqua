@@ -1,3 +1,4 @@
+//nolint:funlen
 package aqua_test
 
 import (
