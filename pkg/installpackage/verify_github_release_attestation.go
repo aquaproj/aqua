@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/sirupsen/logrus"
 )
 
 type gitHubReleaseAttestationsVerifier struct {
 	disabled    bool
-	gra         *registry.GitHubReleaseAttestation
+	gra         bool
 	pkg         *config.Package
 	ghInstaller *DedicatedInstaller
 	ghVerifier  GitHubArtifactAttestationsVerifier
@@ -23,7 +22,7 @@ func (g *gitHubReleaseAttestationsVerifier) Enabled(logE *logrus.Entry) (bool, e
 		logE.Debug("GitHub Release Attestation is disabled")
 		return false, nil
 	}
-	return g.gra.GetEnabled(), nil
+	return g.gra, nil
 }
 
 func (g *gitHubReleaseAttestationsVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
