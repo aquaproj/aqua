@@ -1,3 +1,6 @@
+// Package generate implements the aqua generate command for interactive package configuration.
+// The generate command allows users to search for packages in registries and generate
+// configuration entries interactively, supporting both command-line and fuzzy finder interfaces.
 package generate
 
 import (
@@ -12,10 +15,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// command holds the parameters and configuration for the generate command.
 type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for package configuration generation.
+// The returned command provides interactive package search and configuration
+// generation capabilities with various output and selection options.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -69,6 +76,9 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
+// action implements the main logic for the generate command.
+// It initializes the generate controller and executes the package search
+// and configuration generation process based on user input.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

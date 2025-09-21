@@ -1,3 +1,6 @@
+// Package remove implements the aqua remove command for uninstalling packages.
+// The remove command uninstalls packages from the aqua installation directory,
+// providing options to remove package files and symbolic links.
 package remove
 
 import (
@@ -41,6 +44,9 @@ type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for removing packages.
+// The returned command provides package uninstallation functionality
+// with options for removing files and links based on specified modes.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -72,6 +78,9 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
+// action implements the main logic for the remove command.
+// It initializes the remove controller and executes package removal
+// based on the provided command line arguments and mode settings.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

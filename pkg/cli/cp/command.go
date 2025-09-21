@@ -1,3 +1,7 @@
+// Package cp implements the aqua cp command for copying executable files.
+// The cp command copies executable files from aqua's installation directory
+// to a specified destination directory, allowing for easy distribution
+// and deployment of installed tools.
 package cp
 
 import (
@@ -12,10 +16,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// command holds the parameters and configuration for the cp command.
 type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for copying executable files.
+// The returned command allows users to copy installed tool executables
+// to a specified directory with various filtering options.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -74,6 +82,9 @@ $ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 	}
 }
 
+// action implements the main logic for the cp command.
+// It initializes the copy controller and executes the file copying operation
+// based on the provided command line arguments and configuration.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

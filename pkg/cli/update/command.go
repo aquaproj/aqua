@@ -1,3 +1,6 @@
+// Package update implements the aqua update command for updating packages and registries.
+// The update command updates packages and registries to their latest versions,
+// fetching version information from various sources like GitHub Releases and Tags.
 package update
 
 import (
@@ -95,6 +98,9 @@ type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for updating packages and registries.
+// The returned command provides functionality to update packages to their
+// latest versions from various sources like GitHub and crates.io.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -144,6 +150,9 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
+// action implements the main logic for the update command.
+// It initializes the update controller and executes package and registry
+// updates based on the provided command line arguments.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

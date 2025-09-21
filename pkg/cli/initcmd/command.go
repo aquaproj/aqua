@@ -1,3 +1,6 @@
+// Package initcmd implements the aqua init command for creating configuration files.
+// The init command creates new aqua configuration files with optional
+// directory structure and import configurations for project initialization.
 package initcmd
 
 import (
@@ -12,10 +15,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// initCommand holds the parameters and configuration for the init command.
 type initCommand struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for project initialization.
+// The returned command creates aqua configuration files with options
+// for directory structure and import configurations.
 func New(r *util.Param) *cli.Command {
 	ic := &initCommand{
 		r: r,
@@ -53,6 +60,9 @@ $ aqua init -d # Create a directory "aqua" and create "aqua/aqua.yaml"
 	}
 }
 
+// action implements the main logic for the init command.
+// It creates configuration files and directory structures based on
+// the provided command line options and arguments.
 func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

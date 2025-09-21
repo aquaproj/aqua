@@ -1,3 +1,6 @@
+// Package ast provides utility functions for working with YAML Abstract Syntax Trees (AST).
+// It offers helper functions to navigate and manipulate YAML AST nodes, particularly
+// for finding and extracting mapping values from YAML documents.
 package ast
 
 import (
@@ -6,6 +9,9 @@ import (
 	"github.com/goccy/go-yaml/ast"
 )
 
+// FindMappingValueFromNode searches for a mapping value with the specified key in a YAML AST node.
+// It first normalizes the node to extract mapping values, then searches for the key.
+// Returns the matching MappingValueNode or nil if not found.
 func FindMappingValueFromNode(body ast.Node, key string) (*ast.MappingValueNode, error) {
 	values, err := NormalizeMappingValueNodes(body)
 	if err != nil {
@@ -14,6 +20,9 @@ func FindMappingValueFromNode(body ast.Node, key string) (*ast.MappingValueNode,
 	return findMappingValue(values, key), nil
 }
 
+// findMappingValue searches through a slice of mapping value nodes for a specific key.
+// It iterates through the values and matches string keys against the target key.
+// Returns the matching MappingValueNode or nil if not found.
 func findMappingValue(values []*ast.MappingValueNode, key string) *ast.MappingValueNode {
 	for _, value := range values {
 		sn, ok := value.Key.(*ast.StringNode)
@@ -27,6 +36,9 @@ func findMappingValue(values []*ast.MappingValueNode, key string) *ast.MappingVa
 	return nil
 }
 
+// NormalizeMappingValueNodes extracts mapping value nodes from different AST node types.
+// It handles both MappingNode (which contains multiple values) and single MappingValueNode.
+// Returns a slice of MappingValueNodes for consistent processing, or an error for unsupported types.
 func NormalizeMappingValueNodes(node ast.Node) ([]*ast.MappingValueNode, error) {
 	switch t := node.(type) {
 	case *ast.MappingNode:
