@@ -1,3 +1,4 @@
+//nolint:funlen
 package registry_test
 
 import (
@@ -109,7 +110,7 @@ func TestPackageInfo_GetFormat(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_GetFiles(t *testing.T) { //nolint:funlen
+func TestPackageInfo_GetFiles(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -176,7 +177,7 @@ func TestPackageInfo_GetFiles(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestPackageInfo_Validate(t *testing.T) { //nolint:funlen
+func TestPackageInfo_Validate(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -445,7 +446,7 @@ func TestPackageInfo_JSONEncode_RoundTrip(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_YAMLDecode_VersionOverrides_GitHubReleaseAttestation(t *testing.T) {
+func TestPackageInfo_YAMLDecode_VersionOverrides_GitHubReleaseAttestation(t *testing.T) { //nolint:cyclop
 	t.Parallel()
 
 	// YAML with VersionOverrides containing GitHubReleaseAttestation
@@ -593,7 +594,7 @@ func TestPackageInfo_YAMLDecode_RoundTrip(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_YAMLDecode_NestedStructure(t *testing.T) {
+func TestPackageInfo_YAMLDecode_NestedStructure(t *testing.T) { //nolint:cyclop
 	t.Parallel()
 
 	// Test more complex YAML structure with multiple verification configurations
