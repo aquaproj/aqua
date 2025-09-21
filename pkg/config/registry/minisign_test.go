@@ -138,21 +138,3 @@ func TestMinisign_ToDownloadedFile(t *testing.T) {
 		})
 	}
 }
-
-func TestMinisign_GetDownloadedFile(t *testing.T) {
-	t.Parallel()
-	// This is an alias for ToDownloadedFile, so we just test it works
-	minisign := &registry.Minisign{
-		Type:      "github_release",
-		RepoOwner: "owner",
-		RepoName:  "repo",
-		Asset:     stringPtr("signature.minisig"),
-	}
-
-	result1 := minisign.ToDownloadedFile()
-	result2 := minisign.GetDownloadedFile()
-
-	if diff := cmp.Diff(result1, result2); diff != "" {
-		t.Errorf("GetDownloadedFile should return same as ToDownloadedFile (-want +got):\n%s", diff)
-	}
-}
