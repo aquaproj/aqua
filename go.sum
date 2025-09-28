@@ -252,8 +252,8 @@ github.com/suzuki-shunsuke/go-jsoneq v0.1.2 h1:A4czEbmFqSELTbrEtXVo4dSgfz2e2Z0y6
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2/go.mod h1:ETXAwfruZTqMMKDxc9CYoS34CNSsnzcdcVIAW3+RujI=
 github.com/suzuki-shunsuke/go-osenv v0.1.0 h1:hBQ7yaeO1WBZsEWuDj1wrOWF+N7HSWSOpEiEZqfCjjk=
 github.com/suzuki-shunsuke/go-osenv v0.1.0/go.mod h1:ZlSVi4kYvV51JEtYpdHh9hAxXKLOWExXel3Jo74aacQ=
-github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-1 h1:Dh1iJ0QAlYVbbouWgBEty5L5Tnuz+JuLKVx3XbMVuUs=
-github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-1/go.mod h1:fRVZ62p4iY8BxyyhZQ++grjQIDzWtRK02mHQapxm4Kk=
+github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2 h1:oOeDLYiW+X/8XC2/Wu3U3rQ0hbindlFs0I8BYpHVA9Y=
+github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2/go.mod h1:fRVZ62p4iY8BxyyhZQ++grjQIDzWtRK02mHQapxm4Kk=
 github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.1 h1:Y+pdnQdt4SYyAyr24MHSjcNKccIQhDzL4lg4IZEMv1I=
 github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.1/go.mod h1:5AZJWWx3A7KudKLEkW8cwxSKWLHXElP9odOD+721oKQ=
 github.com/suzuki-shunsuke/gomic v0.6.0 h1:oSmoXR1nmt7X05TssjBTcX9BCTNnFCcNlA5yshaTjsk=
