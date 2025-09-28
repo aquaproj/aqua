@@ -13,15 +13,25 @@ jobs:
           aqua_version: v2.55.0
       - run: aqua upc -prune
         working-directory: pkg/cosign
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: aqua upc -prune
         working-directory: pkg/slsa
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: aqua upc -prune
         working-directory: pkg/minisign
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: aqua upc -prune
         working-directory: pkg/ghattestation
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
 
       - run: git ls-files docs | xargs pinact run -u
         working-directory: website
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
       - name: get nested property
         id: package_json
         uses: notiz-dev/github-action-json-property@a5a9c668b16513c737c3e1f8956772c99c73f6e8 # v0.2.0
@@ -35,7 +45,7 @@ jobs:
           cache-dependency-path: website/package-lock.json
       - run: npm ci
         working-directory: website
-      - run: cmdx usage
+      - run: bash scripts/generate-usage.sh
         working-directory: website
 
       - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27 # v1.3.2
