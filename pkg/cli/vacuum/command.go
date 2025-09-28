@@ -1,3 +1,6 @@
+// Package vacuum implements the aqua vacuum command for cleaning up unused packages.
+// The vacuum command removes unused installed packages based on usage timestamps,
+// helping users save storage space and maintain a clean installation directory.
 package vacuum
 
 import (
@@ -45,6 +48,9 @@ type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for cleaning up unused packages.
+// The returned command provides functionality to remove packages that haven't
+// been used for a specified number of days.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -70,6 +76,9 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
+// action implements the main logic for the vacuum command.
+// It initializes the vacuum controller and removes unused packages
+// based on the expiration days configuration.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
+// RenderCosign renders Cosign configuration with template variables.
+// It processes Cosign options through templates to generate platform-specific signing configurations.
 func (p *Package) RenderCosign(cos *registry.Cosign, rt *runtime.Runtime) (*registry.Cosign, error) {
 	if p == nil || p.PackageInfo == nil || !cos.GetEnabled() {
 		return nil, nil //nolint:nilnil

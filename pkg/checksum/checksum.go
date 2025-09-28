@@ -16,12 +16,19 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Calculator provides checksum calculation functionality for files and streams.
+// It supports multiple hash algorithms including MD5, SHA1, SHA256, and SHA512.
 type Calculator struct{}
 
+// NewCalculator creates a new checksum calculator instance.
+// Returns a Calculator that can compute hashes for files and streams.
 func NewCalculator() *Calculator {
 	return &Calculator{}
 }
 
+// Calculate computes the checksum of a file using the specified algorithm.
+// It opens the file from the filesystem and delegates to CalculateReader.
+// Returns the hexadecimal representation of the computed hash.
 func (*Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
@@ -31,6 +38,9 @@ func (*Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, e
 	return CalculateReader(f, algorithm)
 }
 
+// CalculateReader computes the checksum of data from an io.Reader using the specified algorithm.
+// It reads all data from the reader and computes the hash using the appropriate algorithm.
+// Returns the hexadecimal representation of the computed hash.
 func CalculateReader(file io.Reader, algorithm string) (string, error) {
 	h, err := getHash(algorithm)
 	if err != nil {
@@ -42,6 +52,9 @@ func CalculateReader(file io.Reader, algorithm string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
+// getHash creates a hash.Hash instance for the specified algorithm.
+// Supports md5, sha1, sha256, and sha512 algorithms.
+// Returns an error for empty or unsupported algorithm names.
 func getHash(algorithm string) (hash.Hash, error) {
 	switch algorithm {
 	case "md5":
@@ -59,12 +72,18 @@ func getHash(algorithm string) (hash.Hash, error) {
 	}
 }
 
+// convertChecksumFileName converts a checksum filename to a template format.
+// It replaces version strings with template placeholders for dynamic generation.
+// Handles both prefixed (v1.0.0) and non-prefixed (1.0.0) version formats.
 func convertChecksumFileName(filename, version string) string {
 	return strings.ReplaceAll(
 		strings.ReplaceAll(filename, version, "{{.Version}}"),
 		strings.TrimPrefix(version, "v"), "{{trimV .Version}}")
 }
 
+// GetChecksumConfigFromFilename analyzes a filename to determine checksum configuration.
+// It identifies the hash algorithm based on filename patterns and excludes signature files.
+// Returns a checksum configuration for github_release type or nil if no pattern matches.
 func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum {
 	s := strings.ToLower(filename)
 	for _, suffix := range []string{"sig", "asc", "pem", "bundle"} {

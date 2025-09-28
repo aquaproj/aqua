@@ -4,6 +4,10 @@ import (
 	"strings"
 )
 
+// SetOS analyzes an asset name to detect and set operating system information.
+// It matches common OS patterns in asset names, handles file extensions like .exe
+// and .dmg for OS detection, and generates templates for cross-platform downloads.
+// The function also manages OS name mappings and scoring for asset selection.
 func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen,cyclop
 	if strings.Contains(lowAssetName, ".exe.") || strings.HasSuffix(lowAssetName, ".exe") {
 		assetInfo.OS = "windows"

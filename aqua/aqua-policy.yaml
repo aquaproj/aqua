@@ -3,7 +3,7 @@
 # aqua Policy
 registries:
   - type: standard
-    ref: semver(">= 3.0.0") or Version in ["f9cce37273a70e2f5664fb4c3708169ffe7e320c", "1f20d0c2211df45694e762fcb20830d5c3cedf95", "98524ca5b420af9115275d110b2cadeab60f49e2"]
+    ref: semver(">= 3.0.0") or Version in ["f9cce37273a70e2f5664fb4c3708169ffe7e320c", "1f20d0c2211df45694e762fcb20830d5c3cedf95", "98524ca5b420af9115275d110b2cadeab60f49e2", "501377ba89acc447dce6b7ad69f51f705d00bff0"]
   - name: main
     type: local
     path: ../tests/main/registry.yaml

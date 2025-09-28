@@ -2,6 +2,8 @@ package aqua
 
 import "github.com/aquaproj/aqua/v2/pkg/config/registry"
 
+// ChecksumEnabled determines if checksum validation is enabled.
+// It considers enforcement flags and configuration settings to make the final decision.
 func (c *Config) ChecksumEnabled(enforceValue, defValue bool) bool {
 	if enforceValue {
 		return true
@@ -12,6 +14,8 @@ func (c *Config) ChecksumEnabled(enforceValue, defValue bool) bool {
 	return c.Checksum.GetEnabled()
 }
 
+// RequireChecksum determines if checksum validation is required.
+// It considers enforcement flags and configuration to determine if checksums are mandatory.
 func (c *Config) RequireChecksum(enforceValue, defValue bool) bool {
 	if enforceValue {
 		return true
@@ -22,8 +26,10 @@ func (c *Config) RequireChecksum(enforceValue, defValue bool) bool {
 	return *c.Checksum.RequireChecksum
 }
 
+// Checksum contains global checksum validation configuration.
+// It controls whether checksums are enabled, required, and on which platforms.
 type Checksum struct {
-	Enabled         *bool                  `json:"enabled,omitempty"`
-	RequireChecksum *bool                  `yaml:"require_checksum" json:"require_checksum,omitempty"`
-	SupportedEnvs   registry.SupportedEnvs `yaml:"supported_envs" json:"supported_envs,omitempty"`
+	Enabled         *bool                  `json:"enabled,omitempty"`                                  // Whether checksum validation is enabled
+	RequireChecksum *bool                  `yaml:"require_checksum" json:"require_checksum,omitempty"` // Whether checksums are required for all packages
+	SupportedEnvs   registry.SupportedEnvs `yaml:"supported_envs" json:"supported_envs,omitempty"`     // Platforms where checksum validation applies
 }

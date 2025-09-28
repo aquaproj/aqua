@@ -11,10 +11,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// policyDenyCommand holds the parameters and configuration for the policy deny command.
 type policyDenyCommand struct {
 	r *util.Param
 }
 
+// newPolicyDeny creates and returns a new CLI command for denying policy files.
+// The returned command marks a policy file as denied, preventing packages
+// from being installed according to that policy.
 func newPolicyDeny(r *util.Param) *cli.Command {
 	i := &policyDenyCommand{
 		r: r,
@@ -30,6 +34,9 @@ $ aqua policy deny [<policy file path>]
 	}
 }
 
+// action implements the main logic for the policy deny command.
+// It initializes the deny policy controller and marks the specified
+// policy file as denied based on the provided file path.
 func (pd *policyDenyCommand) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

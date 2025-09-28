@@ -8,6 +8,9 @@ import (
 	"github.com/goccy/go-yaml/ast"
 )
 
+// UpdateASTFile updates the packages section of a YAML AST file with new package data.
+// It merges the provided packages into the existing packages array or replaces null values.
+// The function handles both null and sequence types for the packages field.
 func UpdateASTFile(file *ast.File, pkgs any) error { //nolint:cyclop
 	node, err := yaml.ValueToNode(pkgs)
 	if err != nil {

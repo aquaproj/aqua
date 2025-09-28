@@ -1,3 +1,6 @@
+// Package genr implements the aqua generate-registry command for creating registry configurations.
+// The generate-registry command creates templates for registry package configurations,
+// providing a starting point for adding new packages to the aqua registry.
 package genr
 
 import (
@@ -84,6 +87,9 @@ type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for generating registry configurations.
+// The returned command provides functionality to generate template configurations
+// for adding new packages to the aqua registry.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -131,6 +137,9 @@ func New(r *util.Param) *cli.Command {
 	}
 }
 
+// action implements the main logic for the generate-registry command.
+// It initializes the generate-registry controller and creates template
+// configurations for new packages in the registry.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

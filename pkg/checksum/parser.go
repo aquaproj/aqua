@@ -11,6 +11,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// showFileContent logs checksum file content for debugging when checksum is not found.
+// If content exceeds 10000 characters, it truncates the output.
 func showFileContent(logE *logrus.Entry, content string) {
 	if len(content) > 10000 { //nolint:mnd
 		content = content[:10000]
@@ -20,6 +22,9 @@ func showFileContent(logE *logrus.Entry, content string) {
 	logE.Error("Checksum isn't found in a checksum file. Checksum file content:\n" + content)
 }
 
+// GetChecksum extracts a checksum for the specified asset from checksum file content.
+// It parses the checksum file according to the provided configuration and returns
+// the checksum value for the given asset name.
 func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, checksumConfig *registry.Checksum) (string, error) {
 	m, s, err := ParseChecksumFile(checksumFileContent, checksumConfig)
 	logE = logE.WithField("checksum_file_format", checksumConfig.FileFormat)
@@ -46,6 +51,9 @@ func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, chec
 	return "", ErrNoChecksumIsFound
 }
 
+// ParseChecksumFile parses checksum file content according to the provided configuration.
+// It returns a map of asset names to checksums, a single checksum string (for raw format),
+// and any error encountered during parsing.
 func ParseChecksumFile(content string, checksumConfig *registry.Checksum) (map[string]string, string, error) {
 	m, s, err := parseChecksumFile(content, checksumConfig)
 	if err != nil {
@@ -57,6 +65,8 @@ func ParseChecksumFile(content string, checksumConfig *registry.Checksum) (map[s
 	return m, s, nil
 }
 
+// parseChecksumFile is the internal implementation for parsing checksum files.
+// It handles different file formats: raw, regexp, and default.
 func parseChecksumFile(content string, checksumConfig *registry.Checksum) (map[string]string, string, error) {
 	switch checksumConfig.FileFormat {
 	case "raw":
@@ -69,6 +79,9 @@ func parseChecksumFile(content string, checksumConfig *registry.Checksum) (map[s
 	return nil, "", errUnknownChecksumFileFormat
 }
 
+// parseDefault parses checksum files in the default format where each line contains
+// a checksum followed by a filename, separated by space or tab.
+// If the content is a single line without separators, it's treated as a raw checksum.
 func parseDefault(content string) (map[string]string, string, error) {
 	lines := strings.Split(strings.TrimSpace(content), "\n")
 	if len(lines) == 1 && !strings.Contains(lines[0], " ") && !strings.Contains(lines[0], "\t") {
@@ -91,6 +104,9 @@ func parseDefault(content string) (map[string]string, string, error) {
 	return m, "", nil
 }
 
+// parseRegex parses checksum files using regular expressions to extract checksums and filenames.
+// If no file pattern is provided, it returns the first checksum found.
+// Otherwise, it returns a map of filenames to their corresponding checksums.
 func parseRegex(content string, checksumPattern *registry.ChecksumPattern) (map[string]string, string, error) {
 	checksumRegexp, err := regexp.Compile(checksumPattern.Checksum)
 	if err != nil {
@@ -128,6 +144,8 @@ func parseRegex(content string, checksumPattern *registry.ChecksumPattern) (map[
 	return m, "", nil
 }
 
+// extractByRegex extracts the first capture group from a line using the provided regular expression.
+// If no match is found or no capture groups exist, it returns an empty string.
 func extractByRegex(line string, pattern *regexp.Regexp) string {
 	if match := pattern.FindStringSubmatch(line); match != nil {
 		if len(match) > 1 {

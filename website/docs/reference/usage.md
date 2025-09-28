@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.54.0
+   2.55.0
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -46,6 +46,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification (default: false) [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification (default: false) [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification (default: false) [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification (default: false) [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
    --help, -h                             show help

@@ -38,6 +38,13 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 			ghInstaller: is.ghInstaller,
 			ghVerifier:  is.ghVerifier,
 		},
+		&gitHubReleaseAttestationsVerifier{
+			disabled:    is.graDisabled,
+			gra:         pkgInfo.GitHubImmutableRelease,
+			pkg:         pkg,
+			ghInstaller: is.ghInstaller,
+			ghVerifier:  is.ghVerifier,
+		},
 		&cosignVerifier{
 			disabled:  is.cosignDisabled,
 			cosign:    pkgInfo.Checksum.GetCosign(),

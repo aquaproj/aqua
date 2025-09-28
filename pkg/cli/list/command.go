@@ -1,3 +1,6 @@
+// Package list implements the aqua list command for listing packages in registries.
+// The list command displays available packages from configured registries,
+// with options to show only installed packages and include global configurations.
 package list
 
 import (
@@ -12,10 +15,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// command holds the parameters and configuration for the list command.
 type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for listing packages.
+// The returned command allows users to list available packages from registries
+// with optional filtering for installed packages and global configurations.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,
@@ -61,6 +68,9 @@ $ aqua list -installed -a
 	}
 }
 
+// action implements the main logic for the list command.
+// It initializes the list controller and executes the package listing
+// operation based on the provided command line flags and configuration.
 func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

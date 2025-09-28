@@ -1,3 +1,6 @@
+// Package updateaqua implements the aqua update-aqua command for updating aqua itself.
+// The update-aqua command downloads and installs the latest version of aqua,
+// providing a self-update mechanism for the tool.
 package updateaqua
 
 import (
@@ -12,10 +15,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// updateAquaCommand holds the parameters and configuration for the update-aqua command.
 type updateAquaCommand struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for updating aqua itself.
+// The returned command provides self-update functionality to download
+// and install the latest version of the aqua tool.
 func New(r *util.Param) *cli.Command {
 	i := &updateAquaCommand{
 		r: r,

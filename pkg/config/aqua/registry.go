@@ -8,22 +8,30 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+// Registry represents a package registry configuration.
+// It defines how to access and download package definitions from various sources.
 type Registry struct {
-	Name      string `json:"name,omitempty"`
-	Type      string `json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"`
-	RepoOwner string `yaml:"repo_owner" json:"repo_owner,omitempty"`
-	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`
-	Ref       string `json:"ref,omitempty"`
-	Path      string `json:"path,omitempty"`
-	Private   bool   `json:"private,omitempty"`
+	Name      string `json:"name,omitempty"`                                                           // Registry name identifier
+	Type      string `json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"` // Registry type (standard, local, github_content)
+	RepoOwner string `yaml:"repo_owner" json:"repo_owner,omitempty"`                                   // GitHub repository owner
+	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`                                     // GitHub repository name
+	Ref       string `json:"ref,omitempty"`                                                            // Git reference (tag, branch, commit)
+	Path      string `json:"path,omitempty"`                                                           // Path to registry file or directory
+	Private   bool   `json:"private,omitempty"`                                                        // Whether the registry is private
 }
 
+// Registry type constants
 const (
+	// RegistryTypeGitHubContent indicates a registry hosted on GitHub
 	RegistryTypeGitHubContent = "github_content"
-	RegistryTypeLocal         = "local"
-	RegistryTypeStandard      = "standard"
+	// RegistryTypeLocal indicates a registry stored locally on the filesystem
+	RegistryTypeLocal = "local"
+	// RegistryTypeStandard indicates the default aqua registry
+	RegistryTypeStandard = "standard"
 )
 
+// Validate validates the registry configuration based on its type.
+// It ensures all required fields are present and valid for the registry type.
 func (r *Registry) Validate() error {
 	switch r.Type {
 	case RegistryTypeLocal:
@@ -37,6 +45,8 @@ func (r *Registry) Validate() error {
 	}
 }
 
+// UnmarshalYAML implements custom YAML unmarshaling for Registry.
+// It handles the special case of 'standard' registry type with default values.
 func (r *Registry) UnmarshalYAML(unmarshal func(any) error) error {
 	type alias Registry
 	a := alias(*r)
@@ -62,6 +72,8 @@ func (r *Registry) UnmarshalYAML(unmarshal func(any) error) error {
 	return nil
 }
 
+// FilePath returns the file system path where the registry file is located.
+// The path format depends on the registry type (local vs GitHub content).
 func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 	switch r.Type {
 	case RegistryTypeLocal:
@@ -72,6 +84,8 @@ func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 	return "", errInvalidRegistryType
 }
 
+// validateLocal validates a local registry configuration.
+// It ensures the required path field is present.
 func (r *Registry) validateLocal() error {
 	if r.Path == "" {
 		return errPathIsRequired
@@ -79,6 +93,8 @@ func (r *Registry) validateLocal() error {
 	return nil
 }
 
+// validateGitHubContent validates a GitHub content registry configuration.
+// It ensures all required GitHub fields are present and valid.
 func (r *Registry) validateGitHubContent() error {
 	if r.RepoOwner == "" {
 		return errRepoOwnerIsRequired

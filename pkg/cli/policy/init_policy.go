@@ -5,6 +5,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// NewInitPolicy creates and returns a new CLI command for initializing policy files.
+// This is a deprecated command that creates policy files. Users should use
+// "aqua policy init" command instead for new implementations.
 func NewInitPolicy(r *util.Param) *cli.Command {
 	cmd := newPolicyInit(r)
 	return &cli.Command{

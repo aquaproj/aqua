@@ -1,3 +1,6 @@
+// Package upc implements the aqua update-checksum command for updating package checksums.
+// The update-checksum command updates the checksums of packages in configuration files,
+// ensuring package integrity and security after version updates.
 package upc
 
 import (
@@ -12,10 +15,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// command holds the parameters and configuration for the update-checksum command.
 type command struct {
 	r *util.Param
 }
 
+// New creates and returns a new CLI command for updating package checksums.
+// The returned command provides functionality to update checksums in
+// configuration files after package version changes.
 func New(r *util.Param) *cli.Command {
 	i := &command{
 		r: r,

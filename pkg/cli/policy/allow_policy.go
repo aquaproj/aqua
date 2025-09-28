@@ -11,10 +11,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// policyAllowCommand holds the parameters and configuration for the policy allow command.
 type policyAllowCommand struct {
 	r *util.Param
 }
 
+// newPolicyAllow creates and returns a new CLI command for allowing policy files.
+// The returned command marks a policy file as allowed, permitting packages
+// to be installed according to that policy.
 func newPolicyAllow(r *util.Param) *cli.Command {
 	i := &policyAllowCommand{
 		r: r,
@@ -30,6 +34,9 @@ $ aqua policy allow [<policy file path>]
 	}
 }
 
+// action implements the main logic for the policy allow command.
+// It initializes the allow policy controller and marks the specified
+// policy file as allowed based on the provided file path.
 func (pa *policyAllowCommand) action(ctx context.Context, cmd *cli.Command) error {
 	profiler, err := profile.Start(cmd)
 	if err != nil {

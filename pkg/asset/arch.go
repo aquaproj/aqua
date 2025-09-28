@@ -4,6 +4,10 @@ import (
 	"strings"
 )
 
+// SetArch analyzes an asset name to detect and set architecture information.
+// It matches common architecture patterns in asset names and generates templates
+// for cross-platform package downloads. The function also handles architecture
+// name mappings and scoring for asset selection.
 func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 	archList := []*Arch{
 		{

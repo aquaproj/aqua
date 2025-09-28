@@ -19,12 +19,16 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+// Package represents a complete package configuration with its metadata.
+// It combines the package definition from aqua.yaml with registry information and registry details.
 type Package struct {
-	Package     *aqua.Package
-	PackageInfo *registry.PackageInfo
-	Registry    *aqua.Registry
+	Package     *aqua.Package         // Package configuration from aqua.yaml
+	PackageInfo *registry.PackageInfo // Package metadata from registry
+	Registry    *aqua.Registry        // Registry information where package is defined
 }
 
+// ExePath returns the absolute path to an executable file for the package.
+// It handles different package types and constructs the appropriate file system path.
 func (p *Package) ExePath(rootDir string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	if pkgInfo.Type == "go_build" {
@@ -42,6 +46,8 @@ func (p *Package) ExePath(rootDir string, file *registry.File, rt *runtime.Runti
 	return filepath.Join(pkgPath, fileSrc), nil
 }
 
+// RenderAsset renders the asset name for the given runtime.
+// It applies templating, extensions, and platform-specific modifications.
 func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	asset, err := p.renderAsset(rt)
 	if err != nil {
@@ -61,6 +67,8 @@ func (p *Package) RenderAsset(rt *runtime.Runtime) (string, error) {
 	return p.completeWindowsExtToAsset(asset), nil
 }
 
+// TemplateArtifact creates a template artifact with all necessary context variables.
+// It provides template variables for rendering asset names, URLs, and paths.
 func (p *Package) TemplateArtifact(rt *runtime.Runtime, aset string) *template.Artifact {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
@@ -77,11 +85,15 @@ func (p *Package) TemplateArtifact(rt *runtime.Runtime, aset string) *template.A
 	}
 }
 
+// RenderPath renders the package path using templates.
+// Used primarily for Go modules and other path-based package types.
 func (p *Package) RenderPath() (string, error) {
 	pkgInfo := p.PackageInfo
 	return p.RenderTemplateString(pkgInfo.GetPath(), &runtime.Runtime{})
 }
 
+// PkgPath returns the relative path where the package should be installed.
+// The path format varies by package type (GitHub, HTTP, Go, Cargo, etc.).
 func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
@@ -122,6 +134,8 @@ func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	return "", nil
 }
 
+// AbsPkgPath returns the absolute path where the package should be installed.
+// It combines the root directory with the package-specific path.
 func (p *Package) AbsPkgPath(rootDir string, rt *runtime.Runtime) (string, error) {
 	pkgPath, err := p.PkgPath(rt)
 	if err != nil {
@@ -130,6 +144,8 @@ func (p *Package) AbsPkgPath(rootDir string, rt *runtime.Runtime) (string, error
 	return filepath.Join(rootDir, pkgPath), nil
 }
 
+// RenderTemplateString renders a template string with package and runtime context.
+// It compiles the template and executes it with all available template variables.
 func (p *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, error) {
 	tpl, err := template.Compile(s)
 	if err != nil {
@@ -138,6 +154,8 @@ func (p *Package) RenderTemplateString(s string, rt *runtime.Runtime) (string, e
 	return p.renderTemplate(tpl, rt)
 }
 
+// RenderURL renders the download URL for the package using templates.
+// It handles platform-specific URL generation and extension handling.
 func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	s, err := p.RenderTemplateString(pkgInfo.URL, rt)
@@ -155,6 +173,8 @@ func (p *Package) RenderURL(rt *runtime.Runtime) (string, error) {
 	return p.completeWindowsExtToURL(s), nil
 }
 
+// RenderDir renders the directory path for a file using templates.
+// It provides template variables for platform-specific directory generation.
 func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
@@ -171,6 +191,8 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 	})
 }
 
+// ApplyVars applies default values for package variables.
+// It processes variable definitions and sets defaults for required variables.
 func (p *Package) ApplyVars() error {
 	if p.PackageInfo.Vars == nil {
 		return nil
@@ -188,18 +210,24 @@ func (p *Package) ApplyVars() error {
 	return nil
 }
 
+// FileNotFoundError represents an error when a required file is not found.
+// It wraps the underlying error while maintaining the error chain.
 type FileNotFoundError struct {
 	Err error
 }
 
+// Error returns the error message for FileNotFoundError.
 func (e *FileNotFoundError) Error() string {
 	return e.Err.Error()
 }
 
+// Unwrap returns the underlying error for error chain unwrapping.
 func (e *FileNotFoundError) Unwrap() error {
 	return e.Err
 }
 
+// renderSrc renders the source path template for a file within a package.
+// It provides template variables for generating platform-specific file paths.
 func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkg := p.Package
 	pkgInfo := p.PackageInfo
@@ -224,6 +252,8 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 	return filepath.FromSlash(s), nil // FromSlash is needed for Windows. https://github.com/aquaproj/aqua/issues/2013
 }
 
+// replace applies string replacements from the replacements map.
+// If no replacement is found, it returns the original key.
 func replace(key string, replacements registry.Replacements) string {
 	a := replacements[key]
 	if a == "" {
@@ -232,6 +262,8 @@ func replace(key string, replacements registry.Replacements) string {
 	return a
 }
 
+// getArch returns the appropriate architecture string considering emulation.
+// It handles Rosetta 2 on macOS ARM64 and Windows ARM emulation scenarios.
 func getArch(rosetta2, windowsARMEmulation bool, replacements registry.Replacements, rt *runtime.Runtime) string {
 	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
 		// Rosetta 2
@@ -244,6 +276,8 @@ func getArch(rosetta2, windowsARMEmulation bool, replacements registry.Replaceme
 	return replace(rt.GOARCH, replacements)
 }
 
+// fileSrc returns the source path for a file, including Windows extension handling.
+// It determines the appropriate file path within the package structure.
 func (p *Package) fileSrc(file *registry.File, rt *runtime.Runtime) (string, error) {
 	s, err := p.fileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
@@ -255,6 +289,8 @@ func (p *Package) fileSrc(file *registry.File, rt *runtime.Runtime) (string, err
 	return p.completeWindowsExtToFileSrc(s), nil
 }
 
+// fileSrcWithoutWindowsExt returns the source path without Windows-specific extensions.
+// It handles different package types and archive formats to determine the correct file path.
 func (p *Package) fileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	if pkgInfo.Type == "cargo" {
@@ -277,21 +313,32 @@ func (p *Package) fileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runt
 	return src, nil
 }
 
+// Package type constants defining how packages are distributed and installed.
 const (
+	// PkgInfoTypeGitHubRelease indicates packages distributed via GitHub releases
 	PkgInfoTypeGitHubRelease = "github_release"
+	// PkgInfoTypeGitHubContent indicates packages downloaded from GitHub repository content
 	PkgInfoTypeGitHubContent = "github_content"
+	// PkgInfoTypeGitHubArchive indicates packages using GitHub's archive download
 	PkgInfoTypeGitHubArchive = "github_archive"
-	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGoInstall     = "go_install"
-	PkgInfoTypeGoBuild       = "go_build"
-	PkgInfoTypeCargo         = "cargo"
+	// PkgInfoTypeHTTP indicates packages downloaded from arbitrary HTTP URLs
+	PkgInfoTypeHTTP = "http"
+	// PkgInfoTypeGoInstall indicates packages installed via 'go install' command
+	PkgInfoTypeGoInstall = "go_install"
+	// PkgInfoTypeGoBuild indicates packages built from Go source code
+	PkgInfoTypeGoBuild = "go_build"
+	// PkgInfoTypeCargo indicates packages installed via Cargo (Rust package manager)
+	PkgInfoTypeCargo = "cargo"
 )
 
+// RemoveMode specifies what should be removed during package removal operations.
 type RemoveMode struct {
-	Link    bool
-	Package bool
+	Link    bool // Whether to remove symlinks
+	Package bool // Whether to remove the package itself
 }
 
+// Param contains all configuration parameters and flags for aqua operations.
+// It consolidates command-line flags, environment variables, and configuration settings.
 type Param struct {
 	ConfigFilePath                    string
 	GenerateConfigFilePath            string
@@ -337,11 +384,14 @@ type Param struct {
 	OnlyRegistry                      bool
 	CosignDisabled                    bool
 	GitHubArtifactAttestationDisabled bool
+	GitHubReleaseAttestationDisabled  bool
 	SLSADisabled                      bool
 	Installed                         bool
 	InitConfig                        bool
 }
 
+// appendExt appends the appropriate file extension based on format.
+// It only adds extensions for raw format files that don't already have the extension.
 func appendExt(s, format string) string {
 	if _, f := asset.RemoveExtFromAsset(s); f != "raw" {
 		return s
@@ -355,6 +405,8 @@ func appendExt(s, format string) string {
 	return fmt.Sprintf("%s.%s", s, format)
 }
 
+// renderAsset renders the asset name without extensions or Windows-specific modifications.
+// It handles different package types to generate the appropriate asset identifier.
 func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	switch pkgInfo.Type {
@@ -384,6 +436,8 @@ func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	return "", nil
 }
 
+// renderChecksumFile renders the checksum file name using templates.
+// It provides template variables for generating platform-specific checksum file names.
 func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
@@ -409,6 +463,8 @@ func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string,
 	return uS, nil
 }
 
+// renderTemplate executes a template with package and runtime context.
+// It provides all standard template variables for package rendering.
 func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
@@ -428,6 +484,8 @@ func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime
 	return uS, nil
 }
 
+// semVer returns the semantic version by removing the version prefix.
+// It strips configured prefixes (like 'v') to get clean semantic versions.
 func (p *Package) semVer() string {
 	v := p.Package.Version
 	prefix := p.PackageInfo.VersionPrefix
@@ -437,6 +495,8 @@ func (p *Package) semVer() string {
 	return strings.TrimPrefix(v, prefix)
 }
 
+// applyVar applies a single variable definition to the package.
+// It sets default values for variables that aren't already configured.
 func (p *Package) applyVar(v *registry.Var) error {
 	if _, ok := p.Package.Vars[v.Name]; ok {
 		return nil

@@ -111,6 +111,8 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 		"AQUA_GLOBAL_CONFIG",
 		"AQUA_GOARCH",
 		"AQUA_GOOS",
+		"AQUA_KEYRING_ENABLED",
+		"AQUA_GHTKN_ENABLED",
 		"AQUA_LOG_COLOR",
 		"AQUA_LOG_LEVEL",
 		"AQUA_MAX_PARALLELISM",

@@ -1,3 +1,13 @@
+// Package registry provides configuration structures and utilities for managing
+// package information, including package definitions, verification configurations,
+// version handling, platform support, and registry caching.
+//
+// This package contains the core types used by aqua for:
+// - Package metadata and definitions
+// - Checksum, signing, and verification configurations
+// - Version constraints and overrides
+// - Platform support definitions
+// - Registry configuration and caching
 package registry
 
 import (
@@ -14,16 +24,28 @@ import (
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
+// Package type constants define the supported package installation methods.
 const (
+	// PkgInfoTypeGitHubRelease installs packages from GitHub release assets.
 	PkgInfoTypeGitHubRelease = "github_release"
+	// PkgInfoTypeGitHubContent installs packages from specific files in GitHub repositories.
 	PkgInfoTypeGitHubContent = "github_content"
+	// PkgInfoTypeGitHubArchive installs packages from GitHub repository archives.
 	PkgInfoTypeGitHubArchive = "github_archive"
-	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGoInstall     = "go_install"
-	PkgInfoTypeGoBuild       = "go_build"
-	PkgInfoTypeCargo         = "cargo"
+	// PkgInfoTypeHTTP installs packages from arbitrary HTTP URLs.
+	PkgInfoTypeHTTP = "http"
+	// PkgInfoTypeGoInstall installs Go packages using 'go install'.
+	PkgInfoTypeGoInstall = "go_install"
+	// PkgInfoTypeGoBuild builds Go packages from source using 'go build'.
+	PkgInfoTypeGoBuild = "go_build"
+	// PkgInfoTypeCargo installs Rust packages from crates.io using cargo.
+	PkgInfoTypeCargo = "cargo"
 )
 
+// PackageInfo represents a complete package definition including metadata,
+// installation configuration, verification settings, and platform support.
+// It contains all information needed to install and verify a package across
+// different platforms and versions.
 type PackageInfo struct {
 	Name                       string                      `json:"name,omitempty" yaml:",omitempty"`
 	Aliases                    []*Alias                    `yaml:",omitempty" json:"aliases,omitempty"`
@@ -62,25 +84,41 @@ type PackageInfo struct {
 	SLSAProvenance             *SLSAProvenance             `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `json:"minisign,omitempty" yaml:",omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
+	GitHubImmutableRelease     bool                        `json:"github_immutable_release,omitempty" yaml:"github_immutable_release,omitempty"`
 	Vars                       []*Var                      `json:"vars,omitempty" yaml:",omitempty"`
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	VersionOverrides           []*VersionOverride          `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 }
 
+// Var represents a template variable that can be used in package configurations
+// to customize installation behavior based on runtime values.
 type Var struct {
-	Name     string `json:"name"`
-	Required bool   `json:"required,omitempty"`
-	Default  any    `json:"default,omitempty"`
+	// Name is the variable name used in templates.
+	Name string `json:"name"`
+	// Required indicates whether this variable must be provided.
+	Required bool `json:"required,omitempty"`
+	// Default is the default value used when the variable is not provided.
+	Default any `json:"default,omitempty"`
 }
 
+// Build defines configuration for building packages from source code.
+// This is used as a fallback when pre-built binaries are not available
+// for the target platform.
 type Build struct {
-	Enabled      *bool         `json:"enabled,omitempty" yaml:",omitempty"`
-	Type         string        `json:"type,omitempty" yaml:",omitempty" jsonschema:"enum=go_install,enum=go_build"`
-	Path         string        `json:"path,omitempty" yaml:",omitempty"`
-	Files        []*File       `json:"files,omitempty" yaml:",omitempty"`
+	// Enabled controls whether building from source is allowed.
+	Enabled *bool `json:"enabled,omitempty" yaml:",omitempty"`
+	// Type specifies the build method (go_install or go_build).
+	Type string `json:"type,omitempty" yaml:",omitempty" jsonschema:"enum=go_install,enum=go_build"`
+	// Path is the import path or directory for Go packages.
+	Path string `json:"path,omitempty" yaml:",omitempty"`
+	// Files specifies which files to install after building.
+	Files []*File `json:"files,omitempty" yaml:",omitempty"`
+	// ExcludedEnvs lists environments where building should be skipped.
 	ExcludedEnvs SupportedEnvs `yaml:"excluded_envs,omitempty" json:"excluded_envs,omitempty"`
 }
 
+// CheckEnabled returns true if building from source is enabled for this package.
+// If Enabled is nil, it defaults to true.
 func (b *Build) CheckEnabled() bool {
 	if b == nil {
 		return false
@@ -91,6 +129,8 @@ func (b *Build) CheckEnabled() bool {
 	return *b.Enabled
 }
 
+// GetAppendExt returns whether file extensions should be appended to installed binaries.
+// If AppendExt is nil, it defaults to true.
 func (p *PackageInfo) GetAppendExt() bool {
 	if p.AppendExt == nil {
 		return true
@@ -98,6 +138,9 @@ func (p *PackageInfo) GetAppendExt() bool {
 	return *p.AppendExt
 }
 
+// VersionOverride allows different package configurations for specific version ranges.
+// This enables packages to change their installation method, repository, or other
+// settings based on the version being installed.
 type VersionOverride struct {
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
 	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
@@ -128,12 +171,15 @@ type VersionOverride struct {
 	SLSAProvenance             *SLSAProvenance             `json:"slsa_provenance,omitempty" yaml:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `json:"minisign,omitempty" yaml:",omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
+	GitHubImmutableRelease     *bool                       `json:"github_immutable_release,omitempty" yaml:"github_immutable_release,omitempty"`
 	Build                      *Build                      `json:"build,omitempty" yaml:",omitempty"`
 	Vars                       []*Var                      `json:"vars,omitempty" yaml:",omitempty"`
 	Overrides                  Overrides                   `yaml:",omitempty" json:"overrides,omitempty"`
 	SupportedEnvs              SupportedEnvs               `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 }
 
+// Override provides platform-specific package configuration that overrides
+// the default settings when the specified OS/architecture conditions are met.
 type Override struct {
 	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
 	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
@@ -159,6 +205,9 @@ type Override struct {
 	Envs                       SupportedEnvs               `yaml:",omitempty" json:"envs,omitempty"`
 }
 
+// Copy creates a deep copy of the PackageInfo struct.
+// This is used when creating modified versions of a package
+// for different platforms or versions.
 func (p *PackageInfo) Copy() *PackageInfo {
 	pkg := &PackageInfo{
 		Name:                       p.Name,
@@ -194,6 +243,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		SLSAProvenance:             p.SLSAProvenance,
 		Minisign:                   p.Minisign,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
+		GitHubImmutableRelease:     p.GitHubImmutableRelease,
 		Private:                    p.Private,
 		ErrorMessage:               p.ErrorMessage,
 		NoAsset:                    p.NoAsset,
@@ -204,6 +254,8 @@ func (p *PackageInfo) Copy() *PackageInfo {
 	return pkg
 }
 
+// OverrideByRuntime applies platform-specific overrides based on the runtime environment.
+// It modifies the PackageInfo in-place to use platform-specific settings when available.
 func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,funlen
 	for _, fo := range p.FormatOverrides {
 		if fo.GOOS == rt.GOOS {
@@ -300,6 +352,8 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 	}
 }
 
+// OverrideByBuild applies build-specific configuration to the package.
+// This modifies the package to use build settings when building from source.
 func (p *PackageInfo) OverrideByBuild() {
 	if p.Type != p.Build.Type {
 		p.resetByPkgType(p.Build.Type)
@@ -313,31 +367,46 @@ func (p *PackageInfo) OverrideByBuild() {
 	}
 }
 
+// FormatOverrides is a slice of platform-specific format overrides.
 type FormatOverrides []*FormatOverride
 
+// IsZero implements yaml.IsZeroer interface.
+// It returns true if the FormatOverrides slice is nil.
 func (o FormatOverrides) IsZero() bool {
 	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
 	return o == nil
 }
 
+// Overrides is a slice of platform-specific configuration overrides.
 type Overrides []*Override
 
+// IsZero implements yaml.IsZeroer interface.
+// It returns true if the Overrides slice is nil.
 func (o Overrides) IsZero() bool {
 	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
 	return o == nil
 }
 
+// Alias represents an alternative name for a package.
+// This allows packages to be referenced by multiple names.
 type Alias struct {
+	// Name is the alternative name for the package.
 	Name string `json:"name"`
 }
 
+// Replacements is a map of template replacements for platform-specific values.
+// Keys are typically platform identifiers (GOOS/GOARCH) and values are the replacements.
 type Replacements map[string]string
 
+// IsZero implements yaml.IsZeroer interface.
+// It returns true if the Replacements map is nil.
 func (r Replacements) IsZero() bool {
 	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
 	return r == nil
 }
 
+// JSONSchema generates a JSON schema for Replacements.
+// It creates a schema with properties for each supported GOOS and GOARCH value.
 func (Replacements) JSONSchema() *jsonschema.Schema {
 	Map := orderedmap.New[string, *jsonschema.Schema]()
 	for _, value := range append(runtime.GOOSList(), runtime.GOARCHList()...) {
@@ -351,8 +420,12 @@ func (Replacements) JSONSchema() *jsonschema.Schema {
 	}
 }
 
+// SupportedEnvs represents a list of supported runtime environments.
+// Each entry can be a GOOS, GOARCH, GOOS/GOARCH combination, or "all".
 type SupportedEnvs []string
 
+// JSONSchema generates a JSON schema for SupportedEnvs.
+// It creates an enum schema with all valid GOOS, GOARCH, and GOOS/GOARCH combinations.
 func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 	osList := runtime.GOOSList()
 	archList := runtime.GOARCHList()
@@ -376,10 +449,14 @@ func (SupportedEnvs) JSONSchema() *jsonschema.Schema {
 	}
 }
 
+// HasRepo returns true if the package has both RepoOwner and RepoName set.
+// This indicates the package is hosted on a Git repository (typically GitHub).
 func (p *PackageInfo) HasRepo() bool {
 	return p.RepoOwner != "" && p.RepoName != ""
 }
 
+// GetName returns the effective name of the package.
+// It uses the Name field if set, otherwise derives it from repository or path information.
 func (p *PackageInfo) GetName() string {
 	if p.Name != "" {
 		return p.Name
@@ -393,6 +470,8 @@ func (p *PackageInfo) GetName() string {
 	return ""
 }
 
+// GetPath returns the effective import path or directory path for the package.
+// For Go packages, this is used with 'go install' or 'go build'.
 func (p *PackageInfo) GetPath() string {
 	if p.Path != "" {
 		return p.Path
@@ -403,6 +482,8 @@ func (p *PackageInfo) GetPath() string {
 	return ""
 }
 
+// GetLink returns the primary URL link for the package.
+// It uses the Link field if set, otherwise derives it from repository information.
 func (p *PackageInfo) GetLink() string {
 	if p.Link != "" {
 		return p.Link
@@ -413,6 +494,8 @@ func (p *PackageInfo) GetLink() string {
 	return ""
 }
 
+// GetFormat returns the archive format for the package.
+// Some package types have default formats that are returned if Format is not explicitly set.
 func (p *PackageInfo) GetFormat() string {
 	if p.Type == PkgInfoTypeGitHubArchive || p.Type == PkgInfoTypeGoBuild {
 		return "tar.gz"
@@ -420,6 +503,8 @@ func (p *PackageInfo) GetFormat() string {
 	return p.Format
 }
 
+// GetChecksumReplacements returns the effective replacements for checksum validation.
+// It merges package-level replacements with checksum-specific replacements.
 func (p *PackageInfo) GetChecksumReplacements() Replacements {
 	cr := p.Checksum.GetReplacements()
 	if cr == nil {
@@ -434,6 +519,8 @@ func (p *PackageInfo) GetChecksumReplacements() Replacements {
 	return m
 }
 
+// Validate checks if the PackageInfo has all required fields for its type.
+// It returns an error if any required fields are missing or invalid.
 func (p *PackageInfo) Validate() error { //nolint:cyclop
 	if p.GetName() == "" {
 		return errPkgNameIsRequired
@@ -482,6 +569,8 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	return errInvalidPackageType
 }
 
+// GetFiles returns the list of files to be installed.
+// If no files are specified, it returns a default file based on the package name.
 func (p *PackageInfo) GetFiles() []*File {
 	if len(p.Files) != 0 {
 		return p.Files
@@ -499,6 +588,8 @@ func (p *PackageInfo) GetFiles() []*File {
 
 var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
 
+// PkgPaths returns all possible package installation paths for this package.
+// This includes paths for all version overrides and is used for package management.
 func (p *PackageInfo) PkgPaths() map[string]struct{} {
 	m := map[string]struct{}{}
 	for _, a := range p.pkgPaths() {
@@ -513,6 +604,8 @@ func (p *PackageInfo) PkgPaths() map[string]struct{} {
 	return m
 }
 
+// SLSASourceURI returns the source URI for SLSA provenance verification.
+// It uses the configured SourceURI or derives it from repository information.
 func (p *PackageInfo) SLSASourceURI() string {
 	sp := p.SLSAProvenance
 	if sp == nil {
@@ -532,6 +625,8 @@ func (p *PackageInfo) SLSASourceURI() string {
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }
 
+// pkgPaths returns the package installation paths for this specific package configuration.
+// This is used internally by PkgPaths to compute all possible paths.
 func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
@@ -566,6 +661,8 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	return nil
 }
 
+// defaultCmdName returns the default command name for the package.
+// This is derived from the package name, repository name, or path.
 func (p *PackageInfo) defaultCmdName() string {
 	if p.HasRepo() {
 		if p.Name == "" {
@@ -582,6 +679,8 @@ func (p *PackageInfo) defaultCmdName() string {
 	return path.Base(p.GetName())
 }
 
+// overrideVersion applies a version override to create a new PackageInfo.
+// This creates a copy with version-specific configuration applied.
 func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
 	pkg := p.Copy()
 	if child.Type != "" {
@@ -666,6 +765,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.GitHubArtifactAttestations != nil {
 		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
 	}
+	if child.GitHubImmutableRelease != nil {
+		pkg.GitHubImmutableRelease = *child.GitHubImmutableRelease
+	}
 	if child.ErrorMessage != nil {
 		pkg.ErrorMessage = *child.ErrorMessage
 	}
@@ -684,6 +786,8 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	return pkg
 }
 
+// resetByPkgType resets package fields that are not applicable to the specified type.
+// This cleans up conflicting configuration when changing package types.
 func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 	switch typ {
 	case PkgInfoTypeGitHubRelease:
@@ -721,6 +825,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -736,6 +841,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -750,6 +856,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false

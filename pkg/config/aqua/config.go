@@ -9,50 +9,58 @@ import (
 	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
+// Package represents a package definition in aqua.yaml configuration.
+// It contains package identification, version constraints, and customization options.
 type Package struct {
-	Name              string          `json:"name,omitempty"`
-	Registry          string          `yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"`
-	Version           string          `yaml:",omitempty" json:"version,omitempty"`
-	Import            string          `yaml:",omitempty" json:"import,omitempty"`
-	Tags              []string        `yaml:",omitempty" json:"tags,omitempty"`
-	Description       string          `yaml:",omitempty" json:"description,omitempty"`
-	Link              string          `yaml:",omitempty" json:"link,omitempty"`
-	Update            *Update         `yaml:",omitempty" json:"update,omitempty"`
-	FilePath          string          `json:"-" yaml:"-"`
-	GoVersionFile     string          `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`
-	VersionExpr       string          `json:"version_expr,omitempty" yaml:"version_expr,omitempty"`
-	VersionExprPrefix string          `json:"version_expr_prefix,omitempty" yaml:"version_expr_prefix,omitempty"`
-	Vars              map[string]any  `json:"vars,omitempty" yaml:",omitempty"`
-	CommandAliases    []*CommandAlias `json:"command_aliases,omitempty" yaml:"command_aliases,omitempty"`
-	Pin               bool            `json:"-" yaml:"-"`
+	Name              string          `json:"name,omitempty"`                                                                                                         // Package name
+	Registry          string          `yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"` // Registry containing the package
+	Version           string          `yaml:",omitempty" json:"version,omitempty"`                                                                                    // Package version
+	Import            string          `yaml:",omitempty" json:"import,omitempty"`                                                                                     // Import path for configuration inclusion
+	Tags              []string        `yaml:",omitempty" json:"tags,omitempty"`                                                                                       // Package tags for filtering
+	Description       string          `yaml:",omitempty" json:"description,omitempty"`                                                                                // Package description
+	Link              string          `yaml:",omitempty" json:"link,omitempty"`                                                                                       // Package homepage link
+	Update            *Update         `yaml:",omitempty" json:"update,omitempty"`                                                                                     // Update configuration
+	FilePath          string          `json:"-" yaml:"-"`                                                                                                             // File path where package is defined
+	GoVersionFile     string          `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`                                                             // Go version file path
+	VersionExpr       string          `json:"version_expr,omitempty" yaml:"version_expr,omitempty"`                                                                   // Version expression for dynamic versions
+	VersionExprPrefix string          `json:"version_expr_prefix,omitempty" yaml:"version_expr_prefix,omitempty"`                                                     // Prefix for version expressions
+	Vars              map[string]any  `json:"vars,omitempty" yaml:",omitempty"`                                                                                       // Package-specific variables
+	CommandAliases    []*CommandAlias `json:"command_aliases,omitempty" yaml:"command_aliases,omitempty"`                                                             // Command aliases for the package
+	Pin               bool            `json:"-" yaml:"-"`                                                                                                             // Whether the package version is pinned
 }
 
+// CommandAlias defines an alias for a package command.
+// It allows creating alternative command names and controls symlink creation.
 type CommandAlias struct {
-	Command string `json:"command"`
-	Alias   string `json:"alias"`
-	NoLink  bool   `yaml:"no_link,omitempty" json:"no_link,omitempty"`
+	Command string `json:"command"`                                    // Original command name
+	Alias   string `json:"alias"`                                      // Alias name
+	NoLink  bool   `yaml:"no_link,omitempty" json:"no_link,omitempty"` // Whether to skip creating symlinks
 }
 
+// Update contains configuration for package update behavior.
+// It controls whether packages can be updated and what types of updates are allowed.
 type Update struct {
-	// # If enabled is false, aqua up command ignores the package.
-	// If the package name is passed to aqua up command explicitly, enabled is ignored.
+	// Enabled controls whether the package is included in update operations.
+	// If false, aqua up command ignores the package unless explicitly specified.
 	// By default, enabled is true.
 	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
-	// The condition of allowed version.
-	// expr https://github.com/expr-lang/expr is used.
+	// AllowedVersion is an expression that defines which versions are allowed.
+	// Uses expr language (https://github.com/expr-lang/expr).
 	// By default, all versions are allowed.
-	// The version must meet both allowed_version and types.
 	AllowedVersion string `yaml:"allowed_version,omitempty" json:"allowed_version,omitempty"`
-	// The list of allowed update types
+	// Types specifies which update types are allowed (major, minor, patch, other).
 	// By default, all types are allowed.
-	// major, minor, patch, other
 	Types []string `yaml:",omitempty" json:"types,omitempty"`
 }
 
+// GetEnabled returns whether updates are enabled for this package.
+// It returns true if Update is nil or Enabled is nil (default behavior).
 func (u *Update) GetEnabled() bool {
 	return u == nil || u.Enabled == nil || *u.Enabled
 }
 
+// UnmarshalYAML implements custom YAML unmarshaling for Package.
+// It handles package name@version syntax and sets default registry.
 func (p *Package) UnmarshalYAML(unmarshal func(any) error) error {
 	type alias Package
 	a := alias(*p)
@@ -75,18 +83,24 @@ func (p *Package) UnmarshalYAML(unmarshal func(any) error) error {
 	return nil
 }
 
+// parseNameWithVersion splits a package name containing version (name@version format).
+// Returns the package name and version separately.
 func parseNameWithVersion(name string) (string, string) {
 	pkgName, version, _ := strings.Cut(name, "@")
 	return pkgName, version
 }
 
+// Config represents the complete aqua.yaml configuration.
+// It contains package definitions, registry configurations, and global settings.
 type Config struct {
-	Packages   []*Package `json:"packages,omitempty"`
-	Registries Registries `json:"registries"`
-	Checksum   *Checksum  `json:"checksum,omitempty"`
-	ImportDir  string     `json:"import_dir,omitempty" yaml:"import_dir,omitempty"`
+	Packages   []*Package `json:"packages,omitempty"`                               // List of packages to manage
+	Registries Registries `json:"registries"`                                       // Registry configurations
+	Checksum   *Checksum  `json:"checksum,omitempty"`                               // Checksum validation settings
+	ImportDir  string     `json:"import_dir,omitempty" yaml:"import_dir,omitempty"` // Directory for importing configurations
 }
 
+// Validate validates the configuration for correctness.
+// It checks all registries for proper configuration and returns any validation errors.
 func (c *Config) Validate() error {
 	for _, r := range c.Registries {
 		if err := r.Validate(); err != nil {
@@ -98,8 +112,12 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+// Registries maps registry names to their configurations.
+// It provides custom JSON schema generation for better documentation.
 type Registries map[string]*Registry //nolint:recvcheck
 
+// JSONSchema generates a JSON schema for registries configuration.
+// It creates an array schema with Registry items for validation purposes.
 func (Registries) JSONSchema() *jsonschema.Schema {
 	s := jsonschema.Reflect(&Registry{})
 	return &jsonschema.Schema{
@@ -108,15 +126,24 @@ func (Registries) JSONSchema() *jsonschema.Schema {
 	}
 }
 
+// Package type constants for registry package definitions.
 const (
+	// PkgInfoTypeGitHubRelease indicates packages distributed via GitHub releases
 	PkgInfoTypeGitHubRelease = "github_release"
+	// PkgInfoTypeGitHubContent indicates packages from GitHub repository content
 	PkgInfoTypeGitHubContent = "github_content"
+	// PkgInfoTypeGitHubArchive indicates packages using GitHub archive downloads
 	PkgInfoTypeGitHubArchive = "github_archive"
-	PkgInfoTypeHTTP          = "http"
-	PkgInfoTypeGoInstall     = "go_install"
-	PkgInfoTypeCargo         = "cargo"
+	// PkgInfoTypeHTTP indicates packages downloaded from HTTP URLs
+	PkgInfoTypeHTTP = "http"
+	// PkgInfoTypeGoInstall indicates packages installed via 'go install'
+	PkgInfoTypeGoInstall = "go_install"
+	// PkgInfoTypeCargo indicates packages installed via Cargo
+	PkgInfoTypeCargo = "cargo"
 )
 
+// UnmarshalYAML implements custom YAML unmarshaling for Registries.
+// It converts from array format to map format for easier lookups.
 func (r *Registries) UnmarshalYAML(unmarshal func(any) error) error {
 	arr := []*Registry{}
 	if err := unmarshal(&arr); err != nil {

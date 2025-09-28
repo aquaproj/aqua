@@ -25,10 +25,17 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// Runner is the main CLI runner for aqua commands.
+// It provides the entry point for executing aqua CLI operations.
 type Runner struct{}
 
+// newC is a function type that creates a new CLI command given a parameter.
+// It's used to construct commands in a consistent way throughout the CLI package.
 type newC func(r *util.Param) *cli.Command
 
+// commands creates a slice of CLI commands by applying the given command constructors
+// to the provided parameter. It takes a parameter and a variadic list of command
+// constructor functions, returning the constructed commands.
 func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	cs := make([]*cli.Command, len(newCs))
 	for i, newC := range newCs {
@@ -37,6 +44,9 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	return cs
 }
 
+// Run executes the aqua CLI application with the given context, parameters, and arguments.
+// It sets up the main command with all flags and subcommands, then runs it using the
+// urfave CLI framework. This is the main entry point for the aqua CLI application.
 func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
 	return urfave.Command(param.LogE, param.LDFlags, &cli.Command{ //nolint:wrapcheck
 		Name:           "aqua",
@@ -68,6 +78,11 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 				Name:    "disable-github-artifact-attestation",
 				Usage:   "Disable GitHub Artifact Attestations verification",
 				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION"),
+			},
+			&cli.BoolFlag{
+				Name:    "disable-github-immutable-release",
+				Usage:   "Disable GitHub Release Attestations verification",
+				Sources: cli.EnvVars("AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE"),
 			},
 			&cli.StringFlag{
 				Name:  "trace",
@@ -102,6 +117,9 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 	}).Run(ctx, args)
 }
 
+// exitErrHandlerFunc handles exit errors for CLI commands.
+// It provides special handling for the "exec" command by skipping the default
+// error handling, allowing the exec command to manage its own exit codes.
 func exitErrHandlerFunc(_ context.Context, cmd *cli.Command, err error) {
 	if cmd.Name != "exec" {
 		cli.HandleExitCoder(err)

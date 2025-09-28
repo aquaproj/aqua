@@ -66,6 +66,7 @@ packages:
 - [slsa_provenance](slsa-provenance.md)
 - [minisign](minisign.md)
 - [github_artifact_attestations](github-artifact-attestations.md)
+- [github_immutable_release](github-immutable-release.md)
 - [private](private.md)
 - [no_asset](no_asset.md)
 - [error_message](error_message.md)

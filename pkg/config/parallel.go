@@ -6,8 +6,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// defaultMaxParallelism is the default number of parallel operations when not specified
 const defaultMaxParallelism = 5
 
+// GetMaxParallelism determines the maximum number of parallel operations.
+// It parses the AQUA_MAX_PARALLELISM environment variable or returns the default value.
 func GetMaxParallelism(envMaxParallelism string, logE *logrus.Entry) int {
 	if envMaxParallelism == "" {
 		return defaultMaxParallelism

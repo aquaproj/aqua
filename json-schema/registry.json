@@ -556,6 +556,9 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
+        "github_immutable_release": {
+          "type": "boolean"
+        },
         "vars": {
           "items": {
             "$ref": "#/$defs/Var"
@@ -780,6 +783,9 @@
         },
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
+        },
+        "github_immutable_release": {
+          "type": "boolean"
         },
         "build": {
           "$ref": "#/$defs/Build"

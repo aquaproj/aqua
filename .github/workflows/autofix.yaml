@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: suzuki-shunsuke/go-autofix-action@00c2661f4665666ed7c3cb3f8a27725e3e9bf686 # v0.1.10
         with:
-          aqua_version: v2.54.0
+          aqua_version: v2.55.0
       - run: aqua upc -prune
         working-directory: pkg/cosign
       - run: aqua upc -prune
