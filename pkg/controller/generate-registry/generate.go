@@ -178,7 +178,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 		assetNames = append(assetNames, asset.GetName())
 	}
 
-	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames)
+	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames, release.GetImmutable())
 	return pkgInfo, []string{version}
 }
 
@@ -201,11 +201,12 @@ func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.
 	return nil
 }
 
-func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string) { //nolint:cyclop
+func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string, immutableRelease bool) { //nolint:cyclop
 	if len(assets) == 0 {
 		pkgInfo.NoAsset = true
 		return
 	}
+	pkgInfo.GitHubImmutableRelease = immutableRelease
 	assetInfos := make([]*asset.AssetInfo, 0, len(assets))
 	pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
 	assetNames := map[string]struct{}{}

@@ -27,6 +27,7 @@ type Release struct {
 	Tag           string
 	Version       *version.Version
 	VersionPrefix string
+	Immutable     bool
 	assets        []*github.ReleaseAsset
 }
 
@@ -118,6 +119,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 			Tag:           tag,
 			Version:       v,
 			VersionPrefix: prefix,
+			Immutable:     release.GetImmutable(),
 		})
 	}
 	sort.Slice(releases, func(i, j int) bool {

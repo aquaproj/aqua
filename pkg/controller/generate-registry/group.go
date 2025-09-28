@@ -23,7 +23,7 @@ type Group struct {
 }
 
 func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
-	return &registry.VersionOverride{
+	vo := &registry.VersionOverride{
 		Asset:              pkgInfo.Asset,
 		Files:              pkgInfo.Files,
 		Format:             pkgInfo.Format,
@@ -34,6 +34,10 @@ func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
 		Checksum:           pkgInfo.Checksum,
 		SLSAProvenance:     pkgInfo.SLSAProvenance,
 	}
+	if pkgInfo.GitHubImmutableRelease {
+		vo.GitHubImmutableRelease = &pkgInfo.GitHubImmutableRelease
+	}
+	return vo
 }
 
 func toVersionInString(releases []*Release) string {
@@ -286,7 +290,7 @@ func (c *Controller) group(logger *slog.Logger, pkgInfo *registry.PackageInfo, p
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 		}
-		c.patchRelease(logger, pkgInfo, pkgName, release.Tag, group.assetNames)
+		c.patchRelease(logger, pkgInfo, pkgName, release.Tag, group.assetNames, release.Immutable)
 		group.pkg = &Package{
 			Info:    pkgInfo,
 			Version: release.Tag,
