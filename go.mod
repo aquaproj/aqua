@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/ktr0731/go-fuzzyfinder v0.9.0
-	github.com/mholt/archives v0.1.4
+	github.com/mholt/archives v0.1.5
 	github.com/otiai10/copy v1.14.1
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/sirupsen/logrus v1.9.3
@@ -63,7 +63,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/ktr0731/go-ansisgr v0.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -77,7 +77,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/nsf/termbox-go v1.1.1 // indirect
-	github.com/nwaples/rardecode/v2 v2.1.1 // indirect
+	github.com/nwaples/rardecode/v2 v2.2.0 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -98,6 +98,6 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/term v0.35.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
