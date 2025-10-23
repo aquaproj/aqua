@@ -41,7 +41,7 @@ func setCancel(cmd *exec.Cmd) {
 	cmd.WaitDelay = waitDelay
 }
 
-// execAndOutputWhenFailure executes a command, and outputs the command output to standard error only when the command failed.
+// ExecAndOutputWhenFailure executes a command, and outputs the command output to standard error only when the command failed.
 func (e *Executor) ExecAndOutputWhenFailure(cmd *exec.Cmd) (int, error) {
 	buf := &bytes.Buffer{}
 	stderr := cmd.Stderr
