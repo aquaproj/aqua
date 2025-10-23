@@ -14,7 +14,7 @@ func (e *Mock) ExecStderr(cmd *Cmd) (int, error) {
 	return e.ExitCode, e.Err
 }
 
-func (e *Mock) ExecXSys(exePath string, args ...string) error {
+func (e *Mock) ExecXSys(_, _ string, _ ...string) error {
 	return e.Err
 }
 
