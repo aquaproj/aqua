@@ -46,7 +46,7 @@ The following custom functions are available:
 - `readJSON("file path")`: read a JSON file and returns a content 
 - `readYAML("file path")`: read a YAML file and returns a content 
 
-To prevent secrects from being leaked by reading secret files via read{File,JSON,YAML} functions, the evaluation result of `version_expr` must match with the regular expression `^v?\d+\.\d+(\.\d+)*[.-]?((alpha|beta|dev|rc)[.-]?)?\d*`.
+To prevent secrets from being leaked by reading secret files via read{File,JSON,YAML} functions, the evaluation result of `version_expr` must match with the regular expression `^v?\d+\.\d+(\.\d+)*[.-]?((alpha|beta|dev|rc)[.-]?)?\d*`.
 
 If the version has a prefix such as `cli-`, the version doesn't match with the regular expression.
 In that case, you can set the prefix with `version_expr_prefix`.
