@@ -163,6 +163,7 @@ func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logE *logrus.Entry, pa
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 	cmd := osexec.Command(ctx, e.exePath, args...)
+	cmd.Args[0] = "gh"
 
 	// https://github.com/aquaproj/aqua/issues/4035
 	// Set GH_HOST to github.com for GitHub Enterprise

@@ -87,6 +87,8 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) 
 	mutex := cosign.GetMutex()
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, e.verifierExePath, args...))
+	cmd := osexec.Command(ctx, e.verifierExePath, args...)
+	cmd.Args[0] = "slsa-verifier"
+	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)
 	return out, err //nolint:wrapcheck
 }

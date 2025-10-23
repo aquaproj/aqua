@@ -111,7 +111,9 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
 	mutex.Lock()
 	defer mutex.Unlock()
-	out, _, err := v.executor.ExecStderrAndGetCombinedOutput(osexec.Command(ctx, v.cosignExePath, args...))
+	cmd := osexec.Command(ctx, v.cosignExePath, args...)
+	cmd.Args[0] = "cosign"
+	out, _, err := v.executor.ExecStderrAndGetCombinedOutput(cmd)
 	return out, err //nolint:wrapcheck
 }
 
