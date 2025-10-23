@@ -51,8 +51,8 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 	}
 }
 
-// art is used to render the template.
 func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
+	// art is used to render the template.
 	if v.disabled {
 		logE.Debug("verification with cosign is disabled")
 		return nil
