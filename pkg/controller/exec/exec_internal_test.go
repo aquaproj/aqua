@@ -13,12 +13,14 @@ func TestController_execCommand(t *testing.T) {
 	data := []struct {
 		title    string
 		exePath  string
+		exeName  string
 		args     []string
 		executor Executor
 	}{
 		{
 			title:    "normal",
 			exePath:  "/bin/date",
+			exeName:  "date",
 			args:     []string{},
 			executor: &osexec.Mock{},
 		},
@@ -34,7 +36,7 @@ func TestController_execCommand(t *testing.T) {
 				stderr:   os.Stderr,
 				executor: d.executor,
 			}
-			err := ctrl.execCommandWithRetry(ctx, logE, d.exePath, d.args...)
+			err := ctrl.execCommandWithRetry(ctx, logE, d.exePath, d.exeName, d.args...)
 			if err != nil {
 				t.Fatal(err)
 			}

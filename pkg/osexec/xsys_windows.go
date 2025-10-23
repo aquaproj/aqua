@@ -7,6 +7,6 @@ import "errors"
 
 var errXSysNotSupported = errors.New("Windows doesn't support xsys")
 
-func (e *Executor) ExecXSys(exePath string, args ...string) error {
+func (e *Executor) ExecXSys(_, _ string, _ ...string) error {
 	return errXSysNotSupported
 }

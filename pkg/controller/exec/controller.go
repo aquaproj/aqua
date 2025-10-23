@@ -55,7 +55,7 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 
 type Executor interface {
 	Exec(cmd *osexec.Cmd) (int, error)
-	ExecXSys(exePath string, args ...string) error
+	ExecXSys(exePath, name string, args ...string) error
 }
 
 type PolicyReader interface {

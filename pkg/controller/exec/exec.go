@@ -42,7 +42,7 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 		return err //nolint:wrapcheck
 	}
 	if findResult.Package == nil {
-		return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+		return c.execCommandWithRetry(ctx, logE, findResult.ExePath, exeName, args...)
 	}
 
 	logE = logE.WithFields(logrus.Fields{
@@ -68,7 +68,7 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 		logerr.WithError(logE, err).Warn("update the last used datetime")
 	}
 
-	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, args...)
+	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, exeName, args...)
 }
 
 func (c *Controller) updateTimestamp(pkg *config.Package) error {
@@ -129,9 +129,9 @@ func wait(ctx context.Context, duration time.Duration) error {
 
 var errFailedToStartProcess = errors.New("it failed to start the process")
 
-func (c *Controller) execCommand(ctx context.Context, exePath string, args ...string) (bool, error) {
+func (c *Controller) execCommand(ctx context.Context, exePath, name string, args ...string) (bool, error) {
 	if c.enabledXSysExec {
-		if err := c.executor.ExecXSys(exePath, args...); err != nil {
+		if err := c.executor.ExecXSys(exePath, name, args...); err != nil {
 			return true, fmt.Errorf("call execve(2): %w", err)
 		}
 		return false, nil
@@ -148,10 +148,10 @@ func (c *Controller) execCommand(ctx context.Context, exePath string, args ...st
 	return false, nil
 }
 
-func (c *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath string, args ...string) error {
+func (c *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath, name string, args ...string) error {
 	for i := range 10 {
 		logE.Debug("execute the command")
-		retried, err := c.execCommand(ctx, exePath, args...)
+		retried, err := c.execCommand(ctx, exePath, name, args...)
 		if !retried {
 			return err
 		}
