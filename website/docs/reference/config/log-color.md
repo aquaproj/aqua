@@ -15,7 +15,7 @@ $ export AQUA_LOG_COLOR=always|auto|never
 ```
 
 aqua uses [sirupsen/logrus](https://github.com/sirupsen/logrus).
-About the color setting, please see [logrus#formtter](https://github.com/sirupsen/logrus#formatters) too.
+About the color setting, please see [logrus#formatters](https://github.com/sirupsen/logrus#formatters) too.
 
 If you want to disable the coloring, please set `AQUA_LOG_COLOR=never`.
 
