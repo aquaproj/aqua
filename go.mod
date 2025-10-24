@@ -30,7 +30,7 @@ require (
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/suzuki-shunsuke/slog-logrus v0.1.0
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.7
-	github.com/urfave/cli/v3 v3.4.1
+	github.com/urfave/cli/v3 v3.5.0
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	golang.org/x/oauth2 v0.32.0
 	golang.org/x/sync v0.17.0
@@ -88,7 +88,7 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sorairolake/lzip-go v0.3.8 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/suzuki-shunsuke/go-exec v0.0.1 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/suzuki-shunsuke/slog-error v0.2.0 // indirect
