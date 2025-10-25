@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.55.0
+   2.55.1
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -43,10 +43,10 @@ COMMANDS:
 GLOBAL OPTIONS:
    --log-level string                     log level [$AQUA_LOG_LEVEL]
    --config string, -c string             configuration file path [$AQUA_CONFIG]
-   --disable-cosign                       Disable Cosign verification (default: false) [$AQUA_DISABLE_COSIGN]
-   --disable-slsa                         Disable SLSA verification (default: false) [$AQUA_DISABLE_SLSA]
-   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification (default: false) [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification (default: false) [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
    --help, -h                             show help
@@ -74,9 +74,9 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --use-import-dir, -u            Use import_dir (default: false)
+   --use-import-dir, -u            Use import_dir
    --import-dir string, -i string  import_dir
-   --create-dir, -d                Create a directory named aqua and create aqua.yaml in it (default: false)
+   --create-dir, -d                Create a directory named aqua and create aqua.yaml in it
    --help, -h                      show help
 ```
 
@@ -114,9 +114,9 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --only-link, -l           create links but skip downloading packages (default: false)
-   --test                    This flag was deprecated and had no meaning from aqua v2.0.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/1691 (default: false)
-   --all, -a                 install all aqua configuration packages (default: false)
+   --only-link, -l           create links but skip downloading packages
+   --test                    This flag was deprecated and had no meaning from aqua v2.0.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/1691
+   --all, -a                 install all aqua configuration packages
    --tags string, -t string  filter installed packages with tags
    --exclude-tags string     exclude installed packages with tags
    --help, -h                show help
@@ -244,12 +244,12 @@ DESCRIPTION:
 
 OPTIONS:
    -f string             the file path of packages list. When the value is "-", the list is passed from the standard input
-   -i                    Insert packages to configuration file (default: false)
-   --pin                 Pin version (default: false)
-   -g                    Insert packages in a global configuration file (default: false)
-   --detail, -d          Output additional fields such as description and link (default: false) [$AQUA_GENERATE_WITH_DETAIL]
+   -i                    Insert packages to configuration file
+   --pin                 Pin version
+   -g                    Insert packages in a global configuration file
+   --detail, -d          Output additional fields such as description and link [$AQUA_GENERATE_WITH_DETAIL]
    -o string             inserted file
-   --select-version, -s  Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it. (default: false)
+   --select-version, -s  Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it.
    --limit int, -l int   The maximum number of versions. Non-positive number refers to no limit. (default: 30)
    --help, -h            show help
 ```
@@ -311,9 +311,9 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --all, -a   Create or Update all aqua-checksums.json including global configuration (default: false)
-   --deep      This flag was deprecated and had no meaning from aqua v2.0.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/1769 (default: false)
-   --prune     Remove unused checksums (default: false)
+   --all, -a   Create or Update all aqua-checksums.json including global configuration
+   --deep      This flag was deprecated and had no meaning from aqua v2.0.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/1769
+   --prune     Remove unused checksums
    --help, -h  show help
 ```
 
@@ -408,10 +408,10 @@ DESCRIPTION:
 
 
 OPTIONS:
-   -i                        Select packages with fuzzy finder (default: false)
-   --select-version, -s      Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it. (default: false)
-   --only-registry, -r       Update only registries (default: false)
-   --only-package, -p        Update only packages (default: false)
+   -i                        Select packages with fuzzy finder
+   --select-version, -s      Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it.
+   --only-registry, -r       Update only registries
+   --only-package, -p        Update only packages
    --limit int, -l int       The maximum number of versions. Non-positive number refers to no limit. (default: 30)
    --tags string, -t string  filter installed packages with tags
    --exclude-tags string     exclude installed packages with tags
@@ -451,7 +451,7 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --version, -v  Output the given package version (default: false)
+   --version, -v  Output the given package version
    --help, -h     show help
 ```
 
@@ -511,9 +511,9 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --all, -a                 uninstall all packages (default: false)
+   --all, -a                 uninstall all packages
    --mode string, -m string  Removed target modes. l: link, p: package [$AQUA_REMOVE_MODE]
-   -i                        Select packages with a Fuzzy Finder (default: false)
+   -i                        Select packages with a Fuzzy Finder
    --help, -h                show help
 ```
 
@@ -557,7 +557,7 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --init              Create timestamp files. (default: false)
+   --init              Create timestamp files.
    --days int, -d int  Expiration days (default: 60) [$AQUA_VACUUM_DAYS]
    --help, -h          show help
 ```
@@ -597,7 +597,7 @@ DESCRIPTION:
    Set GitHub Access token to keyring.
 
 OPTIONS:
-   --stdin     Read GitHub Access token from stdin (default: false)
+   --stdin     Read GitHub Access token from stdin
    --help, -h  show help
 ```
 
@@ -657,7 +657,7 @@ DESCRIPTION:
 
 OPTIONS:
    -o string                 destination directory (default: "dist")
-   --all, -a                 install all aqua configuration packages (default: false)
+   --all, -a                 install all aqua configuration packages
    --tags string, -t string  filter installed packages with tags
    --exclude-tags string     exclude installed packages with tags
    --help, -h                show help
@@ -823,8 +823,8 @@ DESCRIPTION:
 
 
 OPTIONS:
-   --installed, -i  List installed packages (default: false)
-   --all, -a        List global configuration packages too (default: false)
+   --installed, -i  List installed packages
+   --all, -a        List global configuration packages too
    --help, -h       show help
 ```
 
@@ -911,8 +911,8 @@ OPTIONS:
    --cmd string                         A list of commands joined with commas ','
    --generate-config string, -c string  A configuration file path
    --limit int, -l int                  the maximum number of versions (default: 0)
-   --deep                               This flag was deprecated and had no meaning from aqua v2.15.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/2351 (default: false)
-   --init                               Generate a configuration file (default: false)
+   --deep                               This flag was deprecated and had no meaning from aqua v2.15.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/2351
+   --init                               Generate a configuration file
    --help, -h                           show help
 ```
 
@@ -951,7 +951,7 @@ USAGE:
    aqua version
 
 OPTIONS:
-   --json, -j  Output version in JSON format (default: false)
+   --json, -j  Output version in JSON format
    --help, -h  show help
 ```
 
