@@ -31,7 +31,7 @@ jobs:
       - run: git ls-files docs | xargs pinact run -u
         working-directory: website
         env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
+          GITHUB_TOKEN: ${{github.token}}
       - name: get nested property
         id: package_json
         uses: notiz-dev/github-action-json-property@a5a9c668b16513c737c3e1f8956772c99c73f6e8 # v0.2.0
