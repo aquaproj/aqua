@@ -8,9 +8,6 @@ package controller
 
 import (
 	"context"
-	"io"
-	"net/http"
-
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -55,6 +52,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"io"
+	"net/http"
 )
 
 // Injectors from wire.go:
@@ -63,7 +62,8 @@ func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, pa
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -78,15 +78,17 @@ func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, pa
 
 func InitializeGenerateRegistryCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
 	fs := afero.NewOsFs()
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	outputter := output.New(stdout, fs)
 	client := cargo.NewClient(httpClient)
 	controller := genrgst.NewController(fs, repositoriesService, outputter, client, stdout)
 	return controller
 }
 
-func InitializeInitCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param) *initcmd.Controller {
-	repositoriesService := github.New(ctx, logE)
+func InitializeInitCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client) *initcmd.Controller {
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	fs := afero.NewOsFs()
 	controller := initcmd.New(repositoriesService, fs)
 	return controller
@@ -102,7 +104,8 @@ func InitializeGenerateCommandController(ctx context.Context, logE *logrus.Entry
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -128,7 +131,8 @@ func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry,
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -168,7 +172,8 @@ func InitializeWhichCommandController(ctx context.Context, logE *logrus.Entry, p
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -184,7 +189,8 @@ func InitializeWhichCommandController(ctx context.Context, logE *logrus.Entry, p
 }
 
 func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*exec.Controller, error) {
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	fs := afero.NewOsFs()
@@ -227,7 +233,8 @@ func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, pa
 
 func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
 	fs := afero.NewOsFs()
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	linker := link.New()
@@ -258,7 +265,8 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Ent
 }
 
 func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	fs := afero.NewOsFs()
@@ -304,7 +312,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logE *logrus
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -319,7 +328,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logE *logrus
 }
 
 func InitializeUpdateCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
@@ -374,7 +384,8 @@ func InitializeRemoveCommandController(ctx context.Context, logE *logrus.Entry, 
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -404,7 +415,8 @@ func InitializeVacuumInitCommandController(ctx context.Context, logE *logrus.Ent
 	client := vacuum.New(fs, param)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logE)
+	tokenSource := github.NewTokenSource(logE)
+	repositoriesService := github.New(ctx, logE, tokenSource, httpClient)
 	httpDownloader := download.NewHTTPDownloader(logE, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
