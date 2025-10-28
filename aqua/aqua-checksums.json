@@ -131,28 +131,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/mvdan/gofumpt/v0.9.1/gofumpt_v0.9.1_darwin_amd64",
-      "checksum": "62A54ABE6488062FA79FBB56B44436C1D68805A9B7CE314A3FBFA37D9C17DC52",
+      "id": "github_release/github.com/mvdan/gofumpt/v0.9.2/gofumpt_v0.9.2_darwin_amd64",
+      "checksum": "4172B912EC514038605F334FEF9ED7B3F12CA3E40024CB0A622EAB3073A55E57",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/mvdan/gofumpt/v0.9.1/gofumpt_v0.9.1_darwin_arm64",
-      "checksum": "3821782C96D1C322C0BA6C0E7078B897E29997BDD14BE5FA8CF9821EE14B3845",
+      "id": "github_release/github.com/mvdan/gofumpt/v0.9.2/gofumpt_v0.9.2_darwin_arm64",
+      "checksum": "C241FB742599A6CB0563D7377F59DEF65D451B23DD718DBC6DDF4AB5E695E8F1",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/mvdan/gofumpt/v0.9.1/gofumpt_v0.9.1_linux_amd64",
-      "checksum": "A616C867CA92F63017500502B7D0B490DFE5BCBCAA265659A1B50620AD63DE5C",
+      "id": "github_release/github.com/mvdan/gofumpt/v0.9.2/gofumpt_v0.9.2_linux_amd64",
+      "checksum": "72CF61B12FEF91EAB6DF6DB4A4284F30616B5EAD330112E28A1FA1CB15E57339",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/mvdan/gofumpt/v0.9.1/gofumpt_v0.9.1_linux_arm64",
-      "checksum": "CB0BDDD2EA3DBDC292BB1B527C6806143A1E57653BC5BE9AC1C9228FBBC43135",
+      "id": "github_release/github.com/mvdan/gofumpt/v0.9.2/gofumpt_v0.9.2_linux_arm64",
+      "checksum": "5ACAA5A554050F55FC81EF02A8B0D14AB6B3C058A84513885286DC52D3451645",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/mvdan/gofumpt/v0.9.1/gofumpt_v0.9.1_windows_amd64.exe",
-      "checksum": "1514D3B5FE2767AADE67E84BB765B0C41CDABB2AEB013CD233724DB70B5197E3",
+      "id": "github_release/github.com/mvdan/gofumpt/v0.9.2/gofumpt_v0.9.2_windows_amd64.exe",
+      "checksum": "067236B55A8EF4547DDC7D78FBB7A38169DE15BAB02A1763CDE6A132C59DD35C",
       "algorithm": "sha256"
     },
     {
