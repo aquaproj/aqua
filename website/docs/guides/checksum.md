@@ -306,7 +306,7 @@ jobs:
       - name: Fix aqua-checksums.json
         run: aqua upc -prune
       - name: Commit and push
-        uses: suzuki-shunsuke/commit-action@b4aee3f297a855b761e0db5736a73566a7807fe2 # v0.0.11
+        uses: suzuki-shunsuke/commit-action@75b215c45f1ded3868b7d525e0e40bcb73dc5ccc # v0.0.12
         with:
           app_id: ${{secrets.APP_ID}}
           app_private_key: ${{secrets.APP_PRIVATE_KEY}}
