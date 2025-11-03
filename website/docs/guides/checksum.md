@@ -172,7 +172,7 @@ Add a GitHub Actions job that runs a tampered package.
       AQUA_LOG_COLOR: always
       AQUA_REQUIRE_CHECKSUM: "true"
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6-beta
       - uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
         with:
           aqua_version: v2.48.3
@@ -230,7 +230,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6-beta
         with:
           persist-credentials: false
       - name: Install aqua
@@ -261,7 +261,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6-beta
         with:
           persist-credentials: false
       - name: Install aqua
@@ -296,7 +296,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6-beta
         with:
           persist-credentials: false
       - name: Install aqua
