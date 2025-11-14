@@ -20,7 +20,8 @@ Here is a brief overview of how to learn aqua.
 
 ## :bulb: NotebookLM for aqua
 
-[You can ask any questions about aqua to NotebookLM. The notebook for aqua is available.](https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71).
+You can ask any questions about aqua to [Google NotebookLM](https://notebooklm.google/).
+A Google Account is required, but everyone can use [the notebook for aqua.](https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71)
 
 ## Contact us
 
