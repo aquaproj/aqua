@@ -61,8 +61,13 @@ const config = {
           {
             type: 'doc',
             docId: 'index',
-            position: 'left',
+            position: 'right',
             label: 'Docs',
+          },
+          {
+            href: 'https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71',
+            label: 'NotebookLM',
+            position: 'right',
           },
           {
             href: '/docs/#contact-us',
