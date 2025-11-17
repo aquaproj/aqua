@@ -331,33 +331,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.3/pinact_darwin_amd64.tar.gz",
-      "checksum": "505965C3E18D862F35985082283502B597EFBB654C280D4A496B00C13AE564F0",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.4/pinact_darwin_amd64.tar.gz",
+      "checksum": "21507EF818D6FF254CC8623A9DBD969547AB7925C86F4BD481052BAF502F2BAA",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.3/pinact_darwin_arm64.tar.gz",
-      "checksum": "30E289D6A5EEE87C1178A3FFF4A17528AED8460607544C0B4F4AD6C3BF65055D",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.4/pinact_darwin_arm64.tar.gz",
+      "checksum": "58CD5ED8043124B82D9EC5B8507FF1DDBED83920BAF18179053203C01DC502C7",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.3/pinact_linux_amd64.tar.gz",
-      "checksum": "0F4ED8164659A554C5B06ED01158C9B29DA32DCB8A9AD22AE71B15419B946398",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.4/pinact_linux_amd64.tar.gz",
+      "checksum": "8132AF84FB5C0991FD88E5D5D552B59AB0FD9D073C85D5F457D52AD8D33F648F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.3/pinact_linux_arm64.tar.gz",
-      "checksum": "398CAB2EA8A74D5F7099E4680DBE320866C6CFC74DB1EFA0704122E38700907C",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.4/pinact_linux_arm64.tar.gz",
+      "checksum": "FDB2112123538686F36A7DFF80278FD60D0F79D36DA05DDA16F0538F8AD490E4",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.3/pinact_windows_amd64.zip",
-      "checksum": "21ACF44EC679ECB46015E6618837A11770FF6A0F0480BB4AD4819F4F5815AA6A",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.4/pinact_windows_amd64.zip",
+      "checksum": "32D62FD519F391E6104B5DA49F414BFF779226B41553C37E869EF9CBB046AE4B",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.3/pinact_windows_arm64.zip",
-      "checksum": "F88449D9F319F9D0DD5B2A6A9C2E33047F15F80C74858FA0C4FC2F4FA332286A",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v3.4.4/pinact_windows_arm64.zip",
+      "checksum": "3C2825F04D9A8F4CCBAD0601381FCF3FEE5D64DB19C3B87A36EBFFEA90D6E472",
       "algorithm": "sha256"
     },
     {
