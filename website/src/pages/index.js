@@ -25,6 +25,11 @@ function HomepageHeader() {
             to="/docs/tutorial">
             Quick Start
           </Link>
+          <Link
+            className="button button--secondary button--lg"
+            to="https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71">
+            NotebookLM
+          </Link>
         </div>
       </div>
     </header>

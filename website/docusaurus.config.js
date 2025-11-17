@@ -44,9 +44,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       announcementBar: {
-        id: 'security-ghtkn',
+        id: 'notebooklm',
         content:
-          '<a href="/docs/reference/security/ghtkn">ghtkn integration (2025-09-13)</a>',
+          '<a href="https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71">Google NotebookLM for aqua is available (2025-11-14)</a>',
         backgroundColor: '#7FFF00',
         textColor: '#091E42',
         isCloseable: true,
@@ -61,8 +61,13 @@ const config = {
           {
             type: 'doc',
             docId: 'index',
-            position: 'left',
+            position: 'right',
             label: 'Docs',
+          },
+          {
+            href: 'https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71',
+            label: 'NotebookLM',
+            position: 'right',
           },
           {
             href: '/docs/#contact-us',
