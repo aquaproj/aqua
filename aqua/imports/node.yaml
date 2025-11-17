@@ -1,0 +1,4 @@
+packages:
+  - name: nodejs/node
+    version_expr: readFile("../../website/.node-version")
+    version_expr_prefix: v
