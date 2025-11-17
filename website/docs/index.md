@@ -4,6 +4,10 @@ sidebar_position: 100
 
 # Home
 
+## :bulb: NotebookLM for aqua
+
+[You can ask any questions about aqua to Google NotebookLM.](https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71)
+
 ## How to learn aqua
 
 aqua has a lot of documents, so it's hard to read all of them.
@@ -17,29 +21,6 @@ Here is a brief overview of how to learn aqua.
 1. To learn advanced usage, please read [Guides](/docs/guides)
 1. To contribute to Standard Registry (Add new packages, fix bugs), please read [Contributing](/docs/products/aqua-registry/contributing)
 1. To develop custom Registry, please read [Develop a Registry](/docs/develop-registry/)
-
-## :bulb: Learn aqua using NotebookLM
-
-:::info
-If you have any better idea, please let us know.
-:::
-
-You can learn aqua using [NotebookLM](https://notebooklm.google.com/).
-
-Add sources:
-
-- top page: https://aquaproj.github.io/
-- documents in https://github.com/aquaproj/aquaproj.github.io/tree/main/docs
-
-```sh
-git clone https://github.com/aquaproj/aquaproj.github.io
-cd aquaproj.github.io
-git ls-files docs | grep .md | xargs cat - > aqua.md
-```
-
-Add `aqua.md` to NotebookLM.
-
-Then you can ask NotebookLM questions about aqua.
 
 ## Contact us
 
