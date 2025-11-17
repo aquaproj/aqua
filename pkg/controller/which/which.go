@@ -181,6 +181,10 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logE *logrus.Entry
 		return nil, nil //nolint:nilnil
 	}
 
+	if !pkgInfo.MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {
+		return nil, nil //nolint:nilnil
+	}
+
 	pkgInfo, err = pkgInfo.Override(logE, pkg.Version, c.runtime)
 	if err != nil {
 		logerr.WithError(logE, err).Warn("version constraint is invalid")
