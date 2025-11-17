@@ -35,7 +35,7 @@ jobs:
           go-version-file: go.mod
 
       # The default vim doesn't work well, so we install the latest vim ourselves.
-      - uses: rhysd/action-setup-vim@46cf85a6076d2028f9e8cdbb77ccf04816ac88f6 # v1.5.1
+      - uses: rhysd/action-setup-vim@19e3dd31a84dbc2c5445d65e9b363f616cab96c1 # v1.6.0
 
       - uses: mxschmitt/action-tmate@7b6a61a73bbb9793cb80ad69b8dd8ac19261834c # v3.22
         with:
