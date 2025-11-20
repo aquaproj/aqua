@@ -252,7 +252,8 @@ func TestPackageInfo_MaybeHasCommand(t *testing.T) {
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
 			},
-		}, {
+		},
+		{
 			title: "potentially empty",
 			has:   []string{"ci-info", "ci-info.prebuilt"},
 			pkgInfo: &registry.PackageInfo{
