@@ -586,6 +586,65 @@ func (p *PackageInfo) GetFiles() []*File {
 	return p.Files
 }
 
+func doFilesContain(files []*File, exeName string, isEmpty *bool) bool {
+	if len(files) == 0 {
+		*isEmpty = true
+	}
+
+	for _, f := range files {
+		if f.Name == exeName {
+			return true
+		}
+	}
+
+	return false
+}
+
+// MaybeHasCommand returns true if the given exe name can be in this package.
+// This includes file lists that may only be used under specific versions or
+// host platforms.
+func (p *PackageInfo) MaybeHasCommand(exeName string) bool { //nolint:cyclop
+	anyListEmpty := false
+
+	if doFilesContain(p.Files, exeName, &anyListEmpty) {
+		return true
+	}
+
+	if p.Build != nil && doFilesContain(p.Build.Files, exeName, &anyListEmpty) {
+		return true
+	}
+
+	for _, v := range p.VersionOverrides {
+		if doFilesContain(v.Files, exeName, &anyListEmpty) {
+			return true
+		}
+
+		if v.Build != nil && doFilesContain(v.Build.Files, exeName, &anyListEmpty) {
+			return true
+		}
+
+		for _, o := range v.Overrides {
+			if doFilesContain(o.Files, exeName, &anyListEmpty) {
+				return true
+			}
+		}
+	}
+
+	for _, o := range p.Overrides {
+		if doFilesContain(o.Files, exeName, &anyListEmpty) {
+			return true
+		}
+	}
+
+	// If any of the file lists that could be used are empty, then the default
+	// command name would be used, so check that as well.
+	if anyListEmpty && p.defaultCmdName() == exeName {
+		return true
+	}
+
+	return false
+}
+
 var placeHolderTemplate = regexp.MustCompile(`{{.*?}}`)
 
 // PkgPaths returns all possible package installation paths for this package.

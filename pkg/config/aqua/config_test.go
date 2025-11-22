@@ -92,3 +92,24 @@ packages:
 		})
 	}
 }
+
+// HasCommandAlias returns true if the given command alias is present.
+func TestConfig_HasCommandAlias(t *testing.T) {
+	t.Parallel()
+
+	p := aqua.Package{
+		CommandAliases: []*aqua.CommandAlias{
+			{
+				Command: "foo",
+				Alias:   "bar",
+			},
+		},
+	}
+
+	if p.HasCommandAlias("foo") {
+		t.Fatal("HasCommandAlias(foo): wanted false, got true")
+	}
+	if !p.HasCommandAlias("bar") {
+		t.Fatal("HasCommandAlias(bar): wanted true, got false")
+	}
+}

@@ -177,6 +177,126 @@ func TestPackageInfo_GetFiles(t *testing.T) {
 	}
 }
 
+func TestPackageInfo_MaybeHasCommand(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		title   string
+		has     []string
+		lacks   []string
+		pkgInfo *registry.PackageInfo
+	}{
+		{
+			title: "normal",
+			has: []string{
+				"go", "gofmt", "go.build", "go.override", "go.v", "go.vbuild", "go.voverride",
+			},
+			lacks: []string{"golang"},
+			pkgInfo: &registry.PackageInfo{
+				RepoName: "golang",
+				Files: []*registry.File{
+					{
+						Name: "go",
+					},
+					{
+						Name: "gofmt",
+					},
+				},
+				Build: &registry.Build{
+					Files: []*registry.File{
+						{
+							Name: "go.build",
+						},
+					},
+				},
+				Overrides: []*registry.Override{
+					{
+						Files: []*registry.File{
+							{
+								Name: "go.override",
+							},
+						},
+					},
+				},
+				VersionOverrides: []*registry.VersionOverride{
+					{
+						Files: []*registry.File{
+							{
+								Name: "go.v",
+							},
+						},
+						Build: &registry.Build{
+							Files: []*registry.File{
+								{
+									Name: "go.vbuild",
+								},
+							},
+						},
+						Overrides: []*registry.Override{
+							{
+								Files: []*registry.File{
+									{
+										Name: "go.voverride",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			title: "empty",
+			has:   []string{"ci-info"},
+			pkgInfo: &registry.PackageInfo{
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+			},
+		},
+		{
+			title: "potentially empty",
+			has:   []string{"ci-info", "ci-info.prebuilt"},
+			pkgInfo: &registry.PackageInfo{
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Files: []*registry.File{
+					{
+						Name: "ci-info.prebuilt",
+					},
+				},
+				Build: &registry.Build{},
+			},
+		},
+		{
+			title: "has name",
+			has:   []string{"cmctl"},
+			pkgInfo: &registry.PackageInfo{
+				Type:      "github_release",
+				RepoOwner: "cert-manager",
+				RepoName:  "cert-manager",
+				Name:      "cert-manager/cert-manager/cmctl",
+			},
+		},
+	}
+
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			for _, exe := range d.has {
+				if !d.pkgInfo.MaybeHasCommand(exe) {
+					t.Fatalf("expected to have command %s", exe)
+				}
+			}
+			for _, exe := range d.lacks {
+				if d.pkgInfo.MaybeHasCommand(exe) {
+					t.Fatalf("expected to not have command %s", exe)
+				}
+			}
+		})
+	}
+}
+
 func TestPackageInfo_Validate(t *testing.T) {
 	t.Parallel()
 	data := []struct {

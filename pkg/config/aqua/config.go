@@ -83,6 +83,16 @@ func (p *Package) UnmarshalYAML(unmarshal func(any) error) error {
 	return nil
 }
 
+func (p *Package) HasCommandAlias(exeName string) bool {
+	for _, a := range p.CommandAliases {
+		if a.Alias == exeName {
+			return true
+		}
+	}
+
+	return false
+}
+
 // parseNameWithVersion splits a package name containing version (name@version format).
 // Returns the package name and version separately.
 func parseNameWithVersion(name string) (string, string) {
