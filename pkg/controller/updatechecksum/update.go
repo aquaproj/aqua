@@ -115,10 +115,11 @@ func (c *Controller) updateRegistry(ctx context.Context, logE *logrus.Entry, che
 		return nil
 	}
 	ghContentFile, err := c.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
-		RepoOwner: rgst.RepoOwner,
-		RepoName:  rgst.RepoName,
-		Ref:       rgst.Ref,
-		Path:      rgst.Path,
+		RepoOwner:   rgst.RepoOwner,
+		RepoName:    rgst.RepoName,
+		GHESBaseURL: rgst.GHESBaseURL,
+		Ref:         rgst.Ref,
+		Path:        rgst.Path,
 	})
 	if err != nil {
 		return err //nolint:wrapcheck

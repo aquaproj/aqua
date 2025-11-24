@@ -18,10 +18,11 @@ const registryFilePermission = 0o600
 
 func (is *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	ghContentFile, err := is.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
-		RepoOwner: regist.RepoOwner,
-		RepoName:  regist.RepoName,
-		Ref:       regist.Ref,
-		Path:      regist.Path,
+		RepoOwner:   regist.RepoOwner,
+		RepoName:    regist.RepoName,
+		GHESBaseURL: regist.GHESBaseURL,
+		Ref:         regist.Ref,
+		Path:        regist.Path,
 	})
 	if err != nil {
 		return nil, err //nolint:wrapcheck

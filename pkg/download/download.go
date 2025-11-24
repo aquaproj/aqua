@@ -30,11 +30,11 @@ type Downloader struct {
 	ghRelease domain.GitHubReleaseDownloader
 }
 
-func NewDownloader(gh GitHub, httpDownloader HTTPDownloader) *Downloader {
+func NewDownloader(gh GitHub, ghesr GHESContentAPIResolver, httpDownloader HTTPDownloader) *Downloader {
 	return &Downloader{
 		github:    gh,
 		http:      httpDownloader,
-		ghContent: NewGitHubContentFileDownloader(gh, httpDownloader),
+		ghContent: NewGitHubContentFileDownloader(gh, ghesr, httpDownloader),
 		ghRelease: NewGitHubReleaseDownloader(gh, httpDownloader),
 	}
 }
