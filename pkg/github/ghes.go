@@ -3,6 +3,8 @@ package github
 import (
 	"context"
 	"errors"
+	"io"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -11,29 +13,35 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type GHESRepoService struct {
+type GitHub interface {
+	GetArchiveLink(ctx context.Context, owner, repo string, archiveformat github.ArchiveFormat, opts *github.RepositoryContentGetOptions, maxRedirects int) (*url.URL, *github.Response, error)
+	GetReleaseByTag(ctx context.Context, owner, repoName, version string) (*github.RepositoryRelease, *github.Response, error)
+	DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
+	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
+}
+
+type GHESRepositoryService struct {
 	clients map[string]*github.RepositoriesService
 }
 
-func NewGHES(ctx context.Context, logE *logrus.Entry) *GHESRepoService {
-	return &GHESRepoService{
-		clients: make(map[string]*github.RepositoriesService),
+func NewGHES(standard *github.RepositoriesService) *GHESRepositoryService {
+	clients := make(map[string]*github.RepositoriesService)
+	clients[TokenKeyGitHubCom] = standard
+	return &GHESRepositoryService{
+		clients: clients,
 	}
 }
 
-func (s *GHESRepoService) Resolve(baseURL string) (*RepositoriesService, error) {
+func (s *GHESRepositoryService) Resolve(ctx context.Context, logE *logrus.Entry, baseURL string) (GitHub, error) {
 	envKey, err := GetGitHubTokenEnvKey(baseURL)
 	if err != nil {
 		return nil, err
-	}
-	if envKey == TokenKeyGitHubCom {
-		return New(context.Background(), logrus.NewEntry(logrus.New())), nil
 	}
 	if client, ok := s.clients[envKey]; ok {
 		return client, nil
 	}
 	client, err := github.NewClient(MakeRetryable(
-		getHTTPClientForGitHub(context.Background(), logrus.NewEntry(logrus.New()), getGitHubToken(envKey)), logrus.NewEntry(logrus.New()))).
+		getHTTPClientForGitHub(ctx, logE, getGitHubToken(envKey)), logrus.NewEntry(logrus.New()))).
 		WithEnterpriseURLs(baseURL, "")
 	if err != nil {
 		return nil, err
