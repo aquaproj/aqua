@@ -2,8 +2,12 @@ package github
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"net/url"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
 	"github.com/google/go-github/v79/github"
@@ -31,7 +35,10 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
+func New(ctx context.Context, logE *logrus.Entry, baseURL string) *RepositoriesService {
+	if baseURL != "" {
+		return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, baseURL), logE)).Repositories
+	}
 	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)).Repositories
 }
 
@@ -40,6 +47,30 @@ func getGitHubToken() string {
 		return token
 	}
 	return os.Getenv("GITHUB_TOKEN")
+}
+
+func GetGHESTokenEnvKey(baseURL string) (string, error) {
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return "", err
+	}
+
+	d := strings.TrimSpace(u.Host)
+	if d == "" {
+		return "", errors.New("invalid domain")
+	}
+
+	d = strings.ToLower(d)
+	if !regexp.MustCompile(`^[a-z0-9.-]+\.[a-z0-9]+$`).MatchString(d) {
+		return "", errors.New("invalid domain")
+	}
+
+	if d == "github.com" {
+		return "GITHUB_TOKEN", nil
+	}
+
+	transformed := strings.ReplaceAll(d, ".", "_")
+	return "GITHUB_TOKEN_" + transformed, nil
 }
 
 func MakeRetryable(client *http.Client, logE *logrus.Entry) *http.Client {
