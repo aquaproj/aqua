@@ -69,6 +69,11 @@ func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, pa
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
 			registry.New,
 			wire.Bind(new(list.RegistryInstaller), new(*registry.Installer)),
 		),
@@ -114,6 +119,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logE *logr
 		genrgst.NewController,
 		wire.NewSet(
 			github.New,
+			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			github.NewGHES,
 			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		afero.NewOsFs,

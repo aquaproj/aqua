@@ -10,7 +10,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	if client := github.New(t.Context(), logrus.NewEntry(logrus.New())); client == nil {
+	if client := github.New(t.Context(), logrus.NewEntry(logrus.New()), ""); client == nil {
 		t.Fatal("client must not be nil")
 	}
 }
@@ -18,54 +18,49 @@ func TestNew(t *testing.T) {
 func Test_getGHESKeyName(t *testing.T) {
 	tests := []struct {
 		name    string
-		domain  string
+		baseURL string
 		want    string
 		wantErr bool
 	}{
 		{
-			name:   "Normal case",
-			domain: "ghe.example.com",
-			want:   "GITHUB_TOKEN_ghe_example_com",
+			name:    "Normal case",
+			baseURL: "https://ghe.example.com",
+			want:    "GITHUB_TOKEN_ghe_example_com",
 		},
 		{
-			name:   "Domain with mixed case",
-			domain: "gHe.eXaMpLe.CoM",
-			want:   "GITHUB_TOKEN_ghe_example_com",
+			name:    "Resolve github.com for empty baseURL",
+			baseURL: "",
+			want:    "GITHUB_TOKEN",
 		},
 		{
-			name:   "Domain with hyphen",
-			domain: "ghe-example.com", // only hyphen is allowed as special characters
-			want:   "GITHUB_TOKEN_ghe-example_com",
+			name:    "Domain with mixed case",
+			baseURL: "https://gHe.eXaMpLe.CoM",
+			want:    "GITHUB_TOKEN_ghe_example_com",
 		},
 		{
-			name:   "Domain with spaces",
-			domain: " ghe.example.com ",
-			want:   "GITHUB_TOKEN_ghe_example_com",
+			name:    "Domain with hyphen",
+			baseURL: "https://ghe-example.com", // only hyphen is allowed as special characters
+			want:    "GITHUB_TOKEN_ghe-example_com",
 		},
 		{
-			name:   "handle github.com",
-			domain: "github.com",
-			want:   "GITHUB_TOKEN",
+			name:    "handle github.com",
+			baseURL: "https://github.com",
+			want:    "GITHUB_TOKEN",
 		},
 		{
 			name:    "invalid domain with underscore",
-			domain:  "ghe_example_com", // underscore is not allowed in domains
+			baseURL: "https://ghe_example_com.com", // underscore is not allowed in domains
 			wantErr: true,
 		},
 		{
-			name:    "invalid domain with slash",
-			domain:  "github.com/",
-			wantErr: true,
-		},
-		{
-			name:    "invalid domain with scheme",
-			domain:  "https://github.com",
+			name:    "non HTTPS scheme",
+			baseURL: "http://ghe.example.com",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := github.GetGHESTokenEnvKey(tt.domain)
+			got, err := github.GetGitHubTokenEnvKey(tt.baseURL)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
