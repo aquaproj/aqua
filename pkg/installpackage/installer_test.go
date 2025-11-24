@@ -187,7 +187,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewDownloader(nil, nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			if err := ctrl.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{
@@ -263,7 +263,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 			if err != nil {
 				t.Fatal(err)
 			}
-			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewDownloader(nil, nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			if err := ctrl.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{

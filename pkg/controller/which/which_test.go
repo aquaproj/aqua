@@ -250,7 +250,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewGitHubContentFileDownloader(nil, nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(d.env), fs, linker)
 			which, err := ctrl.Which(ctx, logE, d.param, d.exeName)
 			if err != nil {

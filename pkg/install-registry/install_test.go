@@ -102,7 +102,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			downloader: download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, &http.Client{
+			downloader: download.NewGitHubContentFileDownloader(nil, nil, download.NewHTTPDownloader(logE, &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
 						{

@@ -10,7 +10,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	if client := github.New(t.Context(), logrus.NewEntry(logrus.New()), ""); client == nil {
+	if client := github.New(t.Context(), logrus.NewEntry(logrus.New())); client == nil {
 		t.Fatal("client must not be nil")
 	}
 }
