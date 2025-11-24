@@ -133,6 +133,20 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 		info.Env["GITHUB_TOKEN"] = "(masked)"
 	}
 
+	// check tokens for GHES
+	for _, env := range os.Environ() {
+		parts := strings.SplitN(env, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		if strings.HasPrefix(parts[0], "AQUA_GITHUB_TOKEN_") {
+			info.Env[parts[0]] = "(masked)"
+		}
+		if strings.HasPrefix(parts[0], "GITHUB_TOKEN_") {
+			info.Env[parts[0]] = "(masked)"
+		}
+	}
+
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(info); err != nil {
