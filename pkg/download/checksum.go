@@ -20,6 +20,7 @@ var errUnknownChecksumFileType = errors.New("unknown checksum type")
 
 type ChecksumDownloaderImpl struct {
 	github    GitHub
+	ghesr     GHESResolver
 	runtime   *runtime.Runtime
 	http      HTTPDownloader
 	ghRelease domain.GitHubReleaseDownloader
@@ -32,9 +33,14 @@ type GitHub interface {
 	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
 }
 
-func NewChecksumDownloader(gh GitHub, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloaderImpl {
+type GHESResolver interface {
+	Resolve(ctx context.Context, logE *logrus.Entry, baseURL string) (github.GitHub, error)
+}
+
+func NewChecksumDownloader(gh GitHub, ghesr GHESResolver, rt *runtime.Runtime, httpDownloader HTTPDownloader) *ChecksumDownloaderImpl {
 	return &ChecksumDownloaderImpl{
 		github:    gh,
+		ghesr:     ghesr,
 		runtime:   rt,
 		http:      httpDownloader,
 		ghRelease: NewGitHubReleaseDownloader(gh, httpDownloader),

@@ -13,6 +13,7 @@ import (
 
 type GitHubContentFileDownloader struct {
 	github GitHubContentAPI
+	ghescr GHESContentAPIResolver
 	http   HTTPDownloader
 }
 
@@ -20,15 +21,20 @@ type GitHubContentAPI interface {
 	DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
 }
 
-func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) *GitHubContentFileDownloader {
+type GHESContentAPIResolver interface {
+	Resolve(ctx context.Context, logE *logrus.Entry, baseURL string) (github.GitHub, error)
+}
+
+func NewGitHubContentFileDownloader(gh GitHubContentAPI, ghescr GHESContentAPIResolver, httpDL HTTPDownloader) *GitHubContentFileDownloader {
 	return &GitHubContentFileDownloader{
 		github: gh,
+		ghescr: ghescr,
 		http:   httpDL,
 	}
 }
 
 func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, _ *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
-	if !param.Private {
+	if param.GHESBaseURL == "" && !param.Private {
 		// https://github.com/aquaproj/aqua/issues/391
 		body, _, err := dl.http.Download(ctx, fmt.Sprintf(
 			"https://raw.githubusercontent.com/%s/%s/%s/%s",
@@ -44,7 +50,18 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 		}
 	}
 
-	file, resp, err := dl.github.DownloadContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
+	var contentAPI GitHubContentAPI
+	if param.GHESBaseURL != "" {
+		ghAPI, err := dl.ghescr.Resolve(ctx, nil, param.GHESBaseURL)
+		if err != nil {
+			return nil, err
+		}
+		contentAPI = ghAPI
+	} else {
+		contentAPI = dl.github
+	}
+
+	file, resp, err := contentAPI.DownloadContents(ctx, param.RepoOwner, param.RepoName, param.Path, &github.RepositoryContentGetOptions{
 		Ref: param.Ref,
 	})
 	if err != nil {
