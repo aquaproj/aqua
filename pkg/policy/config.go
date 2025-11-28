@@ -28,12 +28,13 @@ type ConfigYAML struct {
 }
 
 type Registry struct {
-	Name      string `json:"name,omitempty"`
-	Type      string `json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"`
-	RepoOwner string `yaml:"repo_owner" json:"repo_owner,omitempty"`
-	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`
-	Ref       string `json:"ref,omitempty"`
-	Path      string `json:"path,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Type        string `json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"`
+	RepoOwner   string `yaml:"repo_owner" json:"repo_owner,omitempty"`
+	RepoName    string `yaml:"repo_name" json:"repo_name,omitempty"`
+	GHESBaseURL string `yaml:"github_enterprise_base_url,omitempty" json:"github_enterprise_base_url,omitempty"`
+	Ref         string `json:"ref,omitempty"`
+	Path        string `json:"path,omitempty"`
 }
 
 type Package struct {

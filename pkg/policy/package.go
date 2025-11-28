@@ -57,6 +57,15 @@ func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}
+	if policyPkg.Registry != nil && policyPkg.Registry.GHESBaseURL != "" ||
+		(pkg.Registry != nil && pkg.Registry.GHESBaseURL != "") {
+		if policyPkg.Registry == nil || pkg.Registry == nil {
+			return false, nil
+		}
+		if pkg.Registry.GHESBaseURL != policyPkg.Registry.GHESBaseURL {
+			return false, nil
+		}
+	}
 	if policyPkg.Version != "" {
 		sv := pkg.Package.Version
 		if pkg.PackageInfo.VersionPrefix != "" {
