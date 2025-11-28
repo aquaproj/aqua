@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -48,7 +49,7 @@ func (s *GHESRepositoryService) Resolve(ctx context.Context, logE *logrus.Entry,
 		getHTTPClientForGitHub(ctx, logE, token), logrus.NewEntry(logrus.New()))).
 		WithEnterpriseURLs(baseURL, "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create GHES client: %w", err)
 	}
 	s.clients[envKey] = client.Repositories
 	return client.Repositories, nil
@@ -61,7 +62,7 @@ func GetGitHubTokenEnvKey(baseURL string) (string, error) {
 
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("parse base URL: %w", err)
 	}
 
 	if u.Scheme != "https" {

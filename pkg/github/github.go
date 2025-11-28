@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -32,7 +31,7 @@ type (
 
 const (
 	Tarball           = github.Tarball
-	TokenKeyGitHubCom = "GITHUB_TOKEN"
+	TokenKeyGitHubCom = "GITHUB_TOKEN" //nolint:gosec
 	TokenKeyGHES      = "GITHUB_ENTERPRISE_TOKEN"
 )
 
@@ -41,7 +40,7 @@ func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
 }
 
 func getGitHubToken(envKey string) string {
-	if token := os.Getenv(fmt.Sprintf("AQUA_%s", envKey)); token != "" {
+	if token := os.Getenv("AQUA_" + envKey); token != "" {
 		return token
 	}
 	return os.Getenv(envKey)

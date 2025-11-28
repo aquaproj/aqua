@@ -16,6 +16,7 @@ func TestNew(t *testing.T) {
 }
 
 func Test_getGHESKeyName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		baseURL string
@@ -60,6 +61,7 @@ func Test_getGHESKeyName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := github.GetGitHubTokenEnvKey(tt.baseURL)
 			if tt.wantErr {
 				assert.Error(t, err)

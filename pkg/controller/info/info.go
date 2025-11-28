@@ -15,6 +15,8 @@ import (
 	"github.com/spf13/afero"
 )
 
+const maskedValue = "(masked)"
+
 type Controller struct {
 	fs     afero.Fs
 	finder ConfigFinder
@@ -67,7 +69,7 @@ func getCurrentUserName() (string, error) {
 	return userName, nil
 }
 
-func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Param) error { //nolint:funlen
+func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Param) error { //nolint:funlen,cyclop
 	userName, err := getCurrentUserName()
 	if err != nil {
 		return fmt.Errorf("get a current user name: %w", err)
@@ -128,22 +130,22 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 		}
 	}
 	if _, ok := os.LookupEnv("AQUA_GITHUB_TOKEN"); ok {
-		info.Env["AQUA_GITHUB_TOKEN"] = "(masked)"
+		info.Env["AQUA_GITHUB_TOKEN"] = maskedValue
 	} else if _, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
-		info.Env["GITHUB_TOKEN"] = "(masked)"
+		info.Env["GITHUB_TOKEN"] = maskedValue
 	}
 
 	// check tokens for GHES
 	for _, env := range os.Environ() {
-		parts := strings.SplitN(env, "=", 2)
-		if len(parts) != 2 {
+		parts := strings.SplitN(env, "=", 2) //nolint:mnd
+		if len(parts) != 2 {                 //nolint:mnd
 			continue
 		}
 		if strings.HasPrefix(parts[0], "AQUA_GITHUB_TOKEN_") {
-			info.Env[parts[0]] = "(masked)"
+			info.Env[parts[0]] = maskedValue
 		}
 		if strings.HasPrefix(parts[0], "GITHUB_TOKEN_") {
-			info.Env[parts[0]] = "(masked)"
+			info.Env[parts[0]] = maskedValue
 		}
 	}
 

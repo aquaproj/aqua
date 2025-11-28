@@ -33,7 +33,7 @@ type GitHub interface {
 	DownloadReleaseAsset(ctx context.Context, owner, repoName string, assetID int64, httpClient *http.Client) (io.ReadCloser, string, error)
 }
 
-type GHESResolver interface {
+type GHESResolver interface { //nolint:iface
 	Resolve(ctx context.Context, logE *logrus.Entry, baseURL string) (github.GitHub, error)
 }
 

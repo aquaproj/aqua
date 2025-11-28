@@ -21,7 +21,7 @@ type GitHubContentAPI interface {
 	DownloadContents(ctx context.Context, owner, repo, filepath string, opts *github.RepositoryContentGetOptions) (io.ReadCloser, *github.Response, error)
 }
 
-type GHESContentAPIResolver interface {
+type GHESContentAPIResolver interface { //nolint:iface
 	Resolve(ctx context.Context, logE *logrus.Entry, baseURL string) (github.GitHub, error)
 }
 
@@ -54,7 +54,7 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 	if param.GHESBaseURL != "" {
 		ghAPI, err := dl.ghescr.Resolve(ctx, nil, param.GHESBaseURL)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("resolve GHES client: %w", err)
 		}
 		contentAPI = ghAPI
 	} else {
