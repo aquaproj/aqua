@@ -40,8 +40,12 @@ func (s *GHESRepositoryService) Resolve(ctx context.Context, logE *logrus.Entry,
 	if client, ok := s.clients[envKey]; ok {
 		return client, nil
 	}
+	token := getGitHubToken(envKey)
+	if token == "" {
+		token = getGitHubToken(TokenKeyGHES)
+	}
 	client, err := github.NewClient(MakeRetryable(
-		getHTTPClientForGitHub(ctx, logE, getGitHubToken(envKey)), logrus.NewEntry(logrus.New()))).
+		getHTTPClientForGitHub(ctx, logE, token), logrus.NewEntry(logrus.New()))).
 		WithEnterpriseURLs(baseURL, "")
 	if err != nil {
 		return nil, err

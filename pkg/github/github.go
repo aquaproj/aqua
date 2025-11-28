@@ -33,6 +33,7 @@ type (
 const (
 	Tarball           = github.Tarball
 	TokenKeyGitHubCom = "GITHUB_TOKEN"
+	TokenKeyGHES      = "GITHUB_ENTERPRISE_TOKEN"
 )
 
 func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
