@@ -9,7 +9,7 @@
 #   - all
 registries:
 - type: standard
-  ref: v4.441.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.442.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: hashicorp/terraform
   version_expr: |
