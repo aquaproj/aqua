@@ -11,7 +11,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v79 v79.0.0
 	github.com/google/wire v0.7.0
-	github.com/hashicorp/go-version v1.7.0
+	github.com/hashicorp/go-version v1.8.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/ktr0731/go-fuzzyfinder v0.9.0
 	github.com/mholt/archives v0.1.5
