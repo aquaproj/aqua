@@ -17,10 +17,10 @@ type Config struct {
 }
 
 type RawConfig struct {
-	VersionFilter   string `json:"version_filter,omitempty" yaml:"version_filter"`
-	VersionPrefix   string `json:"version_prefix,omitempty" yaml:"version_prefix"`
+	VersionFilter   string `json:"version_filter,omitempty"    yaml:"version_filter"`
+	VersionPrefix   string `json:"version_prefix,omitempty"    yaml:"version_prefix"`
 	AllAssetsFilter string `json:"all_assets_filter,omitempty" yaml:"all_assets_filter"`
-	Package         string `json:"name" yaml:"name"`
+	Package         string `json:"name"                        yaml:"name"`
 }
 
 func (c *Config) FromRaw(raw *RawConfig) error {

@@ -10,7 +10,7 @@ type Checksum struct {
 	// URL is the direct URL to the checksum file (for http type).
 	URL string `json:"url,omitempty"`
 	// FileFormat specifies the format of the checksum file.
-	FileFormat string `yaml:"file_format,omitempty" json:"file_format,omitempty"`
+	FileFormat string `json:"file_format,omitempty" yaml:"file_format,omitempty"`
 	// Algorithm specifies the hash algorithm used for checksums.
 	Algorithm string `json:"algorithm,omitempty" jsonschema:"enum=md5,enum=sha1,enum=sha256,enum=sha512"`
 	// Pattern defines how to extract checksums from the checksum file.

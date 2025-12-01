@@ -9,10 +9,10 @@ type GitHubArtifactAttestations struct {
 	PredicateType string `json:"predicate_type,omitempty" yaml:"predicate_type,omitempty"`
 	// SignerWorkflow2 specifies the expected GitHub Actions workflow for signing.
 	// See https://github.com/aquaproj/aqua/issues/3581
-	SignerWorkflow2 string `yaml:"signer_workflow,omitempty" json:"signer_workflow,omitempty"`
+	SignerWorkflow2 string `json:"signer_workflow,omitempty" yaml:"signer_workflow,omitempty"`
 	// SignerWorkflow3 is the deprecated field name for signer workflow.
 	// Deprecated: Use SignerWorkflow2 instead. This will be removed in aqua v3.
-	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty"`
+	SignerWorkflow3 string `json:"signer-workflow,omitempty" yaml:"signer-workflow,omitempty"`
 }
 
 // SignerWorkflow returns the configured signer workflow.

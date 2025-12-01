@@ -8,7 +8,7 @@ import (
 // It provides methods to access packages by name with caching for performance.
 type Config struct {
 	// PackageInfos contains all package definitions in the registry.
-	PackageInfos PackageInfos `yaml:"packages" json:"packages"`
+	PackageInfos PackageInfos `json:"packages" yaml:"packages"`
 	// m is an internal cache of packages indexed by name (including aliases).
 	m map[string]*PackageInfo
 }

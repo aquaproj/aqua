@@ -8,11 +8,11 @@ type SLSAProvenance struct {
 	// Enabled controls whether SLSA provenance verification is active.
 	Enabled *bool `json:"enabled,omitempty"`
 	// Type specifies where to download the provenance file from.
-	Type string `json:"type,omitempty"  jsonschema:"enum=github_release,enum=http"`
+	Type string `json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
 	// RepoOwner is the GitHub repository owner (for github_release type).
-	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoOwner string `json:"repo_owner,omitempty" yaml:"repo_owner,omitempty"`
 	// RepoName is the GitHub repository name (for github_release type).
-	RepoName string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	RepoName string `json:"repo_name,omitempty" yaml:"repo_name,omitempty"`
 	// Asset is the name of the provenance file asset (for github_release type).
 	Asset *string `json:"asset,omitempty" yaml:",omitempty"`
 	// URL is the direct URL to the provenance file (for http type).

@@ -11,13 +11,13 @@ import (
 // Registry represents a package registry configuration.
 // It defines how to access and download package definitions from various sources.
 type Registry struct {
-	Name      string `json:"name,omitempty"`                                                           // Registry name identifier
-	Type      string `json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"` // Registry type (standard, local, github_content)
-	RepoOwner string `yaml:"repo_owner" json:"repo_owner,omitempty"`                                   // GitHub repository owner
-	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`                                     // GitHub repository name
-	Ref       string `json:"ref,omitempty"`                                                            // Git reference (tag, branch, commit)
-	Path      string `json:"path,omitempty"`                                                           // Path to registry file or directory
-	Private   bool   `json:"private,omitempty"`                                                        // Whether the registry is private
+	Name      string `json:"name,omitempty"`                                                                 // Registry name identifier
+	Type      string `json:"type,omitempty"       jsonschema:"enum=standard,enum=local,enum=github_content"` // Registry type (standard, local, github_content)
+	RepoOwner string `json:"repo_owner,omitempty" yaml:"repo_owner"`                                         // GitHub repository owner
+	RepoName  string `json:"repo_name,omitempty"  yaml:"repo_name"`                                          // GitHub repository name
+	Ref       string `json:"ref,omitempty"`                                                                  // Git reference (tag, branch, commit)
+	Path      string `json:"path,omitempty"`                                                                 // Path to registry file or directory
+	Private   bool   `json:"private,omitempty"`                                                              // Whether the registry is private
 }
 
 // Registry type constants

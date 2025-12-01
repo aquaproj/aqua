@@ -12,9 +12,9 @@ type PackageInfos []*PackageInfo
 // This is useful when a package provides different archive formats for different platforms.
 type FormatOverride struct {
 	// GOOS specifies the target operating system for this format override.
-	GOOS string `yaml:",omitempty" json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
+	GOOS string `json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows" yaml:",omitempty"`
 	// Format specifies the archive format to use for this operating system.
-	Format string `yaml:",omitempty" json:"format" jsonschema:"example=tar.gz,example=raw,example=zip"`
+	Format string `json:"format" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
 }
 
 // File represents a file to be installed from a package.

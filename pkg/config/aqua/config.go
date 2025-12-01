@@ -12,21 +12,21 @@ import (
 // Package represents a package definition in aqua.yaml configuration.
 // It contains package identification, version constraints, and customization options.
 type Package struct {
-	Name              string          `json:"name,omitempty"`                                                                                                         // Package name
-	Registry          string          `yaml:",omitempty" json:"registry,omitempty" jsonschema:"description=Registry name,example=foo,example=local,default=standard"` // Registry containing the package
-	Version           string          `yaml:",omitempty" json:"version,omitempty"`                                                                                    // Package version
-	Import            string          `yaml:",omitempty" json:"import,omitempty"`                                                                                     // Import path for configuration inclusion
-	Tags              []string        `yaml:",omitempty" json:"tags,omitempty"`                                                                                       // Package tags for filtering
-	Description       string          `yaml:",omitempty" json:"description,omitempty"`                                                                                // Package description
-	Link              string          `yaml:",omitempty" json:"link,omitempty"`                                                                                       // Package homepage link
-	Update            *Update         `yaml:",omitempty" json:"update,omitempty"`                                                                                     // Update configuration
-	FilePath          string          `json:"-" yaml:"-"`                                                                                                             // File path where package is defined
-	GoVersionFile     string          `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`                                                             // Go version file path
-	VersionExpr       string          `json:"version_expr,omitempty" yaml:"version_expr,omitempty"`                                                                   // Version expression for dynamic versions
-	VersionExprPrefix string          `json:"version_expr_prefix,omitempty" yaml:"version_expr_prefix,omitempty"`                                                     // Prefix for version expressions
-	Vars              map[string]any  `json:"vars,omitempty" yaml:",omitempty"`                                                                                       // Package-specific variables
-	CommandAliases    []*CommandAlias `json:"command_aliases,omitempty" yaml:"command_aliases,omitempty"`                                                             // Command aliases for the package
-	Pin               bool            `json:"-" yaml:"-"`                                                                                                             // Whether the package version is pinned
+	Name              string          `json:"name,omitempty"`                                                                                                                    // Package name
+	Registry          string          `json:"registry,omitempty"            jsonschema:"description=Registry name,example=foo,example=local,default=standard" yaml:",omitempty"` // Registry containing the package
+	Version           string          `json:"version,omitempty"             yaml:",omitempty"`                                                                                   // Package version
+	Import            string          `json:"import,omitempty"              yaml:",omitempty"`                                                                                   // Import path for configuration inclusion
+	Tags              []string        `json:"tags,omitempty"                yaml:",omitempty"`                                                                                   // Package tags for filtering
+	Description       string          `json:"description,omitempty"         yaml:",omitempty"`                                                                                   // Package description
+	Link              string          `json:"link,omitempty"                yaml:",omitempty"`                                                                                   // Package homepage link
+	Update            *Update         `json:"update,omitempty"              yaml:",omitempty"`                                                                                   // Update configuration
+	FilePath          string          `json:"-"                             yaml:"-"`                                                                                            // File path where package is defined
+	GoVersionFile     string          `json:"go_version_file,omitempty"     yaml:"go_version_file,omitempty"`                                                                    // Go version file path
+	VersionExpr       string          `json:"version_expr,omitempty"        yaml:"version_expr,omitempty"`                                                                       // Version expression for dynamic versions
+	VersionExprPrefix string          `json:"version_expr_prefix,omitempty" yaml:"version_expr_prefix,omitempty"`                                                                // Prefix for version expressions
+	Vars              map[string]any  `json:"vars,omitempty"                yaml:",omitempty"`                                                                                   // Package-specific variables
+	CommandAliases    []*CommandAlias `json:"command_aliases,omitempty"     yaml:"command_aliases,omitempty"`                                                                    // Command aliases for the package
+	Pin               bool            `json:"-"                             yaml:"-"`                                                                                            // Whether the package version is pinned
 }
 
 // CommandAlias defines an alias for a package command.
@@ -34,7 +34,7 @@ type Package struct {
 type CommandAlias struct {
 	Command string `json:"command"`                                    // Original command name
 	Alias   string `json:"alias"`                                      // Alias name
-	NoLink  bool   `yaml:"no_link,omitempty" json:"no_link,omitempty"` // Whether to skip creating symlinks
+	NoLink  bool   `json:"no_link,omitempty" yaml:"no_link,omitempty"` // Whether to skip creating symlinks
 }
 
 // Update contains configuration for package update behavior.
@@ -43,14 +43,14 @@ type Update struct {
 	// Enabled controls whether the package is included in update operations.
 	// If false, aqua up command ignores the package unless explicitly specified.
 	// By default, enabled is true.
-	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
+	Enabled *bool `json:"enabled,omitempty" yaml:",omitempty"`
 	// AllowedVersion is an expression that defines which versions are allowed.
 	// Uses expr language (https://github.com/expr-lang/expr).
 	// By default, all versions are allowed.
-	AllowedVersion string `yaml:"allowed_version,omitempty" json:"allowed_version,omitempty"`
+	AllowedVersion string `json:"allowed_version,omitempty" yaml:"allowed_version,omitempty"`
 	// Types specifies which update types are allowed (major, minor, patch, other).
 	// By default, all types are allowed.
-	Types []string `yaml:",omitempty" json:"types,omitempty"`
+	Types []string `json:"types,omitempty" yaml:",omitempty"`
 }
 
 // GetEnabled returns whether updates are enabled for this package.
