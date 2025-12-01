@@ -68,6 +68,7 @@ func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, pa
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			registry.New,
 			wire.Bind(new(list.RegistryInstaller), new(*registry.Installer)),
@@ -116,6 +117,7 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logE *logr
 			github.New,
 			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		afero.NewOsFs,
 		wire.NewSet(
 			output.New,
@@ -129,13 +131,14 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logE *logr
 	return &genrgst.Controller{}
 }
 
-func InitializeInitCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param) *initcmd.Controller {
+func InitializeInitCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client) *initcmd.Controller {
 	wire.Build(
 		initcmd.New,
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(initcmd.RepositoriesService), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		afero.NewOsFs,
 	)
 	return &initcmd.Controller{}
@@ -164,6 +167,7 @@ func InitializeGenerateCommandController(ctx context.Context, logE *logrus.Entry
 			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesService)),
 			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			registry.New,
 			wire.Bind(new(generate.RegistryInstaller), new(*registry.Installer)),
@@ -243,6 +247,7 @@ func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry,
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			registry.New,
 			wire.Bind(new(install.RegistryInstaller), new(*registry.Installer)),
@@ -371,6 +376,7 @@ func InitializeWhichCommandController(ctx context.Context, logE *logrus.Entry, p
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			registry.New,
 			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
@@ -438,6 +444,7 @@ func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, pa
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			registry.New,
 			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
@@ -566,6 +573,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Ent
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
@@ -676,6 +684,7 @@ func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, pa
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			registry.New,
 			wire.Bind(new(install.RegistryInstaller), new(*registry.Installer)),
@@ -818,6 +827,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logE *logrus
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -879,6 +889,7 @@ func InitializeUpdateCommandController(ctx context.Context, logE *logrus.Entry, 
 			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesService)),
 			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -1019,6 +1030,7 @@ func InitializeRemoveCommandController(ctx context.Context, logE *logrus.Entry, 
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
@@ -1102,6 +1114,7 @@ func InitializeVacuumInitCommandController(ctx context.Context, logE *logrus.Ent
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
+		github.NewTokenSource,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
