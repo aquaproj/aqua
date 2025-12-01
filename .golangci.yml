@@ -14,7 +14,6 @@ linters:
     - musttag
     - nlreturn
     - nonamedreturns
-    - tagalign
     - tagliatelle
     - varnamelen
     - wsl
@@ -48,3 +47,11 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+linters-settings:
+  tagalign:
+    align: true
+    sort: true
+    order:
+      - yaml
+      - json
+      - jsonschema
