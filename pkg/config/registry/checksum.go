@@ -10,7 +10,7 @@ type Checksum struct {
 	// URL is the direct URL to the checksum file (for http type).
 	URL string `json:"url,omitempty"`
 	// FileFormat specifies the format of the checksum file.
-	FileFormat string `json:"file_format,omitempty" yaml:"file_format,omitempty"`
+	FileFormat string `yaml:"file_format,omitempty" json:"file_format,omitempty"`
 	// Algorithm specifies the hash algorithm used for checksums.
 	Algorithm string `json:"algorithm,omitempty" jsonschema:"enum=md5,enum=sha1,enum=sha256,enum=sha512"`
 	// Pattern defines how to extract checksums from the checksum file.
@@ -24,7 +24,7 @@ type Checksum struct {
 	// Minisign configuration for signature verification of checksums.
 	Minisign *Minisign `json:"minisign,omitempty"`
 	// GitHubArtifactAttestations configuration for GitHub artifact attestation verification.
-	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
+	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 }
 
 // ChecksumPattern defines regular expression patterns for extracting checksums from checksum files.

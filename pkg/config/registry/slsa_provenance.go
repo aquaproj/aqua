@@ -10,17 +10,17 @@ type SLSAProvenance struct {
 	// Type specifies where to download the provenance file from.
 	Type string `json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
 	// RepoOwner is the GitHub repository owner (for github_release type).
-	RepoOwner string `json:"repo_owner,omitempty" yaml:"repo_owner,omitempty"`
+	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	// RepoName is the GitHub repository name (for github_release type).
-	RepoName string `json:"repo_name,omitempty" yaml:"repo_name,omitempty"`
+	RepoName string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	// Asset is the name of the provenance file asset (for github_release type).
-	Asset *string `json:"asset,omitempty" yaml:",omitempty"`
+	Asset *string `yaml:",omitempty" json:"asset,omitempty"`
 	// URL is the direct URL to the provenance file (for http type).
-	URL *string `json:"url,omitempty" yaml:",omitempty"`
+	URL *string `yaml:",omitempty" json:"url,omitempty"`
 	// SourceURI is the expected source repository URI for verification.
-	SourceURI *string `json:"source_uri,omitempty" yaml:"source_uri,omitempty"`
+	SourceURI *string `yaml:"source_uri,omitempty" json:"source_uri,omitempty"`
 	// SourceTag is the expected source tag for verification.
-	SourceTag string `json:"source_tag,omitempty" yaml:"source_tag,omitempty"`
+	SourceTag string `yaml:"source_tag,omitempty" json:"source_tag,omitempty"`
 }
 
 // ToDownloadedFile converts the SLSAProvenance configuration to a DownloadedFile.

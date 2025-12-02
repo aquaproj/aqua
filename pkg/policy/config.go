@@ -29,9 +29,9 @@ type ConfigYAML struct {
 
 type Registry struct {
 	Name      string `json:"name,omitempty"`
-	Type      string `json:"type,omitempty"       jsonschema:"enum=standard,enum=local,enum=github_content"`
-	RepoOwner string `json:"repo_owner,omitempty" yaml:"repo_owner"`
-	RepoName  string `json:"repo_name,omitempty"  yaml:"repo_name"`
+	Type      string `json:"type,omitempty" jsonschema:"enum=standard,enum=local,enum=github_content"`
+	RepoOwner string `yaml:"repo_owner"     json:"repo_owner,omitempty"`
+	RepoName  string `yaml:"repo_name"      json:"repo_name,omitempty"`
 	Ref       string `json:"ref,omitempty"`
 	Path      string `json:"path,omitempty"`
 }
@@ -39,8 +39,8 @@ type Registry struct {
 type Package struct {
 	Name         string    `json:"name,omitempty"`
 	Version      string    `json:"version,omitempty"`
-	RegistryName string    `json:"registry,omitempty" yaml:"registry"`
-	Registry     *Registry `json:"-"                  yaml:"-"`
+	RegistryName string    `yaml:"registry"          json:"registry,omitempty"`
+	Registry     *Registry `yaml:"-"                 json:"-"`
 }
 
 func (c *Config) Init() error {

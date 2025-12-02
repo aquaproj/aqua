@@ -29,7 +29,7 @@ func (c *Config) RequireChecksum(enforceValue, defValue bool) bool {
 // Checksum contains global checksum validation configuration.
 // It controls whether checksums are enabled, required, and on which platforms.
 type Checksum struct {
-	Enabled         *bool                  `json:"enabled,omitempty"`                                  // Whether checksum validation is enabled
-	RequireChecksum *bool                  `json:"require_checksum,omitempty" yaml:"require_checksum"` // Whether checksums are required for all packages
-	SupportedEnvs   registry.SupportedEnvs `json:"supported_envs,omitempty"   yaml:"supported_envs"`   // Platforms where checksum validation applies
+	Enabled         *bool                  `json:"enabled,omitempty"`                                   // Whether checksum validation is enabled
+	RequireChecksum *bool                  `yaml:"require_checksum"  json:"require_checksum,omitempty"` // Whether checksums are required for all packages
+	SupportedEnvs   registry.SupportedEnvs `yaml:"supported_envs"    json:"supported_envs,omitempty"`   // Platforms where checksum validation applies
 }

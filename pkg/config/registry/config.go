@@ -12,24 +12,24 @@ type PackageInfos []*PackageInfo
 // This is useful when a package provides different archive formats for different platforms.
 type FormatOverride struct {
 	// GOOS specifies the target operating system for this format override.
-	GOOS string `json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows" yaml:",omitempty"`
+	GOOS string `yaml:",omitempty" json:"goos" jsonschema:"enum=aix,enum=android,enum=darwin,enum=dragonfly,enum=freebsd,enum=illumos,enum=ios,enum=linux,enum=netbsd,enum=openbsd,enum=plan9,enum=solaris,enum=windows"`
 	// Format specifies the archive format to use for this operating system.
-	Format string `json:"format" jsonschema:"example=tar.gz,example=raw,example=zip" yaml:",omitempty"`
+	Format string `yaml:",omitempty" json:"format" jsonschema:"example=tar.gz,example=raw,example=zip"`
 }
 
 // File represents a file to be installed from a package.
 // It defines the source file within the package and how it should be installed.
 type File struct {
 	// Name is the name of the installed file.
-	Name string `json:"name,omitempty" yaml:",omitempty"`
+	Name string `yaml:",omitempty" json:"name,omitempty"`
 	// Src is the source path of the file within the package archive.
-	Src string `json:"src,omitempty" yaml:",omitempty"`
+	Src string `yaml:",omitempty" json:"src,omitempty"`
 	// Dir is the directory where the file should be installed.
-	Dir string `json:"dir,omitempty" yaml:",omitempty"`
+	Dir string `yaml:",omitempty" json:"dir,omitempty"`
 	// Link is the relative path from Src to the link target.
-	Link string `json:"link,omitempty" yaml:",omitempty"`
+	Link string `yaml:",omitempty" json:"link,omitempty"`
 	// Hard indicates whether to create a hard link instead of a symbolic link.
-	Hard bool `json:"hard,omitempty" yaml:",omitempty"`
+	Hard bool `yaml:",omitempty" json:"hard,omitempty"`
 }
 
 // ToMap converts the PackageInfos slice to a map indexed by package name.
