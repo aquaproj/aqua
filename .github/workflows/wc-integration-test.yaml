@@ -4,7 +4,7 @@ on: workflow_call
 jobs:
   integration-test:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions: {}
     env:
       GITHUB_TOKEN: ${{github.token}}
@@ -280,7 +280,7 @@ jobs:
 
   integration-test-cargo:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions: {}
     env:
       AQUA_LOG_COLOR: always
@@ -334,7 +334,7 @@ jobs:
           - runs-on: windows-latest
           - runs-on: ubuntu-24.04
           - runs-on: ubuntu-24.04-arm
-          - runs-on: macos-13
+          - runs-on: macos-15-intel
           - runs-on: macos-14
     env:
       AQUA_LOG_COLOR: always

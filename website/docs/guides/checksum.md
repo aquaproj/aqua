@@ -165,7 +165,7 @@ Add a GitHub Actions job that runs a tampered package.
 
 ```yaml
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     env:
