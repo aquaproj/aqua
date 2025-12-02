@@ -20,13 +20,13 @@ type Package struct {
 	Description       string          `yaml:",omitempty" json:"description,omitempty"`                                                                                // Package description
 	Link              string          `yaml:",omitempty" json:"link,omitempty"`                                                                                       // Package homepage link
 	Update            *Update         `yaml:",omitempty" json:"update,omitempty"`                                                                                     // Update configuration
-	FilePath          string          `json:"-" yaml:"-"`                                                                                                             // File path where package is defined
-	GoVersionFile     string          `json:"go_version_file,omitempty" yaml:"go_version_file,omitempty"`                                                             // Go version file path
-	VersionExpr       string          `json:"version_expr,omitempty" yaml:"version_expr,omitempty"`                                                                   // Version expression for dynamic versions
-	VersionExprPrefix string          `json:"version_expr_prefix,omitempty" yaml:"version_expr_prefix,omitempty"`                                                     // Prefix for version expressions
-	Vars              map[string]any  `json:"vars,omitempty" yaml:",omitempty"`                                                                                       // Package-specific variables
-	CommandAliases    []*CommandAlias `json:"command_aliases,omitempty" yaml:"command_aliases,omitempty"`                                                             // Command aliases for the package
-	Pin               bool            `json:"-" yaml:"-"`                                                                                                             // Whether the package version is pinned
+	FilePath          string          `yaml:"-" json:"-"`                                                                                                             // File path where package is defined
+	GoVersionFile     string          `yaml:"go_version_file,omitempty" json:"go_version_file,omitempty"`                                                             // Go version file path
+	VersionExpr       string          `yaml:"version_expr,omitempty" json:"version_expr,omitempty"`                                                                   // Version expression for dynamic versions
+	VersionExprPrefix string          `yaml:"version_expr_prefix,omitempty" json:"version_expr_prefix,omitempty"`                                                     // Prefix for version expressions
+	Vars              map[string]any  `yaml:",omitempty" json:"vars,omitempty"`                                                                                       // Package-specific variables
+	CommandAliases    []*CommandAlias `yaml:"command_aliases,omitempty" json:"command_aliases,omitempty"`                                                             // Command aliases for the package
+	Pin               bool            `yaml:"-" json:"-"`                                                                                                             // Whether the package version is pinned
 }
 
 // CommandAlias defines an alias for a package command.
@@ -106,7 +106,7 @@ type Config struct {
 	Packages   []*Package `json:"packages,omitempty"`                               // List of packages to manage
 	Registries Registries `json:"registries"`                                       // Registry configurations
 	Checksum   *Checksum  `json:"checksum,omitempty"`                               // Checksum validation settings
-	ImportDir  string     `json:"import_dir,omitempty" yaml:"import_dir,omitempty"` // Directory for importing configurations
+	ImportDir  string     `yaml:"import_dir,omitempty" json:"import_dir,omitempty"` // Directory for importing configurations
 }
 
 // Validate validates the configuration for correctness.

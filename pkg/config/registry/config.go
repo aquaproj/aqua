@@ -21,15 +21,15 @@ type FormatOverride struct {
 // It defines the source file within the package and how it should be installed.
 type File struct {
 	// Name is the name of the installed file.
-	Name string `json:"name,omitempty" yaml:",omitempty"`
+	Name string `yaml:",omitempty" json:"name,omitempty"`
 	// Src is the source path of the file within the package archive.
-	Src string `json:"src,omitempty" yaml:",omitempty"`
+	Src string `yaml:",omitempty" json:"src,omitempty"`
 	// Dir is the directory where the file should be installed.
-	Dir string `json:"dir,omitempty" yaml:",omitempty"`
+	Dir string `yaml:",omitempty" json:"dir,omitempty"`
 	// Link is the relative path from Src to the link target.
-	Link string `json:"link,omitempty" yaml:",omitempty"`
+	Link string `yaml:",omitempty" json:"link,omitempty"`
 	// Hard indicates whether to create a hard link instead of a symbolic link.
-	Hard bool `json:"hard,omitempty" yaml:",omitempty"`
+	Hard bool `yaml:",omitempty" json:"hard,omitempty"`
 }
 
 // ToMap converts the PackageInfos slice to a map indexed by package name.
