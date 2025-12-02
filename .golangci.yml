@@ -36,7 +36,7 @@ linters:
       - examples$
   settings:
     tagalign:
-      align: true
+      align: false
       sort: true
       order:
         - yaml
