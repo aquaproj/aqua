@@ -34,9 +34,9 @@ type DownloadedFile struct {
 	// RepoName is the GitHub repository name (for github_release type).
 	RepoName string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	// Asset is the name of the asset to download (for github_release type).
-	Asset *string `json:"asset,omitempty" yaml:",omitempty"`
+	Asset *string `yaml:",omitempty" json:"asset,omitempty"`
 	// URL is the direct URL to download the file (for http type).
-	URL *string `json:"url,omitempty" yaml:",omitempty"`
+	URL *string `yaml:",omitempty" json:"url,omitempty"`
 }
 
 // GetEnabled returns whether Cosign verification is enabled.

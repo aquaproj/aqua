@@ -6,7 +6,7 @@ type GitHubArtifactAttestations struct {
 	// Enabled controls whether GitHub artifact attestation verification is active.
 	Enabled *bool `json:"enabled,omitempty"`
 	// PredicateType specifies the type of predicate to verify.
-	PredicateType string `json:"predicate_type,omitempty" yaml:"predicate_type,omitempty"`
+	PredicateType string `yaml:"predicate_type,omitempty" json:"predicate_type,omitempty"`
 	// SignerWorkflow2 specifies the expected GitHub Actions workflow for signing.
 	// See https://github.com/aquaproj/aqua/issues/3581
 	SignerWorkflow2 string `yaml:"signer_workflow,omitempty" json:"signer_workflow,omitempty"`

@@ -24,7 +24,7 @@ type Checksum struct {
 	// Minisign configuration for signature verification of checksums.
 	Minisign *Minisign `json:"minisign,omitempty"`
 	// GitHubArtifactAttestations configuration for GitHub artifact attestation verification.
-	GitHubArtifactAttestations *GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty" yaml:"github_artifact_attestations,omitempty"`
+	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 }
 
 // ChecksumPattern defines regular expression patterns for extracting checksums from checksum files.
