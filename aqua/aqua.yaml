@@ -7,5 +7,5 @@ checksum:
   require_checksum: true
 registries:
   - type: standard
-    ref: v4.442.1 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.443.0 # renovate: depName=aquaproj/aqua-registry
 import_dir: imports
