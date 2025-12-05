@@ -138,6 +138,9 @@
           "repo_name": {
             "type": "string"
           },
+          "github_enterprise_base_url": {
+            "type": "string"
+          },
           "ref": {
             "type": "string"
           },

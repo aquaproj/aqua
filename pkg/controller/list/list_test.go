@@ -51,7 +51,7 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+	downloader := download.NewGitHubContentFileDownloader(nil, nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 	rt := &runtime.Runtime{}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {

@@ -29,17 +29,21 @@ type (
 	ArchiveFormat               = github.ArchiveFormat
 )
 
-const Tarball = github.Tarball
+const (
+	Tarball           = github.Tarball
+	TokenKeyGitHubCom = "GITHUB_TOKEN" //nolint:gosec
+	TokenKeyGHES      = "GITHUB_ENTERPRISE_TOKEN"
+)
 
 func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
-	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)).Repositories
+	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken(TokenKeyGitHubCom)), logE)).Repositories
 }
 
-func getGitHubToken() string {
-	if token := os.Getenv("AQUA_GITHUB_TOKEN"); token != "" {
+func getGitHubToken(envKey string) string {
+	if token := os.Getenv("AQUA_" + envKey); token != "" {
 		return token
 	}
-	return os.Getenv("GITHUB_TOKEN")
+	return os.Getenv(envKey)
 }
 
 func MakeRetryable(client *http.Client, logE *logrus.Entry) *http.Client {

@@ -69,6 +69,11 @@ func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, pa
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
+		),
+		wire.NewSet(
 			registry.New,
 			wire.Bind(new(list.RegistryInstaller), new(*registry.Installer)),
 		),
@@ -165,6 +170,10 @@ func InitializeGenerateCommandController(ctx context.Context, logE *logrus.Entry
 			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
+		),
+		wire.NewSet(
 			registry.New,
 			wire.Bind(new(generate.RegistryInstaller), new(*registry.Installer)),
 		),
@@ -242,6 +251,11 @@ func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry,
 			github.New,
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -372,6 +386,10 @@ func InitializeWhichCommandController(ctx context.Context, logE *logrus.Entry, p
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
+		),
+		wire.NewSet(
 			registry.New,
 			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
 		),
@@ -437,6 +455,11 @@ func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, pa
 			github.New,
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -567,6 +590,11 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Ent
 			wire.Bind(new(updateaqua.RepositoriesService), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
+		),
+		wire.NewSet(
 			installpackage.New,
 			wire.Bind(new(updateaqua.AquaInstaller), new(*installpackage.Installer)),
 		),
@@ -675,6 +703,11 @@ func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, pa
 			github.New,
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
 		),
 		wire.NewSet(
 			registry.New,
@@ -819,6 +852,11 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logE *logrus
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
+		),
+		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
 			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -878,6 +916,11 @@ func InitializeUpdateCommandController(ctx context.Context, logE *logrus.Entry, 
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 			wire.Bind(new(versiongetter.GitHubTagClient), new(*github.RepositoriesService)),
 			wire.Bind(new(versiongetter.GitHubReleaseClient), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
@@ -1020,6 +1063,11 @@ func InitializeRemoveCommandController(ctx context.Context, logE *logrus.Entry, 
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
+		),
+		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
@@ -1101,6 +1149,11 @@ func InitializeVacuumInitCommandController(ctx context.Context, logE *logrus.Ent
 			github.New,
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			github.NewGHES,
+			wire.Bind(new(download.GHESResolver), new(*github.GHESRepositoryService)),
+			wire.Bind(new(download.GHESContentAPIResolver), new(*github.GHESRepositoryService)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
