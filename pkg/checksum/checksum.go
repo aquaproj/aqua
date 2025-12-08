@@ -86,7 +86,7 @@ func convertChecksumFileName(filename, version string) string {
 // Returns a checksum configuration for github_release type or nil if no pattern matches.
 func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum {
 	s := strings.ToLower(filename)
-	for _, suffix := range []string{"sig", "asc", "pem", "bundle"} {
+	for _, suffix := range []string{"sig", "asc", "pem", "bundle", "sigstore", "sigstore.json"} {
 		if strings.HasSuffix(s, "."+suffix) {
 			return nil
 		}
