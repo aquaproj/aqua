@@ -1,6 +1,6 @@
 registries:
   - type: standard
-    ref: v4.444.1 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.444.2 # renovate: depName=aquaproj/aqua-registry
 packages:
   - name: golang/go
     go_version_file: go.mod
