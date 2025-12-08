@@ -9,7 +9,7 @@
 #   - all
 registries:
   - type: standard
-    ref: v4.444.0 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.444.1 # renovate: depName=aquaproj/aqua-registry
 packages:
   # raw
   - name: aquaproj/aqua-installer
