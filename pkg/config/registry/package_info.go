@@ -370,20 +370,18 @@ func (p *PackageInfo) OverrideByBuild() {
 // FormatOverrides is a slice of platform-specific format overrides.
 type FormatOverrides []*FormatOverride
 
-// IsZero implements yaml.IsZeroer interface.
+// IsZero implements the [go.yaml.in/yaml/v3.IsZeroer] interface.
 // It returns true if the FormatOverrides slice is nil.
 func (o FormatOverrides) IsZero() bool {
-	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
 	return o == nil
 }
 
 // Overrides is a slice of platform-specific configuration overrides.
 type Overrides []*Override
 
-// IsZero implements yaml.IsZeroer interface.
+// IsZero implements the [go.yaml.in/yaml/v3.IsZeroer] interface.
 // It returns true if the Overrides slice is nil.
 func (o Overrides) IsZero() bool {
-	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
 	return o == nil
 }
 
@@ -398,10 +396,9 @@ type Alias struct {
 // Keys are typically platform identifiers (GOOS/GOARCH) and values are the replacements.
 type Replacements map[string]string
 
-// IsZero implements yaml.IsZeroer interface.
+// IsZero implements the [go.yaml.in/yaml/v3.IsZeroer] interface.
 // It returns true if the Replacements map is nil.
 func (r Replacements) IsZero() bool {
-	// Implement yaml.IsZeroer https://pkg.go.dev/gopkg.in/yaml.v3#IsZeroer
 	return r == nil
 }
 

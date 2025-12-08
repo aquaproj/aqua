@@ -6,7 +6,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/google/go-cmp/cmp"
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v2"
 )
 
 func TestCargo_YAML(t *testing.T) {

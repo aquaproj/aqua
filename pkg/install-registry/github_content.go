@@ -11,7 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v2"
 )
 
 const registryFilePermission = 0o600

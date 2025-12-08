@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v2"
 )
 
 func TestPackage_UnmarshalYAML_ParseNameWithVersion(t *testing.T) {
