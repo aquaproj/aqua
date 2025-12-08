@@ -10,7 +10,7 @@ import (
 
 	"github.com/expr-lang/expr"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type Reader struct {
