@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v2"
 )
 
 func (is *Installer) readYAMLRegistry(p string, registry *registry.Config) error {
