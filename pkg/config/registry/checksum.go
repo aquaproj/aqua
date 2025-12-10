@@ -4,25 +4,25 @@ package registry
 // It supports downloading checksum files from various sources and multiple hash algorithms.
 type Checksum struct {
 	// Type specifies where to download the checksum file from.
-	Type string `json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
+	Type string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
 	// Asset is the name of the checksum file asset (for github_release type).
-	Asset string `json:"asset,omitempty"`
+	Asset string `yaml:",omitempty" json:"asset,omitempty"`
 	// URL is the direct URL to the checksum file (for http type).
-	URL string `json:"url,omitempty"`
+	URL string `yaml:",omitempty" json:"url,omitempty"`
 	// FileFormat specifies the format of the checksum file.
 	FileFormat string `yaml:"file_format,omitempty" json:"file_format,omitempty"`
 	// Algorithm specifies the hash algorithm used for checksums.
-	Algorithm string `json:"algorithm,omitempty" jsonschema:"enum=md5,enum=sha1,enum=sha256,enum=sha512"`
+	Algorithm string `yaml:",omitempty" json:"algorithm,omitempty" jsonschema:"enum=md5,enum=sha1,enum=sha256,enum=sha512"`
 	// Pattern defines how to extract checksums from the checksum file.
-	Pattern *ChecksumPattern `json:"pattern,omitempty"`
+	Pattern *ChecksumPattern `yaml:",omitempty" json:"pattern,omitempty"`
 	// Enabled controls whether checksum verification is active.
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
 	// Replacements provides template replacements for checksum URLs/assets.
-	Replacements Replacements `json:"replacements,omitempty"`
+	Replacements Replacements `yaml:",omitempty" json:"replacements,omitempty"`
 	// Cosign configuration for signature verification of checksums.
-	Cosign *Cosign `json:"cosign,omitempty"`
+	Cosign *Cosign `yaml:",omitempty" json:"cosign,omitempty"`
 	// Minisign configuration for signature verification of checksums.
-	Minisign *Minisign `json:"minisign,omitempty"`
+	Minisign *Minisign `yaml:",omitempty" json:"minisign,omitempty"`
 	// GitHubArtifactAttestations configuration for GitHub artifact attestation verification.
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 }
@@ -33,7 +33,7 @@ type ChecksumPattern struct {
 	// Checksum is a regex pattern to extract the checksum value.
 	Checksum string `json:"checksum"`
 	// File is a regex pattern to extract the filename (optional).
-	File string `json:"file,omitempty"`
+	File string `yaml:",omitempty" json:"file,omitempty"`
 }
 
 // GetReplacements returns the template replacements for this checksum configuration.
