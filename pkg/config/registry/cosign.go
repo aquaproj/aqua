@@ -11,17 +11,17 @@ import (
 // Cosign is a tool for signing and verifying container images and other artifacts.
 type Cosign struct {
 	// Enabled controls whether Cosign verification is active.
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
 	// Opts contains additional command-line options to pass to cosign verify.
-	Opts []string `json:"opts,omitempty"`
+	Opts []string `yaml:",omitempty" json:"opts,omitempty"`
 	// Signature specifies where to download the signature file.
-	Signature *DownloadedFile `json:"signature,omitempty"`
+	Signature *DownloadedFile `yaml:",omitempty" json:"signature,omitempty"`
 	// Certificate specifies where to download the certificate file.
-	Certificate *DownloadedFile `json:"certificate,omitempty"`
+	Certificate *DownloadedFile `yaml:",omitempty" json:"certificate,omitempty"`
 	// Key specifies where to download the public key file.
-	Key *DownloadedFile `json:"key,omitempty"`
+	Key *DownloadedFile `yaml:",omitempty" json:"key,omitempty"`
 	// Bundle specifies where to download the signature bundle.
-	Bundle *DownloadedFile `json:"bundle,omitempty"`
+	Bundle *DownloadedFile `yaml:",omitempty" json:"bundle,omitempty"`
 }
 
 // DownloadedFile represents a file that can be downloaded from various sources.

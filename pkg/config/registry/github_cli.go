@@ -4,7 +4,7 @@ package registry
 // This uses GitHub's built-in attestation system for verifying build provenance and integrity.
 type GitHubArtifactAttestations struct {
 	// Enabled controls whether GitHub artifact attestation verification is active.
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
 	// PredicateType specifies the type of predicate to verify.
 	PredicateType string `yaml:"predicate_type,omitempty" json:"predicate_type,omitempty"`
 	// SignerWorkflow2 specifies the expected GitHub Actions workflow for signing.

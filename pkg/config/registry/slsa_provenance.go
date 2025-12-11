@@ -6,9 +6,9 @@ import "fmt"
 // SLSA is a framework for ensuring software supply chain security through build provenance.
 type SLSAProvenance struct {
 	// Enabled controls whether SLSA provenance verification is active.
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
 	// Type specifies where to download the provenance file from.
-	Type string `json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
+	Type string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
 	// RepoOwner is the GitHub repository owner (for github_release type).
 	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	// RepoName is the GitHub repository name (for github_release type).
