@@ -10,7 +10,7 @@ type SLSAProvenance struct {
 	// Type specifies where to download the provenance file from.
 	Type string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
 	// RepoOwner is the GitHub repository owner (for github_release type).
-	RepoOwner string `yaml:",omitempty" yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	// RepoName is the GitHub repository name (for github_release type).
 	RepoName string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	// Asset is the name of the provenance file asset (for github_release type).
