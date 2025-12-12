@@ -5,7 +5,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
@@ -64,11 +63,17 @@ func Test_getGHESKeyName(t *testing.T) {
 			t.Parallel()
 			got, err := github.GetGitHubTokenEnvKey(tt.baseURL)
 			if tt.wantErr {
-				assert.Error(t, err)
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
 				return
 			}
-			assert.Equal(t, tt.want, got)
-			assert.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("got %q, want %q", got, tt.want)
+			}
 		})
 	}
 }

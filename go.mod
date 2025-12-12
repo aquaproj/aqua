@@ -19,7 +19,6 @@ require (
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.15.0
-	github.com/stretchr/testify v1.11.1
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
 	github.com/suzuki-shunsuke/ghtkn-go-sdk v0.2.2
@@ -88,6 +87,7 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sorairolake/lzip-go v0.3.8 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/suzuki-shunsuke/go-exec v0.0.1 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/suzuki-shunsuke/slog-error v0.2.1 // indirect
