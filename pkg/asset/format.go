@@ -42,7 +42,7 @@ func RemoveExtFromAsset(assetName string) (string, string) {
 		"tar",
 	}
 	for _, format := range formats {
-		if s := strings.TrimSuffix(assetName, "."+format); s != assetName {
+		if s, ok := strings.CutSuffix(assetName, "."+format); ok {
 			return s, format
 		}
 	}

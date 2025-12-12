@@ -376,8 +376,8 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
 	}
 	if assetInfo.OS == "windows" && assetInfo.Format == formatRaw {
-		if strings.HasSuffix(assetInfo.Template, ".exe") {
-			assetInfo.Template = strings.TrimSuffix(assetInfo.Template, ".exe")
+		if before, ok := strings.CutSuffix(assetInfo.Template, ".exe"); ok {
+			assetInfo.Template = before
 		} else {
 			assetInfo.CompleteWindowsExt = ptr.Bool(false)
 		}
