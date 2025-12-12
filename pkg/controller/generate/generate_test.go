@@ -395,7 +395,7 @@ packages:
 				Releases: d.releases,
 				Tags:     d.tags,
 			}
-			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewGitHubContentFileDownloader(gh, nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)

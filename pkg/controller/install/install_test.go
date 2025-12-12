@@ -86,7 +86,7 @@ packages:
 		},
 	}
 	logE := logrus.NewEntry(logrus.New())
-	registryDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+	registryDownloader := download.NewGitHubContentFileDownloader(nil, nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -101,7 +101,7 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewDownloader(nil, nil, download.NewHTTPDownloader(logE, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)

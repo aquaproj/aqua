@@ -57,6 +57,9 @@ func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}
+	if !matchGHESBaseURL(pkg.Registry, policyPkg.Registry) {
+		return false, nil
+	}
 	if policyPkg.Version != "" {
 		sv := pkg.Package.Version
 		if pkg.PackageInfo.VersionPrefix != "" {
@@ -71,6 +74,18 @@ func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 		}
 	}
 	return matchRegistry(pkg.Registry, policyPkg.Registry)
+}
+
+func matchGHESBaseURL(pkgRegistry *aqua.Registry, policyRegistry *Registry) bool {
+	hasGHESInPolicy := policyRegistry != nil && policyRegistry.GHESBaseURL != ""
+	hasGHESInPkg := pkgRegistry != nil && pkgRegistry.GHESBaseURL != ""
+	if !hasGHESInPolicy && !hasGHESInPkg {
+		return true
+	}
+	if hasGHESInPolicy != hasGHESInPkg {
+		return false
+	}
+	return pkgRegistry.GHESBaseURL == policyRegistry.GHESBaseURL
 }
 
 func matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {

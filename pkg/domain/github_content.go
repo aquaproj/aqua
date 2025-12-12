@@ -10,11 +10,12 @@ import (
 )
 
 type GitHubContentFileParam struct {
-	RepoOwner string
-	RepoName  string
-	Ref       string
-	Path      string
-	Private   bool
+	RepoOwner   string
+	RepoName    string
+	GHESBaseURL string
+	Ref         string
+	Path        string
+	Private     bool
 }
 
 type GitHubContentFile struct {

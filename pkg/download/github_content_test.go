@@ -100,7 +100,7 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			downloader := download.NewGitHubContentFileDownloader(d.github, download.NewHTTPDownloader(logE, d.httpClient))
+			downloader := download.NewGitHubContentFileDownloader(d.github, nil, download.NewHTTPDownloader(logE, d.httpClient))
 			file, err := downloader.DownloadGitHubContentFile(ctx, logE, d.param)
 			if err != nil {
 				if d.isErr {

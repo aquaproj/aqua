@@ -77,6 +77,83 @@ func TestValidatePackage(t *testing.T) { //nolint:funlen
 				},
 			},
 		},
+		{
+			name: "GHES registry - matching base URLs",
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Name:    "suzuki-shunsuke/tfcmt",
+					Version: "v4.0.0",
+				},
+				PackageInfo: &registry.PackageInfo{},
+				Registry: &aqua.Registry{
+					Type:        "github_content",
+					Name:        "custom-ghes",
+					RepoOwner:   "aquaproj",
+					RepoName:    "aqua-registry",
+					Path:        "registry.yaml",
+					Ref:         "v3.90.0",
+					GHESBaseURL: "https://github.example.com",
+				},
+			},
+			policies: []*policy.Config{
+				{
+					YAML: &policy.ConfigYAML{
+						Packages: []*policy.Package{
+							{
+								Name: "suzuki-shunsuke/tfcmt",
+								Registry: &policy.Registry{
+									Type:        "github_content",
+									Name:        "custom-ghes",
+									RepoOwner:   "aquaproj",
+									RepoName:    "aqua-registry",
+									Path:        "registry.yaml",
+									GHESBaseURL: "https://github.example.com",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "GHES registry - non-matching base URLs",
+			isErr: true,
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Name:    "suzuki-shunsuke/tfcmt",
+					Version: "v4.0.0",
+				},
+				PackageInfo: &registry.PackageInfo{},
+				Registry: &aqua.Registry{
+					Type:        "github_content",
+					Name:        "custom-ghes",
+					RepoOwner:   "aquaproj",
+					RepoName:    "aqua-registry",
+					Path:        "registry.yaml",
+					Ref:         "v3.90.0",
+					GHESBaseURL: "https://github.example.com",
+				},
+			},
+			policies: []*policy.Config{
+				{
+					YAML: &policy.ConfigYAML{
+						Packages: []*policy.Package{
+							{
+								Name: "suzuki-shunsuke/tfcmt",
+								Registry: &policy.Registry{
+									Type:        "github_content",
+									Name:        "custom-ghes",
+									RepoOwner:   "aquaproj",
+									RepoName:    "aqua-registry",
+									Path:        "registry.yaml",
+									GHESBaseURL: "https://github.different.com",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	logE := logrus.NewEntry(logrus.New())
 	for _, d := range data {
