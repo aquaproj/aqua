@@ -108,7 +108,7 @@ aqua-installer doesn't support caching, but you can cache packages and registrie
 e.g.
 
 ```yaml
-- uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+- uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
   with:
     path: ~/.local/share/aquaproj-aqua
     key: v2-aqua-installer-${{runner.os}}-${{runner.arch}}-${{hashFiles('aqua.yaml')}}
@@ -125,7 +125,7 @@ If you [split `aqua.yaml` using import](/docs/guides/split-config) or use local 
 e.g.
 
 ```yaml
-- uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+- uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
   with:
     path: ~/.local/share/aquaproj-aqua
     key: v2-aqua-installer-${{runner.os}}-${{runner.arch}}-${{hashFiles('.aqua/*.yaml')}} # Change key
