@@ -19,7 +19,7 @@ aqua uses [GitHub CLI](https://cli.github.com/) internally, but aqua installs it
 We recommend enabling the verification for security, but you can disable the verification by the environment variable.
 
 ```sh
-export AQUA_DISABLE_GITHUB_IMMUTABLE_RElEASE=true
+export AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE=true
 ```
 
 ## Registry Settings
