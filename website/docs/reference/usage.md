@@ -161,7 +161,7 @@ DESCRIPTION:
      48/380                                                        │
    > cli                                                           └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
 
-   Please select the package you want to install, then the package configuration is outputted.
+   Please select the package you want to install, then the package configuration is outptted.
    You can select multiple packages by tab key.
    Please copy and paste the outputted configuration in the aqua configuration file.
 
