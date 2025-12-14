@@ -5,7 +5,7 @@ sidebar_position: 410
 # Manage a GitHub access token using Keyring
 
 :::info
-We recommend [ghtkn integration](./ghtkn.md) because it is securer than managing a long-lived personal access token using Keyring.
+We recommend [ghtkn integration](./ghtkn.md) because it is more secure than managing a long-lived personal access token using Keyring.
 :::
 
 aqua >= v2.51.0 [#3852](https://github.com/aquaproj/aqua/pull/3852)
@@ -22,7 +22,7 @@ Enter a GitHub access token: # Input GitHub Access token
 or you can also pass a GitHub Access token via standard input:
 
 ```sh
-echo "<github access token>" | aqua tokn set -stdin
+echo "<github access token>" | aqua token set --stdin
 ```
 
 2. Enable the feature by setting the environment variable `AQUA_KEYRING_ENABLED`:
