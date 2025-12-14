@@ -4,9 +4,10 @@ sidebar_position: 100
 
 # Home
 
-## :bulb: NotebookLM for aqua
+## :bulb: NotebookLM And DeepWiki
 
-[You can ask any questions about aqua to Google NotebookLM.](https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71)
+- [Google NotebookLM](https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71)
+- [DeepWiki](https://deepwiki.com/aquaproj/aqua)
 
 ## How to learn aqua
 

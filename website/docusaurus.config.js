@@ -43,14 +43,14 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      announcementBar: {
-        id: 'notebooklm',
-        content:
-          '<a href="https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71">Google NotebookLM for aqua is available (2025-11-14)</a>',
-        backgroundColor: '#7FFF00',
-        textColor: '#091E42',
-        isCloseable: true,
-      },
+      // announcementBar: {
+      //   id: 'notebooklm',
+      //   content:
+      //     '<a href="https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71">Google NotebookLM for aqua is available (2025-11-14)</a>',
+      //   backgroundColor: '#7FFF00',
+      //   textColor: '#091E42',
+      //   isCloseable: true,
+      // },
       navbar: {
         title: 'aqua',
         logo: {
@@ -67,6 +67,11 @@ const config = {
           {
             href: 'https://notebooklm.google.com/notebook/874e89e4-66a1-459a-82c9-923b81501a71',
             label: 'NotebookLM',
+            position: 'right',
+          },
+          {
+            href: 'https://deepwiki.com/aquaproj/aqua',
+            label: 'DeepWiki',
             position: 'right',
           },
           {
