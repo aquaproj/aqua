@@ -38,3 +38,7 @@ You can remove a GitHub Access token from keyring by `aqua token rm` command:
 ```sh
 aqua token rm
 ```
+
+:::info
+**GitHub Enterprise Server**: Keyring is not supported for GHES. Use environment variables instead. See [GHES Guide](/docs/guides/github-enterprise-server) for details.
+:::

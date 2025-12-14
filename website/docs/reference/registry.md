@@ -29,6 +29,14 @@ The Standard Registry is a registry that we maintain.
 
 https://github.com/aquaproj/aqua-registry
 
+## GitHub Enterprise Server (GHES) Registry
+
+`aqua >= v2.56.0`
+
+You can use registries hosted on GitHub Enterprise Server.
+
+See [GitHub Enterprise Server Support](/docs/guides/github-enterprise-server) for details.
+
 ## Create your own Registry
 
 Please see the following document.

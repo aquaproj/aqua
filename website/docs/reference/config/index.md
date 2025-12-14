@@ -49,6 +49,8 @@ To install tools in global configuration files, you have to set `-a` to `aqua in
 * `AQUA_GITHUB_TOKEN`, `GITHUB_TOKEN`: GitHub Access Token. This is required to install private repository's package
   * [You can also manage GitHub access tokens using ghtkn integration](/docs/reference/security/ghtkn)
   * [You can also manage a GitHub access token using Keyring](/docs/reference/security/keyring)
+* `AQUA_GITHUB_TOKEN_<domain>`, `GITHUB_TOKEN_<domain>`: `aqua >= v2.56.0` GitHub Access Token for specific [GitHub Enterprise Server](/docs/guides/github-enterprise-server) instances. `<domain>` is the GHES domain where dots (`.`) are replaced with underscores (`_`). e.g. for `ghes.example.com`, use `GITHUB_TOKEN_ghes_example_com`
+* `GITHUB_ENTERPRISE_TOKEN`: `aqua >= v2.56.0` Fallback GitHub Access Token for any [GitHub Enterprise Server](/docs/guides/github-enterprise-server) instance
 * [AQUA_GHTKN_ENABLED](/docs/reference/security/ghtkn) `aqua >= v2.54.0`
 * [AQUA_KEYRING_ENABLED](/docs/reference/security/keyring) `aqua >= v2.51.0`
 * [AQUA_LOG_COLOR](log-color.md): Log color setting (`always|auto|never`)
@@ -205,6 +207,15 @@ registries:
 * `repo_name`: Repository name
 * `ref`: Repository tag or commit hash. Don't specify a branch name as `ref`, because aqua treats the ref as immutable
 * `path`: file path from the repository root directory
+* `github_enterprise_base_url`: (optional) `aqua >= v2.56.0` GitHub Enterprise Server base URL (e.g., `https://ghes.example.com`). If not specified, aqua uses github.com
+
+#### GitHub Enterprise Server (GHES) Registry
+
+`aqua >= v2.56.0`
+
+You can use registries hosted on GitHub Enterprise Server by specifying `github_enterprise_base_url`.
+
+See [GitHub Enterprise Server Support](/docs/guides/github-enterprise-server) for details.
 
 ## `packages`
 

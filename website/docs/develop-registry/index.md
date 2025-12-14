@@ -86,3 +86,11 @@ packages:
 ```
 
 If the Registry is private, you have to set a GitHub Access Token to the environment variable `AQUA_GITHUB_TOKEN` or `GITHUB_TOKEN`.
+
+### GitHub Enterprise Server (GHES) Registry
+
+`aqua >= v2.56.0`
+
+You can use registries hosted on GitHub Enterprise Server.
+
+See [GitHub Enterprise Server Support](/docs/guides/github-enterprise-server) for details.
