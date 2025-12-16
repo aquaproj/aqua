@@ -6,5 +6,3 @@ SERVER_PID=$!
 echo $SERVER_PID > /tmp/http-registry-server.pid
 echo "HTTP server started with PID $SERVER_PID"
 sleep 2  # Wait for server to start
-
-

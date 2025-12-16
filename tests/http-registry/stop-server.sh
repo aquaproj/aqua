@@ -7,5 +7,3 @@ if [ -f /tmp/http-registry-server.pid ]; then
 else
   echo "No HTTP server PID file found"
 fi
-
-
