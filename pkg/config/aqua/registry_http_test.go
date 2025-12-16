@@ -6,7 +6,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 )
 
-func TestRegistry_ValidateHTTP(t *testing.T) {
+func TestRegistry_ValidateHTTP(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string

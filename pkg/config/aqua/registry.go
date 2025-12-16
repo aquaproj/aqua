@@ -95,6 +95,13 @@ func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 	return "", errInvalidRegistryType
 }
 
+// RenderURL renders the URL template with the version.
+func (r *Registry) RenderURL() (string, error) {
+	return template.Execute(r.URL, map[string]any{ //nolint:wrapcheck
+		"Version": r.Version,
+	})
+}
+
 // validateLocal validates a local registry configuration.
 // It ensures the required path field is present.
 func (r *Registry) validateLocal() error {
@@ -155,13 +162,6 @@ func (r *Registry) httpFilePath(rootDir string) (string, error) {
 	filename := r.getHTTPFilename()
 
 	return filepath.Join(rootDir, "registries", r.Type, r.Name, r.Version, filename), nil
-}
-
-// RenderURL renders the URL template with the version.
-func (r *Registry) RenderURL() (string, error) {
-	return template.Execute(r.URL, map[string]any{ //nolint:wrapcheck
-		"Version": r.Version,
-	})
 }
 
 // getHTTPFilename determines the filename for the cached HTTP registry.

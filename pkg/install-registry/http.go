@@ -19,7 +19,7 @@ import (
 	"go.yaml.in/yaml/v2"
 )
 
-func (is *Installer) getHTTPRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *Installer) getHTTPRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) { //nolint:cyclop
 	// Render the URL with the version
 	renderedURL, err := regist.RenderURL()
 	if err != nil {
@@ -96,7 +96,7 @@ func (is *Installer) handleRawHTTPRegistry(registryFilePath string, content []by
 	return registryContent, nil
 }
 
-func (is *Installer) handleTarGzHTTPRegistry(ctx context.Context, logE *logrus.Entry, registryFilePath string, content []byte, regist *aqua.Registry) (*registry.Config, error) {
+func (is *Installer) handleTarGzHTTPRegistry(ctx context.Context, logE *logrus.Entry, registryFilePath string, content []byte, regist *aqua.Registry) (*registry.Config, error) { //nolint:cyclop,funlen
 	// Create a temporary file for the tar.gz content
 	tempDir := filepath.Join(filepath.Dir(registryFilePath), ".tmp")
 	if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
