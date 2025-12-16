@@ -12,4 +12,3 @@ registries:
 packages:
   - registry: http-raw
   - registry: http-targz
-
