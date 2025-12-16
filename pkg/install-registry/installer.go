@@ -16,6 +16,7 @@ import (
 
 type Installer struct {
 	registryDownloader GitHubContentFileDownloader
+	httpDownloader     download.HTTPDownloader
 	param              *config.Param
 	fs                 afero.Fs
 	cosign             CosignVerifier
@@ -23,10 +24,11 @@ type Installer struct {
 	rt                 *runtime.Runtime
 }
 
-func New(param *config.Param, downloader GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *Installer {
+func New(param *config.Param, downloader GitHubContentFileDownloader, httpDownloader download.HTTPDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *Installer {
 	return &Installer{
 		param:              param,
 		registryDownloader: downloader,
+		httpDownloader:     httpDownloader,
 		fs:                 fs,
 		rt:                 rt,
 		cosign:             cos,
