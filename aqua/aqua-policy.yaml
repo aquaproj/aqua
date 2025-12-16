@@ -16,6 +16,12 @@ registries:
   - name: macos
     type: local
     path: ../tests/macos/registry.yaml
+  - name: http-raw
+    type: http
+    url: http://localhost:8888/v{{.Version}}/registry.yaml
+  - name: http-targz
+    type: http
+    url: http://localhost:8888/archives/{{trimV .Version}}/registry.tar.gz
 packages:
 - registry: standard
 - registry: main

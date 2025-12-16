@@ -19,6 +19,9 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Start HTTP registry server
+        run: bash tests/http-registry/start-server.sh
+
       - run: |
           go install \
             -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" \
@@ -252,17 +255,9 @@ jobs:
 
       - run: aqua update-checksum -a
 
-      - name: Start HTTP registry server
-        run: bash tests/http-registry/start-server.sh
-
-      - name: Allow HTTP registry policy
-        run: aqua policy allow tests/http-registry/aqua-policy.yaml
-
       - name: Test HTTP registry (raw format)
         run: aqua i
         working-directory: tests/http-registry
-        env:
-          GITHUB_TOKEN: ${{github.token}}
 
       - name: Verify HTTP registry packages work (ghalint)
         run: ghalint version
