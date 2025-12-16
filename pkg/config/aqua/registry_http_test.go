@@ -104,6 +104,27 @@ func TestRegistry_ValidateHTTP(t *testing.T) { //nolint:funlen
 			},
 			isErr: true,
 		},
+		{
+			name: "valid http registry with trimV function",
+			registry: &aqua.Registry{
+				Type:    aqua.RegistryTypeHTTP,
+				Name:    "test",
+				URL:     "https://example.com/{{trimV .Version}}/registry.yaml",
+				Version: "v1.0.0",
+			},
+			isErr: false,
+		},
+		{
+			name: "valid http registry with sprig function and spaces",
+			registry: &aqua.Registry{
+				Type:    aqua.RegistryTypeHTTP,
+				Name:    "test",
+				URL:     "https://example.com/{{ trimV .Version }}/registry.tar.gz",
+				Version: "v2.0.0",
+				Format:  "tar.gz",
+			},
+			isErr: false,
+		},
 	}
 
 	for _, d := range data {
@@ -123,7 +144,7 @@ func TestRegistry_ValidateHTTP(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestRegistry_RenderURL(t *testing.T) {
+func TestRegistry_RenderURL(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -147,6 +168,24 @@ func TestRegistry_RenderURL(t *testing.T) {
 				Version: "v2.5.3",
 			},
 			expected: "https://example.com/v2.5.3/files/v2.5.3/registry.yaml",
+			isErr:    false,
+		},
+		{
+			name: "trimV function",
+			registry: &aqua.Registry{
+				URL:     "https://example.com/{{trimV .Version}}/registry.yaml",
+				Version: "v1.0.0",
+			},
+			expected: "https://example.com/1.0.0/registry.yaml",
+			isErr:    false,
+		},
+		{
+			name: "trimV function with tar.gz",
+			registry: &aqua.Registry{
+				URL:     "http://localhost:8888/archives/{{trimV .Version}}/registry.tar.gz",
+				Version: "v2.0.0",
+			},
+			expected: "http://localhost:8888/archives/2.0.0/registry.tar.gz",
 			isErr:    false,
 		},
 	}

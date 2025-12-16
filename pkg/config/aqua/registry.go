@@ -2,6 +2,7 @@ package aqua
 
 import (
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
@@ -139,7 +140,7 @@ func (r *Registry) validateHTTP() error {
 		return errVersionIsRequired
 	}
 	// Prevent path traversal via version parameter
-	if strings.Contains(r.Version, "..") {
+	if strings.Contains(r.Version, "..") || strings.Contains(r.Version, "/") {
 		return logerr.WithFields(errInvalidVersion, logrus.Fields{ //nolint:wrapcheck
 			"version": r.Version,
 		})
@@ -175,5 +176,8 @@ func (r *Registry) getHTTPFilename() string {
 
 // containsVersionTemplate checks if the URL contains {{.Version}}.
 func containsVersionTemplate(s string) bool {
-	return strings.Contains(s, "{{.Version}}") || strings.Contains(s, "{{ .Version }}")
+	// Check if the string contains a template expression with .Version
+	// This allows for template functions like {{trimV .Version}} or {{.Version}}
+	matched, _ := regexp.MatchString(`\{\{.*\.Version.*\}\}`, s)
+	return matched
 }
