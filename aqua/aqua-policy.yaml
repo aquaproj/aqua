@@ -28,3 +28,5 @@ packages:
 - registry: cosign
 - registry: slsa
 - registry: macos
+- registry: http-raw
+- registry: http-targz
