@@ -1,0 +1,15 @@
+---
+# aqua Policy for HTTP Registry Integration Test
+registries:
+  - name: http-raw
+    type: http
+    url: http://localhost:8888/v{{.Version}}/registry.yaml
+    # No version constraint - allow any version
+  - name: http-targz
+    type: http
+    url: http://localhost:8888/archives/{{trimV .Version}}/registry.tar.gz
+    # No version constraint - allow any version
+packages:
+  - registry: http-raw
+  - registry: http-targz
+

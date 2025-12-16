@@ -255,6 +255,9 @@ jobs:
       - name: Start HTTP registry server
         run: bash tests/http-registry/start-server.sh
 
+      - name: Allow HTTP registry policy
+        run: aqua policy allow tests/http-registry/aqua-policy.yaml
+
       - name: Test HTTP registry (raw format)
         run: aqua i
         working-directory: tests/http-registry
