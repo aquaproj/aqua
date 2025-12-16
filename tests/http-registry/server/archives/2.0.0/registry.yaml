@@ -1,0 +1,13 @@
+packages:
+  - type: github_release
+    repo_owner: suzuki-shunsuke
+    repo_name: ci-info
+    asset: ci-info_{{.OS}}_{{.Arch}}.tar.gz
+    description: Get CI information
+    supported_envs:
+      - darwin
+      - linux
+      - windows
+      - amd64
+      - arm64
+    rosetta2: true

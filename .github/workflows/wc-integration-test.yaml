@@ -252,6 +252,27 @@ jobs:
 
       - run: aqua update-checksum -a
 
+      - name: Start HTTP registry server
+        run: bash tests/http-registry/start-server.sh
+
+      - name: Test HTTP registry (raw format)
+        run: aqua i
+        working-directory: tests/http-registry
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+
+      - name: Verify HTTP registry packages work (ghalint)
+        run: ghalint version
+        working-directory: tests/http-registry
+
+      - name: Test HTTP registry (tar.gz format)
+        run: ci-info --version
+        working-directory: tests/http-registry
+
+      - name: Stop HTTP registry server
+        if: always()
+        run: bash tests/http-registry/stop-server.sh
+
       - run: terraform --help
       - run: terrafmt --help
       - name: Test rm

@@ -1,0 +1,12 @@
+packages:
+  - type: github_release
+    repo_owner: suzuki-shunsuke
+    repo_name: ghalint
+    asset: ghalint_{{.OS}}_{{.Arch}}.tar.gz
+    description: GitHub Actions linter
+    supported_envs:
+      - darwin
+      - linux
+      - amd64
+      - arm64
+    rosetta2: true
