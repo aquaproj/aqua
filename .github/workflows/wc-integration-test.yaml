@@ -255,21 +255,17 @@ jobs:
 
       - run: aqua update-checksum -a
 
-      - name: Test HTTP registry (raw format)
+      - name: Run aqua i for HTTP registries
         run: aqua i
         working-directory: tests/http-registry
 
-      - name: Verify HTTP registry packages work (ghalint)
+      - name: Test HTTP registry(raw) package
         run: ghalint version
         working-directory: tests/http-registry
 
-      - name: Test HTTP registry (tar.gz format)
+      - name: Test HTTP registry(tar.gz) package
         run: ci-info --version
         working-directory: tests/http-registry
-
-      - name: Stop HTTP registry server
-        if: always()
-        run: bash tests/http-registry/stop-server.sh
 
       - run: terraform --help
       - run: terrafmt --help
