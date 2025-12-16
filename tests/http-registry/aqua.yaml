@@ -1,3 +1,5 @@
+---
+# Spin up a local HTTP server with ./start-server.sh before running installation.
 registries:
   - name: http-raw
     type: http
