@@ -9,7 +9,7 @@ registries:
 packages:
 - name: kubernetes-sigs/kind # http package, raw format
   registry: standard
-  version: v0.30.0 # renovate: depName=kubernetes-sigs/kind
+  version: v0.31.0 # renovate: depName=kubernetes-sigs/kind
 - null
 - name: cycloidio/terracognita@v0.8.4 # update-checksum -deep
 - name: dlvhdr/gh-dash
