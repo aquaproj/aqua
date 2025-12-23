@@ -7,12 +7,13 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type InfoPayload struct {
 	Version string
-	Time    time.Time
 }
 
 type Client struct {
@@ -45,28 +46,35 @@ func (c *Client) doHTTPRequest(ctx context.Context, uri string) ([]byte, error) 
 	return b, nil
 }
 
-func (c *Client) List(ctx context.Context, path string) ([]string, error) {
-	b, err := c.doHTTPRequest(ctx, fmt.Sprintf("https://proxy.golang.org/%s/@v/list", path))
+func (c *Client) List(ctx context.Context, logE *logrus.Entry, path string) ([]string, error) {
+	listEndpoint := fmt.Sprintf("https://proxy.golang.org/%s/@v/list", path)
+	b, err := c.doHTTPRequest(ctx, listEndpoint)
 	if err != nil {
-		return nil, err
-	}
-	s := strings.TrimSpace(string(b))
-	if s != "" {
-		return strings.Split(s, "\n"), nil
+		logerr.WithError(logE, err).WithField("api_endpoint", listEndpoint).Debug("retrieve package versions")
+	} else {
+		s := strings.TrimSpace(string(b))
+		if s != "" {
+			return strings.Split(s, "\n"), nil
+		}
 	}
 
 	// Find the latest version (including pseudo-versions) if $module/@v/list is empty
-	b, err = c.doHTTPRequest(ctx, fmt.Sprintf("https://proxy.golang.org/%s/@latest", path))
+	latestEndpoint := fmt.Sprintf("https://proxy.golang.org/%s/@latest", path)
+	fields := logrus.Fields{
+		"api_endpoint": latestEndpoint,
+	}
+	logE = logE.WithFields(fields)
+	b, err = c.doHTTPRequest(ctx, latestEndpoint)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("retrieve the latest version: %w", logerr.WithFields(err, fields))
 	}
-	if len(b) > 0 {
-		payload := &InfoPayload{}
-		if err := json.Unmarshal(b, &payload); err != nil {
-			return nil, fmt.Errorf("decode the response body as JSON: %w", err)
-		}
-		return []string{payload.Version}, nil
+	if len(b) == 0 {
+		logE.Debug("the response body from go proxy is empty")
+		return nil, nil
 	}
-
-	return nil, nil
+	payload := &InfoPayload{}
+	if err := json.Unmarshal(b, &payload); err != nil {
+		return nil, fmt.Errorf("decode the response body as JSON: %w", logerr.WithFields(err, fields))
+	}
+	return []string{payload.Version}, nil
 }
