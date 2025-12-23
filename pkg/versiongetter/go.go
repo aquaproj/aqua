@@ -22,11 +22,11 @@ func NewGoGetter(gc GoProxyClient) *GoGetter {
 }
 
 type GoProxyClient interface {
-	List(ctx context.Context, path string) ([]string, error)
+	List(ctx context.Context, logE *logrus.Entry, path string) ([]string, error)
 }
 
 func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, _ []*Filter) (string, error) { //nolint:cyclop
-	versions, err := g.gc.List(ctx, pkg.GoVersionPath)
+	versions, err := g.gc.List(ctx, logE, pkg.GoVersionPath)
 	if err != nil {
 		return "", fmt.Errorf("list versions: %w", err)
 	}
@@ -57,7 +57,7 @@ func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.Pa
 }
 
 func (g *GoGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, _ []*Filter, _ int) ([]*fuzzyfinder.Item, error) {
-	vs, err := g.gc.List(ctx, pkg.GoVersionPath)
+	vs, err := g.gc.List(ctx, logE, pkg.GoVersionPath)
 	if err != nil {
 		return nil, fmt.Errorf("list versions: %w", err)
 	}
