@@ -50,12 +50,12 @@ func (c *Client) List(ctx context.Context, logE *logrus.Entry, path string) ([]s
 	listEndpoint := fmt.Sprintf("https://proxy.golang.org/%s/@v/list", path)
 	b, err := c.doHTTPRequest(ctx, listEndpoint)
 	if err != nil {
-		logerr.WithError(logE, err).WithField("api_endpoint", listEndpoint).Debug("retrieve package versions")
-	} else {
-		s := strings.TrimSpace(string(b))
-		if s != "" {
-			return strings.Split(s, "\n"), nil
-		}
+		return nil, fmt.Errorf("retrieve package versions: %w", logerr.WithFields(err, logrus.Fields{
+			"api_endpoint": listEndpoint,
+		}))
+	}
+	if s := strings.TrimSpace(string(b)); s != "" {
+		return strings.Split(s, "\n"), nil
 	}
 
 	// Find the latest version (including pseudo-versions) if $module/@v/list is empty
