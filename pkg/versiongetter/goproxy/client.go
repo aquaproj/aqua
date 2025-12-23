@@ -26,26 +26,6 @@ func New(client *http.Client) *Client {
 	}
 }
 
-func (c *Client) doHTTPRequest(ctx context.Context, uri string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create a http request: %w", err)
-	}
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("send a http request: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read a response body: %w", err)
-	}
-	return b, nil
-}
-
 func (c *Client) List(ctx context.Context, logE *logrus.Entry, path string) ([]string, error) {
 	listEndpoint := fmt.Sprintf("https://proxy.golang.org/%s/@v/list", path)
 	b, err := c.doHTTPRequest(ctx, listEndpoint)
@@ -77,4 +57,24 @@ func (c *Client) List(ctx context.Context, logE *logrus.Entry, path string) ([]s
 		return nil, fmt.Errorf("decode the response body as JSON: %w", logerr.WithFields(err, fields))
 	}
 	return []string{payload.Version}, nil
+}
+
+func (c *Client) doHTTPRequest(ctx context.Context, uri string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create a http request: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("send a http request: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read a response body: %w", err)
+	}
+	return b, nil
 }
