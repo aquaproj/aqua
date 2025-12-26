@@ -61,7 +61,8 @@ packages:
 			if err != nil {
 				t.Fatal(err)
 			}
-			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
+			httpDownloader := download.NewHTTPDownloader(logE, http.DefaultClient)
+			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, httpDownloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
 			if err := ctrl.List(ctx, logE, d.param); err != nil {
 				if d.isErr {
 					return

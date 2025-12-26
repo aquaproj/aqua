@@ -73,12 +73,27 @@ func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 	return matchRegistry(pkg.Registry, policyPkg.Registry)
 }
 
-func matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
+func matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) { //nolint:cyclop
 	if rgst.Type != rgstPolicy.Type {
 		return false, nil
 	}
 	if rgst.Type == "local" {
 		return rgst.Path == rgstPolicy.Path, nil
+	}
+	if rgst.Type == "http" {
+		// For HTTP registries, match URL and version
+		if rgst.URL != rgstPolicy.URL {
+			return false, nil
+		}
+		if rgstPolicy.Version != "" {
+			// Support version constraints for HTTP registries
+			matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Version, rgst.Version, rgst.Version)
+			if err != nil {
+				return false, fmt.Errorf("evaluate the version constraint of http registry: %w", err)
+			}
+			return matched, nil
+		}
+		return true, nil
 	}
 	if rgst.RepoOwner != rgstPolicy.RepoOwner {
 		return false, nil
