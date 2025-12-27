@@ -1,2 +1,2 @@
 packages:
-  - name: goreleaser/goreleaser@v2.13.1
+  - name: goreleaser/goreleaser@v2.13.2
