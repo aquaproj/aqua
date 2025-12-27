@@ -17,6 +17,7 @@ func Exclude(pkgName, assetName string) bool {
 		"armv6",
 		"armv7",
 		"changelog",
+		"eabihf",
 		"freebsd",
 		"i386",
 		"license",
