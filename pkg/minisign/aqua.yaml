@@ -9,7 +9,7 @@ checksum:
 #   - all
 registries:
 - type: standard
-  ref: v4.449.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.450.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: jedisct1/minisign@0.12
 - name: jedisct1/minisign
