@@ -104,11 +104,10 @@ func (c *Controller) selectPackages(logger *slog.Logger, cfgFilePath string) (ma
 	items := make([]*fuzzyfinder.Item, 0, len(cfg.Packages))
 	for _, pkg := range cfg.Packages {
 		if commitHashPattern.MatchString(pkg.Version) {
-			logger.With(
+			logger.Debug("skip a package whose version is a commit hash",
 				"registry_name", pkg.Registry,
 				"package_name", pkg.Name,
-				"package_version", pkg.Version,
-			).Debug("skip a package whose version is a commit hash")
+				"package_version", pkg.Version)
 			continue
 		}
 		var item string
