@@ -27,7 +27,7 @@ func ValidatePackage(logger *slog.Logger, pkg *config.Package, policies []*Confi
 			return nil
 		}
 	}
-	return ErrUnAllowedPackage
+	return errUnAllowedPackage
 }
 
 type paramValidatePackage struct {
@@ -50,7 +50,7 @@ func validatePackage(logger *slog.Logger, param *paramValidatePackage) error {
 			return nil
 		}
 	}
-	return ErrUnAllowedPackage
+	return errUnAllowedPackage
 }
 
 func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {

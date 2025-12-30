@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrConfigFileNotFound = errors.New("policy file isn't found")
-	ErrUnAllowedPackage   = slogerr.With(errors.New("this package isn't allowed"),
+	errUnAllowedPackage   = slogerr.With(errors.New("this package isn't allowed"),
 		"doc", "https://aquaproj.github.io/docs/reference/codes/002",
 	)
 )
