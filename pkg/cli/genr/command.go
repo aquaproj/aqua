@@ -133,6 +133,10 @@ func New(r *util.Param) *cli.Command {
 				Name:  "init",
 				Usage: "Generate a configuration file",
 			},
+			&cli.StringFlag{
+				Name:  "asset-file",
+				Usage: "A JSON file path of versions and assets",
+			},
 		},
 	}
 }
