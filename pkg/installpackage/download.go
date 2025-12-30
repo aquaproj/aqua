@@ -31,8 +31,7 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logger *slog.Logger,
 						return err
 					}
 					retryCount++
-					logger.Info("retry installing the package",
-						"error", err,
+					slogerr.WithError(logger, err).Info("retry installing the package",
 						"retry_count", retryCount)
 					continue
 				}
