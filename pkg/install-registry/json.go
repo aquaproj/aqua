@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, checksums *checksum.Checksums, registryFilePath string) (*registry.Config, error) {
@@ -21,16 +22,12 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logger *slog.L
 	registryContent := &registry.Config{}
 	if err := is.readJSONRegistry(jsonPath, registryContent); err != nil { //nolint:nestif
 		if !errors.Is(err, os.ErrNotExist) {
-			logger.Warn("failed to read a registry JSON file. Will remove and recreate the file",
-				slog.Any("error", err),
-				slog.String("registry_json_path", jsonPath))
+			slogerr.WithError(logger, err).With("registry_json_path", jsonPath).Warn("failed to read a registry JSON file. Will remove and recreate the file")
 			if err := is.fs.Remove(jsonPath); err != nil {
-				logger.Warn("failed to remove a registry JSON file",
-					slog.Any("error", err),
-					slog.String("registry_json_path", jsonPath))
+				slogerr.WithError(logger, err).With("registry_json_path", jsonPath).Warn("failed to remove a registry JSON file")
 			} else {
 				logger.Debug("remove a registry JSON file",
-					slog.String("registry_json_path", jsonPath))
+					"registry_json_path", jsonPath)
 			}
 		}
 		if err := is.readYAMLRegistry(registryFilePath, registryContent); err != nil {

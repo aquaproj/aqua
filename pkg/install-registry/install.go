@@ -44,9 +44,7 @@ func (is *Installer) InstallRegistries(ctx context.Context, logger *slog.Logger,
 			registryContent, err := is.InstallRegistry(ctx, logger, registry, cfgFilePath, checksums)
 			if err != nil {
 				<-maxInstallChan
-				logger.Error("install the registry",
-					slog.Any("error", err),
-					slog.String("registry_name", registry.Name))
+				slogerr.WithError(logger, err).With("registry_name", registry.Name).Error("install the registry")
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
@@ -82,7 +80,7 @@ func (is *Installer) InstallRegistry(ctx context.Context, logger *slog.Logger, r
 		if err := is.readRegistry(registryFilePath, registryContent); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				return nil, slogerr.With(errLocalRegistryNotFound, //nolint:wrapcheck
-					slog.String("local_registry_file_path", registryFilePath))
+					"local_registry_file_path", registryFilePath)
 			}
 			return nil, err
 		}

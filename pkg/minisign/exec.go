@@ -60,8 +60,8 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
 	logger.With(
-		slog.Int("retry_count", retryCount),
-		slog.Duration("wait_time", waitTime),
+		"retry_count", retryCount,
+		"wait_time", waitTime,
 	).Info("Verification by minisign failed temporarily, retrying")
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running minisign: %w", err)
@@ -90,8 +90,8 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 			return nil
 		}
 		slogerr.WithError(logger, err).With(
-			slog.String("exe", e.minisignExePath),
-			slog.String("args", strings.Join(args, " ")),
+			"exe", e.minisignExePath,
+			"args", strings.Join(args, " "),
 		).Warn("execute minisign")
 		if i == 4 { //nolint:mnd
 			break

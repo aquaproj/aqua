@@ -43,7 +43,7 @@ func (p *Package) renameFile(logger *slog.Logger, fs afero.Fs, pkgPath, oldName 
 			Err: err,
 		}
 	}
-	logger.Info("rename a file", slog.String("new", newPath), slog.String("old", old))
+	logger.Info("rename a file", "new", newPath, "old", old)
 	if err := fs.Rename(old, newPath); err != nil {
 		return "", fmt.Errorf("rename a file: %w", err)
 	}

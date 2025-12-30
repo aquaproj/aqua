@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type CommandExecutor interface {
@@ -49,8 +50,8 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
 	logger.Info("gh attestation verify failed temporarily, retrying",
-		slog.Int("retry_count", retryCount),
-		slog.Duration("wait_time", waitTime))
+		"retry_count", retryCount,
+		"wait_time", waitTime)
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running gh attestation verify: %w", err)
 	}
@@ -98,13 +99,12 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 		}
 		ae := &AuthError{}
 		if errors.As(err, &ae) {
-			logger.Warn("skip verifying GitHub Artifact Attestations because of the authentication error", slog.Any("error", err))
+			slogerr.WithError(logger, err).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
 			return nil
 		}
-		logger.Warn("execute gh attestation verify",
-			slog.String("exe", e.exePath),
-			slog.String("args", strings.Join(args, " ")),
-			slog.Any("error", err))
+		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
+			"exe", e.exePath,
+			"args", strings.Join(args, " "))
 		if i == 4 { //nolint:mnd
 			break
 		}
@@ -142,13 +142,12 @@ func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logger *slog.Logger, p
 		}
 		ae := &AuthError{}
 		if errors.As(err, &ae) {
-			logger.Warn("skip verifying GitHub Release Attestations because of the authentication error", slog.Any("error", err))
+			slogerr.WithError(logger, err).Warn("skip verifying GitHub Release Attestations because of the authentication error")
 			return nil
 		}
-		logger.Warn("execute gh release verify-asset",
-			slog.String("exe", e.exePath),
-			slog.String("args", strings.Join(args, " ")),
-			slog.Any("error", err))
+		slogerr.WithError(logger, err).Warn("execute gh release verify-asset",
+			"exe", e.exePath,
+			"args", strings.Join(args, " "))
 		if i == 4 { //nolint:mnd
 			break
 		}

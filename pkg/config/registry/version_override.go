@@ -25,9 +25,9 @@ func (p *PackageInfo) setTopVersion(logger *slog.Logger, v string) *PackageInfo 
 	}
 	if a {
 		logger.Debug("match the version_constraint",
-			slog.String("version_constraint", p.VersionConstraints),
-			slog.String("package_version", v),
-			slog.String("package_semver", sv),
+			"version_constraint", p.VersionConstraints,
+			"package_version", v,
+			"package_semver", sv,
 		)
 		return p.Copy()
 	}
@@ -65,16 +65,16 @@ func (p *PackageInfo) SetVersion(logger *slog.Logger, v string) (*PackageInfo, e
 		}
 		if a {
 			logger.Debug("match the version_constraint",
-				slog.String("version_constraint", vo.VersionConstraints),
-				slog.String("package_version", v),
-				slog.String("package_semver", sv),
+				"version_constraint", vo.VersionConstraints,
+				"package_version", v,
+				"package_semver", sv,
 			)
 			return p.overrideVersion(vo), nil
 		}
 	}
 	logger.Debug("no version_constraint matches",
-		slog.String("version_constraint", p.VersionConstraints),
-		slog.String("package_version", v),
+		"version_constraint", p.VersionConstraints,
+		"package_version", v,
 	)
 	return p.Copy(), nil
 }

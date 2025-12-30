@@ -67,11 +67,11 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 		rc, code, err := dl.http.Download(ctx, u)
 		if err != nil {
 			return rc, code, fmt.Errorf("download a checksum file: %w", slogerr.With(err,
-				slog.String("download_url", u)))
+				"download_url", u))
 		}
 		return rc, code, nil
 	default:
 		return nil, 0, slogerr.With(errUnknownChecksumFileType, //nolint:wrapcheck
-			slog.String("package_type", pkgInfo.Type))
+			"package_type", pkgInfo.Type)
 	}
 }

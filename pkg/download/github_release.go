@@ -9,6 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type GitHubReleaseDownloader struct {
@@ -44,12 +45,11 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		if b != nil {
 			b.Close()
 		}
-		logger.Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API",
-			slog.Any("error", err),
-			slog.String("repo_owner", param.RepoOwner),
-			slog.String("repo_name", param.RepoName),
-			slog.String("asset_version", param.Version),
-			slog.String("asset_name", param.Asset))
+		slogerr.WithError(logger, err).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API",
+			"repo_owner", param.RepoOwner,
+			"repo_name", param.RepoName,
+			"asset_version", param.Version,
+			"asset_name", param.Asset)
 	}
 
 	release, _, err := dl.github.GetReleaseByTag(ctx, param.RepoOwner, param.RepoName, param.Version)

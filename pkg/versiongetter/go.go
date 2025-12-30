@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/hashicorp/go-version"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type GoGetter struct {
@@ -35,7 +36,7 @@ func (g *GoGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.P
 	for _, vs := range versions {
 		v, err := version.NewSemver(vs)
 		if err != nil {
-			logger.Warn("parse a version", slog.Any("error", err), slog.String("version", vs))
+			slogerr.WithError(logger, err).With("version", vs).Warn("parse a version")
 			continue
 		}
 		if v.Prerelease() == "" && (latest == nil || v.GreaterThan(latest)) {
@@ -65,7 +66,7 @@ func (g *GoGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.
 	for _, v := range vs {
 		v, err := version.NewSemver(v)
 		if err != nil {
-			logger.Warn("parse a version", slog.Any("error", err), slog.Any("version", vs))
+			slogerr.WithError(logger, err).With("version", vs).Warn("parse a version")
 			continue
 		}
 		versions = append(versions, v)

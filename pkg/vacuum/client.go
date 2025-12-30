@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 const (
@@ -80,7 +81,7 @@ func (c *Client) FindAll(logger *slog.Logger) (map[string]time.Time, error) {
 		}
 		t, err := ParseTime(strings.TrimSpace(string(b)))
 		if err != nil {
-			logger.Warn("a timestamp file is broken, so recreating it", slog.Any("error", err), slog.String("timestamp_file", path))
+			slogerr.WithError(logger, err).With("timestamp_file", path).Warn("a timestamp file is broken, so recreating it")
 			if err := c.Update(path, time.Now()); err != nil {
 				return fmt.Errorf("recreate a broken package timestamp file: %w", err)
 			}

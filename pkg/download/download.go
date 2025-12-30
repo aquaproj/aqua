@@ -74,11 +74,11 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logger *slog.Logger, file 
 		rc, code, err := dl.http.Download(ctx, file.URL)
 		if err != nil {
 			return rc, code, fmt.Errorf("download a package: %w", slogerr.With(err,
-				slog.String("download_url", file.URL)))
+				"download_url", file.URL))
 		}
 		return rc, code, nil
 	default:
 		return nil, 0, slogerr.With(errInvalidPackageType, //nolint:wrapcheck
-			slog.String("file_type", file.Type))
+			"file_type", file.Type)
 	}
 }

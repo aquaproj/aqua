@@ -131,7 +131,7 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger
 		paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
 		if paramVerifyChecksum.Checksum == nil && param.RequireChecksum {
 			return slogerr.With(errChecksumIsRequired, //nolint:wrapcheck
-				slog.String("doc", "https://aquaproj.github.io/docs/reference/codes/001"))
+				"doc", "https://aquaproj.github.io/docs/reference/codes/001")
 		}
 	}
 
@@ -169,7 +169,7 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 		c, err := is.dlAndExtractChecksum(ctx, logger, pkg, assetName)
 		if err != nil {
 			return slogerr.With(err, //nolint:wrapcheck
-				slog.String("asset_name", assetName))
+				"asset_name", assetName)
 		}
 		chksum = &checksum.Checksum{
 			ID:        checksumID,
@@ -186,19 +186,19 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 	calculatedSum, err := is.checksumCalculator.Calculate(is.fs, tempFilePath, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate a checksum of downloaded file: %w", slogerr.With(err,
-			slog.String("temp_file", tempFilePath)))
+			"temp_file", tempFilePath))
 	}
 
 	if chksum != nil && !strings.EqualFold(calculatedSum, chksum.Checksum) {
 		return slogerr.With(errInvalidChecksum, //nolint:wrapcheck
-			slog.String("actual_checksum", strings.ToUpper(calculatedSum)),
-			slog.String("expected_checksum", strings.ToUpper(chksum.Checksum)))
+			"actual_checksum", strings.ToUpper(calculatedSum),
+			"expected_checksum", strings.ToUpper(chksum.Checksum))
 	}
 
 	if chksum == nil {
 		logger.Debug("set a calculated checksum",
-			slog.String("checksum_id", checksumID),
-			slog.String("checksum", calculatedSum))
+			"checksum_id", checksumID,
+			"checksum", calculatedSum)
 		chksum = &checksum.Checksum{
 			ID:        checksumID,
 			Checksum:  calculatedSum,

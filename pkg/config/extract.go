@@ -37,13 +37,13 @@ func ListPackagesNotOverride(logger *slog.Logger, cfg *aqua.Config, registries m
 			continue
 		}
 		logger := logger.With(
-			slog.String("package_name", pkg.Name),
-			slog.String("package_version", pkg.Version),
-			slog.String("registry", pkg.Registry),
+			"package_name", pkg.Name,
+			"package_version", pkg.Version,
+			"registry", pkg.Registry,
 		)
 		if registry, ok := cfg.Registries[pkg.Registry]; ok {
 			if registry.Ref != "" {
-				logger = logger.With(slog.String("registry_ref", registry.Ref))
+				logger = logger.With("registry_ref", registry.Ref)
 			}
 		}
 		pkgInfo, err := getPkgInfoFromRegistries(logger, registries, pkg, m)
@@ -87,9 +87,9 @@ func ListPackages(logger *slog.Logger, cfg *aqua.Config, rt *runtime.Runtime, re
 			continue
 		}
 		logger := logger.With(
-			slog.String("package_name", pkg.Name),
-			slog.String("package_version", pkg.Version),
-			slog.String("registry", pkg.Registry),
+			"package_name", pkg.Name,
+			"package_version", pkg.Version,
+			"registry", pkg.Registry,
 		)
 		p, err := listPackage(logger, cfg, rt, registries, pkg, m, env)
 		if err != nil {
@@ -111,7 +111,7 @@ func listPackage(logger *slog.Logger, cfg *aqua.Config, rt *runtime.Runtime, reg
 	rgst, ok := cfg.Registries[pkg.Registry]
 	if ok {
 		if rgst.Ref != "" {
-			logger = logger.With(slog.String("registry_ref", rgst.Ref))
+			logger = logger.With("registry_ref", rgst.Ref)
 		}
 	}
 	pkgInfo, err := getPkgInfoFromRegistries(logger, registries, pkg, m)

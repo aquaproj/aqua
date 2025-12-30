@@ -51,14 +51,14 @@ func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logger *slog.L
 	args := getCargoArgs(version, opts)
 	if _, err := is.exec.ExecStderr(osexec.Command(ctx, "cargo", append(args, "--root", root, crate)...)); err != nil {
 		// Clean up root
-		logger := logger.With(slog.String("install_dir", root))
+		logger := logger.With("install_dir", root)
 		logger.Info("removing the install directory because the installation failed")
 		if err := is.cleaner.RemoveAll(root); err != nil {
-			logger.Error("aqua tried to remove the install directory because the installation failed, but it failed", slog.Any("error", err))
+			slogerr.WithError(logger, err).Error("aqua tried to remove the install directory because the installation failed, but it failed")
 		}
 		return fmt.Errorf("install a crate: %w", slogerr.With(err,
-			slog.String("doc", "https://aquaproj.github.io/docs/reference/codes/005"),
-			slog.String("cargo_command", strings.Join(append(append([]string{"cargo"}, args...), crate), " "))))
+			"doc", "https://aquaproj.github.io/docs/reference/codes/005",
+			"cargo_command", strings.Join(append(append([]string{"cargo"}, args...), crate), " ")))
 	}
 	return nil
 }

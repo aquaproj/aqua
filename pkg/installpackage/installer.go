@@ -203,7 +203,7 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 
 	if is.onlyLink {
 		logger.Debug("skip downloading the package",
-			slog.Bool("only_link", true))
+			"only_link", true)
 		if failed {
 			return errInstallFailure
 		}

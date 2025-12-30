@@ -24,20 +24,20 @@ func (is *Installer) checkFilesWrap(ctx context.Context, logger *slog.Logger, pa
 	failed := false
 	notFound := false
 	for _, file := range pkgInfo.GetFiles() {
-		logger := logger.With(slog.String("file_name", file.Name))
+		logger := logger.With("file_name", file.Name)
 		var errFileNotFound *config.FileNotFoundError
 		if err := is.checkAndCopyFile(ctx, logger, pkg, file); err != nil {
 			if errors.As(err, &errFileNotFound) {
 				notFound = true
 			}
 			failed = true
-			logger.Error("check file_src is correct", slog.Any("error", err))
+			slogerr.WithError(logger, err).Error("check file_src is correct")
 		}
 	}
 	if notFound { //nolint:nestif
 		paths, err := is.walk(pkgPath)
 		if err != nil {
-			logger.Warn("traverse the content of unarchived package", slog.Any("error", err))
+			slogerr.WithError(logger, err).Warn("traverse the content of unarchived package")
 		} else {
 			if len(paths) > 30 { //nolint:mnd
 				logger.Error(fmt.Sprintf("executable files aren't found\nFiles in the unarchived package (Only 30 files are shown):\n%s\n ", strings.Join(paths[:30], "\n")))
@@ -102,9 +102,9 @@ func (is *Installer) checkFileSrcGo(ctx context.Context, logger *slog.Logger, pk
 		src = "."
 	}
 	logger.Info("building Go tool",
-		slog.String("exe_path", exePath),
-		slog.String("go_src", src),
-		slog.String("go_build_dir", exeDir))
+		"exe_path", exePath,
+		"go_src", src,
+		"go_build_dir", exeDir)
 	if err := is.goBuildInstaller.Install(ctx, exePath, exeDir, src); err != nil {
 		return "", fmt.Errorf("build Go tool: %w", err)
 	}
@@ -131,10 +131,10 @@ func (is *Installer) checkFileSrc(ctx context.Context, logger *slog.Logger, pkg 
 	if err != nil {
 		return "", fmt.Errorf("exe_path isn't found: %w", slogerr.With(&config.FileNotFoundError{
 			Err: err,
-		}, slog.String("exe_path", exePath)))
+		}, "exe_path", exePath))
 	}
 	if finfo.IsDir() {
-		return "", slogerr.With(errExePathIsDirectory, slog.String("exe_path", exePath)) //nolint:wrapcheck
+		return "", slogerr.With(errExePathIsDirectory, "exe_path", exePath) //nolint:wrapcheck
 	}
 
 	logger.Debug("check the permission")

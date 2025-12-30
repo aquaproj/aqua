@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 func (is *Installer) createLinks(logger *slog.Logger, pkgs []*config.Package) bool {
@@ -20,7 +21,7 @@ func (is *Installer) createLinks(logger *slog.Logger, pkgs []*config.Package) bo
 		pkg := proxyPkg()
 		pkgPath, err := pkg.AbsPkgPath(is.rootDir, is.runtime)
 		if err != nil {
-			logger.Error("get a path to aqua-proxy", slog.Any("error", err))
+			slogerr.WithError(logger, err).Error("get a path to aqua-proxy")
 			failed = true
 		}
 		aquaProxyPathOnWindows = filepath.Join(pkgPath, "aqua-proxy.exe")
@@ -28,8 +29,8 @@ func (is *Installer) createLinks(logger *slog.Logger, pkgs []*config.Package) bo
 
 	for _, pkg := range pkgs {
 		logger := logger.With(
-			slog.String("package_name", pkg.Package.Name),
-			slog.String("package_version", pkg.Package.Version),
+			"package_name", pkg.Package.Name,
+			"package_version", pkg.Package.Version,
 		)
 		if is.createPackageLinks(logger, pkg, aquaProxyPathOnWindows) {
 			failed = true
@@ -42,7 +43,7 @@ func (is *Installer) createPackageLinks(logger *slog.Logger, pkg *config.Package
 	failed := false
 	pkgInfo := pkg.PackageInfo
 	for _, file := range pkgInfo.GetFiles() {
-		logger := logger.With(slog.String("command", file.Name))
+		logger := logger.With("command", file.Name)
 		if is.createFileLinks(logger, pkg, file, aquaProxyPathOnWindows) {
 			failed = true
 		}
@@ -66,7 +67,7 @@ func (is *Installer) createFileLinks(logger *slog.Logger, pkg *config.Package, f
 	}
 	for cmd := range cmds {
 		if err := is.createCmdLink(logger, file, cmd, aquaProxyPathOnWindows); err != nil {
-			logger.Error("create a link to aqua-proxy", slog.Any("error", err))
+			slogerr.WithError(logger, err).Error("create a link to aqua-proxy")
 			failed = true
 		}
 	}
@@ -176,9 +177,9 @@ func (is *Installer) recreateLink(logger *slog.Logger, linkPath, linkDest string
 	// recreate link
 	logger.Debug("recreate a symbolic link",
 		// TODO add version
-		slog.String("link_file", linkPath),
-		slog.String("old", lnDest),
-		slog.String("new", linkDest))
+		"link_file", linkPath,
+		"old", lnDest,
+		"new", linkDest)
 	if err := is.fs.Remove(linkPath); err != nil {
 		return fmt.Errorf("remove a symbolic link (%s): %w", linkPath, err)
 	}

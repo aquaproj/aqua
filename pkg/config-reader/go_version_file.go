@@ -3,7 +3,6 @@ package reader
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"path/filepath"
 	"regexp"
 
@@ -19,13 +18,13 @@ func readGoVersionFile(fs afero.Fs, filePath string, pkg *aqua.Package) error {
 	b, err := afero.ReadFile(fs, p)
 	if err != nil {
 		return fmt.Errorf("open a go version file: %w", slogerr.With(err,
-			slog.String("go_version_file", p),
+			"go_version_file", p,
 		))
 	}
 	matches := goVersionPattern.FindSubmatch(b)
 	if len(matches) == 0 {
 		return slogerr.With(errors.New("invalid go version file. No go directive is found. The version must be a semver x.y.z"), //nolint:wrapcheck
-			slog.String("go_version_file", p),
+			"go_version_file", p,
 		)
 	}
 	pkg.Version = string(matches[1])

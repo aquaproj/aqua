@@ -88,8 +88,8 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 		Target: verifiedFilePath,
 	}); err != nil {
 		return fmt.Errorf("verify a signature file with Cosign: %w", slogerr.With(err,
-			slog.String("cosign_opts", strings.Join(opts, ", ")),
-			slog.String("target", verifiedFilePath),
+			"cosign_opts", strings.Join(opts, ", "),
+			"target", verifiedFilePath,
 		))
 	}
 	return nil
@@ -121,8 +121,8 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
 	logger.With(
-		slog.Int("retry_count", retryCount),
-		slog.Duration("wait_time", waitTime),
+		"retry_count", retryCount,
+		"wait_time", waitTime,
 	).Info("Verification by Cosign failed temporarily, retrying")
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running Cosign: %w", err)

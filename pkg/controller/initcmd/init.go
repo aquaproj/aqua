@@ -66,7 +66,7 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath 
 	for _, name := range append(finder.DuplicateFilePaths(cfgFilePath), cfgFilePath) {
 		if _, err := c.fs.Stat(name); err == nil {
 			// configuration file already exists, then do nothing.
-			logger.Info("configuration file already exists", slog.String("configuration_file_path", name))
+			logger.Info("configuration file already exists", "configuration_file_path", name)
 			return nil
 		}
 	}
@@ -80,10 +80,10 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath 
 	registryVersion := "v4.450.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
-		logger.Warn("get the latest release", slog.String("repo_owner", "aquaproj"), slog.String("repo_name", "aqua-registry"), slog.Any("error", err))
+		slogerr.WithError(logger, err).With("repo_owner", "aquaproj", "repo_name", "aqua-registry").Warn("get the latest release")
 	} else {
 		if release == nil {
-			logger.Warn("failed to get the latest release", slog.String("repo_owner", "aquaproj"), slog.String("repo_name", "aqua-registry"))
+			logger.Warn("failed to get the latest release", "repo_owner", "aquaproj", "repo_name", "aqua-registry")
 		} else {
 			registryVersion = release.GetTagName()
 		}
@@ -97,7 +97,7 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath 
 			"%%IMPORT_DIR%%", param.ImportDir, 1)
 	}
 	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(cfgStr), osfile.FilePermission); err != nil {
-		return fmt.Errorf("write a configuration file: %w", slogerr.With(err, slog.String("configuration_file_path", cfgFilePath)))
+		return fmt.Errorf("write a configuration file: %w", slogerr.With(err, "configuration_file_path", cfgFilePath))
 	}
 	return nil
 }

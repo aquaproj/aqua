@@ -26,13 +26,13 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
 	parentDir := filepath.Dir(dstPath)
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
-		h.logger.Warn("create a directory", slog.Any("error", err))
+		slogerr.WithError(h.logger, err).Warn("create a directory")
 		return nil
 	}
 
 	if f.IsDir() {
 		if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
-			h.logger.Warn("create a directory", slog.Any("error", err))
+			slogerr.WithError(h.logger, err).Warn("create a directory")
 			return nil
 		}
 		return nil
@@ -41,7 +41,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	if f.LinkTarget != "" {
 		if f.Mode()&os.ModeSymlink != 0 {
 			if err := os.Symlink(f.LinkTarget, dstPath); err != nil {
-				h.logger.Warn("create a symlink", slog.Any("error", err), slog.String("link_target", f.LinkTarget), slog.String("link_dest", dstPath))
+				slogerr.WithError(h.logger, err).With("link_target", f.LinkTarget, "link_dest", dstPath).Warn("create a symlink")
 				return nil
 			}
 		}
@@ -50,20 +50,20 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	reader, err := f.Open()
 	if err != nil {
-		h.logger.Warn("open a file", slog.Any("error", err))
+		slogerr.WithError(h.logger, err).Warn("open a file")
 		return nil
 	}
 	defer reader.Close()
 
 	dstFile, err := h.fs.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, f.Mode())
 	if err != nil {
-		h.logger.Warn("create a file", slog.Any("error", err))
+		slogerr.WithError(h.logger, err).Warn("create a file")
 		return nil
 	}
 	defer dstFile.Close()
 
 	if _, err := io.Copy(dstFile, reader); err != nil {
-		h.logger.Warn("copy a file", slog.Any("error", err))
+		slogerr.WithError(h.logger, err).Warn("copy a file")
 		return nil
 	}
 	return nil
@@ -75,7 +75,7 @@ func (h *handler) Unarchive(ctx context.Context, _ *slog.Logger, src *File) erro
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 	if err := h.unarchive(ctx, src.Filename, tempFilePath); err != nil {
-		return slogerr.With(err, slog.String("archived_file", tempFilePath), slog.String("archived_filename", src.Filename)) //nolint:wrapcheck
+		return slogerr.With(err, "archived_file", tempFilePath, "archived_filename", src.Filename) //nolint:wrapcheck
 	}
 	return nil
 }

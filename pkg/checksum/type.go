@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // Checksums manages a collection of checksum data with concurrent access support.
@@ -52,7 +53,7 @@ func Open(logger *slog.Logger, fs afero.Fs, cfgFilePath string, enabled bool) (*
 	}
 	return checksums, func() {
 		if err := checksums.UpdateFile(fs, checksumFilePath); err != nil {
-			logger.Error("update a checksum file", "error", err)
+			slogerr.WithError(logger, err).Error("update a checksum file")
 		}
 	}, nil
 }

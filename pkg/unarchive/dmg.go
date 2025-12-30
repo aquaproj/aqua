@@ -8,6 +8,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 const FormatDMG string = "dmg"
@@ -39,16 +40,16 @@ func (u *dmgUnarchiver) Unarchive(ctx context.Context, logger *slog.Logger, src 
 
 	if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "hdiutil", "attach", tempFilePath, "-mountpoint", tmpMountPoint)); err != nil {
 		if err := u.fs.Remove(tmpMountPoint); err != nil {
-			logger.Warn("remove a temporary directory created to attach a DMG file", slog.Any("error", err))
+			slogerr.WithError(logger, err).Warn("remove a temporary directory created to attach a DMG file")
 		}
 		return fmt.Errorf("hdiutil attach: %w", err)
 	}
 	defer func() {
 		if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "hdiutil", "detach", tmpMountPoint)); err != nil {
-			logger.Warn("detach a DMG file", slog.Any("error", err))
+			slogerr.WithError(logger, err).Warn("detach a DMG file")
 		}
 		if err := u.fs.Remove(tmpMountPoint); err != nil {
-			logger.Warn("remove a temporary directory created to attach a DMG file", slog.Any("error", err))
+			slogerr.WithError(logger, err).Warn("remove a temporary directory created to attach a DMG file")
 		}
 	}()
 

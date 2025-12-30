@@ -41,8 +41,8 @@ func (is *Installer) downloadGoInstall(ctx context.Context, logger *slog.Logger,
 	}
 	goPkgPath := p + "@" + pkg.Package.Version
 	logger.Info("Installing a Go tool",
-		slog.String("gobin", dest),
-		slog.String("go_package_path", goPkgPath))
+		"gobin", dest,
+		"go_package_path", goPkgPath)
 	if err := is.goInstallInstaller.Install(ctx, goPkgPath, dest); err != nil {
 		return fmt.Errorf("build Go tool: %w", err)
 	}

@@ -3,7 +3,6 @@ package download
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -50,7 +49,7 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		return f, nil
 	}
 	return nil, slogerr.With(errors.New("invalid file type"), //nolint:wrapcheck
-		slog.String("file_type", file.Type))
+		"file_type", file.Type)
 }
 
 func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Runtime) (*File, error) {
@@ -81,7 +80,7 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		return file, nil
 	default:
 		return nil, slogerr.With(domain.ErrInvalidPackageType, //nolint:wrapcheck
-			slog.String("package_type", pkgInfo.Type))
+			"package_type", pkgInfo.Type)
 	}
 }
 
@@ -99,6 +98,6 @@ func ConvertRegistryToFile(rgst *aqua.Registry) (*File, error) {
 		return file, nil
 	default:
 		return nil, slogerr.With(domain.ErrInvalidPackageType, //nolint:wrapcheck
-			slog.String("registry_type", rgst.Type))
+			"registry_type", rgst.Type)
 	}
 }

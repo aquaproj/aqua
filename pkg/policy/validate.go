@@ -138,8 +138,8 @@ $ aqua policy deny "%s"
 		msg = `The policy file is changed. ` + msg
 	}
 	logger.With(
-		slog.String("policy_file", policyFilePath),
-		slog.String("doc", "https://aquaproj.github.io/docs/reference/codes/003"),
+		"policy_file", policyFilePath,
+		"doc", "https://aquaproj.github.io/docs/reference/codes/003",
 	).Warn(fmt.Sprintf(msg, policyFilePath, policyFilePath))
 	return nil
 }
