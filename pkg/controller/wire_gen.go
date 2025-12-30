@@ -14,14 +14,14 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/aquaproj/aqua/v2/pkg/config-finder"
-	"github.com/aquaproj/aqua/v2/pkg/config-reader"
+	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
+	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/controller/allowpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
 	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/exec"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
-	"github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
+	genrgst "github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/controller/info"
 	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
@@ -40,7 +40,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/install-registry"
+	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
@@ -71,7 +71,7 @@ func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, pa
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	controller := list.NewController(configFinder, configReader, installer, fs)
 	return controller
 }
@@ -110,7 +110,7 @@ func InitializeGenerateCommandController(ctx context.Context, logE *logrus.Entry
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	client := cargo.NewClient(httpClient)
 	cargoVersionGetter := versiongetter.NewCargo(client)
@@ -136,7 +136,7 @@ func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry,
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
@@ -176,7 +176,7 @@ func InitializeWhichCommandController(ctx context.Context, logE *logrus.Entry, p
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
@@ -214,7 +214,7 @@ func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, pa
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
@@ -288,7 +288,7 @@ func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, pa
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
 	validatorImpl := policy.NewValidator(param, fs)
@@ -312,7 +312,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logE *logrus
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader)
 	return controller
@@ -330,7 +330,7 @@ func InitializeUpdateCommandController(ctx context.Context, logE *logrus.Entry, 
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	client := cargo.NewClient(httpClient)
 	cargoVersionGetter := versiongetter.NewCargo(client)
@@ -382,7 +382,7 @@ func InitializeRemoveCommandController(ctx context.Context, logE *logrus.Entry, 
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	osEnv := osenv.New()
 	linker := link.New()
@@ -412,7 +412,7 @@ func InitializeVacuumInitCommandController(ctx context.Context, logE *logrus.Ent
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	installer := registry.New(param, gitHubContentFileDownloader, httpDownloader, fs, rt, verifier, slsaVerifier)
 	controller := initialize.New(param, rt, fs, client, configFinder, configReader, installer)
 	return controller
 }

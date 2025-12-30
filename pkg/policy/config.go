@@ -29,11 +29,14 @@ type ConfigYAML struct {
 
 type Registry struct {
 	Name      string `json:"name,omitempty"`
-	Type      string `json:"type,omitempty"       jsonschema:"enum=standard,enum=local,enum=github_content"`
+	Type      string `json:"type,omitempty"       jsonschema:"enum=standard,enum=local,enum=github_content,enum=http"`
 	RepoOwner string `yaml:"repo_owner" json:"repo_owner,omitempty"`
 	RepoName  string `yaml:"repo_name" json:"repo_name,omitempty"`
 	Ref       string `json:"ref,omitempty"`
 	Path      string `json:"path,omitempty"`
+	URL       string `json:"url,omitempty"`
+	Version   string `json:"version,omitempty"`
+	Format    string `json:"format,omitempty"`
 }
 
 type Package struct {

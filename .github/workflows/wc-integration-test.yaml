@@ -19,6 +19,9 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Start HTTP registry server
+        run: bash tests/http-registry/start-server.sh
+
       - run: |
           go install \
             -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" \
@@ -251,6 +254,18 @@ jobs:
         run: aqua vacuum --init
 
       - run: aqua update-checksum -a
+
+      - name: Run aqua i for HTTP registries
+        run: aqua i
+        working-directory: tests/http-registry
+
+      - name: Test HTTP registry(raw) package
+        run: ghalint version
+        working-directory: tests/http-registry
+
+      - name: Test HTTP registry(tar.gz) package
+        run: ci-info --version
+        working-directory: tests/http-registry
 
       - run: terraform --help
       - run: terrafmt --help

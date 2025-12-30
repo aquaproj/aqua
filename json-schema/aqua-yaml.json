@@ -129,7 +129,8 @@
             "enum": [
               "standard",
               "local",
-              "github_content"
+              "github_content",
+              "http"
             ]
           },
           "repo_owner": {
@@ -146,6 +147,19 @@
           },
           "private": {
             "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "raw",
+              "tar.gz"
+            ]
           }
         },
         "additionalProperties": false,

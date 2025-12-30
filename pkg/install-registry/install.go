@@ -111,8 +111,11 @@ func (is *Installer) InstallRegistry(ctx context.Context, logE *logrus.Entry, re
 func (is *Installer) getRegistry(ctx context.Context, logE *logrus.Entry, registry *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	// TODO checksum verification
 	// TODO download checksum file
-	if registry.Type == aqua.RegistryTypeGitHubContent {
+	switch registry.Type {
+	case aqua.RegistryTypeGitHubContent:
 		return is.getGitHubContentRegistry(ctx, logE, registry, registryFilePath, checksums)
+	case aqua.RegistryTypeHTTP:
+		return is.getHTTPRegistry(ctx, logE, registry, registryFilePath, checksums)
 	}
 	return nil, errUnsupportedRegistryType
 }

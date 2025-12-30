@@ -1,0 +1,20 @@
+---
+# Spin up a local HTTP server with ./start-server.sh before running installation.
+registries:
+  - name: http-raw
+    type: http
+    url: http://localhost:8888/v{{.Version}}/registry.yaml
+    version: "1.0.0"
+    format: raw
+  - name: http-targz
+    type: http
+    url: http://localhost:8888/archives/{{trimV .Version}}/registry.tar.gz
+    version: v2.0.0
+    format: tar.gz
+packages:
+  - name: suzuki-shunsuke/ghalint
+    registry: http-raw
+    version: v1.0.0
+  - name: suzuki-shunsuke/ci-info
+    registry: http-targz
+    version: v2.3.1
