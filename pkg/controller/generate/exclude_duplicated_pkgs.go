@@ -34,20 +34,18 @@ func excludeDuplicatedPkgs(logger *slog.Logger, cfg *aqua.Config, pkgs []*config
 			key = registry + "," + pkg.Package.Name
 		}
 		if _, ok := m[keyV]; ok {
-			logger.With(
+			logger.Warn("skip adding a duplicate package",
 				"package_name", pkg.Package.Name,
 				"package_version", pkg.Package.Version,
-				"package_registry", registry,
-			).Warn("skip adding a duplicate package")
+				"package_registry", registry)
 			continue
 		}
 		m[keyV] = struct{}{}
 		ret = append(ret, pkg)
 		if _, ok := m[key]; ok {
-			logger.With(
+			logger.Warn("same package already exists",
 				"package_name", pkg.Package.Name,
-				"package_registry", registry,
-			).Warn("same package already exists")
+				"package_registry", registry)
 			continue
 		}
 		m[key] = struct{}{}

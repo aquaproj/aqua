@@ -59,10 +59,9 @@ func NewExecutor(logger *slog.Logger, executor CommandExecutor, param *config.Pa
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
-	logger.With(
+	logger.Info("Verification by minisign failed temporarily, retrying",
 		"retry_count", retryCount,
-		"wait_time", waitTime,
-	).Info("Verification by minisign failed temporarily, retrying")
+		"wait_time", waitTime)
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running minisign: %w", err)
 	}

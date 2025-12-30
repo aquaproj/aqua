@@ -120,10 +120,9 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
-	logger.With(
+	logger.Info("Verification by Cosign failed temporarily, retrying",
 		"retry_count", retryCount,
-		"wait_time", waitTime,
-	).Info("Verification by Cosign failed temporarily, retrying")
+		"wait_time", waitTime)
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running Cosign: %w", err)
 	}

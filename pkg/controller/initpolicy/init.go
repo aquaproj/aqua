@@ -51,9 +51,8 @@ func (c *Controller) Init(logger *slog.Logger, cfgFilePath string) error {
 	}
 	if _, err := c.fs.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.
-		logger.With(
-			"policy_file_path", cfgFilePath,
-		).Info("policy file already exists")
+		logger.Info("policy file already exists",
+			"policy_file_path", cfgFilePath)
 		return nil
 	}
 

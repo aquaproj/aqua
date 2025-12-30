@@ -13,10 +13,9 @@ func (c *Controller) copy(logger *slog.Logger, param *config.Param, exePath stri
 	if c.runtime.GOOS == "windows" && filepath.Ext(exeName) == "" {
 		p += ".exe"
 	}
-	logger.With(
+	logger.Info("coping a file",
 		"exe_name", exeName,
-		"dest", p,
-	).Info("coping a file")
+		"dest", p)
 	if err := c.packageInstaller.Copy(p, exePath); err != nil {
 		return fmt.Errorf("copy a file: %w", err)
 	}

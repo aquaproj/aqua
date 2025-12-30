@@ -242,10 +242,9 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 	}
 	checksumFile := strings.TrimSpace(string(b))
 	if pkgInfo.Checksum.FileFormat == "raw" {
-		logger.With(
+		logger.Debug("set a checksum",
 			"checksum_id", checksumID,
-			"checksum", checksumFile,
-		).Debug("set a checksum")
+			"checksum", checksumFile)
 		checksums.Set(checksumID, &checksum.Checksum{
 			ID:        checksumID,
 			Checksum:  checksumFile,
@@ -258,10 +257,9 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 		return fmt.Errorf("parse a checksum file: %w", err)
 	}
 	if s != "" {
-		logger.With(
+		logger.Debug("set a checksum",
 			"checksum_id", checksumID,
-			"checksum", s,
-		).Debug("set a checksum")
+			"checksum", s)
 		checksums.Set(checksumID, &checksum.Checksum{
 			ID:        checksumID,
 			Checksum:  s,
@@ -281,10 +279,9 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 			return nil
 		}
 		// update the checksum
-		logger.With(
+		logger.Debug("set a checksum",
 			"checksum_id", checksumID,
-			"checksum", chksum,
-		).Debug("set a checksum")
+			"checksum", chksum)
 		checksums.Set(checksumID, &checksum.Checksum{
 			ID:        checksumID,
 			Checksum:  chksum,
@@ -300,10 +297,9 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 		if err != nil {
 			return fmt.Errorf("get a checksum id from asset: %w", err)
 		}
-		logger.With(
+		logger.Debug("set a checksum",
 			"checksum_id", checksumID,
-			"checksum", chksum,
-		).Debug("set a checksum")
+			"checksum", chksum)
 		checksums.Set(checksumID, &checksum.Checksum{
 			ID:        checksumID,
 			Checksum:  chksum,

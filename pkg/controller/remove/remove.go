@@ -202,7 +202,7 @@ func (c *Controller) removePackage(logger *slog.Logger, rootDir string, pkg *reg
 
 	paths := pkg.PkgPaths()
 	if len(paths) == 0 {
-		logger.With("package_type", pkg.Type).Warn("this package can't be removed")
+		logger.Warn("this package can't be removed", "package_type", pkg.Type)
 		return gErr
 	}
 	for path := range paths {
@@ -223,7 +223,7 @@ func (c *Controller) removePath(logger *slog.Logger, rootDir string, path string
 		return fmt.Errorf("find directories: %w", err)
 	}
 	for _, p := range arr {
-		logger.With("removed_path", p).Debug("removing a directory")
+		logger.Debug("removing a directory", "removed_path", p)
 		if err := c.fs.RemoveAll(p); err != nil {
 			return fmt.Errorf("remove directories: %w", err)
 		}
@@ -238,7 +238,7 @@ func (c *Controller) removeMetadataPath(logger *slog.Logger, rootDir string, pat
 		return fmt.Errorf("find directories: %w", err)
 	}
 	for _, p := range arr {
-		logger.With("removed_path", p).Debug("removing a directory")
+		logger.Debug("removing a directory", "removed_path", p)
 		if err := c.fs.RemoveAll(p); err != nil {
 			return fmt.Errorf("remove directories: %w", err)
 		}

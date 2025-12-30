@@ -87,17 +87,15 @@ func parsePackageNode(logger *slog.Logger, node ast.Node, newVersions map[string
 		return false, nil
 	}
 	if commitHashPattern.MatchString(pkgVersion) {
-		logger.With(
+		logger.Debug("skip updating a commit hash",
 			"current_version", pkgVersion,
-			"package_name", pkgName,
-		).Debug("skip updating a commit hash")
+			"package_name", pkgName)
 		return false, nil
 	}
-	logger.With(
+	logger.Info("updating a package",
 		"old_version", pkgVersion,
 		"new_version", newVersion,
-		"package_name", pkgName,
-	).Info("updating a package")
+		"package_name", pkgName)
 	nameNode.Value = fmt.Sprintf("%s@%s", pkgName, newVersion)
 	return true, nil
 }

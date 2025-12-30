@@ -107,9 +107,8 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResul
 				break
 			}
 		}
-		logger.With(
-			"retry_count", i+1,
-		).Debug("command isn't found. wait for lazy install")
+		logger.Debug("command isn't found. wait for lazy install",
+			"retry_count", i+1)
 		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
 			return err
 		}

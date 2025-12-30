@@ -41,17 +41,15 @@ func updateRegistryVersion(logger *slog.Logger, refNode *ast.StringNode, rgstNam
 		return false
 	}
 	if commitHashPattern.MatchString(refNode.Value) {
-		logger.With(
+		logger.Debug("skip updating a commit hash",
 			"registry_name", rgstName,
-			"current_version", refNode.Value,
-		).Debug("skip updating a commit hash")
+			"current_version", refNode.Value)
 		return false
 	}
-	logger.With(
+	logger.Info("updating a registry",
 		"old_version", refNode.Value,
 		"new_version", newVersion,
-		"registry_name", rgstName,
-	).Info("updating a registry")
+		"registry_name", rgstName)
 	refNode.Value = newVersion
 	return true
 }

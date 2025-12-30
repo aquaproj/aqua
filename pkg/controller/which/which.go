@@ -244,10 +244,9 @@ func (c *Controller) findPkgInfo(ctx context.Context, logger *slog.Logger, cfgFi
 		rgPath = p
 		rgPaths[pkg.Registry] = rgPath
 	}
-	logger.With(
+	logger.Debug("getting a package from a registry cache",
 		"registry_file_path", rgPath,
-		"package_name", pkg.Name,
-	).Debug("getting a package from a registry cache")
+		"package_name", pkg.Name)
 	if pkgInfo := rCache.Get(rgPath, pkg.Name); pkgInfo != nil {
 		return pkgInfo, nil
 	}
