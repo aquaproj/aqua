@@ -36,7 +36,7 @@ func (g *GoGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.P
 	for _, vs := range versions {
 		v, err := version.NewSemver(vs)
 		if err != nil {
-			slogerr.WithError(logger, err).With("version", vs).Warn("parse a version")
+			slogerr.WithError(logger, err).Warn("parse a version", "version", vs)
 			continue
 		}
 		if v.Prerelease() == "" && (latest == nil || v.GreaterThan(latest)) {
@@ -66,7 +66,7 @@ func (g *GoGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.
 	for _, v := range vs {
 		v, err := version.NewSemver(v)
 		if err != nil {
-			slogerr.WithError(logger, err).With("version", vs).Warn("parse a version")
+			slogerr.WithError(logger, err).Warn("parse a version", "version", vs)
 			continue
 		}
 		versions = append(versions, v)

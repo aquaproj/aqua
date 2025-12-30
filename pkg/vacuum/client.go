@@ -81,7 +81,7 @@ func (c *Client) FindAll(logger *slog.Logger) (map[string]time.Time, error) {
 		}
 		t, err := ParseTime(strings.TrimSpace(string(b)))
 		if err != nil {
-			slogerr.WithError(logger, err).With("timestamp_file", path).Warn("a timestamp file is broken, so recreating it")
+			slogerr.WithError(logger, err).Warn("a timestamp file is broken, so recreating it", "timestamp_file", path)
 			if err := c.Update(path, time.Now()); err != nil {
 				return fmt.Errorf("recreate a broken package timestamp file: %w", err)
 			}

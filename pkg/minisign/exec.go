@@ -89,10 +89,9 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 		if err == nil {
 			return nil
 		}
-		slogerr.WithError(logger, err).With(
+		slogerr.WithError(logger, err).Warn("execute minisign",
 			"exe", e.minisignExePath,
-			"args", strings.Join(args, " "),
-		).Warn("execute minisign")
+			"args", strings.Join(args, " "))
 		if i == 4 { //nolint:mnd
 			break
 		}

@@ -157,7 +157,7 @@ func (c *Controller) execCommandWithRetry(ctx context.Context, logger *slog.Logg
 		if !retried {
 			return err
 		}
-		slogerr.WithError(logger, err).With("retry_count", i+1).Debug("the process isn't started. retry")
+		slogerr.WithError(logger, err).Debug("the process isn't started. retry", "retry_count", i+1)
 		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
 			return err
 		}

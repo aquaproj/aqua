@@ -41,7 +41,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	if f.LinkTarget != "" {
 		if f.Mode()&os.ModeSymlink != 0 {
 			if err := os.Symlink(f.LinkTarget, dstPath); err != nil {
-				slogerr.WithError(h.logger, err).With("link_target", f.LinkTarget, "link_dest", dstPath).Warn("create a symlink")
+				slogerr.WithError(h.logger, err).Warn("create a symlink", "link_target", f.LinkTarget, "link_dest", dstPath)
 				return nil
 			}
 		}

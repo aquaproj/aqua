@@ -191,7 +191,7 @@ func (c *Controller) removePackage(logger *slog.Logger, rootDir string, pkg *reg
 				if errors.Is(err, fs.ErrNotExist) {
 					continue
 				}
-				slogerr.WithError(logger, err).With("link", file.Name).Error("remove a link")
+				slogerr.WithError(logger, err).Error("remove a link", "link", file.Name)
 				gErr = errors.New("remove links")
 			}
 		}

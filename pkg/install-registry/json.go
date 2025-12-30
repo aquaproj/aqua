@@ -22,9 +22,9 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logger *slog.L
 	registryContent := &registry.Config{}
 	if err := is.readJSONRegistry(jsonPath, registryContent); err != nil { //nolint:nestif
 		if !errors.Is(err, os.ErrNotExist) {
-			slogerr.WithError(logger, err).With("registry_json_path", jsonPath).Warn("failed to read a registry JSON file. Will remove and recreate the file")
+			slogerr.WithError(logger, err).Warn("failed to read a registry JSON file. Will remove and recreate the file", "registry_json_path", jsonPath)
 			if err := is.fs.Remove(jsonPath); err != nil {
-				slogerr.WithError(logger, err).With("registry_json_path", jsonPath).Warn("failed to remove a registry JSON file")
+				slogerr.WithError(logger, err).Warn("failed to remove a registry JSON file", "registry_json_path", jsonPath)
 			} else {
 				logger.Debug("remove a registry JSON file",
 					"registry_json_path", jsonPath)

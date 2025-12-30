@@ -98,7 +98,7 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	logger.Debug("reading registry cache")
 	registryCache, err := registry.NewCache(c.fs, param.RootDir, cfgFilePath)
 	if err != nil {
-		slogerr.WithError(logger, err).With("config_file_path", cfgFilePath).Debug("read a registry cache file")
+		slogerr.WithError(logger, err).Debug("read a registry cache file", "config_file_path", cfgFilePath)
 	}
 
 	rgPaths := map[string]string{}

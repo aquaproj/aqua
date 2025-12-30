@@ -44,7 +44,7 @@ func (is *Installer) InstallRegistries(ctx context.Context, logger *slog.Logger,
 			registryContent, err := is.InstallRegistry(ctx, logger, registry, cfgFilePath, checksums)
 			if err != nil {
 				<-maxInstallChan
-				slogerr.WithError(logger, err).With("registry_name", registry.Name).Error("install the registry")
+				slogerr.WithError(logger, err).Error("install the registry", "registry_name", registry.Name)
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
