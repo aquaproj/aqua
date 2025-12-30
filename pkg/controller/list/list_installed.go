@@ -2,14 +2,14 @@ package list
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (c *Controller) listInstalled(logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) listInstalled(logger *slog.Logger, param *config.Param) error {
 	cfgFilePaths := c.configFinder.Finds(param.PWD, param.ConfigFilePath)
 	cfgFileMap := map[string]struct{}{}
 	for _, cfgFilePath := range cfgFilePaths {
@@ -18,10 +18,10 @@ func (c *Controller) listInstalled(logE *logrus.Entry, param *config.Param) erro
 		}
 		cfgFileMap[cfgFilePath] = struct{}{}
 
-		if err := c.listInstalledByConfig(logE, cfgFilePath); err != nil {
-			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"config_file_path": cfgFilePath,
-			})
+		if err := c.listInstalledByConfig(logger, cfgFilePath); err != nil {
+			return slogerr.With(err, //nolint:wrapcheck
+				"config_file_path", cfgFilePath,
+			)
 		}
 	}
 
@@ -30,28 +30,28 @@ func (c *Controller) listInstalled(logE *logrus.Entry, param *config.Param) erro
 	}
 
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		logE := logE.WithField("config_file_path", cfgFilePath)
+		logger := logger.With("config_file_path", cfgFilePath)
 		if _, ok := cfgFileMap[cfgFilePath]; ok {
 			continue
 		}
 		cfgFileMap[cfgFilePath] = struct{}{}
 
-		logE.Debug("checking a global configuration file")
+		logger.Debug("checking a global configuration file")
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		if err := c.listInstalledByConfig(logE, cfgFilePath); err != nil {
-			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"config_file_path": cfgFilePath,
-			})
+		if err := c.listInstalledByConfig(logger, cfgFilePath); err != nil {
+			return slogerr.With(err, //nolint:wrapcheck
+				"config_file_path", cfgFilePath,
+			)
 		}
 	}
 	return nil
 }
 
-func (c *Controller) listInstalledByConfig(logE *logrus.Entry, cfgFilePath string) error {
+func (c *Controller) listInstalledByConfig(logger *slog.Logger, cfgFilePath string) error {
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logger, cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 	for _, pkg := range cfg.Packages {

@@ -2,12 +2,12 @@ package allowpolicy
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Controller struct {
@@ -24,19 +24,19 @@ func New(fs afero.Fs, policyConfigFinder policy.ConfigFinder, policyValidator po
 	}
 }
 
-func (c *Controller) Allow(logE *logrus.Entry, param *config.Param, policyFilePath string) error {
+func (c *Controller) Allow(logger *slog.Logger, param *config.Param, policyFilePath string) error {
 	policyFile, err := c.policyConfigFinder.Find(policyFilePath, param.PWD)
 	if err != nil {
 		return fmt.Errorf("find a policy file: %w", err)
 	}
 	if policyFile == "" {
-		logE.Info("no policy file is found")
+		logger.Info("no policy file is found")
 		return nil
 	}
 	if err := c.policyValidator.Allow(policyFile); err != nil {
-		return logerr.WithFields(fmt.Errorf("allow a policy file: %w", err), logrus.Fields{ //nolint:wrapcheck
-			"policy_file": policyFile,
-		})
+		return slogerr.With(fmt.Errorf("allow a policy file: %w", err), //nolint:wrapcheck
+			"policy_file", policyFile,
+		)
 	}
 	return nil
 }

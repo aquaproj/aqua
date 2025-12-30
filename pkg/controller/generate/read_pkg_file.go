@@ -5,15 +5,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (c *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus.Entry, param *config.Param, outputPkgs []*config.Package, m map[string]*fuzzyfinder.Package) ([]*config.Package, error) {
+func (c *Controller) readGeneratedPkgsFromFile(ctx context.Context, logger *slog.Logger, param *config.Param, outputPkgs []*config.Package, m map[string]*fuzzyfinder.Package) ([]*config.Package, error) {
 	var file io.Reader
 	if param.File == "-" {
 		file = c.stdin
@@ -31,10 +31,10 @@ func (c *Controller) readGeneratedPkgsFromFile(ctx context.Context, logE *logrus
 		key, version, _ := strings.Cut(txt, "@")
 		findingPkg, ok := m[key]
 		if !ok {
-			return nil, logerr.WithFields(errUnknownPkg, logrus.Fields{"package_name": txt}) //nolint:wrapcheck
+			return nil, slogerr.With(errUnknownPkg, "package_name", txt) //nolint:wrapcheck
 		}
 		findingPkg.Version = version
-		outputPkg := c.getOutputtedPkg(ctx, logE, param, findingPkg)
+		outputPkg := c.getOutputtedPkg(ctx, logger, param, findingPkg)
 		outputPkgs = append(outputPkgs, outputPkg)
 	}
 	if err := scanner.Err(); err != nil {

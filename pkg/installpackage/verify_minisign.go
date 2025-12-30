@@ -3,13 +3,13 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 )
 
 type minisignVerifier struct {
@@ -21,7 +21,7 @@ type minisignVerifier struct {
 	minisign  *registry.Minisign
 }
 
-func (s *minisignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+func (s *minisignVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if !s.minisign.GetEnabled() {
 		return false, nil
 	}
@@ -30,15 +30,15 @@ func (s *minisignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
 	if f, err := mPkg.PackageInfo.CheckSupported(s.runtime, s.runtime.Env()); err != nil {
 		return false, fmt.Errorf("check if minisign supports this environment: %w", err)
 	} else if !f {
-		logE.Warn("minisign doesn't support this environment")
+		logger.Warn("minisign doesn't support this environment")
 		return false, nil
 	}
 	return true, nil
 }
 
-func (s *minisignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
-	logE.Info("verify a package with minisign")
-	if err := s.installer.install(ctx, logE); err != nil {
+func (s *minisignVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
+	logger.Info("verify a package with minisign")
+	if err := s.installer.install(ctx, logger); err != nil {
 		return fmt.Errorf("install minisign: %w", err)
 	}
 
@@ -48,7 +48,7 @@ func (s *minisignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file 
 
 	art := pkg.TemplateArtifact(s.runtime, s.asset)
 
-	if err := s.verifier.Verify(ctx, logE, s.runtime, m, art, &download.File{
+	if err := s.verifier.Verify(ctx, logger, s.runtime, m, art, &download.File{
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
 		Version:   pkg.Package.Version,

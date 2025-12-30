@@ -3,6 +3,7 @@ package install
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -12,13 +13,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // Install is a main method of "install" command.
 // This method is also called by "cp" command.
-func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) Install(ctx context.Context, logger *slog.Logger, param *config.Param) error {
 	if param.Dest == "" {
 		// Create a "bin" directory and install aqua-proxy in advance.
 		// If param.Dest isn't empty, this means this method is called by "copy" command.
@@ -26,7 +26,7 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 		if err := c.mkBinDir(); err != nil {
 			return err
 		}
-		if err := c.packageInstaller.InstallProxy(ctx, logE); err != nil {
+		if err := c.packageInstaller.InstallProxy(ctx, logger); err != nil {
 			return fmt.Errorf("install aqua-proxy: %w", err)
 		}
 	}
@@ -42,20 +42,20 @@ func (c *Controller) Install(ctx context.Context, logE *logrus.Entry, param *con
 	}
 
 	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
-		policyCfgs, err := c.policyReader.Append(logE, cfgFilePath, policyCfgs, globalPolicyPaths)
+		policyCfgs, err := c.policyReader.Append(logger, cfgFilePath, policyCfgs, globalPolicyPaths)
 		if err != nil {
-			return fmt.Errorf("append policy configs: %w", logerr.WithFields(err, logrus.Fields{
-				"config_file_path": cfgFilePath,
-			}))
+			return fmt.Errorf("append policy configs: %w", slogerr.With(err,
+				"config_file_path", cfgFilePath,
+			))
 		}
-		if err := c.install(ctx, logE, cfgFilePath, policyCfgs, param); err != nil {
-			return fmt.Errorf("install packages: %w", logerr.WithFields(err, logrus.Fields{
-				"config_file_path": cfgFilePath,
-			}))
+		if err := c.install(ctx, logger, cfgFilePath, policyCfgs, param); err != nil {
+			return fmt.Errorf("install packages: %w", slogerr.With(err,
+				"config_file_path", cfgFilePath,
+			))
 		}
 	}
 
-	return c.installAll(ctx, logE, param, policyCfgs, globalPolicyPaths)
+	return c.installAll(ctx, logger, param, policyCfgs, globalPolicyPaths)
 }
 
 func (c *Controller) mkBinDir() error {
@@ -70,7 +70,7 @@ func (c *Controller) mkBinDir() error {
 	return nil
 }
 
-func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *config.Param, policyConfigs []*policy.Config, globalPolicyPaths map[string]struct{}) error {
+func (c *Controller) installAll(ctx context.Context, logger *slog.Logger, param *config.Param, policyConfigs []*policy.Config, globalPolicyPaths map[string]struct{}) error {
 	if !param.All {
 		return nil
 	}
@@ -78,27 +78,27 @@ func (c *Controller) installAll(ctx context.Context, logE *logrus.Entry, param *
 		if _, err := c.fs.Stat(cfgFilePath); err != nil {
 			continue
 		}
-		policyConfigs, err := c.policyReader.Append(logE, cfgFilePath, policyConfigs, globalPolicyPaths)
+		policyConfigs, err := c.policyReader.Append(logger, cfgFilePath, policyConfigs, globalPolicyPaths)
 		if err != nil {
-			return fmt.Errorf("append policy configs: %w", logerr.WithFields(err, logrus.Fields{
-				"config_file_path": cfgFilePath,
-			}))
+			return fmt.Errorf("append policy configs: %w", slogerr.With(err,
+				"config_file_path", cfgFilePath,
+			))
 		}
-		if err := c.install(ctx, logE, cfgFilePath, policyConfigs, param); err != nil {
-			return fmt.Errorf("install packages: %w", logerr.WithFields(err, logrus.Fields{
-				"config_file_path": cfgFilePath,
-			}))
+		if err := c.install(ctx, logger, cfgFilePath, policyConfigs, param); err != nil {
+			return fmt.Errorf("install packages: %w", slogerr.With(err,
+				"config_file_path", cfgFilePath,
+			))
 		}
 	}
 	return nil
 }
 
-func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePath string, policyConfigs []*policy.Config, param *config.Param) error {
+func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePath string, policyConfigs []*policy.Config, param *config.Param) error {
 	cfg := &aqua.Config{}
 	if cfgFilePath == "" {
 		return finder.ErrConfigFileNotFound
 	}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logger, cfgFilePath, cfg); err != nil {
 		return err //nolint:wrapcheck
 	}
 	if err := cfg.Validate(); err != nil {
@@ -106,18 +106,18 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, cfgFilePat
 	}
 
 	checksums, updateChecksum, err := checksum.Open(
-		logE, c.fs, cfgFilePath, param.ChecksumEnabled(cfg))
+		logger, c.fs, cfgFilePath, param.ChecksumEnabled(cfg))
 	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
 	defer updateChecksum()
 
-	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logger, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
-	return c.packageInstaller.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
+	return c.packageInstaller.InstallPackages(ctx, logger, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
 		Config:          cfg,
 		Registries:      registryContents,
 		ConfigFilePath:  cfgFilePath,

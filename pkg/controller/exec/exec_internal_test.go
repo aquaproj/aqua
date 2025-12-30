@@ -1,11 +1,11 @@
 package exec
 
 import (
+	"log/slog"
 	"os"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
-	"github.com/sirupsen/logrus"
 )
 
 func TestController_execCommand(t *testing.T) {
@@ -25,7 +25,7 @@ func TestController_execCommand(t *testing.T) {
 			executor: &osexec.Mock{},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
@@ -36,7 +36,7 @@ func TestController_execCommand(t *testing.T) {
 				stderr:   os.Stderr,
 				executor: d.executor,
 			}
-			err := ctrl.execCommandWithRetry(ctx, logE, d.exePath, d.exeName, d.args...)
+			err := ctrl.execCommandWithRetry(ctx, logger, d.exePath, d.exeName, d.args...)
 			if err != nil {
 				t.Fatal(err)
 			}

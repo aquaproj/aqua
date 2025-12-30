@@ -3,8 +3,7 @@ package domain
 import (
 	"context"
 	"io"
-
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
 type DownloadGitHubReleaseParam struct {
@@ -16,5 +15,5 @@ type DownloadGitHubReleaseParam struct {
 }
 
 type GitHubReleaseDownloader interface {
-	DownloadGitHubRelease(ctx context.Context, logE *logrus.Entry, param *DownloadGitHubReleaseParam) (io.ReadCloser, int64, error)
+	DownloadGitHubRelease(ctx context.Context, logger *slog.Logger, param *DownloadGitHubReleaseParam) (io.ReadCloser, int64, error)
 }

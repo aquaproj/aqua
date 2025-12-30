@@ -3,6 +3,7 @@ package download
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -10,8 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *runtime.Runtime, tplParam *template.Artifact) (*File, error) {
@@ -49,9 +49,8 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		f.URL = u
 		return f, nil
 	}
-	return nil, logerr.WithFields(errors.New("invalid file type"), logrus.Fields{ //nolint:wrapcheck
-		"file_type": file.Type,
-	})
+	return nil, slogerr.With(errors.New("invalid file type"), //nolint:wrapcheck
+		slog.String("file_type", file.Type))
 }
 
 func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Runtime) (*File, error) {
@@ -81,9 +80,8 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		file.URL = uS
 		return file, nil
 	default:
-		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
-			"package_type": pkgInfo.Type,
-		})
+		return nil, slogerr.With(domain.ErrInvalidPackageType, //nolint:wrapcheck
+			slog.String("package_type", pkgInfo.Type))
 	}
 }
 
@@ -100,8 +98,7 @@ func ConvertRegistryToFile(rgst *aqua.Registry) (*File, error) {
 		file.Path = rgst.Path
 		return file, nil
 	default:
-		return nil, logerr.WithFields(domain.ErrInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
-			"registry_type": rgst.Type,
-		})
+		return nil, slogerr.With(domain.ErrInvalidPackageType, //nolint:wrapcheck
+			slog.String("registry_type", rgst.Type))
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
-	"github.com/sirupsen/logrus"
 )
 
 type CommandExecutor interface {
@@ -20,7 +20,7 @@ type CommandExecutor interface {
 }
 
 type Executor interface {
-	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error
+	Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, provenancePath string) error
 }
 
 type ExecutorImpl struct {
@@ -39,13 +39,13 @@ func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
 	}
 }
 
-func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
+func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
-	logE.WithFields(logrus.Fields{
-		"retry_count": retryCount,
-		"wait_time":   waitTime,
-	}).Info("Verification by slsa-verifier failed temporarily, retrying")
+	logger.With(
+		slog.Int("retry_count", retryCount),
+		slog.Duration("wait_time", waitTime),
+	).Info("Verification by slsa-verifier failed temporarily, retrying")
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running slsa-verifier: %w", err)
 	}
@@ -54,7 +54,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 
 var errVerify = errors.New("verify with slsa-verifier")
 
-func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, provenancePath string) error {
+func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, provenancePath string) error {
 	if param.SourceTag == "" {
 		return errors.New("source tag is empty")
 	}
@@ -76,7 +76,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		if i == 4 { //nolint:mnd
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+		if err := wait(ctx, logger, i+1); err != nil {
 			return err
 		}
 	}

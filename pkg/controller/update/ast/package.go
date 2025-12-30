@@ -3,14 +3,14 @@ package ast
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	wast "github.com/aquaproj/aqua/v2/pkg/ast"
 	"github.com/goccy/go-yaml/ast"
-	"github.com/sirupsen/logrus"
 )
 
-func UpdatePackages(logE *logrus.Entry, file *ast.File, newVersions map[string]string) (bool, error) {
+func UpdatePackages(logger *slog.Logger, file *ast.File, newVersions map[string]string) (bool, error) {
 	body := file.Docs[0].Body // DocumentNode
 	mv, err := wast.FindMappingValueFromNode(body, "packages")
 	if err != nil {
@@ -23,7 +23,7 @@ func UpdatePackages(logE *logrus.Entry, file *ast.File, newVersions map[string]s
 	}
 	updated := false
 	for _, value := range seq.Values {
-		up, err := parsePackageNode(logE, value, newVersions)
+		up, err := parsePackageNode(logger, value, newVersions)
 		if err != nil {
 			return false, err
 		}
@@ -34,7 +34,7 @@ func UpdatePackages(logE *logrus.Entry, file *ast.File, newVersions map[string]s
 	return updated, nil
 }
 
-func parsePackageNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:cyclop,funlen
+func parsePackageNode(logger *slog.Logger, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:cyclop,funlen
 	mvs, err := wast.NormalizeMappingValueNodes(node)
 	if err != nil {
 		return false, fmt.Errorf("normalize mapping value node: %w", err)
@@ -79,25 +79,25 @@ func parsePackageNode(logE *logrus.Entry, node ast.Node, newVersions map[string]
 	}
 	newVersion, ok := newVersions[fmt.Sprintf("%s,%s", registryName, pkgName)]
 	if !ok {
-		logE.Debug("version isn't found")
+		logger.Debug("version isn't found")
 		return false, nil
 	}
 	if pkgVersion == newVersion {
-		logE.Debug("already latest")
+		logger.Debug("already latest")
 		return false, nil
 	}
 	if commitHashPattern.MatchString(pkgVersion) {
-		logE.WithFields(logrus.Fields{
-			"current_version": pkgVersion,
-			"package_name":    pkgName,
-		}).Debug("skip updating a commit hash")
+		logger.With(
+			"current_version", pkgVersion,
+			"package_name", pkgName,
+		).Debug("skip updating a commit hash")
 		return false, nil
 	}
-	logE.WithFields(logrus.Fields{
-		"old_version":  pkgVersion,
-		"new_version":  newVersion,
-		"package_name": pkgName,
-	}).Info("updating a package")
+	logger.With(
+		"old_version", pkgVersion,
+		"new_version", newVersion,
+		"package_name", pkgName,
+	).Info("updating a package")
 	nameNode.Value = fmt.Sprintf("%s@%s", pkgName, newVersion)
 	return true, nil
 }

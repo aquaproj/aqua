@@ -3,20 +3,20 @@ package update
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update/ast"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry, rgst *aqua.Registry) (string, error) {
+func (c *Controller) newRegistryVersion(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry) (string, error) {
 	if rgst.Type == "local" {
 		return "", nil
 	}
 
-	logE.Debug("getting the latest release of a registry")
+	logger.Debug("getting the latest release of a registry")
 	release, _, err := c.gh.GetLatestRelease(ctx, rgst.RepoOwner, rgst.RepoName)
 	if err != nil {
 		return "", fmt.Errorf("get the latest release by GitHub API: %w", err)
@@ -25,17 +25,15 @@ func (c *Controller) newRegistryVersion(ctx context.Context, logE *logrus.Entry,
 	return release.GetTagName(), nil
 }
 
-func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, cfgFilePath string, cfg *aqua.Config) error { //nolint:cyclop
+func (c *Controller) updateRegistries(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config) error { //nolint:cyclop
 	newVersions := map[string]string{}
 	for _, rgst := range cfg.Registries {
-		logE := logE.WithFields(logrus.Fields{
-			"registry_name": rgst.Name,
-		})
+		logger := logger.With("registry_name", rgst.Name)
 		if commitHashPattern.MatchString(rgst.Ref) {
-			logE.Debug("skip a registry whose version is a commit hash")
+			logger.Debug("skip a registry whose version is a commit hash")
 			continue
 		}
-		newVersion, err := c.newRegistryVersion(ctx, logE, rgst)
+		newVersion, err := c.newRegistryVersion(ctx, logger, rgst)
 		if err != nil {
 			return err
 		}
@@ -56,7 +54,7 @@ func (c *Controller) updateRegistries(ctx context.Context, logE *logrus.Entry, c
 	}
 
 	// TODO consider how to update commit hashes
-	updated, err := ast.UpdateRegistries(logE, file, newVersions)
+	updated, err := ast.UpdateRegistries(logger, file, newVersions)
 	if err != nil {
 		return fmt.Errorf("parse a configuration as YAML to update registries: %w", err)
 	}

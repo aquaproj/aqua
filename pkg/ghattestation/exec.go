@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -14,8 +15,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 type CommandExecutor interface {
@@ -23,8 +22,8 @@ type CommandExecutor interface {
 }
 
 type Executor interface {
-	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error
-	VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ParamVerifyRelease) error
+	Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error
+	VerifyRelease(ctx context.Context, logger *slog.Logger, param *ParamVerifyRelease) error
 }
 
 type ExecutorImpl struct {
@@ -46,13 +45,12 @@ func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, 
 	}, nil
 }
 
-func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
+func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
-	logE.WithFields(logrus.Fields{
-		"retry_count": retryCount,
-		"wait_time":   waitTime,
-	}).Info("gh attestation verify failed temporarily, retrying")
+	logger.Info("gh attestation verify failed temporarily, retrying",
+		slog.Int("retry_count", retryCount),
+		slog.Duration("wait_time", waitTime))
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running gh attestation verify: %w", err)
 	}
@@ -73,7 +71,7 @@ func (e *AuthError) Unwrap() error {
 
 var errVerify = errors.New("verify GitHub Artifact Attestations")
 
-func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
+func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
 	/*
 		$ gh attestation verify hello \
 		  -R suzuki-shunsuke/test-github-artifact-attestation \
@@ -100,17 +98,17 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		}
 		ae := &AuthError{}
 		if errors.As(err, &ae) {
-			logerr.WithError(logE, err).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
+			logger.Warn("skip verifying GitHub Artifact Attestations because of the authentication error", slog.Any("error", err))
 			return nil
 		}
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"exe":  e.exePath,
-			"args": strings.Join(args, " "),
-		}).Warn("execute gh attestation verify")
+		logger.Warn("execute gh attestation verify",
+			slog.String("exe", e.exePath),
+			slog.String("args", strings.Join(args, " ")),
+			slog.Any("error", err))
 		if i == 4 { //nolint:mnd
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+		if err := wait(ctx, logger, i+1); err != nil {
 			return err
 		}
 	}
@@ -123,7 +121,7 @@ type ParamVerifyRelease struct {
 	Version      string
 }
 
-func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ParamVerifyRelease) error {
+func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logger *slog.Logger, param *ParamVerifyRelease) error {
 	/*
 		$ gh release verify-asset hello \
 		  -R suzuki-shunsuke/test-github-artifact-attestation
@@ -144,17 +142,17 @@ func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logE *logrus.Entry, pa
 		}
 		ae := &AuthError{}
 		if errors.As(err, &ae) {
-			logerr.WithError(logE, err).Warn("skip verifying GitHub Release Attestations because of the authentication error")
+			logger.Warn("skip verifying GitHub Release Attestations because of the authentication error", slog.Any("error", err))
 			return nil
 		}
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"exe":  e.exePath,
-			"args": strings.Join(args, " "),
-		}).Warn("execute gh release verify-asset")
+		logger.Warn("execute gh release verify-asset",
+			slog.String("exe", e.exePath),
+			slog.String("args", strings.Join(args, " ")),
+			slog.Any("error", err))
 		if i == 4 { //nolint:mnd
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+		if err := wait(ctx, logger, i+1); err != nil {
 			return err
 		}
 	}

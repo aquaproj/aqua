@@ -3,12 +3,12 @@ package list
 import (
 	"context"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -31,9 +31,9 @@ func NewController(configFinder ConfigFinder, configReader ConfigReader, registr
 }
 
 type ConfigReader interface {
-	Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error
+	Read(logger *slog.Logger, configFilePath string, cfg *aqua.Config) error
 }
 
 type RegistryInstaller interface {
-	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
+	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 }

@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type File struct {
@@ -40,13 +40,13 @@ func NewDownloader(gh GitHub, httpDownloader HTTPDownloader) *Downloader {
 }
 
 type ClientAPI interface {
-	ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error)
+	ReadCloser(ctx context.Context, logger *slog.Logger, file *File) (io.ReadCloser, int64, error)
 }
 
-func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *File) (io.ReadCloser, int64, error) {
+func (dl *Downloader) ReadCloser(ctx context.Context, logger *slog.Logger, file *File) (io.ReadCloser, int64, error) {
 	switch file.Type {
 	case config.PkgInfoTypeGitHubRelease:
-		return dl.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
+		return dl.ghRelease.DownloadGitHubRelease(ctx, logger, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
 			RepoOwner: file.RepoOwner,
 			RepoName:  file.RepoName,
 			Version:   file.Version,
@@ -54,7 +54,7 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *
 			Private:   file.Private,
 		})
 	case config.PkgInfoTypeGitHubContent:
-		file, err := dl.ghContent.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
+		file, err := dl.ghContent.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
 			RepoOwner: file.RepoOwner,
 			RepoName:  file.RepoName,
 			Ref:       file.Version,
@@ -73,14 +73,12 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logE *logrus.Entry, file *
 	case config.PkgInfoTypeHTTP:
 		rc, code, err := dl.http.Download(ctx, file.URL)
 		if err != nil {
-			return rc, code, fmt.Errorf("download a package: %w", logerr.WithFields(err, logrus.Fields{
-				"download_url": file.URL,
-			}))
+			return rc, code, fmt.Errorf("download a package: %w", slogerr.With(err,
+				slog.String("download_url", file.URL)))
 		}
 		return rc, code, nil
 	default:
-		return nil, 0, logerr.WithFields(errInvalidPackageType, logrus.Fields{ //nolint:wrapcheck
-			"file_type": file.Type,
-		})
+		return nil, 0, slogerr.With(errInvalidPackageType, //nolint:wrapcheck
+			slog.String("file_type", file.Type))
 	}
 }

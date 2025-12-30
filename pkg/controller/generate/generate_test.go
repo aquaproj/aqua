@@ -1,6 +1,7 @@
 package generate_test
 
 import (
+	"log/slog"
 	"net/http"
 	"testing"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
-	"github.com/sirupsen/logrus"
 )
 
 func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
@@ -375,7 +375,7 @@ packages:
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -395,12 +395,12 @@ packages:
 				Releases: d.releases,
 				Tags:     d.tags,
 			}
-			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(logger, http.DefaultClient))
 			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			configReader := reader.New(fs, d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
 			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versiongetter.NewMockFuzzyGetter(map[string]string{}))
-			if err := ctrl.Generate(ctx, logE, d.param, d.args...); err != nil {
+			if err := ctrl.Generate(ctx, logger, d.param, d.args...); err != nil {
 				if d.isErr {
 					return
 				}

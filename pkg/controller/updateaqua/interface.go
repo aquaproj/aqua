@@ -2,13 +2,13 @@ package updateaqua
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
 )
 
 type AquaInstaller interface {
-	InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error
+	InstallAqua(ctx context.Context, logger *slog.Logger, version string) error
 }
 
 type RepositoriesService interface {

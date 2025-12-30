@@ -4,35 +4,35 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/mholt/archives"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type handler struct {
 	fs       afero.Fs
 	dest     string
 	filename string
-	logE     *logrus.Entry
+	logger   *slog.Logger
 }
 
 func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
 	parentDir := filepath.Dir(dstPath)
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
-		logerr.WithError(h.logE, err).Warn("create a directory")
+		h.logger.Warn("create a directory", slog.Any("error", err))
 		return nil
 	}
 
 	if f.IsDir() {
 		if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
-			logerr.WithError(h.logE, err).Warn("create a directory")
+			h.logger.Warn("create a directory", slog.Any("error", err))
 			return nil
 		}
 		return nil
@@ -41,10 +41,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	if f.LinkTarget != "" {
 		if f.Mode()&os.ModeSymlink != 0 {
 			if err := os.Symlink(f.LinkTarget, dstPath); err != nil {
-				logerr.WithError(h.logE, err).WithFields(logrus.Fields{
-					"link_target": f.LinkTarget,
-					"link_dest":   dstPath,
-				}).Warn("create a symlink")
+				h.logger.Warn("create a symlink", slog.Any("error", err), slog.String("link_target", f.LinkTarget), slog.String("link_dest", dstPath))
 				return nil
 			}
 		}
@@ -53,35 +50,32 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	reader, err := f.Open()
 	if err != nil {
-		logerr.WithError(h.logE, err).Warn("open a file")
+		h.logger.Warn("open a file", slog.Any("error", err))
 		return nil
 	}
 	defer reader.Close()
 
 	dstFile, err := h.fs.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, f.Mode())
 	if err != nil {
-		logerr.WithError(h.logE, err).Warn("create a file")
+		h.logger.Warn("create a file", slog.Any("error", err))
 		return nil
 	}
 	defer dstFile.Close()
 
 	if _, err := io.Copy(dstFile, reader); err != nil {
-		logerr.WithError(h.logE, err).Warn("copy a file")
+		h.logger.Warn("copy a file", slog.Any("error", err))
 		return nil
 	}
 	return nil
 }
 
-func (h *handler) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) error {
+func (h *handler) Unarchive(ctx context.Context, _ *slog.Logger, src *File) error {
 	tempFilePath, err := src.Body.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporary file path: %w", err)
 	}
 	if err := h.unarchive(ctx, src.Filename, tempFilePath); err != nil {
-		return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-			"archived_file":     tempFilePath,
-			"archived_filename": src.Filename,
-		})
+		return slogerr.With(err, slog.String("archived_file", tempFilePath), slog.String("archived_filename", src.Filename)) //nolint:wrapcheck
 	}
 	return nil
 }

@@ -3,11 +3,11 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
-	"github.com/sirupsen/logrus"
 )
 
 type GoInstallInstaller interface {
@@ -34,16 +34,15 @@ func (is *GoInstallInstallerImpl) Install(ctx context.Context, path, gobin strin
 	return nil
 }
 
-func (is *Installer) downloadGoInstall(ctx context.Context, logE *logrus.Entry, pkg *config.Package, dest string) error {
+func (is *Installer) downloadGoInstall(ctx context.Context, logger *slog.Logger, pkg *config.Package, dest string) error {
 	p, err := pkg.RenderPath()
 	if err != nil {
 		return fmt.Errorf("render Go Module Path: %w", err)
 	}
 	goPkgPath := p + "@" + pkg.Package.Version
-	logE.WithFields(logrus.Fields{
-		"gobin":           dest,
-		"go_package_path": goPkgPath,
-	}).Info("Installing a Go tool")
+	logger.Info("Installing a Go tool",
+		slog.String("gobin", dest),
+		slog.String("go_package_path", goPkgPath))
 	if err := is.goInstallInstaller.Install(ctx, goPkgPath, dest); err != nil {
 		return fmt.Errorf("build Go tool: %w", err)
 	}

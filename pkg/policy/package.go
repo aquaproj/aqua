@@ -2,16 +2,16 @@ package policy
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func ValidatePackage(logE *logrus.Entry, pkg *config.Package, policies []*Config) error {
+func ValidatePackage(logger *slog.Logger, pkg *config.Package, policies []*Config) error {
 	if len(policies) == 0 {
 		a, err := getDefaultPolicy()
 		if err != nil {
@@ -20,14 +20,14 @@ func ValidatePackage(logE *logrus.Entry, pkg *config.Package, policies []*Config
 		policies = a
 	}
 	for _, policyCfg := range policies {
-		if err := validatePackage(logE, &paramValidatePackage{
+		if err := validatePackage(logger, &paramValidatePackage{
 			Pkg:          pkg,
 			PolicyConfig: policyCfg.YAML,
 		}); err == nil {
 			return nil
 		}
 	}
-	return errUnAllowedPackage
+	return ErrUnAllowedPackage
 }
 
 type paramValidatePackage struct {
@@ -35,7 +35,7 @@ type paramValidatePackage struct {
 	PolicyConfig *ConfigYAML
 }
 
-func validatePackage(logE *logrus.Entry, param *paramValidatePackage) error {
+func validatePackage(logger *slog.Logger, param *paramValidatePackage) error {
 	if param.PolicyConfig == nil {
 		return nil
 	}
@@ -43,14 +43,14 @@ func validatePackage(logE *logrus.Entry, param *paramValidatePackage) error {
 		f, err := matchPkg(param.Pkg, policyPkg)
 		if err != nil {
 			// If it fails to check if the policy matches with the package, output a debug log and treat as the policy doesn't match with the package.
-			logerr.WithError(logE, err).Debug("check if the package matches with a policy")
+			slogerr.WithError(logger, err).Debug("check if the package matches with a policy")
 			continue
 		}
 		if f {
 			return nil
 		}
 	}
-	return errUnAllowedPackage
+	return ErrUnAllowedPackage
 }
 
 func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {

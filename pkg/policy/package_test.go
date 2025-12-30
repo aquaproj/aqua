@@ -1,13 +1,13 @@
 package policy_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/sirupsen/logrus"
 )
 
 func TestValidatePackage(t *testing.T) { //nolint:funlen
@@ -78,11 +78,11 @@ func TestValidatePackage(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			if err := policy.ValidatePackage(logE, d.pkg, d.policies); err != nil {
+			if err := policy.ValidatePackage(logger, d.pkg, d.policies); err != nil {
 				if d.isErr {
 					return
 				}

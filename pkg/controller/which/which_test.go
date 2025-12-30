@@ -1,6 +1,7 @@
 package which_test
 
 import (
+	"log/slog"
 	"net/http"
 	"testing"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -235,7 +235,7 @@ packages:
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -250,9 +250,9 @@ packages:
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(d.env), fs, linker)
-			which, err := ctrl.Which(ctx, logE, d.param, d.exeName)
+			which, err := ctrl.Which(ctx, logger, d.param, d.exeName)
 			if err != nil {
 				if d.isErr {
 					return

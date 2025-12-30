@@ -45,9 +45,9 @@ func (pa *policyAllowCommand) action(ctx context.Context, cmd *cli.Command) erro
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, pa.r.LogE, "allow-policy", param, pa.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, pa.r.Logger, "allow-policy", param, pa.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeAllowPolicyCommandController(ctx, param)
-	return ctrl.Allow(pa.r.LogE, param, cmd.Args().First()) //nolint:wrapcheck
+	return ctrl.Allow(pa.r.Logger.Logger, param, cmd.Args().First()) //nolint:wrapcheck
 }

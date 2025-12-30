@@ -1,12 +1,12 @@
 package registry_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 )
 
 func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
@@ -108,11 +108,11 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgInfo, err := d.pkgInfo.Override(logE, d.version, d.rt)
+			pkgInfo, err := d.pkgInfo.Override(logger, d.version, d.rt)
 			if err != nil {
 				if d.isErr {
 					return

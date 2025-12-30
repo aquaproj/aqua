@@ -1,8 +1,9 @@
 package reader
 
 import (
+	"log/slog"
+
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/sirupsen/logrus"
 )
 
 type MockConfigReader struct {
@@ -10,7 +11,7 @@ type MockConfigReader struct {
 	Err error
 }
 
-func (r *MockConfigReader) Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error {
+func (r *MockConfigReader) Read(_ *slog.Logger, _ string, cfg *aqua.Config) error {
 	*cfg = *r.Cfg
 	return r.Err
 }

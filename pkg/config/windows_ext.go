@@ -2,19 +2,19 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
 // RenameFile renames files with appropriate Windows extensions when necessary.
 // It handles Windows-specific file extension requirements for executable files.
-func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
+func (p *Package) RenameFile(logger *slog.Logger, fs afero.Fs, pkgPath string, file *registry.File, rt *runtime.Runtime) (string, error) {
 	s, err := p.fileSrcWithoutWindowsExt(file, rt)
 	if err != nil {
 		return "", err
@@ -26,12 +26,12 @@ func (p *Package) RenameFile(logE *logrus.Entry, fs afero.Fs, pkgPath string, fi
 		return s, nil
 	}
 
-	return p.renameFile(logE, fs, pkgPath, s)
+	return p.renameFile(logger, fs, pkgPath, s)
 }
 
 // renameFile performs the actual file renaming with Windows extension.
 // It checks if the target file already exists before attempting to rename.
-func (p *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldName string) (string, error) {
+func (p *Package) renameFile(logger *slog.Logger, fs afero.Fs, pkgPath, oldName string) (string, error) {
 	newName := oldName + p.windowsExt()
 	newPath := filepath.Join(pkgPath, newName)
 	if _, err := fs.Stat(newPath); err == nil {
@@ -43,10 +43,7 @@ func (p *Package) renameFile(logE *logrus.Entry, fs afero.Fs, pkgPath, oldName s
 			Err: err,
 		}
 	}
-	logE.WithFields(logrus.Fields{
-		"new": newPath,
-		"old": old,
-	}).Info("rename a file")
+	logger.Info("rename a file", slog.String("new", newPath), slog.String("old", old))
 	if err := fs.Rename(old, newPath); err != nil {
 		return "", fmt.Errorf("rename a file: %w", err)
 	}

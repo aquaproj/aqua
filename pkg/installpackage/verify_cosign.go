@@ -3,12 +3,12 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 )
 
 type cosignVerifier struct {
@@ -21,18 +21,18 @@ type cosignVerifier struct {
 	asset     string
 }
 
-func (c *cosignVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+func (c *cosignVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if c.disabled {
-		logE.Debug("cosign is disabled")
+		logger.Debug("cosign is disabled")
 		return false, nil
 	}
 
 	return c.cosign.GetEnabled(), nil
 }
 
-func (c *cosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
-	logE.Info("verifying a file with Cosign")
-	if err := c.installer.install(ctx, logE); err != nil {
+func (c *cosignVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
+	logger.Info("verifying a file with Cosign")
+	if err := c.installer.install(ctx, logger); err != nil {
 		return fmt.Errorf("install sigstore/cosign: %w", err)
 	}
 
@@ -41,7 +41,7 @@ func (c *cosignVerifier) Verify(ctx context.Context, logE *logrus.Entry, file st
 
 	art := pkg.TemplateArtifact(c.runtime, c.asset)
 
-	if err := c.verifier.Verify(ctx, logE, c.runtime, &download.File{
+	if err := c.verifier.Verify(ctx, logger, c.runtime, &download.File{
 		RepoOwner: pkg.PackageInfo.RepoOwner,
 		RepoName:  pkg.PackageInfo.RepoName,
 		Version:   pkg.Package.Version,

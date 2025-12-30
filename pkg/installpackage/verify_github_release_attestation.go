@@ -3,10 +3,10 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
-	"github.com/sirupsen/logrus"
 )
 
 type gitHubReleaseAttestationsVerifier struct {
@@ -17,21 +17,21 @@ type gitHubReleaseAttestationsVerifier struct {
 	ghVerifier  GitHubArtifactAttestationsVerifier
 }
 
-func (g *gitHubReleaseAttestationsVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+func (g *gitHubReleaseAttestationsVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if g.disabled {
-		logE.Debug("GitHub Release Attestation is disabled")
+		logger.Debug("GitHub Release Attestation is disabled")
 		return false, nil
 	}
 	return g.gra, nil
 }
 
-func (g *gitHubReleaseAttestationsVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
-	logE.Info("verify GitHub Release Attestations")
-	if err := g.ghInstaller.install(ctx, logE); err != nil {
+func (g *gitHubReleaseAttestationsVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
+	logger.Info("verify GitHub Release Attestations")
+	if err := g.ghInstaller.install(ctx, logger); err != nil {
 		return fmt.Errorf("install GitHub CLI: %w", err)
 	}
 
-	if err := g.ghVerifier.VerifyRelease(ctx, logE, &ghattestation.ParamVerifyRelease{
+	if err := g.ghVerifier.VerifyRelease(ctx, logger, &ghattestation.ParamVerifyRelease{
 		Repository:   g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName,
 		ArtifactPath: file,
 		Version:      g.pkg.Package.Version,

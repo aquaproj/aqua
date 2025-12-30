@@ -3,14 +3,14 @@ package initcmd
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 const configTemplate = `---
@@ -60,15 +60,13 @@ type Param struct {
 	IsDir     bool
 }
 
-func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath string, param *Param) error {
+func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath string, param *Param) error {
 	cfgFilePath = c.cfgFilePath(cfgFilePath, param)
 
 	for _, name := range append(finder.DuplicateFilePaths(cfgFilePath), cfgFilePath) {
 		if _, err := c.fs.Stat(name); err == nil {
 			// configuration file already exists, then do nothing.
-			logE.WithFields(logrus.Fields{
-				"configuration_file_path": name,
-			}).Info("configuration file already exists")
+			logger.Info("configuration file already exists", slog.String("configuration_file_path", name))
 			return nil
 		}
 	}
@@ -82,16 +80,10 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 	registryVersion := "v4.450.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"repo_owner": "aquaproj",
-			"repo_name":  "aqua-registry",
-		}).Warn("get the latest release")
+		logger.Warn("get the latest release", slog.String("repo_owner", "aquaproj"), slog.String("repo_name", "aqua-registry"), slog.Any("error", err))
 	} else {
 		if release == nil {
-			logE.WithFields(logrus.Fields{
-				"repo_owner": "aquaproj",
-				"repo_name":  "aqua-registry",
-			}).Warn("failed to get the latest release")
+			logger.Warn("failed to get the latest release", slog.String("repo_owner", "aquaproj"), slog.String("repo_name", "aqua-registry"))
 		} else {
 			registryVersion = release.GetTagName()
 		}
@@ -105,9 +97,7 @@ func (c *Controller) Init(ctx context.Context, logE *logrus.Entry, cfgFilePath s
 			"%%IMPORT_DIR%%", param.ImportDir, 1)
 	}
 	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(cfgStr), osfile.FilePermission); err != nil {
-		return fmt.Errorf("write a configuration file: %w", logerr.WithFields(err, logrus.Fields{
-			"configuration_file_path": cfgFilePath,
-		}))
+		return fmt.Errorf("write a configuration file: %w", slogerr.With(err, slog.String("configuration_file_path", cfgFilePath)))
 	}
 	return nil
 }

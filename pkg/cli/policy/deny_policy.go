@@ -45,9 +45,9 @@ func (pd *policyDenyCommand) action(ctx context.Context, cmd *cli.Command) error
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, pd.r.LogE, "deny-policy", param, pd.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, pd.r.Logger, "deny-policy", param, pd.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeDenyPolicyCommandController(ctx, param)
-	return ctrl.Deny(pd.r.LogE, param, cmd.Args().First()) //nolint:wrapcheck
+	return ctrl.Deny(pd.r.Logger.Logger, param, cmd.Args().First()) //nolint:wrapcheck
 }

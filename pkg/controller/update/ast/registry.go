@@ -3,15 +3,15 @@ package ast
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	wast "github.com/aquaproj/aqua/v2/pkg/ast"
 	"github.com/goccy/go-yaml/ast"
-	"github.com/sirupsen/logrus"
 )
 
 const typeStandard = "standard"
 
-func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string]string) (bool, error) {
+func UpdateRegistries(logger *slog.Logger, file *ast.File, newVersions map[string]string) (bool, error) {
 	body := file.Docs[0].Body // DocumentNode
 
 	mv, err := wast.FindMappingValueFromNode(body, "registries")
@@ -25,7 +25,7 @@ func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string
 	}
 	updated := false
 	for _, value := range seq.Values {
-		up, err := parseRegistryNode(logE, value, newVersions)
+		up, err := parseRegistryNode(logger, value, newVersions)
 		if err != nil {
 			return false, err
 		}
@@ -36,27 +36,27 @@ func UpdateRegistries(logE *logrus.Entry, file *ast.File, newVersions map[string
 	return updated, nil
 }
 
-func updateRegistryVersion(logE *logrus.Entry, refNode *ast.StringNode, rgstName, newVersion string) bool {
+func updateRegistryVersion(logger *slog.Logger, refNode *ast.StringNode, rgstName, newVersion string) bool {
 	if refNode.Value == newVersion {
 		return false
 	}
 	if commitHashPattern.MatchString(refNode.Value) {
-		logE.WithFields(logrus.Fields{
-			"registry_name":   rgstName,
-			"current_version": refNode.Value,
-		}).Debug("skip updating a commit hash")
+		logger.With(
+			"registry_name", rgstName,
+			"current_version", refNode.Value,
+		).Debug("skip updating a commit hash")
 		return false
 	}
-	logE.WithFields(logrus.Fields{
-		"old_version":   refNode.Value,
-		"new_version":   newVersion,
-		"registry_name": rgstName,
-	}).Info("updating a registry")
+	logger.With(
+		"old_version", refNode.Value,
+		"new_version", newVersion,
+		"registry_name", rgstName,
+	).Info("updating a registry")
 	refNode.Value = newVersion
 	return true
 }
 
-func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:gocognit,cyclop,funlen
+func parseRegistryNode(logger *slog.Logger, node ast.Node, newVersions map[string]string) (bool, error) { //nolint:gocognit,cyclop,funlen
 	mvs, err := wast.NormalizeMappingValueNodes(node)
 	if err != nil {
 		return false, fmt.Errorf("normalize a mapping value node: %w", err)
@@ -79,7 +79,7 @@ func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string
 				refNode = sn
 				continue
 			}
-			return updateRegistryVersion(logE, sn, rgstName, newVersion), nil
+			return updateRegistryVersion(logger, sn, rgstName, newVersion), nil
 		case "type":
 			sn, ok := mvn.Value.(*ast.StringNode)
 			if !ok {
@@ -109,7 +109,7 @@ func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string
 				newVersion = version
 				continue
 			}
-			return updateRegistryVersion(logE, refNode, sn.Value, version), nil
+			return updateRegistryVersion(logger, refNode, sn.Value, version), nil
 		default:
 			continue // Ignore unknown fields
 		}
@@ -121,5 +121,5 @@ func parseRegistryNode(logE *logrus.Entry, node ast.Node, newVersions map[string
 	if !ok {
 		return false, nil
 	}
-	return updateRegistryVersion(logE, refNode, rgstName, version), nil
+	return updateRegistryVersion(logger, refNode, rgstName, version), nil
 }

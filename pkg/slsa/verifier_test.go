@@ -2,6 +2,7 @@ package slsa_test
 
 import (
 	"io"
+	"log/slog"
 	"strings"
 	"testing"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -68,13 +68,13 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			exe: &slsa.MockExecutor{},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 			verifier := slsa.New(d.downloader, d.fs, d.exe)
-			if err := verifier.Verify(ctx, logE, d.rt, d.sp, d.art, d.file, d.param); err != nil {
+			if err := verifier.Verify(ctx, logger, d.rt, d.sp, d.art, d.file, d.param); err != nil {
 				if d.isErr {
 					return
 				}

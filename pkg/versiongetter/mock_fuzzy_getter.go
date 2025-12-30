@@ -2,9 +2,9 @@ package versiongetter
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/sirupsen/logrus"
 )
 
 type MockFuzzyGetter struct {
@@ -17,6 +17,6 @@ func NewMockFuzzyGetter(versions map[string]string) *MockFuzzyGetter {
 	}
 }
 
-func (g *MockFuzzyGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string {
+func (g *MockFuzzyGetter) Get(_ context.Context, _ *slog.Logger, pkg *registry.PackageInfo, _ string, _ bool, _ int) string {
 	return g.versions[pkg.GetName()]
 }

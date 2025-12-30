@@ -2,11 +2,11 @@ package versiongetter
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
 )
 
 const ghMaxPerPage int = 100
@@ -27,20 +27,20 @@ func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionG
 	}
 }
 
-func (g *GeneralVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GeneralVersionGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	getter := g.get(pkg)
 	if getter == nil {
 		return "", nil
 	}
-	return getter.Get(ctx, logE, pkg, filters) //nolint:wrapcheck
+	return getter.Get(ctx, logger, pkg, filters) //nolint:wrapcheck
 }
 
-func (g *GeneralVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *GeneralVersionGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	getter := g.get(pkg)
 	if getter == nil {
 		return nil, nil
 	}
-	return getter.List(ctx, logE, pkg, filters, limit) //nolint:wrapcheck
+	return getter.List(ctx, logger, pkg, filters, limit) //nolint:wrapcheck
 }
 
 func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
@@ -74,19 +74,19 @@ func itemNumPerPage(limit, filterNum int) int {
 }
 
 // log the GitHub API rate limit info
-func logGHRateLimit(logE *logrus.Entry, resp *github.Response) {
+func logGHRateLimit(logger *slog.Logger, resp *github.Response) {
 	if resp == nil {
 		return
 	}
-	withRateLimitInfo(logE, resp).Debug("GitHub API Rate Limit info")
+	withRateLimitInfo(logger, resp).Debug("GitHub API Rate Limit info")
 }
 
-func withRateLimitInfo(logE *logrus.Entry, resp *github.Response) *logrus.Entry {
+func withRateLimitInfo(logger *slog.Logger, resp *github.Response) *slog.Logger {
 	if resp == nil {
-		return logE
+		return logger
 	}
-	return logE.WithFields(logrus.Fields{
-		"github_api_rate_limit":     resp.Rate.Limit,
-		"github_api_rate_remaining": resp.Rate.Remaining,
-	})
+	return logger.With(
+		"github_api_rate_limit", resp.Rate.Limit,
+		"github_api_rate_remaining", resp.Rate.Remaining,
+	)
 }

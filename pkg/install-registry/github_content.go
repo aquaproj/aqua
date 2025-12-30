@@ -4,20 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"go.yaml.in/yaml/v2"
 )
 
 const registryFilePermission = 0o600
 
-func (is *Installer) getGitHubContentRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
-	ghContentFile, err := is.registryDownloader.DownloadGitHubContentFile(ctx, logE, &domain.GitHubContentFileParam{
+func (is *Installer) getGitHubContentRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+	ghContentFile, err := is.registryDownloader.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
 		Ref:       regist.Ref,

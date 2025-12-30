@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/user"
 	"runtime"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	rt "github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -31,7 +31,6 @@ func New(fs afero.Fs, finder ConfigFinder, rt *rt.Runtime) *Controller {
 
 type Info struct {
 	Version     string            `json:"version"`
-	CommitHash  string            `json:"commit_hash"`
 	OS          string            `json:"os"`
 	Arch        string            `json:"arch"`
 	AquaGOOS    string            `json:"aqua_goos,omitempty"`
@@ -67,7 +66,7 @@ func getCurrentUserName() (string, error) {
 	return userName, nil
 }
 
-func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Param) error { //nolint:funlen
+func (c *Controller) Info(_ context.Context, _ *slog.Logger, param *config.Param) error { //nolint:funlen
 	userName, err := getCurrentUserName()
 	if err != nil {
 		return fmt.Errorf("get a current user name: %w", err)
@@ -83,7 +82,6 @@ func (c *Controller) Info(_ context.Context, _ *logrus.Entry, param *config.Para
 
 	info := &Info{
 		Version:     param.AQUAVersion,
-		CommitHash:  param.AquaCommitHash,
 		PWD:         maskUser(param.PWD, userName),
 		OS:          runtime.GOOS,
 		Arch:        runtime.GOARCH,

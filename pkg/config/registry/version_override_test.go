@@ -1,15 +1,15 @@
 package registry_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/sirupsen/logrus"
 )
 
 func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 	t.Parallel()
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 
 	data := []struct {
 		name        string
@@ -185,7 +185,7 @@ func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			result, err := d.pkg.SetVersion(logE, d.version)
+			result, err := d.pkg.SetVersion(logger, d.version)
 
 			if d.expectError {
 				if err == nil {
@@ -219,7 +219,7 @@ func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 
 func TestPackageInfo_SetVersion_Integration(t *testing.T) { //nolint:funlen
 	t.Parallel()
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 
 	// Test a more complex scenario with realistic package info
 	pkg := &registry.PackageInfo{
@@ -272,7 +272,7 @@ func TestPackageInfo_SetVersion_Integration(t *testing.T) { //nolint:funlen
 	for _, tt := range tests {
 		t.Run(tt.version, func(t *testing.T) {
 			t.Parallel()
-			result, err := pkg.SetVersion(logE, tt.version)
+			result, err := pkg.SetVersion(logger, tt.version)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -298,7 +298,7 @@ func TestPackageInfo_SetVersion_Integration(t *testing.T) { //nolint:funlen
 
 func TestPackageInfo_setTopVersion(t *testing.T) { //nolint:funlen
 	t.Parallel()
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 
 	data := []struct {
 		name      string
@@ -379,7 +379,7 @@ func TestPackageInfo_setTopVersion(t *testing.T) { //nolint:funlen
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			// Using the internal method through a wrapper
-			result, err := d.pkg.SetVersion(logE, d.version)
+			result, err := d.pkg.SetVersion(logger, d.version)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

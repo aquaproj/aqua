@@ -3,12 +3,12 @@ package versiongetter
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sort"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/hashicorp/go-version"
-	"github.com/sirupsen/logrus"
 )
 
 type GoGetter struct {
@@ -22,11 +22,11 @@ func NewGoGetter(gc GoProxyClient) *GoGetter {
 }
 
 type GoProxyClient interface {
-	List(ctx context.Context, logE *logrus.Entry, path string) ([]string, error)
+	List(ctx context.Context, logger *slog.Logger, path string) ([]string, error)
 }
 
-func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, _ []*Filter) (string, error) { //nolint:cyclop
-	versions, err := g.gc.List(ctx, logE, pkg.GoVersionPath)
+func (g *GoGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, _ []*Filter) (string, error) { //nolint:cyclop
+	versions, err := g.gc.List(ctx, logger, pkg.GoVersionPath)
 	if err != nil {
 		return "", fmt.Errorf("list versions: %w", err)
 	}
@@ -35,7 +35,7 @@ func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.Pa
 	for _, vs := range versions {
 		v, err := version.NewSemver(vs)
 		if err != nil {
-			logE.WithError(err).WithField("version", vs).Warn("parse a version")
+			logger.Warn("parse a version", slog.Any("error", err), slog.String("version", vs))
 			continue
 		}
 		if v.Prerelease() == "" && (latest == nil || v.GreaterThan(latest)) {
@@ -56,8 +56,8 @@ func (g *GoGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.Pa
 	return "", nil
 }
 
-func (g *GoGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, _ []*Filter, _ int) ([]*fuzzyfinder.Item, error) {
-	vs, err := g.gc.List(ctx, logE, pkg.GoVersionPath)
+func (g *GoGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, _ []*Filter, _ int) ([]*fuzzyfinder.Item, error) {
+	vs, err := g.gc.List(ctx, logger, pkg.GoVersionPath)
 	if err != nil {
 		return nil, fmt.Errorf("list versions: %w", err)
 	}
@@ -65,7 +65,7 @@ func (g *GoGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.P
 	for _, v := range vs {
 		v, err := version.NewSemver(v)
 		if err != nil {
-			logE.WithError(err).WithField("version", vs).Warn("parse a version")
+			logger.Warn("parse a version", slog.Any("error", err), slog.Any("version", vs))
 			continue
 		}
 		versions = append(versions, v)

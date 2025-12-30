@@ -2,11 +2,11 @@ package cp
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/sirupsen/logrus"
 )
 
 type Installer interface {
-	Install(ctx context.Context, logE *logrus.Entry, param *config.Param) error
+	Install(ctx context.Context, logger *slog.Logger, param *config.Param) error
 }

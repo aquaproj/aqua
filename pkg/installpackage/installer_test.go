@@ -1,6 +1,7 @@
 package installpackage_test
 
 import (
+	"log/slog"
 	"net/http"
 	"testing"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -172,7 +172,7 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -187,10 +187,10 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			if err := ctrl.InstallPackages(ctx, logE, &installpackage.ParamInstallPackages{
+			if err := ctrl.InstallPackages(ctx, logger, &installpackage.ParamInstallPackages{
 				Config:         d.cfg,
 				Registries:     d.registries,
 				ConfigFilePath: d.param.ConfigFilePath,
@@ -254,7 +254,7 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger2 := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -263,10 +263,10 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 			if err != nil {
 				t.Fatal(err)
 			}
-			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger2, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, nil, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			if err := ctrl.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
+			if err := ctrl.InstallPackage(ctx, logger2, &installpackage.ParamInstallPackage{
 				Pkg: d.pkg,
 			}); err != nil {
 				if d.isErr {

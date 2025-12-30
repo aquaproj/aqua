@@ -5,8 +5,7 @@ import (
 	"strings"
 
 	"github.com/invopop/jsonschema"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // Package represents a package definition in aqua.yaml configuration.
@@ -114,9 +113,7 @@ type Config struct {
 func (c *Config) Validate() error {
 	for _, r := range c.Registries {
 		if err := r.Validate(); err != nil {
-			return fmt.Errorf("validate the registry: %w", logerr.WithFields(err, logrus.Fields{
-				"registry_name": r.Name,
-			}))
+			return fmt.Errorf("validate the registry: %w", slogerr.With(err, "registry_name", r.Name))
 		}
 	}
 	return nil

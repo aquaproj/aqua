@@ -1,6 +1,7 @@
 package installpackage
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -8,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -75,14 +75,14 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 			inst := d.inst
 
-			if err := inst.verifyChecksum(ctx, logE, d.param); err != nil {
+			if err := inst.verifyChecksum(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
 				}

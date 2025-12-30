@@ -3,15 +3,14 @@ package vacuum
 import (
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
 )
 
 const (
@@ -65,7 +64,7 @@ func (c *Client) Create(pkgPath string, timestamp time.Time) error {
 	return c.update(file, dir, timestamp)
 }
 
-func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
+func (c *Client) FindAll(logger *slog.Logger) (map[string]time.Time, error) {
 	timestamps := map[string]time.Time{}
 	if err := afero.Walk(c.fs, filepath.Join(c.rootDir, "pkgs"), func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -81,7 +80,7 @@ func (c *Client) FindAll(logE *logrus.Entry) (map[string]time.Time, error) {
 		}
 		t, err := ParseTime(strings.TrimSpace(string(b)))
 		if err != nil {
-			logerr.WithError(logE, err).WithField("timestamp_file", path).Warn("a timestamp file is broken, so recreating it")
+			logger.Warn("a timestamp file is broken, so recreating it", slog.Any("error", err), slog.String("timestamp_file", path))
 			if err := c.Update(path, time.Now()); err != nil {
 				return fmt.Errorf("recreate a broken package timestamp file: %w", err)
 			}

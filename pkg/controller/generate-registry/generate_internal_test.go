@@ -2,6 +2,7 @@ package genrgst
 
 import (
 	"bytes"
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
@@ -10,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 )
 
 func strp(s string) *string {
@@ -130,7 +130,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -145,7 +145,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			}
 			var buf bytes.Buffer
 			ctrl := NewController(nil, gh, nil, cargoClient, &buf)
-			pkgInfo, _ := ctrl.getPackageInfo(ctx, logE, d.pkgName, &config.Param{}, &Config{})
+			pkgInfo, _ := ctrl.getPackageInfo(ctx, logger, d.pkgName, &config.Param{}, &Config{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}

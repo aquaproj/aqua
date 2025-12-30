@@ -3,11 +3,11 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/sirupsen/logrus"
 )
 
 type DedicatedInstaller struct {
@@ -26,17 +26,17 @@ func newDedicatedInstaller(installer *Installer, pkg func() *config.Package, che
 	}
 }
 
-func (di *DedicatedInstaller) install(ctx context.Context, logE *logrus.Entry) error {
+func (di *DedicatedInstaller) install(ctx context.Context, logger *slog.Logger) error {
 	di.mutex.Lock()
 	defer di.mutex.Unlock()
 
 	pkg := di.pkg()
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Package.Name,
-		"package_version": pkg.Package.Version,
-	})
+	logger = logger.With(
+		"package_name", pkg.Package.Name,
+		"package_version", pkg.Package.Version,
+	)
 
-	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, di.installer.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, di.installer.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
@@ -45,13 +45,13 @@ func (di *DedicatedInstaller) install(ctx context.Context, logE *logrus.Entry) e
 		return fmt.Errorf("check if the package is supported in the environment: %w", err)
 	}
 	if !supported {
-		logE.Debug("the package isn't supported in the environment")
+		logger.Debug("the package isn't supported in the environment")
 		return nil
 	}
 
 	pkg.PackageInfo = pkgInfo
 
-	if err := di.installer.InstallPackage(ctx, logE, &ParamInstallPackage{
+	if err := di.installer.InstallPackage(ctx, logger, &ParamInstallPackage{
 		Pkg:           pkg,
 		Checksums:     di.checksums,
 		DisablePolicy: true,

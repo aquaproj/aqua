@@ -2,16 +2,14 @@ package github
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
 	"github.com/google/go-github/v80/github"
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/ghtkn-go-sdk/ghtkn"
 	"github.com/suzuki-shunsuke/go-retryablehttp"
-	"github.com/suzuki-shunsuke/go-retryablehttp-logrus/rlog"
-	"github.com/suzuki-shunsuke/slog-logrus/slogrus"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/keyring/ghtoken"
 	"golang.org/x/oauth2"
 )
@@ -31,8 +29,8 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context, logE *logrus.Entry) *RepositoriesService {
-	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logE, getGitHubToken()), logE)).Repositories
+func New(ctx context.Context, logger *slog.Logger) *RepositoriesService {
+	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logger, getGitHubToken()), logger)).Repositories
 }
 
 func getGitHubToken() string {
@@ -42,21 +40,21 @@ func getGitHubToken() string {
 	return os.Getenv("GITHUB_TOKEN")
 }
 
-func MakeRetryable(client *http.Client, logE *logrus.Entry) *http.Client {
+func MakeRetryable(client *http.Client, logger *slog.Logger) *http.Client {
 	c := retryablehttp.NewClient()
 	c.HTTPClient = client
-	c.Logger = rlog.New(logE)
+	c.Logger = logger
 	return c.StandardClient()
 }
 
-func getHTTPClientForGitHub(ctx context.Context, logE *logrus.Entry, token string) *http.Client {
+func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token string) *http.Client {
 	if token == "" {
 		if keyring.Enabled() {
-			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logE, keyring.KeyService))
+			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logger, keyring.KeyService))
 		}
 		if os.Getenv("AQUA_GHTKN_ENABLED") == "true" {
 			client := ghtkn.New()
-			return oauth2.NewClient(ctx, client.TokenSource(slogrus.Convert(logE), &ghtkn.InputGet{}))
+			return oauth2.NewClient(ctx, client.TokenSource(logger, &ghtkn.InputGet{}))
 		}
 		return http.DefaultClient
 	}

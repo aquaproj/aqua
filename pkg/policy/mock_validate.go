@@ -1,7 +1,7 @@
 package policy
 
 import (
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
 type MockValidator struct {
@@ -20,6 +20,6 @@ func (v *MockValidator) Validate(p string) error {
 	return v.Err
 }
 
-func (v *MockValidator) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
+func (v *MockValidator) Warn(logger *slog.Logger, policyFilePath string, updated bool) error {
 	return v.Err
 }

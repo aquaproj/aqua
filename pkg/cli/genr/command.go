@@ -148,9 +148,9 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "generate-registry", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.Logger, "generate-registry", param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, i.r.LogE, param, http.DefaultClient, os.Stdout)
-	return ctrl.GenerateRegistry(ctx, param, i.r.LogE, cmd.Args().Slice()...) //nolint:wrapcheck
+	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, os.Stdout)
+	return ctrl.GenerateRegistry(ctx, param, i.r.Logger.Logger, cmd.Args().Slice()...) //nolint:wrapcheck
 }

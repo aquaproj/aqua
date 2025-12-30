@@ -1,10 +1,10 @@
 package config_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/sirupsen/logrus"
 )
 
 func TestGetMaxParallelism(t *testing.T) {
@@ -29,11 +29,11 @@ func TestGetMaxParallelism(t *testing.T) {
 			exp:               10,
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			maxParallelism := config.GetMaxParallelism(d.envMaxParallelism, logE)
+			maxParallelism := config.GetMaxParallelism(d.envMaxParallelism, logger)
 			if maxParallelism != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, maxParallelism)
 			}

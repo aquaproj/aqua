@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (c *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *config.Param) error {
+func (c *Controller) UpdateAqua(ctx context.Context, logger *slog.Logger, param *config.Param) error {
 	rootBin := filepath.Join(c.rootDir, "bin")
 	if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
@@ -23,12 +23,12 @@ func (c *Controller) UpdateAqua(ctx context.Context, logE *logrus.Entry, param *
 		return err
 	}
 
-	logE = logE.WithField("new_version", version)
+	logger = logger.With("new_version", version)
 
-	if err := c.installer.InstallAqua(ctx, logE, version); err != nil {
-		return fmt.Errorf("download aqua: %w", logerr.WithFields(err, logrus.Fields{
-			"new_version": version,
-		}))
+	if err := c.installer.InstallAqua(ctx, logger, version); err != nil {
+		return fmt.Errorf("download aqua: %w", slogerr.With(err,
+			"new_version", version,
+		))
 	}
 	return nil
 }

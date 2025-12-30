@@ -1,6 +1,7 @@
 package versiongetter_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -9,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 )
 
 func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
@@ -54,7 +54,7 @@ func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 			ctx := t.Context()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
 			ghTagGetter := versiongetter.NewGitHubTag(ghTagClient)
-			version, err := ghTagGetter.Get(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters)
+			version, err := ghTagGetter.Get(ctx, slog.New(slog.DiscardHandler), d.pkg, d.filters)
 			if err != nil {
 				if d.isErr {
 					return
@@ -123,7 +123,7 @@ func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 			ctx := t.Context()
 			ghTagClient := versiongetter.NewMockGitHubTagClient(d.tags)
 			ghTagGetter := versiongetter.NewGitHubTag(ghTagClient)
-			items, err := ghTagGetter.List(ctx, logrus.NewEntry(logrus.New()), d.pkg, d.filters, -1)
+			items, err := ghTagGetter.List(ctx, slog.New(slog.DiscardHandler), d.pkg, d.filters, -1)
 			if err != nil {
 				if d.isErr {
 					return

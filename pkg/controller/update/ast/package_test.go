@@ -1,12 +1,12 @@
 package ast_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/controller/update/ast"
 	"github.com/goccy/go-yaml/parser"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 )
 
 func TestUpdatePackages(t *testing.T) { //nolint:funlen
@@ -49,7 +49,7 @@ func TestUpdatePackages(t *testing.T) { //nolint:funlen
 			updated: true,
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -57,7 +57,7 @@ func TestUpdatePackages(t *testing.T) { //nolint:funlen
 			if err != nil {
 				t.Fatal(err)
 			}
-			updated, err := ast.UpdatePackages(logE, file, d.newVersions)
+			updated, err := ast.UpdatePackages(logger, file, d.newVersions)
 			if err != nil {
 				if !d.isErr {
 					t.Fatal(err)

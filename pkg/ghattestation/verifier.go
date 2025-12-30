@@ -2,8 +2,7 @@ package ghattestation
 
 import (
 	"context"
-
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
 type Verifier struct {
@@ -23,6 +22,6 @@ type ParamVerify struct {
 	PredicateType  string
 }
 
-func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
-	return v.exe.Verify(ctx, logE, param) //nolint:wrapcheck
+func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
+	return v.exe.Verify(ctx, logger, param) //nolint:wrapcheck
 }

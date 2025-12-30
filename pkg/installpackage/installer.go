@@ -3,6 +3,7 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
@@ -19,9 +20,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -132,24 +132,24 @@ type Linker interface {
 }
 
 type SLSAVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *slsa.ParamVerify) error
+	Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *slsa.ParamVerify) error
 }
 
 type MinisignVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *minisign.ParamVerify) error
+	Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *minisign.ParamVerify) error
 }
 
 type GitHubArtifactAttestationsVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, param *ghattestation.ParamVerify) error
-	VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ghattestation.ParamVerifyRelease) error
+	Verify(ctx context.Context, logger *slog.Logger, param *ghattestation.ParamVerify) error
+	VerifyRelease(ctx context.Context, logger *slog.Logger, param *ghattestation.ParamVerifyRelease) error
 }
 
 type CosignVerifier interface {
-	Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
+	Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
 }
 
 type Unarchiver interface {
-	Unarchive(ctx context.Context, logE *logrus.Entry, src *unarchive.File, dest string) error
+	Unarchive(ctx context.Context, logger *slog.Logger, src *unarchive.File, dest string) error
 }
 
 type ParamInstallPackages struct {
@@ -193,18 +193,17 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackages) error { //nolint:cyclop
-	pkgs, failed := config.ListPackages(logE, param.Config, is.runtime, param.Registries)
+func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error { //nolint:cyclop
+	pkgs, failed := config.ListPackages(logger, param.Config, is.runtime, param.Registries)
 	if !param.SkipLink {
-		if failedCreateLinks := is.createLinks(logE, pkgs); failedCreateLinks {
+		if failedCreateLinks := is.createLinks(logger, pkgs); failedCreateLinks {
 			failed = failedCreateLinks
 		}
 	}
 
 	if is.onlyLink {
-		logE.WithFields(logrus.Fields{
-			"only_link": true,
-		}).Debug("skip downloading the package")
+		logger.Debug("skip downloading the package",
+			slog.Bool("only_link", true))
 		if failed {
 			return errInstallFailure
 		}
@@ -222,24 +221,24 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 	eg.SetLimit(is.maxParallelism)
 
 	for _, pkg := range pkgs {
-		logE := logE.WithFields(logrus.Fields{
-			"package_name":    pkg.Package.Name,
-			"package_version": pkg.Package.Version,
-			"registry":        pkg.Package.Registry,
-		})
+		logger := logger.With(
+			"package_name", pkg.Package.Name,
+			"package_version", pkg.Package.Version,
+			"registry", pkg.Package.Registry,
+		)
 		if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
-			logE.Debug("skip installing the package because package tags are unmatched")
+			logger.Debug("skip installing the package because package tags are unmatched")
 			continue
 		}
 		eg.Go(func() error {
-			if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
+			if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksums:       param.Checksums,
 				RequireChecksum: param.RequireChecksum,
 				PolicyConfigs:   param.PolicyConfigs,
 				DisablePolicy:   param.DisablePolicy,
 			}); err != nil {
-				logerr.WithError(logE, err).Error("install the package")
+				slogerr.WithError(logger, err).Error("install the package")
 				return err
 			}
 			return nil
@@ -251,16 +250,16 @@ func (is *Installer) InstallPackages(ctx context.Context, logE *logrus.Entry, pa
 	return nil
 }
 
-func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, param *ParamInstallPackage) error {
+func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, param *ParamInstallPackage) error {
 	pkg := param.Pkg
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Package.Name,
-		"package_version": pkg.Package.Version,
-		"registry":        pkg.Package.Registry,
-	})
-	logE.Debug("installing the package")
+	logger = logger.With(
+		"package_name", pkg.Package.Name,
+		"package_version", pkg.Package.Version,
+		"registry", pkg.Package.Registry,
+	)
+	logger.Debug("installing the package")
 
-	if err := is.validatePackage(logE, param); err != nil {
+	if err := is.validatePackage(logger, param); err != nil {
 		return err
 	}
 
@@ -274,7 +273,7 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 		return fmt.Errorf("get the package install path: %w", err)
 	}
 
-	if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
+	if err := is.downloadWithRetry(ctx, logger, &DownloadParam{
 		Package:         pkg,
 		Dest:            pkgPath,
 		Asset:           assetName,
@@ -285,5 +284,5 @@ func (is *Installer) InstallPackage(ctx context.Context, logE *logrus.Entry, par
 		return err
 	}
 
-	return is.checkFilesWrap(ctx, logE, param, pkgPath)
+	return is.checkFilesWrap(ctx, logger, param, pkgPath)
 }

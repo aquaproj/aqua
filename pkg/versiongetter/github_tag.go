@@ -3,11 +3,11 @@ package versiongetter
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
 )
 
 type GitHubTagVersionGetter struct {
@@ -34,7 +34,7 @@ func convTag(tag *github.RepositoryTag) *Release {
 	}
 }
 
-func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GitHubTagVersionGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
@@ -43,7 +43,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 
 	var respToLog *github.Response
 	defer func() {
-		logGHRateLimit(logE, respToLog)
+		logGHRateLimit(logger, respToLog)
 	}()
 
 	candidates := []*Release{}
@@ -69,7 +69,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pk
 	}
 }
 
-func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubTagVersionGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
@@ -81,7 +81,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logE *logrus.Entry, p
 	for {
 		tags, resp, err := g.gh.ListTags(ctx, repoOwner, repoName, opt)
 		if err != nil {
-			*logE = *withRateLimitInfo(logE, resp)
+			logger = withRateLimitInfo(logger, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {

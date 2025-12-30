@@ -2,6 +2,7 @@ package installpackage_test
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"testing"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
-	"github.com/sirupsen/logrus"
 )
 
 func Test_installer_InstallProxy(t *testing.T) {
@@ -48,7 +48,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -63,10 +63,10 @@ func Test_installer_InstallProxy(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			ctrl := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(d.executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			if err := ctrl.InstallProxy(ctx, logE); err != nil {
+			if err := ctrl.InstallProxy(ctx, logger); err != nil {
 				if d.isErr {
 					return
 				}

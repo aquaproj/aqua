@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -11,15 +12,14 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/update/ast"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
-func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, rgstCfgs map[string]*registry.Config) error {
+func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, param *config.Param, cfgFilePath string, rgstCfgs map[string]*registry.Config) error {
 	newVersions := map[string]string{}
 	updatedPkgs := map[string]struct{}{}
 	if param.Insert {
-		pkgs, err := c.selectPackages(logE, cfgFilePath)
+		pkgs, err := c.selectPackages(logger, cfgFilePath)
 		if err != nil {
 			return err
 		}
@@ -35,15 +35,15 @@ func (c *Controller) updatePackages(ctx context.Context, logE *logrus.Entry, par
 	}
 	cfgs[cfgFilePath] = cfg
 	for cfgPath, cfg := range cfgs {
-		if err := c.updatePackagesInFile(ctx, logE, param, cfgPath, cfg, rgstCfgs, updatedPkgs, newVersions); err != nil {
+		if err := c.updatePackagesInFile(ctx, logger, param, cfgPath, cfg, rgstCfgs, updatedPkgs, newVersions); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Controller) updatePackagesInFile(ctx context.Context, logE *logrus.Entry, param *config.Param, cfgFilePath string, cfg *aqua.Config, rgstCfgs map[string]*registry.Config, updatedPkgs map[string]struct{}, newVersions map[string]string) error { //nolint:cyclop
-	pkgs, failed := config.ListPackages(logE, cfg, c.runtime, rgstCfgs)
+func (c *Controller) updatePackagesInFile(ctx context.Context, logger *slog.Logger, param *config.Param, cfgFilePath string, cfg *aqua.Config, rgstCfgs map[string]*registry.Config, updatedPkgs map[string]struct{}, newVersions map[string]string) error { //nolint:cyclop
+	pkgs, failed := config.ListPackages(logger, cfg, c.runtime, rgstCfgs)
 	if len(pkgs) == 0 {
 		if failed {
 			return errors.New("list packages")
@@ -57,16 +57,16 @@ func (c *Controller) updatePackagesInFile(ctx context.Context, logE *logrus.Entr
 				continue
 			}
 		}
-		logE := logE.WithFields(logrus.Fields{
-			"package_name":    pkg.Package.Name,
-			"package_version": pkg.Package.Version,
-			"registry":        pkg.Package.Registry,
-		})
+		logger := logger.With(
+			"package_name", pkg.Package.Name,
+			"package_version", pkg.Package.Version,
+			"registry", pkg.Package.Registry,
+		)
 		if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
-			logE.Debug("skip updating the package because package tags are unmatched")
+			logger.Debug("skip updating the package because package tags are unmatched")
 			continue
 		}
-		if newVersion := c.getPackageNewVersion(ctx, logE, param, updatedPkgs, pkg); newVersion != "" {
+		if newVersion := c.getPackageNewVersion(ctx, logger, param, updatedPkgs, pkg); newVersion != "" {
 			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.PackageInfo.GetName())] = newVersion
 			newVersions[fmt.Sprintf("%s,%s", pkg.Package.Registry, pkg.Package.Name)] = newVersion
 		}
@@ -74,13 +74,13 @@ func (c *Controller) updatePackagesInFile(ctx context.Context, logE *logrus.Entr
 	if len(newVersions) == 0 {
 		return nil
 	}
-	if err := c.updateFile(logE, cfgFilePath, newVersions); err != nil {
+	if err := c.updateFile(logger, cfgFilePath, newVersions); err != nil {
 		return fmt.Errorf("update a package: %w", err)
 	}
 	return nil
 }
 
-func (c *Controller) getPackageNewVersion(ctx context.Context, logE *logrus.Entry, param *config.Param, updatedPkgs map[string]struct{}, pkg *config.Package) string {
+func (c *Controller) getPackageNewVersion(ctx context.Context, logger *slog.Logger, param *config.Param, updatedPkgs map[string]struct{}, pkg *config.Package) string {
 	if len(updatedPkgs) != 0 {
 		var item string
 		if pkg.Package.Registry != "standard" {
@@ -92,23 +92,23 @@ func (c *Controller) getPackageNewVersion(ctx context.Context, logE *logrus.Entr
 			return ""
 		}
 	}
-	return c.fuzzyGetter.Get(ctx, logE, pkg.PackageInfo, pkg.Package.Version, param.SelectVersion, param.Limit)
+	return c.fuzzyGetter.Get(ctx, logger, pkg.PackageInfo, pkg.Package.Version, param.SelectVersion, param.Limit)
 }
 
-func (c *Controller) selectPackages(logE *logrus.Entry, cfgFilePath string) (map[string]struct{}, error) {
+func (c *Controller) selectPackages(logger *slog.Logger, cfgFilePath string) (map[string]struct{}, error) {
 	updatedPkgs := map[string]struct{}{}
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logger, cfgFilePath, cfg); err != nil {
 		return nil, fmt.Errorf("read a configuration file: %w", err)
 	}
 	items := make([]*fuzzyfinder.Item, 0, len(cfg.Packages))
 	for _, pkg := range cfg.Packages {
 		if commitHashPattern.MatchString(pkg.Version) {
-			logE.WithFields(logrus.Fields{
-				"registry_name":   pkg.Registry,
-				"package_name":    pkg.Name,
-				"package_version": pkg.Version,
-			}).Debug("skip a package whose version is a commit hash")
+			logger.With(
+				"registry_name", pkg.Registry,
+				"package_name", pkg.Name,
+				"package_version", pkg.Version,
+			).Debug("skip a package whose version is a commit hash")
 			continue
 		}
 		var item string
@@ -134,7 +134,7 @@ func (c *Controller) selectPackages(logE *logrus.Entry, cfgFilePath string) (map
 	return updatedPkgs, nil
 }
 
-func (c *Controller) updateFile(logE *logrus.Entry, cfgFilePath string, newVersions map[string]string) error {
+func (c *Controller) updateFile(logger *slog.Logger, cfgFilePath string, newVersions map[string]string) error {
 	b, err := afero.ReadFile(c.fs, cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
@@ -145,7 +145,7 @@ func (c *Controller) updateFile(logE *logrus.Entry, cfgFilePath string, newVersi
 		return fmt.Errorf("parse configuration file as YAML: %w", err)
 	}
 
-	updated, err := ast.UpdatePackages(logE, file, newVersions)
+	updated, err := ast.UpdatePackages(logger, file, newVersions)
 	if err != nil {
 		return fmt.Errorf("parse a file with AST: %w", err)
 	}

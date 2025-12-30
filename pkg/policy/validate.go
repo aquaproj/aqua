@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -18,7 +18,7 @@ type Validator interface {
 	Validate(p string) error
 	Allow(p string) error
 	Deny(p string) error
-	Warn(logE *logrus.Entry, policyFilePath string, updated bool) error
+	Warn(logger *slog.Logger, policyFilePath string, updated bool) error
 }
 
 type ValidatorImpl struct {
@@ -115,7 +115,7 @@ func (v *ValidatorImpl) Deny(p string) error {
 	return nil
 }
 
-func (v *ValidatorImpl) Warn(logE *logrus.Entry, policyFilePath string, updated bool) error {
+func (v *ValidatorImpl) Warn(logger *slog.Logger, policyFilePath string, updated bool) error {
 	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizePath(policyFilePath))
 	fs := v.fs
 	f, err := afero.Exists(fs, warnFilePath)
@@ -137,10 +137,10 @@ $ aqua policy deny "%s"
 	if updated {
 		msg = `The policy file is changed. ` + msg
 	}
-	logE.WithFields(logrus.Fields{
-		"policy_file": policyFilePath,
-		"doc":         "https://aquaproj.github.io/docs/reference/codes/003",
-	}).Warnf(msg, policyFilePath, policyFilePath)
+	logger.With(
+		slog.String("policy_file", policyFilePath),
+		slog.String("doc", "https://aquaproj.github.io/docs/reference/codes/003"),
+	).Warn(fmt.Sprintf(msg, policyFilePath, policyFilePath))
 	return nil
 }
 
