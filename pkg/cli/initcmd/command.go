@@ -6,6 +6,7 @@ package initcmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
@@ -74,7 +75,7 @@ func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
 	if err := util.SetParam(cmd, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInitCommandController(ctx, ic.r.LogE, param)
+	ctrl := controller.InitializeInitCommandController(ctx, ic.r.LogE, param, http.DefaultClient)
 	cParam := &initcmd.Param{
 		IsDir:     cmd.Bool("create-dir"),
 		ImportDir: cmd.String("import-dir"),
