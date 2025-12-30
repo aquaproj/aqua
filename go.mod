@@ -29,7 +29,7 @@ require (
 	github.com/suzuki-shunsuke/go-retryablehttp-logrus v0.0.1
 	github.com/suzuki-shunsuke/logrus-error v0.1.4
 	github.com/suzuki-shunsuke/slog-logrus v0.1.0
-	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.0.7
+	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.0
 	github.com/urfave/cli/v3 v3.6.1
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	go.yaml.in/yaml/v2 v2.4.3
