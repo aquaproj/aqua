@@ -44,26 +44,26 @@ func (p *PackageInfos) toMap(logger *slog.Logger, logLevel slog.Level) map[strin
 	m := make(map[string]*PackageInfo, len(*p))
 	for _, pkgInfo := range *p {
 		if pkgInfo == nil {
-			logger.Log(nil, logLevel, "ignore an empty package")
+			logger.Log(nil, logLevel, "ignore an empty package") //nolint:staticcheck
 			continue
 		}
 		name := pkgInfo.GetName()
 		if name == "" {
-			logger.Log(nil, logLevel, "ignore a package in the registry because the name is empty")
+			logger.Log(nil, logLevel, "ignore a package in the registry because the name is empty") //nolint:staticcheck
 			continue
 		}
 		if _, ok := m[name]; ok {
-			logger.Log(nil, logLevel, "ignore a package in the registry because the package name is duplicate", "registry_package_name", name)
+			logger.Log(nil, logLevel, "ignore a package in the registry because the package name is duplicate", "registry_package_name", name) //nolint:staticcheck
 			continue
 		}
 		m[name] = pkgInfo
 		for _, alias := range pkgInfo.Aliases {
 			if alias.Name == "" {
-				logger.Log(nil, logLevel, "ignore an empty package alias in the registry", "registry_package_name", name)
+				logger.Log(nil, logLevel, "ignore an empty package alias in the registry", "registry_package_name", name) //nolint:staticcheck
 				continue
 			}
 			if _, ok := m[alias.Name]; ok {
-				logger.Log(nil, logLevel, "ignore a package alias in the registry because the alias is duplicate",
+				logger.Log(nil, logLevel, "ignore a package alias in the registry because the alias is duplicate", //nolint:staticcheck
 					"registry_package_name", name,
 					"registry_package_alias", alias,
 				)

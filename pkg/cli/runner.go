@@ -46,12 +46,8 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	return cs
 }
 
-// func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
-// 	return urfave.Command(param.LogE, param.LDFlags, ).Run(ctx, args)
-// }
-
-func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error {
-	param := &util.Param{ //nolint:wrapcheck
+func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error { //nolint:funlen
+	param := &util.Param{
 		Stdin:   env.Stdin,
 		Stdout:  env.Stdout,
 		Stderr:  env.Stderr,

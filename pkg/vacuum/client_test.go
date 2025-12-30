@@ -1,7 +1,6 @@
 package vacuum_test
 
 import (
-	"io"
 	"log/slog"
 	"path"
 	"path/filepath"
@@ -201,7 +200,7 @@ func TestClient_FindAll(t *testing.T) {
 			},
 		},
 	}
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	logger := slog.New(slog.DiscardHandler)
 	for _, tt := range data {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()

@@ -82,7 +82,7 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	logger := i.r.Logger.Logger.With("exe_name", exeName)
+	logger := i.r.Logger.With("exe_name", exeName)
 	which, err := ctrl.Which(ctx, logger, param, exeName)
 	if err != nil {
 		return slogerr.With(err, "exe_name", exeName) //nolint:wrapcheck

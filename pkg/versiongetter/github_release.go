@@ -129,7 +129,6 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logger *slog.Logg
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
-			logger = withRateLimitInfo(logger, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, release := range releases {
