@@ -3,6 +3,7 @@ package exec
 import (
 	"context"
 	"io"
+	"log/slog"
 	"os"
 	"runtime"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
@@ -35,7 +35,7 @@ type Vacuum interface {
 }
 
 type Installer interface {
-	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
+	InstallPackage(ctx context.Context, logger *slog.Logger, param *installpackage.ParamInstallPackage) error
 }
 
 func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyReader PolicyReader, vacuum Vacuum) *Controller {
@@ -60,9 +60,9 @@ type Executor interface {
 
 type PolicyReader interface {
 	Read(policyFilePaths []string) ([]*policy.Config, error)
-	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
+	Append(logger *slog.Logger, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
 }
 
 type WhichController interface {
-	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
+	Which(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*which.FindResult, error)
 }

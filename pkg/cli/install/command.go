@@ -92,12 +92,12 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "install", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.Logger, "install", param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeInstallCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeInstallCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an InstallController: %w", err)
 	}
-	return ctrl.Install(ctx, i.r.LogE, param) //nolint:wrapcheck
+	return ctrl.Install(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }

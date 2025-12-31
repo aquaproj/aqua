@@ -2,6 +2,7 @@ package cosign_test
 
 import (
 	"io"
+	"log/slog"
 	"strings"
 	"testing"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -116,13 +116,13 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 			verifier := cosign.NewVerifier(d.executor, d.fs, d.downloader, d.param)
-			if err := verifier.Verify(ctx, logE, d.rt, d.file, d.cos, d.art, d.verifiedFilePath); err != nil {
+			if err := verifier.Verify(ctx, logger, d.rt, d.file, d.cos, d.art, d.verifiedFilePath); err != nil {
 				if d.isErr {
 					return
 				}

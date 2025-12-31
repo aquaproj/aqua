@@ -1,11 +1,11 @@
 package policy_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -140,7 +140,7 @@ func TestValidator_Warn(t *testing.T) {
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -153,7 +153,7 @@ func TestValidator_Warn(t *testing.T) {
 			validator := policy.NewValidator(&config.Param{
 				RootDir: d.rootDir,
 			}, fs)
-			if err := validator.Warn(logE, d.configFilePath, false); err != nil {
+			if err := validator.Warn(logger, d.configFilePath, false); err != nil {
 				if d.isErr {
 					return
 				}

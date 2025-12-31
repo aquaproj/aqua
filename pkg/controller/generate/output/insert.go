@@ -10,9 +10,8 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
@@ -26,9 +25,9 @@ func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) err
 	}
 
 	if len(file.Docs) != 1 {
-		return logerr.WithFields(errDocumentMustBeOne, logrus.Fields{ //nolint:wrapcheck
-			"num_of_docs": len(file.Docs),
-		})
+		return slogerr.With(errDocumentMustBeOne, //nolint:wrapcheck
+			"num_of_docs", len(file.Docs),
+		)
 	}
 	s, err := o.getAppendedTxt(cfgFilePath, file, pkgs)
 	if err != nil {

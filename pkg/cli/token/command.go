@@ -6,13 +6,14 @@ package token
 import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
-	ghTokenCLI "github.com/suzuki-shunsuke/urfave-cli-v3-util/keyring/ghtoken/cli"
+	"github.com/suzuki-shunsuke/urfave-cli-v3-util/keyring/ghtoken"
 	"github.com/urfave/cli/v3"
 )
 
-// New creates and returns a new CLI command for token management.
-// It integrates with the GitHub token CLI utility to provide secure
-// token storage and retrieval functionality using the system keyring.
-func New(r *util.Param) *cli.Command {
-	return ghTokenCLI.New(r.LogE, keyring.KeyService)
+// New creates a new token command for the CLI.
+// It initializes a GitHub token management command using the system keyring
+// for secure credential storage and retrieval.
+// Returns a pointer to the configured CLI command for token operations.
+func New(param *util.Param) *cli.Command {
+	return ghtoken.Command(ghtoken.NewActor(param.Logger.Logger, keyring.KeyService))
 }

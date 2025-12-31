@@ -57,12 +57,12 @@ func (ua *updateAquaCommand) action(ctx context.Context, cmd *cli.Command) error
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, ua.r.LogE, "update-aqua", param, ua.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, ua.r.Logger, "update-aqua", param, ua.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl, err := controller.InitializeUpdateAquaCommandController(ctx, ua.r.LogE, param, http.DefaultClient, ua.r.Runtime)
+	ctrl, err := controller.InitializeUpdateAquaCommandController(ctx, ua.r.Logger.Logger, param, http.DefaultClient, ua.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an UpdateAquaController: %w", err)
 	}
-	return ctrl.UpdateAqua(ctx, ua.r.LogE, param) //nolint:wrapcheck
+	return ctrl.UpdateAqua(ctx, ua.r.Logger.Logger, param) //nolint:wrapcheck
 }

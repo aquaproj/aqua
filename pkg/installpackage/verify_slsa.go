@@ -3,12 +3,12 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
-	"github.com/sirupsen/logrus"
 )
 
 type slsaVerifier struct {
@@ -20,17 +20,17 @@ type slsaVerifier struct {
 	asset     string
 }
 
-func (s *slsaVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+func (s *slsaVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if s.disabled {
-		logE.Debug("slsa verification is disabled")
+		logger.Debug("slsa verification is disabled")
 		return false, nil
 	}
 	return s.pkg.PackageInfo.SLSAProvenance.GetEnabled(), nil
 }
 
-func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
-	logE.Info("verify a package with slsa-verifier")
-	if err := s.installer.install(ctx, logE); err != nil {
+func (s *slsaVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
+	logger.Info("verify a package with slsa-verifier")
+	if err := s.installer.install(ctx, logger); err != nil {
 		return fmt.Errorf("install slsa-verifier: %w", err)
 	}
 
@@ -43,7 +43,7 @@ func (s *slsaVerifier) Verify(ctx context.Context, logE *logrus.Entry, file stri
 		sourceTag = pkg.Package.Version
 	}
 
-	if err := s.verifier.Verify(ctx, logE, s.runtime, pkgInfo.SLSAProvenance, art, &download.File{
+	if err := s.verifier.Verify(ctx, logger, s.runtime, pkgInfo.SLSAProvenance, art, &download.File{
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
 		Version:   pkg.Package.Version,

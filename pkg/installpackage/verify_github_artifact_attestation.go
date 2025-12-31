@@ -3,16 +3,16 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
-	"github.com/sirupsen/logrus"
 )
 
 type FileVerifier interface {
-	Enabled(logE *logrus.Entry) (bool, error)
-	Verify(ctx context.Context, logE *logrus.Entry, file string) error
+	Enabled(logger *slog.Logger) (bool, error)
+	Verify(ctx context.Context, logger *slog.Logger, file string) error
 }
 
 type gitHubArtifactAttestationsVerifier struct {
@@ -23,21 +23,21 @@ type gitHubArtifactAttestationsVerifier struct {
 	ghVerifier  GitHubArtifactAttestationsVerifier
 }
 
-func (g *gitHubArtifactAttestationsVerifier) Enabled(logE *logrus.Entry) (bool, error) {
+func (g *gitHubArtifactAttestationsVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if g.disabled {
-		logE.Debug("GitHub Artifact Attestation is disabled")
+		logger.Debug("GitHub Artifact Attestation is disabled")
 		return false, nil
 	}
 	return g.gaa.GetEnabled(), nil
 }
 
-func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logE *logrus.Entry, file string) error {
-	logE.Info("verify GitHub Artifact Attestations")
-	if err := g.ghInstaller.install(ctx, logE); err != nil {
+func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
+	logger.Info("verify GitHub Artifact Attestations")
+	if err := g.ghInstaller.install(ctx, logger); err != nil {
 		return fmt.Errorf("install GitHub CLI: %w", err)
 	}
 
-	if err := g.ghVerifier.Verify(ctx, logE, &ghattestation.ParamVerify{
+	if err := g.ghVerifier.Verify(ctx, logger, &ghattestation.ParamVerify{
 		Repository:     g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName,
 		ArtifactPath:   file,
 		PredicateType:  g.gaa.PredicateType,

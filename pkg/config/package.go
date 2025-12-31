@@ -15,8 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // Package represents a complete package configuration with its metadata.
@@ -202,9 +201,7 @@ func (p *Package) ApplyVars() error {
 			return errors.New("a variable name is empty")
 		}
 		if err := p.applyVar(v); err != nil {
-			return fmt.Errorf("apply a variable: %w", logerr.WithFields(err, logrus.Fields{
-				"var_name": v.Name,
-			}))
+			return fmt.Errorf("apply a variable: %w", slogerr.With(err, "var_name", v.Name))
 		}
 	}
 	return nil
@@ -345,7 +342,6 @@ type Param struct {
 	LogLevel                          string
 	File                              string
 	AQUAVersion                       string
-	AquaCommitHash                    string
 	RootDir                           string
 	PWD                               string
 	InsertFile                        string

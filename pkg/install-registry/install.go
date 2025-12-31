@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -12,13 +13,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 var errMaxParallelismMustBeGreaterThanZero = errors.New("MaxParallelism must be greater than zero")
 
-func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
+func (is *Installer) InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
 	var wg sync.WaitGroup
 	var flagMutex sync.Mutex
 	var registriesMutex sync.Mutex
@@ -37,16 +37,14 @@ func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, 
 		go func(registry *aqua.Registry) {
 			defer wg.Done()
 			if registry.Name == "" {
-				logE.Debug("ignore a registry because the registry name is empty")
+				logger.Debug("ignore a registry because the registry name is empty")
 				return
 			}
 			maxInstallChan <- struct{}{}
-			registryContent, err := is.InstallRegistry(ctx, logE, registry, cfgFilePath, checksums)
+			registryContent, err := is.InstallRegistry(ctx, logger, registry, cfgFilePath, checksums)
 			if err != nil {
 				<-maxInstallChan
-				logerr.WithError(logE, err).WithFields(logrus.Fields{
-					"registry_name": registry.Name,
-				}).Error("install the registry")
+				slogerr.WithError(logger, err).Error("install the registry", "registry_name", registry.Name)
 				flagMutex.Lock()
 				failed = true
 				flagMutex.Unlock()
@@ -68,7 +66,7 @@ func (is *Installer) InstallRegistries(ctx context.Context, logE *logrus.Entry, 
 
 // InstallRegistry installs and reads the registry file and returns the registry content.
 // If the registry file already exists, the installation is skipped.
-func (is *Installer) InstallRegistry(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *Installer) InstallRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	if err := regist.Validate(); err != nil {
 		return nil, fmt.Errorf("validate the registry: %w", err)
 	}
@@ -81,9 +79,8 @@ func (is *Installer) InstallRegistry(ctx context.Context, logE *logrus.Entry, re
 		registryContent := &registry.Config{}
 		if err := is.readRegistry(registryFilePath, registryContent); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				return nil, logerr.WithFields(errLocalRegistryNotFound, logrus.Fields{ //nolint:wrapcheck
-					"local_registry_file_path": registryFilePath,
-				})
+				return nil, slogerr.With(errLocalRegistryNotFound, //nolint:wrapcheck
+					"local_registry_file_path", registryFilePath)
 			}
 			return nil, err
 		}
@@ -91,7 +88,7 @@ func (is *Installer) InstallRegistry(ctx context.Context, logE *logrus.Entry, re
 	}
 
 	if !isJSON(registryFilePath) {
-		return is.handleYAMLGitHubContent(ctx, logE, regist, checksums, registryFilePath)
+		return is.handleYAMLGitHubContent(ctx, logger, regist, checksums, registryFilePath)
 	}
 
 	registryContent := &registry.Config{}
@@ -102,17 +99,17 @@ func (is *Installer) InstallRegistry(ctx context.Context, logE *logrus.Entry, re
 		if err := osfile.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
 			return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 		}
-		return is.getRegistry(ctx, logE, regist, registryFilePath, checksums)
+		return is.getRegistry(ctx, logger, regist, registryFilePath, checksums)
 	}
 	return registryContent, nil
 }
 
 // getRegistry downloads and installs the registry file.
-func (is *Installer) getRegistry(ctx context.Context, logE *logrus.Entry, registry *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+func (is *Installer) getRegistry(ctx context.Context, logger *slog.Logger, registry *aqua.Registry, registryFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
 	// TODO checksum verification
 	// TODO download checksum file
 	if registry.Type == aqua.RegistryTypeGitHubContent {
-		return is.getGitHubContentRegistry(ctx, logE, registry, registryFilePath, checksums)
+		return is.getGitHubContentRegistry(ctx, logger, registry, registryFilePath, checksums)
 	}
 	return nil, errUnsupportedRegistryType
 }

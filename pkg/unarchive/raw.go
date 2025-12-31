@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -17,7 +17,7 @@ type rawUnarchiver struct {
 	fs   afero.Fs
 }
 
-func (u *rawUnarchiver) Unarchive(_ context.Context, _ *logrus.Entry, src *File) error {
+func (u *rawUnarchiver) Unarchive(_ context.Context, _ *slog.Logger, src *File) error {
 	dest := u.dest
 	if err := osfile.MkdirAll(u.fs, filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)

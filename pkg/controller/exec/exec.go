@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -14,16 +15,16 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string, args ...string) (gErr error) { //nolint:cyclop
-	logE = logE.WithField("exe_name", exeName)
+func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string, args ...string) (gErr error) { //nolint:cyclop
+	attrs := slogerr.NewAttrs(1)
+	logger = attrs.Add(logger, "exe_name", exeName)
 	defer func() {
 		if gErr != nil {
-			gErr = logerr.WithFields(gErr, logE.Data)
+			gErr = attrs.With(gErr)
 		}
 	}()
 
@@ -37,38 +38,38 @@ func (c *Controller) Exec(ctx context.Context, logE *logrus.Entry, param *config
 		globalPolicyPaths[p] = struct{}{}
 	}
 
-	findResult, err := c.which.Which(ctx, logE, param, exeName)
+	findResult, err := c.which.Which(ctx, logger, param, exeName)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 	if findResult.Package == nil {
-		return c.execCommandWithRetry(ctx, logE, findResult.ExePath, exeName, args...)
+		return c.execCommandWithRetry(ctx, logger, findResult.ExePath, exeName, args...)
 	}
 
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    findResult.Package.Package.Name,
-		"package_version": findResult.Package.Package.Version,
-	})
+	logger = attrs.Add(logger,
+		"package_name", findResult.Package.Package.Name,
+		"package_version", findResult.Package.Package.Version,
+	)
 
-	policyCfgs, err = c.policyReader.Append(logE, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
+	policyCfgs, err = c.policyReader.Append(logger, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
 
 	if param.DisableLazyInstall {
 		if _, err := c.fs.Stat(findResult.ExePath); err != nil {
-			return logerr.WithFields(errExecNotFoundDisableLazyInstall, logE.WithField("doc", "https://aquaproj.github.io/docs/reference/codes/006").Data) //nolint:wrapcheck
+			return slogerr.With(errExecNotFoundDisableLazyInstall, "doc", "https://aquaproj.github.io/docs/reference/codes/006") //nolint:wrapcheck
 		}
 	}
-	if err := c.install(ctx, logE, findResult, policyCfgs, param); err != nil {
+	if err := c.install(ctx, logger, findResult, policyCfgs, param); err != nil {
 		return err
 	}
 
 	if err := c.updateTimestamp(findResult.Package); err != nil {
-		logerr.WithError(logE, err).Warn("update the last used datetime")
+		slogerr.WithError(logger, err).Warn("update the last used datetime")
 	}
 
-	return c.execCommandWithRetry(ctx, logE, findResult.ExePath, exeName, args...)
+	return c.execCommandWithRetry(ctx, logger, findResult.ExePath, exeName, args...)
 }
 
 func (c *Controller) updateTimestamp(pkg *config.Package) error {
@@ -82,16 +83,16 @@ func (c *Controller) updateTimestamp(pkg *config.Package) error {
 	return nil
 }
 
-func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult *which.FindResult, policies []*policy.Config, param *config.Param) error {
+func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResult *which.FindResult, policies []*policy.Config, param *config.Param) error {
 	checksums, updateChecksum, err := checksum.Open(
-		logE, c.fs, findResult.ConfigFilePath,
+		logger, c.fs, findResult.ConfigFilePath,
 		param.ChecksumEnabled(findResult.Config))
 	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
 	defer updateChecksum()
 
-	if err := c.packageInstaller.InstallPackage(ctx, logE, &installpackage.ParamInstallPackage{
+	if err := c.packageInstaller.InstallPackage(ctx, logger, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
 		RequireChecksum: findResult.Config.RequireChecksum(param.EnforceRequireChecksum, param.RequireChecksum),
@@ -101,15 +102,14 @@ func (c *Controller) install(ctx context.Context, logE *logrus.Entry, findResult
 		return fmt.Errorf("install the package: %w", err)
 	}
 	for i := range 10 {
-		logE.Debug("check if exec file exists")
+		logger.Debug("check if exec file exists")
 		if fi, err := c.fs.Stat(findResult.ExePath); err == nil {
 			if osfile.IsOwnerExecutable(fi.Mode()) {
 				break
 			}
 		}
-		logE.WithFields(logrus.Fields{
-			"retry_count": i + 1,
-		}).Debug("command isn't found. wait for lazy install")
+		logger.Debug("command isn't found. wait for lazy install",
+			"retry_count", i+1)
 		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
 			return err
 		}
@@ -150,14 +150,14 @@ func (c *Controller) execCommand(ctx context.Context, exePath, name string, args
 	return false, nil
 }
 
-func (c *Controller) execCommandWithRetry(ctx context.Context, logE *logrus.Entry, exePath, name string, args ...string) error {
+func (c *Controller) execCommandWithRetry(ctx context.Context, logger *slog.Logger, exePath, name string, args ...string) error {
 	for i := range 10 {
-		logE.Debug("execute the command")
+		logger.Debug("execute the command")
 		retried, err := c.execCommand(ctx, exePath, name, args...)
 		if !retried {
 			return err
 		}
-		logE.WithError(err).WithField("retry_count", i+1).Debug("the process isn't started. retry")
+		slogerr.WithError(logger, err).Debug("the process isn't started. retry", "retry_count", i+1)
 		if err := wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
 			return err
 		}

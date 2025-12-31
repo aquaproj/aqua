@@ -3,13 +3,13 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/sirupsen/logrus"
 )
 
 const ProxyVersion = "v1.2.12" // renovate: depName=aquaproj/aqua-proxy
@@ -45,15 +45,15 @@ func proxyPkg() *config.Package {
 	}
 }
 
-func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error {
+func (is *Installer) InstallProxy(ctx context.Context, logger *slog.Logger) error {
 	pkg := proxyPkg()
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Package.Name,
-		"package_version": pkg.Package.Version,
-		"registry":        pkg.Package.Registry,
-	})
+	logger = logger.With(
+		"package_name", pkg.Package.Name,
+		"package_version", pkg.Package.Version,
+		"registry", pkg.Package.Registry,
+	)
 
-	logE.Debug("install the proxy")
+	logger.Debug("install the proxy")
 	assetName, err := pkg.RenderAsset(is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -71,12 +71,12 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	logE.Debug("check if aqua-proxy is already installed")
+	logger.Debug("check if aqua-proxy is already installed")
 	finfo, err := is.fs.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
 		chksum := ProxyChecksums()[is.runtime.Env()]
-		if err := is.downloadWithRetry(ctx, logE, &DownloadParam{
+		if err := is.downloadWithRetry(ctx, logger, &DownloadParam{
 			Package: pkg,
 			Dest:    pkgPath,
 			Asset:   assetName,
@@ -100,5 +100,5 @@ func (is *Installer) InstallProxy(ctx context.Context, logE *logrus.Entry) error
 		return nil
 	}
 
-	return is.createLink(logE, filepath.Join(is.rootDir, proxyName), a)
+	return is.createLink(logger, filepath.Join(is.rootDir, proxyName), a)
 }

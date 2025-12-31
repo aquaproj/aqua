@@ -3,6 +3,7 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -10,11 +11,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
-func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, version string) error { //nolint:funlen
+func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, version string) error { //nolint:funlen
 	provTemplate := "multiple.intoto.jsonl"
 	disabled := false
 	pkg := &config.Package{
@@ -108,13 +108,13 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 		},
 	}
 
-	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, is.runtime)
+	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, is.runtime)
 	if err != nil {
 		return fmt.Errorf("evaluate version constraints: %w", err)
 	}
 	pkg.PackageInfo = pkgInfo
 
-	if err := is.InstallPackage(ctx, logE, &ParamInstallPackage{
+	if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
 		Checksums:     checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:           pkg,
 		DisablePolicy: true,
@@ -122,10 +122,10 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 		return err
 	}
 
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Package.Name,
-		"package_version": pkg.Package.Version,
-	})
+	logger = logger.With(
+		"package_name", pkg.Package.Name,
+		"package_version", pkg.Package.Version,
+	)
 
 	exePath, err := pkg.ExePath(is.rootDir, &registry.File{
 		Name: "aqua",
@@ -144,7 +144,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logE *logrus.Entry, versio
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return is.createLink(logE, filepath.Join(is.rootDir, "bin", "aqua"), a)
+	return is.createLink(logger, filepath.Join(is.rootDir, "bin", "aqua"), a)
 }
 
 func (is *Installer) copyAquaOnWindows(exePath string) error {

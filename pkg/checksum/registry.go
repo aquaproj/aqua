@@ -6,8 +6,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // RegistryID generates a unique identifier for a registry based on its repository information.
@@ -40,10 +39,10 @@ func CheckRegistry(regist *aqua.Registry, checksums *Checksums, content []byte) 
 		return nil
 	}
 	if !strings.EqualFold(chksum.Checksum, chk) {
-		return logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
-			"actual_checksum":   strings.ToUpper(chk),
-			"expected_checksum": strings.ToUpper(chksum.Checksum),
-		})
+		return slogerr.With(errInvalidChecksum, //nolint:wrapcheck
+			"actual_checksum", strings.ToUpper(chk),
+			"expected_checksum", strings.ToUpper(chksum.Checksum),
+		)
 	}
 	return nil
 }

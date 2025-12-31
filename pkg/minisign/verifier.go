@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -32,22 +32,22 @@ type ParamVerify struct {
 	PublicKey    string
 }
 
-func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *ParamVerify) error {
-	sigFile, err := v.downloadSignature(ctx, logE, rt, m, art, file)
+func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *ParamVerify) error {
+	sigFile, err := v.downloadSignature(ctx, logger, rt, m, art, file)
 	if err != nil {
 		return err
 	}
-	defer v.fs.Remove(sigFile)                     //nolint:errcheck
-	return v.exe.Verify(ctx, logE, param, sigFile) //nolint:wrapcheck
+	defer v.fs.Remove(sigFile)                       //nolint:errcheck
+	return v.exe.Verify(ctx, logger, param, sigFile) //nolint:wrapcheck
 }
 
-func (v *Verifier) downloadSignature(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File) (string, error) {
+func (v *Verifier) downloadSignature(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File) (string, error) {
 	f, err := download.ConvertDownloadedFileToFile(m.ToDownloadedFile(), file, rt, art)
 	if err != nil {
 		return "", err //nolint:wrapcheck
 	}
 
-	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
+	rc, _, err := v.downloader.ReadCloser(ctx, logger, f)
 	if err != nil {
 		return "", fmt.Errorf("download a Minisign signature: %w", err)
 	}

@@ -21,6 +21,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/cli/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/cli/which"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
 	"github.com/urfave/cli/v3"
 )
@@ -44,11 +46,16 @@ func commands(param *util.Param, newCs ...newC) []*cli.Command {
 	return cs
 }
 
-// Run executes the aqua CLI application with the given context, parameters, and arguments.
-// It sets up the main command with all flags and subcommands, then runs it using the
-// urfave CLI framework. This is the main entry point for the aqua CLI application.
-func Run(ctx context.Context, param *util.Param, args ...string) error { //nolint:funlen
-	return urfave.Command(param.LogE, param.LDFlags, &cli.Command{ //nolint:wrapcheck
+func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error { //nolint:funlen
+	param := &util.Param{
+		Stdin:   env.Stdin,
+		Stdout:  env.Stdout,
+		Stderr:  env.Stderr,
+		Logger:  logger,
+		Runtime: runtime.New(),
+		Version: env.Version,
+	}
+	return urfave.Command(env, &cli.Command{ //nolint:wrapcheck
 		Name:           "aqua",
 		Usage:          "Version Manager of CLI. https://aquaproj.github.io/",
 		ExitErrHandler: exitErrHandlerFunc,
@@ -114,7 +121,7 @@ func Run(ctx context.Context, param *util.Param, args ...string) error { //nolin
 			genr.New,
 			root.New,
 		),
-	}).Run(ctx, args)
+	}).Run(ctx, env.Args)
 }
 
 // exitErrHandlerFunc handles exit errors for CLI commands.

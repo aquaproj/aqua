@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,26 +14,20 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logE *logrus.Entry, regist *aqua.Registry, checksums *checksum.Checksums, registryFilePath string) (*registry.Config, error) {
+func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, checksums *checksum.Checksums, registryFilePath string) (*registry.Config, error) {
 	jsonPath := registryFilePath + jsonSuffix
 	registryContent := &registry.Config{}
 	if err := is.readJSONRegistry(jsonPath, registryContent); err != nil { //nolint:nestif
 		if !errors.Is(err, os.ErrNotExist) {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"registry_json_path": jsonPath,
-			}).Warn("failed to read a registry JSON file. Will remove and recreate the file")
+			slogerr.WithError(logger, err).Warn("failed to read a registry JSON file. Will remove and recreate the file", "registry_json_path", jsonPath)
 			if err := is.fs.Remove(jsonPath); err != nil {
-				logerr.WithError(logE, err).WithFields(logrus.Fields{
-					"registry_json_path": jsonPath,
-				}).Warn("failed to remove a registry JSON file")
+				slogerr.WithError(logger, err).Warn("failed to remove a registry JSON file", "registry_json_path", jsonPath)
 			} else {
-				logE.WithFields(logrus.Fields{
-					"registry_json_path": jsonPath,
-				}).Debug("remove a registry JSON file")
+				logger.Debug("remove a registry JSON file",
+					"registry_json_path", jsonPath)
 			}
 		}
 		if err := is.readYAMLRegistry(registryFilePath, registryContent); err != nil {
@@ -42,7 +37,7 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logE *logrus.E
 			if err := osfile.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
 				return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 			}
-			registryContent, err := is.getRegistry(ctx, logE, regist, registryFilePath, checksums)
+			registryContent, err := is.getRegistry(ctx, logger, regist, registryFilePath, checksums)
 			if err != nil {
 				return nil, err
 			}

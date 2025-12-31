@@ -3,13 +3,13 @@ package unarchive_test
 import (
 	"context"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -103,8 +103,8 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
-	httpDownloader := download.NewHTTPDownloader(logE, http.DefaultClient)
+	logger := slog.New(slog.DiscardHandler)
+	httpDownloader := download.NewHTTPDownloader(logger, http.DefaultClient)
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
@@ -119,7 +119,7 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 			}
 			d.src.Body = download.NewDownloadedFile(fs, body, nil)
 			unarchiver := unarchive.New(nil, fs)
-			if err := unarchiver.Unarchive(ctx, logE, d.src, t.TempDir()); err != nil {
+			if err := unarchiver.Unarchive(ctx, logger, d.src, t.TempDir()); err != nil {
 				if d.isErr {
 					return
 				}

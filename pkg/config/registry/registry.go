@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
 // Config represents a registry configuration containing package definitions.
@@ -15,19 +15,19 @@ type Config struct {
 
 // Packages returns a map of all packages indexed by name (including aliases).
 // The result is cached for subsequent calls to improve performance.
-func (c *Config) Packages(logE *logrus.Entry) map[string]*PackageInfo {
+func (c *Config) Packages(logger *slog.Logger) map[string]*PackageInfo {
 	if c.m != nil {
 		return c.m
 	}
-	m := c.PackageInfos.ToMap(logE)
+	m := c.PackageInfos.ToMap(logger)
 	c.m = m
 	return m
 }
 
 // Package returns the PackageInfo for the specified package name.
 // It returns nil if the package is not found in the registry.
-func (c *Config) Package(logE *logrus.Entry, pkgName string) *PackageInfo {
-	m := c.Packages(logE)
+func (c *Config) Package(logger *slog.Logger, pkgName string) *PackageInfo {
+	m := c.Packages(logger)
 	pkg, ok := m[pkgName]
 	if !ok {
 		return nil

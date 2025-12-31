@@ -2,13 +2,14 @@ package genrgst
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (c *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry, pkgName string) (*registry.PackageInfo, []string) {
+func (c *Controller) getCargoPackageInfo(ctx context.Context, logger *slog.Logger, pkgName string) (*registry.PackageInfo, []string) {
 	crate := strings.TrimPrefix(pkgName, "crates.io/")
 	pkgInfo := &registry.PackageInfo{
 		Name:  pkgName,
@@ -17,7 +18,7 @@ func (c *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry
 	}
 	payload, err := c.cargoClient.GetCrate(ctx, crate)
 	if err != nil {
-		logE.WithError(err).Warn("get a crate metadata by crates.io API")
+		slogerr.WithError(logger, err).Warn("get a crate metadata by crates.io API")
 	}
 	if payload != nil && payload.Crate != nil {
 		pkgInfo.Description = payload.Crate.Description
@@ -33,7 +34,7 @@ func (c *Controller) getCargoPackageInfo(ctx context.Context, logE *logrus.Entry
 	}
 	version, err := c.cargoClient.GetLatestVersion(ctx, crate)
 	if err != nil {
-		logE.WithError(err).Warn("get a latest version by crates.io API")
+		slogerr.WithError(logger, err).Warn("get a latest version by crates.io API")
 		return pkgInfo, nil
 	}
 	return pkgInfo, []string{version}

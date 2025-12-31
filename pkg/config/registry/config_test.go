@@ -1,11 +1,11 @@
 package registry_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 )
 
 func TestPackageInfos_ToMap(t *testing.T) {
@@ -32,11 +32,11 @@ func TestPackageInfos_ToMap(t *testing.T) {
 		},
 	}
 
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			m := d.pkgInfos.ToMap(logE)
+			m := d.pkgInfos.ToMap(logger)
 			if diff := cmp.Diff(d.exp, m); diff != "" {
 				t.Fatal(diff)
 			}

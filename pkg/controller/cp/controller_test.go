@@ -1,6 +1,7 @@
 package cp_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -10,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -66,13 +66,13 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 			pkgInstaller: &cp.MockPackageInstaller{},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockReader{})
-			if err := ctrl.Copy(ctx, logE, d.param); err != nil {
+			if err := ctrl.Copy(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
 				}

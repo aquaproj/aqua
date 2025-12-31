@@ -3,10 +3,10 @@ package versiongetter
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
-	"github.com/sirupsen/logrus"
 )
 
 type MockVersionGetter struct {
@@ -19,7 +19,7 @@ func NewMockVersionGetter(versions map[string][]*fuzzyfinder.Item) *MockVersionG
 	}
 }
 
-func (g *MockVersionGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *MockVersionGetter) Get(_ context.Context, _ *slog.Logger, pkg *registry.PackageInfo, _ []*Filter) (string, error) {
 	versions, ok := g.versions[pkg.GetName()]
 	if !ok {
 		return "", errors.New("version isn't found")
@@ -27,7 +27,7 @@ func (g *MockVersionGetter) Get(ctx context.Context, _ *logrus.Entry, pkg *regis
 	return versions[0].Item, nil
 }
 
-func (g *MockVersionGetter) List(ctx context.Context, _ *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *MockVersionGetter) List(_ context.Context, _ *slog.Logger, pkg *registry.PackageInfo, _ []*Filter, _ int) ([]*fuzzyfinder.Item, error) {
 	versions, ok := g.versions[pkg.GetName()]
 	if !ok {
 		return nil, errors.New("version isn't found")

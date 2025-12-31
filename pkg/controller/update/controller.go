@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -11,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -29,7 +29,7 @@ type Controller struct {
 }
 
 type WhichController interface {
-	Which(ctx context.Context, logE *logrus.Entry, param *config.Param, exeName string) (*which.FindResult, error)
+	Which(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*which.FindResult, error)
 }
 
 type FuzzyFinder interface {
@@ -38,12 +38,12 @@ type FuzzyFinder interface {
 }
 
 type ConfigReader interface {
-	Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error
+	Read(logger *slog.Logger, configFilePath string, cfg *aqua.Config) error
 	ReadToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error)
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string
+	Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string
 }
 
 type RepositoriesService interface {
@@ -72,5 +72,5 @@ type ConfigFinder interface {
 }
 
 type RegistryInstaller interface {
-	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
+	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 }

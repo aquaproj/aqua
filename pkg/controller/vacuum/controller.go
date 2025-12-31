@@ -1,11 +1,11 @@
 package vacuum
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -26,6 +26,6 @@ func New(param *config.Param, rt *runtime.Runtime, fs afero.Fs, vc Vacuum) *Cont
 }
 
 type Vacuum interface {
-	FindAll(logE *logrus.Entry) (map[string]time.Time, error)
+	FindAll(logger *slog.Logger) (map[string]time.Time, error)
 	Remove(pkgPath string) error
 }

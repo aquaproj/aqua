@@ -3,12 +3,12 @@ package installpackage
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/sirupsen/logrus"
 )
 
-func (is *Installer) validatePackage(logE *logrus.Entry, param *ParamInstallPackage) error {
+func (is *Installer) validatePackage(logger *slog.Logger, param *ParamInstallPackage) error {
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 
@@ -20,12 +20,12 @@ func (is *Installer) validatePackage(logE *logrus.Entry, param *ParamInstallPack
 		return errNoAsset
 	}
 	if pkgInfo.ErrorMessage != "" {
-		logE.Error(pkgInfo.ErrorMessage)
+		logger.Error(pkgInfo.ErrorMessage)
 		return errors.New("the package has a field `error_message`")
 	}
 
 	if !param.DisablePolicy {
-		if err := policy.ValidatePackage(logE, pkg, param.PolicyConfigs); err != nil {
+		if err := policy.ValidatePackage(logger, pkg, param.PolicyConfigs); err != nil {
 			return err //nolint:wrapcheck
 		}
 	}

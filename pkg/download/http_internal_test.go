@@ -2,10 +2,10 @@ package download
 
 import (
 	"io"
+	"log/slog"
 	"net/http"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
@@ -52,8 +52,8 @@ func Test_fromURL(t *testing.T) { //nolint:funlen
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			logE := logrus.NewEntry(logrus.New())
-			httpDownloader := NewHTTPDownloader(logE, d.httpClient)
+			logger := slog.New(slog.DiscardHandler)
+			httpDownloader := NewHTTPDownloader(logger, d.httpClient)
 			readCloser, _, err := httpDownloader.Download(ctx, d.url)
 			if readCloser != nil {
 				defer readCloser.Close()

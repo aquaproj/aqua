@@ -94,12 +94,12 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "remove", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.Logger, "remove", param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl := controller.InitializeRemoveCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime, mode)
-	if err := ctrl.Remove(ctx, i.r.LogE, param); err != nil {
+	ctrl := controller.InitializeRemoveCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime, mode)
+	if err := ctrl.Remove(ctx, i.r.Logger.Logger, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

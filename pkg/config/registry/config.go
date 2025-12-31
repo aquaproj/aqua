@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
 // PackageInfos represents a slice of package information.
@@ -34,43 +34,39 @@ type File struct {
 
 // ToMap converts the PackageInfos slice to a map indexed by package name.
 // It includes aliases and logs conflicts at debug level.
-func (p *PackageInfos) ToMap(logE *logrus.Entry) map[string]*PackageInfo {
-	return p.toMap(logE, logrus.DebugLevel)
+func (p *PackageInfos) ToMap(logger *slog.Logger) map[string]*PackageInfo {
+	return p.toMap(logger, slog.LevelDebug)
 }
 
 // toMap is the internal implementation of ToMap with configurable log level.
 // It handles duplicate package names and aliases with appropriate logging.
-func (p *PackageInfos) toMap(logE *logrus.Entry, logLevel logrus.Level) map[string]*PackageInfo {
+func (p *PackageInfos) toMap(logger *slog.Logger, logLevel slog.Level) map[string]*PackageInfo {
 	m := make(map[string]*PackageInfo, len(*p))
-	logE = logE.WithField("package_name", "")
 	for _, pkgInfo := range *p {
-		logE := logE
 		if pkgInfo == nil {
-			logE.Log(logLevel, "ignore an empty package")
+			logger.Log(nil, logLevel, "ignore an empty package") //nolint:staticcheck
 			continue
 		}
 		name := pkgInfo.GetName()
 		if name == "" {
-			logE.Log(logLevel, "ignore a package in the registry because the name is empty")
+			logger.Log(nil, logLevel, "ignore a package in the registry because the name is empty") //nolint:staticcheck
 			continue
 		}
 		if _, ok := m[name]; ok {
-			logE.WithField("registry_package_name", name).Log(logLevel, "ignore a package in the registry because the package name is duplicate")
+			logger.Log(nil, logLevel, "ignore a package in the registry because the package name is duplicate", "registry_package_name", name) //nolint:staticcheck
 			continue
 		}
 		m[name] = pkgInfo
 		for _, alias := range pkgInfo.Aliases {
 			if alias.Name == "" {
-				logE.WithFields(logrus.Fields{
-					"registry_package_name": name,
-				}).Log(logLevel, "ignore an empty package alias in the registry")
+				logger.Log(nil, logLevel, "ignore an empty package alias in the registry", "registry_package_name", name) //nolint:staticcheck
 				continue
 			}
 			if _, ok := m[alias.Name]; ok {
-				logE.WithFields(logrus.Fields{
-					"registry_package_name":  name,
-					"registry_package_alias": alias,
-				}).Log(logLevel, "ignore a package alias in the registry because the alias is duplicate")
+				logger.Log(nil, logLevel, "ignore a package alias in the registry because the alias is duplicate", //nolint:staticcheck
+					"registry_package_name", name,
+					"registry_package_alias", alias,
+				)
 				continue
 			}
 			m[alias.Name] = pkgInfo

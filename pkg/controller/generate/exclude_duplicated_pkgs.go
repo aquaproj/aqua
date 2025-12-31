@@ -1,14 +1,14 @@
 package generate
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/sirupsen/logrus"
 )
 
-func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*config.Package) []*config.Package {
+func excludeDuplicatedPkgs(logger *slog.Logger, cfg *aqua.Config, pkgs []*config.Package) []*config.Package {
 	ret := make([]*config.Package, 0, len(pkgs))
 	m := make(map[string]struct{}, len(cfg.Packages))
 	for _, pkg := range cfg.Packages {
@@ -34,20 +34,18 @@ func excludeDuplicatedPkgs(logE *logrus.Entry, cfg *aqua.Config, pkgs []*config.
 			key = registry + "," + pkg.Package.Name
 		}
 		if _, ok := m[keyV]; ok {
-			logE.WithFields(logrus.Fields{
-				"package_name":     pkg.Package.Name,
-				"package_version":  pkg.Package.Version,
-				"package_registry": registry,
-			}).Warn("skip adding a duplicate package")
+			logger.Warn("skip adding a duplicate package",
+				"package_name", pkg.Package.Name,
+				"package_version", pkg.Package.Version,
+				"package_registry", registry)
 			continue
 		}
 		m[keyV] = struct{}{}
 		ret = append(ret, pkg)
 		if _, ok := m[key]; ok {
-			logE.WithFields(logrus.Fields{
-				"package_name":     pkg.Package.Name,
-				"package_registry": registry,
-			}).Warn("same package already exists")
+			logger.Warn("same package already exists",
+				"package_name", pkg.Package.Name,
+				"package_registry", registry)
 			continue
 		}
 		m[key] = struct{}{}

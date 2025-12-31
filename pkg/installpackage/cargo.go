@@ -3,17 +3,17 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type CargoPackageInstaller interface {
-	Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error
+	Install(ctx context.Context, logger *slog.Logger, crate, version, root string, opts *registry.Cargo) error
 }
 
 type CargoPackageInstallerImpl struct {
@@ -47,36 +47,35 @@ func getCargoArgs(version string, opts *registry.Cargo) []string {
 	return args
 }
 
-func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logE *logrus.Entry, crate, version, root string, opts *registry.Cargo) error {
+func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logger *slog.Logger, crate, version, root string, opts *registry.Cargo) error {
 	args := getCargoArgs(version, opts)
 	if _, err := is.exec.ExecStderr(osexec.Command(ctx, "cargo", append(args, "--root", root, crate)...)); err != nil {
 		// Clean up root
-		logE := logE.WithField("install_dir", root)
-		logE.Info("removing the install directory because the installation failed")
+		logger := logger.With("install_dir", root)
+		logger.Info("removing the install directory because the installation failed")
 		if err := is.cleaner.RemoveAll(root); err != nil {
-			logE.WithError(err).Error("aqua tried to remove the install directory because the installation failed, but it failed")
+			slogerr.WithError(logger, err).Error("aqua tried to remove the install directory because the installation failed, but it failed")
 		}
-		return fmt.Errorf("install a crate: %w", logerr.WithFields(err, logrus.Fields{
-			"doc":           "https://aquaproj.github.io/docs/reference/codes/005",
-			"cargo_command": strings.Join(append(append([]string{"cargo"}, args...), crate), " "),
-		}))
+		return fmt.Errorf("install a crate: %w", slogerr.With(err,
+			"doc", "https://aquaproj.github.io/docs/reference/codes/005",
+			"cargo_command", strings.Join(append(append([]string{"cargo"}, args...), crate), " ")))
 	}
 	return nil
 }
 
-func (is *Installer) downloadCargo(ctx context.Context, logE *logrus.Entry, pkg *config.Package, root string) error {
+func (is *Installer) downloadCargo(ctx context.Context, logger *slog.Logger, pkg *config.Package, root string) error {
 	cargoOpts := pkg.PackageInfo.Cargo
 	if cargoOpts != nil {
 		if cargoOpts.AllFeatures {
-			logE = logE.WithField("cargo_all_features", true)
+			logger = logger.With("cargo_all_features", true)
 		} else if len(cargoOpts.Features) != 0 {
-			logE = logE.WithField("cargo_features", strings.Join(cargoOpts.Features, ","))
+			logger = logger.With("cargo_features", strings.Join(cargoOpts.Features, ","))
 		}
 	}
-	logE.Info("Installing a crate")
+	logger.Info("Installing a crate")
 	crate := pkg.PackageInfo.Crate
 	version := strings.TrimPrefix(strings.TrimPrefix(pkg.Package.Version, pkg.PackageInfo.VersionPrefix), "v")
-	if err := is.cargoPackageInstaller.Install(ctx, logE, crate, version, root, cargoOpts); err != nil {
+	if err := is.cargoPackageInstaller.Install(ctx, logger, crate, version, root, cargoOpts); err != nil {
 		return fmt.Errorf("cargo install: %w", err)
 	}
 	return nil

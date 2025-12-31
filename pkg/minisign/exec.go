@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"strings"
 	"time"
@@ -12,8 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type CommandExecutor interface {
@@ -21,7 +21,7 @@ type CommandExecutor interface {
 }
 
 type Executor interface {
-	Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, signature string) error
+	Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, signature string) error
 }
 
 type ExecutorImpl struct {
@@ -29,11 +29,11 @@ type ExecutorImpl struct {
 	minisignExePath string
 }
 
-func NewExecutor(logE *logrus.Entry, executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
+func NewExecutor(logger *slog.Logger, executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
 	rt := runtime.NewR()
 	pkg := Package()
 
-	pkgInfo, err := pkg.PackageInfo.Override(logE, pkg.Package.Version, rt)
+	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, rt)
 	if err != nil {
 		return nil, fmt.Errorf("evaluate version constraints: %w", err)
 	}
@@ -42,7 +42,7 @@ func NewExecutor(logE *logrus.Entry, executor CommandExecutor, param *config.Par
 		return nil, fmt.Errorf("check if the package is supported in the environment: %w", err)
 	}
 	if !supported {
-		logE.Debug("the package isn't supported in the environment")
+		logger.Debug("the package isn't supported in the environment")
 		return nil, nil //nolint:nilnil
 	}
 	pkg.PackageInfo = pkgInfo
@@ -56,13 +56,12 @@ func NewExecutor(logE *logrus.Entry, executor CommandExecutor, param *config.Par
 	}, nil
 }
 
-func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
+func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
-	logE.WithFields(logrus.Fields{
-		"retry_count": retryCount,
-		"wait_time":   waitTime,
-	}).Info("Verification by minisign failed temporarily, retrying")
+	logger.Info("Verification by minisign failed temporarily, retrying",
+		"retry_count", retryCount,
+		"wait_time", waitTime)
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running minisign: %w", err)
 	}
@@ -71,7 +70,7 @@ func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
 
 var errVerify = errors.New("verify with minisign")
 
-func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify, signature string) error {
+func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, signature string) error {
 	if e == nil {
 		return errors.New("executor is nil")
 	}
@@ -89,14 +88,13 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logE *logrus.Entry, param *Pa
 		if err == nil {
 			return nil
 		}
-		logerr.WithError(logE, err).WithFields(logrus.Fields{
-			"exe":  e.minisignExePath,
-			"args": strings.Join(args, " "),
-		}).Warn("execute minisign")
+		slogerr.WithError(logger, err).Warn("execute minisign",
+			"exe", e.minisignExePath,
+			"args", strings.Join(args, " "))
 		if i == 4 { //nolint:mnd
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+		if err := wait(ctx, logger, i+1); err != nil {
 			return err
 		}
 	}

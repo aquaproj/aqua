@@ -3,6 +3,7 @@ package reader
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -12,9 +13,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"go.yaml.in/yaml/v2"
 )
 
@@ -34,8 +34,8 @@ func New(fs afero.Fs, param *config.Param) *ConfigReader {
 
 const homePrefix = "$HOME" + string(os.PathSeparator)
 
-func (r *ConfigReader) Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error {
-	logE = logE.WithField("config_file_path", configFilePath)
+func (r *ConfigReader) Read(logger *slog.Logger, configFilePath string, cfg *aqua.Config) error {
+	logger = logger.With("config_file_path", configFilePath)
 	file, err := r.fs.Open(configFilePath)
 	if err != nil {
 		return fmt.Errorf("open a file: %w", err)
@@ -48,7 +48,7 @@ func (r *ConfigReader) Read(logE *logrus.Entry, configFilePath string, cfg *aqua
 	if err := r.readRegistries(configFileDir, cfg); err != nil {
 		return err
 	}
-	r.readPackages(logE, configFilePath, cfg)
+	r.readPackages(logger, configFilePath, cfg)
 	return nil
 }
 
@@ -67,15 +67,15 @@ func (r *ConfigReader) readRegistries(configFileDir string, cfg *aqua.Config) er
 	return nil
 }
 
-func (r *ConfigReader) readPackages(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) {
+func (r *ConfigReader) readPackages(logger *slog.Logger, configFilePath string, cfg *aqua.Config) {
 	pkgs := []*aqua.Package{}
 	for _, pkg := range cfg.Packages {
 		if pkg == nil {
 			continue
 		}
-		subPkgs, err := r.readPackage(logE, configFilePath, pkg)
+		subPkgs, err := r.readPackage(logger, configFilePath, pkg)
 		if err != nil {
-			logerr.WithError(logE, err).Error("read a package")
+			slogerr.WithError(logger, err).Error("read a package")
 			continue
 		}
 		if subPkgs == nil {
@@ -87,32 +87,32 @@ func (r *ConfigReader) readPackages(logE *logrus.Entry, configFilePath string, c
 	}
 	cfg.Packages = pkgs
 	if cfg.ImportDir != "" {
-		cfg.Packages = append(cfg.Packages, r.readImportDir(logE, configFilePath, cfg)...)
+		cfg.Packages = append(cfg.Packages, r.readImportDir(logger, configFilePath, cfg)...)
 	}
 }
 
-func (r *ConfigReader) readImportDir(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) []*aqua.Package {
+func (r *ConfigReader) readImportDir(logger *slog.Logger, configFilePath string, cfg *aqua.Config) []*aqua.Package {
 	if cfg.ImportDir == "" {
 		return nil
 	}
-	pkgs1, err := r.importFiles(logE, configFilePath, filepath.Join(cfg.ImportDir, "*.yml"))
+	pkgs1, err := r.importFiles(logger, configFilePath, filepath.Join(cfg.ImportDir, "*.yml"))
 	if err != nil {
-		logerr.WithError(logE, err).Error("read import files")
+		slogerr.WithError(logger, err).Error("read import files")
 	}
-	pkgs2, err := r.importFiles(logE, configFilePath, filepath.Join(cfg.ImportDir, "*.yaml"))
+	pkgs2, err := r.importFiles(logger, configFilePath, filepath.Join(cfg.ImportDir, "*.yaml"))
 	if err != nil {
-		logerr.WithError(logE, err).Error("read import files")
+		slogerr.WithError(logger, err).Error("read import files")
 	}
 	return append(pkgs1, pkgs2...)
 }
 
-func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pkg *aqua.Package) ([]*aqua.Package, error) {
+func (r *ConfigReader) readPackage(logger *slog.Logger, configFilePath string, pkg *aqua.Package) ([]*aqua.Package, error) {
 	if pkg.GoVersionFile != "" {
 		// go_version_file
 		if err := readGoVersionFile(r.fs, configFilePath, pkg); err != nil {
-			return nil, fmt.Errorf("read a go version file: %w", logerr.WithFields(err, logrus.Fields{
-				"go_version_file": pkg.GoVersionFile,
-			}))
+			return nil, fmt.Errorf("read a go version file: %w", slogerr.With(err,
+				"go_version_file", pkg.GoVersionFile,
+			))
 		}
 		return nil, nil
 	}
@@ -121,9 +121,9 @@ func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pk
 		dir := filepath.Dir(configFilePath)
 		s, err := expr.EvalVersionExpr(r.fs, dir, pkg.VersionExpr)
 		if err != nil {
-			return nil, fmt.Errorf("evaluate a version_expr: %w", logerr.WithFields(err, logrus.Fields{
-				"version_expr": pkg.VersionExpr,
-			}))
+			return nil, fmt.Errorf("evaluate a version_expr: %w", slogerr.With(err,
+				"version_expr", pkg.VersionExpr,
+			))
 		}
 		pkg.Version = pkg.VersionExprPrefix + s
 		return nil, nil
@@ -133,11 +133,11 @@ func (r *ConfigReader) readPackage(logE *logrus.Entry, configFilePath string, pk
 		return nil, nil
 	}
 	// import
-	logE = logE.WithField("import", pkg.Import)
-	return r.importFiles(logE, configFilePath, pkg.Import)
+	logger = logger.With("import", pkg.Import)
+	return r.importFiles(logger, configFilePath, pkg.Import)
 }
 
-func (r *ConfigReader) importFiles(logE *logrus.Entry, configFilePath string, importGlob string) ([]*aqua.Package, error) {
+func (r *ConfigReader) importFiles(logger *slog.Logger, configFilePath string, importGlob string) ([]*aqua.Package, error) {
 	p := filepath.Join(filepath.Dir(configFilePath), importGlob)
 	filePaths, err := afero.Glob(r.fs, p)
 	if err != nil {
@@ -146,10 +146,10 @@ func (r *ConfigReader) importFiles(logE *logrus.Entry, configFilePath string, im
 	sort.Strings(filePaths)
 	pkgs := []*aqua.Package{}
 	for _, filePath := range filePaths {
-		logE := logE.WithField("imported_file", filePath)
+		logger := logger.With("imported_file", filePath)
 		subCfg := &aqua.Config{}
-		if err := r.Read(logE, filePath, subCfg); err != nil {
-			logerr.WithError(logE, err).Error("read an import file")
+		if err := r.Read(logger, filePath, subCfg); err != nil {
+			slogerr.WithError(logger, err).Error("read an import file")
 			continue
 		}
 		pkgs = append(pkgs, subCfg.Packages...)

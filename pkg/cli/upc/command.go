@@ -76,9 +76,9 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "update-checksum", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.Logger, "update-checksum", param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeUpdateChecksumCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
-	return ctrl.UpdateChecksum(ctx, i.r.LogE, param) //nolint:wrapcheck
+	ctrl := controller.InitializeUpdateChecksumCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	return ctrl.UpdateChecksum(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }

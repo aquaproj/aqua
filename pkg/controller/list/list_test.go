@@ -1,6 +1,7 @@
 package list_test
 
 import (
+	"log/slog"
 	"net/http"
 	"testing"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
-	"github.com/sirupsen/logrus"
 )
 
 func TestController_List(t *testing.T) {
@@ -50,8 +50,8 @@ packages:
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
-	downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, http.DefaultClient))
+	logger := slog.New(slog.DiscardHandler)
+	downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 	rt := &runtime.Runtime{}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
@@ -62,7 +62,7 @@ packages:
 				t.Fatal(err)
 			}
 			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
-			if err := ctrl.List(ctx, logE, d.param); err != nil {
+			if err := ctrl.List(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
 				}

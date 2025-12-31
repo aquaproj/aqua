@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 
@@ -12,8 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 var errUnknownChecksumFileType = errors.New("unknown checksum type")
@@ -42,10 +42,10 @@ func NewChecksumDownloader(gh GitHub, rt *runtime.Runtime, httpDownloader HTTPDo
 }
 
 type ChecksumDownloader interface {
-	DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error)
+	DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error)
 }
 
-func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
+func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
 	switch pkg.PackageInfo.Checksum.Type {
 	case config.PkgInfoTypeGitHubRelease:
@@ -53,7 +53,7 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *lo
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 		}
-		return dl.ghRelease.DownloadGitHubRelease(ctx, logE, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
+		return dl.ghRelease.DownloadGitHubRelease(ctx, logger, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 			Version:   pkg.Package.Version,
@@ -66,14 +66,12 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logE *lo
 		}
 		rc, code, err := dl.http.Download(ctx, u)
 		if err != nil {
-			return rc, code, fmt.Errorf("download a checksum file: %w", logerr.WithFields(err, logrus.Fields{
-				"download_url": u,
-			}))
+			return rc, code, fmt.Errorf("download a checksum file: %w", slogerr.With(err,
+				"download_url", u))
 		}
 		return rc, code, nil
 	default:
-		return nil, 0, logerr.WithFields(errUnknownChecksumFileType, logrus.Fields{ //nolint:wrapcheck
-			"package_type": pkgInfo.Type,
-		})
+		return nil, 0, slogerr.With(errUnknownChecksumFileType, //nolint:wrapcheck
+			"package_type", pkgInfo.Type)
 	}
 }

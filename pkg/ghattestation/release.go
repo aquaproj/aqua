@@ -2,10 +2,9 @@ package ghattestation
 
 import (
 	"context"
-
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
-func (v *Verifier) VerifyRelease(ctx context.Context, logE *logrus.Entry, param *ParamVerifyRelease) error {
-	return v.exe.VerifyRelease(ctx, logE, param) //nolint:wrapcheck
+func (v *Verifier) VerifyRelease(ctx context.Context, logger *slog.Logger, param *ParamVerifyRelease) error {
+	return v.exe.VerifyRelease(ctx, logger, param) //nolint:wrapcheck
 }

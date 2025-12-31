@@ -93,15 +93,15 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "cp", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.Logger, "cp", param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	param.SkipLink = true
-	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.LogE, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a CopyController: %w", err)
 	}
-	if err := ctrl.Copy(ctx, i.r.LogE, param); err != nil {
+	if err := ctrl.Copy(ctx, i.r.Logger.Logger, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

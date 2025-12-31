@@ -1,6 +1,7 @@
 package vacuum_test
 
 import (
+	"log/slog"
 	"path"
 	"path/filepath"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -200,7 +200,7 @@ func TestClient_FindAll(t *testing.T) {
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, tt := range data {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
@@ -216,7 +216,7 @@ func TestClient_FindAll(t *testing.T) {
 			client := vacuum.New(fs, &config.Param{
 				RootDir: rootDir,
 			})
-			timestamps, err := client.FindAll(logE)
+			timestamps, err := client.FindAll(logger)
 			if err != nil {
 				t.Fatal(err)
 			}

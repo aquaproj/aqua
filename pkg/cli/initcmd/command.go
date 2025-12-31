@@ -71,10 +71,10 @@ func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, ic.r.LogE, "init", param, ic.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, ic.r.Logger, "init", param, ic.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	ctrl := controller.InitializeInitCommandController(ctx, ic.r.LogE, param)
+	ctrl := controller.InitializeInitCommandController(ctx, ic.r.Logger.Logger, param)
 	cParam := &initcmd.Param{
 		IsDir:     cmd.Bool("create-dir"),
 		ImportDir: cmd.String("import-dir"),
@@ -82,5 +82,5 @@ func (ic *initCommand) action(ctx context.Context, cmd *cli.Command) error {
 	if cParam.ImportDir == "" && cmd.Bool("use-import-dir") {
 		cParam.ImportDir = "imports"
 	}
-	return ctrl.Init(ctx, ic.r.LogE, cmd.Args().First(), cParam) //nolint:wrapcheck
+	return ctrl.Init(ctx, ic.r.Logger.Logger, cmd.Args().First(), cParam) //nolint:wrapcheck
 }

@@ -3,12 +3,12 @@ package versiongetter
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/hashicorp/go-version"
-	"github.com/sirupsen/logrus"
 )
 
 type GitHubReleaseVersionGetter struct {
@@ -82,13 +82,13 @@ func getLatestRelease(releases []*Release) *Release {
 	return latest
 }
 
-func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 
 	var respToLog *github.Response
 	defer func() {
-		logGHRateLimit(logE, respToLog)
+		logGHRateLimit(logger, respToLog)
 	}()
 
 	candidates := []*Release{}
@@ -117,7 +117,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logE *logrus.Entry
 	}
 }
 
-func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entry, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	repoOwner := pkg.RepoOwner
 	repoName := pkg.RepoName
 	opt := &github.ListOptions{
@@ -129,7 +129,6 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logE *logrus.Entr
 	for {
 		releases, resp, err := g.gh.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
-			*logE = *withRateLimitInfo(logE, resp)
 			return nil, fmt.Errorf("list tags: %w", err)
 		}
 		for _, release := range releases {

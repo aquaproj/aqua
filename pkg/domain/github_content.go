@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 )
 
 type GitHubContentFileParam struct {
@@ -48,5 +47,5 @@ func (f *GitHubContentFile) Close() error {
 }
 
 type GitHubContentFileDownloader interface {
-	DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *GitHubContentFileParam) (*GitHubContentFile, error)
+	DownloadGitHubContentFile(ctx context.Context, logger *slog.Logger, param *GitHubContentFileParam) (*GitHubContentFile, error)
 }

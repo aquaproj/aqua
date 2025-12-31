@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"math/rand"
 	"strings"
 	"sync"
@@ -17,9 +18,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 var mutex = &sync.Mutex{} //nolint:gochecknoglobals
@@ -51,10 +51,10 @@ func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, 
 	}
 }
 
-func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
+func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
 	// art is used to render the template.
 	if v.disabled {
-		logE.Debug("verification with cosign is disabled")
+		logger.Debug("verification with cosign is disabled")
 		return nil
 	}
 
@@ -73,7 +73,7 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		if df == nil {
 			continue
 		}
-		f, err := v.downloadFile(ctx, logE, rt, file, art, df)
+		f, err := v.downloadFile(ctx, logger, rt, file, art, df)
 		if f != "" {
 			defer v.fs.Remove(f) //nolint:errcheck
 		}
@@ -83,14 +83,14 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		opts = append(opts, "--"+name, f)
 	}
 
-	if err := v.verify(ctx, logE, &ParamVerify{
+	if err := v.verify(ctx, logger, &ParamVerify{
 		Opts:   opts,
 		Target: verifiedFilePath,
 	}); err != nil {
-		return fmt.Errorf("verify a signature file with Cosign: %w", logerr.WithFields(err, logrus.Fields{
-			"cosign_opts": strings.Join(opts, ", "),
-			"target":      verifiedFilePath,
-		}))
+		return fmt.Errorf("verify a signature file with Cosign: %w", slogerr.With(err,
+			"cosign_opts", strings.Join(opts, ", "),
+			"target", verifiedFilePath,
+		))
 	}
 	return nil
 }
@@ -117,20 +117,19 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	return out, err //nolint:wrapcheck
 }
 
-func wait(ctx context.Context, logE *logrus.Entry, retryCount int) error {
+func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
 	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
-	logE.WithFields(logrus.Fields{
-		"retry_count": retryCount,
-		"wait_time":   waitTime,
-	}).Info("Verification by Cosign failed temporarily, retrying")
+	logger.Info("Verification by Cosign failed temporarily, retrying",
+		"retry_count", retryCount,
+		"wait_time", waitTime)
 	if err := timer.Wait(ctx, waitTime); err != nil {
 		return fmt.Errorf("wait running Cosign: %w", err)
 	}
 	return nil
 }
 
-func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamVerify) error {
+func (v *Verifier) verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
 	for i := range 5 {
 		// https://github.com/aquaproj/aqua/issues/1554
@@ -141,15 +140,15 @@ func (v *Verifier) verify(ctx context.Context, logE *logrus.Entry, param *ParamV
 			// skip last wait
 			break
 		}
-		if err := wait(ctx, logE, i+1); err != nil {
+		if err := wait(ctx, logger, i+1); err != nil {
 			return err
 		}
 	}
 	return errVerify
 }
 
-func (v *Verifier) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f *download.File, tf io.Writer) error {
-	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
+func (v *Verifier) downloadCosignFile(ctx context.Context, logger *slog.Logger, f *download.File, tf io.Writer) error {
+	rc, _, err := v.downloader.ReadCloser(ctx, logger, f)
 	if err != nil {
 		return fmt.Errorf("get a readcloser: %w", err)
 	}
@@ -160,7 +159,7 @@ func (v *Verifier) downloadCosignFile(ctx context.Context, logE *logrus.Entry, f
 	return nil
 }
 
-func (v *Verifier) downloadFile(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, file *download.File, art *template.Artifact, downloadedFile *registry.DownloadedFile) (string, error) {
+func (v *Verifier) downloadFile(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, art *template.Artifact, downloadedFile *registry.DownloadedFile) (string, error) {
 	// --signature cos.Signature - Download a signature file
 	sigFile, err := afero.TempFile(v.fs, "", "")
 	if err != nil {
@@ -173,7 +172,7 @@ func (v *Verifier) downloadFile(ctx context.Context, logE *logrus.Entry, rt *run
 		return fileName, err //nolint:wrapcheck
 	}
 
-	if err := v.downloadCosignFile(ctx, logE, f, sigFile); err != nil {
+	if err := v.downloadCosignFile(ctx, logger, f, sigFile); err != nil {
 		return fileName, err
 	}
 	return fileName, nil

@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type GitHubReleaseDownloader struct {
@@ -28,7 +29,7 @@ func NewGitHubReleaseDownloader(gh GitHubReleaseAPI, httpDL HTTPDownloader) *Git
 	}
 }
 
-func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, logE *logrus.Entry, param *domain.DownloadGitHubReleaseParam) (io.ReadCloser, int64, error) {
+func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, logger *slog.Logger, param *domain.DownloadGitHubReleaseParam) (io.ReadCloser, int64, error) {
 	if !param.Private {
 		// I have tested if downloading assets from public repository's GitHub Releases anonymously is rate limited.
 		// As a result of test, it seems not to be limited.
@@ -44,12 +45,11 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		if b != nil {
 			b.Close()
 		}
-		logE.WithError(err).WithFields(logrus.Fields{
-			"repo_owner":    param.RepoOwner,
-			"repo_name":     param.RepoName,
-			"asset_version": param.Version,
-			"asset_name":    param.Asset,
-		}).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API")
+		slogerr.WithError(logger, err).Debug("failed to download an asset from GitHub Release without GitHub API. Try again with GitHub API",
+			"repo_owner", param.RepoOwner,
+			"repo_name", param.RepoName,
+			"asset_version", param.Version,
+			"asset_name", param.Asset)
 	}
 
 	release, _, err := dl.github.GetReleaseByTag(ctx, param.RepoOwner, param.RepoName, param.Version)

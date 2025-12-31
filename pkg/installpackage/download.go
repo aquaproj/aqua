@@ -3,37 +3,36 @@ package installpackage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/schollz/progressbar/v3"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error {
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    param.Package.Package.Name,
-		"package_version": param.Package.Package.Version,
-		"registry":        param.Package.Package.Registry,
-	})
+func (is *Installer) downloadWithRetry(ctx context.Context, logger *slog.Logger, param *DownloadParam) error {
+	logger = logger.With(
+		"package_name", param.Package.Package.Name,
+		"package_version", param.Package.Package.Version,
+		"registry", param.Package.Package.Registry,
+	)
 	retryCount := 0
 	for {
-		logE.Debug("check if the package is already installed")
+		logger.Debug("check if the package is already installed")
 		finfo, err := is.fs.Stat(param.Dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
-			if err := is.download(ctx, logE, param); err != nil {
+			if err := is.download(ctx, logger, param); err != nil {
 				if strings.Contains(err.Error(), "file already exists") {
 					if retryCount >= maxRetryDownload {
 						return err
 					}
 					retryCount++
-					logerr.WithError(logE, err).WithFields(logrus.Fields{
-						"retry_count": retryCount,
-					}).Info("retry installing the package")
+					slogerr.WithError(logger, err).Info("retry installing the package",
+						"retry_count", retryCount)
 					continue
 				}
 				return err
@@ -43,7 +42,7 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 				return fmt.Errorf("get a package path: %w", err)
 			}
 			if err := is.vacuum.Update(pkgPath, time.Now()); err != nil {
-				logerr.WithError(logE, err).Warn("update the last used datetime")
+				slogerr.WithError(logger, err).Warn("update the last used datetime")
 			}
 			return nil
 		}
@@ -54,31 +53,31 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logE *logrus.Entry, 
 	}
 }
 
-func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *DownloadParam) error { //nolint:funlen,cyclop
+func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *DownloadParam) error { //nolint:funlen,cyclop
 	ppkg := param.Package
 	pkg := ppkg.Package
-	logE = logE.WithFields(logrus.Fields{
-		"package_name":    pkg.Name,
-		"package_version": pkg.Version,
-		"registry":        pkg.Registry,
-	})
+	logger = logger.With(
+		"package_name", pkg.Name,
+		"package_version", pkg.Version,
+		"registry", pkg.Registry,
+	)
 	pkgInfo := param.Package.PackageInfo
 
 	if pkgInfo.Type == "go_install" {
-		return is.downloadGoInstall(ctx, logE, ppkg, param.Dest)
+		return is.downloadGoInstall(ctx, logger, ppkg, param.Dest)
 	}
 
 	if pkgInfo.Type == "cargo" {
-		return is.downloadCargo(ctx, logE, ppkg, param.Dest)
+		return is.downloadCargo(ctx, logger, ppkg, param.Dest)
 	}
 
-	logE.Info("download and unarchive the package")
+	logger.Info("download and unarchive the package")
 
 	file, err := download.ConvertPackageToFile(ppkg, param.Asset, is.runtime)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	body, cl, err := is.downloader.ReadCloser(ctx, logE, file)
+	body, cl, err := is.downloader.ReadCloser(ctx, logger, file)
 	if body != nil {
 		defer body.Close()
 	}
@@ -96,7 +95,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 	bodyFile := download.NewDownloadedFile(is.fs, body, pb)
 	defer func() {
 		if err := bodyFile.Remove(); err != nil {
-			logE.WithError(err).Warn("remove a temporary file")
+			slogerr.WithError(logger, err).Warn("remove a temporary file")
 		}
 	}()
 
@@ -144,7 +143,7 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 
 	var tempFilePath string
 	for _, verifier := range verifiers {
-		a, err := verifier.Enabled(logE)
+		a, err := verifier.Enabled(logger)
 		if err != nil {
 			return fmt.Errorf("check if the verifier is enabled: %w", err)
 		}
@@ -158,16 +157,16 @@ func (is *Installer) download(ctx context.Context, logE *logrus.Entry, param *Do
 			}
 			tempFilePath = a
 		}
-		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
+		if err := verifier.Verify(ctx, logger, tempFilePath); err != nil {
 			return fmt.Errorf("verify the asset: %w", err)
 		}
 	}
 
-	if err := is.verifyChecksumWrap(ctx, logE, param, bodyFile); err != nil {
+	if err := is.verifyChecksumWrap(ctx, logger, param, bodyFile); err != nil {
 		return err
 	}
 
-	return is.unarchiver.Unarchive(ctx, logE, &unarchive.File{ //nolint:wrapcheck
+	return is.unarchiver.Unarchive(ctx, logger, &unarchive.File{ //nolint:wrapcheck
 		Body:     bodyFile,
 		Filename: param.Asset,
 		Type:     pkgInfo.GetFormat(),

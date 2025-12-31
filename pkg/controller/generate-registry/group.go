@@ -2,6 +2,7 @@ package genrgst
 
 import (
 	"fmt"
+	"log/slog"
 	"maps"
 	"reflect"
 	"slices"
@@ -11,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
-	"github.com/sirupsen/logrus"
 )
 
 type Group struct {
@@ -272,7 +272,7 @@ func groupByExcludedAsset(groups []*Group) []*Group {
 	return newGroups
 }
 
-func (c *Controller) group(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []*Group {
+func (c *Controller) group(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []*Group {
 	if len(releases) == 0 {
 		return nil
 	}
@@ -286,7 +286,7 @@ func (c *Controller) group(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pk
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 		}
-		c.patchRelease(logE, pkgInfo, pkgName, release.Tag, group.assetNames)
+		c.patchRelease(logger, pkgInfo, pkgName, release.Tag, group.assetNames)
 		group.pkg = &Package{
 			Info:    pkgInfo,
 			Version: release.Tag,
@@ -319,6 +319,6 @@ func (c *Controller) group(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pk
 	return sortAndMergeGroups(newGroups)
 }
 
-func (c *Controller) generatePackage(logE *logrus.Entry, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
-	return mergeGroups(pkgInfo, c.group(logE, pkgInfo, pkgName, releases))
+func (c *Controller) generatePackage(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
+	return mergeGroups(pkgInfo, c.group(logger, pkgInfo, pkgName, releases))
 }

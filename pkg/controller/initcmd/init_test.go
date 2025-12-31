@@ -1,6 +1,7 @@
 package initcmd_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -8,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
-	"github.com/sirupsen/logrus"
 )
 
 func TestController_Init(t *testing.T) { //nolint:funlen
@@ -49,7 +49,7 @@ packages:
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -62,7 +62,7 @@ packages:
 				Releases: d.releases,
 			}
 			ctrl := initcmd.New(gh, fs)
-			if err := ctrl.Init(ctx, logE, "", &initcmd.Param{}); err != nil {
+			if err := ctrl.Init(ctx, logger, "", &initcmd.Param{}); err != nil {
 				if d.isErr {
 					return
 				}

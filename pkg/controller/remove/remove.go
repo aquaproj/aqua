@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
@@ -14,14 +15,13 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *config.Param) error { //nolint:cyclop
+func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *config.Param) error { //nolint:cyclop
 	if param.All {
-		logE.Info("removing all packages")
+		logger.Info("removing all packages")
 		return c.removeAll(param.RootDir)
 	}
 
@@ -39,7 +39,7 @@ func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *conf
 		cmds = append(cmds, arg)
 	}
 
-	if err := c.removeCommands(ctx, logE, param, cmds); err != nil {
+	if err := c.removeCommands(ctx, logger, param, cmds); err != nil {
 		return err
 	}
 
@@ -51,27 +51,27 @@ func (c *Controller) Remove(ctx context.Context, logE *logrus.Entry, param *conf
 	}
 
 	cfg := &aqua.Config{}
-	if err := c.configReader.Read(logE, cfgFilePath, cfg); err != nil {
+	if err := c.configReader.Read(logger, cfgFilePath, cfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
 
 	checksums, updateChecksum, err := checksum.Open(
-		logE, c.fs, cfgFilePath,
+		logger, c.fs, cfgFilePath,
 		param.ChecksumEnabled(cfg))
 	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
 	defer updateChecksum()
 
-	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logE, cfg, cfgFilePath, checksums)
+	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logger, cfg, cfgFilePath, checksums)
 	if err != nil {
 		return fmt.Errorf("install registries: %w", err)
 	}
 
-	return c.removePackages(logE, param, registryContents)
+	return c.removePackages(logger, param, registryContents)
 }
 
-func (c *Controller) removePackagesInteractively(logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) error {
+func (c *Controller) removePackagesInteractively(logger *slog.Logger, param *config.Param, registryContents map[string]*registry.Config) error {
 	var items []*fuzzyfinder.Item
 	var pkgs []*fuzzyfinder.Package
 	for registryName, registryContent := range registryContents {
@@ -99,49 +99,49 @@ func (c *Controller) removePackagesInteractively(logE *logrus.Entry, param *conf
 	for _, idx := range idxes {
 		pkg := pkgs[idx]
 		pkgName := pkg.PackageInfo.GetName()
-		logE := logE.WithField("package_name", pkgName)
-		if err := c.removePackage(logE, param.RootDir, pkg.PackageInfo); err != nil {
-			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
-				"package_name": pkgName,
-			}))
+		logger := logger.With("package_name", pkgName)
+		if err := c.removePackage(logger, param.RootDir, pkg.PackageInfo); err != nil {
+			return fmt.Errorf("remove a package: %w", slogerr.With(err,
+				"package_name", pkgName,
+			))
 		}
 	}
 	return nil
 }
 
-func (c *Controller) removePackages(logE *logrus.Entry, param *config.Param, registryContents map[string]*registry.Config) error {
+func (c *Controller) removePackages(logger *slog.Logger, param *config.Param, registryContents map[string]*registry.Config) error {
 	if param.Insert {
-		return c.removePackagesInteractively(logE, param, registryContents)
+		return c.removePackagesInteractively(logger, param, registryContents)
 	}
 
 	for _, pkgName := range param.Args {
-		logE := logE.WithField("package_name", pkgName)
+		logger := logger.With("package_name", pkgName)
 		pkg, err := findPkg(pkgName, registryContents)
 		if err != nil {
-			return fmt.Errorf("find a package from registries: %w", logerr.WithFields(err, logrus.Fields{
-				"package_name": pkgName,
-			}))
+			return fmt.Errorf("find a package from registries: %w", slogerr.With(err,
+				"package_name", pkgName,
+			))
 		}
-		if err := c.removePackage(logE, param.RootDir, pkg); err != nil {
-			return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
-				"package_name": pkgName,
-			}))
+		if err := c.removePackage(logger, param.RootDir, pkg); err != nil {
+			return fmt.Errorf("remove a package: %w", slogerr.With(err,
+				"package_name", pkgName,
+			))
 		}
 	}
 	return nil
 }
 
-func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, param *config.Param, cmds []string) error {
+func (c *Controller) removeCommands(ctx context.Context, logger *slog.Logger, param *config.Param, cmds []string) error {
 	var gErr error
 	if c.mode.Link {
 		for _, cmd := range cmds {
-			logE := logE.WithField("exe_name", cmd)
-			logE.Info("removing a link")
+			logger := logger.With("exe_name", cmd)
+			logger.Info("removing a link")
 			if err := c.fs.Remove(filepath.Join(c.rootDir, "bin", cmd)); err != nil {
 				if errors.Is(err, fs.ErrNotExist) {
 					continue
 				}
-				logerr.WithError(logE, err).Error("remove a link")
+				slogerr.WithError(logger, err).Error("remove a link")
 				gErr = errors.New("remove links")
 			}
 		}
@@ -150,48 +150,48 @@ func (c *Controller) removeCommands(ctx context.Context, logE *logrus.Entry, par
 		return gErr
 	}
 	for _, cmd := range cmds {
-		logE := logE.WithField("exe_name", cmd)
-		if err := c.removeCommand(ctx, logE, param, cmd); err != nil {
-			return fmt.Errorf("remove a command: %w", logerr.WithFields(err, logrus.Fields{
-				"exe_name": cmd,
-			}))
+		logger := logger.With("exe_name", cmd)
+		if err := c.removeCommand(ctx, logger, param, cmd); err != nil {
+			return fmt.Errorf("remove a command: %w", slogerr.With(err,
+				"exe_name", cmd,
+			))
 		}
 	}
 	return gErr
 }
 
-func (c *Controller) removeCommand(ctx context.Context, logE *logrus.Entry, param *config.Param, cmd string) error {
-	findResult, err := c.which.Which(ctx, logE, param, cmd)
+func (c *Controller) removeCommand(ctx context.Context, logger *slog.Logger, param *config.Param, cmd string) error {
+	findResult, err := c.which.Which(ctx, logger, param, cmd)
 	if err != nil {
 		if errors.Is(err, which.ErrCommandIsNotFound) {
-			logE.Debug("the command isn't found")
+			logger.Debug("the command isn't found")
 			return nil
 		}
 		return fmt.Errorf("find a command: %w", err)
 	}
 	if findResult.Package == nil {
-		logE.Debug("no package is found")
+		logger.Debug("no package is found")
 		return nil
 	}
-	logE = logE.WithField("package_name", findResult.Package.Package.Name)
-	if err := c.removePackage(logE, param.RootDir, findResult.Package.PackageInfo); err != nil {
-		return fmt.Errorf("remove a package: %w", logerr.WithFields(err, logrus.Fields{
-			"package_name": findResult.Package.Package.Name,
-		}))
+	logger = logger.With("package_name", findResult.Package.Package.Name)
+	if err := c.removePackage(logger, param.RootDir, findResult.Package.PackageInfo); err != nil {
+		return fmt.Errorf("remove a package: %w", slogerr.With(err,
+			"package_name", findResult.Package.Package.Name,
+		))
 	}
 	return nil
 }
 
-func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *registry.PackageInfo) error {
+func (c *Controller) removePackage(logger *slog.Logger, rootDir string, pkg *registry.PackageInfo) error {
 	var gErr error
-	logE.Info("removing a package")
+	logger.Info("removing a package")
 	if c.mode.Link {
 		for _, file := range pkg.GetFiles() {
 			if err := c.fs.Remove(filepath.Join(rootDir, "bin", file.Name)); err != nil {
 				if errors.Is(err, fs.ErrNotExist) {
 					continue
 				}
-				logerr.WithError(logE, err).WithField("link", file.Name).Error("remove a link")
+				slogerr.WithError(logger, err).Error("remove a link", "link", file.Name)
 				gErr = errors.New("remove links")
 			}
 		}
@@ -202,28 +202,28 @@ func (c *Controller) removePackage(logE *logrus.Entry, rootDir string, pkg *regi
 
 	paths := pkg.PkgPaths()
 	if len(paths) == 0 {
-		logE.WithField("package_type", pkg.Type).Warn("this package can't be removed")
+		logger.Warn("this package can't be removed", "package_type", pkg.Type)
 		return gErr
 	}
 	for path := range paths {
-		if err := c.removePath(logE, rootDir, path); err != nil {
+		if err := c.removePath(logger, rootDir, path); err != nil {
 			return err
 		}
-		if err := c.removeMetadataPath(logE, rootDir, path); err != nil {
+		if err := c.removeMetadataPath(logger, rootDir, path); err != nil {
 			return err
 		}
 	}
 	return gErr
 }
 
-func (c *Controller) removePath(logE *logrus.Entry, rootDir string, path string) error {
+func (c *Controller) removePath(logger *slog.Logger, rootDir string, path string) error {
 	pkgPath := filepath.Join(rootDir, "pkgs", path)
 	arr, err := afero.Glob(c.fs, pkgPath)
 	if err != nil {
 		return fmt.Errorf("find directories: %w", err)
 	}
 	for _, p := range arr {
-		logE.WithField("removed_path", p).Debug("removing a directory")
+		logger.Debug("removing a directory", "removed_path", p)
 		if err := c.fs.RemoveAll(p); err != nil {
 			return fmt.Errorf("remove directories: %w", err)
 		}
@@ -231,14 +231,14 @@ func (c *Controller) removePath(logE *logrus.Entry, rootDir string, path string)
 	return nil
 }
 
-func (c *Controller) removeMetadataPath(logE *logrus.Entry, rootDir string, path string) error {
+func (c *Controller) removeMetadataPath(logger *slog.Logger, rootDir string, path string) error {
 	pkgPath := filepath.Join(rootDir, "metadata", "pkgs", path)
 	arr, err := afero.Glob(c.fs, pkgPath)
 	if err != nil {
 		return fmt.Errorf("find directories: %w", err)
 	}
 	for _, p := range arr {
-		logE.WithField("removed_path", p).Debug("removing a directory")
+		logger.Debug("removing a directory", "removed_path", p)
 		if err := c.fs.RemoveAll(p); err != nil {
 			return fmt.Errorf("remove directories: %w", err)
 		}

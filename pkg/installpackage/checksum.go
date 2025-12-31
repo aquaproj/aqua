@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entry, pkg *config.Package, assetName string) (string, error) { //nolint:funlen
-	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logE, is.runtime, pkg)
+func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, error) { //nolint:funlen
+	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logger, is.runtime, pkg)
 	if err != nil {
 		return "", fmt.Errorf("download a checksum file: %w", err)
 	}
@@ -65,7 +65,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 	}
 
 	for _, verifier := range verifiers {
-		a, err := verifier.Enabled(logE)
+		a, err := verifier.Enabled(logger)
 		if err != nil {
 			return "", fmt.Errorf("check if the verifier is enabled: %w", err)
 		}
@@ -84,12 +84,12 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logE *logrus.Entr
 				return "", fmt.Errorf("write a checksum to a temporary file: %w", err)
 			}
 		}
-		if err := verifier.Verify(ctx, logE, tempFilePath); err != nil {
+		if err := verifier.Verify(ctx, logger, tempFilePath); err != nil {
 			return "", fmt.Errorf("verify the checksum file: %w", err)
 		}
 	}
 
-	return checksum.GetChecksum(logE, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
+	return checksum.GetChecksum(logger, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
 }
 
 type ParamVerifyChecksum struct {
@@ -102,7 +102,7 @@ type ParamVerifyChecksum struct {
 	SkipSetChecksum bool
 }
 
-func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry, param *DownloadParam, bodyFile *download.DownloadedFile) error {
+func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger, param *DownloadParam, bodyFile *download.DownloadedFile) error {
 	if param.Checksum == nil && param.Checksums == nil {
 		return nil
 	}
@@ -130,19 +130,18 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logE *logrus.Entry,
 		// Even if SLSA Provenance is enabled checksum verification is run
 		paramVerifyChecksum.Checksum = param.Checksums.Get(cid)
 		if paramVerifyChecksum.Checksum == nil && param.RequireChecksum {
-			return logerr.WithFields(errChecksumIsRequired, logrus.Fields{ //nolint:wrapcheck
-				"doc": "https://aquaproj.github.io/docs/reference/codes/001",
-			})
+			return slogerr.With(errChecksumIsRequired, //nolint:wrapcheck
+				"doc", "https://aquaproj.github.io/docs/reference/codes/001")
 		}
 	}
 
-	if err := is.verifyChecksum(ctx, logE, paramVerifyChecksum); err != nil {
+	if err := is.verifyChecksum(ctx, logger, paramVerifyChecksum); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, param *ParamVerifyChecksum) error { //nolint:cyclop
+func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, param *ParamVerifyChecksum) error { //nolint:cyclop
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
@@ -166,12 +165,11 @@ func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, par
 	}
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
-		logE.Info("downloading a checksum file")
-		c, err := is.dlAndExtractChecksum(ctx, logE, pkg, assetName)
+		logger.Info("downloading a checksum file")
+		c, err := is.dlAndExtractChecksum(ctx, logger, pkg, assetName)
 		if err != nil {
-			return logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-				"asset_name": assetName,
-			})
+			return slogerr.With(err, //nolint:wrapcheck
+				"asset_name", assetName)
 		}
 		chksum = &checksum.Checksum{
 			ID:        checksumID,
@@ -187,23 +185,20 @@ func (is *Installer) verifyChecksum(ctx context.Context, logE *logrus.Entry, par
 	}
 	calculatedSum, err := is.checksumCalculator.Calculate(is.fs, tempFilePath, algorithm)
 	if err != nil {
-		return fmt.Errorf("calculate a checksum of downloaded file: %w", logerr.WithFields(err, logrus.Fields{
-			"temp_file": tempFilePath,
-		}))
+		return fmt.Errorf("calculate a checksum of downloaded file: %w", slogerr.With(err,
+			"temp_file", tempFilePath))
 	}
 
 	if chksum != nil && !strings.EqualFold(calculatedSum, chksum.Checksum) {
-		return logerr.WithFields(errInvalidChecksum, logrus.Fields{ //nolint:wrapcheck
-			"actual_checksum":   strings.ToUpper(calculatedSum),
-			"expected_checksum": strings.ToUpper(chksum.Checksum),
-		})
+		return slogerr.With(errInvalidChecksum, //nolint:wrapcheck
+			"actual_checksum", strings.ToUpper(calculatedSum),
+			"expected_checksum", strings.ToUpper(chksum.Checksum))
 	}
 
 	if chksum == nil {
-		logE.WithFields(logrus.Fields{
-			"checksum_id": checksumID,
-			"checksum":    calculatedSum,
-		}).Debug("set a calculated checksum")
+		logger.Debug("set a calculated checksum",
+			"checksum_id", checksumID,
+			"checksum", calculatedSum)
 		chksum = &checksum.Checksum{
 			ID:        checksumID,
 			Checksum:  calculatedSum,

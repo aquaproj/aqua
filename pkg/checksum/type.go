@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // Checksums manages a collection of checksum data with concurrent access support.
@@ -38,7 +39,7 @@ func New() *Checksums {
 // Open loads checksums from a file and returns a cleanup function.
 // If checksum validation is disabled, it returns nil. Otherwise, it reads
 // the checksum file and provides a cleanup function to save changes on exit.
-func Open(logE *logrus.Entry, fs afero.Fs, cfgFilePath string, enabled bool) (*Checksums, func(), error) {
+func Open(logger *slog.Logger, fs afero.Fs, cfgFilePath string, enabled bool) (*Checksums, func(), error) {
 	if !enabled {
 		return nil, func() {}, nil
 	}
@@ -52,7 +53,7 @@ func Open(logE *logrus.Entry, fs afero.Fs, cfgFilePath string, enabled bool) (*C
 	}
 	return checksums, func() {
 		if err := checksums.UpdateFile(fs, checksumFilePath); err != nil {
-			logE.WithError(err).Error("update a checksum file")
+			slogerr.WithError(logger, err).Error("update a checksum file")
 		}
 	}, nil
 }

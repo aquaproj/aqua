@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
 )
 
 type GitHubContentFileDownloader struct {
@@ -27,7 +27,7 @@ func NewGitHubContentFileDownloader(gh GitHubContentAPI, httpDL HTTPDownloader) 
 	}
 }
 
-func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, _ *logrus.Entry, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
+func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, _ *slog.Logger, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
 	if !param.Private {
 		// https://github.com/aquaproj/aqua/issues/391
 		body, _, err := dl.http.Download(ctx, fmt.Sprintf(

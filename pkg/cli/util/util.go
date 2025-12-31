@@ -15,10 +15,8 @@ import (
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/log"
-	"github.com/suzuki-shunsuke/urfave-cli-v3-util/urfave"
+	"github.com/suzuki-shunsuke/slog-util/slogutil"
 	"github.com/urfave/cli/v3"
 )
 
@@ -29,15 +27,15 @@ type Param struct {
 	Stdin   io.Reader
 	Stdout  io.Writer
 	Stderr  io.Writer
-	LDFlags *urfave.LDFlags
-	LogE    *logrus.Entry
+	Logger  *slogutil.Logger
 	Runtime *runtime.Runtime
+	Version string
 }
 
 // SetParam configures the parameter struct with values from CLI flags, environment variables,
 // and default settings. It processes command-line arguments, sets up logging, configures
 // security settings, and initializes various operational parameters for aqua commands.
-func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *config.Param, ldFlags *urfave.LDFlags) error { //nolint:funlen,cyclop
+func SetParam(cmd *cli.Command, logger *slogutil.Logger, commandName string, param *config.Param, version string) error { //nolint:funlen,cyclop,gocognit
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get the current directory: %w", err)
@@ -73,16 +71,18 @@ func SetParam(cmd *cli.Command, logE *logrus.Entry, commandName string, param *c
 	if cmd := cmd.String("cmd"); cmd != "" {
 		param.Commands = strings.Split(cmd, ",")
 	}
-	param.LogColor = os.Getenv("AQUA_LOG_COLOR")
-	param.AQUAVersion = ldFlags.Version
-	param.AquaCommitHash = ldFlags.Commit
+	param.AQUAVersion = version
 	param.RootDir = config.GetRootDir(osenv.New())
 	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
-	if err := log.Set(logE, param.LogLevel, param.LogColor); err != nil {
-		return fmt.Errorf("configure logger: %w", err)
+	if err := logger.SetLevel(param.LogLevel); err != nil {
+		return fmt.Errorf("set log level: %w", err)
 	}
-	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logE)
+	logColor := os.Getenv("AQUA_LOG_COLOR")
+	if err := logger.SetColor(logColor); err != nil {
+		return fmt.Errorf("set log color: %w", err)
+	}
+	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logger.Logger)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = cmd.Bool("deep")
 	param.Pin = cmd.Bool("pin")

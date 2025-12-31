@@ -48,9 +48,9 @@ func (i *infoCommand) action(ctx context.Context, cmd *cli.Command) error {
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.LogE, "info", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, i.r.Logger, "info", param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInfoCommandController(ctx, param, i.r.Runtime)
-	return ctrl.Info(ctx, i.r.LogE, param) //nolint:wrapcheck
+	return ctrl.Info(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }

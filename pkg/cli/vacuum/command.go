@@ -86,16 +86,16 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	}
 	defer profiler.Stop()
 
-	logE := i.r.LogE
+	logger := i.r.Logger
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, logE, "vacuum", param, i.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, logger, "vacuum", param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
 	if cmd.Bool("init") {
-		ctrl := controller.InitializeVacuumInitCommandController(ctx, i.r.LogE, param, i.r.Runtime, &http.Client{})
-		if err := ctrl.Init(ctx, logE, param); err != nil {
+		ctrl := controller.InitializeVacuumInitCommandController(ctx, i.r.Logger.Logger, param, i.r.Runtime, &http.Client{})
+		if err := ctrl.Init(ctx, logger.Logger, param); err != nil {
 			return err //nolint:wrapcheck
 		}
 		return nil
@@ -107,7 +107,7 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	ctrl := controller.InitializeVacuumCommandController(ctx, param, i.r.Runtime)
-	if err := ctrl.Vacuum(logE, param); err != nil {
+	if err := ctrl.Vacuum(logger.Logger, param); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return nil

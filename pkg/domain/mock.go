@@ -2,8 +2,7 @@ package domain
 
 import (
 	"context"
-
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
 type MockGitHubContentFileDownloader struct {
@@ -11,6 +10,6 @@ type MockGitHubContentFileDownloader struct {
 	Err  error
 }
 
-func (m *MockGitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logE *logrus.Entry, param *GitHubContentFileParam) (*GitHubContentFile, error) {
+func (m *MockGitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Context, logger *slog.Logger, param *GitHubContentFileParam) (*GitHubContentFile, error) {
 	return m.File, m.Err
 }

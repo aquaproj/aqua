@@ -3,40 +3,41 @@ package checksum
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"path"
 	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/sirupsen/logrus"
 )
 
 // showFileContent logs checksum file content for debugging when checksum is not found.
 // If content exceeds 10000 characters, it truncates the output.
-func showFileContent(logE *logrus.Entry, content string) {
+func showFileContent(logger *slog.Logger, content string) {
 	if len(content) > 10000 { //nolint:mnd
 		content = content[:10000]
-		logE.Error("Checksum isn't found in a checksum file. Checksum file content (10000):\n" + content)
+		logger.Error("Checksum isn't found in a checksum file. Checksum file content (10000):\n" + content)
 		return
 	}
-	logE.Error("Checksum isn't found in a checksum file. Checksum file content:\n" + content)
+	logger.Error("Checksum isn't found in a checksum file. Checksum file content:\n" + content)
 }
 
 // GetChecksum extracts a checksum for the specified asset from checksum file content.
 // It parses the checksum file according to the provided configuration and returns
 // the checksum value for the given asset name.
-func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, checksumConfig *registry.Checksum) (string, error) {
+func GetChecksum(logger *slog.Logger, assetName, checksumFileContent string, checksumConfig *registry.Checksum) (string, error) {
 	m, s, err := ParseChecksumFile(checksumFileContent, checksumConfig)
-	logE = logE.WithField("checksum_file_format", checksumConfig.FileFormat)
+	logger = logger.With("checksum_file_format", checksumConfig.FileFormat)
 	if checksumConfig.Pattern != nil {
-		logE = logE.WithFields(logrus.Fields{
-			"checksum_pattern_checksum": checksumConfig.Pattern.Checksum,
-			"checksum_pattern_file":     checksumConfig.Pattern.File,
-		})
+		logger = logger.With(
+			"checksum_file_format", checksumConfig.FileFormat,
+			"checksum_pattern_checksum", checksumConfig.Pattern.Checksum,
+			"checksum_pattern_file", checksumConfig.Pattern.File,
+		)
 	}
 	if err != nil {
 		if errors.Is(err, ErrNoChecksumExtracted) {
-			showFileContent(logE, checksumFileContent)
+			showFileContent(logger, checksumFileContent)
 		}
 		return "", fmt.Errorf("parse a checksum file: %w", err)
 	}
@@ -47,7 +48,7 @@ func GetChecksum(logE *logrus.Entry, assetName, checksumFileContent string, chec
 	if ok {
 		return a, nil
 	}
-	showFileContent(logE, checksumFileContent)
+	showFileContent(logger, checksumFileContent)
 	return "", ErrNoChecksumIsFound
 }
 

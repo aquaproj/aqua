@@ -46,9 +46,9 @@ func (pi *policyInitCommand) action(ctx context.Context, cmd *cli.Command) error
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, pi.r.LogE, "init-policy", param, pi.r.LDFlags); err != nil {
+	if err := util.SetParam(cmd, pi.r.Logger, "init-policy", param, pi.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 	ctrl := controller.InitializeInitPolicyCommandController(ctx)
-	return ctrl.Init(pi.r.LogE, cmd.Args().First()) //nolint:wrapcheck
+	return ctrl.Init(pi.r.Logger.Logger, cmd.Args().First()) //nolint:wrapcheck
 }

@@ -3,6 +3,7 @@ package genrgst
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 
@@ -12,8 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/hashicorp/go-version"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Package struct {
@@ -62,7 +62,7 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 	return pkgs
 }
 
-func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
+func excludeVersion(logger *slog.Logger, tag string, cfg *Config) bool {
 	excludedVersions := map[string]struct{}{
 		"latest":  {},
 		"nightly": {},
@@ -74,7 +74,7 @@ func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
 	if cfg.VersionFilter != nil {
 		f, err := expr.EvaluateVersionFilter(cfg.VersionFilter, tag)
 		if err != nil {
-			logerr.WithError(logE, err).WithField("tag_name", tag).Warn("evaluate a version filter")
+			slogerr.WithError(logger, err).Warn("evaluate a version filter", "tag_name", tag)
 			return false
 		}
 		if !f {
@@ -89,29 +89,29 @@ func excludeVersion(logE *logrus.Entry, tag string, cfg *Config) bool {
 	return false
 }
 
-func excludeAsset(logE *logrus.Entry, asset string, cfg *Config) bool {
+func excludeAsset(logger *slog.Logger, asset string, cfg *Config) bool {
 	if cfg.AllAssetsFilter == nil {
 		return false
 	}
 	f, err := expr.EvaluateAssetFilter(cfg.AllAssetsFilter, asset)
 	if err != nil {
-		logerr.WithError(logE, err).WithField("asset", asset).Warn("evaluate an asset filter")
+		slogerr.WithError(logger, err).Warn("evaluate an asset filter", "asset", asset)
 		return false
 	}
 	return !f
 }
 
-func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logE *logrus.Entry, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string { //nolint:cyclop
-	ghReleases := c.listReleases(ctx, logE, pkgInfo, limit)
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string { //nolint:cyclop
+	ghReleases := c.listReleases(ctx, logger, pkgInfo, limit)
 	releases := make([]*Release, 0, len(ghReleases))
 	for _, release := range ghReleases {
 		tag := release.GetTagName()
-		if excludeVersion(logE, tag, cfg) {
+		if excludeVersion(logger, tag, cfg) {
 			continue
 		}
 		v, prefix, err := versiongetter.GetVersionAndPrefix(tag)
 		if err != nil {
-			logerr.WithError(logE, err).WithField("tag_name", tag).Warn("parse a tag as semver")
+			slogerr.WithError(logger, err).Warn("parse a tag as semver", "tag_name", tag)
 		}
 		releases = append(releases, &Release{
 			ID:            release.GetID(),
@@ -139,11 +139,11 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		if release.VersionPrefix != "" {
 			pkgInfo.VersionPrefix = release.VersionPrefix
 		}
-		arr := c.listReleaseAssets(ctx, logE, pkgInfo, release.ID)
-		logE.WithField("num_of_assets", len(arr)).Debug("got assets")
+		arr := c.listReleaseAssets(ctx, logger, pkgInfo, release.ID)
+		logger.Debug("got assets", "num_of_assets", len(arr))
 		assets := make([]*github.ReleaseAsset, 0, len(arr))
 		for _, asset := range arr {
-			if excludeAsset(logE, asset.GetName(), cfg) {
+			if excludeAsset(logger, asset.GetName(), cfg) {
 				continue
 			}
 			assets = append(assets, asset)
@@ -154,14 +154,14 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		release.assets = assets
 	}
 
-	versions := c.generatePackage(logE, pkgInfo, pkgName, releases)
+	versions := c.generatePackage(logger, pkgInfo, pkgName, releases)
 	if len(pkgInfo.VersionOverrides) != 0 {
 		pkgInfo.VersionConstraints = "false"
 	}
 	return versions
 }
 
-func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgInfo *registry.PackageInfo, limit int) []*github.RepositoryRelease {
+func (c *Controller) listReleases(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, limit int) []*github.RepositoryRelease {
 	repoOwner := pkgInfo.RepoOwner
 	repoName := pkgInfo.RepoName
 	opt := &github.ListOptions{
@@ -177,10 +177,10 @@ func (c *Controller) listReleases(ctx context.Context, logE *logrus.Entry, pkgIn
 	for range 10 {
 		releases, resp, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
-			logerr.WithError(logE, err).WithFields(logrus.Fields{
-				"repo_owner": repoOwner,
-				"repo_name":  repoName,
-			}).Warn("list releases")
+			slogerr.WithError(logger, err).Warn("list releases",
+				"repo_owner", repoOwner,
+				"repo_name", repoName,
+			)
 			return arr
 		}
 		arr = append(arr, releases...)

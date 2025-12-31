@@ -1,6 +1,7 @@
 package update_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -18,7 +19,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -505,7 +505,7 @@ packages:
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
@@ -529,7 +529,7 @@ packages:
 			}
 			fuzzyGetter := versiongetter.NewMockFuzzyGetter(d.versions)
 			ctrl := update.New(d.param, gh, configFinder, configReader, registryInstaller, fs, d.rt, fuzzyGetter, fuzzyFinder, whichCtrl)
-			if err := ctrl.Update(ctx, logE, d.param); err != nil {
+			if err := ctrl.Update(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
 				}

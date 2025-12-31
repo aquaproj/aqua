@@ -3,11 +3,12 @@ package policy
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Reader struct {
@@ -40,7 +41,7 @@ func (r *Reader) Read(policyFilePaths []string) ([]*Config, error) {
 }
 
 // Append finds and reads a policy file for aquaYAMLPath and appends the policy to policies.
-func (r *Reader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+func (r *Reader) Append(logger *slog.Logger, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
 	policyFilePath, err := r.finder.Find("", filepath.Dir(aquaYAMLPath))
 	if err != nil {
 		return nil, fmt.Errorf("find a policy file: %w", err)
@@ -51,7 +52,7 @@ func (r *Reader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Con
 	if _, ok := globalPolicyPaths[policyFilePath]; ok {
 		return policies, nil
 	}
-	policyCfg, err := r.read(logE, policyFilePath)
+	policyCfg, err := r.read(logger, policyFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("read a policy file: %w", err)
 	}
@@ -79,7 +80,7 @@ func allowCfgs(cfgs []*Config) {
 	}
 }
 
-func (r *Reader) read(logE *logrus.Entry, policyFilePath string) (*Config, error) {
+func (r *Reader) read(logger *slog.Logger, policyFilePath string) (*Config, error) {
 	if cfg := r.get(policyFilePath); cfg != nil {
 		if cfg.Allowed {
 			return cfg, nil
@@ -88,8 +89,8 @@ func (r *Reader) read(logE *logrus.Entry, policyFilePath string) (*Config, error
 	}
 	if err := r.validator.Validate(policyFilePath); err != nil {
 		r.set(policyFilePath, &Config{})
-		if err := r.validator.Warn(logE, policyFilePath, errors.Is(err, errPolicyUpdated)); err != nil {
-			logE.WithError(err).Warn("warn a denied policy file")
+		if err := r.validator.Warn(logger, policyFilePath, errors.Is(err, errPolicyUpdated)); err != nil {
+			slogerr.WithError(logger, err).Warn("warn a denied policy file")
 		}
 		return nil, nil //nolint:nilnil
 	}

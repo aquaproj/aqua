@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type HTTPDownloader interface {
 	Download(ctx context.Context, u string) (io.ReadCloser, int64, error)
 }
 
-func NewHTTPDownloader(logE *logrus.Entry, httpClient *http.Client) HTTPDownloader {
+func NewHTTPDownloader(logger *slog.Logger, httpClient *http.Client) HTTPDownloader {
 	return &httpDownloader{
-		client: github.MakeRetryable(httpClient, logE),
+		client: github.MakeRetryable(httpClient, logger),
 	}
 }
 
@@ -35,9 +35,8 @@ func (dl *httpDownloader) Download(ctx context.Context, u string) (io.ReadCloser
 		return nil, 0, fmt.Errorf("send http request: %w", err)
 	}
 	if resp.StatusCode >= http.StatusBadRequest {
-		return resp.Body, 0, logerr.WithFields(errInvalidHTTPStatusCode, logrus.Fields{ //nolint:wrapcheck
-			"http_status_code": resp.StatusCode,
-		})
+		return resp.Body, 0, slogerr.With(errInvalidHTTPStatusCode, //nolint:wrapcheck
+			"http_status_code", resp.StatusCode)
 	}
 	return resp.Body, resp.ContentLength, nil
 }

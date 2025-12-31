@@ -2,6 +2,7 @@ package install
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -10,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -45,20 +45,20 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 }
 
 type Installer interface {
-	InstallPackage(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackage) error
-	InstallPackages(ctx context.Context, logE *logrus.Entry, param *installpackage.ParamInstallPackages) error
-	InstallProxy(ctx context.Context, logE *logrus.Entry) error
+	InstallPackage(ctx context.Context, logger *slog.Logger, param *installpackage.ParamInstallPackage) error
+	InstallPackages(ctx context.Context, logger *slog.Logger, param *installpackage.ParamInstallPackages) error
+	InstallProxy(ctx context.Context, logger *slog.Logger) error
 }
 
 type ConfigReader interface {
-	Read(logE *logrus.Entry, configFilePath string, cfg *aqua.Config) error
+	Read(logger *slog.Logger, configFilePath string, cfg *aqua.Config) error
 }
 
 type PolicyReader interface {
 	Read(policyFilePaths []string) ([]*policy.Config, error)
-	Append(logE *logrus.Entry, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
+	Append(logger *slog.Logger, aquaYAMLPath string, policies []*policy.Config, globalPolicyPaths map[string]struct{}) ([]*policy.Config, error)
 }
 
 type RegistryInstaller interface {
-	InstallRegistries(ctx context.Context, logE *logrus.Entry, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
+	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 }

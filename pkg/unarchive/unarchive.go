@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"path/filepath"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
 var errUnsupportedFileFormat = errors.New("unsupported file format")
 
 type coreUnarchiver interface {
-	Unarchive(ctx context.Context, logE *logrus.Entry, src *File) error
+	Unarchive(ctx context.Context, logger *slog.Logger, src *File) error
 }
 
 type File struct {
@@ -40,8 +40,8 @@ func New(executor Executor, fs afero.Fs) *Unarchiver {
 	}
 }
 
-func (u *Unarchiver) Unarchive(ctx context.Context, logE *logrus.Entry, src *File, dest string) error {
-	return u.getUnarchiver(src, dest).Unarchive(ctx, logE, src) //nolint:wrapcheck
+func (u *Unarchiver) Unarchive(ctx context.Context, logger *slog.Logger, src *File, dest string) error {
+	return u.getUnarchiver(logger, src, dest).Unarchive(ctx, logger, src) //nolint:wrapcheck
 }
 
 func IsUnarchived(archiveType, assetName string) bool {
@@ -55,7 +55,7 @@ func IsUnarchived(archiveType, assetName string) bool {
 	return ext == "" || ext == ".exe"
 }
 
-func (u *Unarchiver) getUnarchiver(src *File, dest string) coreUnarchiver {
+func (u *Unarchiver) getUnarchiver(logger *slog.Logger, src *File, dest string) coreUnarchiver {
 	filename := filepath.Base(src.Filename)
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
@@ -96,5 +96,6 @@ func (u *Unarchiver) getUnarchiver(src *File, dest string) coreUnarchiver {
 		fs:       u.fs,
 		dest:     dest,
 		filename: filename,
+		logger:   logger,
 	}
 }

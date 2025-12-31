@@ -5,6 +5,7 @@ package controller
 import (
 	"context"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
@@ -50,12 +51,11 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/google/wire"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *list.Controller {
+func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *list.Controller {
 	wire.Build(
 		list.NewController,
 		wire.NewSet(
@@ -108,7 +108,7 @@ func InitializeListCommandController(ctx context.Context, logE *logrus.Entry, pa
 	return &list.Controller{}
 }
 
-func InitializeGenerateRegistryCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
 	wire.Build(
 		genrgst.NewController,
 		wire.NewSet(
@@ -128,7 +128,7 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logE *logr
 	return &genrgst.Controller{}
 }
 
-func InitializeInitCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param) *initcmd.Controller {
+func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param) *initcmd.Controller {
 	wire.Build(
 		initcmd.New,
 		wire.NewSet(
@@ -148,7 +148,7 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 	return &initpolicy.Controller{}
 }
 
-func InitializeGenerateCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *generate.Controller {
+func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *generate.Controller {
 	wire.Build(
 		generate.New,
 		wire.NewSet(
@@ -230,7 +230,7 @@ func InitializeGenerateCommandController(ctx context.Context, logE *logrus.Entry
 	return &generate.Controller{}
 }
 
-func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
+func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
 	wire.Build(
 		install.New,
 		wire.NewSet(
@@ -358,7 +358,7 @@ func InitializeInstallCommandController(ctx context.Context, logE *logrus.Entry,
 	return &install.Controller{}, nil
 }
 
-func InitializeWhichCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
+func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -417,7 +417,7 @@ func InitializeWhichCommandController(ctx context.Context, logE *logrus.Entry, p
 	return nil
 }
 
-func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
+func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
 	wire.Build(
 		cexec.New,
 		wire.NewSet(
@@ -553,7 +553,7 @@ func InitializeExecCommandController(ctx context.Context, logE *logrus.Entry, pa
 	return &cexec.Controller{}, nil
 }
 
-func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
+func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
 	wire.Build(
 		updateaqua.New,
 		wire.NewSet(
@@ -649,7 +649,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logE *logrus.Ent
 	return &updateaqua.Controller{}, nil
 }
 
-func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
+func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
 	wire.Build(
 		cp.New,
 		wire.NewSet(
@@ -793,7 +793,7 @@ func InitializeCopyCommandController(ctx context.Context, logE *logrus.Entry, pa
 	return &cp.Controller{}, nil
 }
 
-func InitializeUpdateChecksumCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
+func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
 	wire.Build(
 		updatechecksum.New,
 		wire.NewSet(
@@ -852,7 +852,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logE *logrus
 	return &updatechecksum.Controller{}
 }
 
-func InitializeUpdateCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
+func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
 	wire.Build(
 		update.New,
 		wire.NewSet(
@@ -990,7 +990,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return &info.Controller{}
 }
 
-func InitializeRemoveCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) *remove.Controller {
+func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) *remove.Controller {
 	wire.Build(
 		remove.New,
 		wire.NewSet(
@@ -1076,7 +1076,7 @@ func InitializeVacuumCommandController(ctx context.Context, param *config.Param,
 	return &cvacuum.Controller{}
 }
 
-func InitializeVacuumInitCommandController(ctx context.Context, logE *logrus.Entry, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) *initialize.Controller {
+func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) *initialize.Controller {
 	wire.Build(
 		initialize.New,
 		afero.NewOsFs,

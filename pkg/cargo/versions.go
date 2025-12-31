@@ -7,8 +7,7 @@ import (
 	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Payload struct {
@@ -42,9 +41,7 @@ func NewClient(client *http.Client) *Client {
 func (c *Client) ListVersions(ctx context.Context, crate string) ([]string, error) {
 	u := fmt.Sprintf("https://crates.io/api/v1/crates/%s/versions", crate)
 	versions, _, err := listInstallableVersions(ctx, c.client, u)
-	return versions, logerr.WithFields(err, logrus.Fields{ //nolint:wrapcheck
-		"url": u,
-	})
+	return versions, slogerr.With(err, "url", u) //nolint:wrapcheck
 }
 
 func (c *Client) GetLatestVersion(ctx context.Context, crate string) (string, error) {

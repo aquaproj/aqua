@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -35,12 +35,12 @@ type ParamVerify struct {
 	ArtifactPath string
 }
 
-func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
+func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, sp *registry.SLSAProvenance, art *template.Artifact, file *download.File, param *ParamVerify) error {
 	f, err := download.ConvertDownloadedFileToFile(sp.ToDownloadedFile(), file, rt, art)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	rc, _, err := v.downloader.ReadCloser(ctx, logE, f)
+	rc, _, err := v.downloader.ReadCloser(ctx, logger, f)
 	if err != nil {
 		return fmt.Errorf("download a SLSA Provenance: %w", err)
 	}
@@ -56,5 +56,5 @@ func (v *Verifier) Verify(ctx context.Context, logE *logrus.Entry, rt *runtime.R
 		return fmt.Errorf("copy a provenance to a temporary file: %w", err)
 	}
 
-	return v.exe.Verify(ctx, logE, param, provenanceFile.Name()) //nolint:wrapcheck
+	return v.exe.Verify(ctx, logger, param, provenanceFile.Name()) //nolint:wrapcheck
 }

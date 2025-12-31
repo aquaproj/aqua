@@ -3,11 +3,11 @@ package unarchive
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -19,7 +19,7 @@ type pkgUnarchiver struct {
 	fs       afero.Fs
 }
 
-func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *logrus.Entry, src *File) error {
+func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *slog.Logger, src *File) error {
 	if err := osfile.MkdirAll(u.fs, filepath.Dir(u.dest)); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}

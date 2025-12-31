@@ -1,7 +1,7 @@
 package policy
 
 import (
-	"github.com/sirupsen/logrus"
+	"log/slog"
 )
 
 type MockReader struct {
@@ -15,6 +15,6 @@ func (r *MockReader) Read(policyFilePaths []string) ([]*Config, error) {
 	return r.Configs, r.Err
 }
 
-func (r *MockReader) Append(logE *logrus.Entry, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
+func (r *MockReader) Append(logger *slog.Logger, aquaYAMLPath string, policies []*Config, globalPolicyPaths map[string]struct{}) ([]*Config, error) {
 	return r.Configs, r.Err
 }

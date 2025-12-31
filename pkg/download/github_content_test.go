@@ -2,13 +2,13 @@ package download_test
 
 import (
 	"io"
+	"log/slog"
 	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
@@ -95,13 +95,13 @@ func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { /
 			},
 		},
 	}
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			downloader := download.NewGitHubContentFileDownloader(d.github, download.NewHTTPDownloader(logE, d.httpClient))
-			file, err := downloader.DownloadGitHubContentFile(ctx, logE, d.param)
+			downloader := download.NewGitHubContentFileDownloader(d.github, download.NewHTTPDownloader(logger, d.httpClient))
+			file, err := downloader.DownloadGitHubContentFile(ctx, logger, d.param)
 			if err != nil {
 				if d.isErr {
 					return

@@ -1,6 +1,7 @@
 package registry_test
 
 import (
+	"log/slog"
 	"net/http"
 	"testing"
 
@@ -14,13 +15,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
 func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	t.Parallel()
-	logE := logrus.NewEntry(logrus.New())
+	logger := slog.New(slog.DiscardHandler)
 	data := []struct {
 		name        string
 		files       map[string]string
@@ -102,7 +102,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			downloader: download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logE, &http.Client{
+			downloader: download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, &http.Client{
 				Transport: &flute.Transport{
 					Services: []flute.Service{
 						{
@@ -169,7 +169,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 				t.Fatal(err)
 			}
 			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			registries, err := inst.InstallRegistries(ctx, logE, d.cfg, d.cfgFilePath, nil)
+			registries, err := inst.InstallRegistries(ctx, logger, d.cfg, d.cfgFilePath, nil)
 			if err != nil {
 				if d.isErr {
 					return

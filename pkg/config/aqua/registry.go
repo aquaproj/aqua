@@ -4,8 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/logrus-error/logerr"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // Registry represents a package registry configuration.
@@ -39,9 +38,7 @@ func (r *Registry) Validate() error {
 	case RegistryTypeGitHubContent:
 		return r.validateGitHubContent()
 	default:
-		return logerr.WithFields(errInvalidRegistryType, logrus.Fields{ //nolint:wrapcheck
-			"registry_type": r.Type,
-		})
+		return slogerr.With(errInvalidRegistryType, "registry_type", r.Type) //nolint:wrapcheck
 	}
 }
 
