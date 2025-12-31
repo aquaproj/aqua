@@ -64,20 +64,20 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 	param.PWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
 
-	if a := os.Getenv("AQUA_DISABLE_LAZY_INSTALL"); a != "" {
-		disableLazyInstall, err := strconv.ParseBool(a)
-		if err != nil {
-			return fmt.Errorf("parse the environment variable AQUA_DISABLE_LAZY_INSTALL as bool: %w", err)
+	for _, e := range []struct {
+		envName string
+		target  *bool
+	}{
+		{"AQUA_DISABLE_LAZY_INSTALL", &param.DisableLazyInstall},
+		{"AQUA_DISABLE_POLICY", &param.DisablePolicy},
+		{"AQUA_CHECKSUM", &param.Checksum},
+		{"AQUA_REQUIRE_CHECKSUM", &param.RequireChecksum},
+		{"AQUA_ENFORCE_CHECKSUM", &param.EnforceChecksum},
+		{"AQUA_ENFORCE_REQUIRE_CHECKSUM", &param.EnforceRequireChecksum},
+	} {
+		if err := parseBoolEnv(e.envName, e.target); err != nil {
+			return err
 		}
-		param.DisableLazyInstall = disableLazyInstall
-	}
-
-	if a := os.Getenv("AQUA_DISABLE_POLICY"); a != "" {
-		disablePolicy, err := strconv.ParseBool(a)
-		if err != nil {
-			return fmt.Errorf("parse the environment variable AQUA_DISABLE_POLICY as bool: %w", err)
-		}
-		param.DisablePolicy = disablePolicy
 	}
 	if !param.DisablePolicy {
 		param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
@@ -87,34 +87,19 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 			}
 		}
 	}
-	if a := os.Getenv("AQUA_CHECKSUM"); a != "" {
-		chksm, err := strconv.ParseBool(a)
-		if err != nil {
-			return fmt.Errorf("parse the environment variable AQUA_CHECKSUM as bool: %w", err)
-		}
-		param.Checksum = chksm
+	return nil
+}
+
+func parseBoolEnv(envName string, target *bool) error {
+	a := os.Getenv(envName)
+	if a == "" {
+		return nil
 	}
-	if a := os.Getenv("AQUA_REQUIRE_CHECKSUM"); a != "" {
-		requireChecksum, err := strconv.ParseBool(a)
-		if err != nil {
-			return fmt.Errorf("parse the environment variable AQUA_REQUIRE_CHECKSUM as bool: %w", err)
-		}
-		param.RequireChecksum = requireChecksum
+	v, err := strconv.ParseBool(a)
+	if err != nil {
+		return fmt.Errorf("parse the environment variable %s as bool: %w", envName, err)
 	}
-	if a := os.Getenv("AQUA_ENFORCE_CHECKSUM"); a != "" {
-		chksm, err := strconv.ParseBool(a)
-		if err != nil {
-			return fmt.Errorf("parse the environment variable AQUA_ENFORCE_CHECKSUM as bool: %w", err)
-		}
-		param.EnforceChecksum = chksm
-	}
-	if a := os.Getenv("AQUA_ENFORCE_REQUIRE_CHECKSUM"); a != "" {
-		requireChecksum, err := strconv.ParseBool(a)
-		if err != nil {
-			return fmt.Errorf("parse the environment variable AQUA_ENFORCE_REQUIRE_CHECKSUM as bool: %w", err)
-		}
-		param.EnforceRequireChecksum = requireChecksum
-	}
+	*target = v
 	return nil
 }
 
