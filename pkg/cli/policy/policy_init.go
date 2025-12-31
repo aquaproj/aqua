@@ -16,7 +16,7 @@ import (
 type policyInitArgs struct {
 	*cliargs.GlobalArgs
 
-	FilePath []string
+	FilePath string
 }
 
 // policyInitCommand holds the parameters and configuration for the policy init command.
@@ -46,10 +46,8 @@ e.g.
 $ aqua policy init # create "aqua-policy.yaml"
 $ aqua policy init foo.yaml # create foo.yaml`,
 		Arguments: []cli.Argument{
-			&cli.StringArgs{
+			&cli.StringArg{
 				Name:        "file_path",
-				Min:         0,
-				Max:         1,
 				Destination: &args.FilePath,
 			},
 		},
@@ -71,9 +69,5 @@ func (pi *policyInitCommand) action(ctx context.Context, args *policyInitArgs) e
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeInitPolicyCommandController(ctx)
-	filePath := ""
-	if len(args.FilePath) > 0 {
-		filePath = args.FilePath[0]
-	}
-	return ctrl.Init(pi.r.Logger.Logger, filePath) //nolint:wrapcheck
+	return ctrl.Init(pi.r.Logger.Logger, args.FilePath) //nolint:wrapcheck
 }

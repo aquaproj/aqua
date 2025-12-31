@@ -16,7 +16,7 @@ import (
 type policyDenyArgs struct {
 	*cliargs.GlobalArgs
 
-	PolicyPath []string
+	PolicyPath string
 }
 
 // policyDenyCommand holds the parameters and configuration for the policy deny command.
@@ -45,10 +45,8 @@ e.g.
 $ aqua policy deny [<policy file path>]
 `,
 		Arguments: []cli.Argument{
-			&cli.StringArgs{
+			&cli.StringArg{
 				Name:        "policy_path",
-				Min:         0,
-				Max:         1,
 				Destination: &args.PolicyPath,
 			},
 		},
@@ -70,9 +68,5 @@ func (pd *policyDenyCommand) action(ctx context.Context, args *policyDenyArgs) e
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeDenyPolicyCommandController(ctx, param)
-	policyPath := ""
-	if len(args.PolicyPath) > 0 {
-		policyPath = args.PolicyPath[0]
-	}
-	return ctrl.Deny(pd.r.Logger.Logger, param, policyPath) //nolint:wrapcheck
+	return ctrl.Deny(pd.r.Logger.Logger, param, args.PolicyPath) //nolint:wrapcheck
 }

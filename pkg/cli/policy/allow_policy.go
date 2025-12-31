@@ -16,7 +16,7 @@ import (
 type policyAllowArgs struct {
 	*cliargs.GlobalArgs
 
-	PolicyPath []string
+	PolicyPath string
 }
 
 // policyAllowCommand holds the parameters and configuration for the policy allow command.
@@ -45,10 +45,8 @@ e.g.
 $ aqua policy allow [<policy file path>]
 `,
 		Arguments: []cli.Argument{
-			&cli.StringArgs{
+			&cli.StringArg{
 				Name:        "policy_path",
-				Min:         0,
-				Max:         1,
 				Destination: &args.PolicyPath,
 			},
 		},
@@ -70,9 +68,5 @@ func (pa *policyAllowCommand) action(ctx context.Context, args *policyAllowArgs)
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeAllowPolicyCommandController(ctx, param)
-	policyPath := ""
-	if len(args.PolicyPath) > 0 {
-		policyPath = args.PolicyPath[0]
-	}
-	return ctrl.Allow(pa.r.Logger.Logger, param, policyPath) //nolint:wrapcheck
+	return ctrl.Allow(pa.r.Logger.Logger, param, args.PolicyPath) //nolint:wrapcheck
 }

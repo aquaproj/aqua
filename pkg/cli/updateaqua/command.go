@@ -20,7 +20,7 @@ import (
 type Args struct {
 	*cliargs.GlobalArgs
 
-	Version []string
+	Version string
 }
 
 // updateAquaCommand holds the parameters and configuration for the update-aqua command.
@@ -60,10 +60,9 @@ $ aqua update-aqua # Install the latest version
 $ aqua update-aqua v1.20.0 # Install v1.20.0
 `,
 		Arguments: []cli.Argument{
-			&cli.StringArgs{
+			&cli.StringArg{
 				Name:        "version",
 				Destination: &args.Version,
-				Max:         1,
 			},
 		},
 	}
@@ -80,9 +79,7 @@ func (ua *updateAquaCommand) action(ctx context.Context, args *Args) error {
 	if err := util.SetParam(args.GlobalArgs, ua.r.Logger, param, ua.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	if len(args.Version) > 0 {
-		param.AQUAVersion = args.Version[0]
-	}
+	param.AQUAVersion = args.Version
 	ctrl, err := controller.InitializeUpdateAquaCommandController(ctx, ua.r.Logger.Logger, param, http.DefaultClient, ua.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an UpdateAquaController: %w", err)

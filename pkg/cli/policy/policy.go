@@ -51,10 +51,8 @@ $ aqua init-policy foo.yaml # create foo.yaml`,
 			return policyInit.action(ctx, args)
 		},
 		Arguments: []cli.Argument{
-			&cli.StringArgs{
+			&cli.StringArg{
 				Name:        "file_path",
-				Min:         0,
-				Max:         1,
 				Destination: &args.FilePath,
 			},
 		},

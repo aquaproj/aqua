@@ -23,7 +23,7 @@ type Args struct {
 	UseImportDir bool
 	ImportDir    string
 	CreateDir    bool
-	FilePath     []string
+	FilePath     string
 }
 
 // initCommand holds the parameters and configuration for the init command.
@@ -77,10 +77,8 @@ $ aqua init -d # Create a directory "aqua" and create "aqua/aqua.yaml"
 			},
 		},
 		Arguments: []cli.Argument{
-			&cli.StringArgs{
+			&cli.StringArg{
 				Name:        "file_path",
-				Min:         0,
-				Max:         1,
 				Destination: &args.FilePath,
 			},
 		},
@@ -109,9 +107,5 @@ func (ic *initCommand) action(ctx context.Context, args *Args) error {
 	if cParam.ImportDir == "" && args.UseImportDir {
 		cParam.ImportDir = "imports"
 	}
-	filePath := ""
-	if len(args.FilePath) > 0 {
-		filePath = args.FilePath[0]
-	}
-	return ctrl.Init(ctx, ic.r.Logger.Logger, filePath, cParam) //nolint:wrapcheck
+	return ctrl.Init(ctx, ic.r.Logger.Logger, args.FilePath, cParam) //nolint:wrapcheck
 }
