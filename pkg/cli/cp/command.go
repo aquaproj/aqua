@@ -144,7 +144,7 @@ func (i *command) action(ctx context.Context, args *Args) error {
 
 func parseTags(tags string) map[string]struct{} {
 	tagsM := map[string]struct{}{}
-	for _, tag := range strings.Split(tags, ",") {
+	for tag := range strings.SplitSeq(tags, ",") {
 		tag = strings.TrimSpace(tag)
 		if tag == "" {
 			continue

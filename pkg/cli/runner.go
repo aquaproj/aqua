@@ -47,7 +47,7 @@ func commands(param *util.Param, globalArgs *cliargs.GlobalArgs, newCs ...newC) 
 	return cs
 }
 
-func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error { //nolint:funlen
+func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error {
 	param := &util.Param{
 		Stdin:   env.Stdin,
 		Stdout:  env.Stdout,
