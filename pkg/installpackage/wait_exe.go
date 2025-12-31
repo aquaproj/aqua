@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
-	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 func (is *Installer) WaitExe(ctx context.Context, logger *slog.Logger, exePath string) error {
@@ -19,10 +18,9 @@ func (is *Installer) WaitExe(ctx context.Context, logger *slog.Logger, exePath s
 				break
 			}
 		}
-		logger.Debug("command isn't found. wait for lazy install",
-			"retry_count", i+1)
+		logger.Debug("command isn't found. wait for lazy install", "retry_count", i+1)
 		if err := timer.Wait(ctx, 10*time.Millisecond); err != nil { //nolint:mnd
-			return fmt.Errorf("wait: %w", slogerr.With(err))
+			return fmt.Errorf("wait: %w", err)
 		}
 	}
 	return nil

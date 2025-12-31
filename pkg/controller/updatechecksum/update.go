@@ -310,6 +310,12 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 }
 
 func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (gErr error) {
+	attrs := slogerr.NewAttrs(1)
+	defer func() {
+		if gErr != nil {
+			gErr = attrs.With(gErr)
+		}
+	}()
 	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
 		return fmt.Errorf("get a checksum id: %w", err)
@@ -321,13 +327,8 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Log
 	if err != nil {
 		return fmt.Errorf("get an asset name: %w", err)
 	}
-	logger = logger.With("asset_name", assetName)
+	logger = attrs.Add(logger, "asset_name", assetName)
 	logger.Info("downloading an asset to calculate the checksum")
-	defer func() {
-		if gErr != nil {
-			gErr = slogerr.With(gErr, "asset_name", assetName)
-		}
-	}()
 	f, err := download.ConvertPackageToFile(pkg, assetName, rt)
 	if err != nil {
 		return err //nolint:wrapcheck
@@ -340,7 +341,7 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Log
 	algorithm := "sha256"
 	chk, err := checksum.CalculateReader(file, algorithm)
 	if err != nil {
-		return fmt.Errorf("calculate an asset: %w", err)
+		return fmt.Errorf("calculate an asset: %w", slogerr.With(err, "algorithm", algorithm))
 	}
 	checksums.Set(checksumID, &checksum.Checksum{
 		ID:        checksumID,

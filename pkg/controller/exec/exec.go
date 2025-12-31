@@ -20,10 +20,11 @@ import (
 )
 
 func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string, args ...string) (gErr error) { //nolint:cyclop
-	logger = logger.With("exe_name", exeName)
+	attrs := slogerr.NewAttrs(1)
+	logger = attrs.Add(logger, "exe_name", exeName)
 	defer func() {
 		if gErr != nil {
-			gErr = slogerr.With(gErr)
+			gErr = attrs.With(gErr)
 		}
 	}()
 
@@ -45,7 +46,7 @@ func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *confi
 		return c.execCommandWithRetry(ctx, logger, findResult.ExePath, exeName, args...)
 	}
 
-	logger = logger.With(
+	logger = attrs.Add(logger,
 		"package_name", findResult.Package.Package.Name,
 		"package_version", findResult.Package.Package.Version,
 	)

@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResult *which.FindResult, policyConfigs []*policy.Config, param *config.Param) error {
@@ -31,7 +30,7 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResul
 		PolicyConfigs:   policyConfigs,
 		DisablePolicy:   param.DisablePolicy,
 	}); err != nil {
-		return fmt.Errorf("install a package: %w", slogerr.With(err))
+		return fmt.Errorf("install a package: %w", err)
 	}
 	return c.packageInstaller.WaitExe(ctx, logger, findResult.ExePath) //nolint:wrapcheck
 }
