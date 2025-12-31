@@ -7,10 +7,6 @@ import (
 
 var version = ""
 
-type HasExitCode interface {
-	ExitCode() int
-}
-
 func main() {
 	urfave.Main("aqua", version, cli.Run)
 }
