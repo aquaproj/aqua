@@ -38,7 +38,7 @@ type command struct {
 // New creates and returns a new CLI command for package configuration generation.
 // The returned command provides interactive package search and configuration
 // generation capabilities with various output and selection options.
-func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command { //nolint:funlen
 	args := &Args{
 		GlobalArgs: globalArgs,
 	}

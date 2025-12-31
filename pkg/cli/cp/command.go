@@ -37,7 +37,7 @@ type command struct {
 // New creates and returns a new CLI command for copying executable files.
 // The returned command allows users to copy installed tool executables
 // to a specified directory with various filtering options.
-func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command { //nolint:funlen
 	args := &Args{
 		GlobalArgs: globalArgs,
 	}

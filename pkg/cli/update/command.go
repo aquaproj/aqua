@@ -117,7 +117,7 @@ type command struct {
 // New creates and returns a new CLI command for updating packages and registries.
 // The returned command provides functionality to update packages to their
 // latest versions from various sources like GitHub and crates.io.
-func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command { //nolint:funlen
 	args := &Args{
 		GlobalArgs: globalArgs,
 	}

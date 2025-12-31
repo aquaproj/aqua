@@ -36,7 +36,7 @@ type command struct {
 // New creates and returns a new CLI command for installing tools.
 // The returned command handles tool installation with options for
 // link-only mode, tag filtering, and global configuration inclusion.
-func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command { //nolint:funlen
 	args := &Args{
 		GlobalArgs: globalArgs,
 	}
