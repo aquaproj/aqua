@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -44,6 +45,14 @@ To solve the problem, "aqua vacuum --init" is available.
 If you want to record their date times, you need to remove them by "aqua rm" command and re-install them.
 `
 
+// Args holds command-line arguments for the vacuum command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	Init bool
+	Days int
+}
+
 type command struct {
 	r *util.Param
 }
@@ -51,7 +60,10 @@ type command struct {
 // New creates and returns a new CLI command for cleaning up unused packages.
 // The returned command provides functionality to remove packages that haven't
 // been used for a specified number of days.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
 		r: r,
 	}
@@ -59,18 +71,22 @@ func New(r *util.Param) *cli.Command {
 		Name:        "vacuum",
 		Usage:       "Remove unused installed packages",
 		Description: description,
-		Action:      i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "init",
-				Usage: "Create timestamp files.",
+				Name:        "init",
+				Usage:       "Create timestamp files.",
+				Destination: &args.Init,
 			},
 			&cli.IntFlag{
-				Name:    "days",
-				Aliases: []string{"d"},
-				Usage:   "Expiration days",
-				Sources: cli.EnvVars("AQUA_VACUUM_DAYS"),
-				Value:   60, //nolint:mnd
+				Name:        "days",
+				Aliases:     []string{"d"},
+				Usage:       "Expiration days",
+				Sources:     cli.EnvVars("AQUA_VACUUM_DAYS"),
+				Value:       60, //nolint:mnd
+				Destination: &args.Days,
 			},
 		},
 	}
@@ -79,8 +95,8 @@ func New(r *util.Param) *cli.Command {
 // action implements the main logic for the vacuum command.
 // It initializes the vacuum controller and removes unused packages
 // based on the expiration days configuration.
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
@@ -89,11 +105,11 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 	logger := i.r.Logger
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, logger, "vacuum", param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	if cmd.Bool("init") {
+	if args.Init {
 		ctrl := controller.InitializeVacuumInitCommandController(ctx, i.r.Logger.Logger, param, i.r.Runtime, &http.Client{})
 		if err := ctrl.Init(ctx, logger.Logger, param); err != nil {
 			return err //nolint:wrapcheck
@@ -101,7 +117,7 @@ func (i *command) action(ctx context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
-	param.VacuumDays = cmd.Int("days")
+	param.VacuumDays = args.Days
 	if param.VacuumDays <= 0 {
 		return errors.New("vacuum days must be greater than 0")
 	}

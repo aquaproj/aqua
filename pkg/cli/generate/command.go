@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -15,7 +16,21 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// command holds the parameters and configuration for the generate command.
+// Args holds command-line arguments for the generate command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	File          string
+	Insert        bool
+	Pin           bool
+	Global        bool
+	Detail        bool
+	OutputFile    string
+	SelectVersion bool
+	Limit         int
+	Packages      []string
+}
+
 type command struct {
 	r *util.Param
 }
@@ -23,7 +38,10 @@ type command struct {
 // New creates and returns a new CLI command for package configuration generation.
 // The returned command provides interactive package search and configuration
 // generation capabilities with various output and selection options.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command { //nolint:funlen
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
 		r: r,
 	}
@@ -33,44 +51,62 @@ func New(r *util.Param) *cli.Command {
 		Usage:       "Search packages in registries and output the configuration interactively",
 		ArgsUsage:   `[<registry name>,<package name> ...]`,
 		Description: generateDescription,
-		Action:      i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "packages",
+				Min:         0,
+				Max:         -1,
+				Destination: &args.Packages,
+			},
+		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "f",
-				Usage: `the file path of packages list. When the value is "-", the list is passed from the standard input`,
+				Name:        "f",
+				Usage:       `the file path of packages list. When the value is "-", the list is passed from the standard input`,
+				Destination: &args.File,
 			},
 			&cli.BoolFlag{
-				Name:  "i",
-				Usage: `Insert packages to configuration file`,
+				Name:        "i",
+				Usage:       `Insert packages to configuration file`,
+				Destination: &args.Insert,
 			},
 			&cli.BoolFlag{
-				Name:  "pin",
-				Usage: `Pin version`,
+				Name:        "pin",
+				Usage:       `Pin version`,
+				Destination: &args.Pin,
 			},
 			&cli.BoolFlag{
-				Name:  "g",
-				Usage: `Insert packages in a global configuration file`,
+				Name:        "g",
+				Usage:       `Insert packages in a global configuration file`,
+				Destination: &args.Global,
 			},
 			&cli.BoolFlag{
-				Name:    "detail",
-				Aliases: []string{"d"},
-				Usage:   `Output additional fields such as description and link`,
-				Sources: cli.EnvVars("AQUA_GENERATE_WITH_DETAIL"),
+				Name:        "detail",
+				Aliases:     []string{"d"},
+				Usage:       `Output additional fields such as description and link`,
+				Sources:     cli.EnvVars("AQUA_GENERATE_WITH_DETAIL"),
+				Destination: &args.Detail,
 			},
 			&cli.StringFlag{
-				Name:  "o",
-				Usage: `inserted file`,
+				Name:        "o",
+				Usage:       `inserted file`,
+				Destination: &args.OutputFile,
 			},
 			&cli.BoolFlag{
-				Name:    "select-version",
-				Aliases: []string{"s"},
-				Usage:   `Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it.`,
+				Name:        "select-version",
+				Aliases:     []string{"s"},
+				Usage:       `Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it.`,
+				Destination: &args.SelectVersion,
 			},
 			&cli.IntFlag{
-				Name:    "limit",
-				Aliases: []string{"l"},
-				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   config.DefaultVerCnt,
+				Name:        "limit",
+				Aliases:     []string{"l"},
+				Usage:       "The maximum number of versions. Non-positive number refers to no limit.",
+				Value:       config.DefaultVerCnt,
+				Destination: &args.Limit,
 			},
 		},
 	}
@@ -79,19 +115,28 @@ func New(r *util.Param) *cli.Command {
 // action implements the main logic for the generate command.
 // It initializes the generate controller and executes the package search
 // and configuration generation process based on user input.
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.Logger, "generate", param, i.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
+	param.File = args.File
+	param.Insert = args.Insert
+	param.Pin = args.Pin
+	param.Global = args.Global
+	param.Detail = args.Detail
+	param.Dest = args.OutputFile
+	param.SelectVersion = args.SelectVersion
+	param.Limit = args.Limit
+
 	ctrl := controller.InitializeGenerateCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
-	return ctrl.Generate(ctx, i.r.Logger.Logger, param, cmd.Args().Slice()...) //nolint:wrapcheck
+	return ctrl.Generate(ctx, i.r.Logger.Logger, param, args.Packages...) //nolint:wrapcheck
 }
 
 const generateDescription = `Search packages in registries and output the configuration interactively.

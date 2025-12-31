@@ -7,12 +7,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/urfave/cli/v3"
 )
+
+// Args holds command-line arguments for the root-dir command.
+type Args struct {
+	*cliargs.GlobalArgs
+}
 
 // command holds the parameters and configuration for the root-dir command.
 type command struct {
@@ -22,7 +28,10 @@ type command struct {
 // New creates and returns a new CLI command for displaying the root directory.
 // The returned command outputs the aqua root directory path which can be
 // used for PATH configuration and understanding aqua's file structure.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
 		r: r,
 	}
@@ -37,15 +46,17 @@ $ aqua root-dir
 
 $ export "PATH=$(aqua root-dir)/bin:PATH"
 `,
-		Action: i.action,
+		Action: func(_ context.Context, _ *cli.Command) error {
+			return i.action(args)
+		},
 	}
 }
 
 // action implements the main logic for the root-dir command.
 // It outputs the aqua root directory path to stdout for use in
 // shell scripts and PATH configuration.
-func (i *command) action(_ context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}

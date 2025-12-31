@@ -8,13 +8,26 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v3"
 )
+
+// Args holds command-line arguments for the cp command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	Output      string
+	All         bool
+	Tags        string
+	ExcludeTags string
+	Commands    []string
+}
 
 // command holds the parameters and configuration for the cp command.
 type command struct {
@@ -24,7 +37,10 @@ type command struct {
 // New creates and returns a new CLI command for copying executable files.
 // The returned command allows users to copy installed tool executables
 // to a specified directory with various filtering options.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command { //nolint:funlen
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
 		r: r,
 	}
@@ -34,23 +50,27 @@ func New(r *util.Param) *cli.Command {
 		ArgsUsage: `<command name> [<command name> ...]`,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "o",
-				Value: "dist",
-				Usage: "destination directory",
+				Name:        "o",
+				Value:       "dist",
+				Usage:       "destination directory",
+				Destination: &args.Output,
 			},
 			&cli.BoolFlag{
-				Name:    "all",
-				Aliases: []string{"a"},
-				Usage:   "install all aqua configuration packages",
+				Name:        "all",
+				Aliases:     []string{"a"},
+				Usage:       "install all aqua configuration packages",
+				Destination: &args.All,
 			},
 			&cli.StringFlag{
-				Name:    "tags",
-				Aliases: []string{"t"},
-				Usage:   "filter installed packages with tags",
+				Name:        "tags",
+				Aliases:     []string{"t"},
+				Usage:       "filter installed packages with tags",
+				Destination: &args.Tags,
 			},
 			&cli.StringFlag{
-				Name:  "exclude-tags",
-				Usage: "exclude installed packages with tags",
+				Name:        "exclude-tags",
+				Usage:       "exclude installed packages with tags",
+				Destination: &args.ExcludeTags,
 			},
 		},
 		Description: `Copy executable files in a directory.
@@ -78,25 +98,40 @@ e.g.
 $ aqua cp -t foo # Copy only packages having a tag "foo"
 $ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 `,
-		Action: i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "commands",
+				Min:         0,
+				Max:         -1,
+				Destination: &args.Commands,
+			},
+		},
 	}
 }
 
 // action implements the main logic for the cp command.
 // It initializes the copy controller and executes the file copying operation
 // based on the provided command line arguments and configuration.
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.Logger, "cp", param, i.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
 	param.SkipLink = true
+	param.Dest = args.Output
+	param.All = args.All
+	param.Tags = util.ParseTags(strings.Split(args.Tags, ","))
+	param.ExcludedTags = util.ParseTags(strings.Split(args.ExcludeTags, ","))
+	param.Commands = args.Commands
 	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a CopyController: %w", err)

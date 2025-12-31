@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -83,6 +84,19 @@ $ aqua gr -cmd age,age-keygen FiloSottile/age
 	  - name: age-keygen
 `
 
+// Args holds command-line arguments for the generate-registry command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	OutTestdata    string
+	Cmd            string
+	GenerateConfig string
+	Limit          int
+	Deep           bool
+	Init           bool
+	Packages       []string
+}
+
 type command struct {
 	r *util.Param
 }
@@ -90,7 +104,10 @@ type command struct {
 // New creates and returns a new CLI command for generating registry configurations.
 // The returned command provides functionality to generate template configurations
 // for adding new packages to the aqua registry.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
 		r: r,
 	}
@@ -100,7 +117,9 @@ func New(r *util.Param) *cli.Command {
 		Usage:       "Generate a registry's package configuration",
 		ArgsUsage:   `<package name>`,
 		Description: generateRegistryDescription,
-		Action:      i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		// TODO support "i" option
 		Flags: []cli.Flag{
 			// 	&cli.StringFlag{
@@ -108,30 +127,44 @@ func New(r *util.Param) *cli.Command {
 			// 		Usage: "Insert a registry to configuration file",
 			// 	},
 			&cli.StringFlag{
-				Name:  "out-testdata",
-				Usage: "A file path where the testdata is outputted",
+				Name:        "out-testdata",
+				Usage:       "A file path where the testdata is outputted",
+				Destination: &args.OutTestdata,
 			},
 			&cli.StringFlag{
-				Name:  "cmd",
-				Usage: "A list of commands joined with commas ','",
+				Name:        "cmd",
+				Usage:       "A list of commands joined with commas ','",
+				Destination: &args.Cmd,
 			},
 			&cli.StringFlag{
-				Name:    "generate-config",
-				Aliases: []string{"c"},
-				Usage:   "A configuration file path",
+				Name:        "generate-config",
+				Aliases:     []string{"c"},
+				Usage:       "A configuration file path",
+				Destination: &args.GenerateConfig,
 			},
 			&cli.IntFlag{
-				Name:    "limit",
-				Aliases: []string{"l"},
-				Usage:   "the maximum number of versions",
+				Name:        "limit",
+				Aliases:     []string{"l"},
+				Usage:       "the maximum number of versions",
+				Destination: &args.Limit,
 			},
 			&cli.BoolFlag{
-				Name:  "deep",
-				Usage: "This flag was deprecated and had no meaning from aqua v2.15.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/2351",
+				Name:        "deep",
+				Usage:       "This flag was deprecated and had no meaning from aqua v2.15.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/2351",
+				Destination: &args.Deep,
 			},
 			&cli.BoolFlag{
-				Name:  "init",
-				Usage: "Generate a configuration file",
+				Name:        "init",
+				Usage:       "Generate a configuration file",
+				Destination: &args.Init,
+			},
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "packages",
+				Min:         0,
+				Max:         -1,
+				Destination: &args.Packages,
 			},
 		},
 	}
@@ -140,17 +173,22 @@ func New(r *util.Param) *cli.Command {
 // action implements the main logic for the generate-registry command.
 // It initializes the generate-registry controller and creates template
 // configurations for new packages in the registry.
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.Logger, "generate-registry", param, i.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
+	param.OutTestData = args.OutTestdata
+	param.Args = []string{args.Cmd}
+	param.GenerateConfigFilePath = args.GenerateConfig
+	param.Limit = args.Limit
+	param.InitConfig = args.Init
 	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, os.Stdout)
-	return ctrl.GenerateRegistry(ctx, param, i.r.Logger.Logger, cmd.Args().Slice()...) //nolint:wrapcheck
+	return ctrl.GenerateRegistry(ctx, param, i.r.Logger.Logger, args.Packages...) //nolint:wrapcheck
 }

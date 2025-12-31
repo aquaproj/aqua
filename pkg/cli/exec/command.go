@@ -5,16 +5,26 @@ package exec
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
-	"github.com/aquaproj/aqua/v2/pkg/cli/which"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v3"
 )
+
+// Args holds command-line arguments for the exec command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	Command  string
+	ExecArgs []string
+}
 
 // command holds the parameters and configuration for the exec command.
 type command struct {
@@ -24,7 +34,10 @@ type command struct {
 // New creates and returns a new CLI command for executing tools.
 // The returned command is used internally by aqua-proxy to execute
 // installed tools with proper version resolution and argument handling.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
 		r: r,
 	}
@@ -38,32 +51,45 @@ e.g.
 $ aqua exec -- gh version
 gh version 2.4.0 (2021-12-21)
 https://github.com/cli/cli/releases/tag/v2.4.0`,
-		Action:    i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		ArgsUsage: `<executed command> [<arg> ...]`,
+		Arguments: []cli.Argument{
+			&cli.StringArg{
+				Name:        "command",
+				Destination: &args.Command,
+			},
+			&cli.StringArgs{
+				Name:        "exec_args",
+				Min:         0,
+				Max:         -1,
+				Destination: &args.ExecArgs,
+			},
+		},
 	}
 }
 
 // action implements the main logic for the exec command.
 // It parses the command arguments, initializes the exec controller,
 // and executes the specified tool with the provided arguments.
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.Logger, "exec", param, i.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl, err := controller.InitializeExecCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an ExecController: %w", err)
 	}
-	exeName, args, err := which.ParseExecArgs(cmd.Args().Slice())
-	if err != nil {
-		return fmt.Errorf("parse args: %w", err)
+	if args.Command == "" {
+		return errors.New("command is required")
 	}
-	return ctrl.Exec(ctx, i.r.Logger.Logger, param, exeName, args...) //nolint:wrapcheck
+	return ctrl.Exec(ctx, i.r.Logger.Logger, param, filepath.Base(args.Command), args.ExecArgs...) //nolint:wrapcheck
 }

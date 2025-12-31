@@ -8,7 +8,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/cpuprofile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/tracer"
-	"github.com/urfave/cli/v3"
 )
 
 // Profiler manages both CPU profiling and execution tracing for aqua operations.
@@ -27,15 +26,15 @@ func (p *Profiler) Stop() {
 	p.tracer.Stop()
 }
 
-// Start initializes profiling based on CLI command flags and returns a Profiler instance.
-// It starts both execution tracing and CPU profiling if the respective flags are provided.
+// Start initializes profiling based on the provided trace and cpu profile paths.
+// It starts both execution tracing and CPU profiling if the respective paths are provided.
 // If any profiling mechanism fails to start, it cleans up already started profilers.
-func Start(cmd *cli.Command) (*Profiler, error) {
-	t, err := tracer.Start(cmd.String("trace"))
+func Start(trace, cpuProfile string) (*Profiler, error) {
+	t, err := tracer.Start(trace)
 	if err != nil {
 		return nil, fmt.Errorf("start tracing: %w", err)
 	}
-	cpuProfiler, err := cpuprofile.Start(cmd.String("cpu-profile"))
+	cpuProfiler, err := cpuprofile.Start(cpuProfile)
 	if err != nil {
 		t.Stop()
 		return nil, fmt.Errorf("start CPU Profile: %w", err)
