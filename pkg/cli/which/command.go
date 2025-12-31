@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
@@ -25,7 +24,7 @@ type Args struct {
 	*cliargs.GlobalArgs
 
 	ShowVersion bool
-	WhichArgs   []string
+	Command     string
 }
 
 // command holds the parameters and configuration for the which command.
@@ -79,11 +78,9 @@ v2.4.0
 			},
 		},
 		Arguments: []cli.Argument{
-			&cli.StringArgs{
-				Name:        "which_args",
-				Min:         0,
-				Max:         -1,
-				Destination: &args.WhichArgs,
+			&cli.StringArg{
+				Name:        "command",
+				Destination: &args.Command,
 			},
 		},
 	}
@@ -102,31 +99,23 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	}
 	param.ShowVersion = args.ShowVersion
 	ctrl := controller.InitializeWhichCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
-	exeName, _, err := ParseExecArgs(args.WhichArgs)
-	if err != nil {
-		return err
+	if args.Command == "" {
+		return errCommandIsRequired
 	}
-	logger := i.r.Logger.With("exe_name", exeName)
-	which, err := ctrl.Which(ctx, logger, param, exeName)
+	logger := i.r.Logger.With("exe_name", args.Command)
+	which, err := ctrl.Which(ctx, logger, param, args.Command)
 	if err != nil {
-		return slogerr.With(err, "exe_name", exeName) //nolint:wrapcheck
+		return slogerr.With(err, "exe_name", args.Command) //nolint:wrapcheck
 	}
 	if !param.ShowVersion {
 		fmt.Fprintln(os.Stdout, which.ExePath)
 		return nil
 	}
 	if which.Package == nil {
-		return slogerr.With(errors.New("aqua can't get the command version because the command isn't managed by aqua"), "exe_name", exeName) //nolint:wrapcheck
+		return slogerr.With(errors.New("aqua can't get the command version because the command isn't managed by aqua"), "exe_name", args.Command) //nolint:wrapcheck
 	}
 	fmt.Fprintln(os.Stdout, which.Package.Package.Version)
 	return nil
 }
 
 var errCommandIsRequired = errors.New("command is required")
-
-func ParseExecArgs(args []string) (string, []string, error) {
-	if len(args) == 0 {
-		return "", nil, errCommandIsRequired
-	}
-	return filepath.Base(args[0]), args[1:], nil
-}

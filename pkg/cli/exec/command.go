@@ -5,13 +5,14 @@ package exec
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
-	"github.com/aquaproj/aqua/v2/pkg/cli/which"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
 	"github.com/urfave/cli/v3"
@@ -21,6 +22,7 @@ import (
 type Args struct {
 	*cliargs.GlobalArgs
 
+	Command  string
 	ExecArgs []string
 }
 
@@ -54,6 +56,10 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 		},
 		ArgsUsage: `<executed command> [<arg> ...]`,
 		Arguments: []cli.Argument{
+			&cli.StringArg{
+				Name:        "command",
+				Destination: &args.Command,
+			},
 			&cli.StringArgs{
 				Name:        "exec_args",
 				Min:         0,
@@ -82,9 +88,8 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	if err != nil {
 		return fmt.Errorf("initialize an ExecController: %w", err)
 	}
-	exeName, execArgs, err := which.ParseExecArgs(args.ExecArgs)
-	if err != nil {
-		return fmt.Errorf("parse args: %w", err)
+	if args.Command == "" {
+		return errors.New("command is required")
 	}
-	return ctrl.Exec(ctx, i.r.Logger.Logger, param, exeName, execArgs...) //nolint:wrapcheck
+	return ctrl.Exec(ctx, i.r.Logger.Logger, param, filepath.Base(args.Command), args.ExecArgs...) //nolint:wrapcheck
 }
