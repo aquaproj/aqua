@@ -21,8 +21,7 @@ type policyInitArgs struct {
 
 // policyInitCommand holds the parameters and configuration for the policy init command.
 type policyInitCommand struct {
-	r    *util.Param
-	args *policyInitArgs
+	r *util.Param
 }
 
 // newPolicyInit creates and returns a new CLI command for initializing policy files.
@@ -33,11 +32,12 @@ func newPolicyInit(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &policyInitCommand{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
-		Action:    i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Name:      "init",
 		Usage:     "Create a policy file if it doesn't exist",
 		ArgsUsage: `[<created file path. The default value is "aqua-policy.yaml">]`,
@@ -59,21 +59,21 @@ $ aqua policy init foo.yaml # create foo.yaml`,
 // action implements the main logic for the policy init command.
 // It initializes the policy init controller and creates a new policy file
 // at the specified path with default security policy configuration.
-func (pi *policyInitCommand) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(pi.args.Trace, pi.args.CPUProfile)
+func (pi *policyInitCommand) action(ctx context.Context, args *policyInitArgs) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(pi.args.GlobalArgs, pi.r.Logger, param, pi.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, pi.r.Logger, param, pi.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeInitPolicyCommandController(ctx)
 	filePath := ""
-	if len(pi.args.FilePath) > 0 {
-		filePath = pi.args.FilePath[0]
+	if len(args.FilePath) > 0 {
+		filePath = args.FilePath[0]
 	}
 	return ctrl.Init(pi.r.Logger.Logger, filePath) //nolint:wrapcheck
 }

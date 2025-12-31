@@ -28,8 +28,7 @@ type Args struct {
 
 // initCommand holds the parameters and configuration for the init command.
 type initCommand struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for project initialization.
@@ -40,8 +39,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	ic := &initCommand{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:      "init",
@@ -55,7 +53,9 @@ $ aqua init -u # Replace "packages:" with "import_dir: imports"
 $ aqua init -i <directory path> # Replace "packages:" with "import_dir: <directory path>"
 $ aqua init -d # Create a directory "aqua" and create "aqua/aqua.yaml"
 `,
-		Action: ic.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return ic.action(ctx, args)
+		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "use-import-dir",
@@ -90,28 +90,28 @@ $ aqua init -d # Create a directory "aqua" and create "aqua/aqua.yaml"
 // action implements the main logic for the init command.
 // It creates configuration files and directory structures based on
 // the provided command line options and arguments.
-func (ic *initCommand) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(ic.args.Trace, ic.args.CPUProfile)
+func (ic *initCommand) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(ic.args.GlobalArgs, ic.r.Logger, param, ic.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, ic.r.Logger, param, ic.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeInitCommandController(ctx, ic.r.Logger.Logger, param)
 	cParam := &initcmd.Param{
-		IsDir:     ic.args.CreateDir,
-		ImportDir: ic.args.ImportDir,
+		IsDir:     args.CreateDir,
+		ImportDir: args.ImportDir,
 	}
-	if cParam.ImportDir == "" && ic.args.UseImportDir {
+	if cParam.ImportDir == "" && args.UseImportDir {
 		cParam.ImportDir = "imports"
 	}
 	filePath := ""
-	if len(ic.args.FilePath) > 0 {
-		filePath = ic.args.FilePath[0]
+	if len(args.FilePath) > 0 {
+		filePath = args.FilePath[0]
 	}
 	return ctrl.Init(ctx, ic.r.Logger.Logger, filePath, cParam) //nolint:wrapcheck
 }

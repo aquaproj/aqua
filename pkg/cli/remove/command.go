@@ -52,8 +52,7 @@ type Args struct {
 }
 
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for removing packages.
@@ -64,8 +63,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:      "remove",
@@ -93,7 +91,9 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 			},
 		},
 		Description: description,
-		Action:      i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Arguments: []cli.Argument{
 			&cli.StringArgs{
 				Name:        "packages",
@@ -108,26 +108,26 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 // action implements the main logic for the remove command.
 // It initializes the remove controller and executes package removal
 // based on the provided command line arguments and mode settings.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
-	mode, err := parseRemoveMode(i.args.Mode)
+	mode, err := parseRemoveMode(args.Mode)
 	if err != nil {
 		return fmt.Errorf("parse the mode option: %w", err)
 	}
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	param.SkipLink = true
-	param.All = i.args.All
-	param.SelectVersion = i.args.Interactive
-	param.Args = i.args.Packages
+	param.All = args.All
+	param.SelectVersion = args.Interactive
+	param.Args = args.Packages
 	ctrl := controller.InitializeRemoveCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime, mode)
 	if err := ctrl.Remove(ctx, i.r.Logger.Logger, param); err != nil {
 		return err //nolint:wrapcheck

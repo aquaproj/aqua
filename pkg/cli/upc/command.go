@@ -27,8 +27,7 @@ type Args struct {
 
 // command holds the parameters and configuration for the update-checksum command.
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for updating package checksums.
@@ -39,8 +38,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name: "update-checksum",
@@ -82,23 +80,25 @@ If -prune option is set, aqua unused checksums would be removed.
 
 $ aqua update-checksum -prune
 `,
-		Action: i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 	}
 }
 
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	param.All = i.args.All
-	param.Prune = i.args.Prune
+	param.All = args.All
+	param.Prune = args.Prune
 	ctrl := controller.InitializeUpdateChecksumCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	return ctrl.UpdateChecksum(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }

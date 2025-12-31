@@ -26,8 +26,7 @@ type Args struct {
 
 // command holds the parameters and configuration for the exec command.
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for executing tools.
@@ -38,8 +37,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:  "exec",
@@ -51,7 +49,9 @@ e.g.
 $ aqua exec -- gh version
 gh version 2.4.0 (2021-12-21)
 https://github.com/cli/cli/releases/tag/v2.4.0`,
-		Action:    i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		ArgsUsage: `<executed command> [<arg> ...]`,
 		Arguments: []cli.Argument{
 			&cli.StringArgs{
@@ -67,22 +67,22 @@ https://github.com/cli/cli/releases/tag/v2.4.0`,
 // action implements the main logic for the exec command.
 // It parses the command arguments, initializes the exec controller,
 // and executes the specified tool with the provided arguments.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl, err := controller.InitializeExecCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an ExecController: %w", err)
 	}
-	exeName, execArgs, err := which.ParseExecArgs(i.args.ExecArgs)
+	exeName, execArgs, err := which.ParseExecArgs(args.ExecArgs)
 	if err != nil {
 		return fmt.Errorf("parse args: %w", err)
 	}

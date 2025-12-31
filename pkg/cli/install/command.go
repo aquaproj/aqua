@@ -30,8 +30,7 @@ type Args struct {
 
 // command holds the parameters and configuration for the install command.
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for installing tools.
@@ -42,8 +41,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:    "install",
@@ -70,7 +68,9 @@ e.g.
 $ aqua i -t foo # Install only packages having a tag "foo"
 $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 `,
-		Action: i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "only-link",
@@ -107,21 +107,21 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 // action implements the main logic for the install command.
 // It initializes the install controller and executes the tool installation
 // process based on configuration files and command line options.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
-	param.OnlyLink = i.args.OnlyLink
-	param.All = i.args.All
-	param.Tags = parseTags(i.args.Tags)
-	param.ExcludedTags = parseTags(i.args.ExcludeTags)
+	param.OnlyLink = args.OnlyLink
+	param.All = args.All
+	param.Tags = parseTags(args.Tags)
+	param.ExcludedTags = parseTags(args.ExcludeTags)
 
 	ctrl, err := controller.InitializeInstallCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {

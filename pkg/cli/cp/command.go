@@ -31,8 +31,7 @@ type Args struct {
 
 // command holds the parameters and configuration for the cp command.
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for copying executable files.
@@ -43,8 +42,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:      "cp",
@@ -100,7 +98,9 @@ e.g.
 $ aqua cp -t foo # Copy only packages having a tag "foo"
 $ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 `,
-		Action: i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Arguments: []cli.Argument{
 			&cli.StringArgs{
 				Name:        "commands",
@@ -115,23 +115,23 @@ $ aqua cp --exclude-tags foo # Copy only packages not having a tag "foo"
 // action implements the main logic for the cp command.
 // It initializes the copy controller and executes the file copying operation
 // based on the provided command line arguments and configuration.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	param.SkipLink = true
-	param.Dest = i.args.Output
-	param.All = i.args.All
-	param.Tags = parseTags(i.args.Tags)
-	param.ExcludedTags = parseTags(i.args.ExcludeTags)
-	param.Commands = i.args.Commands
+	param.Dest = args.Output
+	param.All = args.All
+	param.Tags = parseTags(args.Tags)
+	param.ExcludedTags = parseTags(args.ExcludeTags)
+	param.Commands = args.Commands
 	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a CopyController: %w", err)

@@ -111,8 +111,7 @@ type Args struct {
 }
 
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for updating packages and registries.
@@ -123,15 +122,16 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:        "update",
 		Aliases:     []string{"up"},
 		Usage:       "Update registries and packages",
 		Description: updateDescription,
-		Action:      i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "i",
@@ -188,25 +188,25 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 // action implements the main logic for the update command.
 // It initializes the update controller and executes package and registry
 // updates based on the provided command line arguments.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	param.Insert = i.args.Interactive
-	param.SelectVersion = i.args.SelectVersion
-	param.OnlyPackage = i.args.OnlyPackage
-	param.OnlyRegistry = i.args.OnlyRegistry
-	param.Limit = i.args.Limit
-	param.Tags = parseTags(i.args.Tags)
-	param.ExcludedTags = parseTags(i.args.ExcludeTags)
-	param.Args = i.args.Packages
+	param.Insert = args.Interactive
+	param.SelectVersion = args.SelectVersion
+	param.OnlyPackage = args.OnlyPackage
+	param.OnlyRegistry = args.OnlyRegistry
+	param.Limit = args.Limit
+	param.Tags = parseTags(args.Tags)
+	param.ExcludedTags = parseTags(args.ExcludeTags)
+	param.Args = args.Packages
 	ctrl := controller.InitializeUpdateCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	return ctrl.Update(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }

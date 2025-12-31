@@ -21,8 +21,7 @@ type policyAllowArgs struct {
 
 // policyAllowCommand holds the parameters and configuration for the policy allow command.
 type policyAllowCommand struct {
-	r    *util.Param
-	args *policyAllowArgs
+	r *util.Param
 }
 
 // newPolicyAllow creates and returns a new CLI command for allowing policy files.
@@ -33,13 +32,14 @@ func newPolicyAllow(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command 
 		GlobalArgs: globalArgs,
 	}
 	i := &policyAllowCommand{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
-		Action: i.action,
-		Name:   "allow",
-		Usage:  "Allow a policy file",
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
+		Name:  "allow",
+		Usage: "Allow a policy file",
 		Description: `Allow a policy file
 e.g.
 $ aqua policy allow [<policy file path>]
@@ -58,21 +58,21 @@ $ aqua policy allow [<policy file path>]
 // action implements the main logic for the policy allow command.
 // It initializes the allow policy controller and marks the specified
 // policy file as allowed based on the provided file path.
-func (pa *policyAllowCommand) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(pa.args.Trace, pa.args.CPUProfile)
+func (pa *policyAllowCommand) action(ctx context.Context, args *policyAllowArgs) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(pa.args.GlobalArgs, pa.r.Logger, param, pa.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, pa.r.Logger, param, pa.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeAllowPolicyCommandController(ctx, param)
 	policyPath := ""
-	if len(pa.args.PolicyPath) > 0 {
-		policyPath = pa.args.PolicyPath[0]
+	if len(args.PolicyPath) > 0 {
+		policyPath = args.PolicyPath[0]
 	}
 	return ctrl.Allow(pa.r.Logger.Logger, param, policyPath) //nolint:wrapcheck
 }

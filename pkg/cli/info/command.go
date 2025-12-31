@@ -22,8 +22,7 @@ type Args struct {
 
 // infoCommand holds the parameters and configuration for the info command.
 type infoCommand struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for displaying information.
@@ -34,8 +33,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &infoCommand{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:  "info",
@@ -43,23 +41,25 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		Description: `Show information.
 e.g.
 $ aqua info`,
-		Action: i.action,
-		Flags:  []cli.Flag{},
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
+		Flags: []cli.Flag{},
 	}
 }
 
 // action implements the main logic for the info command.
 // It initializes the info controller and displays comprehensive
 // information about the aqua installation and configuration.
-func (i *infoCommand) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *infoCommand) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeInfoCommandController(ctx, param, i.r.Runtime)

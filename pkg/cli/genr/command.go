@@ -98,8 +98,7 @@ type Args struct {
 }
 
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for generating registry configurations.
@@ -110,8 +109,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:        "generate-registry",
@@ -119,7 +117,9 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		Usage:       "Generate a registry's package configuration",
 		ArgsUsage:   `<package name>`,
 		Description: generateRegistryDescription,
-		Action:      i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		// TODO support "i" option
 		Flags: []cli.Flag{
 			// 	&cli.StringFlag{
@@ -173,22 +173,22 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 // action implements the main logic for the generate-registry command.
 // It initializes the generate-registry controller and creates template
 // configurations for new packages in the registry.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	param.OutTestData = i.args.OutTestdata
-	param.Args = []string{i.args.Cmd}
-	param.GenerateConfigFilePath = i.args.GenerateConfig
-	param.Limit = i.args.Limit
-	param.InitConfig = i.args.Init
+	param.OutTestData = args.OutTestdata
+	param.Args = []string{args.Cmd}
+	param.GenerateConfigFilePath = args.GenerateConfig
+	param.Limit = args.Limit
+	param.InitConfig = args.Init
 	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, os.Stdout)
-	return ctrl.GenerateRegistry(ctx, param, i.r.Logger.Logger, i.args.Packages...) //nolint:wrapcheck
+	return ctrl.GenerateRegistry(ctx, param, i.r.Logger.Logger, args.Packages...) //nolint:wrapcheck
 }

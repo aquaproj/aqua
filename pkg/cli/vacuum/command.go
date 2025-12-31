@@ -54,8 +54,7 @@ type Args struct {
 }
 
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for cleaning up unused packages.
@@ -66,14 +65,15 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:        "vacuum",
 		Usage:       "Remove unused installed packages",
 		Description: description,
-		Action:      i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "init",
@@ -95,8 +95,8 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 // action implements the main logic for the vacuum command.
 // It initializes the vacuum controller and removes unused packages
 // based on the expiration days configuration.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
@@ -105,11 +105,11 @@ func (i *command) action(ctx context.Context, _ *cli.Command) error {
 	logger := i.r.Logger
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	if i.args.Init {
+	if args.Init {
 		ctrl := controller.InitializeVacuumInitCommandController(ctx, i.r.Logger.Logger, param, i.r.Runtime, &http.Client{})
 		if err := ctrl.Init(ctx, logger.Logger, param); err != nil {
 			return err //nolint:wrapcheck
@@ -117,7 +117,7 @@ func (i *command) action(ctx context.Context, _ *cli.Command) error {
 		return nil
 	}
 
-	param.VacuumDays = i.args.Days
+	param.VacuumDays = args.Days
 	if param.VacuumDays <= 0 {
 		return errors.New("vacuum days must be greater than 0")
 	}

@@ -22,8 +22,7 @@ type Args struct {
 
 // command holds the parameters and configuration for the root-dir command.
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for displaying the root directory.
@@ -34,8 +33,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:  "root-dir",
@@ -48,15 +46,17 @@ $ aqua root-dir
 
 $ export "PATH=$(aqua root-dir)/bin:PATH"
 `,
-		Action: i.action,
+		Action: func(_ context.Context, _ *cli.Command) error {
+			return i.action(args)
+		},
 	}
 }
 
 // action implements the main logic for the root-dir command.
 // It outputs the aqua root directory path to stdout for use in
 // shell scripts and PATH configuration.
-func (i *command) action(_ context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}

@@ -26,8 +26,7 @@ type Args struct {
 
 // command holds the parameters and configuration for the list command.
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for listing packages.
@@ -38,13 +37,14 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
-		Name:   "list",
-		Usage:  "List packages in Registries",
-		Action: i.action,
+		Name:  "list",
+		Usage: "List packages in Registries",
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Description: `Output the list of packages in registries.
 The output format is <registry name>,<package name>
 
@@ -87,19 +87,19 @@ $ aqua list -installed -a
 // action implements the main logic for the list command.
 // It initializes the list controller and executes the package listing
 // operation based on the provided command line flags and configuration.
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	param.Installed = i.args.Installed
-	param.All = i.args.All
+	param.Installed = args.Installed
+	param.All = args.All
 	ctrl := controller.InitializeListCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	return ctrl.List(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }

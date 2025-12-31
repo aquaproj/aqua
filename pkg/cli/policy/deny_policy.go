@@ -21,8 +21,7 @@ type policyDenyArgs struct {
 
 // policyDenyCommand holds the parameters and configuration for the policy deny command.
 type policyDenyCommand struct {
-	r    *util.Param
-	args *policyDenyArgs
+	r *util.Param
 }
 
 // newPolicyDeny creates and returns a new CLI command for denying policy files.
@@ -33,13 +32,14 @@ func newPolicyDeny(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &policyDenyCommand{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
-		Action: i.action,
-		Name:   "deny",
-		Usage:  "Deny a policy file",
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
+		Name:  "deny",
+		Usage: "Deny a policy file",
 		Description: `Deny a policy file
 e.g.
 $ aqua policy deny [<policy file path>]
@@ -58,21 +58,21 @@ $ aqua policy deny [<policy file path>]
 // action implements the main logic for the policy deny command.
 // It initializes the deny policy controller and marks the specified
 // policy file as denied based on the provided file path.
-func (pd *policyDenyCommand) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(pd.args.Trace, pd.args.CPUProfile)
+func (pd *policyDenyCommand) action(ctx context.Context, args *policyDenyArgs) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(pd.args.GlobalArgs, pd.r.Logger, param, pd.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, pd.r.Logger, param, pd.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeDenyPolicyCommandController(ctx, param)
 	policyPath := ""
-	if len(pd.args.PolicyPath) > 0 {
-		policyPath = pd.args.PolicyPath[0]
+	if len(args.PolicyPath) > 0 {
+		policyPath = args.PolicyPath[0]
 	}
 	return ctrl.Deny(pd.r.Logger.Logger, param, policyPath) //nolint:wrapcheck
 }

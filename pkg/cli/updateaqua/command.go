@@ -25,8 +25,7 @@ type Args struct {
 
 // updateAquaCommand holds the parameters and configuration for the update-aqua command.
 type updateAquaCommand struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for updating aqua itself.
@@ -37,12 +36,13 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &updateAquaCommand{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
-		Action: i.action,
-		Name:   "update-aqua",
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
+		Name: "update-aqua",
 		Aliases: []string{
 			"upa",
 		},
@@ -69,19 +69,19 @@ $ aqua update-aqua v1.20.0 # Install v1.20.0
 	}
 }
 
-func (ua *updateAquaCommand) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(ua.args.Trace, ua.args.CPUProfile)
+func (ua *updateAquaCommand) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(ua.args.GlobalArgs, ua.r.Logger, param, ua.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, ua.r.Logger, param, ua.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	if len(ua.args.Version) > 0 {
-		param.AQUAVersion = ua.args.Version[0]
+	if len(args.Version) > 0 {
+		param.AQUAVersion = args.Version[0]
 	}
 	ctrl, err := controller.InitializeUpdateAquaCommandController(ctx, ua.r.Logger.Logger, param, http.DefaultClient, ua.r.Runtime)
 	if err != nil {

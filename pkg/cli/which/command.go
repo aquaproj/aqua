@@ -30,8 +30,7 @@ type Args struct {
 
 // command holds the parameters and configuration for the which command.
 type command struct {
-	r    *util.Param
-	args *Args
+	r *util.Param
 }
 
 // New creates and returns a new CLI command for locating executables.
@@ -42,8 +41,7 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 		GlobalArgs: globalArgs,
 	}
 	i := &command{
-		r:    r,
-		args: args,
+		r: r,
 	}
 	return &cli.Command{
 		Name:      "which",
@@ -69,7 +67,9 @@ If you want the package version, "--version" option is useful.
 $ aqua which --version gh
 v2.4.0
 `,
-		Action: i.action,
+		Action: func(ctx context.Context, _ *cli.Command) error {
+			return i.action(ctx, args)
+		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "version",
@@ -89,20 +89,20 @@ v2.4.0
 	}
 }
 
-func (i *command) action(ctx context.Context, _ *cli.Command) error {
-	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
+func (i *command) action(ctx context.Context, args *Args) error {
+	profiler, err := profile.Start(args.Trace, args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+	if err := util.SetParam(args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	param.ShowVersion = i.args.ShowVersion
+	param.ShowVersion = args.ShowVersion
 	ctrl := controller.InitializeWhichCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
-	exeName, _, err := ParseExecArgs(i.args.WhichArgs)
+	exeName, _, err := ParseExecArgs(args.WhichArgs)
 	if err != nil {
 		return err
 	}
