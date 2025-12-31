@@ -78,6 +78,10 @@ func SetParam(cmd *cli.Command, logger *slogutil.Logger, commandName string, par
 	if err := logger.SetLevel(param.LogLevel); err != nil {
 		return fmt.Errorf("set log level: %w", err)
 	}
+	logColor := os.Getenv("AQUA_LOG_COLOR")
+	if err := logger.SetColor(logColor); err != nil {
+		return fmt.Errorf("set log color: %w", err)
+	}
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logger.Logger)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
 	param.Deep = cmd.Bool("deep")
