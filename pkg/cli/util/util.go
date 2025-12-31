@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -115,4 +116,19 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 		param.EnforceRequireChecksum = requireChecksum
 	}
 	return nil
+}
+
+// ParseTags converts a slice of tag strings into a map for fast lookup.
+// It trims whitespace from each tag and filters out empty strings,
+// returning a map where tag names are keys with empty struct values.
+func ParseTags(tags []string) map[string]struct{} {
+	tagsM := make(map[string]struct{}, len(tags))
+	for _, tag := range tags {
+		tag = strings.TrimSpace(tag)
+		if tag == "" {
+			continue
+		}
+		tagsM[tag] = struct{}{}
+	}
+	return tagsM
 }

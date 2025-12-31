@@ -129,8 +129,8 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param.SkipLink = true
 	param.Dest = args.Output
 	param.All = args.All
-	param.Tags = parseTags(args.Tags)
-	param.ExcludedTags = parseTags(args.ExcludeTags)
+	param.Tags = util.ParseTags(strings.Split(args.Tags, ","))
+	param.ExcludedTags = util.ParseTags(strings.Split(args.ExcludeTags, ","))
 	param.Commands = args.Commands
 	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
@@ -140,16 +140,4 @@ func (i *command) action(ctx context.Context, args *Args) error {
 		return err //nolint:wrapcheck
 	}
 	return nil
-}
-
-func parseTags(tags string) map[string]struct{} {
-	tagsM := map[string]struct{}{}
-	for tag := range strings.SplitSeq(tags, ",") {
-		tag = strings.TrimSpace(tag)
-		if tag == "" {
-			continue
-		}
-		tagsM[tag] = struct{}{}
-	}
-	return tagsM
 }

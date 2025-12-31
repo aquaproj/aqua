@@ -204,21 +204,9 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param.OnlyPackage = args.OnlyPackage
 	param.OnlyRegistry = args.OnlyRegistry
 	param.Limit = args.Limit
-	param.Tags = parseTags(args.Tags)
-	param.ExcludedTags = parseTags(args.ExcludeTags)
+	param.Tags = util.ParseTags(strings.Split(args.Tags, ","))
+	param.ExcludedTags = util.ParseTags(strings.Split(args.ExcludeTags, ","))
 	param.Args = args.Packages
 	ctrl := controller.InitializeUpdateCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	return ctrl.Update(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
-}
-
-func parseTags(tags string) map[string]struct{} {
-	tagsM := map[string]struct{}{}
-	for tag := range strings.SplitSeq(tags, ",") {
-		tag = strings.TrimSpace(tag)
-		if tag == "" {
-			continue
-		}
-		tagsM[tag] = struct{}{}
-	}
-	return tagsM
 }
