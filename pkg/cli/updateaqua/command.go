@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -15,17 +16,29 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// Args holds command-line arguments for the update-aqua command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	Version []string
+}
+
 // updateAquaCommand holds the parameters and configuration for the update-aqua command.
 type updateAquaCommand struct {
-	r *util.Param
+	r    *util.Param
+	args *Args
 }
 
 // New creates and returns a new CLI command for updating aqua itself.
 // The returned command provides self-update functionality to download
 // and install the latest version of the aqua tool.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &updateAquaCommand{
-		r: r,
+		r:    r,
+		args: args,
 	}
 	return &cli.Command{
 		Action: i.action,
@@ -46,19 +59,29 @@ e.g.
 $ aqua update-aqua # Install the latest version
 $ aqua update-aqua v1.20.0 # Install v1.20.0
 `,
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "version",
+				Destination: &args.Version,
+				Max:         1,
+			},
+		},
 	}
 }
 
-func (ua *updateAquaCommand) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (ua *updateAquaCommand) action(ctx context.Context, _ *cli.Command) error {
+	profiler, err := profile.Start(ua.args.Trace, ua.args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, ua.r.Logger, "update-aqua", param, ua.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(ua.args.GlobalArgs, ua.r.Logger, param, ua.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
+	}
+	if len(ua.args.Version) > 0 {
+		param.AQUAVersion = ua.args.Version[0]
 	}
 	ctrl, err := controller.InitializeUpdateAquaCommandController(ctx, ua.r.Logger.Logger, param, http.DefaultClient, ua.r.Runtime)
 	if err != nil {

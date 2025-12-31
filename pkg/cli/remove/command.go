@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -40,16 +41,31 @@ Limitation:
 "http" and "go_install" packages can't be removed.
 `
 
+// Args holds command-line arguments for the remove command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	All         bool
+	Mode        string
+	Interactive bool
+	Packages    []string
+}
+
 type command struct {
-	r *util.Param
+	r    *util.Param
+	args *Args
 }
 
 // New creates and returns a new CLI command for removing packages.
 // The returned command provides package uninstallation functionality
 // with options for removing files and links based on specified modes.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
-		r: r,
+		r:    r,
+		args: args,
 	}
 	return &cli.Command{
 		Name:      "remove",
@@ -58,46 +74,60 @@ func New(r *util.Param) *cli.Command {
 		ArgsUsage: `[<registry name>,]<package name> [...]`,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:    "all",
-				Aliases: []string{"a"},
-				Usage:   "uninstall all packages",
+				Name:        "all",
+				Aliases:     []string{"a"},
+				Usage:       "uninstall all packages",
+				Destination: &args.All,
 			},
 			&cli.StringFlag{
-				Name:    "mode",
-				Aliases: []string{"m"},
-				Sources: cli.EnvVars("AQUA_REMOVE_MODE"),
-				Usage:   "Removed target modes. l: link, p: package",
+				Name:        "mode",
+				Aliases:     []string{"m"},
+				Sources:     cli.EnvVars("AQUA_REMOVE_MODE"),
+				Usage:       "Removed target modes. l: link, p: package",
+				Destination: &args.Mode,
 			},
 			&cli.BoolFlag{
-				Name:  "i",
-				Usage: "Select packages with a Fuzzy Finder",
+				Name:        "i",
+				Usage:       "Select packages with a Fuzzy Finder",
+				Destination: &args.Interactive,
 			},
 		},
 		Description: description,
 		Action:      i.action,
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "packages",
+				Min:         0,
+				Max:         -1,
+				Destination: &args.Packages,
+			},
+		},
 	}
 }
 
 // action implements the main logic for the remove command.
 // It initializes the remove controller and executes package removal
 // based on the provided command line arguments and mode settings.
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, _ *cli.Command) error {
+	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
-	mode, err := parseRemoveMode(cmd.String("mode"))
+	mode, err := parseRemoveMode(i.args.Mode)
 	if err != nil {
 		return fmt.Errorf("parse the mode option: %w", err)
 	}
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.Logger, "remove", param, i.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
 	param.SkipLink = true
+	param.All = i.args.All
+	param.SelectVersion = i.args.Interactive
+	param.Args = i.args.Packages
 	ctrl := controller.InitializeRemoveCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime, mode)
 	if err := ctrl.Remove(ctx, i.r.Logger.Logger, param); err != nil {
 		return err //nolint:wrapcheck

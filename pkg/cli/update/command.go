@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -94,16 +96,35 @@ $ aqua up -t foo # Install only packages having a tag "foo"
 $ aqua up --exclude-tags foo # Install only packages not having a tag "foo"
 `
 
+// Args holds command-line arguments for the update command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	Interactive   bool
+	SelectVersion bool
+	OnlyRegistry  bool
+	OnlyPackage   bool
+	Limit         int
+	Tags          string
+	ExcludeTags   string
+	Packages      []string
+}
+
 type command struct {
-	r *util.Param
+	r    *util.Param
+	args *Args
 }
 
 // New creates and returns a new CLI command for updating packages and registries.
 // The returned command provides functionality to update packages to their
 // latest versions from various sources like GitHub and crates.io.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
-		r: r,
+		r:    r,
+		args: args,
 	}
 	return &cli.Command{
 		Name:        "update",
@@ -113,38 +134,52 @@ func New(r *util.Param) *cli.Command {
 		Action:      i.action,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "i",
-				Usage: `Select packages with fuzzy finder`,
+				Name:        "i",
+				Usage:       `Select packages with fuzzy finder`,
+				Destination: &args.Interactive,
 			},
 			&cli.BoolFlag{
-				Name:    "select-version",
-				Aliases: []string{"s"},
-				Usage:   `Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it.`,
+				Name:        "select-version",
+				Aliases:     []string{"s"},
+				Usage:       `Select the version with fuzzy finder. Default to display 30 versions, use --limit/-l to change it.`,
+				Destination: &args.SelectVersion,
 			},
 			&cli.BoolFlag{
-				Name:    "only-registry",
-				Aliases: []string{"r"},
-				Usage:   `Update only registries`,
+				Name:        "only-registry",
+				Aliases:     []string{"r"},
+				Usage:       `Update only registries`,
+				Destination: &args.OnlyRegistry,
 			},
 			&cli.BoolFlag{
-				Name:    "only-package",
-				Aliases: []string{"p"},
-				Usage:   `Update only packages`,
+				Name:        "only-package",
+				Aliases:     []string{"p"},
+				Usage:       `Update only packages`,
+				Destination: &args.OnlyPackage,
 			},
 			&cli.IntFlag{
-				Name:    "limit",
-				Aliases: []string{"l"},
-				Usage:   "The maximum number of versions. Non-positive number refers to no limit.",
-				Value:   config.DefaultVerCnt,
+				Name:        "limit",
+				Aliases:     []string{"l"},
+				Usage:       "The maximum number of versions. Non-positive number refers to no limit.",
+				Value:       config.DefaultVerCnt,
+				Destination: &args.Limit,
 			},
 			&cli.StringFlag{
-				Name:    "tags",
-				Aliases: []string{"t"},
-				Usage:   "filter installed packages with tags",
+				Name:        "tags",
+				Aliases:     []string{"t"},
+				Usage:       "filter installed packages with tags",
+				Destination: &args.Tags,
 			},
 			&cli.StringFlag{
-				Name:  "exclude-tags",
-				Usage: "exclude installed packages with tags",
+				Name:        "exclude-tags",
+				Usage:       "exclude installed packages with tags",
+				Destination: &args.ExcludeTags,
+			},
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "packages",
+				Destination: &args.Packages,
+				Max:         -1,
 			},
 		},
 	}
@@ -153,17 +188,37 @@ func New(r *util.Param) *cli.Command {
 // action implements the main logic for the update command.
 // It initializes the update controller and executes package and registry
 // updates based on the provided command line arguments.
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, _ *cli.Command) error {
+	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.Logger, "update", param, i.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
+	param.Insert = i.args.Interactive
+	param.SelectVersion = i.args.SelectVersion
+	param.OnlyPackage = i.args.OnlyPackage
+	param.OnlyRegistry = i.args.OnlyRegistry
+	param.Limit = i.args.Limit
+	param.Tags = parseTags(i.args.Tags)
+	param.ExcludedTags = parseTags(i.args.ExcludeTags)
+	param.Args = i.args.Packages
 	ctrl := controller.InitializeUpdateCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	return ctrl.Update(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
+}
+
+func parseTags(tags string) map[string]struct{} {
+	tagsM := map[string]struct{}{}
+	for _, tag := range strings.Split(tags, ",") {
+		tag = strings.TrimSpace(tag)
+		if tag == "" {
+			continue
+		}
+		tagsM[tag] = struct{}{}
+	}
+	return tagsM
 }

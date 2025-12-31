@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -19,17 +20,30 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// Args holds command-line arguments for the which command.
+type Args struct {
+	*cliargs.GlobalArgs
+
+	ShowVersion bool
+	WhichArgs   []string
+}
+
 // command holds the parameters and configuration for the which command.
 type command struct {
-	r *util.Param
+	r    *util.Param
+	args *Args
 }
 
 // New creates and returns a new CLI command for locating executables.
 // The returned command provides functionality to find the absolute path
 // of installed tools managed by aqua.
-func New(r *util.Param) *cli.Command {
+func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &Args{
+		GlobalArgs: globalArgs,
+	}
 	i := &command{
-		r: r,
+		r:    r,
+		args: args,
 	}
 	return &cli.Command{
 		Name:      "which",
@@ -58,27 +72,37 @@ v2.4.0
 		Action: i.action,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:    "version",
-				Aliases: []string{"v"},
-				Usage:   "Output the given package version",
+				Name:        "version",
+				Aliases:     []string{"v"},
+				Usage:       "Output the given package version",
+				Destination: &args.ShowVersion,
+			},
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "which_args",
+				Min:         0,
+				Max:         -1,
+				Destination: &args.WhichArgs,
 			},
 		},
 	}
 }
 
-func (i *command) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (i *command) action(ctx context.Context, _ *cli.Command) error {
+	profiler, err := profile.Start(i.args.Trace, i.args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, i.r.Logger, "which", param, i.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(i.args.GlobalArgs, i.r.Logger, param, i.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
+	param.ShowVersion = i.args.ShowVersion
 	ctrl := controller.InitializeWhichCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
-	exeName, _, err := ParseExecArgs(cmd.Args().Slice())
+	exeName, _, err := ParseExecArgs(i.args.WhichArgs)
 	if err != nil {
 		return err
 	}

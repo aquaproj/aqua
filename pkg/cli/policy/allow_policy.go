@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -11,17 +12,29 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// policyAllowArgs holds command-line arguments for the policy allow command.
+type policyAllowArgs struct {
+	*cliargs.GlobalArgs
+
+	PolicyPath []string
+}
+
 // policyAllowCommand holds the parameters and configuration for the policy allow command.
 type policyAllowCommand struct {
-	r *util.Param
+	r    *util.Param
+	args *policyAllowArgs
 }
 
 // newPolicyAllow creates and returns a new CLI command for allowing policy files.
 // The returned command marks a policy file as allowed, permitting packages
 // to be installed according to that policy.
-func newPolicyAllow(r *util.Param) *cli.Command {
+func newPolicyAllow(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
+	args := &policyAllowArgs{
+		GlobalArgs: globalArgs,
+	}
 	i := &policyAllowCommand{
-		r: r,
+		r:    r,
+		args: args,
 	}
 	return &cli.Command{
 		Action: i.action,
@@ -31,23 +44,35 @@ func newPolicyAllow(r *util.Param) *cli.Command {
 e.g.
 $ aqua policy allow [<policy file path>]
 `,
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "policy_path",
+				Min:         0,
+				Max:         1,
+				Destination: &args.PolicyPath,
+			},
+		},
 	}
 }
 
 // action implements the main logic for the policy allow command.
 // It initializes the allow policy controller and marks the specified
 // policy file as allowed based on the provided file path.
-func (pa *policyAllowCommand) action(ctx context.Context, cmd *cli.Command) error {
-	profiler, err := profile.Start(cmd)
+func (pa *policyAllowCommand) action(ctx context.Context, _ *cli.Command) error {
+	profiler, err := profile.Start(pa.args.Trace, pa.args.CPUProfile)
 	if err != nil {
 		return fmt.Errorf("start CPU Profile or tracing: %w", err)
 	}
 	defer profiler.Stop()
 
 	param := &config.Param{}
-	if err := util.SetParam(cmd, pa.r.Logger, "allow-policy", param, pa.r.Version); err != nil {
-		return fmt.Errorf("parse the command line arguments: %w", err)
+	if err := util.SetParam(pa.args.GlobalArgs, pa.r.Logger, param, pa.r.Version); err != nil {
+		return fmt.Errorf("set param: %w", err)
 	}
 	ctrl := controller.InitializeAllowPolicyCommandController(ctx, param)
-	return ctrl.Allow(pa.r.Logger.Logger, param, cmd.Args().First()) //nolint:wrapcheck
+	policyPath := ""
+	if len(pa.args.PolicyPath) > 0 {
+		policyPath = pa.args.PolicyPath[0]
+	}
+	return ctrl.Allow(pa.r.Logger.Logger, param, policyPath) //nolint:wrapcheck
 }
