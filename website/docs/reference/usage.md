@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.56.1
+   2.56.2
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -262,7 +262,7 @@ NAME:
    aqua update-aqua - Update aqua
 
 USAGE:
-   aqua update-aqua
+   aqua update-aqua [arguments...]
 
 DESCRIPTION:
    Update aqua.
@@ -325,7 +325,7 @@ NAME:
    aqua update - Update registries and packages
 
 USAGE:
-   aqua update
+   aqua update [arguments...]
 
 DESCRIPTION:
    Update registries and packages.
@@ -690,7 +690,7 @@ NAME:
    aqua policy allow - Allow a policy file
 
 USAGE:
-   aqua policy allow
+   aqua policy allow [arguments...]
 
 DESCRIPTION:
    Allow a policy file
@@ -710,7 +710,7 @@ NAME:
    aqua policy deny - Deny a policy file
 
 USAGE:
-   aqua policy deny
+   aqua policy deny [arguments...]
 
 DESCRIPTION:
    Deny a policy file
