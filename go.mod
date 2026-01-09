@@ -9,7 +9,7 @@ require (
 	github.com/forPelevin/gomoji v1.4.1
 	github.com/goccy/go-yaml v1.19.1
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v80 v80.0.0
+	github.com/google/go-github/v81 v81.0.0
 	github.com/google/wire v0.7.0
 	github.com/hashicorp/go-version v1.8.0
 	github.com/invopop/jsonschema v0.13.0
@@ -56,6 +56,7 @@ require (
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/gdamore/tcell/v2 v2.9.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/google/go-github/v80 v80.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
