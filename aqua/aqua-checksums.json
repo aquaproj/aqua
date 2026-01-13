@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/anchore/syft/v1.39.0/syft_1.39.0_darwin_amd64.tar.gz",
-      "checksum": "EF28D9A8B09070EC2B04E1E97240EEBC66C4E6E78433757A8943CD4867476AF6",
+      "id": "github_release/github.com/anchore/syft/v1.40.0/syft_1.40.0_darwin_amd64.tar.gz",
+      "checksum": "370036E312A3A95A436B2C8FCCB66160FE43B0AD68D3C47193958EE05B526D03",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.39.0/syft_1.39.0_darwin_arm64.tar.gz",
-      "checksum": "FE99F5D9D76C48752A53C3E5F3D4044652623DAA623C0DA4B1B501BF4FC6CDE2",
+      "id": "github_release/github.com/anchore/syft/v1.40.0/syft_1.40.0_darwin_arm64.tar.gz",
+      "checksum": "C7D6DC1BB17BDDD90B1976B289C82B4C6A58B2CC01F4862E72C76982BC306E81",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.39.0/syft_1.39.0_linux_amd64.tar.gz",
-      "checksum": "BB8F1BA8201D1CE0D99AB4F5243142629C1AFBA4DA97A7C4CA2DF97327F97190",
+      "id": "github_release/github.com/anchore/syft/v1.40.0/syft_1.40.0_linux_amd64.tar.gz",
+      "checksum": "F551CD16DA3A5456F5245BB8045B98594263A678A9D2A07B462A05BE0357B795",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.39.0/syft_1.39.0_linux_arm64.tar.gz",
-      "checksum": "7074B90CBF4FBB8416FEB6ACDEA7A310EFC2D155198D559AEAA691EDD5A8C2CA",
+      "id": "github_release/github.com/anchore/syft/v1.40.0/syft_1.40.0_linux_arm64.tar.gz",
+      "checksum": "1D62E6C40D23C319E113514DAE3CF84375F4AA93520A46CB01B6AD4E8183F9DD",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.39.0/syft_1.39.0_windows_amd64.zip",
-      "checksum": "FCF42129786C8F7520EE87204851C38438F68EEC20FE69313BEC5B43B0549914",
+      "id": "github_release/github.com/anchore/syft/v1.40.0/syft_1.40.0_windows_amd64.zip",
+      "checksum": "3F4021EC098B4BCBAF19BBA7028CF7704FEF12936970778CEC3C6D669B740E6D",
       "algorithm": "sha256"
     },
     {
@@ -81,28 +81,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.2/goreleaser_Darwin_all.tar.gz",
-      "checksum": "D63BA9584B71A0FFDB0F66BDDCBE4DB5CA1F23EEF1000A63328E19E3ED71D91D",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.3/goreleaser_Darwin_all.tar.gz",
+      "checksum": "5516C37779EFB3935D5B213CDA3B0B9025AE94DDBCB51DF6919ACBCDEF4194B0",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.2/goreleaser_Linux_arm64.tar.gz",
-      "checksum": "81B59A932F6CB6632D29F334F890BD7A8414CB1B765451517A2E0B8DE523453D",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.3/goreleaser_Linux_arm64.tar.gz",
+      "checksum": "156656D0F874542D618568BD50AFD3D33CED2E8AAB2C60CC7C21E1B9FA52031E",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.2/goreleaser_Linux_x86_64.tar.gz",
-      "checksum": "B38D8F8F9231EE52EEAC9BBD1E3441467A8B1A2E0AA7461F2B1E52B80CD5C62A",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.3/goreleaser_Linux_x86_64.tar.gz",
+      "checksum": "4B66F2F78F78561330350651ADE557B70328664718490F37834749073AF21D20",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.2/goreleaser_Windows_arm64.zip",
-      "checksum": "11F8F48EA75817F071AB8F2C66CF24A3218FCABBE4B6ADA029644548603A14C2",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.3/goreleaser_Windows_arm64.zip",
+      "checksum": "72416A357432D3CF256ADA8D0D0206CB8B734FD827BBF687D6506AAFCA929189",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.2/goreleaser_Windows_x86_64.zip",
-      "checksum": "105B8B760449D111775376580CE1B28BEF11AFAC5CB1B0FC4231113C52DAF06A",
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.3/goreleaser_Windows_x86_64.zip",
+      "checksum": "C5586C4ED749CA358AD61ED73EE4B8039CFA68DAAE8C23E69FB086D549DFB31D",
       "algorithm": "sha256"
     },
     {

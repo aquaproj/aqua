@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
-	"github.com/google/go-github/v80/github"
+	"github.com/google/go-github/v81/github"
 	"github.com/suzuki-shunsuke/ghtkn-go-sdk/ghtkn"
 	"github.com/suzuki-shunsuke/go-retryablehttp"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/keyring/ghtoken"

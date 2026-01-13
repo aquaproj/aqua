@@ -131,7 +131,7 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param.All = args.All
 	param.Tags = util.ParseTags(strings.Split(args.Tags, ","))
 	param.ExcludedTags = util.ParseTags(strings.Split(args.ExcludeTags, ","))
-	param.Commands = args.Commands
+	param.Args = args.Commands
 	ctrl, err := controller.InitializeCopyCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a CopyController: %w", err)
