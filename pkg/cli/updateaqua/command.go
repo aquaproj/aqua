@@ -79,7 +79,7 @@ func (ua *updateAquaCommand) action(ctx context.Context, args *Args) error {
 	if err := util.SetParam(args.GlobalArgs, ua.r.Logger, param, ua.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	param.AQUAVersion = args.Version
+	param.NewAquaVersion = args.Version
 	ctrl, err := controller.InitializeUpdateAquaCommandController(ctx, ua.r.Logger.Logger, param, http.DefaultClient, ua.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize an UpdateAquaController: %w", err)
