@@ -72,8 +72,12 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 }
 
 func (c *Controller) removePackagesInteractively(logger *slog.Logger, param *config.Param, registryContents map[string]*registry.Config) error {
-	var items []*fuzzyfinder.Item
-	var pkgs []*fuzzyfinder.Package
+	var sizePkgs int
+	for _, registryContent := range registryContents {
+		sizePkgs += len(registryContent.PackageInfos)
+	}
+	pkgs := make([]*fuzzyfinder.Package, 0, sizePkgs)
+	items := make([]*fuzzyfinder.Item, 0, sizePkgs)
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
 			fp := &fuzzyfinder.Package{

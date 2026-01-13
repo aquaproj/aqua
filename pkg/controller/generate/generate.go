@@ -124,8 +124,12 @@ func (c *Controller) listPkgs(ctx context.Context, logger *slog.Logger, param *c
 
 func (c *Controller) listPkgsWithFinder(ctx context.Context, logger *slog.Logger, param *config.Param, registryContents map[string]*registry.Config) ([]*config.Package, error) {
 	// maps the package and the registry
-	var items []*fuzzyfinder.Item
-	var pkgs []*fuzzyfinder.Package
+	sizePkgs := 0
+	for _, registryContent := range registryContents {
+		sizePkgs += len(registryContent.PackageInfos)
+	}
+	items := make([]*fuzzyfinder.Item, 0, sizePkgs)
+	pkgs := make([]*fuzzyfinder.Package, 0, sizePkgs)
 	for registryName, registryContent := range registryContents {
 		for _, pkg := range registryContent.PackageInfos {
 			p := &fuzzyfinder.Package{
