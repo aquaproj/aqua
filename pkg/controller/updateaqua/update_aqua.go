@@ -2,7 +2,6 @@ package updateaqua
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -34,16 +33,12 @@ func (c *Controller) UpdateAqua(ctx context.Context, logger *slog.Logger, param 
 }
 
 func (c *Controller) getVersion(ctx context.Context, param *config.Param) (string, error) {
-	switch len(param.Args) {
-	case 0:
-		release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua")
-		if err != nil {
-			return "", fmt.Errorf("get the latest version of aqua: %w", err)
-		}
-		return release.GetTagName(), nil
-	case 1:
-		return param.Args[0], nil
-	default:
-		return "", errors.New("too many arguments")
+	if param.NewAquaVersion != "" {
+		return param.NewAquaVersion, nil
 	}
+	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua")
+	if err != nil {
+		return "", fmt.Errorf("get the latest version of aqua: %w", err)
+	}
+	return release.GetTagName(), nil
 }
