@@ -32,6 +32,12 @@ func (c *cosignVerifier) Enabled(logger *slog.Logger) (bool, error) {
 
 func (c *cosignVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
 	logger.Info("verifying a file with Cosign")
+	installerPkg := c.installer.Pkg()
+	logger = logger.With(
+		"package_name", installerPkg.Package.Name,
+		"package_version", installerPkg.Package.Version,
+		"registry", installerPkg.Package.Registry,
+	)
 	if err := c.installer.install(ctx, logger); err != nil {
 		return fmt.Errorf("install sigstore/cosign: %w", err)
 	}

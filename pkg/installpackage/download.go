@@ -14,11 +14,6 @@ import (
 )
 
 func (is *Installer) downloadWithRetry(ctx context.Context, logger *slog.Logger, param *DownloadParam) error {
-	logger = logger.With(
-		"package_name", param.Package.Package.Name,
-		"package_version", param.Package.Package.Version,
-		"registry", param.Package.Package.Registry,
-	)
 	retryCount := 0
 	for {
 		logger.Debug("check if the package is already installed")
@@ -56,11 +51,6 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logger *slog.Logger,
 func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *DownloadParam) error { //nolint:funlen,cyclop
 	ppkg := param.Package
 	pkg := ppkg.Package
-	logger = logger.With(
-		"package_name", pkg.Name,
-		"package_version", pkg.Version,
-		"registry", pkg.Registry,
-	)
 	pkgInfo := param.Package.PackageInfo
 
 	if pkgInfo.Type == "go_install" {

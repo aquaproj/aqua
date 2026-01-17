@@ -121,7 +121,11 @@ func (c *Controller) installAndCopy(ctx context.Context, logger *slog.Logger, pa
 		return err //nolint:wrapcheck
 	}
 	if findResult.Package != nil {
-		logger := logger.With("package", findResult.Package.Package.Name)
+		logger := logger.With(
+			"package_name", findResult.Package.Package.Name,
+			"package_version", findResult.Package.Package.Version,
+			"registry", findResult.Package.Package.Registry,
+		)
 
 		policyConfigs, err := c.policyReader.Append(logger, findResult.ConfigFilePath, policyConfigs, globalPolicyPaths)
 		if err != nil {

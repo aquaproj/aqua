@@ -26,15 +26,15 @@ func newDedicatedInstaller(installer *Installer, pkg func() *config.Package, che
 	}
 }
 
+func (di *DedicatedInstaller) Pkg() *config.Package {
+	return di.pkg()
+}
+
 func (di *DedicatedInstaller) install(ctx context.Context, logger *slog.Logger) error {
 	di.mutex.Lock()
 	defer di.mutex.Unlock()
 
 	pkg := di.pkg()
-	logger = logger.With(
-		"package_name", pkg.Package.Name,
-		"package_version", pkg.Package.Version,
-	)
 
 	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, di.installer.runtime)
 	if err != nil {

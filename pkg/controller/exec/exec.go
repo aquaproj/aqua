@@ -49,6 +49,7 @@ func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *confi
 	logger = attrs.Add(logger,
 		"package_name", findResult.Package.Package.Name,
 		"package_version", findResult.Package.Package.Version,
+		"registry", findResult.Package.Package.Registry,
 	)
 
 	policyCfgs, err = c.policyReader.Append(logger, findResult.ConfigFilePath, policyCfgs, globalPolicyPaths)
