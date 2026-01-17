@@ -253,8 +253,6 @@ github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2 h1:oOeDLYiW+X/8XC2/Wu3U3rQ0
 github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2/go.mod h1:fRVZ62p4iY8BxyyhZQ++grjQIDzWtRK02mHQapxm4Kk=
 github.com/suzuki-shunsuke/gomic v0.6.0 h1:oSmoXR1nmt7X05TssjBTcX9BCTNnFCcNlA5yshaTjsk=
 github.com/suzuki-shunsuke/gomic v0.6.0/go.mod h1:/+uhQJ1H5f9ythus/MbXOotAZDmkN1QOjKlsSiH2v+I=
-github.com/suzuki-shunsuke/slog-error v0.2.1 h1:zcWOEo451RWmgusiONt/GueyvkTL7n4qA0ZJ3gTEjbA=
-github.com/suzuki-shunsuke/slog-error v0.2.1/go.mod h1:w45QyO2G0uiEuo9hhrcLqqRl3hmYon9jGgq9CrCxxOY=
 github.com/suzuki-shunsuke/slog-error v0.2.2 h1:z8rymlIlZcMA+ERnnhVigQ0Q+X0pxKqBfDzSIyGh6vU=
 github.com/suzuki-shunsuke/slog-error v0.2.2/go.mod h1:w45QyO2G0uiEuo9hhrcLqqRl3hmYon9jGgq9CrCxxOY=
 github.com/suzuki-shunsuke/slog-util v0.3.0 h1:s+Go2yZqBnJCyV4kj1MDJEITfS7ELdDAEKk/aCulBkQ=
