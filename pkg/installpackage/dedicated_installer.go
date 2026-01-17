@@ -13,7 +13,7 @@ import (
 type DedicatedInstaller struct {
 	installer *Installer
 	mutex     *sync.Mutex
-	Pkg       func() *config.Package
+	pkg       func() *config.Package
 	checksums *checksum.Checksums
 }
 
@@ -21,7 +21,7 @@ func newDedicatedInstaller(installer *Installer, pkg func() *config.Package, che
 	return &DedicatedInstaller{
 		installer: installer,
 		mutex:     &sync.Mutex{},
-		Pkg:       pkg,
+		pkg:       pkg,
 		checksums: checksums,
 	}
 }
@@ -30,7 +30,12 @@ func (di *DedicatedInstaller) install(ctx context.Context, logger *slog.Logger) 
 	di.mutex.Lock()
 	defer di.mutex.Unlock()
 
-	pkg := di.Pkg()
+	pkg := di.pkg()
+	logger = logger.With(
+		"package_name", pkg.Package.Name,
+		"package_version", pkg.Package.Version,
+		"registry", pkg.Package.Registry,
+	)
 
 	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, di.installer.runtime)
 	if err != nil {

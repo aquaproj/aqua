@@ -38,12 +38,6 @@ func (s *minisignVerifier) Enabled(logger *slog.Logger) (bool, error) {
 
 func (s *minisignVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
 	logger.Info("verify a package with minisign")
-	installerPkg := s.installer.Pkg()
-	logger = logger.With(
-		"package_name", installerPkg.Package.Name,
-		"package_version", installerPkg.Package.Version,
-		"registry", installerPkg.Package.Registry,
-	)
 	if err := s.installer.install(ctx, logger); err != nil {
 		return fmt.Errorf("install minisign: %w", err)
 	}

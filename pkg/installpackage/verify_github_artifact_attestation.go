@@ -33,12 +33,6 @@ func (g *gitHubArtifactAttestationsVerifier) Enabled(logger *slog.Logger) (bool,
 
 func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
 	logger.Info("verify GitHub Artifact Attestations")
-	pkg := g.ghInstaller.Pkg()
-	logger = logger.With(
-		"package_name", pkg.Package.Name,
-		"package_version", pkg.Package.Version,
-		"registry", pkg.Package.Registry,
-	)
 	if err := g.ghInstaller.install(ctx, logger); err != nil {
 		return fmt.Errorf("install GitHub CLI: %w", err)
 	}
