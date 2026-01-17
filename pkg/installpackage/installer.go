@@ -252,11 +252,6 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 
 func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, param *ParamInstallPackage) error {
 	pkg := param.Pkg
-	logger = logger.With(
-		"package_name", pkg.Package.Name,
-		"package_version", pkg.Package.Version,
-		"registry", pkg.Package.Registry,
-	)
 	logger.Debug("installing the package")
 
 	if err := is.validatePackage(logger, param); err != nil {

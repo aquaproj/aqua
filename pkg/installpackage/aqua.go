@@ -114,6 +114,11 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 	}
 	pkg.PackageInfo = pkgInfo
 
+	logger = logger.With(
+		"package_name", pkg.Package.Name,
+		"package_version", pkg.Package.Version,
+		"registry", pkg.Package.Registry,
+	)
 	if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
 		Checksums:     checksum.New(), // Check aqua's checksum but not update aqua-checksums.json
 		Pkg:           pkg,
@@ -121,11 +126,6 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 	}); err != nil {
 		return err
 	}
-
-	logger = logger.With(
-		"package_name", pkg.Package.Name,
-		"package_version", pkg.Package.Version,
-	)
 
 	exePath, err := pkg.ExePath(is.rootDir, &registry.File{
 		Name: "aqua",

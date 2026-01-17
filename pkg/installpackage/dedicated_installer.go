@@ -34,6 +34,7 @@ func (di *DedicatedInstaller) install(ctx context.Context, logger *slog.Logger) 
 	logger = logger.With(
 		"package_name", pkg.Package.Name,
 		"package_version", pkg.Package.Version,
+		"registry", pkg.Package.Registry,
 	)
 
 	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, di.installer.runtime)
