@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
@@ -185,7 +186,9 @@ func (i *command) action(ctx context.Context, args *Args) error {
 		return fmt.Errorf("set param: %w", err)
 	}
 	param.OutTestData = args.OutTestdata
-	param.Args = []string{args.Cmd}
+	if args.Cmd != "" {
+		param.Commands = strings.Split(args.Cmd, ",")
+	}
 	param.GenerateConfigFilePath = args.GenerateConfig
 	param.Limit = args.Limit
 	param.InitConfig = args.Init
