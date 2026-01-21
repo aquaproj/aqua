@@ -28,7 +28,7 @@ require (
 	github.com/suzuki-shunsuke/slog-error v0.2.2
 	github.com/suzuki-shunsuke/slog-util v0.3.0
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.0
-	github.com/urfave/cli/v3 v3.6.1
+	github.com/urfave/cli/v3 v3.6.2
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	go.yaml.in/yaml/v2 v2.4.3
 	go.yaml.in/yaml/v3 v3.0.4
