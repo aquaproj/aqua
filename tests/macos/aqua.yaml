@@ -6,6 +6,6 @@ packages:
   - name: 99designs/aws-vault@v7.2.0
     # DMG https://github.com/aquaproj/aqua/issues/1706
     registry: local
-  - name: bep/s3deploy@v2.13.0
+  - name: bep/s3deploy@v2.14.0
     # PKG https://github.com/aquaproj/aqua/issues/1803
     registry: local
