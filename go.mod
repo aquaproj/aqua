@@ -26,7 +26,7 @@ require (
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
 	github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2
 	github.com/suzuki-shunsuke/slog-error v0.2.2
-	github.com/suzuki-shunsuke/slog-util v0.3.0
+	github.com/suzuki-shunsuke/slog-util v0.3.1
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.0
 	github.com/urfave/cli/v3 v3.6.2
 	github.com/wk8/go-ordered-map/v2 v2.1.8
