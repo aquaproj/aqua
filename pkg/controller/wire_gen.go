@@ -415,3 +415,34 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 	controller := initialize.New(param, rt, fs, client, configFinder, configReader, installer)
 	return controller
 }
+
+func InitializePackageInstaller(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*installpackage.Installer, error) {
+	repositoriesService := github.New(ctx)
+	httpDownloader := download.NewHTTPDownloader(httpClient)
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	fs := afero.NewOsFs()
+	linker := link.New()
+	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	calculator := checksum.NewCalculator()
+	executor := osexec.New()
+	unarchiver := unarchive.New(executor, fs)
+	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	executorImpl := slsa.NewExecutor(executor, param)
+	slsaVerifier := slsa.New(downloader, fs, executorImpl)
+	minisignExecutorImpl, err := minisign.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
+	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
+	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
+	client := vacuum.New(fs, param)
+	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	return installer, nil
+}
