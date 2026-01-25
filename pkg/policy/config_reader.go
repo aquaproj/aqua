@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/afero"
-	"go.yaml.in/yaml/v2"
+	"go.yaml.in/yaml/v3"
 )
 
 type ConfigReaderImpl struct {
