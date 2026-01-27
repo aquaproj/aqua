@@ -193,10 +193,9 @@ func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[s
 	return pkgs, assets, nil
 }
 
-func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, checksumID string) ([]*checksum.Checksum, error) { //nolint:funlen,cyclop
-	pkgInfo := pkg.PackageInfo
+func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, checksumID string) ([]*checksum.Checksum, error) { //nolint:funlen,cyclop
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		cs, err := c.dlAssetAndGetChecksum(ctx, logger, checksums, pkg, rt)
+		cs, err := c.dlAssetAndGetChecksum(ctx, logger, pkg, rt)
 		if err != nil {
 			return nil, err
 		}
@@ -224,7 +223,11 @@ func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, chec
 	if err != nil {
 		return nil, fmt.Errorf("read a checksum file: %w", err)
 	}
-	checksumFile := strings.TrimSpace(string(b))
+	return c.getChecksumsFromChecksumFile(pkg, assetNames, checksumID, strings.TrimSpace(string(b)))
+}
+
+func (c *Controller) getChecksumsFromChecksumFile(pkg *config.Package, assetNames map[string]struct{}, checksumID string, checksumFile string) ([]*checksum.Checksum, error) { //nolint:funlen,cyclop
+	pkgInfo := pkg.PackageInfo
 	m, s, err := checksum.ParseChecksumFile(checksumFile, pkgInfo.Checksum)
 	if err != nil {
 		return nil, fmt.Errorf("parse a checksum file: %w", err)
@@ -266,17 +269,20 @@ func (c *Controller) updatePackageByRuntime(ctx context.Context, logger *slog.Lo
 		return nil
 	}
 
-	cs, err := c.getChecksums(ctx, logger, checksums, pkg, checksumFiles, rt, assetNames, checksumID)
+	cs, err := c.getChecksums(ctx, logger, pkg, checksumFiles, rt, assetNames, checksumID)
 	if err != nil {
 		return err
 	}
 	for _, c := range cs {
+		if a := checksums.Get(c.ID); a != nil {
+			continue
+		}
 		checksums.Set(c.ID, c)
 	}
 	return nil
 }
 
-func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (*checksum.Checksum, error) {
+func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, rt *runtime.Runtime) (*checksum.Checksum, error) {
 	attrs := slogerr.NewAttrs(1)
 	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
