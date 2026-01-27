@@ -43,7 +43,8 @@ func NewChecksumDownloader(gh GitHub, rt *runtime.Runtime, httpDownloader HTTPDo
 
 type ChecksumDownloader interface {
 	DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error)
-	GetDigestFromGitHubAPI(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (*domain.AssetDigest, error)
+	// GetReleaseAssets retrieves all asset digests from a GitHub Release.
+	GetReleaseAssets(ctx context.Context, logger *slog.Logger, pkg *config.Package) (domain.ReleaseAssets, error)
 }
 
 func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
@@ -77,19 +78,13 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 	}
 }
 
-// GetDigestFromGitHubAPI retrieves the SHA256 digest from GitHub API Release Asset's Digest field.
+// GetReleaseAssets retrieves all asset digests from a GitHub Release.
 // This only works for github_release type packages.
 // Returns nil without error if the digest is not available.
-func (dl *ChecksumDownloaderImpl) GetDigestFromGitHubAPI(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (*domain.AssetDigest, error) {
+func (dl *ChecksumDownloaderImpl) GetReleaseAssets(ctx context.Context, logger *slog.Logger, pkg *config.Package) (domain.ReleaseAssets, error) {
 	pkgInfo := pkg.PackageInfo
 	if pkgInfo.Type != config.PkgInfoTypeGitHubRelease {
 		return nil, nil //nolint:nilnil
 	}
-	return dl.ghRelease.GetAssetDigest(ctx, logger, &domain.DownloadGitHubReleaseParam{
-		RepoOwner: pkgInfo.RepoOwner,
-		RepoName:  pkgInfo.RepoName,
-		Version:   pkg.Package.Version,
-		Asset:     assetName,
-		Private:   pkgInfo.Private,
-	})
+	return dl.ghRelease.GetReleaseAssets(ctx, logger, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version)
 }

@@ -159,18 +159,20 @@ func (is *Installer) getChecksumFromSource(ctx context.Context, logger *slog.Log
 
 	// If no signature verification and it's a github_release type, try GitHub API first
 	if !hasSignatureVerification && pkgInfo.Type == config.PkgInfoTypeGitHubRelease {
-		digest, err := is.checksumDownloader.GetDigestFromGitHubAPI(ctx, logger, pkg, assetName)
+		releaseAssets, err := is.checksumDownloader.GetReleaseAssets(ctx, logger, pkg)
 		if err != nil {
-			slogerr.WithError(logger, err).Debug("failed to get digest from GitHub API")
-		} else if digest != nil {
-			logger.Debug("got digest from GitHub API",
-				"checksum_id", checksumID,
-				"checksum", digest.Digest)
-			return &checksum.Checksum{
-				ID:        checksumID,
-				Checksum:  digest.Digest,
-				Algorithm: digest.Algorithm,
-			}, nil
+			slogerr.WithError(logger, err).Debug("failed to get release assets from GitHub API")
+		} else if releaseAssets != nil {
+			if digest := releaseAssets.GetDigest(assetName); digest != nil {
+				logger.Debug("got digest from GitHub API",
+					"checksum_id", checksumID,
+					"checksum", digest.Digest)
+				return &checksum.Checksum{
+					ID:        checksumID,
+					Checksum:  digest.Digest,
+					Algorithm: digest.Algorithm,
+				}, nil
+			}
 		}
 	}
 

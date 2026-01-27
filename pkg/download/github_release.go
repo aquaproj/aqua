@@ -88,49 +88,54 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
 }
 
-// GetAssetDigest retrieves the SHA256 digest from GitHub API Release Asset's Digest field.
-// It returns nil without error if the digest is not available (empty or unsupported format).
-func (dl *GitHubReleaseDownloader) GetAssetDigest(ctx context.Context, logger *slog.Logger, param *domain.DownloadGitHubReleaseParam) (*domain.AssetDigest, error) {
-	release, _, err := dl.github.GetReleaseByTag(ctx, param.RepoOwner, param.RepoName, param.Version)
+// releaseAssetsImpl implements domain.ReleaseAssets
+type releaseAssetsImpl struct {
+	assets map[string]*domain.AssetDigest // assetName -> digest
+}
+
+func (r *releaseAssetsImpl) GetDigest(assetName string) *domain.AssetDigest {
+	return r.assets[assetName]
+}
+
+// GetReleaseAssets retrieves all asset digests from a GitHub Release.
+// Returns nil without error if the release is not found or has no digest-enabled assets.
+func (dl *GitHubReleaseDownloader) GetReleaseAssets(ctx context.Context, logger *slog.Logger, owner, repo, version string) (domain.ReleaseAssets, error) {
+	release, _, err := dl.github.GetReleaseByTag(ctx, owner, repo, version)
 	if err != nil {
 		return nil, fmt.Errorf("get the GitHub Release by Tag: %w", err)
 	}
-	asset := getAssetFromAssets(release.Assets, param.Asset)
-	if asset == nil {
-		return nil, fmt.Errorf("the asset isn't found: %s", param.Asset)
-	}
-	digest := asset.GetDigest()
-	if digest == "" {
-		logger.Debug("GitHub API didn't return a digest for the asset")
-		return nil, nil //nolint:nilnil
-	}
-	return parseDigest(logger, digest)
-}
-
-func getAssetFromAssets(assets []*github.ReleaseAsset, assetName string) *github.ReleaseAsset {
-	for _, asset := range assets {
-		if asset.GetName() == assetName {
-			return asset
+	assets := make(map[string]*domain.AssetDigest, len(release.Assets))
+	for _, asset := range release.Assets {
+		name := asset.GetName()
+		digest := asset.GetDigest()
+		if digest == "" {
+			continue
+		}
+		if parsed := parseDigest(logger, digest); parsed != nil {
+			assets[name] = parsed
 		}
 	}
-	return nil
+	if len(assets) == 0 {
+		return nil, nil //nolint:nilnil
+	}
+	return &releaseAssetsImpl{assets: assets}, nil
 }
 
 // parseDigest parses a digest string in the format "algorithm:hex".
 // Currently only sha256 is supported.
-// Returns nil without error if the format is unsupported.
-func parseDigest(logger *slog.Logger, digest string) (*domain.AssetDigest, error) {
+// Returns nil if the format is unsupported.
+func parseDigest(logger *slog.Logger, digest string) *domain.AssetDigest {
 	algorithm, hex, found := strings.Cut(digest, ":")
 	if !found {
 		logger.Debug("unsupported digest format", "digest", digest)
-		return nil, nil //nolint:nilnil
+		return nil
 	}
 	if algorithm != "sha256" {
 		logger.Debug("unsupported digest algorithm", "algorithm", algorithm)
-		return nil, nil //nolint:nilnil
+		return nil
 	}
 	return &domain.AssetDigest{
 		Digest:    strings.ToUpper(hex),
 		Algorithm: algorithm,
-	}, nil
+	}
 }

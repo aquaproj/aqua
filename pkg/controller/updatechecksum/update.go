@@ -157,6 +157,19 @@ func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, chec
 	if err != nil {
 		return err
 	}
+
+	// Pre-fetch release assets from GitHub API for github_release type without signature verification.
+	// This allows retrieving digests for multiple assets with a single API call.
+	var releaseAssets domain.ReleaseAssets
+	if pkg.PackageInfo.Type == config.PkgInfoTypeGitHubRelease &&
+		!hasChecksumSignatureVerification(pkg.PackageInfo.Checksum) {
+		var err error
+		releaseAssets, err = c.chkDL.GetReleaseAssets(ctx, logger, pkg)
+		if err != nil {
+			slogerr.WithError(logger, err).Debug("failed to get release assets from GitHub API")
+		}
+	}
+
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
 		env := rt.Env()
@@ -167,7 +180,7 @@ func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, chec
 		if !ok {
 			continue
 		}
-		if err := c.getChecksum(ctx, logger, checksums, pkg, checksumFiles, rt, assetNames); err != nil {
+		if err := c.getChecksum(ctx, logger, checksums, pkg, checksumFiles, rt, assetNames, releaseAssets); err != nil {
 			return err
 		}
 	}
@@ -210,11 +223,11 @@ func hasChecksumSignatureVerification(chksum *registry.Checksum) bool {
 	return chksum.GetCosign() != nil || chksum.GetMinisign() != nil || chksum.GetGitHubArtifactAttestations() != nil
 }
 
-func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}) error { //nolint:funlen,cyclop
+func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, releaseAssets domain.ReleaseAssets) error { //nolint:funlen,cyclop
 	pkgInfo := pkg.PackageInfo
 
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		if err := c.dlAssetAndGetChecksum(ctx, logger, checksums, pkg, rt); err != nil {
+		if err := c.dlAssetAndGetChecksum(ctx, logger, checksums, pkg, rt, releaseAssets); err != nil {
 			return err
 		}
 		return nil
@@ -229,17 +242,13 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 		return nil
 	}
 
-	// If no signature verification is configured and it's a github_release type,
-	// try to get the digest from GitHub API first.
-	if !hasChecksumSignatureVerification(pkgInfo.Checksum) && pkgInfo.Type == config.PkgInfoTypeGitHubRelease {
+	// If release assets were pre-fetched, try to get the digest from them.
+	if releaseAssets != nil {
 		assetName, err := pkg.RenderAsset(rt)
 		if err != nil {
 			return fmt.Errorf("render an asset: %w", err)
 		}
-		digest, err := c.chkDL.GetDigestFromGitHubAPI(ctx, logger, pkg, assetName)
-		if err != nil {
-			slogerr.WithError(logger, err).Debug("failed to get digest from GitHub API")
-		} else if digest != nil {
+		if digest := releaseAssets.GetDigest(assetName); digest != nil {
 			logger.Debug("got digest from GitHub API",
 				"checksum_id", checksumID,
 				"checksum", digest.Digest)
@@ -342,31 +351,7 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 	return nil
 }
 
-// tryGetDigestFromGitHubAPI attempts to get the digest from GitHub API for github_release type packages.
-// Returns the checksum if successful, nil otherwise.
-func (c *Controller) tryGetDigestFromGitHubAPI(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, checksumID string) *checksum.Checksum {
-	if pkg.PackageInfo.Type != config.PkgInfoTypeGitHubRelease {
-		return nil
-	}
-	digest, err := c.chkDL.GetDigestFromGitHubAPI(ctx, logger, pkg, assetName)
-	if err != nil {
-		slogerr.WithError(logger, err).Debug("failed to get digest from GitHub API")
-		return nil
-	}
-	if digest == nil {
-		return nil
-	}
-	logger.Debug("got digest from GitHub API",
-		"checksum_id", checksumID,
-		"checksum", digest.Digest)
-	return &checksum.Checksum{
-		ID:        checksumID,
-		Checksum:  digest.Digest,
-		Algorithm: digest.Algorithm,
-	}
-}
-
-func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (gErr error) {
+func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime, releaseAssets domain.ReleaseAssets) (gErr error) {
 	attrs := slogerr.NewAttrs(1)
 	defer func() {
 		if gErr != nil {
@@ -386,10 +371,19 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Log
 	}
 	logger = attrs.Add(logger, "asset_name", assetName)
 
-	// Try to get the digest from GitHub API first for github_release type packages.
-	if chk := c.tryGetDigestFromGitHubAPI(ctx, logger, pkg, assetName, checksumID); chk != nil {
-		checksums.Set(checksumID, chk)
-		return nil
+	// Try to get the digest from pre-fetched release assets.
+	if releaseAssets != nil {
+		if digest := releaseAssets.GetDigest(assetName); digest != nil {
+			logger.Debug("got digest from GitHub API",
+				"checksum_id", checksumID,
+				"checksum", digest.Digest)
+			checksums.Set(checksumID, &checksum.Checksum{
+				ID:        checksumID,
+				Checksum:  digest.Digest,
+				Algorithm: digest.Algorithm,
+			})
+			return nil
+		}
 	}
 
 	logger.Info("downloading an asset to calculate the checksum")
