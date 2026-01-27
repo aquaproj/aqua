@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -200,6 +201,15 @@ func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[s
 	return pkgs, assets, nil
 }
 
+// hasChecksumSignatureVerification returns true if the checksum has signature verification configured
+// (Cosign, Minisign, or GitHubArtifactAttestations).
+func hasChecksumSignatureVerification(chksum *registry.Checksum) bool {
+	if chksum == nil {
+		return false
+	}
+	return chksum.GetCosign() != nil || chksum.GetMinisign() != nil || chksum.GetGitHubArtifactAttestations() != nil
+}
+
 func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}) error { //nolint:funlen,cyclop
 	pkgInfo := pkg.PackageInfo
 
@@ -217,6 +227,29 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 
 	if a := checksums.Get(checksumID); a != nil {
 		return nil
+	}
+
+	// If no signature verification is configured and it's a github_release type,
+	// try to get the digest from GitHub API first.
+	if !hasChecksumSignatureVerification(pkgInfo.Checksum) && pkgInfo.Type == config.PkgInfoTypeGitHubRelease {
+		assetName, err := pkg.RenderAsset(rt)
+		if err != nil {
+			return fmt.Errorf("render an asset: %w", err)
+		}
+		digest, err := c.chkDL.GetDigestFromGitHubAPI(ctx, logger, pkg, assetName)
+		if err != nil {
+			slogerr.WithError(logger, err).Debug("failed to get digest from GitHub API")
+		} else if digest != nil {
+			logger.Debug("got digest from GitHub API",
+				"checksum_id", checksumID,
+				"checksum", digest.Digest)
+			checksums.Set(checksumID, &checksum.Checksum{
+				ID:        checksumID,
+				Checksum:  digest.Digest,
+				Algorithm: digest.Algorithm,
+			})
+			return nil
+		}
 	}
 
 	checksumFileID, err := pkg.RenderChecksumFileID(rt)
@@ -309,6 +342,30 @@ func (c *Controller) getChecksum(ctx context.Context, logger *slog.Logger, check
 	return nil
 }
 
+// tryGetDigestFromGitHubAPI attempts to get the digest from GitHub API for github_release type packages.
+// Returns the checksum if successful, nil otherwise.
+func (c *Controller) tryGetDigestFromGitHubAPI(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, checksumID string) *checksum.Checksum {
+	if pkg.PackageInfo.Type != config.PkgInfoTypeGitHubRelease {
+		return nil
+	}
+	digest, err := c.chkDL.GetDigestFromGitHubAPI(ctx, logger, pkg, assetName)
+	if err != nil {
+		slogerr.WithError(logger, err).Debug("failed to get digest from GitHub API")
+		return nil
+	}
+	if digest == nil {
+		return nil
+	}
+	logger.Debug("got digest from GitHub API",
+		"checksum_id", checksumID,
+		"checksum", digest.Digest)
+	return &checksum.Checksum{
+		ID:        checksumID,
+		Checksum:  digest.Digest,
+		Algorithm: digest.Algorithm,
+	}
+}
+
 func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, rt *runtime.Runtime) (gErr error) {
 	attrs := slogerr.NewAttrs(1)
 	defer func() {
@@ -328,6 +385,13 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Log
 		return fmt.Errorf("get an asset name: %w", err)
 	}
 	logger = attrs.Add(logger, "asset_name", assetName)
+
+	// Try to get the digest from GitHub API first for github_release type packages.
+	if chk := c.tryGetDigestFromGitHubAPI(ctx, logger, pkg, assetName, checksumID); chk != nil {
+		checksums.Set(checksumID, chk)
+		return nil
+	}
+
 	logger.Info("downloading an asset to calculate the checksum")
 	f, err := download.ConvertPackageToFile(pkg, assetName, rt)
 	if err != nil {

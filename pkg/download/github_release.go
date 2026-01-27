@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
@@ -85,4 +86,51 @@ func getAssetIDFromAssets(assets []*github.ReleaseAsset, assetName string) (int6
 		}
 	}
 	return 0, fmt.Errorf("the asset isn't found: %s", assetName)
+}
+
+// GetAssetDigest retrieves the SHA256 digest from GitHub API Release Asset's Digest field.
+// It returns nil without error if the digest is not available (empty or unsupported format).
+func (dl *GitHubReleaseDownloader) GetAssetDigest(ctx context.Context, logger *slog.Logger, param *domain.DownloadGitHubReleaseParam) (*domain.AssetDigest, error) {
+	release, _, err := dl.github.GetReleaseByTag(ctx, param.RepoOwner, param.RepoName, param.Version)
+	if err != nil {
+		return nil, fmt.Errorf("get the GitHub Release by Tag: %w", err)
+	}
+	asset := getAssetFromAssets(release.Assets, param.Asset)
+	if asset == nil {
+		return nil, fmt.Errorf("the asset isn't found: %s", param.Asset)
+	}
+	digest := asset.GetDigest()
+	if digest == "" {
+		logger.Debug("GitHub API didn't return a digest for the asset")
+		return nil, nil //nolint:nilnil
+	}
+	return parseDigest(logger, digest)
+}
+
+func getAssetFromAssets(assets []*github.ReleaseAsset, assetName string) *github.ReleaseAsset {
+	for _, asset := range assets {
+		if asset.GetName() == assetName {
+			return asset
+		}
+	}
+	return nil
+}
+
+// parseDigest parses a digest string in the format "algorithm:hex".
+// Currently only sha256 is supported.
+// Returns nil without error if the format is unsupported.
+func parseDigest(logger *slog.Logger, digest string) (*domain.AssetDigest, error) {
+	algorithm, hex, found := strings.Cut(digest, ":")
+	if !found {
+		logger.Debug("unsupported digest format", "digest", digest)
+		return nil, nil //nolint:nilnil
+	}
+	if algorithm != "sha256" {
+		logger.Debug("unsupported digest algorithm", "algorithm", algorithm)
+		return nil, nil //nolint:nilnil
+	}
+	return &domain.AssetDigest{
+		Digest:    strings.ToUpper(hex),
+		Algorithm: algorithm,
+	}, nil
 }
