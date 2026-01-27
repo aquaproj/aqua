@@ -225,16 +225,6 @@ func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, chec
 		return nil, fmt.Errorf("read a checksum file: %w", err)
 	}
 	checksumFile := strings.TrimSpace(string(b))
-	if pkgInfo.Checksum.FileFormat == "raw" {
-		logger.Debug("set a checksum",
-			"checksum_id", checksumID,
-			"checksum", checksumFile)
-		return []*checksum.Checksum{&checksum.Checksum{
-			ID:        checksumID,
-			Checksum:  checksumFile,
-			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
-		}}, nil
-	}
 	m, s, err := checksum.ParseChecksumFile(checksumFile, pkgInfo.Checksum)
 	if err != nil {
 		return nil, fmt.Errorf("parse a checksum file: %w", err)
@@ -244,25 +234,6 @@ func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, chec
 			{
 				ID:        checksumID,
 				Checksum:  s,
-				Algorithm: pkgInfo.Checksum.GetAlgorithm(),
-			},
-		}, nil
-	}
-	if len(m) == 1 {
-		// get the asset name
-		asset, err := pkg.RenderAsset(rt)
-		if err != nil {
-			return nil, fmt.Errorf("render an asset: %w", err)
-		}
-		chksum, ok := m[asset]
-		if !ok {
-			// if the asset name is different, skip
-			return nil, nil
-		}
-		return []*checksum.Checksum{
-			{
-				ID:        checksumID,
-				Checksum:  chksum,
 				Algorithm: pkgInfo.Checksum.GetAlgorithm(),
 			},
 		}, nil
