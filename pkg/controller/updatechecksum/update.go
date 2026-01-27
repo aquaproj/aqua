@@ -24,10 +24,10 @@ func (c *Controller) UpdateChecksum(ctx context.Context, logger *slog.Logger, pa
 		}
 	}
 
-	return c.updateChecksumAll(ctx, logger, param)
+	return c.updateGlobalChecksumFiles(ctx, logger, param)
 }
 
-func (c *Controller) updateChecksumAll(ctx context.Context, logger *slog.Logger, param *config.Param) error {
+func (c *Controller) updateGlobalChecksumFiles(ctx context.Context, logger *slog.Logger, param *config.Param) error {
 	if !param.All {
 		return nil
 	}
@@ -139,13 +139,6 @@ func (c *Controller) updateRegistry(ctx context.Context, logger *slog.Logger, ch
 }
 
 func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
-	if err := c.getChecksums(ctx, logger, checksums, pkg, supportedEnvs); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
 	logger.Info("updating a package checksum")
 	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
