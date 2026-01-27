@@ -15,22 +15,9 @@ import (
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, error) { //nolint:funlen
-	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logger, is.runtime, pkg)
-	if err != nil {
-		return "", fmt.Errorf("download a checksum file: %w", err)
-	}
-	defer file.Close()
-
-	b, err := io.ReadAll(file)
-	if err != nil {
-		return "", fmt.Errorf("read a checksum file: %w", err)
-	}
-
-	var tempFilePath string
+func (is *Installer) newChecksumVerifiers(pkg *config.Package, assetName string) []FileVerifier { //nolint:funlen
 	pkgInfo := pkg.PackageInfo
-
-	verifiers := []FileVerifier{
+	return []FileVerifier{
 		&gitHubArtifactAttestationsVerifier{
 			disabled:    is.gaaDisabled,
 			gaa:         pkgInfo.Checksum.GetGitHubArtifactAttestations(),
@@ -63,33 +50,66 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logg
 			asset:     assetName,
 		},
 	}
+}
 
+func (is *Installer) filterVerifiers(logger *slog.Logger, verifiers []FileVerifier) ([]FileVerifier, error) {
+	arr := make([]FileVerifier, 0, len(verifiers))
 	for _, verifier := range verifiers {
 		a, err := verifier.Enabled(logger)
 		if err != nil {
-			return "", fmt.Errorf("check if the verifier is enabled: %w", err)
+			return nil, fmt.Errorf("check if the verifier is enabled: %w", err)
 		}
 		if !a {
 			continue
 		}
-		if tempFilePath == "" {
-			f, err := afero.TempFile(is.fs, "", "")
-			if err != nil {
-				return "", fmt.Errorf("create a temporary file: %w", err)
-			}
-			tempFilePath = f.Name()
-			defer f.Close()
-			defer is.fs.Remove(tempFilePath) //nolint:errcheck
-			if _, err := f.Write(b); err != nil {
-				return "", fmt.Errorf("write a checksum to a temporary file: %w", err)
-			}
-		}
-		if err := verifier.Verify(ctx, logger, tempFilePath); err != nil {
-			return "", fmt.Errorf("verify the checksum file: %w", err)
-		}
+		arr = append(arr, verifier)
+	}
+	return arr, nil
+}
+
+func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, error) { //nolint:funlen
+	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logger, is.runtime, pkg)
+	if err != nil {
+		return "", fmt.Errorf("download a checksum file: %w", err)
+	}
+	defer file.Close()
+
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("read a checksum file: %w", err)
+	}
+
+	verifiers, err := is.filterVerifiers(logger, is.newChecksumVerifiers(pkg, assetName))
+	if err != nil {
+		return "", fmt.Errorf("filter verifiers: %w", err)
+	}
+	if err := is.verifyChecksumFile(ctx, logger, b, verifiers); err != nil {
+		return "", fmt.Errorf("verify the checksum file: %w", err)
 	}
 
 	return checksum.GetChecksum(logger, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
+}
+
+func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger, b []byte, verifiers []FileVerifier) error { //nolint:funlen
+	if len(verifiers) == 0 {
+		return nil
+	}
+	f, err := afero.TempFile(is.fs, "", "")
+	if err != nil {
+		return fmt.Errorf("create a temporary file: %w", err)
+	}
+	tempFilePath := f.Name()
+	defer f.Close()
+	defer is.fs.Remove(tempFilePath) //nolint:errcheck
+	if _, err := f.Write(b); err != nil {
+		return fmt.Errorf("write a checksum to a temporary file: %w", err)
+	}
+	for _, verifier := range verifiers {
+		if err := verifier.Verify(ctx, logger, tempFilePath); err != nil {
+			return fmt.Errorf("verify the checksum file: %w", err)
+		}
+	}
+	return nil
 }
 
 type ParamVerifyChecksum struct {
