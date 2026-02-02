@@ -87,6 +87,10 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 			OS:   "windows",
 		},
 		{
+			Name: "win32",
+			OS:   "windows",
+		},
+		{
 			Name: "win",
 			OS:   "windows",
 		},
