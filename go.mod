@@ -9,7 +9,7 @@ require (
 	github.com/forPelevin/gomoji v1.4.1
 	github.com/goccy/go-yaml v1.19.2
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v81 v81.0.0
+	github.com/google/go-github/v82 v82.0.0
 	github.com/google/wire v0.7.0
 	github.com/hashicorp/go-version v1.8.0
 	github.com/invopop/jsonschema v0.13.0
@@ -26,9 +26,9 @@ require (
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
 	github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2
 	github.com/suzuki-shunsuke/slog-error v0.2.2
-	github.com/suzuki-shunsuke/slog-util v0.3.0
+	github.com/suzuki-shunsuke/slog-util v0.3.1
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.0
-	github.com/urfave/cli/v3 v3.6.1
+	github.com/urfave/cli/v3 v3.6.2
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	go.yaml.in/yaml/v2 v2.4.3
 	go.yaml.in/yaml/v3 v3.0.4
@@ -57,7 +57,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.9.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/go-github/v80 v80.0.0 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
