@@ -10,10 +10,20 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
+
+// hasChecksumSignatureVerification returns true if the checksum has signature verification configured
+// (Cosign, Minisign, or GitHubArtifactAttestations).
+func hasChecksumSignatureVerification(chksum *registry.Checksum) bool {
+	if chksum == nil {
+		return false
+	}
+	return chksum.GetCosign() != nil || chksum.GetMinisign() != nil || chksum.GetGitHubArtifactAttestations() != nil
+}
 
 func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, error) { //nolint:funlen
 	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logger, is.runtime, pkg)
@@ -141,7 +151,50 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger
 	return nil
 }
 
-func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, param *ParamVerifyChecksum) error { //nolint:cyclop
+// getChecksumFromSource retrieves the checksum from GitHub API or checksum file.
+// It tries GitHub API first if no signature verification is configured, then falls back to checksum file.
+func (is *Installer) getChecksumFromSource(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, checksumID string) (*checksum.Checksum, error) {
+	pkgInfo := pkg.PackageInfo
+	hasSignatureVerification := hasChecksumSignatureVerification(pkgInfo.Checksum)
+
+	// If no signature verification and it's a github_release type, try GitHub API first
+	if !hasSignatureVerification && pkgInfo.Type == config.PkgInfoTypeGitHubRelease {
+		releaseAssets, err := is.checksumDownloader.GetReleaseAssets(ctx, logger, pkg)
+		if err != nil {
+			slogerr.WithError(logger, err).Debug("failed to get release assets from GitHub API")
+		} else if releaseAssets != nil {
+			if digest := releaseAssets.GetDigest(assetName); digest != nil {
+				logger.Debug("got digest from GitHub API",
+					"checksum_id", checksumID,
+					"checksum", digest.Digest)
+				return &checksum.Checksum{
+					ID:        checksumID,
+					Checksum:  digest.Digest,
+					Algorithm: digest.Algorithm,
+				}, nil
+			}
+		}
+	}
+
+	// Fall back to checksum file download
+	logger.Info("downloading a checksum file")
+	// For github_content, use the base name
+	dlAssetName := assetName
+	if dlAssetName != "" {
+		dlAssetName = filepath.Base(dlAssetName)
+	}
+	c, err := is.dlAndExtractChecksum(ctx, logger, pkg, dlAssetName)
+	if err != nil {
+		return nil, slogerr.With(err, "asset_name", dlAssetName) //nolint:wrapcheck
+	}
+	return &checksum.Checksum{
+		ID:        checksumID,
+		Checksum:  c,
+		Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+	}, nil
+}
+
+func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, param *ParamVerifyChecksum) error {
 	pkg := param.Pkg
 	pkgInfo := pkg.PackageInfo
 	checksums := param.Checksums
@@ -149,32 +202,11 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 	checksumID := param.ChecksumID
 	tempFilePath := param.TempFilePath
 
-	// Download an asset in a temporary directory
-	// Calculate the checksum of download asset
-	// Download a checksum file
-	// Extract the checksum from the checksum file
-	// Compare the checksum
-	// Store the checksum to aqua-checksums.json
-
-	assetName := param.AssetName
-	// If pkgInfo.Type is "github_archive", AssetName is empty.
-	// filepath.Base("") returns "."
-	if assetName != "" {
-		// For github_content
-		assetName = filepath.Base(assetName)
-	}
-
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
-		logger.Info("downloading a checksum file")
-		c, err := is.dlAndExtractChecksum(ctx, logger, pkg, assetName)
+		var err error
+		chksum, err = is.getChecksumFromSource(ctx, logger, pkg, param.AssetName, checksumID)
 		if err != nil {
-			return slogerr.With(err, //nolint:wrapcheck
-				"asset_name", assetName)
-		}
-		chksum = &checksum.Checksum{
-			ID:        checksumID,
-			Checksum:  c,
-			Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+			return err
 		}
 		checksums.Set(checksumID, chksum)
 	}
