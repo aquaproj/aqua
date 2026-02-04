@@ -15,7 +15,7 @@ import (
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (is *Installer) newChecksumVerifiers(pkg *config.Package, assetName string) []FileVerifier { //nolint:funlen
+func (is *Installer) newChecksumVerifiers(pkg *config.Package, assetName string) []FileVerifier {
 	pkgInfo := pkg.PackageInfo
 	return []FileVerifier{
 		&gitHubArtifactAttestationsVerifier{
@@ -67,7 +67,7 @@ func (is *Installer) filterVerifiers(logger *slog.Logger, verifiers []FileVerifi
 	return arr, nil
 }
 
-func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, error) { //nolint:funlen
+func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, error) {
 	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logger, is.runtime, pkg)
 	if err != nil {
 		return "", fmt.Errorf("download a checksum file: %w", err)
@@ -90,7 +90,7 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logg
 	return checksum.GetChecksum(logger, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
 }
 
-func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger, b []byte, verifiers []FileVerifier) error { //nolint:funlen
+func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger, b []byte, verifiers []FileVerifier) error {
 	if len(verifiers) == 0 {
 		return nil
 	}
