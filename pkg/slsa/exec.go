@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"math/rand"
+	"math/rand/v2"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -40,8 +40,7 @@ func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
 }
 
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
-	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
-	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
+	waitTime := time.Duration(rand.IntN(1000)) * time.Millisecond //nolint:mnd
 	logger.Info("Verification by slsa-verifier failed temporarily, retrying",
 		"retry_count", retryCount,
 		"wait_time", waitTime)
