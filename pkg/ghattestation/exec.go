@@ -47,7 +47,7 @@ func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, 
 }
 
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
-	waitTime := time.Duration(rand.IntN(1000)) * time.Millisecond //nolint:mnd
+	waitTime := time.Duration(rand.IntN(1000)) * time.Millisecond //nolint:gosec,mnd
 	logger.Info("gh attestation verify failed temporarily, retrying",
 		"retry_count", retryCount,
 		"wait_time", waitTime)
