@@ -74,7 +74,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 	if e == nil {
 		return errors.New("executor is nil")
 	}
-	// minisign -Vm myfile.txt -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
+	// minisign -Vm myfile.txt -P <pub key>
 	args := []string{
 		"-Vm",
 		param.ArtifactPath,
