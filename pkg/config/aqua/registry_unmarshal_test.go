@@ -6,7 +6,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/google/go-cmp/cmp"
-	"go.yaml.in/yaml/v2"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestRegistry_UnmarshalYAML(t *testing.T) {
