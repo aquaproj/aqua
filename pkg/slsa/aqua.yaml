@@ -9,6 +9,6 @@ checksum:
 #   - all
 registries:
 - type: standard
-  ref: v4.469.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.470.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: slsa-framework/slsa-verifier@v2.7.1
