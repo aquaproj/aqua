@@ -12,4 +12,4 @@ Images in [the top page](https://aquaproj.github.io/) were generated using [carb
 
 ## LICENSE
 
-[MIT](LICENSE)
+[MIT](/LICENSE)
