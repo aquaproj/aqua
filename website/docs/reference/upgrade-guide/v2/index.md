@@ -31,7 +31,7 @@ Removed some features.
 
 ## How to migrate
 
-- [Guide](only-standard-registry-is-allowed-by-default.md#how-to-migrate). If you use non Standard Registry, please create a policy file and set `AQUA_POCLICY_CONFIG`
+- [Guide](only-standard-registry-is-allowed-by-default.md#how-to-migrate). If you use non Standard Registry, please create a policy file and set `AQUA_POLICY_CONFIG`
 - [Guide](change-require_checksum.md#how-to-migrate). If you enable Checksum Verification and `require_checksum`, run `aqua update-checksum` before installing packages. We recommend [updating aqua-checksums.json by GitHub Actions](/docs/guides/checksum)
 - [Guide](deprecate-install-test-option.md). Stop using `aqua install`'s `--test` flag
 - [Guide](deprecate-update-checksum-deep-option.md). Stop using `aqua update-checksum`'s `--deep` flag

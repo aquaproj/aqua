@@ -145,7 +145,7 @@ And if multiple projects require the different tool versions, you have to switch
 Package managers such as Homebrew and apt don't support switching tool versions.
 
 aqua forces to pin tool versions and supports switching tool versions per project.
-You can upgrade a tool temporaroly and rollback the upgrade easily only by editing `aqua.yaml`.
+You can upgrade a tool temporarily and rollback the upgrade easily only by editing `aqua.yaml`.
 
 Of course, aqua supports Monorepo which uses different tool versions per service as well.
 

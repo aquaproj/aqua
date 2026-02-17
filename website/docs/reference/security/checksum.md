@@ -35,7 +35,7 @@ aqua gets the expected checksum from the following sources.
 
 1. `aqua-checksums.json`
 1. checksum files that each tools publish
-1. If the tool doesn't publish checkfum files, aqua treats the checksum calculated from the downloaded asset as the expected checksum
+1. If the tool doesn't publish checksum files, aqua treats the checksum calculated from the downloaded asset as the expected checksum
 
 e.g. `aqua-checksums.json`
 
