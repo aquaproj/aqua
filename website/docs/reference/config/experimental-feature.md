@@ -6,7 +6,7 @@ sidebar_position: 900
 
 [#725](https://github.com/aquaproj/aqua/issues/725), `aqua >= v1.6.0`
 
-aqua supports the mechanithm for experimental features.
+aqua supports the mechanism for experimental features.
 They are disabled by default, but you can enable them with environment variables or somehow.
 
 Maybe experimental features would become enabled by default, or maybe they would be aborted.

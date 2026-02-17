@@ -54,7 +54,7 @@ packages:
       enabled: false
 ```
 
-By default, checkdum download is disabled.
+By default, checksum download is disabled.
 
 ## checksum `algorithm`
 
@@ -98,5 +98,5 @@ pattern:
   file: "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$"
 ```
 
-aqua extracts pairs of checkfum and asset name using regular expressions.
+aqua extracts pairs of checksum and asset name using regular expressions.
 If the checksum file includes only one checksum, you can omit `pattern.file`.

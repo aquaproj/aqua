@@ -32,7 +32,7 @@ https://github.com/crate-ci/typos
 typos -w .
 ```
 
-If the fix by typos is wrong, please fix [_typos.toml](_typos.toml).
+If the fix by typos is wrong, please fix [_typos.toml](/_typos.toml).
 
 ## Update Usage
 

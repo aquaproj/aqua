@@ -32,7 +32,7 @@ But if you only have to support only the latest version, you can set the option 
 aqua gr -l 1 suzuki-shunsuke/ghalint
 ```
 
-`aqua gr` command is inperfect, so sometimes you have to modify generated configuration yourself, but it's much easier than writing configuration from scratch.
+`aqua gr` command is imperfect, so sometimes you have to modify generated configuration yourself, but it's much easier than writing configuration from scratch.
 
 If the command name is different from the package's repository name, you should set `-cmd` option.
 
