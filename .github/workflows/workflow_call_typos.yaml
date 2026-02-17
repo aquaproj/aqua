@@ -1,0 +1,21 @@
+---
+name: typos
+on: workflow_call
+permissions: {}
+env:
+  AQUA_LOG_COLOR: always
+jobs:
+  typos:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
+        with:
+          aqua_version: v2.56.6
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: typos

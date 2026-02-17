@@ -48,3 +48,7 @@ jobs:
     permissions:
       contents: write
       issues: write
+
+  typos:
+    uses: ./.github/workflows/workflow_call_typos.yaml
+    permissions: {}
