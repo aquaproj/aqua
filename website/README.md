@@ -9,7 +9,3 @@ Images in [the top page](https://aquaproj.github.io/) were generated using [carb
 ## Contributing
 
 [Please see CONTRIBUTING.md](CONTRIBUTING.md).
-
-## LICENSE
-
-[MIT](/LICENSE)
