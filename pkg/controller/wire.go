@@ -1132,3 +1132,93 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 	)
 	return &initialize.Controller{}
 }
+
+func InitializePackageInstaller(ctx context.Context, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*installpackage.Installer, error) {
+	wire.Build(
+		installpackage.New,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(github.RepositoriesService), new(*github.RepositoriesServiceImpl)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesServiceImpl)),
+		),
+		wire.NewSet(
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
+		),
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
+			osexec.New,
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
+		),
+		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			cosign.NewVerifier,
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			minisign.New,
+			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.New,
+			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.NewExecutor,
+			wire.Bind(new(ghattestation.Executor), new(*ghattestation.ExecutorImpl)),
+		),
+		wire.NewSet(
+			minisign.NewExecutor,
+			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoInstallInstallerImpl,
+			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoBuildInstallerImpl,
+			wire.Bind(new(installpackage.GoBuildInstaller), new(*installpackage.GoBuildInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
+		),
+	)
+	return &installpackage.Installer{}, nil
+}
