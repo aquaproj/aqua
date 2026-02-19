@@ -15,7 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
-	"go.yaml.in/yaml/v2"
+	"go.yaml.in/yaml/v3"
 )
 
 var errHomeDirEmpty = errors.New("failed to get a user home directory")
