@@ -1,2 +1,2 @@
 packages:
-  - name: sigstore/cosign@v3.0.4
+  - name: sigstore/cosign@v3.0.5
