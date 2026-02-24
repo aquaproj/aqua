@@ -27,23 +27,23 @@ func TestMinisign_GetEnabled(t *testing.T) { //nolint:funlen
 		{
 			name: "enabled explicitly true",
 			minisign: &registry.Minisign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
 			name: "enabled explicitly false",
 			minisign: &registry.Minisign{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
 		{
 			name: "full minisign configuration",
 			minisign: &registry.Minisign{
-				Enabled:   boolPtr(true),
+				Enabled:   new(true),
 				Type:      "github_release",
-				Asset:     stringPtr("{{.Asset}}.minisig"),
+				Asset:     new("{{.Asset}}.minisig"),
 				PublicKey: "RWS...",
 			},
 			expected: true,
@@ -51,9 +51,9 @@ func TestMinisign_GetEnabled(t *testing.T) { //nolint:funlen
 		{
 			name: "disabled minisign configuration",
 			minisign: &registry.Minisign{
-				Enabled:   boolPtr(false),
+				Enabled:   new(false),
 				Type:      "http",
-				URL:       stringPtr("https://example.com/signature.minisig"),
+				URL:       new("https://example.com/signature.minisig"),
 				PublicKey: "RWS...",
 			},
 			expected: false,
@@ -84,41 +84,41 @@ func TestMinisign_ToDownloadedFile(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "owner",
 				RepoName:  "repo",
-				Asset:     stringPtr("{{.Asset}}.minisig"),
+				Asset:     new("{{.Asset}}.minisig"),
 			},
 			expected: &registry.DownloadedFile{
 				Type:      "github_release",
 				RepoOwner: "owner",
 				RepoName:  "repo",
-				Asset:     stringPtr("{{.Asset}}.minisig"),
+				Asset:     new("{{.Asset}}.minisig"),
 			},
 		},
 		{
 			name: "http minisign",
 			minisign: &registry.Minisign{
 				Type: "http",
-				URL:  stringPtr("https://example.com/signature.minisig"),
+				URL:  new("https://example.com/signature.minisig"),
 			},
 			expected: &registry.DownloadedFile{
 				Type: "http",
-				URL:  stringPtr("https://example.com/signature.minisig"),
+				URL:  new("https://example.com/signature.minisig"),
 			},
 		},
 		{
 			name: "full minisign config",
 			minisign: &registry.Minisign{
-				Enabled:   boolPtr(true),
+				Enabled:   new(true),
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     stringPtr("aqua_{{.OS}}_{{.Arch}}.tar.gz.minisig"),
+				Asset:     new("aqua_{{.OS}}_{{.Arch}}.tar.gz.minisig"),
 				PublicKey: "RWSomeBase64EncodedKey...",
 			},
 			expected: &registry.DownloadedFile{
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     stringPtr("aqua_{{.OS}}_{{.Arch}}.tar.gz.minisig"),
+				Asset:     new("aqua_{{.OS}}_{{.Arch}}.tar.gz.minisig"),
 			},
 		},
 		{

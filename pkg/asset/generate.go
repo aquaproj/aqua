@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -379,7 +378,7 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 		if before, ok := strings.CutSuffix(assetInfo.Template, ".exe"); ok {
 			assetInfo.Template = before
 		} else {
-			assetInfo.CompleteWindowsExt = ptr.Bool(false)
+			assetInfo.CompleteWindowsExt = new(false)
 		}
 	}
 	return assetInfo

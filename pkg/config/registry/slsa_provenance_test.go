@@ -27,14 +27,14 @@ func TestSLSAProvenance_GetEnabled(t *testing.T) { //nolint:funlen
 		{
 			name: "enabled explicitly true",
 			slsa: &registry.SLSAProvenance{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
 			name: "enabled explicitly false",
 			slsa: &registry.SLSAProvenance{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
@@ -48,7 +48,7 @@ func TestSLSAProvenance_GetEnabled(t *testing.T) { //nolint:funlen
 		{
 			name: "disabled even with type when explicitly false",
 			slsa: &registry.SLSAProvenance{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 				Type:    "github_release",
 			},
 			expected: false,
@@ -56,12 +56,12 @@ func TestSLSAProvenance_GetEnabled(t *testing.T) { //nolint:funlen
 		{
 			name: "full slsa configuration",
 			slsa: &registry.SLSAProvenance{
-				Enabled:   boolPtr(true),
+				Enabled:   new(true),
 				Type:      "github_release",
 				RepoOwner: "owner",
 				RepoName:  "repo",
-				Asset:     stringPtr("{{.Asset}}.intoto.jsonl"),
-				SourceURI: stringPtr("github.com/owner/repo"),
+				Asset:     new("{{.Asset}}.intoto.jsonl"),
+				SourceURI: new("github.com/owner/repo"),
 				SourceTag: "{{.Version}}",
 			},
 			expected: true,
@@ -89,7 +89,7 @@ func TestSLSAProvenance_GetSourceURI(t *testing.T) {
 		{
 			name: "explicit source URI",
 			slsa: &registry.SLSAProvenance{
-				SourceURI: stringPtr("github.com/custom/repo"),
+				SourceURI: new("github.com/custom/repo"),
 			},
 			expected: "github.com/custom/repo",
 		},
@@ -104,7 +104,7 @@ func TestSLSAProvenance_GetSourceURI(t *testing.T) {
 		{
 			name: "explicit source URI takes precedence",
 			slsa: &registry.SLSAProvenance{
-				SourceURI: stringPtr("github.com/explicit/uri"),
+				SourceURI: new("github.com/explicit/uri"),
 				RepoOwner: "ignored",
 				RepoName:  "ignored",
 			},
@@ -152,42 +152,42 @@ func TestSLSAProvenance_ToDownloadedFile(t *testing.T) { //nolint:funlen
 				Type:      "github_release",
 				RepoOwner: "owner",
 				RepoName:  "repo",
-				Asset:     stringPtr("{{.Asset}}.intoto.jsonl"),
+				Asset:     new("{{.Asset}}.intoto.jsonl"),
 			},
 			expected: &registry.DownloadedFile{
 				Type:      "github_release",
 				RepoOwner: "owner",
 				RepoName:  "repo",
-				Asset:     stringPtr("{{.Asset}}.intoto.jsonl"),
+				Asset:     new("{{.Asset}}.intoto.jsonl"),
 			},
 		},
 		{
 			name: "http slsa",
 			slsa: &registry.SLSAProvenance{
 				Type: "http",
-				URL:  stringPtr("https://example.com/provenance.jsonl"),
+				URL:  new("https://example.com/provenance.jsonl"),
 			},
 			expected: &registry.DownloadedFile{
 				Type: "http",
-				URL:  stringPtr("https://example.com/provenance.jsonl"),
+				URL:  new("https://example.com/provenance.jsonl"),
 			},
 		},
 		{
 			name: "full slsa config",
 			slsa: &registry.SLSAProvenance{
-				Enabled:   boolPtr(true),
+				Enabled:   new(true),
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     stringPtr("aqua_{{.OS}}_{{.Arch}}.tar.gz.intoto.jsonl"),
-				SourceURI: stringPtr("github.com/aquaproj/aqua"),
+				Asset:     new("aqua_{{.OS}}_{{.Arch}}.tar.gz.intoto.jsonl"),
+				SourceURI: new("github.com/aquaproj/aqua"),
 				SourceTag: "{{.Version}}",
 			},
 			expected: &registry.DownloadedFile{
 				Type:      "github_release",
 				RepoOwner: "aquaproj",
 				RepoName:  "aqua",
-				Asset:     stringPtr("aqua_{{.OS}}_{{.Arch}}.tar.gz.intoto.jsonl"),
+				Asset:     new("aqua_{{.OS}}_{{.Arch}}.tar.gz.intoto.jsonl"),
 			},
 		},
 		{
@@ -215,7 +215,7 @@ func TestSLSAProvenance_GetDownloadedFile(t *testing.T) {
 		Type:      "github_release",
 		RepoOwner: "owner",
 		RepoName:  "repo",
-		Asset:     stringPtr("provenance.jsonl"),
+		Asset:     new("provenance.jsonl"),
 	}
 
 	result1 := slsa.ToDownloadedFile()

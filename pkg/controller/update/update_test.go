@@ -14,7 +14,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
@@ -195,7 +194,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: ptr.String("v4.60.0"),
+					TagName: new("v4.60.0"),
 				},
 			},
 		},
@@ -225,7 +224,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: ptr.String("v4.60.0"),
+					TagName: new("v4.60.0"),
 				},
 			},
 		},
@@ -405,7 +404,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: ptr.String("v4.60.0"),
+					TagName: new("v4.60.0"),
 				},
 			},
 		},

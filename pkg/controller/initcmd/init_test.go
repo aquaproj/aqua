@@ -7,7 +7,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 )
 
@@ -44,7 +43,7 @@ packages:
 			files: map[string]string{},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: ptr.String("v2.16.0"),
+					TagName: new("v2.16.0"),
 				},
 			},
 		},

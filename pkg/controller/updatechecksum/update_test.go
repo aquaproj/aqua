@@ -14,7 +14,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/spf13/afero"
 )
@@ -51,7 +50,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: ptr.Bool(true),
+						Enabled: new(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -112,7 +111,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: ptr.Bool(true),
+						Enabled: new(true),
 					},
 					Packages: []*aqua.Package{
 						{

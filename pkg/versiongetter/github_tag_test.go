@@ -7,7 +7,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
 )
@@ -30,13 +29,13 @@ func TestGitHubTagVersionGetter_Get(t *testing.T) { //nolint:dupl
 			tags: map[string][]*github.RepositoryTag{
 				"suzuki-shunsuke/tfcmt": {
 					{
-						Name: ptr.String("v3.0.0"),
+						Name: new("v3.0.0"),
 					},
 					{
-						Name: ptr.String("v2.0.0"),
+						Name: new("v2.0.0"),
 					},
 					{
-						Name: ptr.String("v1.0.0"),
+						Name: new("v1.0.0"),
 					},
 				},
 			},
@@ -89,13 +88,13 @@ func TestGitHubTagVersionGetter_List(t *testing.T) { //nolint:funlen
 			tags: map[string][]*github.RepositoryTag{
 				"suzuki-shunsuke/tfcmt": {
 					{
-						Name: ptr.String("v3.0.0"),
+						Name: new("v3.0.0"),
 					},
 					{
-						Name: ptr.String("v2.0.0"),
+						Name: new("v2.0.0"),
 					},
 					{
-						Name: ptr.String("v1.0.0"),
+						Name: new("v1.0.0"),
 					},
 				},
 			},

@@ -9,13 +9,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/google/go-cmp/cmp"
 )
-
-func strp(s string) *string {
-	return &s
-}
 
 func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -55,7 +50,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				Description: "hello",
 			},
 			repo: &github.Repository{
-				Description: ptr.String("hello."),
+				Description: new("hello."),
 			},
 		},
 		{
@@ -82,31 +77,31 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 								Format: "zip",
 							},
 						},
-						WindowsARMEmulation: ptr.Bool(true),
-						Rosetta2:            ptr.Bool(true),
+						WindowsARMEmulation: new(true),
+						Rosetta2:            new(true),
 					},
 				},
 			},
 			repo: &github.Repository{
-				Description: ptr.String("GitHub’s official command line tool"),
+				Description: new("GitHub’s official command line tool"),
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: ptr.String("v2.13.0"),
+					TagName: new("v2.13.0"),
 				},
 			},
 			assets: []*github.ReleaseAsset{
 				{
-					Name: ptr.String("gh_2.13.0_linux_amd64.tar.gz"),
+					Name: new("gh_2.13.0_linux_amd64.tar.gz"),
 				},
 				{
-					Name: ptr.String("gh_2.13.0_linux_arm64.tar.gz"),
+					Name: new("gh_2.13.0_linux_arm64.tar.gz"),
 				},
 				{
-					Name: ptr.String("gh_2.13.0_macOS_amd64.tar.gz"),
+					Name: new("gh_2.13.0_macOS_amd64.tar.gz"),
 				},
 				{
-					Name: ptr.String("gh_2.13.0_windows_amd64.zip"),
+					Name: new("gh_2.13.0_windows_amd64.zip"),
 				},
 			},
 		},
@@ -176,7 +171,7 @@ func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 			want: &registry.Cosign{
 				Bundle: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: strp("checksums.txt.cosign.bundle"),
+					Asset: new("checksums.txt.cosign.bundle"),
 				},
 				Opts: []string{
 					"--certificate-identity-regexp",
@@ -287,7 +282,7 @@ func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 			want: &registry.Cosign{
 				Bundle: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: strp("checksums.txt.bundle"),
+					Asset: new("checksums.txt.bundle"),
 				},
 				Opts: []string{
 					"--certificate-identity-regexp",
@@ -313,7 +308,7 @@ func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 			want: &registry.Cosign{
 				Bundle: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: strp("checksums.txt.bundle"),
+					Asset: new("checksums.txt.bundle"),
 				},
 				Opts: []string{
 					"--certificate-identity-regexp",

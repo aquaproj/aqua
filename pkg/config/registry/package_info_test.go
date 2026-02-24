@@ -409,9 +409,6 @@ func TestPackageInfo_Validate(t *testing.T) {
 func TestPackageInfo_JSONEncode_VersionOverrides_ImmutableRelease(t *testing.T) { //nolint:cyclop
 	t.Parallel()
 
-	// Helper function for bool pointer
-	boolPtr := func(b bool) *bool { return &b }
-
 	pkgInfo := &registry.PackageInfo{
 		Name:      "test-package",
 		Type:      "github_release",
@@ -421,11 +418,11 @@ func TestPackageInfo_JSONEncode_VersionOverrides_ImmutableRelease(t *testing.T) 
 		VersionOverrides: []*registry.VersionOverride{
 			{
 				VersionConstraints:     ">=v1.0.0",
-				GitHubImmutableRelease: boolPtr(true),
+				GitHubImmutableRelease: new(true),
 			},
 			{
 				VersionConstraints:     ">=v2.0.0",
-				GitHubImmutableRelease: boolPtr(false),
+				GitHubImmutableRelease: new(false),
 			},
 			{
 				VersionConstraints: ">=v3.0.0",
@@ -494,9 +491,6 @@ func TestPackageInfo_JSONEncode_VersionOverrides_ImmutableRelease(t *testing.T) 
 func TestPackageInfo_JSONEncode_RoundTrip(t *testing.T) {
 	t.Parallel()
 
-	// Helper function for bool pointer
-	boolPtr := func(b bool) *bool { return &b }
-
 	original := &registry.PackageInfo{
 		Name:      "kubectl",
 		Type:      "github_release",
@@ -507,7 +501,7 @@ func TestPackageInfo_JSONEncode_RoundTrip(t *testing.T) {
 			{
 				VersionConstraints:     ">=v1.25.0",
 				Asset:                  "kubectl-new",
-				GitHubImmutableRelease: boolPtr(true),
+				GitHubImmutableRelease: new(true),
 			},
 		},
 	}
@@ -625,9 +619,6 @@ version_overrides:
 func TestPackageInfo_YAMLDecode_RoundTrip(t *testing.T) {
 	t.Parallel()
 
-	// Helper function for bool pointer
-	boolPtr := func(b bool) *bool { return &b }
-
 	original := &registry.PackageInfo{
 		Name:      "kubectl",
 		Type:      "github_release",
@@ -638,7 +629,7 @@ func TestPackageInfo_YAMLDecode_RoundTrip(t *testing.T) {
 			{
 				VersionConstraints:     ">=v1.25.0",
 				Asset:                  "kubectl-new",
-				GitHubImmutableRelease: boolPtr(true),
+				GitHubImmutableRelease: new(true),
 			},
 		},
 	}
