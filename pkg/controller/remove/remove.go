@@ -25,7 +25,7 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 		return c.removeAll(param.RootDir)
 	}
 
-	if len(param.Args) == 0 && !param.Insert {
+	if len(param.Args) == 0 && !param.SelectVersion {
 		return nil
 	}
 
@@ -114,7 +114,7 @@ func (c *Controller) removePackagesInteractively(logger *slog.Logger, param *con
 }
 
 func (c *Controller) removePackages(logger *slog.Logger, param *config.Param, registryContents map[string]*registry.Config) error {
-	if param.Insert {
+	if param.SelectVersion {
 		return c.removePackagesInteractively(logger, param, registryContents)
 	}
 
