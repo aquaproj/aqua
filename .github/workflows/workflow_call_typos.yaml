@@ -15,7 +15,7 @@ jobs:
           persist-credentials: false
       - uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
         with:
-          aqua_version: v2.56.6
+          aqua_version: v2.56.7
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: typos
