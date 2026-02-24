@@ -61,7 +61,7 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 	}
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), logger.Logger)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, os.Getenv("AQUA_GLOBAL_CONFIG"))
-	param.PWD = wd
+	param.CWD = wd
 	param.ProgressBar = os.Getenv("AQUA_PROGRESS_BAR") == "true"
 
 	for _, e := range []struct {
@@ -83,7 +83,7 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 		param.PolicyConfigFilePaths = policy.ParseEnv(os.Getenv("AQUA_POLICY_CONFIG"))
 		for i, p := range param.PolicyConfigFilePaths {
 			if !filepath.IsAbs(p) {
-				param.PolicyConfigFilePaths[i] = filepath.Join(param.PWD, p)
+				param.PolicyConfigFilePaths[i] = filepath.Join(param.CWD, p)
 			}
 		}
 	}

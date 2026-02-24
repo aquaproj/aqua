@@ -45,7 +45,7 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 
 	param.Args = pkgs
 
-	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+	cfgFilePath, err := c.configFinder.Find(param.CWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)
 	}

@@ -141,7 +141,7 @@ packages:
 				GOARCH: "arm64",
 			},
 			param: &config.Param{
-				PWD: "/workspace",
+				CWD: "/workspace",
 			},
 			versions: map[string]string{
 				"suzuki-shunsuke/tfcmt": "v4.0.0",
@@ -202,7 +202,7 @@ packages:
 		{
 			name: "only registry",
 			param: &config.Param{
-				PWD:          "/workspace",
+				CWD:          "/workspace",
 				OnlyRegistry: true,
 			},
 			files: map[string]string{
@@ -236,7 +236,7 @@ packages:
 				GOARCH: "arm64",
 			},
 			param: &config.Param{
-				PWD:         "/workspace",
+				CWD:         "/workspace",
 				OnlyPackage: true,
 			},
 			versions: map[string]string{
@@ -293,7 +293,7 @@ packages:
 				GOARCH: "arm64",
 			},
 			param: &config.Param{
-				PWD:    "/workspace",
+				CWD:    "/workspace",
 				Insert: true,
 			},
 			versions: map[string]string{
@@ -351,7 +351,7 @@ packages:
 				GOARCH: "arm64",
 			},
 			param: &config.Param{
-				PWD: "/workspace",
+				CWD: "/workspace",
 			},
 			versions: map[string]string{
 				"suzuki-shunsuke/tfcmt": "v4.0.0",

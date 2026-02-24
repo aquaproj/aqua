@@ -21,7 +21,7 @@ func (c *Controller) Update(ctx context.Context, logger *slog.Logger, param *con
 		return nil
 	}
 
-	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath)
+	cfgFilePath, err := c.configFinder.Find(param.CWD, param.ConfigFilePath)
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)
 	}
