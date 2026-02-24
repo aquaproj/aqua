@@ -42,7 +42,7 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
@@ -115,7 +115,7 @@ packages:
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
@@ -154,7 +154,7 @@ packages:
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				PWD:                   "/home/foo/workspace",
+				CWD:                   "/home/foo/workspace",
 				RootDir:               "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism:        5,
 				GlobalConfigFilePaths: []string{"/etc/aqua/aqua.yaml"},

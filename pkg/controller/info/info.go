@@ -35,7 +35,7 @@ type Info struct {
 	Arch        string            `json:"arch"`
 	AquaGOOS    string            `json:"aqua_goos,omitempty"`
 	AquaGOARCH  string            `json:"aqua_goarch,omitempty"`
-	PWD         string            `json:"pwd"`
+	CWD         string            `json:"cwd"`
 	RootDir     string            `json:"root_dir"`
 	Env         map[string]string `json:"env"`
 	ConfigFiles []*Config         `json:"config_files"`
@@ -72,7 +72,7 @@ func (c *Controller) Info(_ context.Context, _ *slog.Logger, param *config.Param
 		return fmt.Errorf("get a current user name: %w", err)
 	}
 
-	filePaths := c.finder.Finds(param.PWD, param.ConfigFilePath)
+	filePaths := c.finder.Finds(param.CWD, param.ConfigFilePath)
 	cfgs := make([]*Config, len(filePaths))
 	for i, filePath := range filePaths {
 		cfgs[i] = &Config{
@@ -82,7 +82,7 @@ func (c *Controller) Info(_ context.Context, _ *slog.Logger, param *config.Param
 
 	info := &Info{
 		Version:     param.AQUAVersion,
-		PWD:         maskUser(param.PWD, userName),
+		CWD:         maskUser(param.CWD, userName),
 		OS:          runtime.GOOS,
 		Arch:        runtime.GOARCH,
 		RootDir:     maskUser(param.RootDir, userName),

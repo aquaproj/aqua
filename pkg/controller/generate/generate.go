@@ -94,7 +94,7 @@ func (c *Controller) Generate(ctx context.Context, logger *slog.Logger, param *c
 
 func (c *Controller) getConfigFile(param *config.Param) (string, error) {
 	if param.ConfigFilePath != "" || !param.Global {
-		return c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...) //nolint:wrapcheck
+		return c.configFinder.Find(param.CWD, param.ConfigFilePath, param.GlobalConfigFilePaths...) //nolint:wrapcheck
 	}
 	if len(param.GlobalConfigFilePaths) == 0 {
 		return "", errors.New("no global configuration file is found")

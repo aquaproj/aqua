@@ -31,7 +31,7 @@ packages:
 		{
 			name: "normal",
 			param: &config.Param{
-				PWD: "/home/foo/workspace",
+				CWD: "/home/foo/workspace",
 			},
 			files: map[string]string{},
 		},

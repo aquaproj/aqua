@@ -23,7 +23,7 @@ func TestController_Init(t *testing.T) { //nolint:funlen
 		{
 			name: "file already exists",
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				MaxParallelism: 5,
 			},
@@ -38,7 +38,7 @@ packages:
 		{
 			name: "normal",
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{},

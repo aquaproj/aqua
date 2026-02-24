@@ -37,7 +37,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			param: &config.Param{
-				PWD: "/home/foo/workspace",
+				CWD: "/home/foo/workspace",
 				All: true,
 				GlobalConfigFilePaths: []string{
 					"/home/foo/global/aqua.yaml",
@@ -98,7 +98,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 		{
 			name: "enabled",
 			param: &config.Param{
-				PWD: "/home/foo/workspace",
+				CWD: "/home/foo/workspace",
 				All: true,
 				GlobalConfigFilePaths: []string{
 					"/home/foo/global/aqua.yaml",

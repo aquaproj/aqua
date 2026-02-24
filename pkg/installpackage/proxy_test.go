@@ -39,7 +39,7 @@ func Test_installer_InstallProxy(t *testing.T) {
 			},
 			param: &config.Param{
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				MaxParallelism: 5,
 			},

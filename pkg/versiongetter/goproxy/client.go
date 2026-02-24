@@ -61,7 +61,7 @@ func (c *Client) doHTTPRequest(ctx context.Context, uri string) ([]byte, error) 
 	if err != nil {
 		return nil, fmt.Errorf("create a http request: %w", err)
 	}
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(req) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("send a http request: %w", err)
 	}

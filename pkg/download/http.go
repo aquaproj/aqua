@@ -30,7 +30,7 @@ func (dl *httpDownloader) Download(ctx context.Context, u string) (io.ReadCloser
 	if err != nil {
 		return nil, 0, fmt.Errorf("create a http request: %w", err)
 	}
-	resp, err := dl.client.Do(req)
+	resp, err := dl.client.Do(req) //nolint:gosec
 	if err != nil {
 		return nil, 0, fmt.Errorf("send http request: %w", err)
 	}

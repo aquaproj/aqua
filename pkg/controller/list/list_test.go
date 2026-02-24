@@ -29,7 +29,7 @@ func TestController_List(t *testing.T) {
 		{
 			name: "normal",
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				MaxParallelism: 5,
 			},

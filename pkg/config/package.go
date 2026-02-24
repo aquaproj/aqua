@@ -344,7 +344,7 @@ type Param struct {
 	AQUAVersion                       string
 	NewAquaVersion                    string
 	RootDir                           string
-	PWD                               string
+	CWD                               string
 	InsertFile                        string
 	LogColor                          string
 	Dest                              string

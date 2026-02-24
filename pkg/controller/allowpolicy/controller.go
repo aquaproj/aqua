@@ -25,7 +25,7 @@ func New(fs afero.Fs, policyConfigFinder policy.ConfigFinder, policyValidator po
 }
 
 func (c *Controller) Allow(logger *slog.Logger, param *config.Param, policyFilePath string) error {
-	policyFile, err := c.policyConfigFinder.Find(policyFilePath, param.PWD)
+	policyFile, err := c.policyConfigFinder.Find(policyFilePath, param.CWD)
 	if err != nil {
 		return fmt.Errorf("find a policy file: %w", err)
 	}

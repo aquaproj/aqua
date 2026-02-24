@@ -18,7 +18,7 @@ import (
 )
 
 func (c *Controller) UpdateChecksum(ctx context.Context, logger *slog.Logger, param *config.Param) error {
-	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+	for _, cfgFilePath := range c.configFinder.Finds(param.CWD, param.ConfigFilePath) {
 		if err := c.updateChecksum(ctx, logger, cfgFilePath); err != nil {
 			return err
 		}

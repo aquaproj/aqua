@@ -63,7 +63,7 @@ func getCrate(ctx context.Context, client *http.Client, uri string) (*CratePaylo
 		return nil, 0, fmt.Errorf("create a HTTP request: %w", err)
 	}
 	req.Header.Add("User-Agent", "aqua") // https://github.com/aquaproj/aqua/issues/2742
-	resp, err := client.Do(req)
+	resp, err := client.Do(req)          //nolint:gosec
 	if err != nil {
 		return nil, 0, fmt.Errorf("send a HTTP request: %w", err)
 	}
@@ -84,7 +84,7 @@ func listInstallableVersions(ctx context.Context, client *http.Client, uri strin
 		return nil, 0, fmt.Errorf("create a HTTP request: %w", err)
 	}
 	req.Header.Add("User-Agent", "aqua") // https://github.com/aquaproj/aqua/issues/2742
-	resp, err := client.Do(req)
+	resp, err := client.Do(req)          //nolint:gosec
 	if err != nil {
 		return nil, 0, fmt.Errorf("send a HTTP request: %w", err)
 	}
