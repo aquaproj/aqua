@@ -7,7 +7,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
 )
@@ -30,13 +29,13 @@ func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
 			releases: map[string][]*github.RepositoryRelease{
 				"suzuki-shunsuke/tfcmt": {
 					{
-						TagName: ptr.String("v3.0.0"),
+						TagName: new("v3.0.0"),
 					},
 					{
-						TagName: ptr.String("v2.0.0"),
+						TagName: new("v2.0.0"),
 					},
 					{
-						TagName: ptr.String("v1.0.0"),
+						TagName: new("v1.0.0"),
 					},
 				},
 			},
@@ -89,19 +88,19 @@ func TestGitHubReleaseVersionGetter_List(t *testing.T) { //nolint:funlen
 			releases: map[string][]*github.RepositoryRelease{
 				"suzuki-shunsuke/tfcmt": {
 					{
-						TagName: ptr.String("v3.0.0"),
-						Body:    ptr.String("body(v3)"),
-						HTMLURL: ptr.String("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v3.0.0"),
+						TagName: new("v3.0.0"),
+						Body:    new("body(v3)"),
+						HTMLURL: new("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v3.0.0"),
 					},
 					{
-						TagName: ptr.String("v2.0.0"),
-						Body:    ptr.String("body(v2)"),
-						HTMLURL: ptr.String("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v2.0.0"),
+						TagName: new("v2.0.0"),
+						Body:    new("body(v2)"),
+						HTMLURL: new("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v2.0.0"),
 					},
 					{
-						TagName: ptr.String("v1.0.0"),
-						Body:    ptr.String("body(v1)"),
-						HTMLURL: ptr.String("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v1.0.0"),
+						TagName: new("v1.0.0"),
+						Body:    new("body(v1)"),
+						HTMLURL: new("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v1.0.0"),
 					},
 				},
 			},

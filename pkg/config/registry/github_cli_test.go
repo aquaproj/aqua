@@ -27,21 +27,21 @@ func TestGitHubArtifactAttestations_GetEnabled(t *testing.T) {
 		{
 			name: "enabled explicitly true",
 			ghaa: &registry.GitHubArtifactAttestations{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
 			name: "enabled explicitly false",
 			ghaa: &registry.GitHubArtifactAttestations{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
 		{
 			name: "full configuration enabled",
 			ghaa: &registry.GitHubArtifactAttestations{
-				Enabled:         boolPtr(true),
+				Enabled:         new(true),
 				PredicateType:   "https://slsa.dev/provenance/v0.2",
 				SignerWorkflow2: ".github/workflows/release.yml@refs/tags/{{.Version}}",
 			},
@@ -50,7 +50,7 @@ func TestGitHubArtifactAttestations_GetEnabled(t *testing.T) {
 		{
 			name: "full configuration disabled",
 			ghaa: &registry.GitHubArtifactAttestations{
-				Enabled:         boolPtr(false),
+				Enabled:         new(false),
 				PredicateType:   "https://slsa.dev/provenance/v0.2",
 				SignerWorkflow2: ".github/workflows/release.yml@refs/tags/{{.Version}}",
 			},
@@ -119,7 +119,7 @@ func TestGitHubArtifactAttestations_SignerWorkflow(t *testing.T) {
 		{
 			name: "full configuration with template",
 			ghaa: &registry.GitHubArtifactAttestations{
-				Enabled:         boolPtr(true),
+				Enabled:         new(true),
 				PredicateType:   "https://slsa.dev/provenance/v0.2",
 				SignerWorkflow2: ".github/workflows/release.yml@refs/tags/{{.Version}}",
 			},

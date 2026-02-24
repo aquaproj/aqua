@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/spf13/afero"
@@ -96,15 +95,15 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			cos: &registry.Cosign{
 				Signature: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: ptr.String("aqua-installer.sig"),
+					Asset: new("aqua-installer.sig"),
 				},
 				Certificate: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: ptr.String("aqua-installer.pem"),
+					Asset: new("aqua-installer.pem"),
 				},
 				Key: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: ptr.String("aqua-installer.key"),
+					Asset: new("aqua-installer.key"),
 				},
 			},
 			art: &template.Artifact{

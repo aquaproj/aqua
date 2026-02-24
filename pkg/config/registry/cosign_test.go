@@ -29,14 +29,14 @@ func TestCosign_GetEnabled(t *testing.T) {
 		{
 			name: "enabled explicitly true",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
 			name: "enabled explicitly false",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
@@ -52,7 +52,7 @@ func TestCosign_GetEnabled(t *testing.T) {
 			cosign: &registry.Cosign{
 				Signature: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: stringPtr("binary.sig"),
+					Asset: new("binary.sig"),
 				},
 			},
 			expected: true,
@@ -62,7 +62,7 @@ func TestCosign_GetEnabled(t *testing.T) {
 			cosign: &registry.Cosign{
 				Certificate: &registry.DownloadedFile{
 					Type: "http",
-					URL:  stringPtr("https://example.com/cert.pem"),
+					URL:  new("https://example.com/cert.pem"),
 				},
 			},
 			expected: true,
@@ -72,7 +72,7 @@ func TestCosign_GetEnabled(t *testing.T) {
 			cosign: &registry.Cosign{
 				Key: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: stringPtr("key.pub"),
+					Asset: new("key.pub"),
 				},
 			},
 			expected: true,
@@ -82,7 +82,7 @@ func TestCosign_GetEnabled(t *testing.T) {
 			cosign: &registry.Cosign{
 				Bundle: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: stringPtr("bundle.json"),
+					Asset: new("bundle.json"),
 				},
 			},
 			expected: true,
@@ -90,11 +90,11 @@ func TestCosign_GetEnabled(t *testing.T) {
 		{
 			name: "disabled even with opts when explicitly false",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 				Opts:    []string{"--rekor-url", "https://rekor.sigstore.dev"},
 				Signature: &registry.DownloadedFile{
 					Type:  "github_release",
-					Asset: stringPtr("binary.sig"),
+					Asset: new("binary.sig"),
 				},
 			},
 			expected: false,
@@ -102,17 +102,17 @@ func TestCosign_GetEnabled(t *testing.T) {
 		{
 			name: "full configuration enabled",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 				Opts:    []string{"--certificate-identity", "test@example.com"},
 				Signature: &registry.DownloadedFile{
 					Type:      "github_release",
 					RepoOwner: "owner",
 					RepoName:  "repo",
-					Asset:     stringPtr("{{.Asset}}.sig"),
+					Asset:     new("{{.Asset}}.sig"),
 				},
 				Certificate: &registry.DownloadedFile{
 					Type: "http",
-					URL:  stringPtr("https://fulcio.sigstore.dev/api/v1/rootcert"),
+					URL:  new("https://fulcio.sigstore.dev/api/v1/rootcert"),
 				},
 			},
 			expected: true,
@@ -143,7 +143,7 @@ func TestCosign_RenderOpts(t *testing.T) {
 		{
 			name: "no opts",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			runtime:  &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"},
 			artifact: &template.Artifact{Version: "v1.0.0"},

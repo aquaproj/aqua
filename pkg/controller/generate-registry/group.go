@@ -11,7 +11,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 )
 
 type Group struct {
@@ -103,19 +102,19 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 			releases = append(releases, release)
 		}
 		if pkgInfo.NoAsset {
-			vo.NoAsset = ptr.Bool(true)
+			vo.NoAsset = new(true)
 		}
 		if pkgInfo.Rosetta2 {
-			vo.Rosetta2 = ptr.Bool(true)
+			vo.Rosetta2 = new(true)
 		}
 		if pkgInfo.WindowsARMEmulation {
-			vo.WindowsARMEmulation = ptr.Bool(true)
+			vo.WindowsARMEmulation = new(true)
 		}
 		if pkgInfo.VersionFilter != "" {
-			vo.VersionFilter = ptr.String(pkgInfo.VersionFilter)
+			vo.VersionFilter = new(pkgInfo.VersionFilter)
 		}
 		if pkgInfo.VersionPrefix != "" {
-			vo.VersionPrefix = ptr.String(pkgInfo.VersionPrefix)
+			vo.VersionPrefix = new(pkgInfo.VersionPrefix)
 		}
 		pkg.VersionOverrides = append(pkg.VersionOverrides, vo)
 	}
