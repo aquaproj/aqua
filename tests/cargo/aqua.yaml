@@ -11,4 +11,4 @@ registries:
 - type: standard
   ref: v4.476.0 # renovate: depName=aquaproj/aqua-registry
 packages:
-- name: crates.io/skim@3.5.0
+- name: crates.io/skim@3.6.0
