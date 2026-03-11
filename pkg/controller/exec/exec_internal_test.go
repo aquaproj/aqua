@@ -49,37 +49,65 @@ func Test_wrapExec(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title      string
+		lookPath   func(exeName string) (string, error)
+		exeName    string
 		exePath    string
 		args       []string
+		expExeName string
 		expExePath string
 		expArgs    []string
+		isErr      bool
 	}{
 		{
 			title:      "non jar",
+			exeName:    "foo",
 			exePath:    "/usr/bin/foo",
 			args:       []string{"--help"},
+			expExeName: "foo",
 			expExePath: "/usr/bin/foo",
 			expArgs:    []string{"--help"},
 		},
 		{
-			title:      "jar",
+			title: "jar",
+			lookPath: func(string) (string, error) {
+				return "/usr/bin/java", nil
+			},
+			exeName:    "app",
 			exePath:    "/path/to/app.jar",
 			args:       []string{"arg1"},
-			expExePath: "java",
+			expExeName: "java",
+			expExePath: "/usr/bin/java",
 			expArgs:    []string{"-jar", "/path/to/app.jar", "arg1"},
 		},
 		{
-			title:      "jar without args",
+			title: "jar without args",
+			lookPath: func(string) (string, error) {
+				return "/usr/bin/java", nil
+			},
+			exeName:    "app",
 			exePath:    "/path/to/app.jar",
 			args:       []string{},
-			expExePath: "java",
+			expExeName: "java",
+			expExePath: "/usr/bin/java",
 			expArgs:    []string{"-jar", "/path/to/app.jar"},
 		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			exePath, args := wrapExec(d.exePath, d.args...)
+			exeName, exePath, args, err := wrapExec(d.lookPath, d.exeName, d.exePath, d.args...)
+			if err != nil {
+				if !d.isErr {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if d.isErr {
+				t.Fatalf("expected error, but got none")
+			}
+			if exeName != d.expExeName {
+				t.Fatalf("exeName = %s, want %s", exeName, d.expExeName)
+			}
 			if exePath != d.expExePath {
 				t.Fatalf("exePath = %s, want %s", exePath, d.expExePath)
 			}

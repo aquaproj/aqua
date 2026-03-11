@@ -70,16 +70,27 @@ func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *confi
 	if err := c.updateTimestamp(findResult.Package); err != nil {
 		slogerr.WithError(logger, err).Warn("update the last used datetime")
 	}
-	exePath, args := wrapExec(findResult.ExePath, args...)
+	exeName, exePath, args, err := c.wrapExec(exeName, findResult.ExePath, args...)
+	if err != nil {
+		return err
+	}
 
 	return c.execCommandWithRetry(ctx, logger, exePath, exeName, args...)
 }
 
-func wrapExec(exePath string, args ...string) (string, []string) {
+func (c *Controller) wrapExec(exeName, exePath string, args ...string) (string, string, []string, error) {
+	return wrapExec(c.lookPath, exeName, exePath, args...)
+}
+
+func wrapExec(lookPath func(exeName string) (string, error), exeName, exePath string, args ...string) (string, string, []string, error) {
 	if !strings.HasSuffix(exePath, ".jar") {
-		return exePath, args
+		return exeName, exePath, args, nil
 	}
-	return "java", append([]string{"-jar", exePath}, args...)
+	p, err := lookPath("java")
+	if err != nil {
+		return "", "", nil, fmt.Errorf("look up java to execute jar: %w", err)
+	}
+	return "java", p, append([]string{"-jar", exePath}, args...), nil
 }
 
 func (c *Controller) updateTimestamp(pkg *config.Package) error {
