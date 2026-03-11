@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -69,8 +70,16 @@ func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *confi
 	if err := c.updateTimestamp(findResult.Package); err != nil {
 		slogerr.WithError(logger, err).Warn("update the last used datetime")
 	}
+	exePath, args := c.wrapExec(findResult.ExePath, args...)
 
-	return c.execCommandWithRetry(ctx, logger, findResult.ExePath, exeName, args...)
+	return c.execCommandWithRetry(ctx, logger, exePath, exeName, args...)
+}
+
+func (c *Controller) wrapExec(exePath string, args ...string) (string, []string) {
+	if !strings.HasSuffix(exePath, ".jar") {
+		return exePath, args
+	}
+	return "java", append([]string{"-jar", exePath}, args...)
 }
 
 func (c *Controller) updateTimestamp(pkg *config.Package) error {
