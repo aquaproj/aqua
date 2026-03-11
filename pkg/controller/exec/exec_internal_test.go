@@ -45,7 +45,7 @@ func TestController_execCommand(t *testing.T) {
 	}
 }
 
-func Test_wrapExec(t *testing.T) {
+func Test_wrapExec(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title      string
