@@ -161,8 +161,6 @@ github.com/ktr0731/go-ansisgr v0.1.0 h1:fbuupput8739hQbEmZn1cEKjqQFwtCCZNznnF6AN
 github.com/ktr0731/go-ansisgr v0.1.0/go.mod h1:G9lxwgBwH0iey0Dw5YQd7n6PmQTwTuTM/X5Sgm/UrzE=
 github.com/ktr0731/go-fuzzyfinder v0.9.0 h1:JV8S118RABzRl3Lh/RsPhXReJWc2q0rbuipzXQH7L4c=
 github.com/ktr0731/go-fuzzyfinder v0.9.0/go.mod h1:uybx+5PZFCgMCSDHJDQ9M3nNKx/vccPmGffsXPn2ad8=
-github.com/lmittmann/tint v1.1.2 h1:2CQzrL6rslrsyjqLDwD11bZ5OpLBPU+g3G/r5LSfS8w=
-github.com/lmittmann/tint v1.1.2/go.mod h1:HIS3gSy7qNwGCj+5oRjAutErFBl4BzdQP6cJZ0NfMwE=
 github.com/lmittmann/tint v1.1.3 h1:Hv4EaHWXQr+GTFnOU4VKf8UvAtZgn0VuKT+G0wFlO3I=
 github.com/lmittmann/tint v1.1.3/go.mod h1:HIS3gSy7qNwGCj+5oRjAutErFBl4BzdQP6cJZ0NfMwE=
 github.com/lucasb-eyer/go-colorful v1.2.0 h1:1nnpGOrhyZZuNyfu1QjKiUICQ74+3FNCN69Aj6K7nkY=
@@ -257,8 +255,6 @@ github.com/suzuki-shunsuke/gomic v0.6.0 h1:oSmoXR1nmt7X05TssjBTcX9BCTNnFCcNlA5ys
 github.com/suzuki-shunsuke/gomic v0.6.0/go.mod h1:/+uhQJ1H5f9ythus/MbXOotAZDmkN1QOjKlsSiH2v+I=
 github.com/suzuki-shunsuke/slog-error v0.2.2 h1:z8rymlIlZcMA+ERnnhVigQ0Q+X0pxKqBfDzSIyGh6vU=
 github.com/suzuki-shunsuke/slog-error v0.2.2/go.mod h1:w45QyO2G0uiEuo9hhrcLqqRl3hmYon9jGgq9CrCxxOY=
-github.com/suzuki-shunsuke/slog-util v0.3.1 h1:tp4xgj4y/T2YcZkHtr7N2E49f5CiHl9o47/HKdwRQ4g=
-github.com/suzuki-shunsuke/slog-util v0.3.1/go.mod h1:PgZMd+2rC8pA9jBbXDfkI8mTuWYAiaVkKxjrbLtfN5I=
 github.com/suzuki-shunsuke/slog-util v0.3.2 h1:P4sc/swT8rwmmKDfMrh9GR+AzYJhJdW3BSxZXYBURuY=
 github.com/suzuki-shunsuke/slog-util v0.3.2/go.mod h1:fHyN2kPkinXSgo6GMR0QBj0gd/CpSer0j8bc5C4Pqks=
 github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.2 h1:LURZhM7yd6DqKYeX2kijX1LhiYW71vUKHh2L88cMmyQ=
