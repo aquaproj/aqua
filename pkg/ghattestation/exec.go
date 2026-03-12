@@ -175,7 +175,7 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
 	if e.getEnv("GITHUB_TOKEN") == "" && e.getEnv("GH_TOKEN") == "" {
 		if token := e.getEnv("AQUA_GITHUB_TOKEN"); token != "" {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", token))
+			cmd.Env = append(cmd.Env, "GITHUB_TOKEN="+token)
 		}
 	}
 
