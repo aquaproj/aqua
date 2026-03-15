@@ -17,7 +17,7 @@ https://github.com/cli/cli/releases/tag/v2.1.0
 
 ## Benefit
 
-- You can install tools that really needed
+- Install only the tools you actually need
 - You don't have to run `aqua i` to update packages
 - You can ensure executed tool versions
 
@@ -52,7 +52,7 @@ The purpose is same with aqua's Policy, but disabling Lazy Install is simpler th
 
 The Lazy Install is the aqua's characteristic feature, and maybe you feel it like magic.
 
-By `aqua i`, aqua installs [aqua-proxy](https://github.com/aquaproj/aqua-proxy) regardless the aqua's configuration.
+By `aqua i`, aqua installs [aqua-proxy](https://github.com/aquaproj/aqua-proxy) regardless of aqua's configuration.
 
 ```
 $AQUA_ROOT_DIR/
@@ -90,9 +90,9 @@ packages:
   type: http
   url: https://golang.org/dl/go{{.Version}}.{{.OS}}-{{.Arch}}.tar.gz
   files:
-  - name: go # the symbolic `go` is created
+  - name: go # the symbolic link `go` is created
     src: go/bin/go
-  - name: gofmt # the symbolic `gofmt` is created
+  - name: gofmt # the symbolic link `gofmt` is created
     src: go/bin/gofmt
 ```
 
@@ -108,7 +108,7 @@ When `go version` is executed, `$AQUA_ROOT_DIR/bin/go` is a symbolic link to aqu
 Then aqua-proxy executes `aqua exec` passing the program name and command line arguments.
 In case of `go version`, `aqua exec -- go version` is executed.
 `aqua exec` reads the configuration file and finds the package which includes `go` and gets the package versions.
-aqua installs the package version in `$AQUA_ROOT_DIR/pkgs` if it isn't installed yet
+aqua installs the package version in `$AQUA_ROOT_DIR/pkgs` if it isn't installed yet.
 Then aqua executes the command `$AQUA_ROOT_DIR/pkgs/http/golang.org/dl/go1.17.darwin-amd64.tar.gz/go/bin/go version`.
 
 `$AQUA_ROOT_DIR/bin` is shared by every `aqua.yaml`, so maybe in `aqua exec` the package isn't found.
