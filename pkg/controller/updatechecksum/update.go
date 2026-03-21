@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -222,6 +223,16 @@ func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, pkg 
 	b, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("read a checksum file: %w", err)
+	}
+	assetName, err := pkg.RenderAsset(rt)
+	if err != nil {
+		return nil, fmt.Errorf("render an asset name: %w", err)
+	}
+	if assetName != "" {
+		assetName = filepath.Base(assetName)
+	}
+	if err := c.checksumFileVerifier.VerifyChecksumFileContent(ctx, logger, pkg, assetName, b); err != nil {
+		return nil, fmt.Errorf("verify the checksum file: %w", err)
 	}
 	return c.getChecksumsFromChecksumFile(pkg, assetNames, checksumID, strings.TrimSpace(string(b)))
 }

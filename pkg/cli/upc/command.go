@@ -99,6 +99,9 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	}
 	param.All = args.All
 	param.Prune = args.Prune
-	ctrl := controller.InitializeUpdateChecksumCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeUpdateChecksumCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	if err != nil {
+		return fmt.Errorf("initialize a update-checksum controller: %w", err)
+	}
 	return ctrl.UpdateChecksum(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }
