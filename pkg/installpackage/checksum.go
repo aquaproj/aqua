@@ -79,15 +79,19 @@ func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logg
 		return "", fmt.Errorf("read a checksum file: %w", err)
 	}
 
-	verifiers, err := is.filterVerifiers(logger, is.newChecksumVerifiers(pkg, assetName))
-	if err != nil {
-		return "", fmt.Errorf("filter verifiers: %w", err)
-	}
-	if err := is.verifyChecksumFile(ctx, logger, b, verifiers); err != nil {
+	if err := is.VerifyChecksumFileContent(ctx, logger, pkg, assetName, b); err != nil {
 		return "", fmt.Errorf("verify the checksum file: %w", err)
 	}
 
 	return checksum.GetChecksum(logger, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
+}
+
+func (is *Installer) VerifyChecksumFileContent(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string, content []byte) error {
+	verifiers, err := is.filterVerifiers(logger, is.newChecksumVerifiers(pkg, assetName))
+	if err != nil {
+		return fmt.Errorf("filter verifiers: %w", err)
+	}
+	return is.verifyChecksumFile(ctx, logger, content, verifiers)
 }
 
 func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger, b []byte, verifiers []FileVerifier) error {

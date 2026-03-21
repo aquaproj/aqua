@@ -793,7 +793,7 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 	return &cp.Controller{}, nil
 }
 
-func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *updatechecksum.Controller {
+func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updatechecksum.Controller, error) {
 	wire.Build(
 		updatechecksum.New,
 		wire.NewSet(
@@ -828,7 +828,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 			download.NewDownloader,
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
-		afero.NewOsFs,
+		wire.NewSet(
+			afero.NewOsFs,
+			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
+		),
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
@@ -838,6 +841,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 			osexec.New,
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
 			slsa.New,
@@ -848,8 +855,56 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 			slsa.NewExecutor,
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(updatechecksum.ChecksumFileVerifier), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			minisign.New,
+			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			minisign.NewExecutor,
+			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
+			ghattestation.New,
+			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.NewExecutor,
+			wire.Bind(new(ghattestation.Executor), new(*ghattestation.ExecutorImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoInstallInstallerImpl,
+			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoBuildInstallerImpl,
+			wire.Bind(new(installpackage.GoBuildInstaller), new(*installpackage.GoBuildInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
+		),
 	)
-	return &updatechecksum.Controller{}
+	return &updatechecksum.Controller{}, nil
 }
 
 func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
