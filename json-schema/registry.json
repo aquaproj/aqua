@@ -558,8 +558,13 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
+        "github_release_attestations": {
+          "type": "boolean",
+          "description": "For backwards compatibility, if this is false, github_immutable_release will be used instead"
+        },
         "github_immutable_release": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Deprecated: use github_release_attestations instead"
         },
         "vars": {
           "items": {
@@ -786,8 +791,12 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
-        "github_immutable_release": {
+        "github_release_attestations": {
           "type": "boolean"
+        },
+        "github_immutable_release": {
+          "type": "boolean",
+          "description": "Deprecated: use github_release_attestations instead"
         },
         "build": {
           "$ref": "#/$defs/Build"

@@ -99,7 +99,7 @@ func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *D
 		},
 		&gitHubReleaseAttestationsVerifier{
 			disabled:    is.graDisabled,
-			gra:         pkgInfo.GitHubImmutableRelease,
+			gra:         pkgInfo.GitHubReleaseAttestationsAvailable(),
 			pkg:         ppkg,
 			ghInstaller: is.ghInstaller,
 			ghVerifier:  is.ghVerifier,

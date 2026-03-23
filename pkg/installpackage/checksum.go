@@ -27,7 +27,7 @@ func (is *Installer) newChecksumVerifiers(pkg *config.Package, assetName string)
 		},
 		&gitHubReleaseAttestationsVerifier{
 			disabled:    is.graDisabled,
-			gra:         pkgInfo.GitHubImmutableRelease,
+			gra:         pkgInfo.GitHubReleaseAttestationsAvailable(),
 			pkg:         pkg,
 			ghInstaller: is.ghInstaller,
 			ghVerifier:  is.ghVerifier,
