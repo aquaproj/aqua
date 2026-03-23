@@ -265,11 +265,11 @@
         },
         "signer_workflow": {
           "type": "string",
-          "format": "regex"
+          "pattern": "^([^/]+/)?[^/]+/[^/]+/.+$"
         },
         "signer-workflow": {
           "type": "string",
-          "format": "regex"
+          "pattern": "^([^/]+/)?[^/]+/[^/]+/.+$"
         }
       },
       "additionalProperties": false,
