@@ -269,7 +269,8 @@
         },
         "signer-workflow": {
           "type": "string",
-          "format": "regex"
+          "format": "regex",
+          "description": "Deprecated: use signer_workflow instead"
         }
       },
       "additionalProperties": false,

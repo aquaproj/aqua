@@ -13,7 +13,7 @@ type GitHubArtifactAttestations struct {
 	// SignerWorkflow3 is the deprecated field name for signer workflow.
 	//
 	// Deprecated: Use SignerWorkflow2 instead. This will be removed in aqua v3.
-	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty" jsonschema:"format=regex"`
+	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty" jsonschema:"description=Deprecated: use signer_workflow instead,format=regex"`
 }
 
 // SignerWorkflow returns the configured signer workflow.
