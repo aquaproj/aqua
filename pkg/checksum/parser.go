@@ -69,6 +69,7 @@ func ParseChecksumFile(content string, checksumConfig *registry.Checksum) (map[s
 // parseChecksumFile is the internal implementation for parsing checksum files.
 // It handles different file formats: raw, regexp, and default.
 func parseChecksumFile(content string, checksumConfig *registry.Checksum) (map[string]string, string, error) {
+	content = strings.ReplaceAll(content, "\r\n", "\n")
 	switch checksumConfig.FileFormat {
 	case "raw":
 		return nil, strings.TrimSpace(content), nil
