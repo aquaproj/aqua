@@ -80,7 +80,7 @@ func (p *Package) completeWindowsExt(s string) string {
 // completeWindowsExtToAsset adds Windows extension to asset names when appropriate.
 // It considers file format and existing extensions to determine if completion is needed.
 func (p *Package) completeWindowsExtToAsset(asset string) string {
-	if strings.HasSuffix(asset, ".exe") {
+	if strings.HasSuffix(asset, ".exe") || strings.HasSuffix(asset, ".jar") {
 		return asset
 	}
 	if p.PackageInfo.Format == "raw" {
