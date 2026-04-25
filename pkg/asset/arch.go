@@ -23,6 +23,10 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 			Arch: "amd64",
 		},
 		{
+			Name: "x86-64",
+			Arch: "amd64",
+		},
+		{
 			Name: "x64",
 			Arch: "amd64",
 		},
