@@ -77,7 +77,7 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath 
 		}
 	}
 
-	registryVersion := "v4.495.0" // renovate: depName=aquaproj/aqua-registry
+	registryVersion := "v4.499.0" // renovate: depName=aquaproj/aqua-registry
 	release, _, err := c.github.GetLatestRelease(ctx, "aquaproj", "aqua-registry")
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("get the latest release", "repo_owner", "aquaproj", "repo_name", "aqua-registry")
