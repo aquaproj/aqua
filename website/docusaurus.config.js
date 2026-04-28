@@ -24,7 +24,7 @@ const config = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl: 'https://github.com/aquaproj/aquaproj.github.io/edit/main',
+          editUrl: 'https://github.com/aquaproj/aqua/edit/main/website',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
