@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cmdx fmt && cmdx v"
+            "command": "cmdx fmt && go vet ./... && go test -race -covermode=atomic ./... && golangci-lint run"
           }
         ]
       }
