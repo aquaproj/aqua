@@ -10,7 +10,7 @@ ENV PATH=/home/foo/.local/share/aquaproj-aqua/bin:$PATH
 RUN mkdir /home/foo/workspace
 WORKDIR /home/foo/workspace
 
-FROM mirror.gcr.io/alpine:3.23.4 AS alpine-base
+FROM mirror.gcr.io/alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11 AS alpine-base
 RUN apk add sudo vim ca-certificates bash
 RUN echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 RUN adduser -u 900 -G wheel -D foo
