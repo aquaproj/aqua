@@ -72,22 +72,22 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 	}
 	installer := ni(rt)
 	installer.cosignInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(runtime.NewR(context.Background())),
 		cosign.Package,
 		cosign.Checksums(),
 	)
 	installer.slsaVerifierInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(runtime.NewR(context.Background())),
 		slsa.Package,
 		slsa.Checksums(),
 	)
 	installer.minisignInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(runtime.NewR(context.Background())),
 		minisign.Package,
 		minisign.Checksums(),
 	)
 	installer.ghInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(runtime.NewR(context.Background())),
 		ghattestation.Package,
 		ghattestation.Checksums(),
 	)
@@ -102,7 +102,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		checksumDownloader:    chkDL,
 		checksumCalculator:    chkCalc,
 		runtime:               rt,
-		realRuntime:           runtime.NewR(),
+		realRuntime:           runtime.NewR(context.Background()),
 		fs:                    fs,
 		linker:                linker,
 		progressBar:           param.ProgressBar,

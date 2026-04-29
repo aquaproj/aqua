@@ -30,7 +30,7 @@ type ExecutorImpl struct {
 }
 
 func NewExecutor(logger *slog.Logger, executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
-	rt := runtime.NewR()
+	rt := runtime.NewR(context.Background())
 	pkg := Package()
 
 	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, rt)

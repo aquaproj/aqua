@@ -67,7 +67,7 @@ func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *confi
 		return err
 	}
 
-	if err := c.updateTimestamp(findResult.Package); err != nil {
+	if err := c.updateTimestamp(ctx, findResult.Package); err != nil {
 		slogerr.WithError(logger, err).Warn("update the last used datetime")
 	}
 	exeName, exePath, args, err := c.wrapExec(exeName, findResult.ExePath, args...)
@@ -93,8 +93,8 @@ func wrapExec(lookPath func(exeName string) (string, error), exeName, exePath st
 	return "java", p, append([]string{"-jar", exePath}, args...), nil
 }
 
-func (c *Controller) updateTimestamp(pkg *config.Package) error {
-	pkgPath, err := pkg.PkgPath(runtime.New())
+func (c *Controller) updateTimestamp(ctx context.Context, pkg *config.Package) error {
+	pkgPath, err := pkg.PkgPath(runtime.New(ctx))
 	if err != nil {
 		return fmt.Errorf("get a package path: %w", err)
 	}

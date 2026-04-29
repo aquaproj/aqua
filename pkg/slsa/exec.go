@@ -29,7 +29,7 @@ type ExecutorImpl struct {
 }
 
 func NewExecutor(executor CommandExecutor, param *config.Param) *ExecutorImpl {
-	rt := runtime.NewR()
+	rt := runtime.NewR(context.Background())
 	return &ExecutorImpl{
 		executor: executor,
 		verifierExePath: ExePath(&ParamExePath{

@@ -8,7 +8,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	rt := runtime.New()
+	rt := runtime.New(t.Context())
 	if rt == nil {
 		t.Fatal("runtime must not be nil")
 	}

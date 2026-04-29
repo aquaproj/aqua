@@ -8,7 +8,7 @@ import (
 
 func TestDetectLibC(t *testing.T) {
 	t.Parallel()
-	got := detectLibC()
+	got := detectLibC(t.Context())
 	switch got {
 	case "musl", "gnu", "":
 	default:

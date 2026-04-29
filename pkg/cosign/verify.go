@@ -37,7 +37,7 @@ type Verifier struct {
 }
 
 func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *Verifier {
-	rt := runtime.NewR()
+	rt := runtime.NewR(context.Background())
 	return &Verifier{
 		executor:   executor,
 		fs:         fs,
