@@ -4,8 +4,10 @@ package runtime
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"os/exec"
+	"time"
 )
 
 const (
@@ -43,7 +45,11 @@ func detectLibC() string {
 			return libcMusl
 		}
 	}
-	cmd := exec.Command("ldd", "--version")
+	// ldd --version returns near-instantly under normal conditions; the timeout
+	// is a safety net so a hung process can never block aqua's startup.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ldd", "--version")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
