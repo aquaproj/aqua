@@ -4,6 +4,7 @@ package runtime
 
 import (
 	"bytes"
+	"os"
 	"os/exec"
 )
 
@@ -12,12 +13,36 @@ const (
 	libcGNU  = "gnu"
 )
 
+// muslLdFiles lists well-known paths of the musl dynamic linker / libc alias
+// on common architectures. Mirrors the checks in the official Claude Code
+// install script (libc.musl-*.so.1) and adds the upstream-canonical names
+// (ld-musl-*.so.1) so detection works on minimal images that do not ship ldd.
+var muslLdFiles = []string{ //nolint:gochecknoglobals
+	"/lib/ld-musl-x86_64.so.1",
+	"/lib/ld-musl-aarch64.so.1",
+	"/lib/libc.musl-x86_64.so.1",
+	"/lib/libc.musl-aarch64.so.1",
+}
+
 // detectLibC returns the libc implementation in use on the current Linux system.
-// It returns "musl", "gnu", or "" when detection is not possible (e.g. ldd is not on PATH).
-// On musl systems, `ldd --version` exits non-zero but writes "musl libc..." to stderr;
-// on glibc systems, it succeeds and writes "ldd (GNU libc)..." to stdout.
-// We capture both streams and inspect the combined output.
+// It returns "musl", "gnu", or "" when detection is not possible.
+//
+// Detection is tiered:
+//  1. Stat well-known musl ld files. No subprocess and works on distroless or
+//     other images that do not ship ldd.
+//  2. Run `ldd --version` and inspect the combined stdout/stderr. musl's ldd
+//     exits non-zero but writes "musl libc..." to stderr; glibc's ldd writes
+//     "ldd (GNU libc)..." to stdout. The exit code is intentionally ignored.
+//
+// When neither method yields a positive signal (e.g. ldd is missing and no
+// musl files are present), an empty string is returned so libc-constrained
+// overrides do not match.
 func detectLibC() string {
+	for _, p := range muslLdFiles {
+		if _, err := os.Stat(p); err == nil {
+			return libcMusl
+		}
+	}
 	cmd := exec.Command("ldd", "--version")
 	var out bytes.Buffer
 	cmd.Stdout = &out
