@@ -17,12 +17,14 @@ const (
 type Runtime struct {
 	GOOS   string
 	GOARCH string
+	LibC   string
 }
 
 func New() *Runtime {
 	return &Runtime{
 		GOOS:   goos(),
 		GOARCH: goarch(),
+		LibC:   libc(),
 	}
 }
 
@@ -30,6 +32,7 @@ func NewR() *Runtime {
 	return &Runtime{
 		GOOS:   runtime.GOOS,
 		GOARCH: runtime.GOARCH,
+		LibC:   detectLibC(),
 	}
 }
 
@@ -66,6 +69,13 @@ func goarch() string {
 		return s
 	}
 	return runtime.GOARCH
+}
+
+func libc() string {
+	if s := os.Getenv("AQUA_LIBC"); s != "" {
+		return s
+	}
+	return detectLibC()
 }
 
 func GOOSList() []string {

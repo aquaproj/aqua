@@ -178,6 +178,21 @@ type VersionOverride struct {
 	SupportedEnvs              SupportedEnvs               `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 }
 
+// Variant represents an additional matching condition for an Override beyond
+// the standard goos/goarch axis. Each variant is a single key/value pair that
+// must equal the corresponding value reported by the runtime environment for
+// the override to match. Supported keys are maintained as an allowlist in aqua;
+// an override that references an unknown key is treated as non-matching so
+// registries can include fallback overrides for older aqua versions.
+type Variant struct {
+	Key   string `yaml:",omitempty" json:"key,omitempty" jsonschema:"enum=libc"`
+	Value string `yaml:",omitempty" json:"value,omitempty"`
+}
+
+// Variants is a list of Variant conditions that must all match for the
+// containing Override to apply.
+type Variants []*Variant
+
 // Override provides platform-specific package configuration that overrides
 // the default settings when the specified OS/architecture conditions are met.
 type Override struct {
@@ -203,6 +218,7 @@ type Override struct {
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
 	Envs                       SupportedEnvs               `yaml:",omitempty" json:"envs,omitempty"`
+	Variants                   Variants                    `yaml:",omitempty" json:"variants,omitempty"`
 }
 
 // Copy creates a deep copy of the PackageInfo struct.

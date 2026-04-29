@@ -129,7 +129,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestOverride_Match(t *testing.T) {
+func TestOverride_Match(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title    string
@@ -166,6 +166,77 @@ func TestOverride_Match(t *testing.T) {
 			rt: &runtime.Runtime{
 				GOOS:   "darwin",
 				GOARCH: "amd64",
+			},
+		},
+		{
+			title: "variant libc musl matches",
+			exp:   true,
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+				LibC:   "musl",
+			},
+		},
+		{
+			title: "variant libc musl doesn't match gnu runtime",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+				LibC:   "gnu",
+			},
+		},
+		{
+			title: "variant libc constraint with empty runtime libc doesn't match",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+		},
+		{
+			title: "unknown variant key skips the override",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "cpu", Value: "avx2"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+				LibC:   "gnu",
+			},
+		},
+		{
+			title: "all variants must match",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+					{Key: "libc", Value: "gnu"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+				LibC:   "musl",
 			},
 		},
 	}

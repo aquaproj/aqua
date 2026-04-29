@@ -404,6 +404,9 @@
         },
         "envs": {
           "$ref": "#/$defs/SupportedEnvs"
+        },
+        "variants": {
+          "$ref": "#/$defs/Variants"
         }
       },
       "additionalProperties": false,
@@ -679,6 +682,27 @@
       "required": [
         "name"
       ]
+    },
+    "Variant": {
+      "properties": {
+        "key": {
+          "type": "string",
+          "enum": [
+            "libc"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Variants": {
+      "items": {
+        "$ref": "#/$defs/Variant"
+      },
+      "type": "array"
     },
     "VersionOverride": {
       "properties": {
