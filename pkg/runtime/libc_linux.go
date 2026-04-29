@@ -13,6 +13,10 @@ import (
 const (
 	libcMusl = "musl"
 	libcGNU  = "gnu"
+	// lddTimeout caps the wall-clock cost of `ldd --version`. Under normal
+	// conditions the command returns in milliseconds; the timeout is a safety
+	// net so a hung process can never block aqua's startup.
+	lddTimeout = 5 * time.Second
 )
 
 // muslLdFiles lists well-known paths of the musl dynamic linker / libc alias
@@ -45,9 +49,10 @@ func detectLibC() string {
 			return libcMusl
 		}
 	}
-	// ldd --version returns near-instantly under normal conditions; the timeout
-	// is a safety net so a hung process can never block aqua's startup.
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// detectLibC runs at startup and is not part of any cancellable user
+	// operation, so it deliberately uses a fresh context with its own timeout
+	// rather than propagating one from the caller.
+	ctx, cancel := context.WithTimeout(context.Background(), lddTimeout) //nolint:contextcheck
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "ldd", "--version")
 	var out bytes.Buffer
