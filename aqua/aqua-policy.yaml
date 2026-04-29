@@ -16,9 +16,13 @@ registries:
   - name: macos
     type: local
     path: ../tests/macos/registry.yaml
+  - name: libc
+    type: local
+    path: ../tests/libc/registry.yaml
 packages:
-- registry: standard
-- registry: main
-- registry: cosign
-- registry: slsa
-- registry: macos
+  - registry: standard
+  - registry: main
+  - registry: cosign
+  - registry: slsa
+  - registry: macos
+  - registry: libc

@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../json-schema/registry.json
+packages:
+  - type: http
+    repo_owner: anthropics
+    repo_name: claude-code
+    files:
+      - name: claude
+    version_source: github_tag
+    version_constraint: "false"
+    version_overrides:
+      - version_constraint: "true"
+        format: raw
+        url: https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{trimV .Version}}/{{.OS}}-{{.Arch}}/claude
+        replacements:
+          amd64: x64
+        overrides:
+          - goos: linux
+            url: https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{trimV .Version}}/{{.OS}}-{{.Arch}}-musl/claude
+            variants:
+              - key: libc
+                value: musl
+        supported_envs:
+          - darwin
+          - linux

@@ -1,0 +1,9 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
+registries:
+  - name: local
+    type: local
+    path: registry.yaml
+packages:
+  - name: anthropics/claude-code@v2.1.123
+    registry: local

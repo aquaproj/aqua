@@ -70,11 +70,10 @@ tasks:
     usage: Test aqua in a clean container
     script: bash scripts/docker.sh
     flags:
-      - name: build
-        short: b
-        type: bool
+      - name: target
+        short: t
         script_envs:
-          - BUILD
+          - TARGET
   - name: fmt
     description: Format code
     usage: Format code
