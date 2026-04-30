@@ -193,6 +193,12 @@ type Variant struct {
 // containing Override to apply.
 type Variants []*Variant
 
+// IsZero implements the [go.yaml.in/yaml/v3.IsZeroer] interface.
+// It returns true if the Variants slice is nil.
+func (v Variants) IsZero() bool {
+	return v == nil
+}
+
 // Override provides platform-specific package configuration that overrides
 // the default settings when the specified OS/architecture conditions are met.
 type Override struct {
