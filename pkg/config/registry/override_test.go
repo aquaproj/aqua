@@ -184,7 +184,7 @@ func TestOverride_Match(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title: "variant libc musl doesn't match gnu runtime",
+			title: "variant libc musl doesn't match glibc runtime",
 			override: &registry.Override{
 				GOOS: "linux",
 				Variants: registry.Variants{
@@ -194,7 +194,7 @@ func TestOverride_Match(t *testing.T) { //nolint:funlen
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",
-				LibC:   "gnu",
+				LibC:   "glibc",
 			},
 		},
 		{
@@ -221,7 +221,7 @@ func TestOverride_Match(t *testing.T) { //nolint:funlen
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
 				GOARCH: "amd64",
-				LibC:   "gnu",
+				LibC:   "glibc",
 			},
 		},
 		{
@@ -230,7 +230,7 @@ func TestOverride_Match(t *testing.T) { //nolint:funlen
 				GOOS: "linux",
 				Variants: registry.Variants{
 					{Key: "libc", Value: "musl"},
-					{Key: "libc", Value: "gnu"},
+					{Key: "libc", Value: "glibc"},
 				},
 			},
 			rt: &runtime.Runtime{

@@ -145,7 +145,7 @@ files:
 
 :warning: The author [@suzuki-shunsuke](https://github.com/suzuki-shunsuke) isn't familiar with Rust. If you have any opinion, please let us know.
 
-- linux: use the asset for not `gnu` but `musl` if both of them are supported
+- linux: use the asset for not `glibc` but `musl` if both of them are supported
   - ref: https://github.com/aquaproj/aqua-registry/pull/2153#discussion_r805116879
 - windows: use the asset for not `gnu` but `msvc` if both of them are supported
   - ref: https://rust-lang.github.io/rustup/installation/windows.html
