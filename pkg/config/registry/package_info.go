@@ -21,7 +21,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/invopop/jsonschema"
-	orderedmap "github.com/wk8/go-ordered-map/v2"
+	orderedmap "github.com/pb33f/ordered-map/v2"
 )
 
 // Package type constants define the supported package installation methods.
