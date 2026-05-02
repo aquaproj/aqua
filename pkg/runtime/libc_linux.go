@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	libcMusl = "musl"
-	libcGNU  = "gnu"
+	libcMusl  = "musl"
+	libcGlibc = "glibc"
 )
 
 // muslLdFiles lists well-known paths of the musl dynamic linker / libc alias
@@ -26,7 +26,7 @@ var muslLdFiles = []string{ //nolint:gochecknoglobals
 }
 
 // detectLibC returns the libc implementation in use on the current Linux system.
-// It returns "musl", "gnu", or "" when detection is not possible.
+// It returns "musl", "glibc", or "" when detection is not possible.
 //
 // Detection is tiered:
 //  1. Stat well-known musl ld files. No subprocess and works on distroless or
@@ -55,5 +55,5 @@ func detectLibC(ctx context.Context) string {
 	if out.Len() == 0 {
 		return ""
 	}
-	return libcGNU
+	return libcGlibc
 }

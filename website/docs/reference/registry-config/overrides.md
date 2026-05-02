@@ -115,15 +115,15 @@ overrides:
     goarch: amd64
     variants:
       - key: libc
-        value: gnu
-    asset: foo-{{.OS}}-{{.Arch}}-gnu.{{.Format}}
+        value: glibc
+    asset: foo-{{.OS}}-{{.Arch}}-glibc.{{.Format}}
 ```
 
 ### Supported keys
 
 | key | values | runtime detection |
 |-----|--------|-------------------|
-| `libc` | `musl`, `gnu` | On Linux: presence of `/lib/ld-musl-*.so.1` or `/lib/libc.musl-*.so.1`, otherwise `ldd --version` output. On non-Linux: not detected (empty). |
+| `libc` | `musl`, `glibc` | On Linux: presence of `/lib/ld-musl-*.so.1` or `/lib/libc.musl-*.so.1`, otherwise `ldd --version` output. On non-Linux: not detected (empty). |
 
 You can override the detected libc with the `AQUA_LIBC` environment variable (e.g. `AQUA_LIBC=musl`).
 
@@ -157,7 +157,7 @@ On aqua `< v2.58.0`, `variants` is ignored, so this override matches every Linux
 
 ##### Correct: preserves older behavior
 
-Put the gnu override **first** so older aqua matches it before reaching the musl entry.
+Put the glibc override **first** so older aqua matches it before reaching the musl entry.
 Its `url` can be omitted because the top-level `url` is inherited when an override does not set its own.
 
 ```yaml
@@ -168,8 +168,8 @@ version_overrides:
       - goos: linux
         variants:
           - key: libc
-            value: gnu
-        # url omitted → inherits the top-level (gnu) URL
+            value: glibc
+        # url omitted → inherits the top-level (glibc) URL
       - goos: linux
         url: https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{trimV .Version}}/{{.OS}}-{{.Arch}}-musl/claude
         variants:
@@ -181,8 +181,8 @@ version_overrides:
 
 | aqua version | glibc user | musl user |
 |----|----|----|
-| `< v2.58.0` (`variants` ignored) | gnu URL ✅ (unchanged) | gnu URL ⚠️ (unchanged — same as before v2.58.0; the binary may not run on musl) |
-| `>= v2.58.0` | gnu URL ✅ | musl URL ✅ |
+| `< v2.58.0` (`variants` ignored) | glibc URL ✅ (unchanged) | glibc URL ⚠️ (unchanged — same as before v2.58.0; the binary may not run on musl) |
+| `>= v2.58.0` | glibc URL ✅ | musl URL ✅ |
 
 musl users who want the musl binary need to upgrade to aqua `>= v2.58.0`.
 On older aqua they continue to get the glibc URL, which is the same behavior as before `variants` existed — so this is not a regression.
