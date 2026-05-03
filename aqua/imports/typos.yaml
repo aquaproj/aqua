@@ -1,2 +1,2 @@
 packages:
-  - name: crate-ci/typos@v1.45.2
+  - name: crate-ci/typos@v1.46.0
