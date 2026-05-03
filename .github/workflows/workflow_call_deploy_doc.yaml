@@ -8,7 +8,7 @@ jobs:
       contents: write
       issues: write
     steps:
-      - uses: suzuki-shunsuke/release-doc-action@94de66f739174d7c4ff94db68831b2672a4e4519 # v0.0.6
+      - uses: suzuki-shunsuke/release-doc-action@a9e1ea0c4ca8c62906ca2a7fd3fa33325ee43ec9 # v0.1.0
         with:
           source_dir: website
           publish_dir: website/build
