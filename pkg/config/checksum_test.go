@@ -81,7 +81,7 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 				PackageInfo: &registry.PackageInfo{
 					Type:      "http",
 					RepoOwner: "hashicorp",
-					RepoName:  "terrafrom",
+					RepoName:  "terraform",
 					URL:       "https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
 				},
 			},
@@ -174,7 +174,7 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 				PackageInfo: &registry.PackageInfo{
 					Type:      "http",
 					RepoOwner: "hashicorp",
-					RepoName:  "terrafrom",
+					RepoName:  "terraform",
 					URL:       "https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
 				},
 			},
