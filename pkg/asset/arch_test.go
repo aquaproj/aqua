@@ -18,48 +18,48 @@ func Test_SetArch(t *testing.T) { //nolint:funlen
 	}{
 		{
 			name:         "no arch",
-			assetName:    "FOO.tar.gz",
+			assetName:    assetFOOTarGz,
 			lowAssetName: "foo.tar.gz",
 			assetInfo: &asset.AssetInfo{
-				Template: "FOO.tar.gz",
+				Template: assetFOOTarGz,
 			},
 			exp: &asset.AssetInfo{
-				Template: "FOO.tar.gz",
-				Arch:     "amd64",
+				Template: assetFOOTarGz,
+				Arch:     archAmd64,
 				Score:    -2,
 			},
 		},
 		{
-			name:         "FOO_LINUX_AMD64.tar.gz",
-			assetName:    "FOO_LINUX_AMD64.tar.gz",
-			lowAssetName: "foo_linux_amd64.tar.gz",
+			name:         assetFOOLinuxAmd64TarGz,
+			assetName:    assetFOOLinuxAmd64TarGz,
+			lowAssetName: assetFooLinuxAmd64TarGz,
 			assetInfo: &asset.AssetInfo{
-				Template: "FOO_LINUX_AMD64.tar.gz",
+				Template: assetFOOLinuxAmd64TarGz,
 			},
 			exp: &asset.AssetInfo{
-				Arch:     "amd64",
+				Arch:     archAmd64,
 				Template: "FOO_LINUX_{{.Arch}}.tar.gz",
 				Replacements: map[string]string{
-					"amd64": "AMD64",
+					archAmd64: "AMD64",
 				},
 			},
 		},
 		{
 			name:         "FOO_LINUX_AMD64.tar.gz non nil replacements",
-			assetName:    "FOO_LINUX_AMD64.tar.gz",
-			lowAssetName: "foo_linux_amd64.tar.gz",
+			assetName:    assetFOOLinuxAmd64TarGz,
+			lowAssetName: assetFooLinuxAmd64TarGz,
 			assetInfo: &asset.AssetInfo{
-				Template: "FOO_LINUX_AMD64.tar.gz",
+				Template: assetFOOLinuxAmd64TarGz,
 				Replacements: map[string]string{
-					"linux": "LINUX",
+					osLinux: osLinuxUpper,
 				},
 			},
 			exp: &asset.AssetInfo{
-				Arch:     "amd64",
+				Arch:     archAmd64,
 				Template: "FOO_LINUX_{{.Arch}}.tar.gz",
 				Replacements: map[string]string{
-					"linux": "LINUX",
-					"amd64": "AMD64",
+					osLinux:   osLinuxUpper,
+					archAmd64: "AMD64",
 				},
 			},
 		},

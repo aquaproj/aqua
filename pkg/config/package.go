@@ -115,7 +115,7 @@ func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 		registry := "crates.io"
 		return filepath.Join("pkgs", pkgInfo.Type, registry, pkgInfo.Crate, strings.TrimPrefix(pkg.Version, "v")), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		if pkgInfo.RepoOwner == "aquaproj" && (pkgInfo.RepoName == "aqua" || pkgInfo.RepoName == "aqua-proxy") {
+		if pkgInfo.RepoOwner == repoOwnerAquaproj && (pkgInfo.RepoName == pkgNameAqua || pkgInfo.RepoName == "aqua-proxy") {
 			return filepath.Join("internal", "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 		}
 		return filepath.Join("pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
@@ -178,15 +178,15 @@ func (p *Package) RenderDir(file *registry.File, rt *runtime.Runtime) (string, e
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
 	return template.Execute(file.Dir, map[string]any{ //nolint:wrapcheck
-		"Version":  pkg.Version,
-		"SemVer":   p.semVer(),
-		"GOOS":     rt.GOOS,
-		"GOARCH":   rt.GOARCH,
-		"OS":       replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":     getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
-		"Format":   pkgInfo.GetFormat(),
-		"FileName": file.Name,
-		"Vars":     pkg.Vars,
+		tmplVersion: pkg.Version,
+		tmplSemVer:  p.semVer(),
+		tmplGOOS:    rt.GOOS,
+		tmplGOARCH:  rt.GOARCH,
+		"OS":        replace(rt.GOOS, pkgInfo.Replacements),
+		tmplArch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
+		tmplFormat:  pkgInfo.GetFormat(),
+		"FileName":  file.Name,
+		tmplVars:    pkg.Vars,
 	})
 }
 
@@ -231,17 +231,17 @@ func (p *Package) renderSrc(assetName string, file *registry.File, rt *runtime.R
 	format := pkgInfo.GetFormat()
 	assetWithoutExt, _ := asset.RemoveExtFromAsset(assetName)
 	s, err := template.Execute(file.Src, map[string]any{
-		"Version":         pkg.Version,
-		"SemVer":          p.semVer(),
-		"GOOS":            rt.GOOS,
-		"GOARCH":          rt.GOARCH,
+		tmplVersion:       pkg.Version,
+		tmplSemVer:        p.semVer(),
+		tmplGOOS:          rt.GOOS,
+		tmplGOARCH:        rt.GOARCH,
 		"OS":              replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":            getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
-		"Format":          format,
+		tmplArch:          getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
+		tmplFormat:        format,
 		"FileName":        file.Name,
 		"Asset":           assetName,
 		"AssetWithoutExt": assetWithoutExt,
-		"Vars":            pkg.Vars,
+		tmplVars:          pkg.Vars,
 	})
 	if err != nil {
 		return "", err //nolint:wrapcheck
@@ -262,11 +262,11 @@ func replace(key string, replacements registry.Replacements) string {
 // getArch returns the appropriate architecture string considering emulation.
 // It handles Rosetta 2 on macOS ARM64 and Windows ARM emulation scenarios.
 func getArch(rosetta2, windowsARMEmulation bool, replacements registry.Replacements, rt *runtime.Runtime) string {
-	if rosetta2 && rt.GOOS == "darwin" && rt.GOARCH == "arm64" {
+	if rosetta2 && rt.GOOS == osDarwin && rt.GOARCH == "arm64" {
 		// Rosetta 2
 		return replace("amd64", replacements)
 	}
-	if windowsARMEmulation && rt.GOOS == "windows" && rt.GOARCH == "arm64" {
+	if windowsARMEmulation && rt.GOOS == osWindows && rt.GOARCH == "arm64" {
 		// Windows ARM Emulation
 		return replace("amd64", replacements)
 	}
@@ -444,15 +444,15 @@ func (p *Package) renderChecksumFile(asset string, rt *runtime.Runtime) (string,
 	}
 	replacements := pkgInfo.GetChecksumReplacements()
 	uS, err := template.ExecuteTemplate(tpl, map[string]any{
-		"Version": pkg.Version,
-		"SemVer":  p.semVer(),
-		"GOOS":    rt.GOOS,
-		"GOARCH":  rt.GOARCH,
-		"OS":      replace(rt.GOOS, replacements),
-		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, replacements, rt),
-		"Format":  pkgInfo.GetFormat(),
-		"Asset":   asset,
-		"Vars":    pkg.Vars,
+		tmplVersion: pkg.Version,
+		tmplSemVer:  p.semVer(),
+		tmplGOOS:    rt.GOOS,
+		tmplGOARCH:  rt.GOARCH,
+		"OS":        replace(rt.GOOS, replacements),
+		tmplArch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, replacements, rt),
+		tmplFormat:  pkgInfo.GetFormat(),
+		"Asset":     asset,
+		tmplVars:    pkg.Vars,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render a template: %w", err)
@@ -466,14 +466,14 @@ func (p *Package) renderTemplate(tpl *texttemplate.Template, rt *runtime.Runtime
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
 	uS, err := template.ExecuteTemplate(tpl, map[string]any{
-		"Version": pkg.Version,
-		"SemVer":  p.semVer(),
-		"GOOS":    rt.GOOS,
-		"GOARCH":  rt.GOARCH,
-		"OS":      replace(rt.GOOS, pkgInfo.Replacements),
-		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
-		"Format":  pkgInfo.GetFormat(),
-		"Vars":    pkg.Vars,
+		tmplVersion: pkg.Version,
+		tmplSemVer:  p.semVer(),
+		tmplGOOS:    rt.GOOS,
+		tmplGOARCH:  rt.GOARCH,
+		"OS":        replace(rt.GOOS, pkgInfo.Replacements),
+		tmplArch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, pkgInfo.Replacements, rt),
+		tmplFormat:  pkgInfo.GetFormat(),
+		tmplVars:    pkg.Vars,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render a template: %w", err)

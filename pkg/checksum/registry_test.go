@@ -70,7 +70,7 @@ func TestCheckRegistry(t *testing.T) {
 			registry: &aqua.Registry{
 				RepoOwner: "test",
 				RepoName:  "registry",
-				Ref:       "v1.0.0",
+				Ref:       pkgVersionV1,
 				Path:      "",
 			},
 			content: []byte("test content"),
@@ -81,7 +81,7 @@ func TestCheckRegistry(t *testing.T) {
 			registry: &aqua.Registry{
 				RepoOwner: "test2",
 				RepoName:  "registry2",
-				Ref:       "v1.0.0",
+				Ref:       pkgVersionV1,
 				Path:      "",
 			},
 			content: []byte("test content"),
@@ -120,7 +120,7 @@ func TestCheckRegistryWithMismatch(t *testing.T) {
 	registry := &aqua.Registry{
 		RepoOwner: "test",
 		RepoName:  "registry",
-		Ref:       "v1.0.0",
+		Ref:       pkgVersionV1,
 		Path:      "",
 	}
 

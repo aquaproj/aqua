@@ -19,75 +19,75 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 		rt         *runtime.Runtime
 	}{
 		{
-			name: "github_archive",
+			name: pkgTypeGitHubArchive,
 			pkg: &config.Package{
 				Package: &aqua.Package{
 					Version: "v3.0.0",
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_archive",
-					RepoOwner: "tfutils",
-					RepoName:  "tfenv",
+					Type:      pkgTypeGitHubArchive,
+					RepoOwner: repoOwnerTfutils,
+					RepoName:  repoNameTfenv,
 				},
 			},
 			rt:         &runtime.Runtime{},
 			checksumID: "github_archive/github.com/tfutils/tfenv/v3.0.0",
 		},
 		{
-			name: "github_content",
+			name: pkgTypeGitHubContent,
 			pkg: &config.Package{
 				Package: &aqua.Package{
 					Version: "v1.1.0",
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-installer",
-					Path:      "aqua-installer",
+					Type:      pkgTypeGitHubContent,
+					RepoOwner: repoOwnerAquaproj,
+					RepoName:  repoNameAquaInstaller,
+					Path:      repoNameAquaInstaller,
 				},
 			},
 			rt:         &runtime.Runtime{},
 			checksumID: "github_content/github.com/aquaproj/aqua-installer/v1.1.0/aqua-installer",
 		},
 		{
-			name: "github_release",
+			name: pkgTypeGitHubRelease,
 			pkg: &config.Package{
 				Package: &aqua.Package{
-					Version: "v2.17.0",
+					Version: versionV2170,
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "cli",
-					RepoName:  "cli",
+					Type:      pkgTypeGitHubRelease,
+					RepoOwner: repoOwnerCli,
+					RepoName:  repoOwnerCli,
 					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 					Format:    "tar.gz",
 					Replacements: map[string]string{
-						"darwin": "macOS",
+						osDarwin: "macOS",
 					},
 				},
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "amd64",
+				GOOS:   osDarwin,
+				GOARCH: archAmd64,
 			},
 			checksumID: "github_release/github.com/cli/cli/v2.17.0/gh_2.17.0_macOS_amd64.tar.gz",
 		},
 		{
-			name: "http",
+			name: pkgTypeHTTP,
 			pkg: &config.Package{
 				Package: &aqua.Package{
 					Version: "v1.3.0",
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "http",
+					Type:      pkgTypeHTTP,
 					RepoOwner: "hashicorp",
-					RepoName:  "terrafrom",
+					RepoName:  "terraform",
 					URL:       "https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
 				},
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "amd64",
+				GOOS:   osDarwin,
+				GOARCH: archAmd64,
 			},
 			checksumID: "http/releases.hashicorp.com/terraform/1.3.0/terraform_1.3.0_darwin_amd64.zip",
 		},
@@ -122,59 +122,59 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 		asset      string
 	}{
 		{
-			name: "github_archive",
+			name: pkgTypeGitHubArchive,
 			pkg: &config.Package{
 				Package: &aqua.Package{
 					Version: "v3.0.0",
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_archive",
-					RepoOwner: "tfutils",
-					RepoName:  "tfenv",
+					Type:      pkgTypeGitHubArchive,
+					RepoOwner: repoOwnerTfutils,
+					RepoName:  repoNameTfenv,
 				},
 			},
 			checksumID: "github_archive/github.com/tfutils/tfenv/v3.0.0",
 		},
 		{
-			name: "github_content",
+			name: pkgTypeGitHubContent,
 			pkg: &config.Package{
 				Package: &aqua.Package{
 					Version: "v1.1.0",
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-installer",
+					Type:      pkgTypeGitHubContent,
+					RepoOwner: repoOwnerAquaproj,
+					RepoName:  repoNameAquaInstaller,
 				},
 			},
 			checksumID: "github_content/github.com/aquaproj/aqua-installer/v1.1.0/aqua-installer",
-			asset:      "aqua-installer",
+			asset:      repoNameAquaInstaller,
 		},
 		{
-			name: "github_release",
+			name: pkgTypeGitHubRelease,
 			pkg: &config.Package{
 				Package: &aqua.Package{
-					Version: "v2.17.0",
+					Version: versionV2170,
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "cli",
-					RepoName:  "cli",
+					Type:      pkgTypeGitHubRelease,
+					RepoOwner: repoOwnerCli,
+					RepoName:  repoOwnerCli,
 				},
 			},
 			checksumID: "github_release/github.com/cli/cli/v2.17.0/gh_2.17.0_macOS_amd64.tar.gz",
 			asset:      "gh_2.17.0_macOS_amd64.tar.gz",
 		},
 		{
-			name: "http",
+			name: pkgTypeHTTP,
 			pkg: &config.Package{
 				Package: &aqua.Package{
 					Version: "v1.3.0",
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "http",
+					Type:      pkgTypeHTTP,
 					RepoOwner: "hashicorp",
-					RepoName:  "terrafrom",
+					RepoName:  "terraform",
 					URL:       "https://releases.hashicorp.com/terraform/{{trimV .Version}}/terraform_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
 				},
 			},
@@ -202,7 +202,7 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
+func TestPackage_RenderChecksumFileName(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name             string
@@ -212,24 +212,24 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 		rt               *runtime.Runtime
 	}{
 		{
-			name: "github_release",
+			name: pkgTypeGitHubRelease,
 			pkg: &config.Package{
 				Package: &aqua.Package{
-					Version: "v2.17.0",
+					Version: versionV2170,
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "cli",
-					RepoName:  "cli",
+					Type:      pkgTypeGitHubRelease,
+					RepoOwner: repoOwnerCli,
+					RepoName:  repoOwnerCli,
 					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 					Checksum: &registry.Checksum{
-						Type:  "github_release",
+						Type:  pkgTypeGitHubRelease,
 						Asset: "gh_{{trimV .Version}}_checksums.txt",
 					},
 				},
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
+				GOOS:   osDarwin,
 				GOARCH: "arm64",
 			},
 			checksumFileName: "gh_2.17.0_checksums.txt",
@@ -255,7 +255,7 @@ func TestPackage_RenderChecksumFileName(t *testing.T) { //nolint:dupl
 	}
 }
 
-func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
+func TestPackage_RenderChecksumURL(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name  string
@@ -271,18 +271,18 @@ func TestPackage_RenderChecksumURL(t *testing.T) { //nolint:dupl
 					Version: "v3.10.0",
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type:      "http",
+					Type:      pkgTypeHTTP,
 					RepoOwner: "helm",
 					RepoName:  "helm",
 					URL:       "https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz",
 					Checksum: &registry.Checksum{
-						Type: "http",
+						Type: pkgTypeHTTP,
 						URL:  "https://get.helm.sh/helm-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz.sha256sum",
 					},
 				},
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
+				GOOS:   osDarwin,
 				GOARCH: "arm64",
 			},
 			url: "https://get.helm.sh/helm-v3.10.0-darwin-arm64.tar.gz.sha256sum",

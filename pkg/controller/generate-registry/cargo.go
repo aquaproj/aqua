@@ -13,7 +13,7 @@ func (c *Controller) getCargoPackageInfo(ctx context.Context, logger *slog.Logge
 	crate := strings.TrimPrefix(pkgName, "crates.io/")
 	pkgInfo := &registry.PackageInfo{
 		Name:  pkgName,
-		Type:  "cargo",
+		Type:  pkgTypeCargo,
 		Crate: crate,
 	}
 	payload, err := c.cargoClient.GetCrate(ctx, crate)

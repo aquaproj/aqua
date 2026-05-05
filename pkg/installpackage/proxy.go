@@ -32,7 +32,7 @@ func proxyPkg() *config.Package {
 			Version: ProxyVersion,
 		},
 		PackageInfo: &registry.PackageInfo{
-			Type:      "github_release",
+			Type:      pkgTypeGitHubRelease,
 			RepoOwner: "aquaproj",
 			RepoName:  proxyName,
 			Asset:     "aqua-proxy_{{.OS}}_{{.Arch}}.tar.gz",
@@ -81,7 +81,7 @@ func (is *Installer) InstallProxy(ctx context.Context, logger *slog.Logger) erro
 			Dest:    pkgPath,
 			Asset:   assetName,
 			Checksum: &checksum.Checksum{
-				Algorithm: "sha256",
+				Algorithm: algoSHA256,
 				Checksum:  chksum,
 			},
 		}); err != nil {

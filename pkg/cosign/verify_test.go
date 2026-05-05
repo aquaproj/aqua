@@ -41,15 +41,15 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			},
 			cosignExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/sigstore/cosign/v1.13.1/cosign-darwin-arm64/cosign-darwin-arm64",
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
+				GOOS:   osDarwin,
+				GOARCH: archArm64,
 			},
 			file: &download.File{
 				Type:      "github_content",
 				RepoOwner: "aquaproj",
-				RepoName:  "aqua-installer",
-				Version:   "v1.1.3",
-				Path:      "aqua-installer",
+				RepoName:  pkgNameAquaInstaller,
+				Version:   versionV113,
+				Path:      pkgNameAquaInstaller,
 			},
 			param: &config.Param{
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
@@ -63,11 +63,11 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 				},
 			},
 			art: &template.Artifact{
-				Version: "v1.1.3",
-				OS:      "darwin",
-				Arch:    "arm64",
+				Version: versionV113,
+				OS:      osDarwin,
+				Arch:    archArm64,
 				Format:  "raw",
-				Asset:   "aqua-installer",
+				Asset:   pkgNameAquaInstaller,
 			},
 		},
 		{
@@ -79,39 +79,39 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 			},
 			cosignExePath: "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/sigstore/cosign/v1.13.1/cosign-darwin-arm64/cosign-darwin-arm64",
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
+				GOOS:   osDarwin,
+				GOARCH: archArm64,
 			},
 			file: &download.File{
 				Type:      "github_content",
 				RepoOwner: "aquaproj",
-				RepoName:  "aqua-installer",
-				Version:   "v1.1.3",
-				Path:      "aqua-installer",
+				RepoName:  pkgNameAquaInstaller,
+				Version:   versionV113,
+				Path:      pkgNameAquaInstaller,
 			},
 			param: &config.Param{
 				RootDir: "/home/foo/.local/share/aquaproj-aqua",
 			},
 			cos: &registry.Cosign{
 				Signature: &registry.DownloadedFile{
-					Type:  "github_release",
+					Type:  pkgTypeGitHubRelease,
 					Asset: new("aqua-installer.sig"),
 				},
 				Certificate: &registry.DownloadedFile{
-					Type:  "github_release",
+					Type:  pkgTypeGitHubRelease,
 					Asset: new("aqua-installer.pem"),
 				},
 				Key: &registry.DownloadedFile{
-					Type:  "github_release",
+					Type:  pkgTypeGitHubRelease,
 					Asset: new("aqua-installer.key"),
 				},
 			},
 			art: &template.Artifact{
-				Version: "v1.1.3",
-				OS:      "darwin",
-				Arch:    "arm64",
+				Version: versionV113,
+				OS:      osDarwin,
+				Arch:    archArm64,
 				Format:  "raw",
-				Asset:   "aqua-installer",
+				Asset:   pkgNameAquaInstaller,
 			},
 		},
 	}

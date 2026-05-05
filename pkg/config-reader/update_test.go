@@ -28,7 +28,7 @@ func Test_configReader_ReadToUpdate(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			files: map[string]string{
-				"/home/workspace/foo/aqua.yaml": `registries:
+				pathHomeWorkspaceFooAquaYaml: `registries:
 - type: standard
   ref: v2.5.0
 - type: local
@@ -36,20 +36,20 @@ func Test_configReader_ReadToUpdate(t *testing.T) { //nolint:funlen
   path: registry.yaml
 packages:`,
 			},
-			configFilePath: "/home/workspace/foo/aqua.yaml",
+			configFilePath: pathHomeWorkspaceFooAquaYaml,
 			cfg: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": {
-						Type:      "github_content",
-						Name:      "standard",
+					regTypeStandard: {
+						Type:      pkgTypeGitHubContent,
+						Name:      regTypeStandard,
 						Ref:       "v2.5.0",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Path:      "registry.yaml",
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Path:      regFileRegistryYaml,
 					},
-					"local": {
-						Type: "local",
-						Name: "local",
+					regTypeLocal: {
+						Type: regTypeLocal,
+						Name: regTypeLocal,
 						Path: "/home/workspace/foo/registry.yaml",
 					},
 				},
@@ -60,54 +60,54 @@ packages:`,
 		{
 			name: "import package",
 			files: map[string]string{
-				"/home/workspace/foo/aqua.yaml": `registries:
+				pathHomeWorkspaceFooAquaYaml: `registries:
 - type: standard
   ref: v2.5.0
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
 - import: aqua-installer.yaml
 `,
-				"/home/workspace/foo/aqua-installer.yaml": `packages:
+				pathHomeWorkspaceFooAquaInstallerYaml: `packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
 			},
-			configFilePath: "/home/workspace/foo/aqua.yaml",
+			configFilePath: pathHomeWorkspaceFooAquaYaml,
 			cfg: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": {
-						Type:      "github_content",
-						Name:      "standard",
+					regTypeStandard: {
+						Type:      pkgTypeGitHubContent,
+						Name:      regTypeStandard,
 						Ref:       "v2.5.0",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Path:      "registry.yaml",
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Path:      regFileRegistryYaml,
 					},
 				},
 				Packages: []*aqua.Package{
 					{
 						Name:     "suzuki-shunsuke/ci-info",
-						Registry: "standard",
-						Version:  "v1.0.0",
+						Registry: regTypeStandard,
+						Version:  versionV1,
 					},
 				},
 			},
 			cfgs: map[string]*aqua.Config{
-				"/home/workspace/foo/aqua-installer.yaml": {
+				pathHomeWorkspaceFooAquaInstallerYaml: {
 					Packages: []*aqua.Package{
 						{
 							Name:     "aquaproj/aqua-installer",
-							Registry: "standard",
-							Version:  "v1.0.0",
+							Registry: regTypeStandard,
+							Version:  versionV1,
 						},
 					},
 					Registries: aqua.Registries{
-						"standard": {
-							Type:      "github_content",
-							Name:      "standard",
+						regTypeStandard: {
+							Type:      pkgTypeGitHubContent,
+							Name:      regTypeStandard,
 							Ref:       "v2.5.0",
-							RepoOwner: "aquaproj",
-							RepoName:  "aqua-registry",
-							Path:      "registry.yaml",
+							RepoOwner: regOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
+							Path:      regFileRegistryYaml,
 						},
 					},
 				},

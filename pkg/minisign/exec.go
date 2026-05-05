@@ -108,7 +108,7 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 		return errors.New("e.executor is nil")
 	}
 	cmd := osexec.Command(ctx, e.minisignExePath, args...)
-	cmd.Args[0] = "minisign"
+	cmd.Args[0] = pkgName
 	_, err := e.executor.ExecStderr(cmd)
 	return err //nolint:wrapcheck
 }

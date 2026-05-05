@@ -131,7 +131,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
-		Type:          "github_release",
+		Type:          pkgTypeGitHubRelease,
 		VersionPrefix: cfg.VersionPrefix,
 	}
 	if cfg.VersionFilter != nil {
@@ -192,7 +192,7 @@ func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.
 	for _, suffix := range suffixes {
 		if _, ok := checksumNames[assetName+"."+suffix]; ok {
 			return &registry.Checksum{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				Asset:     "{{.Asset}}." + suffix,
 				Algorithm: suffix,
 			}
@@ -282,7 +282,7 @@ func checkSLSAProvenance(assetName, tagName string) *registry.SLSAProvenance {
 	}
 	assetInfo := asset.ParseAssetName(assetName, tagName)
 	return &registry.SLSAProvenance{
-		Type:  "github_release",
+		Type:  pkgTypeGitHubRelease,
 		Asset: &assetInfo.Template,
 	}
 }
@@ -299,7 +299,7 @@ func findSignature(assetNames map[string]struct{}, checksumAssetName string) str
 
 func findPubKey(assetNames map[string]struct{}) string {
 	for assetName := range assetNames {
-		if strings.HasSuffix(assetName, "cosign.pub") {
+		if strings.HasSuffix(assetName, fileCosignPub) {
 			return assetName
 		}
 	}
@@ -336,7 +336,7 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 	var bundleAssetName, certificateAssetName string
 	if bundleAssetName = findCosignBundle(assetNames, checksumAssetName); bundleAssetName != "" {
 		cosign.Bundle = &registry.DownloadedFile{
-			Type:  "github_release",
+			Type:  pkgTypeGitHubRelease,
 			Asset: &bundleAssetName,
 		}
 	} else if certificateAssetName = findCertificate(assetNames, checksumAssetName); certificateAssetName != "" {
@@ -347,14 +347,14 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 	}
 	if bundleAssetName != "" || certificateAssetName != "" {
 		cosign.Opts = append(cosign.Opts,
-			"--certificate-identity-regexp",
+			flagCertIdentityRegexp,
 			fmt.Sprintf(
 				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
 				regexp.QuoteMeta(pkgInfo.RepoOwner),
 				regexp.QuoteMeta(pkgInfo.RepoName),
 			),
-			"--certificate-oidc-issuer",
-			"https://token.actions.githubusercontent.com",
+			flagCertOIDCIssuer,
+			urlOIDCIssuer,
 		)
 	}
 
@@ -386,7 +386,7 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 	}
 
 	cosign.Opts = append(cosign.Opts,
-		"--signature",
+		flagSignature,
 		downloadURL+signatureAssetName,
 	)
 	return cosign

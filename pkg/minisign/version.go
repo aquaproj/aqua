@@ -18,7 +18,7 @@ var (
 
 func init() { //nolint:gochecknoinits
 	Version = checksum.ReadEmbeddedTool(checksums, aquaBytes, checksumBytes)
-	if runtime.GOOS == "darwin" && runtime.GOARCH == "amd64" {
+	if runtime.GOOS == osDarwin && runtime.GOARCH == archAmd64 {
 		Version = "0.11"
 	}
 }

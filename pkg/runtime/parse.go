@@ -35,7 +35,7 @@ func allRuntimes() []*Runtime {
 }
 
 func GetRuntimes(env string) ([]*Runtime, error) {
-	if env == "all" {
+	if env == envAll {
 		return allRuntimes(), nil
 	}
 	o, a, f := strings.Cut(env, "/")

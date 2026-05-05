@@ -28,13 +28,13 @@ func TestChecksum_GetReplacements(t *testing.T) {
 			name: "checksum with replacements",
 			checksum: &registry.Checksum{
 				Replacements: registry.Replacements{
-					"linux":  "Linux",
-					"darwin": "macOS",
+					"linux":  osLinuxCapitalized,
+					osDarwin: "macOS",
 				},
 			},
 			expected: registry.Replacements{
-				"linux":  "Linux",
-				"darwin": "macOS",
+				"linux":  osLinuxCapitalized,
+				osDarwin: "macOS",
 			},
 		},
 		{
@@ -103,12 +103,12 @@ func TestChecksum_GetEnabled(t *testing.T) {
 		{
 			name: "full checksum configuration with enabled true",
 			checksum: &registry.Checksum{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				Asset:     "checksums.txt",
 				Algorithm: "sha256",
 				Enabled:   new(true),
 				Replacements: registry.Replacements{
-					"linux": "Linux",
+					"linux": osLinuxCapitalized,
 				},
 			},
 			expected: true,
@@ -116,7 +116,7 @@ func TestChecksum_GetEnabled(t *testing.T) {
 		{
 			name: "full checksum configuration with enabled false",
 			checksum: &registry.Checksum{
-				Type:      "http",
+				Type:      pkgTypeHTTP,
 				URL:       "https://example.com/checksums.txt",
 				Algorithm: "sha512",
 				Enabled:   new(false),

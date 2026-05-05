@@ -33,13 +33,13 @@ func Test_installer_InstallAqua(t *testing.T) { //nolint:funlen
 		isErr              bool
 	}{
 		{
-			name: "file already exists",
+			name: errFileAlreadyExists,
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: pathRoot,
 			},
 			files: map[string]string{
 				"/home/foo/.local/share/aquaproj-aqua/internal/pkgs/github_release/github.com/aquaproj/aqua/v1.6.1/aqua_linux_amd64.tar.gz/aqua": "xxx",

@@ -25,14 +25,14 @@ func TestGitHubArtifactAttestations_GetEnabled(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: "enabled explicitly true",
+			name: caseEnabledTrue,
 			ghaa: &registry.GitHubArtifactAttestations{
 				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
-			name: "enabled explicitly false",
+			name: caseEnabledFalse,
 			ghaa: &registry.GitHubArtifactAttestations{
 				Enabled: new(false),
 			},
@@ -42,8 +42,8 @@ func TestGitHubArtifactAttestations_GetEnabled(t *testing.T) {
 			name: "full configuration enabled",
 			ghaa: &registry.GitHubArtifactAttestations{
 				Enabled:         new(true),
-				PredicateType:   "https://slsa.dev/provenance/v0.2",
-				SignerWorkflow2: ".github/workflows/release.yml@refs/tags/{{.Version}}",
+				PredicateType:   urlSlsaDev,
+				SignerWorkflow2: pathReleaseYml,
 			},
 			expected: true,
 		},
@@ -51,8 +51,8 @@ func TestGitHubArtifactAttestations_GetEnabled(t *testing.T) {
 			name: "full configuration disabled",
 			ghaa: &registry.GitHubArtifactAttestations{
 				Enabled:         new(false),
-				PredicateType:   "https://slsa.dev/provenance/v0.2",
-				SignerWorkflow2: ".github/workflows/release.yml@refs/tags/{{.Version}}",
+				PredicateType:   urlSlsaDev,
+				SignerWorkflow2: pathReleaseYml,
 			},
 			expected: false,
 		},
@@ -96,15 +96,15 @@ func TestGitHubArtifactAttestations_SignerWorkflow(t *testing.T) {
 		{
 			name: "only deprecated signer workflow field",
 			ghaa: &registry.GitHubArtifactAttestations{
-				SignerWorkflow3: ".github/workflows/deprecated.yml@refs/tags/v1.0.0",
+				SignerWorkflow3: pathDeprecatedYml,
 			},
-			expected: ".github/workflows/deprecated.yml@refs/tags/v1.0.0",
+			expected: pathDeprecatedYml,
 		},
 		{
 			name: "both fields - new takes precedence",
 			ghaa: &registry.GitHubArtifactAttestations{
 				SignerWorkflow2: ".github/workflows/new.yml@refs/tags/v1.0.0",
-				SignerWorkflow3: ".github/workflows/deprecated.yml@refs/tags/v1.0.0",
+				SignerWorkflow3: pathDeprecatedYml,
 			},
 			expected: ".github/workflows/new.yml@refs/tags/v1.0.0",
 		},
@@ -120,10 +120,10 @@ func TestGitHubArtifactAttestations_SignerWorkflow(t *testing.T) {
 			name: "full configuration with template",
 			ghaa: &registry.GitHubArtifactAttestations{
 				Enabled:         new(true),
-				PredicateType:   "https://slsa.dev/provenance/v0.2",
-				SignerWorkflow2: ".github/workflows/release.yml@refs/tags/{{.Version}}",
+				PredicateType:   urlSlsaDev,
+				SignerWorkflow2: pathReleaseYml,
 			},
-			expected: ".github/workflows/release.yml@refs/tags/{{.Version}}",
+			expected: pathReleaseYml,
 		},
 	}
 

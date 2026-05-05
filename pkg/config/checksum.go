@@ -111,13 +111,13 @@ func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 	pkg := p.Package
 	replacements := pkgInfo.GetChecksumReplacements()
 	m := map[string]any{
-		"Version": pkg.Version,
-		"SemVer":  p.semVer(),
-		"GOOS":    rt.GOOS,
-		"GOARCH":  rt.GOARCH,
-		"OS":      replace(rt.GOOS, replacements),
-		"Arch":    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, replacements, rt),
-		"Format":  pkgInfo.GetFormat(),
+		tmplVersion: pkg.Version,
+		tmplSemVer:  p.semVer(),
+		tmplGOOS:    rt.GOOS,
+		tmplGOARCH:  rt.GOARCH,
+		"OS":        replace(rt.GOOS, replacements),
+		tmplArch:    getArch(pkgInfo.Rosetta2, pkgInfo.WindowsARMEmulation, replacements, rt),
+		tmplFormat:  pkgInfo.GetFormat(),
 	}
 	if pkgInfo.Type == "http" {
 		u, err := p.RenderURL(rt)

@@ -17,16 +17,16 @@ func Package() *config.Package { //nolint:funlen
 			PackageInfo: &registry.PackageInfo{
 				Type:                "github_release",
 				RepoOwner:           "jedisct1",
-				RepoName:            "minisign",
+				RepoName:            pkgName,
 				VersionConstraints:  `false`,
 				Asset:               "minisign-{{.Version}}-{{.OS}}.{{.Format}}",
 				Format:              "zip",
 				Rosetta2:            true,
 				WindowsARMEmulation: true,
 				Replacements: map[string]string{
-					"darwin":  "macos",
-					"windows": "win64",
-					"amd64":   "x86_64",
+					osDarwin:  "macos",
+					osWindows: "win64",
+					archAmd64: "x86_64",
 					"arm64":   "aarch64",
 				},
 				Overrides: []*registry.Override{
@@ -35,25 +35,25 @@ func Package() *config.Package { //nolint:funlen
 						Format: "tar.gz",
 						Files: []*registry.File{
 							{
-								Name: "minisign",
+								Name: pkgName,
 								Src:  "minisign-{{.OS}}/{{.Arch}}/minisign",
 							},
 						},
 					},
 					{
-						GOOS: "windows",
+						GOOS: osWindows,
 						Files: []*registry.File{
 							{
-								Name: "minisign",
+								Name: pkgName,
 								Src:  "minisign-win64/minisign.exe",
 							},
 						},
 					},
 				},
 				SupportedEnvs: []string{
-					"darwin",
-					"windows",
-					"amd64",
+					osDarwin,
+					osWindows,
+					archAmd64,
 				},
 			},
 		}
@@ -63,21 +63,21 @@ func Package() *config.Package { //nolint:funlen
 		PackageInfo: &registry.PackageInfo{
 			Type:                "github_release",
 			RepoOwner:           "jedisct1",
-			RepoName:            "minisign",
+			RepoName:            pkgName,
 			VersionConstraints:  `false`,
 			Asset:               "minisign-{{.Version}}-{{.OS}}.{{.Format}}",
 			Format:              "zip",
 			WindowsARMEmulation: true,
 			Files: []*registry.File{
 				{
-					Name: "minisign",
+					Name: pkgName,
 					Src:  "minisign-{{.OS}}/{{.Arch}}/minisign",
 				},
 			},
 			Replacements: map[string]string{
-				"darwin":  "macos",
-				"windows": "win64",
-				"amd64":   "x86_64",
+				osDarwin:  "macos",
+				osWindows: "win64",
+				archAmd64: "x86_64",
 				"arm64":   "aarch64",
 			},
 			Overrides: []*registry.Override{
@@ -86,17 +86,17 @@ func Package() *config.Package { //nolint:funlen
 					Format: "tar.gz",
 				},
 				{
-					GOOS: "darwin",
+					GOOS: osDarwin,
 					Files: []*registry.File{
 						{
-							Name: "minisign",
+							Name: pkgName,
 						},
 					},
 				},
 			},
 			SupportedEnvs: []string{
 				"darwin/arm64",
-				"windows",
+				osWindows,
 				"linux/amd64",
 			},
 		},

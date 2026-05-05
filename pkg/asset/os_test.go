@@ -18,13 +18,13 @@ func Test_SetOS(t *testing.T) { //nolint:funlen
 	}{
 		{
 			name:         "no os",
-			assetName:    "FOO.tar.gz",
+			assetName:    assetFOOTarGz,
 			lowAssetName: "foo.tar.gz",
 			assetInfo: &asset.AssetInfo{
-				Template: "FOO.tar.gz",
+				Template: assetFOOTarGz,
 			},
 			exp: &asset.AssetInfo{
-				Template: "FOO.tar.gz",
+				Template: assetFOOTarGz,
 			},
 		},
 		{
@@ -35,41 +35,41 @@ func Test_SetOS(t *testing.T) { //nolint:funlen
 				Template: "FOO.exe.gz",
 			},
 			exp: &asset.AssetInfo{
-				OS:       "windows",
+				OS:       osWindows,
 				Template: "FOO.exe.gz",
 			},
 		},
 		{
-			name:         "FOO_LINUX_AMD64.tar.gz",
-			assetName:    "FOO_LINUX_AMD64.tar.gz",
-			lowAssetName: "foo_linux_amd64.tar.gz",
+			name:         assetFOOLinuxAmd64TarGz,
+			assetName:    assetFOOLinuxAmd64TarGz,
+			lowAssetName: assetFooLinuxAmd64TarGz,
 			assetInfo: &asset.AssetInfo{
-				Template: "FOO_LINUX_AMD64.tar.gz",
+				Template: assetFOOLinuxAmd64TarGz,
 			},
 			exp: &asset.AssetInfo{
-				OS:       "linux",
+				OS:       osLinux,
 				Template: "FOO_{{.OS}}_AMD64.tar.gz",
 				Replacements: map[string]string{
-					"linux": "LINUX",
+					osLinux: osLinuxUpper,
 				},
 			},
 		},
 		{
 			name:         "FOO_LINUX_AMD64.tar.gz non nil replacements",
-			assetName:    "FOO_LINUX_AMD64.tar.gz",
-			lowAssetName: "foo_linux_amd64.tar.gz",
+			assetName:    assetFOOLinuxAmd64TarGz,
+			lowAssetName: assetFooLinuxAmd64TarGz,
 			assetInfo: &asset.AssetInfo{
-				Template: "FOO_LINUX_AMD64.tar.gz",
+				Template: assetFOOLinuxAmd64TarGz,
 				Replacements: map[string]string{
-					"windows": "WINDOWS",
+					osWindows: "WINDOWS",
 				},
 			},
 			exp: &asset.AssetInfo{
-				OS:       "linux",
+				OS:       osLinux,
 				Template: "FOO_{{.OS}}_AMD64.tar.gz",
 				Replacements: map[string]string{
-					"linux":   "LINUX",
-					"windows": "WINDOWS",
+					osLinux:   osLinuxUpper,
+					osWindows: "WINDOWS",
 				},
 			},
 		},
@@ -81,11 +81,11 @@ func Test_SetOS(t *testing.T) { //nolint:funlen
 				Template: "silicon-{{.Version}}-x86_64-unknown-linux-gnu.tar.gz",
 			},
 			exp: &asset.AssetInfo{
-				OS:       "linux",
+				OS:       osLinux,
 				Template: "silicon-{{.Version}}-x86_64-{{.OS}}.tar.gz",
 				Score:    -1,
 				Replacements: map[string]string{
-					"linux": "unknown-linux-gnu",
+					osLinux: "unknown-linux-gnu",
 				},
 			},
 		},
@@ -97,11 +97,11 @@ func Test_SetOS(t *testing.T) { //nolint:funlen
 				Template: "silicon-{{.Version}}-x86_64-pc-windows-gnu.tar.gz",
 			},
 			exp: &asset.AssetInfo{
-				OS:       "windows",
+				OS:       osWindows,
 				Template: "silicon-{{.Version}}-x86_64-{{.OS}}.tar.gz",
 				Score:    -1,
 				Replacements: map[string]string{
-					"windows": "pc-windows-gnu",
+					osWindows: "pc-windows-gnu",
 				},
 			},
 		},

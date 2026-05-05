@@ -22,7 +22,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 			pkgInfo: &PackageInfo{
 				Type:        PkgInfoTypeGitHubRelease,
 				RepoOwner:   "abiosoft",
-				RepoName:    "colima",
+				RepoName:    repoNameColima,
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
 				Asset:       "colima-amd64",
 				Files: []*File{
@@ -33,19 +33,19 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 			},
 			child: &VersionOverride{
 				Type: PkgInfoTypeGitHubContent,
-				Path: "colima",
+				Path: repoNameColima,
 			},
 			exp: &PackageInfo{
 				Type:        PkgInfoTypeGitHubContent,
 				RepoOwner:   "abiosoft",
-				RepoName:    "colima",
+				RepoName:    repoNameColima,
 				Description: "Docker (and Kubernetes) on MacOS with minimal setup",
 				Files: []*File{
 					{
 						Name: proxyName,
 					},
 				},
-				Path: "colima",
+				Path: repoNameColima,
 			},
 		},
 	}
@@ -71,49 +71,49 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 		{
 			title: "no version constraint",
 			exp: &PackageInfo{
-				Type: "github_content",
-				Path: "foo",
+				Type: PkgInfoTypeGitHubContent,
+				Path: pkgFoo,
 			},
 			pkgInfo: &PackageInfo{
-				Type: "github_content",
-				Path: "foo",
+				Type: PkgInfoTypeGitHubContent,
+				Path: pkgFoo,
 			},
 		},
 		{
 			title: "version constraint",
 			exp: &PackageInfo{
-				Type:               "github_content",
-				Path:               "foo",
-				VersionConstraints: `semver(">= 0.4.0")`,
+				Type:               PkgInfoTypeGitHubContent,
+				Path:               pkgFoo,
+				VersionConstraints: semverGTE040,
 			},
 			pkgInfo: &PackageInfo{
-				Type:               "github_content",
-				Path:               "foo",
-				VersionConstraints: `semver(">= 0.4.0")`,
+				Type:               PkgInfoTypeGitHubContent,
+				Path:               pkgFoo,
+				VersionConstraints: semverGTE040,
 			},
 			version: "v0.5.0",
 		},
 		{
 			title: "child version constraint",
 			exp: &PackageInfo{
-				Type:               "github_content",
-				Path:               "bar",
-				VersionConstraints: `semver(">= 0.4.0")`,
+				Type:               PkgInfoTypeGitHubContent,
+				Path:               pkgBar,
+				VersionConstraints: semverGTE040,
 				VersionOverrides: []*VersionOverride{
 					{
 						VersionConstraints: `semver("< 0.4.0")`,
-						Path:               "bar",
+						Path:               pkgBar,
 					},
 				},
 			},
 			pkgInfo: &PackageInfo{
-				Type:               "github_content",
-				Path:               "foo",
-				VersionConstraints: `semver(">= 0.4.0")`,
+				Type:               PkgInfoTypeGitHubContent,
+				Path:               pkgFoo,
+				VersionConstraints: semverGTE040,
 				VersionOverrides: []*VersionOverride{
 					{
 						VersionConstraints: `semver("< 0.4.0")`,
-						Path:               "bar",
+						Path:               pkgBar,
 					},
 				},
 			},

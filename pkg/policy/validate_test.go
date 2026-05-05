@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestValidator_Allow(t *testing.T) { //nolint:dupl
+func TestValidator_Allow(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name           string
@@ -19,19 +19,19 @@ func TestValidator_Allow(t *testing.T) { //nolint:dupl
 		isErr          bool
 	}{
 		{
-			name:           "normal",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
+			name:           caseNormal,
+			rootDir:        pathHomeFooLocalShare,
+			configFilePath: pathHomeFooWorkspacePolicy,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml": "",
+				pathHomeFooWorkspacePolicy: "",
 			},
 		},
 		{
 			name:           "warn file exists",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
+			rootDir:        pathHomeFooLocalShare,
+			configFilePath: pathHomeFooWorkspacePolicy,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml":                                                     "",
+				pathHomeFooWorkspacePolicy: "",
 				"/home/foo/.local/share/aquaproj-aqua/policy-warnings/home/foo/workspace/aqua-policy.yaml": "",
 			},
 		},
@@ -61,7 +61,7 @@ func TestValidator_Allow(t *testing.T) { //nolint:dupl
 	}
 }
 
-func TestValidator_Deny(t *testing.T) { //nolint:dupl
+func TestValidator_Deny(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name           string
@@ -71,20 +71,20 @@ func TestValidator_Deny(t *testing.T) { //nolint:dupl
 		isErr          bool
 	}{
 		{
-			name:           "normal",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
+			name:           caseNormal,
+			rootDir:        pathHomeFooLocalShare,
+			configFilePath: pathHomeFooWorkspacePolicy,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml": "",
+				pathHomeFooWorkspacePolicy: "",
 			},
 		},
 		{
 			name:           "remove allowed policy file",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
+			configFilePath: pathHomeFooWorkspacePolicy,
+			rootDir:        pathHomeFooLocalShare,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml":                                              "",
-				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": "",
+				pathHomeFooWorkspacePolicy: "",
+				pathPolicyApplied:          "",
 			},
 		},
 	}
@@ -123,19 +123,19 @@ func TestValidator_Warn(t *testing.T) {
 		isErr          bool
 	}{
 		{
-			name:           "normal",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
+			name:           caseNormal,
+			rootDir:        pathHomeFooLocalShare,
+			configFilePath: pathHomeFooWorkspacePolicy,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml": "",
+				pathHomeFooWorkspacePolicy: "",
 			},
 		},
 		{
 			name:           "warn file exists",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
+			configFilePath: pathHomeFooWorkspacePolicy,
+			rootDir:        pathHomeFooLocalShare,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml":                                                     "",
+				pathHomeFooWorkspacePolicy: "",
 				"/home/foo/.local/share/aquaproj-aqua/policy-warnings/home/foo/workspace/aqua-policy.yaml": "",
 			},
 		},
@@ -176,30 +176,30 @@ func TestValidator_Validate(t *testing.T) {
 		isErr          bool
 	}{
 		{
-			name:           "normal",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
+			name:           caseNormal,
+			rootDir:        pathHomeFooLocalShare,
+			configFilePath: pathHomeFooWorkspacePolicy,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml":                                              "",
-				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": "",
+				pathHomeFooWorkspacePolicy: "",
+				pathPolicyApplied:          "",
 			},
 		},
 		{
 			name:           "policy is not found",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
+			configFilePath: pathHomeFooWorkspacePolicy,
+			rootDir:        pathHomeFooLocalShare,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml": "",
+				pathHomeFooWorkspacePolicy: "",
 			},
 			isErr: true,
 		},
 		{
 			name:           "policy is changed",
-			configFilePath: "/home/foo/workspace/aqua-policy.yaml",
-			rootDir:        "/home/foo/.local/share/aquaproj-aqua",
+			configFilePath: pathHomeFooWorkspacePolicy,
+			rootDir:        pathHomeFooLocalShare,
 			files: map[string]string{
-				"/home/foo/workspace/aqua-policy.yaml":                                              "",
-				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": "a",
+				pathHomeFooWorkspacePolicy: "",
+				pathPolicyApplied:          "a",
 			},
 			isErr: true,
 		},

@@ -22,8 +22,8 @@ func TestPackage_UnmarshalYAML_ParseNameWithVersion(t *testing.T) {
 			yamlContent: `
 name: cli/cli@v2.0.0
 `,
-			expectedName:    "cli/cli",
-			expectedVersion: "v2.0.0",
+			expectedName:    repoCliCli,
+			expectedVersion: versionV2,
 			expectedPin:     false, // Version from name doesn't set pin
 		},
 		{
@@ -31,7 +31,7 @@ name: cli/cli@v2.0.0
 			yamlContent: `
 name: cli/cli
 `,
-			expectedName:    "cli/cli",
+			expectedName:    repoCliCli,
 			expectedVersion: "",
 			expectedPin:     false,
 		},
@@ -50,7 +50,7 @@ name: scope/package@1.0.0@beta
 name: "@v1.0.0"
 `,
 			expectedName:    "@v1.0.0", // Original name preserved when parsed name is empty
-			expectedVersion: "v1.0.0",  // Version after @
+			expectedVersion: versionV1, // Version after @
 			expectedPin:     false,
 		},
 		{
@@ -77,9 +77,9 @@ name: github.com/user/repo@v1.2.3-alpha
 name: cli/cli@v1.0.0
 version: v2.0.0
 `,
-			expectedName:    "cli/cli",
-			expectedVersion: "v1.0.0", // Name@version overwrites explicit version
-			expectedPin:     true,     // Explicit version sets pin
+			expectedName:    repoCliCli,
+			expectedVersion: versionV1, // Name@version overwrites explicit version
+			expectedPin:     true,      // Explicit version sets pin
 		},
 		{
 			name: "explicit version only",
@@ -87,8 +87,8 @@ version: v2.0.0
 name: cli/cli
 version: v2.0.0
 `,
-			expectedName:    "cli/cli",
-			expectedVersion: "v2.0.0",
+			expectedName:    repoCliCli,
+			expectedVersion: versionV2,
 			expectedPin:     true,
 		},
 	}
@@ -111,8 +111,8 @@ version: v2.0.0
 				t.Errorf("expected pin %v, got %v", d.expectedPin, pkg.Pin)
 			}
 			// Default registry should be set
-			if pkg.Registry != "standard" {
-				t.Errorf("expected registry %q, got %q", "standard", pkg.Registry)
+			if pkg.Registry != regTypeStandard {
+				t.Errorf("expected registry %q, got %q", regTypeStandard, pkg.Registry)
 			}
 		})
 	}

@@ -13,6 +13,8 @@ const (
 	darwin  = "darwin"
 	linux   = "linux"
 	windows = "windows"
+
+	envAll = "all"
 )
 
 type Runtime struct {

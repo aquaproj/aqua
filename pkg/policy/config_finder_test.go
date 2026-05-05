@@ -33,10 +33,10 @@ func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 		{
 			name:           "configFilePath",
 			wd:             "/home/foo",
-			configFilePath: "/home/foo/bar/aqua-policy.yaml",
-			exp:            "/home/foo/bar/aqua-policy.yaml",
+			configFilePath: pathHomeFooBarPolicy,
+			exp:            pathHomeFooBarPolicy,
 			files: map[string]string{
-				"/home/foo/bar/aqua-policy.yaml": "",
+				pathHomeFooBarPolicy: "",
 			},
 		},
 		{
