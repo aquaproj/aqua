@@ -361,12 +361,15 @@ jobs:
 
       - run: aqua policy allow
 
-      - name: Test pnpm (hardlink)
+      # pnpm v11 dropped darwin/amd64 support (registry supported_envs).
+      - if: matrix.env.runs-on != 'macos-15-intel'
+        name: Test pnpm (hardlink)
         run: aqua -c aqua.yaml i
         working-directory: tests/pnpm
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
-      - name: Test pnpm (hardlink)
+      - if: matrix.env.runs-on != 'macos-15-intel'
+        name: Test pnpm (hardlink)
         run: pnpm install
         working-directory: tests/pnpm
         env:
