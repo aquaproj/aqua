@@ -25,14 +25,14 @@ func TestMinisign_GetEnabled(t *testing.T) { //nolint:funlen
 			expected: true,
 		},
 		{
-			name: "enabled explicitly true",
+			name: caseEnabledTrue,
 			minisign: &registry.Minisign{
 				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
-			name: "enabled explicitly false",
+			name: caseEnabledFalse,
 			minisign: &registry.Minisign{
 				Enabled: new(false),
 			},
@@ -42,7 +42,7 @@ func TestMinisign_GetEnabled(t *testing.T) { //nolint:funlen
 			name: "full minisign configuration",
 			minisign: &registry.Minisign{
 				Enabled:   new(true),
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				Asset:     new("{{.Asset}}.minisig"),
 				PublicKey: "RWS...",
 			},
@@ -52,7 +52,7 @@ func TestMinisign_GetEnabled(t *testing.T) { //nolint:funlen
 			name: "disabled minisign configuration",
 			minisign: &registry.Minisign{
 				Enabled:   new(false),
-				Type:      "http",
+				Type:      pkgTypeHTTP,
 				URL:       new("https://example.com/signature.minisig"),
 				PublicKey: "RWS...",
 			},
@@ -81,13 +81,13 @@ func TestMinisign_ToDownloadedFile(t *testing.T) { //nolint:funlen
 		{
 			name: "github_release minisign",
 			minisign: &registry.Minisign{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				RepoOwner: "owner",
 				RepoName:  "repo",
 				Asset:     new("{{.Asset}}.minisig"),
 			},
 			expected: &registry.DownloadedFile{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				RepoOwner: "owner",
 				RepoName:  "repo",
 				Asset:     new("{{.Asset}}.minisig"),
@@ -96,11 +96,11 @@ func TestMinisign_ToDownloadedFile(t *testing.T) { //nolint:funlen
 		{
 			name: "http minisign",
 			minisign: &registry.Minisign{
-				Type: "http",
+				Type: pkgTypeHTTP,
 				URL:  new("https://example.com/signature.minisig"),
 			},
 			expected: &registry.DownloadedFile{
-				Type: "http",
+				Type: pkgTypeHTTP,
 				URL:  new("https://example.com/signature.minisig"),
 			},
 		},
@@ -108,16 +108,16 @@ func TestMinisign_ToDownloadedFile(t *testing.T) { //nolint:funlen
 			name: "full minisign config",
 			minisign: &registry.Minisign{
 				Enabled:   new(true),
-				Type:      "github_release",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua",
+				Type:      pkgTypeGitHubRelease,
+				RepoOwner: repoOwnerAquaproj,
+				RepoName:  pkgNameAqua,
 				Asset:     new("aqua_{{.OS}}_{{.Arch}}.tar.gz.minisig"),
 				PublicKey: "RWSomeBase64EncodedKey...",
 			},
 			expected: &registry.DownloadedFile{
-				Type:      "github_release",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua",
+				Type:      pkgTypeGitHubRelease,
+				RepoOwner: repoOwnerAquaproj,
+				RepoName:  pkgNameAqua,
 				Asset:     new("aqua_{{.OS}}_{{.Arch}}.tar.gz.minisig"),
 			},
 		},

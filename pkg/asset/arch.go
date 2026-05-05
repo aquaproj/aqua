@@ -11,40 +11,40 @@ import (
 func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 	archList := []*Arch{
 		{
-			Name: "amd64",
-			Arch: "amd64",
+			Name: archAmd64,
+			Arch: archAmd64,
 		},
 		{
-			Name: "arm64",
-			Arch: "arm64",
+			Name: archArm64,
+			Arch: archArm64,
 		},
 		{
-			Name: "x86_64",
-			Arch: "amd64",
+			Name: archX86_64,
+			Arch: archAmd64,
 		},
 		{
 			Name: "x86-64",
-			Arch: "amd64",
+			Arch: archAmd64,
 		},
 		{
 			Name: "x64",
-			Arch: "amd64",
+			Arch: archAmd64,
 		},
 		{
 			Name: "64bit",
-			Arch: "amd64",
+			Arch: archAmd64,
 		},
 		{
 			Name: "64-bit",
-			Arch: "amd64",
+			Arch: archAmd64,
 		},
 		{
 			Name: "aarch64",
-			Arch: "arm64",
+			Arch: archArm64,
 		},
 		{
 			Name: "arm",
-			Arch: "arm64",
+			Arch: archArm64,
 		},
 	}
 	for _, o := range archList {
@@ -58,14 +58,14 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 				assetInfo.Replacements[o.Arch] = archName
 			}
 			assetInfo.Template = strings.Replace(assetInfo.Template, archName, "{{.Arch}}", 1)
-			if o.Arch == "arm64" && o.Name == "arm" {
+			if o.Arch == archArm64 && o.Name == "arm" {
 				assetInfo.Score -= 1
 			}
 			break
 		}
 	}
 	if assetInfo.Arch == "" {
-		assetInfo.Arch = "amd64"
+		assetInfo.Arch = archAmd64
 		assetInfo.Score = -2 //nolint:mnd
 	}
 }

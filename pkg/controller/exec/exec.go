@@ -82,15 +82,20 @@ func (c *Controller) wrapExec(exeName, exePath string, args ...string) (string, 
 	return wrapExec(c.lookPath, exeName, exePath, args...)
 }
 
+const (
+	flagJar = "-jar"
+	exeJava = "java"
+)
+
 func wrapExec(lookPath func(exeName string) (string, error), exeName, exePath string, args ...string) (string, string, []string, error) {
 	if !strings.HasSuffix(exePath, ".jar") {
 		return exeName, exePath, args, nil
 	}
-	p, err := lookPath("java")
+	p, err := lookPath(exeJava)
 	if err != nil {
 		return "", "", nil, fmt.Errorf("look up java to execute jar: %w", err)
 	}
-	return "java", p, append([]string{"-jar", exePath}, args...), nil
+	return exeJava, p, append([]string{flagJar, exePath}, args...), nil
 }
 
 func (c *Controller) updateTimestamp(ctx context.Context, pkg *config.Package) error {

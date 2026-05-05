@@ -18,20 +18,20 @@ func TestConfig_Validate(t *testing.T) {
 			name: "valid config with standard registry",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": &aqua.Registry{
-						Name:      "standard",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Ref:       "v4.0.0",
-						Path:      "registry.yaml",
+					regTypeStandard: &aqua.Registry{
+						Name:      regTypeStandard,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Ref:       versionV4,
+						Path:      regFileRegistryYaml,
 					},
 				},
 				Packages: []*aqua.Package{
 					{
 						Name:     "cli/cli",
 						Version:  "v2.0.0",
-						Registry: "standard",
+						Registry: regTypeStandard,
 					},
 				},
 			},
@@ -41,17 +41,17 @@ func TestConfig_Validate(t *testing.T) {
 			name: "valid config with local registry",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"local": &aqua.Registry{
-						Name: "local",
-						Type: "local",
-						Path: "registry.yaml",
+					regTypeLocal: &aqua.Registry{
+						Name: regTypeLocal,
+						Type: regTypeLocal,
+						Path: regFileRegistryYaml,
 					},
 				},
 				Packages: []*aqua.Package{
 					{
 						Name:     "custom-tool",
 						Version:  "v1.0.0",
-						Registry: "local",
+						Registry: regTypeLocal,
 					},
 				},
 			},
@@ -61,12 +61,12 @@ func TestConfig_Validate(t *testing.T) {
 			name: "invalid registry - missing repo_owner",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"invalid": &aqua.Registry{
-						Name:     "invalid",
-						Type:     "github_content",
-						RepoName: "aqua-registry",
-						Ref:      "v4.0.0",
-						Path:     "registry.yaml",
+					regTypeInvalid: &aqua.Registry{
+						Name:     regTypeInvalid,
+						Type:     pkgTypeGitHubContent,
+						RepoName: regNameAquaRegistry,
+						Ref:      versionV4,
+						Path:     regFileRegistryYaml,
 					},
 				},
 			},
@@ -76,12 +76,12 @@ func TestConfig_Validate(t *testing.T) {
 			name: "invalid registry - missing repo_name",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"invalid": &aqua.Registry{
-						Name:      "invalid",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						Ref:       "v4.0.0",
-						Path:      "registry.yaml",
+					regTypeInvalid: &aqua.Registry{
+						Name:      regTypeInvalid,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						Ref:       versionV4,
+						Path:      regFileRegistryYaml,
 					},
 				},
 			},
@@ -91,12 +91,12 @@ func TestConfig_Validate(t *testing.T) {
 			name: "invalid registry - missing ref",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"invalid": &aqua.Registry{
-						Name:      "invalid",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Path:      "registry.yaml",
+					regTypeInvalid: &aqua.Registry{
+						Name:      regTypeInvalid,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Path:      regFileRegistryYaml,
 					},
 				},
 			},
@@ -106,13 +106,13 @@ func TestConfig_Validate(t *testing.T) {
 			name: "invalid registry - ref cannot be main",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"invalid": &aqua.Registry{
-						Name:      "invalid",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+					regTypeInvalid: &aqua.Registry{
+						Name:      regTypeInvalid,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
 						Ref:       "main",
-						Path:      "registry.yaml",
+						Path:      regFileRegistryYaml,
 					},
 				},
 			},
@@ -122,13 +122,13 @@ func TestConfig_Validate(t *testing.T) {
 			name: "invalid registry - ref cannot be master",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"invalid": &aqua.Registry{
-						Name:      "invalid",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
+					regTypeInvalid: &aqua.Registry{
+						Name:      regTypeInvalid,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
 						Ref:       "master",
-						Path:      "registry.yaml",
+						Path:      regFileRegistryYaml,
 					},
 				},
 			},
@@ -138,9 +138,9 @@ func TestConfig_Validate(t *testing.T) {
 			name: "invalid local registry - missing path",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"invalid": &aqua.Registry{
-						Name: "invalid",
-						Type: "local",
+					regTypeInvalid: &aqua.Registry{
+						Name: regTypeInvalid,
+						Type: regTypeLocal,
 					},
 				},
 			},
@@ -150,8 +150,8 @@ func TestConfig_Validate(t *testing.T) {
 			name: "invalid registry type",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"invalid": &aqua.Registry{
-						Name: "invalid",
+					regTypeInvalid: &aqua.Registry{
+						Name: regTypeInvalid,
 						Type: "unknown",
 					},
 				},
@@ -169,17 +169,17 @@ func TestConfig_Validate(t *testing.T) {
 			name: "multiple valid registries",
 			config: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": &aqua.Registry{
-						Name:      "standard",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Ref:       "v4.0.0",
-						Path:      "registry.yaml",
+					regTypeStandard: &aqua.Registry{
+						Name:      regTypeStandard,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Ref:       versionV4,
+						Path:      regFileRegistryYaml,
 					},
-					"local": &aqua.Registry{
-						Name: "local",
-						Type: "local",
+					regTypeLocal: &aqua.Registry{
+						Name: regTypeLocal,
+						Type: regTypeLocal,
 						Path: "local-registry.yaml",
 					},
 				},
@@ -192,15 +192,15 @@ func TestConfig_Validate(t *testing.T) {
 				Registries: aqua.Registries{
 					"valid": &aqua.Registry{
 						Name:      "valid",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Ref:       "v4.0.0",
-						Path:      "registry.yaml",
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Ref:       versionV4,
+						Path:      regFileRegistryYaml,
 					},
-					"invalid": &aqua.Registry{
-						Name: "invalid",
-						Type: "github_content",
+					regTypeInvalid: &aqua.Registry{
+						Name: regTypeInvalid,
+						Type: pkgTypeGitHubContent,
 						// Missing required fields
 					},
 				},

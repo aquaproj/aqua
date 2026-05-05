@@ -26,19 +26,19 @@ func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
 				AssetName: "gh_2.17.0_macOS_amd64.tar.gz",
 				Pkg: &config.Package{
 					PackageInfo: &registry.PackageInfo{
-						Type:     "github_release",
+						Type:     pkgTypeGitHubRelease,
 						Rosetta2: true,
 						Checksum: &registry.Checksum{
-							Type:       "github_release",
-							Algorithm:  "sha256",
-							FileFormat: "regexp",
+							Type:       pkgTypeGitHubRelease,
+							Algorithm:  algoSHA256,
+							FileFormat: algoTypeRegexp,
 							Pattern: &registry.ChecksumPattern{
-								Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+								Checksum: regexpSHA256,
 								File:     "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$",
 							},
 						},
 						Replacements: map[string]string{
-							"darwin": "macOS",
+							osDarwin: "macOS",
 						},
 					},
 				},
@@ -66,7 +66,7 @@ d3b06f291551ce0357e08334d8ba72810a552b593329e3c0dd3489f51a8712a3  gh_2.17.0_wind
 ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linux_386.tar.gz`,
 				},
 				runtime: &runtime.Runtime{
-					GOOS:   "darwin",
+					GOOS:   osDarwin,
 					GOARCH: "arm64",
 				},
 				checksumCalculator: &MockChecksumCalculator{

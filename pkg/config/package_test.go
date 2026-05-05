@@ -18,52 +18,52 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 		rt    *runtime.Runtime
 	}{
 		{
-			title: "github_archive",
+			title: pkgTypeGitHubArchive,
 			exp:   "",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type: "github_archive",
+					Type: pkgTypeGitHubArchive,
 				},
 			},
 		},
 		{
-			title: "github_content",
+			title: pkgTypeGitHubContent,
 			exp:   "foo",
 			pkg: &config.Package{
 				Package: &aqua.Package{
-					Version: "v1.0.0",
+					Version: versionV1,
 				},
 				PackageInfo: &registry.PackageInfo{
-					Type: "github_content",
+					Type: pkgTypeGitHubContent,
 					Path: "foo",
 				},
 			},
 		},
 		{
-			title: "github_release",
+			title: pkgTypeGitHubRelease,
 			exp:   "foo-1.0.0.zip",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:   "github_release",
+					Type:   pkgTypeGitHubRelease,
 					Asset:  "foo-{{trimV .Version}}.{{.Format}}",
-					Format: "zip",
+					Format: formatZip,
 				},
 				Package: &aqua.Package{
-					Version: "v1.0.0",
+					Version: versionV1,
 				},
 			},
 		},
 		{
-			title: "http",
+			title: pkgTypeHTTP,
 			exp:   "foo-1.0.0.zip",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:   "http",
+					Type:   pkgTypeHTTP,
 					URL:    "https://example.com/foo-{{trimV .Version}}.{{.Format}}",
-					Format: "zip",
+					Format: formatZip,
 				},
 				Package: &aqua.Package{
-					Version: "v1.0.0",
+					Version: versionV1,
 				},
 			},
 		},
@@ -72,17 +72,17 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			exp:   "foo-windows-amd64.exe",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:   "github_release",
+					Type:   pkgTypeGitHubRelease,
 					Asset:  "foo-{{.OS}}-{{.Arch}}",
 					Format: "raw",
 				},
 				Package: &aqua.Package{
-					Version: "v1.0.0",
+					Version: versionV1,
 				},
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "windows",
-				GOARCH: "amd64",
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
 			},
 		},
 		{
@@ -90,33 +90,33 @@ func TestPackage_RenderAsset(t *testing.T) { //nolint:funlen
 			exp:   "foo-windows-amd64.exe",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:  "github_release",
+					Type:  pkgTypeGitHubRelease,
 					Asset: "foo-{{.OS}}-{{.Arch}}",
 				},
 				Package: &aqua.Package{
-					Version: "v1.0.0",
+					Version: versionV1,
 				},
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "windows",
-				GOARCH: "amd64",
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
 			},
 		},
 		{
-			title: "windows",
+			title: osWindows,
 			exp:   "foo-windows-amd64.tar.gz",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:  "github_release",
+					Type:  pkgTypeGitHubRelease,
 					Asset: "foo-{{.OS}}-{{.Arch}}.tar.gz",
 				},
 				Package: &aqua.Package{
-					Version: "v1.0.0",
+					Version: versionV1,
 				},
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "windows",
-				GOARCH: "amd64",
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
 			},
 		},
 	}
@@ -147,13 +147,13 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 		pkg   *config.Package
 	}{
 		{
-			title: "github_archive",
+			title: pkgTypeGitHubArchive,
 			exp:   "/tmp/aqua/pkgs/github_archive/github.com/tfutils/tfenv/v2.2.2",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_archive",
-					RepoOwner: "tfutils",
-					RepoName:  "tfenv",
+					Type:      pkgTypeGitHubArchive,
+					RepoOwner: repoOwnerTfutils,
+					RepoName:  repoNameTfenv,
 				},
 				Package: &aqua.Package{
 					Version: "v2.2.2",
@@ -161,14 +161,14 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title: "github_content",
+			title: pkgTypeGitHubContent,
 			exp:   "/tmp/aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v0.2.0/aqua-installer",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_content",
-					Path:      "aqua-installer",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-installer",
+					Type:      pkgTypeGitHubContent,
+					Path:      repoNameAquaInstaller,
+					RepoOwner: repoOwnerAquaproj,
+					RepoName:  repoNameAquaInstaller,
 				},
 				Package: &aqua.Package{
 					Version: "v0.2.0",
@@ -176,11 +176,11 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title: "github_release",
+			title: pkgTypeGitHubRelease,
 			exp:   "/tmp/aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v0.7.7/ci-info.tar.gz",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
+					Type:      pkgTypeGitHubRelease,
 					RepoOwner: "suzuki-shunsuke",
 					RepoName:  "ci-info",
 					Asset:     "ci-info.{{.Format}}",
@@ -192,16 +192,16 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title: "http",
+			title: pkgTypeHTTP,
 			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:   "http",
+					Type:   pkgTypeHTTP,
 					URL:    "https://example.com/foo-{{trimV .Version}}.{{.Format}}",
-					Format: "zip",
+					Format: formatZip,
 				},
 				Package: &aqua.Package{
-					Version: "v1.0.0",
+					Version: versionV1,
 				},
 			},
 		},

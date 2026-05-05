@@ -23,9 +23,9 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 			Version: version,
 		},
 		PackageInfo: &registry.PackageInfo{
-			Type:      "github_release",
+			Type:      pkgTypeGitHubRelease,
 			RepoOwner: "aquaproj",
-			RepoName:  "aqua",
+			RepoName:  pkgNameAqua,
 			Asset:     "aqua_{{.OS}}_{{.Arch}}.{{.Format}}",
 			Format:    "tar.gz",
 			Overrides: []*registry.Override{
@@ -36,21 +36,21 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 			},
 			Files: []*registry.File{
 				{
-					Name: "aqua",
+					Name: pkgNameAqua,
 				},
 			},
 			SLSAProvenance: &registry.SLSAProvenance{
-				Type:  "github_release",
+				Type:  pkgTypeGitHubRelease,
 				Asset: &provTemplate,
 			},
 			// Checksum: &registry.Checksum{
-			// 	Type:       "github_release",
+			// 	Type:       pkgTypeGitHubRelease,
 			// 	Asset:      "aqua_{{trimV .Version}}_checksums.txt",
-			// 	FileFormat: "regexp",
-			// 	Algorithm:  "sha256",
+			// 	FileFormat: algoTypeRegexp,
+			// 	Algorithm:  algoSHA256,
 			// 	Pattern: &registry.ChecksumPattern{
-			// 		Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
-			// 		File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+			// 		Checksum: regexpSHA256,
+			// 		File:     regexpSHA256WithFile,
 			// 	},
 			// 	Cosign: &registry.Cosign{
 			// 		CosignExperimental: true,
@@ -71,13 +71,13 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 					},
 					Overrides: []*registry.Override{},
 					Checksum: &registry.Checksum{
-						Type:       "github_release",
+						Type:       pkgTypeGitHubRelease,
 						Asset:      "aqua_{{trimV .Version}}_checksums.txt",
-						FileFormat: "regexp",
-						Algorithm:  "sha256",
+						FileFormat: algoTypeRegexp,
+						Algorithm:  algoSHA256,
 						Pattern: &registry.ChecksumPattern{
-							Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
-							File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+							Checksum: regexpSHA256,
+							File:     regexpSHA256WithFile,
 						},
 						Cosign: &registry.Cosign{
 							Opts: []string{},
@@ -91,13 +91,13 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 						Enabled: &disabled,
 					},
 					Checksum: &registry.Checksum{
-						Type:       "github_release",
+						Type:       pkgTypeGitHubRelease,
 						Asset:      "aqua_{{trimV .Version}}_checksums.txt",
-						FileFormat: "regexp",
-						Algorithm:  "sha256",
+						FileFormat: algoTypeRegexp,
+						Algorithm:  algoSHA256,
 						Pattern: &registry.ChecksumPattern{
-							Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
-							File:     `^\b[A-Fa-f0-9]{64}\b\s+(\S+)$`,
+							Checksum: regexpSHA256,
+							File:     regexpSHA256WithFile,
 						},
 						Cosign: &registry.Cosign{
 							Opts: []string{},
@@ -128,7 +128,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 	}
 
 	exePath, err := pkg.ExePath(is.rootDir, &registry.File{
-		Name: "aqua",
+		Name: pkgNameAqua,
 	}, is.runtime)
 	if err != nil {
 		return fmt.Errorf("get the executable file path: %w", err)
@@ -144,7 +144,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 		return fmt.Errorf("get a relative path: %w", err)
 	}
 
-	return is.createLink(logger, filepath.Join(is.rootDir, "bin", "aqua"), a)
+	return is.createLink(logger, filepath.Join(is.rootDir, "bin", pkgNameAqua), a)
 }
 
 func (is *Installer) copyAquaOnWindows(exePath string) error {

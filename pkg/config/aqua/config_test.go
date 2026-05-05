@@ -28,19 +28,19 @@ packages:
 `,
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": &aqua.Registry{
-						Name:      "standard",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Path:      "registry.yaml",
-						Type:      "github_content",
+					regTypeStandard: &aqua.Registry{
+						Name:      regTypeStandard,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Path:      regFileRegistryYaml,
+						Type:      pkgTypeGitHubContent,
 						Ref:       "v0.2.0",
 					},
 				},
 				Packages: []*aqua.Package{
 					{
 						Name:     "cmdx",
-						Registry: "standard",
+						Registry: regTypeStandard,
 						Version:  "v1.6.0",
 						Pin:      true,
 					},
@@ -59,19 +59,19 @@ packages:
 `,
 			exp: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": &aqua.Registry{
-						Name:      "standard",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Path:      "registry.yaml",
+					regTypeStandard: &aqua.Registry{
+						Name:      regTypeStandard,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Path:      regFileRegistryYaml,
 						Ref:       "v0.2.0",
 					},
 				},
 				Packages: []*aqua.Package{
 					{
 						Name:     "suzuki-shunsuke/cmdx",
-						Registry: "standard",
+						Registry: regTypeStandard,
 						Version:  "v1.6.0",
 					},
 				},
@@ -100,13 +100,13 @@ func TestConfig_HasCommandAlias(t *testing.T) {
 	p := aqua.Package{
 		CommandAliases: []*aqua.CommandAlias{
 			{
-				Command: "foo",
+				Command: pkgFoo,
 				Alias:   "bar",
 			},
 		},
 	}
 
-	if p.HasCommandAlias("foo") {
+	if p.HasCommandAlias(pkgFoo) {
 		t.Fatal("HasCommandAlias(foo): wanted false, got true")
 	}
 	if !p.HasCommandAlias("bar") {

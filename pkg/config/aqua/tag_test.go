@@ -18,18 +18,18 @@ func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 		{
 			name: "no tag",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
 			},
 			exp: true,
 		},
 		{
 			name: "package has tags but no tag is specified",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
 				Tags:     []string{"ci"},
 			},
 			exp: true,
@@ -37,10 +37,10 @@ func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 		{
 			name: "tag is matched",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
-				Tags:     []string{"ci", "foo"},
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
+				Tags:     []string{"ci", pkgFoo},
 			},
 			tags: map[string]struct{}{
 				"ci": {},
@@ -50,10 +50,10 @@ func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 		{
 			name: "exclude tag is matched",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
-				Tags:     []string{"ci", "foo"},
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
+				Tags:     []string{"ci", pkgFoo},
 			},
 			excludedTags: map[string]struct{}{
 				"ci": {},
@@ -63,13 +63,13 @@ func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 		{
 			name: "exclude tag and tag are matched",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
-				Tags:     []string{"ci", "foo"},
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
+				Tags:     []string{"ci", pkgFoo},
 			},
 			tags: map[string]struct{}{
-				"foo": {},
+				pkgFoo: {},
 			},
 			excludedTags: map[string]struct{}{
 				"ci": {},
@@ -79,45 +79,45 @@ func TestFilterPackageByTag(t *testing.T) { //nolint:funlen
 		{
 			name: "exclude tag isn't matched and tag is matched",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
-				Tags:     []string{"ci", "foo"},
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
+				Tags:     []string{"ci", pkgFoo},
 			},
 			tags: map[string]struct{}{
-				"foo": {},
+				pkgFoo: {},
 			},
 			excludedTags: map[string]struct{}{
-				"yoo": {},
+				pkgYoo: {},
 			},
 			exp: true,
 		},
 		{
 			name: "exclude tag and tag aren't matched",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
 				Tags:     []string{"ci"},
 			},
 			tags: map[string]struct{}{
-				"foo": {},
+				pkgFoo: {},
 			},
 			excludedTags: map[string]struct{}{
-				"yoo": {},
+				pkgYoo: {},
 			},
 			exp: false,
 		},
 		{
 			name: "exclude tag ins't matched and tag isn't specified",
 			pkg: &aqua.Package{
-				Name:     "cli/cli",
-				Version:  "v2.0.0",
-				Registry: "standard",
+				Name:     repoCliCli,
+				Version:  versionV2,
+				Registry: regTypeStandard,
 				Tags:     []string{"ci"},
 			},
 			excludedTags: map[string]struct{}{
-				"yoo": {},
+				pkgYoo: {},
 			},
 			exp: true,
 		},

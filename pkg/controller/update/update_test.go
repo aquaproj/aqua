@@ -41,14 +41,14 @@ func TestController_Update(t *testing.T) { //nolint:funlen,maintidx
 		{ //nolint:dupl
 			name: "update commands",
 			param: &config.Param{
-				Args: []string{"tfcmt", "gh"},
+				Args: []string{pkgNameTfcmt, "gh"},
 			},
 			versions: map[string]string{
-				"suzuki-shunsuke/tfcmt": "v4.0.0",
-				"cli/cli":               "v2.30.0",
+				repoSuzukiTfcmt: "v4.0.0",
+				repoCliCli:      "v2.30.0",
 			},
 			files: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -57,7 +57,7 @@ packages:
 `,
 			},
 			expFiles: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -66,104 +66,104 @@ packages:
 `,
 			},
 			findResults: map[string]*which.FindResult{
-				"tfcmt": {
+				pkgNameTfcmt: {
 					Package: &config.Package{
 						Package: &aqua.Package{
-							Name:     "suzuki-shunsuke/tfcmt",
-							Registry: "standard",
+							Name:     repoSuzukiTfcmt,
+							Registry: regTypeStandard,
 							Version:  "v3.0.0",
 						},
 						PackageInfo: &registry.PackageInfo{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "tfcmt",
-							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerSuzuki,
+							RepoName:  pkgNameTfcmt,
+							Asset:     tmplTfcmtAsset,
 						},
 						Registry: &aqua.Registry{
-							Name:      "standard",
-							Type:      "github_content",
-							RepoOwner: "aquaproj",
-							RepoName:  "aqua-registry",
+							Name:      regTypeStandard,
+							Type:      pkgTypeGitHubContent,
+							RepoOwner: repoOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
 							Ref:       "v4.0.0",
-							Path:      "registry.yaml",
+							Path:      regFileRegistryYaml,
 						},
 					},
 					File: &registry.File{
-						Name: "tfcmt",
+						Name: pkgNameTfcmt,
 					},
 					Config:         &aqua.Config{},
 					ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/tfcmt/v3.0.0/tfcmt_darwin_arm64.tar.gz/tfcmt",
-					ConfigFilePath: "/workspace/aqua.yaml",
+					ConfigFilePath: pathWorkspaceYaml,
 				},
 				"gh": {
 					Package: &config.Package{
 						Package: &aqua.Package{
-							Name:     "cli/cli",
-							Registry: "standard",
+							Name:     repoCliCli,
+							Registry: regTypeStandard,
 							Version:  "v2.0.0",
 						},
 						PackageInfo: &registry.PackageInfo{
-							Type:      "github_release",
-							RepoOwner: "cli",
-							RepoName:  "cli",
-							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerCli,
+							RepoName:  repoOwnerCli,
+							Asset:     tmplGhAsset,
 							Files: []*registry.File{
 								{
 									Name: "gh",
-									Src:  "{{.AssetWithoutExt}}/bin/gh",
+									Src:  tmplGhBinSrc,
 								},
 							},
 						},
 						Registry: &aqua.Registry{
-							Name:      "standard",
-							Type:      "github_content",
-							RepoOwner: "aquaproj",
-							RepoName:  "aqua-registry",
+							Name:      regTypeStandard,
+							Type:      pkgTypeGitHubContent,
+							RepoOwner: repoOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
 							Ref:       "v4.0.0",
-							Path:      "registry.yaml",
+							Path:      regFileRegistryYaml,
 						},
 					},
 					File: &registry.File{
 						Name: "gh",
-						Src:  "{{.AssetWithoutExt}}/bin/gh",
+						Src:  tmplGhBinSrc,
 					},
 					Config:         &aqua.Config{},
 					ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/cli/cli/v2.0.0/gh_2.0.0_macOS_arm64.zip/gh_2.0.0_macOS_arm64/bin/gh",
-					ConfigFilePath: "/workspace/aqua.yaml",
+					ConfigFilePath: pathWorkspaceYaml,
 				},
 			},
 		},
 		{
 			name: "no arg",
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
+				GOOS:   osDarwin,
+				GOARCH: archArm64,
 			},
 			param: &config.Param{
-				CWD: "/workspace",
+				CWD: pathWorkspace,
 			},
 			versions: map[string]string{
-				"suzuki-shunsuke/tfcmt": "v4.0.0",
-				"cli/cli":               "v2.30.0",
+				repoSuzukiTfcmt: "v4.0.0",
+				repoCliCli:      "v2.30.0",
 			},
 			registries: map[string]*registry.Config{
-				"standard": {
+				regTypeStandard: {
 					PackageInfos: registry.PackageInfos{
 						{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "tfcmt",
-							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerSuzuki,
+							RepoName:  pkgNameTfcmt,
+							Asset:     tmplTfcmtAsset,
 						},
 						{
-							Type:      "github_release",
-							RepoOwner: "cli",
-							RepoName:  "cli",
-							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerCli,
+							RepoName:  repoOwnerCli,
+							Asset:     tmplGhAsset,
 							Files: []*registry.File{
 								{
 									Name: "gh",
-									Src:  "{{.AssetWithoutExt}}/bin/gh",
+									Src:  tmplGhBinSrc,
 								},
 							},
 						},
@@ -171,7 +171,7 @@ packages:
 				},
 			},
 			files: map[string]string{
-				"/workspace/aqua.yaml": `checksum:
+				pathWorkspaceYaml: `checksum:
   enabled: true
 registries:
 - type: standard
@@ -182,7 +182,7 @@ packages:
 `,
 			},
 			expFiles: map[string]string{
-				"/workspace/aqua.yaml": `checksum:
+				pathWorkspaceYaml: `checksum:
   enabled: true
 registries:
 - type: standard
@@ -201,11 +201,11 @@ packages:
 		{
 			name: "only registry",
 			param: &config.Param{
-				CWD:          "/workspace",
+				CWD:          pathWorkspace,
 				OnlyRegistry: true,
 			},
 			files: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -214,7 +214,7 @@ packages:
 `,
 			},
 			expFiles: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.60.0
 packages:
@@ -231,35 +231,35 @@ packages:
 		{
 			name: "only package",
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
+				GOOS:   osDarwin,
+				GOARCH: archArm64,
 			},
 			param: &config.Param{
-				CWD:         "/workspace",
+				CWD:         pathWorkspace,
 				OnlyPackage: true,
 			},
 			versions: map[string]string{
-				"suzuki-shunsuke/tfcmt": "v4.0.0",
-				"cli/cli":               "v2.30.0",
+				repoSuzukiTfcmt: "v4.0.0",
+				repoCliCli:      "v2.30.0",
 			},
 			registries: map[string]*registry.Config{
-				"standard": {
+				regTypeStandard: {
 					PackageInfos: registry.PackageInfos{
 						{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "tfcmt",
-							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerSuzuki,
+							RepoName:  pkgNameTfcmt,
+							Asset:     tmplTfcmtAsset,
 						},
 						{
-							Type:      "github_release",
-							RepoOwner: "cli",
-							RepoName:  "cli",
-							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerCli,
+							RepoName:  repoOwnerCli,
+							Asset:     tmplGhAsset,
 							Files: []*registry.File{
 								{
 									Name: "gh",
-									Src:  "{{.AssetWithoutExt}}/bin/gh",
+									Src:  tmplGhBinSrc,
 								},
 							},
 						},
@@ -267,7 +267,7 @@ packages:
 				},
 			},
 			files: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -276,7 +276,7 @@ packages:
 `,
 			},
 			expFiles: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -288,35 +288,35 @@ packages:
 		{
 			name: "select packages",
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
+				GOOS:   osDarwin,
+				GOARCH: archArm64,
 			},
 			param: &config.Param{
-				CWD:    "/workspace",
+				CWD:    pathWorkspace,
 				Insert: true,
 			},
 			versions: map[string]string{
-				"suzuki-shunsuke/tfcmt": "v4.0.0",
-				"cli/cli":               "v2.30.0",
+				repoSuzukiTfcmt: "v4.0.0",
+				repoCliCli:      "v2.30.0",
 			},
 			registries: map[string]*registry.Config{
-				"standard": {
+				regTypeStandard: {
 					PackageInfos: registry.PackageInfos{
 						{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "tfcmt",
-							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerSuzuki,
+							RepoName:  pkgNameTfcmt,
+							Asset:     tmplTfcmtAsset,
 						},
 						{
-							Type:      "github_release",
-							RepoOwner: "cli",
-							RepoName:  "cli",
-							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerCli,
+							RepoName:  repoOwnerCli,
+							Asset:     tmplGhAsset,
 							Files: []*registry.File{
 								{
 									Name: "gh",
-									Src:  "{{.AssetWithoutExt}}/bin/gh",
+									Src:  tmplGhBinSrc,
 								},
 							},
 						},
@@ -325,7 +325,7 @@ packages:
 			},
 			idxs: []int{1}, // cli/cli
 			files: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -334,7 +334,7 @@ packages:
 `,
 			},
 			expFiles: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -346,34 +346,34 @@ packages:
 		{
 			name: "ignore commit hash",
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "arm64",
+				GOOS:   osDarwin,
+				GOARCH: archArm64,
 			},
 			param: &config.Param{
-				CWD: "/workspace",
+				CWD: pathWorkspace,
 			},
 			versions: map[string]string{
-				"suzuki-shunsuke/tfcmt": "v4.0.0",
-				"cli/cli":               "v2.30.0",
+				repoSuzukiTfcmt: "v4.0.0",
+				repoCliCli:      "v2.30.0",
 			},
 			registries: map[string]*registry.Config{
-				"standard": {
+				regTypeStandard: {
 					PackageInfos: registry.PackageInfos{
 						{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "tfcmt",
-							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerSuzuki,
+							RepoName:  pkgNameTfcmt,
+							Asset:     tmplTfcmtAsset,
 						},
 						{
-							Type:      "github_release",
-							RepoOwner: "cli",
-							RepoName:  "cli",
-							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerCli,
+							RepoName:  repoOwnerCli,
+							Asset:     tmplGhAsset,
 							Files: []*registry.File{
 								{
 									Name: "gh",
-									Src:  "{{.AssetWithoutExt}}/bin/gh",
+									Src:  tmplGhBinSrc,
 								},
 							},
 						},
@@ -381,7 +381,7 @@ packages:
 				},
 			},
 			files: map[string]string{
-				"/workspace/aqua.yaml": `checksum:
+				pathWorkspaceYaml: `checksum:
   enabled: true
 registries:
 - type: standard
@@ -392,7 +392,7 @@ packages:
 `,
 			},
 			expFiles: map[string]string{
-				"/workspace/aqua.yaml": `checksum:
+				pathWorkspaceYaml: `checksum:
   enabled: true
 registries:
 - type: standard
@@ -411,14 +411,14 @@ packages:
 		{ //nolint:dupl
 			name: "update commands with versions",
 			param: &config.Param{
-				Args: []string{"tfcmt", "gh@v2.27.0"},
+				Args: []string{pkgNameTfcmt, "gh@v2.27.0"},
 			},
 			versions: map[string]string{
-				"suzuki-shunsuke/tfcmt": "v4.0.0",
-				"cli/cli":               "v2.30.0",
+				repoSuzukiTfcmt: "v4.0.0",
+				repoCliCli:      "v2.30.0",
 			},
 			files: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -427,7 +427,7 @@ packages:
 `,
 			},
 			expFiles: map[string]string{
-				"/workspace/aqua.yaml": `registries:
+				pathWorkspaceYaml: `registries:
 - type: standard
   ref: v4.0.0
 packages:
@@ -436,70 +436,70 @@ packages:
 `,
 			},
 			findResults: map[string]*which.FindResult{
-				"tfcmt": {
+				pkgNameTfcmt: {
 					Package: &config.Package{
 						Package: &aqua.Package{
-							Name:     "suzuki-shunsuke/tfcmt",
-							Registry: "standard",
+							Name:     repoSuzukiTfcmt,
+							Registry: regTypeStandard,
 							Version:  "v3.0.0",
 						},
 						PackageInfo: &registry.PackageInfo{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "tfcmt",
-							Asset:     "tfcmt_{{.OS}}_{{.Arch}}.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerSuzuki,
+							RepoName:  pkgNameTfcmt,
+							Asset:     tmplTfcmtAsset,
 						},
 						Registry: &aqua.Registry{
-							Name:      "standard",
-							Type:      "github_content",
-							RepoOwner: "aquaproj",
-							RepoName:  "aqua-registry",
+							Name:      regTypeStandard,
+							Type:      pkgTypeGitHubContent,
+							RepoOwner: repoOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
 							Ref:       "v4.0.0",
-							Path:      "registry.yaml",
+							Path:      regFileRegistryYaml,
 						},
 					},
 					File: &registry.File{
-						Name: "tfcmt",
+						Name: pkgNameTfcmt,
 					},
 					Config:         &aqua.Config{},
 					ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/tfcmt/v3.0.0/tfcmt_darwin_arm64.tar.gz/tfcmt",
-					ConfigFilePath: "/workspace/aqua.yaml",
+					ConfigFilePath: pathWorkspaceYaml,
 				},
 				"gh": {
 					Package: &config.Package{
 						Package: &aqua.Package{
-							Name:     "cli/cli",
-							Registry: "standard",
+							Name:     repoCliCli,
+							Registry: regTypeStandard,
 							Version:  "v2.0.0",
 						},
 						PackageInfo: &registry.PackageInfo{
-							Type:      "github_release",
-							RepoOwner: "cli",
-							RepoName:  "cli",
-							Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.zip",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoOwnerCli,
+							RepoName:  repoOwnerCli,
+							Asset:     tmplGhAsset,
 							Files: []*registry.File{
 								{
 									Name: "gh",
-									Src:  "{{.AssetWithoutExt}}/bin/gh",
+									Src:  tmplGhBinSrc,
 								},
 							},
 						},
 						Registry: &aqua.Registry{
-							Name:      "standard",
-							Type:      "github_content",
-							RepoOwner: "aquaproj",
-							RepoName:  "aqua-registry",
+							Name:      regTypeStandard,
+							Type:      pkgTypeGitHubContent,
+							RepoOwner: repoOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
 							Ref:       "v4.0.0",
-							Path:      "registry.yaml",
+							Path:      regFileRegistryYaml,
 						},
 					},
 					File: &registry.File{
 						Name: "gh",
-						Src:  "{{.AssetWithoutExt}}/bin/gh",
+						Src:  tmplGhBinSrc,
 					},
 					Config:         &aqua.Config{},
 					ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/cli/cli/v2.0.0/gh_2.0.0_macOS_arm64.zip/gh_2.0.0_macOS_arm64/bin/gh",
-					ConfigFilePath: "/workspace/aqua.yaml",
+					ConfigFilePath: pathWorkspaceYaml,
 				},
 			},
 		},

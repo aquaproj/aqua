@@ -43,7 +43,7 @@ func TestUpdate_GetEnabled(t *testing.T) {
 			update: &aqua.Update{
 				Enabled:        new(true),
 				AllowedVersion: "semver('>=1.0.0')",
-				Types:          []string{"major", "minor", "patch"},
+				Types:          []string{"major", "minor", updateTypePatch},
 			},
 			expected: true,
 		},
@@ -52,7 +52,7 @@ func TestUpdate_GetEnabled(t *testing.T) {
 			update: &aqua.Update{
 				Enabled:        new(false),
 				AllowedVersion: "semver('>=1.0.0')",
-				Types:          []string{"minor", "patch"},
+				Types:          []string{"minor", updateTypePatch},
 			},
 			expected: false,
 		},
@@ -66,7 +66,7 @@ func TestUpdate_GetEnabled(t *testing.T) {
 		{
 			name: "types constraint with nil enabled",
 			update: &aqua.Update{
-				Types: []string{"patch"},
+				Types: []string{updateTypePatch},
 			},
 			expected: true,
 		},

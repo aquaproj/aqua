@@ -14,16 +14,16 @@ func Test_replace(t *testing.T) {
 	}{
 		{
 			title: "replace",
-			key:   "darwin",
+			key:   osDarwin,
 			exp:   "x86_64",
 			replacements: map[string]string{
-				"darwin": "x86_64",
+				osDarwin: "x86_64",
 			},
 		},
 		{
 			title:        "not replace",
-			key:          "darwin",
-			exp:          "darwin",
+			key:          osDarwin,
+			exp:          osDarwin,
 			replacements: map[string]string{},
 		},
 	}

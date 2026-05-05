@@ -16,7 +16,7 @@ func Test_sortAndMergeGroups(t *testing.T) { //nolint:funlen
 		exp    []*Group
 	}{
 		{
-			name: "normal",
+			name: caseNormal,
 			groups: []*Group{
 				{
 					releases: []*Release{
@@ -177,7 +177,7 @@ func Test_groupByExcludedAsset(t *testing.T) { //nolint:funlen
 		exp    []*Group
 	}{
 		{
-			name: "normal",
+			name: caseNormal,
 			groups: []*Group{
 				{
 					releases: []*Release{

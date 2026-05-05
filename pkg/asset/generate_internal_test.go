@@ -19,30 +19,30 @@ func Test_mergeReplacements(t *testing.T) {
 	}{
 		{
 			name: "normal",
-			goos: "linux",
+			goos: osLinux,
 			m1: map[string]string{
 				// linux/amd64
-				"linux": "Linux",
-				"amd64": "x86_64",
+				osLinux:   osLinuxCapitalized,
+				archAmd64: archX86_64,
 			},
 			m2: map[string]string{
 				// linux/arm64
-				"linux": "Linux",
+				osLinux: osLinuxCapitalized,
 			},
 			m: map[string]string{
 				// linux
-				"linux": "Linux",
-				"amd64": "x86_64",
+				osLinux:   osLinuxCapitalized,
+				archAmd64: archX86_64,
 			},
 			f: true,
 		},
 		{
 			name: "conflicted",
-			goos: "linux",
+			goos: osLinux,
 			m1: map[string]string{
 				// linux/amd64
-				"linux": "Linux",
-				"amd64": "x86_64",
+				osLinux:   osLinuxCapitalized,
+				archAmd64: archX86_64,
 			},
 			m2: nil,
 			m:  nil,
@@ -75,14 +75,14 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 			name: "normal",
 			overrides: []*registry.Override{
 				{
-					GOOS: "linux",
+					GOOS: osLinux,
 					Replacements: map[string]string{
-						"linux": "Linux",
+						osLinux: osLinuxCapitalized,
 					},
 				},
 			},
 			replacements: map[string]string{
-				"linux": "Linux",
+				osLinux: osLinuxCapitalized,
 			},
 			exp: nil,
 		},
@@ -90,26 +90,26 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 			name: "complicated",
 			overrides: []*registry.Override{
 				{
-					GOOS: "linux",
+					GOOS: osLinux,
 					Replacements: map[string]string{
-						"linux": "Linux",
+						osLinux: osLinuxCapitalized,
 					},
 				},
 				{
-					GOOS: "darwin",
+					GOOS: osDarwin,
 					Replacements: map[string]string{
-						"amd64": "x86_64",
+						archAmd64: archX86_64,
 					},
 				},
 			},
 			replacements: map[string]string{
-				"linux": "Linux",
+				osLinux: osLinuxCapitalized,
 			},
 			exp: []*registry.Override{
 				{
-					GOOS: "darwin",
+					GOOS: osDarwin,
 					Replacements: map[string]string{
-						"amd64": "x86_64",
+						archAmd64: archX86_64,
 					},
 				},
 			},
@@ -118,38 +118,38 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 			name: "complicated 2",
 			overrides: []*registry.Override{
 				{
-					GOOS: "linux",
+					GOOS: osLinux,
 					Replacements: map[string]string{
-						"linux": "Linux",
-						"amd64": "x86_64",
+						osLinux:   osLinuxCapitalized,
+						archAmd64: archX86_64,
 					},
 				},
 				{
-					GOOS: "darwin",
+					GOOS: osDarwin,
 					Replacements: map[string]string{
-						"amd64":  "x86_64",
-						"darwin": "MacOS",
+						archAmd64: archX86_64,
+						osDarwin:  "MacOS",
 					},
 				},
 				{
-					GOOS:   "windows",
-					Format: "zip",
+					GOOS:   osWindows,
+					Format: formatZip,
 					Replacements: map[string]string{
-						"amd64":   "x86_64",
-						"windows": "Windows",
+						archAmd64: archX86_64,
+						osWindows: "Windows",
 					},
 				},
 			},
 			replacements: map[string]string{
-				"linux":   "Linux",
-				"darwin":  "MacOS",
-				"windows": "Windows",
-				"amd64":   "x86_64",
+				osLinux:   osLinuxCapitalized,
+				osDarwin:  "MacOS",
+				osWindows: "Windows",
+				archAmd64: archX86_64,
 			},
 			exp: []*registry.Override{
 				{
-					GOOS:   "windows",
-					Format: "zip",
+					GOOS:   osWindows,
+					Format: formatZip,
 				},
 			},
 		},
