@@ -19,8 +19,8 @@ func TestGetRuntimesFromEnvs(t *testing.T) { //nolint:funlen
 			rts:  allRuntimes(),
 		},
 		{
-			name: "all",
-			envs: []string{darwin, "all"},
+			name: envAll,
+			envs: []string{darwin, envAll},
 			rts:  allRuntimes(),
 		},
 		{

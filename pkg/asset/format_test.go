@@ -15,10 +15,10 @@ func TestRemoveExtFromAsset(t *testing.T) {
 		format    string
 	}{
 		{
-			name:      "tar.gz",
+			name:      formatTarGz,
 			assetName: "tfcmt_linux_amd64.tar.gz",
 			exp:       "tfcmt_linux_amd64",
-			format:    "tar.gz",
+			format:    formatTarGz,
 		},
 		{
 			name:      "tgz",
@@ -30,13 +30,13 @@ func TestRemoveExtFromAsset(t *testing.T) {
 			name:      "exe",
 			assetName: "tfcmt_windows_amd64.exe",
 			exp:       "tfcmt_windows_amd64.exe",
-			format:    "raw",
+			format:    formatRaw,
 		},
 		{
 			name:      "js",
 			assetName: "tfcmt.js",
 			exp:       "tfcmt.js",
-			format:    "raw",
+			format:    formatRaw,
 		},
 		{
 			name:      "dmg",

@@ -77,7 +77,7 @@ func Test_wrapExec(t *testing.T) { //nolint:funlen
 			args:       []string{"arg1"},
 			expExeName: "java",
 			expExePath: "/usr/bin/java",
-			expArgs:    []string{"-jar", "/path/to/app.jar", "arg1"},
+			expArgs:    []string{flagJar, "/path/to/app.jar", "arg1"},
 		},
 		{
 			title: "jar without args",
@@ -89,7 +89,7 @@ func Test_wrapExec(t *testing.T) { //nolint:funlen
 			args:       []string{},
 			expExeName: "java",
 			expExePath: "/usr/bin/java",
-			expArgs:    []string{"-jar", "/path/to/app.jar"},
+			expArgs:    []string{flagJar, "/path/to/app.jar"},
 		},
 	}
 	for _, d := range data {

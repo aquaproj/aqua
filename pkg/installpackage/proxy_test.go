@@ -32,15 +32,15 @@ func Test_installer_InstallProxy(t *testing.T) {
 		isErr    bool
 	}{
 		{
-			name: "file already exists",
+			name: errFileAlreadyExists,
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
-				CWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
+				RootDir:        pathRoot,
+				CWD:            pathWorkspace,
+				ConfigFilePath: fileAquaYaml,
 				MaxParallelism: 5,
 			},
 			files: map[string]string{

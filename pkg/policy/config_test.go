@@ -21,7 +21,7 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 		exp   *policy.Config
 	}{
 		{
-			name: "normal",
+			name: caseNormal,
 			cfg: &policy.Config{
 				Path: "/home/foo/aqua-policy.yaml",
 				YAML: &policy.ConfigYAML{
@@ -31,14 +31,14 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 						},
 						{
 							Type: registryTypeLocal,
-							Path: "registry.yaml",
-							Name: "foo",
+							Path: regFileRegistryYaml,
+							Name: pkgFoo,
 						},
 					},
 					Packages: []*policy.Package{
 						{},
 						{
-							RegistryName: "foo",
+							RegistryName: pkgFoo,
 						},
 					},
 				},
@@ -48,35 +48,35 @@ func TestConfig_Init(t *testing.T) { //nolint:funlen
 				YAML: &policy.ConfigYAML{
 					Registries: []*policy.Registry{
 						{
-							Type:      "github_content",
+							Type:      pkgTypeGitHubContent,
 							Name:      registryTypeStandard,
-							RepoOwner: "aquaproj",
-							RepoName:  "aqua-registry",
-							Path:      "registry.yaml",
+							RepoOwner: regOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
+							Path:      regFileRegistryYaml,
 						},
 						{
 							Type: registryTypeLocal,
 							Path: "/home/foo/registry.yaml",
-							Name: "foo",
+							Name: pkgFoo,
 						},
 					},
 					Packages: []*policy.Package{
 						{
 							RegistryName: registryTypeStandard,
 							Registry: &policy.Registry{
-								Type:      "github_content",
+								Type:      pkgTypeGitHubContent,
 								Name:      registryTypeStandard,
-								RepoOwner: "aquaproj",
-								RepoName:  "aqua-registry",
-								Path:      "registry.yaml",
+								RepoOwner: regOwnerAquaproj,
+								RepoName:  regNameAquaRegistry,
+								Path:      regFileRegistryYaml,
 							},
 						},
 						{
-							RegistryName: "foo",
+							RegistryName: pkgFoo,
 							Registry: &policy.Registry{
 								Type: registryTypeLocal,
 								Path: "/home/foo/registry.yaml",
-								Name: "foo",
+								Name: pkgFoo,
 							},
 						},
 					},

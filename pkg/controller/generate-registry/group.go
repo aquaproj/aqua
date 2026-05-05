@@ -60,7 +60,7 @@ func (g *Group) VersionConstraint() (string, *Release) { //nolint:cyclop
 		return vc, nil
 	default:
 		nonSemvers := make([]*Release, 0, len(g.releases))
-		for i := len(g.releases) - 1; i >= 0; i-- {
+		for range slices.Backward(g.releases) {
 			release := g.releases[len(g.releases)-1]
 			if release.Version == nil {
 				nonSemvers = append(nonSemvers, release)

@@ -20,7 +20,7 @@ func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 		isErr   bool
 	}{
 		{
-			name:    "sha256",
+			name:    algoSHA256,
 			content: `89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101  nova_3.2.0_darwin_arm64.tar.gz`,
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
@@ -34,11 +34,11 @@ func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 				},
 			},
 			m: map[string]string{
-				"nova_3.2.0_darwin_arm64.tar.gz": "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101",
+				assetNova320DarwinArm64: checksumValue,
 			},
 		},
 		{
-			name:    "sha256",
+			name:    algoSHA256,
 			content: `89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101  /home/runner/nova_3.2.0_darwin_arm64.tar.gz`,
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
@@ -50,7 +50,7 @@ func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 					},
 				},
 			},
-			s: "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101",
+			s: checksumValue,
 		},
 		{
 			name:    "default",
@@ -61,7 +61,7 @@ func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 				},
 			},
 			m: map[string]string{
-				"nova_3.2.0_darwin_arm64.tar.gz": "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101",
+				assetNova320DarwinArm64: checksumValue,
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 				},
 			},
 			m: map[string]string{
-				"nova_3.2.0_darwin_arm64.tar.gz": "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101",
+				assetNova320DarwinArm64: checksumValue,
 			},
 		},
 		{
@@ -84,7 +84,7 @@ func TestParseChecksumFile(t *testing.T) { //nolint:funlen
 					Checksum: &registry.Checksum{},
 				},
 			},
-			s: "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101",
+			s: checksumValue,
 		},
 		{
 			name: "default multiple lines",

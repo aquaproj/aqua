@@ -21,7 +21,7 @@ func RegistryID(regist *aqua.Registry) string {
 func CheckRegistry(regist *aqua.Registry, checksums *Checksums, content []byte) error {
 	checksumID := RegistryID(regist)
 	chksum := checksums.Get(checksumID)
-	algorithm := "sha512"
+	algorithm := algoSHA512
 	if chksum != nil {
 		algorithm = chksum.Algorithm
 	}
@@ -32,7 +32,7 @@ func CheckRegistry(regist *aqua.Registry, checksums *Checksums, content []byte) 
 	if chksum == nil {
 		chksum = &Checksum{
 			ID:        checksumID,
-			Algorithm: "sha512",
+			Algorithm: algoSHA512,
 			Checksum:  chk,
 		}
 		checksums.Set(checksumID, chksum)

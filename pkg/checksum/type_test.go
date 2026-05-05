@@ -19,23 +19,23 @@ func TestChecksums_Get(t *testing.T) {
 	}{
 		{
 			name: "key not found",
-			key:  "foo",
+			key:  pkgFoo,
 			exp:  nil,
 		},
 		{
 			name: "key is found",
-			key:  "foo",
+			key:  pkgFoo,
 			m: map[string]*checksum.Checksum{
-				"foo": {
-					ID:        "foo",
+				pkgFoo: {
+					ID:        pkgFoo,
 					Checksum:  "bar",
-					Algorithm: "sha256",
+					Algorithm: algoSHA256,
 				},
 			},
 			exp: &checksum.Checksum{
-				ID:        "foo",
+				ID:        pkgFoo,
 				Checksum:  "BAR",
-				Algorithm: "sha256",
+				Algorithm: algoSHA256,
 			},
 		},
 	}
@@ -64,16 +64,16 @@ func TestChecksums_ReadFile(t *testing.T) {
 	}{
 		{
 			name: "file not found",
-			p:    ".aqua-checksums.json",
+			p:    fileDotAquaChecksums,
 		},
 		{
 			name: "file is found",
 			m: map[string]string{
-				".aqua-checksums.json": `{
+				fileDotAquaChecksums: `{
   "github_release/github.com/cli/cli/v2.10.1/gh_2.10.1_macOS_amd64.tar.gz": "xxx"
 }`,
 			},
-			p: ".aqua-checksums.json",
+			p: fileDotAquaChecksums,
 		},
 	}
 	for _, d := range data {
@@ -111,10 +111,10 @@ func TestChecksums_UpdateFile(t *testing.T) {
 				{
 					ID:        "github_release/github.com/cli/cli/v2.10.1/gh_2.10.1_macOS_amd64.tar.gz",
 					Checksum:  "xxx",
-					Algorithm: "sha256",
+					Algorithm: algoSHA256,
 				},
 			},
-			p: ".aqua-checksums.json",
+			p: fileDotAquaChecksums,
 		},
 	}
 	for _, d := range data {
@@ -148,46 +148,46 @@ func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) { //nolint:funlen
 	}{
 		{
 			name:        "new",
-			cfgFilePath: "aqua.yaml",
-			exp:         "aqua-checksums.json",
+			cfgFilePath: fileAquaYaml,
+			exp:         fileAquaChecksums,
 		},
 		{
 			name:        "aqua-checksums.json > .aqua-checksums.json",
-			cfgFilePath: "aqua.yaml",
-			exp:         "aqua-checksums.json",
+			cfgFilePath: fileAquaYaml,
+			exp:         fileAquaChecksums,
 			files: map[string]string{
-				"aqua-checksums.json":  "",
-				".aqua-checksums.json": "",
+				fileAquaChecksums:    "",
+				fileDotAquaChecksums: "",
 			},
 		},
 		{
-			name:        ".aqua-checksums.json",
-			cfgFilePath: "aqua.yaml",
-			exp:         ".aqua-checksums.json",
+			name:        fileDotAquaChecksums,
+			cfgFilePath: fileAquaYaml,
+			exp:         fileDotAquaChecksums,
 			files: map[string]string{
-				".aqua-checksums.json": "",
+				fileDotAquaChecksums: "",
 			},
 		},
 		{
 			name:        "new absolute",
-			cfgFilePath: "/home/foo/aqua.yaml",
-			exp:         "/home/foo/aqua-checksums.json",
+			cfgFilePath: pathHomeFooAquaYaml,
+			exp:         pathHomeFooAquaChecksums,
 		},
 		{
 			name:        "absolute aqua-checksums.json > .aqua-checksums.json",
-			cfgFilePath: "/home/foo/aqua.yaml",
-			exp:         "/home/foo/aqua-checksums.json",
+			cfgFilePath: pathHomeFooAquaYaml,
+			exp:         pathHomeFooAquaChecksums,
 			files: map[string]string{
-				"/home/foo/.aqua-checksums.json": "",
-				"/home/foo/aqua-checksums.json":  "",
+				pathHomeFooDotAquaChecksums: "",
+				pathHomeFooAquaChecksums:    "",
 			},
 		},
 		{
 			name:        "absolute .aqua-checksums.json",
-			cfgFilePath: "/home/foo/aqua.yaml",
-			exp:         "/home/foo/.aqua-checksums.json",
+			cfgFilePath: pathHomeFooAquaYaml,
+			exp:         pathHomeFooDotAquaChecksums,
 			files: map[string]string{
-				"/home/foo/.aqua-checksums.json": "",
+				pathHomeFooDotAquaChecksums: "",
 			},
 		},
 	}
