@@ -19,5 +19,5 @@ packages:
   - name: suzuki-shunsuke/mkghtag@v0.1.11
   - name: suzuki-shunsuke/tfcmt@v4.14.15
     registry: tfcmt
-  - name: pkdindustries/soulshack@v0.74
+  - name: pkdindustries/soulshack@v0.93
     registry: soulshack
