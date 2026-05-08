@@ -25,6 +25,9 @@
     "react-dom": "^19.0.0",
     "url-loader": "4.1.1"
   },
+  "overrides": {
+    "serialize-javascript": "^7.0.5"
+  },
   "browserslist": {
     "production": [
       ">0.5%",
