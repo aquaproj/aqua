@@ -16,7 +16,7 @@ func RegistryID(regist *aqua.Registry) string {
 }
 
 // CheckRegistry validates the integrity of a registry by comparing its content against stored checksums.
-// If no checksum exists for the registry, it calculates and stores a new one using SHA512.
+// If no checksum exists for the registry, it calculates and stores a new one using SHA256.
 // If a checksum exists, it verifies the content matches the expected checksum.
 func CheckRegistry(regist *aqua.Registry, checksums *Checksums, content []byte) error {
 	checksumID := RegistryID(regist)
