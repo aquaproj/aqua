@@ -1,10 +1,12 @@
 package expr
 
 import (
+	"log/slog"
 	"regexp"
 	"strings"
 
 	"github.com/hashicorp/go-version"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Compare struct {
@@ -43,21 +45,32 @@ func comparisons(sv1 *version.Version) []*Compare {
 	}
 }
 
-func getCompareFunc(v string) func(s string) bool {
+func getCompareFunc(logger *slog.Logger, v string) func(s string) bool {
 	return func(s string) bool {
-		return compare(s, v)
+		return compare(logger, s, v)
+	}
+}
+
+func emptySemverWithVersion(_, _ string) bool {
+	return false
+}
+
+func compareFunc(logger *slog.Logger) func(string, string) bool {
+	return func(constr, ver string) bool {
+		return compare(logger, constr, ver)
 	}
 }
 
 var commitHash = regexp.MustCompile(`^[0-9a-f]{40}$`)
 
-func compare(constr, ver string) bool {
+func compare(logger *slog.Logger, constr, ver string) bool {
 	if commitHash.MatchString(ver) {
 		return false
 	}
 	sv1, err := version.NewVersion(ver)
 	if err != nil {
-		panic(err)
+		slogerr.WithError(logger, err).Debug("parse a version as semver", "parsed_version", ver)
+		return false
 	}
 	for constraint := range strings.SplitSeq(strings.TrimSpace(constr), ",") {
 		c := strings.TrimSpace(constraint)
@@ -69,7 +82,8 @@ func compare(constr, ver string) bool {
 			}
 			sv2, err := version.NewVersion(strings.TrimSpace(s))
 			if err != nil {
-				panic(err)
+				slogerr.WithError(logger, err).Debug("parse a version as semver", "parsed_version", s)
+				return false
 			}
 			if !comp.compare(sv2) {
 				return false

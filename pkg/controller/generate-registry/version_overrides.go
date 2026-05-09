@@ -72,7 +72,7 @@ func excludeVersion(logger *slog.Logger, tag string, cfg *Config) bool {
 		return true
 	}
 	if cfg.VersionFilter != nil {
-		f, err := expr.EvaluateVersionFilter(cfg.VersionFilter, tag)
+		f, err := expr.EvaluateVersionFilter(logger, cfg.VersionFilter, tag)
 		if err != nil {
 			slogerr.WithError(logger, err).Warn("evaluate a version filter", "tag_name", tag)
 			return false
@@ -177,7 +177,8 @@ func (c *Controller) listReleases(ctx context.Context, logger *slog.Logger, pkgI
 	for range 10 {
 		releases, resp, err := c.github.ListReleases(ctx, repoOwner, repoName, opt)
 		if err != nil {
-			slogerr.WithError(logger, err).Warn("list releases",
+			slogerr.WithError(logger, err).Warn(
+				"list releases",
 				"repo_owner", repoOwner,
 				"repo_name", repoName,
 			)

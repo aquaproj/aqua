@@ -1,6 +1,7 @@
 package versiongetter
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -59,7 +60,7 @@ func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 	return filters, nil
 }
 
-func matchTagByFilter(tagName string, filter *Filter) bool {
+func matchTagByFilter(logger *slog.Logger, tagName string, filter *Filter) bool {
 	sv := tagName
 	if filter.Prefix != "" {
 		if !strings.HasPrefix(tagName, filter.Prefix) {
@@ -68,14 +69,14 @@ func matchTagByFilter(tagName string, filter *Filter) bool {
 		sv = strings.TrimPrefix(tagName, filter.Prefix)
 	}
 	if filter.Filter != nil {
-		if f, err := expr.EvaluateVersionFilter(filter.Filter, tagName); err != nil || !f {
+		if f, err := expr.EvaluateVersionFilter(logger, filter.Filter, tagName); err != nil || !f {
 			return false
 		}
 	}
 	if filter.Constraint == "" {
 		return true
 	}
-	if f, err := expr.EvaluateVersionConstraints(filter.Constraint, tagName, sv); err == nil && f {
+	if f, err := expr.EvaluateVersionConstraints(logger, filter.Constraint, tagName, sv); err == nil && f {
 		return true
 	}
 	return false

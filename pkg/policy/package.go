@@ -40,7 +40,7 @@ func validatePackage(logger *slog.Logger, param *paramValidatePackage) error {
 		return nil
 	}
 	for _, policyPkg := range param.PolicyConfig.Packages {
-		f, err := matchPkg(param.Pkg, policyPkg)
+		f, err := matchPkg(logger, param.Pkg, policyPkg)
 		if err != nil {
 			// If it fails to check if the policy matches with the package, output a debug log and treat as the policy doesn't match with the package.
 			slogerr.WithError(logger, err).Debug("check if the package matches with a policy")
@@ -53,7 +53,7 @@ func validatePackage(logger *slog.Logger, param *paramValidatePackage) error {
 	return errUnAllowedPackage
 }
 
-func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
+func matchPkg(logger *slog.Logger, pkg *config.Package, policyPkg *Package) (bool, error) {
 	if policyPkg.Name != "" && pkg.Package.Name != policyPkg.Name {
 		return false, nil
 	}
@@ -62,7 +62,7 @@ func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 		if pkg.PackageInfo.VersionPrefix != "" {
 			sv = strings.TrimPrefix(pkg.Package.Version, pkg.PackageInfo.VersionPrefix)
 		}
-		matched, err := expr.EvaluateVersionConstraints(policyPkg.Version, pkg.Package.Version, sv)
+		matched, err := expr.EvaluateVersionConstraints(logger, policyPkg.Version, pkg.Package.Version, sv)
 		if err != nil {
 			return false, fmt.Errorf("evaluate the version constraint of package: %w", err)
 		}
@@ -70,10 +70,10 @@ func matchPkg(pkg *config.Package, policyPkg *Package) (bool, error) {
 			return false, nil
 		}
 	}
-	return matchRegistry(pkg.Registry, policyPkg.Registry)
+	return matchRegistry(logger, pkg.Registry, policyPkg.Registry)
 }
 
-func matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
+func matchRegistry(logger *slog.Logger, rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
 	if rgst.Type != rgstPolicy.Type {
 		return false, nil
 	}
@@ -91,7 +91,7 @@ func matchRegistry(rgst *aqua.Registry, rgstPolicy *Registry) (bool, error) {
 	}
 
 	if rgstPolicy.Ref != "" {
-		matched, err := expr.EvaluateVersionConstraints(rgstPolicy.Ref, rgst.Ref, rgst.Ref)
+		matched, err := expr.EvaluateVersionConstraints(logger, rgstPolicy.Ref, rgst.Ref, rgst.Ref)
 		if err != nil {
 			return false, fmt.Errorf("evaluate the version constraint of registry: %w", err)
 		}

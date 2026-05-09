@@ -1,6 +1,7 @@
 package versiongetter
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/expr"
@@ -102,7 +103,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			f := filterRelease(d.release, d.filters)
+			f := filterRelease(slog.Default(), d.release, d.filters)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)
 			}

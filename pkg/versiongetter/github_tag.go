@@ -55,7 +55,7 @@ func (g *GitHubTagVersionGetter) Get(ctx context.Context, logger *slog.Logger, p
 			return "", fmt.Errorf("list tags: %w", err)
 		}
 		for _, tag := range tags {
-			if filterTag(tag, filters) {
+			if filterTag(logger, tag, filters) {
 				candidates = append(candidates, convTag(tag))
 			}
 		}
@@ -89,7 +89,7 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logger *slog.Logger, 
 				continue
 			}
 			tagNames[tagName] = struct{}{}
-			if filterTag(tag, filters) {
+			if filterTag(logger, tag, filters) {
 				versions = append(versions, tagName)
 			}
 		}
@@ -103,10 +103,10 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logger *slog.Logger, 
 	}
 }
 
-func filterTag(tag *github.RepositoryTag, filters []*Filter) bool {
+func filterTag(logger *slog.Logger, tag *github.RepositoryTag, filters []*Filter) bool {
 	tagName := tag.GetName()
 	for _, filter := range filters {
-		if matchTagByFilter(tagName, filter) {
+		if matchTagByFilter(logger, tagName, filter) {
 			return !filter.NoAsset
 		}
 	}
