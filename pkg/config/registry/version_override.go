@@ -17,14 +17,15 @@ func (p *PackageInfo) setTopVersion(logger *slog.Logger, v string) *PackageInfo 
 		}
 		sv = strings.TrimPrefix(v, prefix)
 	}
-	a, err := expr.EvaluateVersionConstraints(p.VersionConstraints, v, sv)
+	a, err := expr.EvaluateVersionConstraints(logger, p.VersionConstraints, v, sv)
 	if err != nil {
 		// If it fails to evaluate version_constraint, output a debug log and treats as version_constraint is false.
 		slogerr.WithError(logger, err).Debug("evaluate the version_constraint")
 		return nil
 	}
 	if a {
-		logger.Debug("match the version_constraint",
+		logger.Debug(
+			"match the version_constraint",
 			"version_constraint", p.VersionConstraints,
 			"package_version", v,
 			"package_semver", sv,
@@ -57,14 +58,15 @@ func (p *PackageInfo) SetVersion(logger *slog.Logger, v string) (*PackageInfo, e
 			}
 			sv = strings.TrimPrefix(v, prefix)
 		}
-		a, err := expr.EvaluateVersionConstraints(vo.VersionConstraints, v, sv)
+		a, err := expr.EvaluateVersionConstraints(logger, vo.VersionConstraints, v, sv)
 		if err != nil {
 			// If it fails to evaluate version_constraint, output a debug log and treats as version_constraint is false.
 			slogerr.WithError(logger, err).Debug("evaluate the version_constraint")
 			continue
 		}
 		if a {
-			logger.Debug("match the version_constraint",
+			logger.Debug(
+				"match the version_constraint",
 				"version_constraint", vo.VersionConstraints,
 				"package_version", v,
 				"package_semver", sv,
@@ -72,7 +74,8 @@ func (p *PackageInfo) SetVersion(logger *slog.Logger, v string) (*PackageInfo, e
 			return p.overrideVersion(vo), nil
 		}
 	}
-	logger.Debug("no version_constraint matches",
+	logger.Debug(
+		"no version_constraint matches",
 		"version_constraint", p.VersionConstraints,
 		"package_version", v,
 	)

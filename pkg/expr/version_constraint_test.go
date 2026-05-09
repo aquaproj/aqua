@@ -1,6 +1,7 @@
 package expr_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/expr"
@@ -63,7 +64,7 @@ func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			b, err := expr.EvaluateVersionConstraints(d.constraints, d.version, d.semver)
+			b, err := expr.EvaluateVersionConstraints(slog.Default(), d.constraints, d.version, d.semver)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")
