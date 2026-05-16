@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.58.1
+   2.59.0
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -61,7 +61,7 @@ NAME:
    aqua init - Create a configuration file if it doesn't exist
 
 USAGE:
-   aqua init [<created file path. The default value is "aqua.yaml">]
+   aqua init [options] [<created file path. The default value is "aqua.yaml">]
 
 DESCRIPTION:
    Create a configuration file if it doesn't exist
@@ -78,6 +78,16 @@ OPTIONS:
    --import-dir string, -i string  import_dir
    --create-dir, -d                Create a directory named aqua and create aqua.yaml in it
    --help, -h                      show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua install
@@ -88,7 +98,7 @@ NAME:
    aqua install - Install tools
 
 USAGE:
-   aqua install
+   aqua install [options]
 
 DESCRIPTION:
    Install tools according to the configuration files.
@@ -120,6 +130,16 @@ OPTIONS:
    --tags string, -t string  filter installed packages with tags
    --exclude-tags string     exclude installed packages with tags
    --help, -h                show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua generate
@@ -130,7 +150,7 @@ NAME:
    aqua generate - Search packages in registries and output the configuration interactively
 
 USAGE:
-   aqua generate [<registry name>,<package name> ...]
+   aqua generate [options] [<registry name>,<package name> ...]
 
 DESCRIPTION:
    Search packages in registries and output the configuration interactively.
@@ -252,6 +272,16 @@ OPTIONS:
    --select-version, -s  Select the installed version interactively. Default to display 30 versions, use --limit/-l to change it.
    --limit int, -l int   The maximum number of versions. Non-positive number refers to no limit. (default: 30)
    --help, -h            show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua update-aqua
@@ -262,7 +292,7 @@ NAME:
    aqua update-aqua - Update aqua
 
 USAGE:
-   aqua update-aqua [arguments...]
+   aqua update-aqua [options] version 
 
 DESCRIPTION:
    Update aqua.
@@ -280,6 +310,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua update-checksum
@@ -290,7 +330,7 @@ NAME:
    aqua update-checksum - Create or Update aqua-checksums.json
 
 USAGE:
-   aqua update-checksum
+   aqua update-checksum [options]
 
 DESCRIPTION:
    Create or Update aqua-checksums.json.
@@ -315,6 +355,16 @@ OPTIONS:
    --deep      This flag was deprecated and had no meaning from aqua v2.0.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/1769
    --prune     Remove unused checksums
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua update
@@ -325,7 +375,7 @@ NAME:
    aqua update - Update registries and packages
 
 USAGE:
-   aqua update [arguments...]
+   aqua update [options] [packages ...] 
 
 DESCRIPTION:
    Update registries and packages.
@@ -416,6 +466,16 @@ OPTIONS:
    --tags string, -t string  filter installed packages with tags
    --exclude-tags string     exclude installed packages with tags
    --help, -h                show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua which
@@ -426,7 +486,7 @@ NAME:
    aqua which - Output the absolute file path of the given command
 
 USAGE:
-   aqua which <command name>
+   aqua which [options] <command name>
 
 DESCRIPTION:
    Output the absolute file path of the given command
@@ -453,6 +513,16 @@ DESCRIPTION:
 OPTIONS:
    --version, -v  Output the given package version
    --help, -h     show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua info
@@ -463,7 +533,7 @@ NAME:
    aqua info - Show information
 
 USAGE:
-   aqua info
+   aqua info [options]
 
 DESCRIPTION:
    Show information.
@@ -472,6 +542,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua remove
@@ -482,7 +562,7 @@ NAME:
    aqua remove - Uninstall packages
 
 USAGE:
-   aqua remove [<registry name>,]<package name> [...]
+   aqua remove [options] [<registry name>,]<package name> [...]
 
 DESCRIPTION:
    Uninstall packages.
@@ -515,6 +595,16 @@ OPTIONS:
    --mode string, -m string  Removed target modes. l: link, p: package [$AQUA_REMOVE_MODE]
    -i                        Select packages with a Fuzzy Finder
    --help, -h                show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua vacuum
@@ -525,7 +615,7 @@ NAME:
    aqua vacuum - Remove unused installed packages
 
 USAGE:
-   aqua vacuum
+   aqua vacuum [options]
 
 DESCRIPTION:
    Remove unused installed packages.
@@ -560,6 +650,16 @@ OPTIONS:
    --init              Create timestamp files.
    --days int, -d int  Expiration days (default: 60) [$AQUA_VACUUM_DAYS]
    --help, -h          show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua token
@@ -591,7 +691,7 @@ NAME:
    aqua token set - Set GitHub Access token
 
 USAGE:
-   aqua token set
+   aqua token set [options]
 
 DESCRIPTION:
    Set GitHub Access token to keyring.
@@ -599,6 +699,16 @@ DESCRIPTION:
 OPTIONS:
    --stdin     Read GitHub Access token from stdin
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ### token remove
@@ -609,13 +719,23 @@ NAME:
    aqua token remove - Remove GitHub Access token
 
 USAGE:
-   aqua token remove
+   aqua token remove [options]
 
 DESCRIPTION:
    Remove GitHub Access token from keyring.
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua cp
@@ -626,7 +746,7 @@ NAME:
    aqua cp - Copy executable files in a directory
 
 USAGE:
-   aqua cp <command name> [<command name> ...]
+   aqua cp [options] <command name> [<command name> ...]
 
 DESCRIPTION:
    Copy executable files in a directory.
@@ -661,6 +781,16 @@ OPTIONS:
    --tags string, -t string  filter installed packages with tags
    --exclude-tags string     exclude installed packages with tags
    --help, -h                show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua policy
@@ -690,7 +820,7 @@ NAME:
    aqua policy allow - Allow a policy file
 
 USAGE:
-   aqua policy allow [arguments...]
+   aqua policy allow [options] policy_path 
 
 DESCRIPTION:
    Allow a policy file
@@ -700,6 +830,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ### policy deny
@@ -710,7 +850,7 @@ NAME:
    aqua policy deny - Deny a policy file
 
 USAGE:
-   aqua policy deny [arguments...]
+   aqua policy deny [options] policy_path 
 
 DESCRIPTION:
    Deny a policy file
@@ -720,6 +860,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ### policy init
@@ -730,7 +880,7 @@ NAME:
    aqua policy init - Create a policy file if it doesn't exist
 
 USAGE:
-   aqua policy init [<created file path. The default value is "aqua-policy.yaml">]
+   aqua policy init [options] [<created file path. The default value is "aqua-policy.yaml">]
 
 DESCRIPTION:
    Create a policy file if it doesn't exist
@@ -740,6 +890,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua init-policy
@@ -750,7 +910,7 @@ NAME:
    aqua init-policy - [Deprecated] Create a policy file if it doesn't exist
 
 USAGE:
-   aqua init-policy [<created file path. The default value is "aqua-policy.yaml">]
+   aqua init-policy [options] [<created file path. The default value is "aqua-policy.yaml">]
 
 DESCRIPTION:
    [Deprecated] Create a policy file if it doesn't exist
@@ -763,6 +923,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua exec
@@ -773,7 +943,7 @@ NAME:
    aqua exec - Execute tool
 
 USAGE:
-   aqua exec <executed command> [<arg> ...]
+   aqua exec [options] <executed command> [<arg> ...]
 
 DESCRIPTION:
    Basically you don't have to use this command, because this is used by aqua internally. aqua-proxy invokes this command.
@@ -786,6 +956,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua list
@@ -796,7 +976,7 @@ NAME:
    aqua list - List packages in Registries
 
 USAGE:
-   aqua list
+   aqua list [options]
 
 DESCRIPTION:
    Output the list of packages in registries.
@@ -826,6 +1006,16 @@ OPTIONS:
    --installed, -i  List installed packages
    --all, -a        List global configuration packages too
    --help, -h       show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua generate-registry
@@ -836,7 +1026,7 @@ NAME:
    aqua generate-registry - Generate a registry's package configuration
 
 USAGE:
-   aqua generate-registry <package name>
+   aqua generate-registry [options] <package name>
 
 DESCRIPTION:
    Generate a template of Registry package configuration.
@@ -914,6 +1104,16 @@ OPTIONS:
    --deep                               This flag was deprecated and had no meaning from aqua v2.15.0. This flag will be removed in aqua v3.0.0. https://github.com/aquaproj/aqua/issues/2351
    --init                               Generate a configuration file
    --help, -h                           show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua root-dir
@@ -924,7 +1124,7 @@ NAME:
    aqua root-dir - Output the aqua root directory (AQUA_ROOT_DIR)
 
 USAGE:
-   aqua root-dir
+   aqua root-dir [options]
 
 DESCRIPTION:
    Output the aqua root directory (AQUA_ROOT_DIR)
@@ -938,6 +1138,16 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua version
@@ -948,11 +1158,21 @@ NAME:
    aqua version - Show version
 
 USAGE:
-   aqua version
+   aqua version [options]
 
 OPTIONS:
    --json, -j  Output version in JSON format
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ## aqua completion
@@ -963,7 +1183,7 @@ NAME:
    aqua completion - Output shell completion script for bash, zsh, fish, or Powershell
 
 USAGE:
-   aqua completion
+   aqua completion [options]
 
 DESCRIPTION:
    Output shell completion script for bash, zsh, fish, or Powershell.
@@ -984,4 +1204,14 @@ DESCRIPTION:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
