@@ -152,6 +152,12 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, che
 		return err
 	}
 
+	// If every per-runtime checksum is already recorded, there is nothing to do.
+	// This skips both the GitHub API pre-fetch below and the per-runtime loop.
+	if allChecksumsCached(checksums, pkgs, rts) {
+		return nil
+	}
+
 	// Pre-fetch release assets from GitHub API for github_release type without signature verification.
 	// This allows retrieving digests for multiple assets with a single API call.
 	var releaseAssets domain.ReleaseAssets
@@ -206,6 +212,31 @@ func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[s
 		pkgs[env] = pkgWithEnv
 	}
 	return pkgs, assets, nil
+}
+
+// allChecksumsCached reports whether every per-runtime checksum for this
+// package is already present in checksums. When true, the caller can skip
+// all remaining work for this package (GitHub API pre-fetch, per-runtime
+// download/verify, etc.).
+//
+// An empty checksum ID or an error from ChecksumID is treated as "not cached"
+// so the regular path runs and the same error (if any) surfaces with full
+// context in updatePackageByRuntime.
+func allChecksumsCached(checksums *checksum.Checksums, pkgs map[string]*config.Package, rts []*runtime.Runtime) bool {
+	for _, rt := range rts {
+		p, ok := pkgs[rt.Env()]
+		if !ok {
+			continue
+		}
+		id, err := p.ChecksumID(rt)
+		if err != nil || id == "" {
+			return false
+		}
+		if checksums.Get(id) == nil {
+			return false
+		}
+	}
+	return true
 }
 
 // hasChecksumSignatureVerification returns true if the checksum has signature verification configured
