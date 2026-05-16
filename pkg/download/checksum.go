@@ -22,7 +22,7 @@ type ChecksumDownloaderImpl struct {
 	github    GitHub
 	runtime   *runtime.Runtime
 	http      HTTPDownloader
-	ghRelease domain.GitHubReleaseDownloader
+	ghRelease *GitHubReleaseDownloader
 }
 
 type GitHub interface {
@@ -43,6 +43,8 @@ func NewChecksumDownloader(gh GitHub, rt *runtime.Runtime, httpDownloader HTTPDo
 
 type ChecksumDownloader interface {
 	DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error)
+	// GetReleaseAssets retrieves all asset digests from a GitHub Release.
+	GetReleaseAssets(ctx context.Context, logger *slog.Logger, pkg *config.Package) (domain.ReleaseAssets, error)
 }
 
 func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
@@ -53,7 +55,7 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 		if err != nil {
 			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 		}
-		return dl.ghRelease.DownloadGitHubRelease(ctx, logger, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
+		return dl.ghRelease.DownloadGitHubRelease(ctx, logger, &domain.DownloadGitHubReleaseParam{
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 			Version:   pkg.Package.Version,
@@ -74,4 +76,15 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 		return nil, 0, slogerr.With(errUnknownChecksumFileType, //nolint:wrapcheck
 			"package_type", pkgInfo.Type)
 	}
+}
+
+// GetReleaseAssets retrieves all asset digests from a GitHub Release.
+// This only works for github_release type packages.
+// Returns nil without error if the digest is not available.
+func (dl *ChecksumDownloaderImpl) GetReleaseAssets(ctx context.Context, logger *slog.Logger, pkg *config.Package) (domain.ReleaseAssets, error) {
+	pkgInfo := pkg.PackageInfo
+	if pkgInfo.Type != config.PkgInfoTypeGitHubRelease {
+		return nil, nil //nolint:nilnil
+	}
+	return dl.ghRelease.GetReleaseAssets(ctx, logger, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version)
 }

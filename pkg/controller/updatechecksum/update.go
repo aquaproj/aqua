@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -150,6 +151,15 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, che
 	if err != nil {
 		return err
 	}
+
+	// If every per-runtime checksum is already recorded, there is nothing to do.
+	// This skips both the GitHub API pre-fetch below and the per-runtime loop.
+	if allChecksumsCached(checksums, pkgs, rts) {
+		return nil
+	}
+
+	releaseAssets := c.prefetchReleaseAssets(ctx, logger, pkgs, rts)
+
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
 		env := rt.Env()
@@ -160,7 +170,7 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, che
 		if !ok {
 			continue
 		}
-		if err := c.updatePackageByRuntime(ctx, logger, checksums, pkg, checksumFiles, rt, assetNames); err != nil {
+		if err := c.updatePackageByRuntime(ctx, logger, checksums, pkg, checksumFiles, rt, assetNames, releaseAssets); err != nil {
 			return err
 		}
 	}
@@ -194,13 +204,96 @@ func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[s
 	return pkgs, assets, nil
 }
 
-func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, checksumID string) ([]*checksum.Checksum, error) {
+// allChecksumsCached reports whether every per-runtime checksum for this
+// package is already present in checksums. When true, the caller can skip
+// all remaining work for this package (GitHub API pre-fetch, per-runtime
+// download/verify, etc.).
+//
+// An empty checksum ID or an error from ChecksumID is treated as "not cached"
+// so the regular path runs and the same error (if any) surfaces with full
+// context in updatePackageByRuntime.
+func allChecksumsCached(checksums *checksum.Checksums, pkgs map[string]*config.Package, rts []*runtime.Runtime) bool {
+	for _, rt := range rts {
+		p, ok := pkgs[rt.Env()]
+		if !ok {
+			continue
+		}
+		id, err := p.ChecksumID(rt)
+		if err != nil || id == "" {
+			return false
+		}
+		if checksums.Get(id) == nil {
+			return false
+		}
+	}
+	return true
+}
+
+// prefetchReleaseAssets returns the GitHub Release Asset digests for pkgs if
+// any per-runtime config qualifies (github_release type with no checksum-file
+// signature verification). RepoOwner/RepoName/Version cannot be overridden per
+// runtime, so one API call serves every matching runtime. Returns nil when no
+// runtime can use the API or when the API call fails.
+func (c *Controller) prefetchReleaseAssets(ctx context.Context, logger *slog.Logger, pkgs map[string]*config.Package, rts []*runtime.Runtime) domain.ReleaseAssets {
+	for _, rt := range rts {
+		p, ok := pkgs[rt.Env()]
+		if !ok {
+			continue
+		}
+		if p.PackageInfo.Type != config.PkgInfoTypeGitHubRelease ||
+			hasChecksumSignatureVerification(p.PackageInfo.Checksum) {
+			continue
+		}
+		releaseAssets, err := c.chkDL.GetReleaseAssets(ctx, logger, p)
+		if err != nil {
+			slogerr.WithError(logger, err).Debug("failed to get release assets from GitHub API")
+			return nil
+		}
+		return releaseAssets
+	}
+	return nil
+}
+
+// hasChecksumSignatureVerification returns true if the checksum has signature verification configured
+// (Cosign, Minisign, or GitHubArtifactAttestations).
+func hasChecksumSignatureVerification(chksum *registry.Checksum) bool {
+	if chksum == nil {
+		return false
+	}
+	return chksum.GetCosign() != nil || chksum.GetMinisign() != nil || chksum.GetGitHubArtifactAttestations() != nil
+}
+
+func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, checksumID string, releaseAssets domain.ReleaseAssets) ([]*checksum.Checksum, error) {
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		cs, err := c.dlAssetAndGetChecksum(ctx, logger, pkg, rt)
+		cs, err := c.dlAssetAndGetChecksum(ctx, logger, pkg, rt, releaseAssets)
 		if err != nil {
 			return nil, err
 		}
 		return []*checksum.Checksum{cs}, nil
+	}
+
+	// If release assets were pre-fetched, try to get the digest from them.
+	// Re-check the per-runtime config: another runtime may have triggered the
+	// pre-fetch, but this runtime might have a per-runtime override that adds
+	// signature verification or changes the type. Skipping this check would
+	// bypass the signature verification of the checksum file.
+	if releaseAssets != nil &&
+		pkg.PackageInfo.Type == config.PkgInfoTypeGitHubRelease &&
+		!hasChecksumSignatureVerification(pkg.PackageInfo.Checksum) {
+		assetName, err := pkg.RenderAsset(rt)
+		if err != nil {
+			return nil, fmt.Errorf("render an asset: %w", err)
+		}
+		if digest := releaseAssets.GetDigest(assetName); digest != nil {
+			logger.Debug("got digest from GitHub API",
+				"checksum_id", checksumID,
+				"checksum", digest.Digest)
+			return []*checksum.Checksum{{
+				ID:        checksumID,
+				Checksum:  digest.Digest,
+				Algorithm: digest.Algorithm,
+			}}, nil
+		}
 	}
 
 	checksumFileID, err := pkg.RenderChecksumFileID(rt)
@@ -274,7 +367,7 @@ func (c *Controller) getChecksumsFromChecksumFile(pkg *config.Package, assetName
 	return arr, nil
 }
 
-func (c *Controller) updatePackageByRuntime(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}) error {
+func (c *Controller) updatePackageByRuntime(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, releaseAssets domain.ReleaseAssets) error {
 	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
 		return fmt.Errorf("get a checksum id: %w", err)
@@ -284,7 +377,7 @@ func (c *Controller) updatePackageByRuntime(ctx context.Context, logger *slog.Lo
 		return nil
 	}
 
-	cs, err := c.getChecksums(ctx, logger, pkg, checksumFiles, rt, assetNames, checksumID)
+	cs, err := c.getChecksums(ctx, logger, pkg, checksumFiles, rt, assetNames, checksumID, releaseAssets)
 	if err != nil {
 		return err
 	}
@@ -297,7 +390,7 @@ func (c *Controller) updatePackageByRuntime(ctx context.Context, logger *slog.Lo
 	return nil
 }
 
-func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, rt *runtime.Runtime) (*checksum.Checksum, error) {
+func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, rt *runtime.Runtime, releaseAssets domain.ReleaseAssets) (*checksum.Checksum, error) {
 	attrs := slogerr.NewAttrs(1)
 	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
@@ -308,6 +401,21 @@ func (c *Controller) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Log
 		return nil, fmt.Errorf("get an asset name: %w", err)
 	}
 	logger = attrs.Add(logger, "asset_name", assetName)
+
+	// Try to get the digest from pre-fetched release assets.
+	if releaseAssets != nil {
+		if digest := releaseAssets.GetDigest(assetName); digest != nil {
+			logger.Debug("got digest from GitHub API",
+				"checksum_id", checksumID,
+				"checksum", digest.Digest)
+			return &checksum.Checksum{
+				ID:        checksumID,
+				Checksum:  digest.Digest,
+				Algorithm: digest.Algorithm,
+			}, nil
+		}
+	}
+
 	logger.Info("downloading an asset to calculate the checksum")
 	f, err := download.ConvertPackageToFile(pkg, assetName, rt)
 	if err != nil {
