@@ -273,7 +273,13 @@ func (c *Controller) getChecksums(ctx context.Context, logger *slog.Logger, pkg 
 	}
 
 	// If release assets were pre-fetched, try to get the digest from them.
-	if releaseAssets != nil {
+	// Re-check the per-runtime config: another runtime may have triggered the
+	// pre-fetch, but this runtime might have a per-runtime override that adds
+	// signature verification or changes the type. Skipping this check would
+	// bypass the signature verification of the checksum file.
+	if releaseAssets != nil &&
+		pkg.PackageInfo.Type == config.PkgInfoTypeGitHubRelease &&
+		!hasChecksumSignatureVerification(pkg.PackageInfo.Checksum) {
 		assetName, err := pkg.RenderAsset(rt)
 		if err != nil {
 			return nil, fmt.Errorf("render an asset: %w", err)
