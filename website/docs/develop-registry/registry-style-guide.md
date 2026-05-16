@@ -141,11 +141,66 @@ files:
     src: swagger_{{.OS}}_{{.Arch}} # unneeded
 ```
 
+## musl vs glibc
+
+When a package provides pre-built binaries for both musl and glibc, which one to install depends on whether the musl build is static or dynamic (depends on libc).
+You can use the `file` command to determine whether it is static.
+If the `file` command is not available, you can use `ldd`.
+You can also use `readelf -d` or `objdump -p | grep NEEDED` as safer alternatives that don't execute the binary — if there is a `NEEDED` entry, it is dynamic; otherwise static.
+
+For example, the musl build of claude code v2.1.126 is dynamically linked.
+
+```console
+50cbd103ea9b:/workspace# file "$(aqua which claude)"
+/root/.local/share/aquaproj-aqua/pkgs/http/storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.126/linux-arm64-musl/claude/claude: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-musl-aarch64.so.1, BuildID[sha1]=0a41f4e4ceddb1b805d2f5c94fdffd91bf366fb4, not stripped
+```
+
+```console
+50cbd103ea9b:/workspace# ldd "$(aqua which claude)"
+	/lib/ld-musl-aarch64.so.1 (0xf1e6bb2c0000)
+	libc.musl-aarch64.so.1 => /lib/ld-musl-aarch64.so.1 (0xf1e6bb2c0000)
+```
+
+```console
+50cbd103ea9b:/workspace# readelf -d "$(aqua which claude)"
+
+Dynamic section at offset 0x6100000 contains 25 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.musl-aarch64.so.1]
+ ...
+```
+
+```console
+50cbd103ea9b:/workspace# objdump -p "$(aqua which claude)" | grep NEEDED
+  NEEDED               libc.musl-aarch64.so.1
+```
+
+1. If the musl build is static: always use the musl build
+1. If the musl build is dynamic: use the glibc build by default, and use the musl build via [variants](/docs/reference/registry-config/overrides#variants) in environments where the musl build works
+
+### 1. When the musl build is static
+
+While installing the glibc build is an option in environments where it works, we adopt the musl build for several reasons.
+
+1. The musl build works fine
+2. Always installing the musl build is simpler
+3. The glibc build may not work depending on the glibc version
+4. Currently aqua has no feature to check the glibc version. Although it is possible to implement, there is little benefit, so we have no plans to do so
+5. The benefits of the glibc build (such as file size) are not significant, and the benefits of always installing the musl build outweigh them
+
+### 2. When the musl build is dynamic
+
+Use the glibc build by default, and use the musl build via [variants](/docs/reference/registry-config/overrides#variants) in environments where the musl build works.
+Using the glibc build by default matches the behavior from before variants were supported, preserving compatibility.
+However, in environments such as Alpine where the glibc build does not work but the musl build does, we use the musl build (this requires aqua >= v2.58.0, which supports variants).
+
+Please see also [variants](/docs/reference/registry-config/overrides#variants).
+
 ## Consideration about Rust
 
 :warning: The author [@suzuki-shunsuke](https://github.com/suzuki-shunsuke) isn't familiar with Rust. If you have any opinion, please let us know.
 
-- linux: use the asset for not `gnu` but `musl` if both of them are supported
+- linux: use the asset for not `glibc` but `musl` if both of them are supported
   - ref: https://github.com/aquaproj/aqua-registry/pull/2153#discussion_r805116879
 - windows: use the asset for not `gnu` but `msvc` if both of them are supported
   - ref: https://rust-lang.github.io/rustup/installation/windows.html

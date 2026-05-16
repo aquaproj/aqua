@@ -18,14 +18,14 @@ func TestMockLinker_Lstat(t *testing.T) {
 		{
 			name: "file found",
 			files: map[string]string{
-				"/home/foo/foo": "foo",
+				pathHomeFooFoo: pkgFoo,
 			},
-			src: "foo",
+			src: pkgFoo,
 		},
 		{
 			name:  "file isn't found",
 			files: map[string]string{},
-			src:   "foo",
+			src:   pkgFoo,
 			isErr: true,
 		},
 	}
@@ -65,14 +65,14 @@ func TestMockLinker_Readlink(t *testing.T) {
 		{
 			name: "file found",
 			files: map[string]string{
-				"/home/foo/foo": "foo",
+				pathHomeFooFoo: pkgFoo,
 			},
-			src: "foo",
-			exp: "/home/foo/foo",
+			src: pkgFoo,
+			exp: pathHomeFooFoo,
 		},
 		{
 			name:  "file isn't found",
-			src:   "foo",
+			src:   pkgFoo,
 			isErr: true,
 		},
 	}

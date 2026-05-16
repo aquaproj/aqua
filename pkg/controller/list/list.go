@@ -15,7 +15,7 @@ func (c *Controller) List(ctx context.Context, logger *slog.Logger, param *confi
 		return c.listInstalled(logger, param)
 	}
 	cfg := &aqua.Config{}
-	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+	cfgFilePath, err := c.configFinder.Find(param.CWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

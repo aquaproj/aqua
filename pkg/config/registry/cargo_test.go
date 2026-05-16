@@ -29,7 +29,7 @@ features:
   - tls
 `,
 			expected: &registry.Cargo{
-				Features: []string{"default", "tls"},
+				Features: []string{caseDefault, "tls"},
 			},
 		},
 		{

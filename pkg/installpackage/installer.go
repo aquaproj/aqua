@@ -67,34 +67,39 @@ type Vacuum interface {
 }
 
 func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuum Vacuum) *Installer {
+	// realRT is the actual host runtime, shared across the main installer and
+	// the four dedicated verifier installers below. Computing it once avoids
+	// repeating libc detection (file stats and a possible `ldd --version`
+	// invocation) for every dedicated installer.
+	realRT := runtime.NewR(context.Background())
 	ni := func(rt *runtime.Runtime) *Installer {
-		return newInstaller(param, downloader, rt, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, ghVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, vacuum)
+		return newInstaller(param, downloader, rt, realRT, fs, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, ghVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, vacuum)
 	}
 	installer := ni(rt)
 	installer.cosignInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(realRT),
 		cosign.Package,
 		cosign.Checksums(),
 	)
 	installer.slsaVerifierInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(realRT),
 		slsa.Package,
 		slsa.Checksums(),
 	)
 	installer.minisignInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(realRT),
 		minisign.Package,
 		minisign.Checksums(),
 	)
 	installer.ghInstaller = newDedicatedInstaller(
-		ni(runtime.NewR()),
+		ni(realRT),
 		ghattestation.Package,
 		ghattestation.Checksums(),
 	)
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuum Vacuum) *Installer {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT *runtime.Runtime, fs afero.Fs, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuum Vacuum) *Installer {
 	return &Installer{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
@@ -102,7 +107,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt *runtim
 		checksumDownloader:    chkDL,
 		checksumCalculator:    chkCalc,
 		runtime:               rt,
-		realRuntime:           runtime.NewR(),
+		realRuntime:           realRT,
 		fs:                    fs,
 		linker:                linker,
 		progressBar:           param.ProgressBar,

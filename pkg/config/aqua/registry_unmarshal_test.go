@@ -23,12 +23,12 @@ type: standard
 ref: v4.0.0
 `,
 			expected: &aqua.Registry{
-				Name:      "standard",
-				Type:      "github_content",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-registry",
-				Path:      "registry.yaml",
-				Ref:       "v4.0.0",
+				Name:      regTypeStandard,
+				Type:      pkgTypeGitHubContent,
+				RepoOwner: regOwnerAquaproj,
+				RepoName:  regNameAquaRegistry,
+				Path:      regFileRegistryYaml,
+				Ref:       versionV4,
 			},
 		},
 		{
@@ -40,10 +40,10 @@ ref: v3.0.0
 `,
 			expected: &aqua.Registry{
 				Name:      "my-standard",
-				Type:      "github_content",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-registry",
-				Path:      "registry.yaml",
+				Type:      pkgTypeGitHubContent,
+				RepoOwner: regOwnerAquaproj,
+				RepoName:  regNameAquaRegistry,
+				Path:      regFileRegistryYaml,
 				Ref:       "v3.0.0",
 			},
 		},
@@ -55,12 +55,12 @@ repo_owner: custom-org
 ref: v4.0.0
 `,
 			expected: &aqua.Registry{
-				Name:      "standard",
-				Type:      "github_content",
+				Name:      regTypeStandard,
+				Type:      pkgTypeGitHubContent,
 				RepoOwner: "custom-org",
-				RepoName:  "aqua-registry",
-				Path:      "registry.yaml",
-				Ref:       "v4.0.0",
+				RepoName:  regNameAquaRegistry,
+				Path:      regFileRegistryYaml,
+				Ref:       versionV4,
 			},
 		},
 		{
@@ -71,12 +71,12 @@ repo_name: custom-registry
 ref: v4.0.0
 `,
 			expected: &aqua.Registry{
-				Name:      "standard",
-				Type:      "github_content",
-				RepoOwner: "aquaproj",
+				Name:      regTypeStandard,
+				Type:      pkgTypeGitHubContent,
+				RepoOwner: regOwnerAquaproj,
 				RepoName:  "custom-registry",
-				Path:      "registry.yaml",
-				Ref:       "v4.0.0",
+				Path:      regFileRegistryYaml,
+				Ref:       versionV4,
 			},
 		},
 		{
@@ -87,12 +87,12 @@ path: custom.yaml
 ref: v4.0.0
 `,
 			expected: &aqua.Registry{
-				Name:      "standard",
-				Type:      "github_content",
-				RepoOwner: "aquaproj",
-				RepoName:  "aqua-registry",
+				Name:      regTypeStandard,
+				Type:      pkgTypeGitHubContent,
+				RepoOwner: regOwnerAquaproj,
+				RepoName:  regNameAquaRegistry,
 				Path:      "custom.yaml",
-				Ref:       "v4.0.0",
+				Ref:       versionV4,
 			},
 		},
 		{
@@ -107,11 +107,11 @@ ref: v1.0.0
 `,
 			expected: &aqua.Registry{
 				Name:      "custom",
-				Type:      "github_content",
+				Type:      pkgTypeGitHubContent,
 				RepoOwner: "example",
 				RepoName:  "example-registry",
-				Path:      "registry.yaml",
-				Ref:       "v1.0.0",
+				Path:      regFileRegistryYaml,
+				Ref:       versionV1,
 			},
 		},
 		{
@@ -122,8 +122,8 @@ type: local
 path: ./local-registry.yaml
 `,
 			expected: &aqua.Registry{
-				Name: "local",
-				Type: "local",
+				Name: regTypeLocal,
+				Type: regTypeLocal,
 				Path: "./local-registry.yaml",
 			},
 		},
@@ -140,11 +140,11 @@ private: true
 `,
 			expected: &aqua.Registry{
 				Name:      "private-reg",
-				Type:      "github_content",
+				Type:      pkgTypeGitHubContent,
 				RepoOwner: "private-org",
 				RepoName:  "private-registry",
-				Path:      "registry.yaml",
-				Ref:       "v1.0.0",
+				Path:      regFileRegistryYaml,
+				Ref:       versionV1,
 				Private:   true,
 			},
 		},
@@ -161,11 +161,11 @@ private: true
 `,
 			expected: &aqua.Registry{
 				Name:      "custom-standard",
-				Type:      "github_content",
+				Type:      pkgTypeGitHubContent,
 				RepoOwner: "custom-org",
 				RepoName:  "custom-registry",
 				Path:      "custom.yaml",
-				Ref:       "v2.0.0",
+				Ref:       versionV2,
 				Private:   true,
 			},
 		},
@@ -201,13 +201,13 @@ func TestRegistries_UnmarshalYAML(t *testing.T) {
   ref: v4.0.0
 `,
 			expected: aqua.Registries{
-				"standard": &aqua.Registry{
-					Name:      "standard",
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-registry",
-					Path:      "registry.yaml",
-					Ref:       "v4.0.0",
+				regTypeStandard: &aqua.Registry{
+					Name:      regTypeStandard,
+					Type:      pkgTypeGitHubContent,
+					RepoOwner: regOwnerAquaproj,
+					RepoName:  regNameAquaRegistry,
+					Path:      regFileRegistryYaml,
+					Ref:       versionV4,
 				},
 			},
 		},
@@ -222,17 +222,17 @@ func TestRegistries_UnmarshalYAML(t *testing.T) {
   path: ./local.yaml
 `,
 			expected: aqua.Registries{
-				"standard": &aqua.Registry{
-					Name:      "standard",
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-registry",
-					Path:      "registry.yaml",
-					Ref:       "v4.0.0",
+				regTypeStandard: &aqua.Registry{
+					Name:      regTypeStandard,
+					Type:      pkgTypeGitHubContent,
+					RepoOwner: regOwnerAquaproj,
+					RepoName:  regNameAquaRegistry,
+					Path:      regFileRegistryYaml,
+					Ref:       versionV4,
 				},
-				"local": &aqua.Registry{
-					Name: "local",
-					Type: "local",
+				regTypeLocal: &aqua.Registry{
+					Name: regTypeLocal,
+					Type: regTypeLocal,
 					Path: "./local.yaml",
 				},
 			},
@@ -251,13 +251,13 @@ func TestRegistries_UnmarshalYAML(t *testing.T) {
 - null
 `,
 			expected: aqua.Registries{
-				"standard": &aqua.Registry{
-					Name:      "standard",
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-registry",
-					Path:      "registry.yaml",
-					Ref:       "v4.0.0",
+				regTypeStandard: &aqua.Registry{
+					Name:      regTypeStandard,
+					Type:      pkgTypeGitHubContent,
+					RepoOwner: regOwnerAquaproj,
+					RepoName:  regNameAquaRegistry,
+					Path:      regFileRegistryYaml,
+					Ref:       versionV4,
 				},
 			},
 		},

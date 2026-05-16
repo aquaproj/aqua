@@ -14,14 +14,14 @@ func Test_parseNameWithVersion(t *testing.T) {
 	}{
 		{
 			title:      "no version",
-			name:       "foo",
-			expName:    "foo",
+			name:       pkgFoo,
+			expName:    pkgFoo,
 			expVersion: "",
 		},
 		{
 			title:      "with version",
 			name:       "foo@v1.0.0",
-			expName:    "foo",
+			expName:    pkgFoo,
 			expVersion: "v1.0.0",
 		},
 		{
@@ -33,7 +33,7 @@ func Test_parseNameWithVersion(t *testing.T) {
 		{
 			title:      "invalid name foo@",
 			name:       "foo@",
-			expName:    "foo",
+			expName:    pkgFoo,
 			expVersion: "",
 		},
 	}

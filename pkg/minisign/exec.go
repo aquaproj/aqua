@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"math/rand"
+	"math/rand/v2"
 	"strings"
 	"time"
 
@@ -30,7 +30,7 @@ type ExecutorImpl struct {
 }
 
 func NewExecutor(logger *slog.Logger, executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
-	rt := runtime.NewR()
+	rt := runtime.NewR(context.Background())
 	pkg := Package()
 
 	pkgInfo, err := pkg.PackageInfo.Override(logger, pkg.Package.Version, rt)
@@ -57,8 +57,7 @@ func NewExecutor(logger *slog.Logger, executor CommandExecutor, param *config.Pa
 }
 
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
-	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
-	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
+	waitTime := time.Duration(rand.IntN(1000)) * time.Millisecond //nolint:gosec,mnd
 	logger.Info("Verification by minisign failed temporarily, retrying",
 		"retry_count", retryCount,
 		"wait_time", waitTime)
@@ -74,7 +73,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 	if e == nil {
 		return errors.New("executor is nil")
 	}
-	// minisign -Vm myfile.txt -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
+	// minisign -Vm myfile.txt -P <pub key>
 	args := []string{
 		"-Vm",
 		param.ArtifactPath,
@@ -109,7 +108,7 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 		return errors.New("e.executor is nil")
 	}
 	cmd := osexec.Command(ctx, e.minisignExePath, args...)
-	cmd.Args[0] = "minisign"
+	cmd.Args[0] = pkgName
 	_, err := e.executor.ExecStderr(cmd)
 	return err //nolint:wrapcheck
 }

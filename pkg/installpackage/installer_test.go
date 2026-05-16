@@ -37,51 +37,51 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		isErr      bool
 	}{
 		{
-			name: "file already exists",
+			name: errFileAlreadyExists,
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				CWD:            pathWorkspace,
+				ConfigFilePath: fileAquaYaml,
+				RootDir:        pathRoot,
 				MaxParallelism: 5,
 			},
 			cfg: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": {
-						Name:      "standard",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Ref:       "v2.15.0",
-						Path:      "registry.yaml",
+					regTypeStandard: {
+						Name:      regTypeStandard,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Ref:       versionV215,
+						Path:      regFileRegistryYaml,
 					},
 				},
 				Packages: []*aqua.Package{
 					{
-						Name:     "suzuki-shunsuke/ci-info",
-						Registry: "standard",
-						Version:  "v2.0.3",
+						Name:     repoSuzukiShunsukeCiInfo,
+						Registry: regTypeStandard,
+						Version:  versionV203,
 					},
 				},
 			},
 			registries: map[string]*registry.Config{
-				"standard": {
+				regTypeStandard: {
 					PackageInfos: registry.PackageInfos{
 						{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "ci-info",
-							Asset:     "ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoSuzukiShunsuke,
+							RepoName:  repoNameCiInfo,
+							Asset:     tmplCiInfoAsset,
 						},
 					},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: pathRootBin,
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				pathCiInfoBinary: ``,
 			},
 			links: map[string]string{
 				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
@@ -90,50 +90,50 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		{
 			name: "only link",
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				CWD:            pathWorkspace,
+				ConfigFilePath: fileAquaYaml,
+				RootDir:        pathRoot,
 				MaxParallelism: 5,
 				OnlyLink:       true,
 			},
 			cfg: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": {
-						Name:      "standard",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Ref:       "v2.15.0",
-						Path:      "registry.yaml",
+					regTypeStandard: {
+						Name:      regTypeStandard,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Ref:       versionV215,
+						Path:      regFileRegistryYaml,
 					},
 				},
 				Packages: []*aqua.Package{
 					{
-						Name:     "suzuki-shunsuke/ci-info",
-						Registry: "standard",
-						Version:  "v2.0.3",
+						Name:     repoSuzukiShunsukeCiInfo,
+						Registry: regTypeStandard,
+						Version:  versionV203,
 					},
 				},
 			},
 			registries: map[string]*registry.Config{
-				"standard": {
+				regTypeStandard: {
 					PackageInfos: registry.PackageInfos{
 						{
-							Type:      "github_release",
-							RepoOwner: "suzuki-shunsuke",
-							RepoName:  "ci-info",
-							Asset:     "ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz",
+							Type:      pkgTypeGitHubRelease,
+							RepoOwner: repoSuzukiShunsuke,
+							RepoName:  repoNameCiInfo,
+							Asset:     tmplCiInfoAsset,
 						},
 					},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: pathRootBin,
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				pathCiInfoBinary: ``,
 			},
 			links: map[string]string{
 				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/ci-info",
@@ -142,34 +142,34 @@ func Test_installer_InstallPackages(t *testing.T) { //nolint:funlen
 		{
 			name: "no package",
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
-				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				CWD:            pathWorkspace,
+				ConfigFilePath: fileAquaYaml,
+				RootDir:        pathRoot,
 				MaxParallelism: 5,
 			},
 			cfg: &aqua.Config{
 				Registries: aqua.Registries{
-					"standard": {
-						Name:      "standard",
-						Type:      "github_content",
-						RepoOwner: "aquaproj",
-						RepoName:  "aqua-registry",
-						Ref:       "v2.15.0",
-						Path:      "registry.yaml",
+					regTypeStandard: {
+						Name:      regTypeStandard,
+						Type:      pkgTypeGitHubContent,
+						RepoOwner: regOwnerAquaproj,
+						RepoName:  regNameAquaRegistry,
+						Ref:       versionV215,
+						Path:      regFileRegistryYaml,
 					},
 				},
 				Packages: []*aqua.Package{},
 			},
 			registries: map[string]*registry.Config{
-				"standard": {
+				regTypeStandard: {
 					PackageInfos: registry.PackageInfos{},
 				},
 			},
-			binDir: "/home/foo/.local/share/aquaproj-aqua/bin",
+			binDir: pathRootBin,
 		},
 	}
 	logger := slog.New(slog.DiscardHandler)
@@ -220,37 +220,37 @@ func Test_installer_InstallPackage(t *testing.T) { //nolint:funlen
 		isErr    bool
 	}{
 		{
-			name: "file already exists",
+			name: errFileAlreadyExists,
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			pkg: &config.Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "suzuki-shunsuke",
-					RepoName:  "ci-info",
-					Asset:     "ci-info_{{trimV .Version}}_{{.OS}}_amd64.tar.gz",
+					Type:      pkgTypeGitHubRelease,
+					RepoOwner: repoSuzukiShunsuke,
+					RepoName:  repoNameCiInfo,
+					Asset:     tmplCiInfoAsset,
 				},
 				Package: &aqua.Package{
-					Name:     "suzuki-shunsuke/ci-info",
-					Registry: "standard",
-					Version:  "v2.0.3",
+					Name:     repoSuzukiShunsukeCiInfo,
+					Registry: regTypeStandard,
+					Version:  versionV203,
 				},
 				Registry: &aqua.Registry{
-					Name:      "standard",
-					Type:      "github_content",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua-registry",
-					Ref:       "v2.15.0",
-					Path:      "registry.yaml",
+					Name:      regTypeStandard,
+					Type:      pkgTypeGitHubContent,
+					RepoOwner: regOwnerAquaproj,
+					RepoName:  regNameAquaRegistry,
+					Ref:       versionV215,
+					Path:      regFileRegistryYaml,
 				},
 			},
 			param: &config.Param{
-				RootDir: "/home/foo/.local/share/aquaproj-aqua",
+				RootDir: pathRoot,
 			},
 			files: map[string]string{
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_release/github.com/suzuki-shunsuke/ci-info/v2.0.3/ci-info_2.0.3_linux_amd64.tar.gz/ci-info": ``,
+				pathCiInfoBinary: ``,
 			},
 		},
 	}

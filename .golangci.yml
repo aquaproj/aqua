@@ -34,6 +34,10 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      - path: _test\.go
+        linters:
+          - goconst
   settings:
     tagalign:
       align: false

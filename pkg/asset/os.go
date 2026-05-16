@@ -10,7 +10,7 @@ import (
 // The function also manages OS name mappings and scoring for asset selection.
 func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen,cyclop
 	if strings.Contains(lowAssetName, ".exe.") || strings.HasSuffix(lowAssetName, ".exe") {
-		assetInfo.OS = "windows"
+		assetInfo.OS = osWindows
 	} else if strings.HasSuffix(lowAssetName, ".dmg") || strings.HasSuffix(lowAssetName, ".pkg") {
 		// other formats take precedence over DMG because DMG requires external commands.
 		assetInfo.Score = -1
@@ -24,43 +24,43 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 		},
 		{
 			Name: "unknown-linux-gnu",
-			OS:   "linux",
+			OS:   osLinux,
 		},
 		{
 			Name: "unknown-linux-musl",
-			OS:   "linux",
+			OS:   osLinux,
 		},
 		{
 			Name: "unknown-linux",
-			OS:   "linux",
+			OS:   osLinux,
 		},
 		{
 			Name: "linux-gnu",
-			OS:   "linux",
+			OS:   osLinux,
 		},
 		{
 			Name: "pc-windows-msvc",
-			OS:   "windows",
+			OS:   osWindows,
 		},
 		{
 			Name: "pc-windows-gnu",
-			OS:   "windows",
+			OS:   osWindows,
 		},
 		{
 			Name: "pc-windows",
-			OS:   "windows",
+			OS:   osWindows,
 		},
 		{
 			Name: osDarwin,
 			OS:   osDarwin,
 		},
 		{
-			Name: "linux",
-			OS:   "linux",
+			Name: osLinux,
+			OS:   osLinux,
 		},
 		{
-			Name: "windows",
-			OS:   "windows",
+			Name: osWindows,
+			OS:   osWindows,
 		},
 		{
 			Name: "apple",
@@ -84,11 +84,15 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 		},
 		{
 			Name: "win64",
-			OS:   "windows",
+			OS:   osWindows,
+		},
+		{
+			Name: "win32",
+			OS:   osWindows,
 		},
 		{
 			Name: "win",
-			OS:   "windows",
+			OS:   osWindows,
 		},
 	}
 

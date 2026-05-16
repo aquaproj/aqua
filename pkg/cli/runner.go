@@ -53,7 +53,7 @@ func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error {
 		Stdout:  env.Stdout,
 		Stderr:  env.Stderr,
 		Logger:  logger,
-		Runtime: runtime.New(),
+		Runtime: runtime.New(ctx),
 		Version: env.Version,
 	}
 	globalArgs := &cliargs.GlobalArgs{}

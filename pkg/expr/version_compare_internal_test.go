@@ -1,6 +1,9 @@
 package expr
 
-import "testing"
+import (
+	"log/slog"
+	"testing"
+)
 
 func Test_compare(t *testing.T) {
 	t.Parallel()
@@ -20,7 +23,7 @@ func Test_compare(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			f := compare(d.constraint, d.version)
+			f := compare(slog.Default(), d.constraint, d.version)
 			if f != d.exp {
 				t.Fatalf("wanted %v, got %v", d.exp, f)
 			}

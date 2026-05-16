@@ -24,8 +24,8 @@ registries:
   - ref: v1.0.0
     type: standard`,
 			pkgs: []map[string]string{
-				{"name": "cli/cli"},
-				{"name": "kubernetes/kubectl"},
+				{keyName: repoCliCli},
+				{keyName: "kubernetes/kubectl"},
 			},
 			expected: `packages:
 - name: cli/cli
@@ -44,7 +44,7 @@ registries:
   - ref: v1.0.0
     type: standard`,
 			pkgs: []map[string]string{
-				{"name": "cli/cli"},
+				{keyName: repoCliCli},
 			},
 			expected: `packages:
   - name: existing/package
@@ -61,7 +61,7 @@ registries:
 registries:
   - ref: v1.0.0
     type: standard`,
-			pkgs:    []map[string]string{{"name": "cli/cli"}},
+			pkgs:    []map[string]string{{keyName: repoCliCli}},
 			wantErr: true,
 		},
 	}

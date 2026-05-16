@@ -25,7 +25,7 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 		return c.removeAll(param.RootDir)
 	}
 
-	if len(param.Args) == 0 && !param.Insert {
+	if len(param.Args) == 0 && !param.SelectVersion {
 		return nil
 	}
 
@@ -45,7 +45,7 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 
 	param.Args = pkgs
 
-	cfgFilePath, err := c.configFinder.Find(param.PWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
+	cfgFilePath, err := c.configFinder.Find(param.CWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
 	if err != nil {
 		return fmt.Errorf("find a configuration file: %w", err)
 	}
@@ -114,7 +114,7 @@ func (c *Controller) removePackagesInteractively(logger *slog.Logger, param *con
 }
 
 func (c *Controller) removePackages(logger *slog.Logger, param *config.Param, registryContents map[string]*registry.Config) error {
-	if param.Insert {
+	if param.SelectVersion {
 		return c.removePackagesInteractively(logger, param, registryContents)
 	}
 

@@ -27,32 +27,32 @@ func TestUpdate_GetEnabled(t *testing.T) {
 		{
 			name: "enabled is true",
 			update: &aqua.Update{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
 			name: "enabled is false",
 			update: &aqua.Update{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
 		{
 			name: "full update configuration with enabled true",
 			update: &aqua.Update{
-				Enabled:        boolPtr(true),
+				Enabled:        new(true),
 				AllowedVersion: "semver('>=1.0.0')",
-				Types:          []string{"major", "minor", "patch"},
+				Types:          []string{"major", "minor", updateTypePatch},
 			},
 			expected: true,
 		},
 		{
 			name: "full update configuration with enabled false",
 			update: &aqua.Update{
-				Enabled:        boolPtr(false),
+				Enabled:        new(false),
 				AllowedVersion: "semver('>=1.0.0')",
-				Types:          []string{"minor", "patch"},
+				Types:          []string{"minor", updateTypePatch},
 			},
 			expected: false,
 		},
@@ -66,7 +66,7 @@ func TestUpdate_GetEnabled(t *testing.T) {
 		{
 			name: "types constraint with nil enabled",
 			update: &aqua.Update{
-				Types: []string{"patch"},
+				Types: []string{updateTypePatch},
 			},
 			expected: true,
 		},
@@ -83,4 +83,4 @@ func TestUpdate_GetEnabled(t *testing.T) {
 	}
 }
 
-// boolPtr helper function is defined in checksum_test.go
+// new helper function is defined in checksum_test.go

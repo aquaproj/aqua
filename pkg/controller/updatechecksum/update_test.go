@@ -14,7 +14,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/spf13/afero"
 )
@@ -37,7 +36,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			param: &config.Param{
-				PWD: "/home/foo/workspace",
+				CWD: "/home/foo/workspace",
 				All: true,
 				GlobalConfigFilePaths: []string{
 					"/home/foo/global/aqua.yaml",
@@ -51,7 +50,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: ptr.Bool(true),
+						Enabled: new(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -98,7 +97,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 		{
 			name: "enabled",
 			param: &config.Param{
-				PWD: "/home/foo/workspace",
+				CWD: "/home/foo/workspace",
 				All: true,
 				GlobalConfigFilePaths: []string{
 					"/home/foo/global/aqua.yaml",
@@ -112,7 +111,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
-						Enabled: ptr.Bool(true),
+						Enabled: new(true),
 					},
 					Packages: []*aqua.Package{
 						{
@@ -186,7 +185,7 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registryInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registryDownloader)
+			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registryInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
 			if err := ctrl.UpdateChecksum(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

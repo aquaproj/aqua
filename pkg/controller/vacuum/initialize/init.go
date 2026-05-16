@@ -16,7 +16,7 @@ import (
 )
 
 func (c *Controller) Init(ctx context.Context, logger *slog.Logger, param *config.Param) error {
-	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+	for _, cfgFilePath := range c.configFinder.Finds(param.CWD, param.ConfigFilePath) {
 		if err := c.create(ctx, logger, cfgFilePath, param); err != nil {
 			return err
 		}

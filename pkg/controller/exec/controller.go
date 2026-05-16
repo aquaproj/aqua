@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"os/exec"
 	"runtime"
 	"time"
 
@@ -28,6 +29,7 @@ type Controller struct {
 	policyReader     PolicyReader
 	enabledXSysExec  bool
 	vacuum           Vacuum
+	lookPath         func(exeName string) (string, error)
 }
 
 type Vacuum interface {
@@ -50,6 +52,7 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 		fs:               fs,
 		policyReader:     policyReader,
 		vacuum:           vacuum,
+		lookPath:         exec.LookPath,
 	}
 }
 

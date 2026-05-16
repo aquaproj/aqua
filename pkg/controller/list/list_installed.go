@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Controller) listInstalled(logger *slog.Logger, param *config.Param) error {
-	cfgFilePaths := c.configFinder.Finds(param.PWD, param.ConfigFilePath)
+	cfgFilePaths := c.configFinder.Finds(param.CWD, param.ConfigFilePath)
 	cfgFileMap := map[string]struct{}{}
 	for _, cfgFilePath := range cfgFilePaths {
 		if _, ok := cfgFileMap[cfgFilePath]; ok {

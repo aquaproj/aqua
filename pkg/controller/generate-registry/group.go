@@ -11,7 +11,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 )
 
 type Group struct {
@@ -61,7 +60,7 @@ func (g *Group) VersionConstraint() (string, *Release) { //nolint:cyclop
 		return vc, nil
 	default:
 		nonSemvers := make([]*Release, 0, len(g.releases))
-		for i := len(g.releases) - 1; i >= 0; i-- {
+		for range slices.Backward(g.releases) {
 			release := g.releases[len(g.releases)-1]
 			if release.Version == nil {
 				nonSemvers = append(nonSemvers, release)
@@ -103,19 +102,19 @@ func mergeGroups(pkg *registry.PackageInfo, groups []*Group) []string { //nolint
 			releases = append(releases, release)
 		}
 		if pkgInfo.NoAsset {
-			vo.NoAsset = ptr.Bool(true)
+			vo.NoAsset = new(true)
 		}
 		if pkgInfo.Rosetta2 {
-			vo.Rosetta2 = ptr.Bool(true)
+			vo.Rosetta2 = new(true)
 		}
 		if pkgInfo.WindowsARMEmulation {
-			vo.WindowsARMEmulation = ptr.Bool(true)
+			vo.WindowsARMEmulation = new(true)
 		}
 		if pkgInfo.VersionFilter != "" {
-			vo.VersionFilter = ptr.String(pkgInfo.VersionFilter)
+			vo.VersionFilter = new(pkgInfo.VersionFilter)
 		}
 		if pkgInfo.VersionPrefix != "" {
-			vo.VersionPrefix = ptr.String(pkgInfo.VersionPrefix)
+			vo.VersionPrefix = new(pkgInfo.VersionPrefix)
 		}
 		pkg.VersionOverrides = append(pkg.VersionOverrides, vo)
 	}

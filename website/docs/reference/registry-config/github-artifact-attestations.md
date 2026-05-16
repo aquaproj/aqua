@@ -11,11 +11,11 @@ Please see [Reference](/docs/reference/security/github-artifact-attestations) to
 ## Fields
 
 - enabled (bool)
-- signer-workflow (string)
+- signer_workflow (string)
 
 e.g.
 
 ```yaml
 github_artifact_attestations:
-  signer-workflow: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml
+  signer_workflow: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml
 ```

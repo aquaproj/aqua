@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"os/exec"
 	"strings"
@@ -30,10 +30,12 @@ type Executor interface {
 type ExecutorImpl struct {
 	executor CommandExecutor
 	exePath  string
+	getEnv   func(string) string
+	environ  func() []string
 }
 
 func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
-	rt := runtime.NewR()
+	rt := runtime.NewR(context.Background())
 	pkg := Package()
 	pkg.PackageInfo.OverrideByRuntime(rt)
 	exePath, err := pkg.ExePath(param.RootDir, pkg.PackageInfo.GetFiles()[0], rt)
@@ -43,12 +45,13 @@ func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, 
 	return &ExecutorImpl{
 		executor: executor,
 		exePath:  exePath,
+		getEnv:   os.Getenv,
+		environ:  os.Environ,
 	}, nil
 }
 
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
-	randGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))       //nolint:gosec
-	waitTime := time.Duration(randGenerator.Intn(1000)) * time.Millisecond //nolint:mnd
+	waitTime := time.Duration(rand.IntN(1000)) * time.Millisecond //nolint:gosec,mnd
 	logger.Info("gh attestation verify failed temporarily, retrying",
 		"retry_count", retryCount,
 		"wait_time", waitTime)
@@ -167,9 +170,14 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 	// GitHub CLI uses the GH_HOST environment variable to determine the host for GitHub API.
 	// But packages are always hosted on github.com.
 	if cmd.Env == nil {
-		cmd.Env = os.Environ()
+		cmd.Env = e.environ()
 	}
 	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
+	if e.getEnv("GITHUB_TOKEN") == "" && e.getEnv("GH_TOKEN") == "" {
+		if token := e.getEnv("AQUA_GITHUB_TOKEN"); token != "" {
+			cmd.Env = append(cmd.Env, "GITHUB_TOKEN="+token)
+		}
+	}
 
 	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)
 	if err == nil {

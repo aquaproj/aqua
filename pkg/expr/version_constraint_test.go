@@ -1,6 +1,7 @@
 package expr_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/expr"
@@ -18,16 +19,16 @@ func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 	}{
 		{
 			title:       "true",
-			constraints: `semver(">= 0.4.0")`,
+			constraints: semverGTE040,
 			version:     "v0.4.0",
 			semver:      "v0.4.0",
 			exp:         true,
 		},
 		{
 			title:       "false",
-			constraints: `semver(">= 0.4.0")`,
-			version:     "v0.3.0",
-			semver:      "v0.3.0",
+			constraints: semverGTE040,
+			version:     versionV030,
+			semver:      versionV030,
 			exp:         false,
 		},
 		{
@@ -41,19 +42,19 @@ func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 			title:       "semverWithVersion false",
 			constraints: `semverWithVersion(">= 4.2.0", trimPrefix(Version, "kustomize/"))`,
 			version:     "kustomize/v0.3.0",
-			semver:      "v0.3.0",
+			semver:      versionV030,
 			exp:         false,
 		},
 		{
 			title:       "invalid expression",
 			constraints: `>= 0.4.0`,
-			version:     "v0.3.0",
-			semver:      "v0.3.0",
+			version:     versionV030,
+			semver:      versionV030,
 			isErr:       true,
 		},
 		{
 			title:       "commit hash",
-			constraints: `semver(">= 0.4.0")`,
+			constraints: semverGTE040,
 			version:     "35661968adb8fa29ab1d4a8713c0547d9a6007bb",
 			semver:      "35661968adb8fa29ab1d4a8713c0547d9a6007bb",
 			exp:         false,
@@ -63,7 +64,7 @@ func TestVersionConstraints_Check(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			b, err := expr.EvaluateVersionConstraints(d.constraints, d.version, d.semver)
+			b, err := expr.EvaluateVersionConstraints(slog.Default(), d.constraints, d.version, d.semver)
 			if d.isErr {
 				if err == nil {
 					t.Fatal("err should be returned")

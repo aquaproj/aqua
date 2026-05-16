@@ -51,7 +51,7 @@ func TestConfig_ChecksumEnabled(t *testing.T) { //nolint:dupl
 			name: "checksum enabled is true",
 			config: &aqua.Config{
 				Checksum: &aqua.Checksum{
-					Enabled: boolPtr(true),
+					Enabled: new(true),
 				},
 			},
 			enforceValue: false,
@@ -62,7 +62,7 @@ func TestConfig_ChecksumEnabled(t *testing.T) { //nolint:dupl
 			name: "checksum enabled is false",
 			config: &aqua.Config{
 				Checksum: &aqua.Checksum{
-					Enabled: boolPtr(false),
+					Enabled: new(false),
 				},
 			},
 			enforceValue: false,
@@ -125,7 +125,7 @@ func TestConfig_RequireChecksum(t *testing.T) { //nolint:dupl
 			name: "require checksum is true",
 			config: &aqua.Config{
 				Checksum: &aqua.Checksum{
-					RequireChecksum: boolPtr(true),
+					RequireChecksum: new(true),
 				},
 			},
 			enforceValue: false,
@@ -136,7 +136,7 @@ func TestConfig_RequireChecksum(t *testing.T) { //nolint:dupl
 			name: "require checksum is false",
 			config: &aqua.Config{
 				Checksum: &aqua.Checksum{
-					RequireChecksum: boolPtr(false),
+					RequireChecksum: new(false),
 				},
 			},
 			enforceValue: false,
@@ -176,22 +176,22 @@ func TestChecksum_GetEnabled(t *testing.T) {
 		{
 			name: "enabled is true",
 			checksum: &aqua.Checksum{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
 			name: "enabled is false",
 			checksum: &aqua.Checksum{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
 		{
 			name: "full checksum configuration",
 			checksum: &aqua.Checksum{
-				Enabled:         boolPtr(true),
-				RequireChecksum: boolPtr(false),
+				Enabled:         new(true),
+				RequireChecksum: new(false),
 				SupportedEnvs:   registry.SupportedEnvs{"linux", "darwin"},
 			},
 			expected: true,
@@ -207,9 +207,4 @@ func TestChecksum_GetEnabled(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Helper function to create bool pointers
-func boolPtr(b bool) *bool {
-	return &b
 }

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -88,10 +87,10 @@ func mergeReplacements(goos string, m1, m2 map[string]string) (map[string]string
 // It generates overrides for different OS/architecture combinations, determines supported
 // environments, and optimizes the configuration for cross-platform compatibility.
 func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { //nolint:funlen,cyclop
-	for _, goos := range []string{"linux", osDarwin, "windows"} {
+	for _, goos := range []string{osLinux, osDarwin, osWindows} {
 		var overrides []*registry.Override
 		var supportedEnvs []string
-		for _, goarch := range []string{"amd64", "arm64"} {
+		for _, goarch := range []string{archAmd64, archArm64} {
 			if assetInfo := GetOSArch(goos, goarch, assetInfos); assetInfo != nil {
 				overrides = append(overrides, &registry.Override{
 					GOOS:         assetInfo.OS,
@@ -100,7 +99,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 					Replacements: assetInfo.Replacements,
 					Asset:        assetInfo.Template,
 				})
-				if goos == osDarwin && goarch == "amd64" {
+				if goos == osDarwin && goarch == archAmd64 {
 					supportedEnvs = append(supportedEnvs, osDarwin)
 				} else {
 					supportedEnvs = append(supportedEnvs, goos+"/"+goarch)
@@ -214,7 +213,7 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 								if override.Replacements == nil {
 									override.Replacements = map[string]string{}
 								}
-								if k != "arm64" || (override.GOOS != osWindows || !pkgInfo.WindowsARMEmulation) && (override.GOOS != osDarwin || !pkgInfo.Rosetta2) {
+								if k != archArm64 || (override.GOOS != osWindows || !pkgInfo.WindowsARMEmulation) && (override.GOOS != osDarwin || !pkgInfo.Rosetta2) {
 									// https://github.com/aquaproj/aqua/issues/3336
 									override.Replacements[k] = k
 								}
@@ -322,30 +321,30 @@ func getDefaultFormat(overrides []*registry.Override) string {
 // checkRosetta2 determines if a package supports Rosetta2 emulation on macOS.
 // Returns true if only amd64 assets are available for Darwin with arch templating.
 func checkRosetta2(assetInfos []*AssetInfo) bool {
-	darwinAmd64 := GetOSArch(osDarwin, "amd64", assetInfos)
-	darwinArm64 := GetOSArch(osDarwin, "arm64", assetInfos)
+	darwinAmd64 := GetOSArch(osDarwin, archAmd64, assetInfos)
+	darwinArm64 := GetOSArch(osDarwin, archArm64, assetInfos)
 	return darwinAmd64 != nil && darwinArm64 == nil && strings.Contains(darwinAmd64.Template, "{{.Arch}}")
 }
 
 // checkWindowsARMEmulation determines if a package supports ARM emulation on Windows.
 // Returns true if only amd64 assets are available for Windows with arch templating.
 func checkWindowsARMEmulation(assetInfos []*AssetInfo) bool {
-	windowsAmd64 := GetOSArch(osWindows, "amd64", assetInfos)
-	windowsArm64 := GetOSArch(osWindows, "arm64", assetInfos)
+	windowsAmd64 := GetOSArch(osWindows, archAmd64, assetInfos)
+	windowsArm64 := GetOSArch(osWindows, archArm64, assetInfos)
 	return windowsAmd64 != nil && windowsArm64 == nil && strings.Contains(windowsAmd64.Template, "{{.Arch}}")
 }
 
 // normalizeSupportedEnvs simplifies supported environment lists by removing redundant entries.
 // It collapses common platform combinations into more concise representations.
 func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
-	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", osDarwin, "windows"}) {
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{osLinux, osDarwin, osWindows}) {
 		return nil
 	}
-	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux", osDarwin, "windows/amd64"}) {
+	if reflect.DeepEqual(envs, registry.SupportedEnvs{osLinux, osDarwin, "windows/amd64"}) {
 		return nil
 	}
 	if reflect.DeepEqual(envs, registry.SupportedEnvs{"linux/amd64", osDarwin, "windows/amd64"}) {
-		return []string{osDarwin, osWindows, "amd64"}
+		return []string{osDarwin, osWindows, archAmd64}
 	}
 	return envs
 }
@@ -375,11 +374,11 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 	if assetInfo.Format != formatRaw {
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
 	}
-	if assetInfo.OS == "windows" && assetInfo.Format == formatRaw {
+	if assetInfo.OS == osWindows && assetInfo.Format == formatRaw {
 		if before, ok := strings.CutSuffix(assetInfo.Template, ".exe"); ok {
 			assetInfo.Template = before
 		} else {
-			assetInfo.CompleteWindowsExt = ptr.Bool(false)
+			assetInfo.CompleteWindowsExt = new(false)
 		}
 	}
 	return assetInfo

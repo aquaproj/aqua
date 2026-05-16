@@ -57,13 +57,13 @@ func CalculateReader(file io.Reader, algorithm string) (string, error) {
 // Returns an error for empty or unsupported algorithm names.
 func getHash(algorithm string) (hash.Hash, error) {
 	switch algorithm {
-	case "md5":
+	case algoMD5:
 		return md5.New(), nil //nolint:gosec
-	case "sha256":
+	case algoSHA256:
 		return sha256.New(), nil
-	case "sha512":
+	case algoSHA512:
 		return sha512.New(), nil
-	case "sha1":
+	case algoSHA1:
 		return sha1.New(), nil //nolint:gosec
 	case "":
 		return nil, errors.New("algorithm is required")
@@ -96,20 +96,20 @@ func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum 
 		algorithm string
 	}{
 		{
-			words:     []string{"sha512", "shasums512"},
-			algorithm: "sha512",
+			words:     []string{algoSHA512, "shasums512"},
+			algorithm: algoSHA512,
 		},
 		{
-			words:     []string{"md5"},
-			algorithm: "md5",
+			words:     []string{algoMD5},
+			algorithm: algoMD5,
 		},
 		{
-			words:     []string{"sha1", "shasum1"},
-			algorithm: "sha1",
+			words:     []string{algoSHA1, "shasum1"},
+			algorithm: algoSHA1,
 		},
 		{
-			words:     []string{"sha256", "shasums", "checksum"},
-			algorithm: "sha256",
+			words:     []string{algoSHA256, "shasums", "checksum"},
+			algorithm: algoSHA256,
 		},
 	}
 	for _, a := range arr {

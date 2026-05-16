@@ -4,7 +4,10 @@ import (
 	"strings"
 )
 
-const formatRaw string = "raw"
+const (
+	formatRaw string = "raw"
+	formatZip string = "zip"
+)
 
 // RemoveExtFromAsset removes file extensions from asset names and returns the format.
 // It recognizes various archive formats including tar variants, compression formats,
@@ -27,7 +30,7 @@ func RemoveExtFromAsset(assetName string) (string, string) {
 
 		"tar.zst",
 
-		"zip",
+		formatZip,
 		"gz",
 		"bz2",
 		"lz4",
@@ -46,7 +49,7 @@ func RemoveExtFromAsset(assetName string) (string, string) {
 			return s, format
 		}
 	}
-	return assetName, "raw"
+	return assetName, formatRaw
 }
 
 // getFormat extracts the file format from an asset name.

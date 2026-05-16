@@ -41,7 +41,7 @@ func (c *Controller) Install(ctx context.Context, logger *slog.Logger, param *co
 		globalPolicyPaths[p] = struct{}{}
 	}
 
-	for _, cfgFilePath := range c.configFinder.Finds(param.PWD, param.ConfigFilePath) {
+	for _, cfgFilePath := range c.configFinder.Finds(param.CWD, param.ConfigFilePath) {
 		policyCfgs, err := c.policyReader.Append(logger, cfgFilePath, policyCfgs, globalPolicyPaths)
 		if err != nil {
 			return fmt.Errorf("append policy configs: %w", slogerr.With(err,

@@ -22,9 +22,9 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 		{
 			title: "not override",
 			pkgInfo: &registry.PackageInfo{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
+				RepoName:  repoNameCiInfo,
 				Asset:     "ci-info_{{.Arch}}-{{.OS}}.tar.gz",
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
@@ -32,7 +32,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
-						GOArch: "arm64",
+						GOArch: archArm64,
 						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
@@ -40,9 +40,9 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				},
 			},
 			exp: &registry.PackageInfo{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
+				RepoName:  repoNameCiInfo,
 				Asset:     "ci-info_{{.Arch}}-{{.OS}}.tar.gz",
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
@@ -50,7 +50,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
-						GOArch: "arm64",
+						GOArch: archArm64,
 						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
@@ -59,16 +59,16 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 			},
 			version: "v1.0.0",
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "amd64",
+				GOOS:   osDarwin,
+				GOARCH: archAmd64,
 			},
 		},
 		{
 			title: "override",
 			pkgInfo: &registry.PackageInfo{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
+				RepoName:  repoNameCiInfo,
 				Asset:     "ci-info_{{.Arch}}-{{.OS}}.tar.gz",
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-musl",
@@ -76,7 +76,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
-						GOArch: "arm64",
+						GOArch: archArm64,
 						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
@@ -84,9 +84,9 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				},
 			},
 			exp: &registry.PackageInfo{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
+				RepoName:  repoNameCiInfo,
 				Asset:     "ci-info_{{.Arch}}-{{.OS}}.tar.gz",
 				Replacements: registry.Replacements{
 					"linux": "unknown-linux-gnu",
@@ -94,7 +94,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 				Overrides: []*registry.Override{
 					{
 						GOOS:   "linux",
-						GOArch: "arm64",
+						GOArch: archArm64,
 						Replacements: registry.Replacements{
 							"linux": "unknown-linux-gnu",
 						},
@@ -104,7 +104,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 			version: "v1.0.0",
 			rt: &runtime.Runtime{
 				GOOS:   "linux",
-				GOARCH: "arm64",
+				GOARCH: archArm64,
 			},
 		},
 	}
@@ -129,7 +129,7 @@ func TestPackageInfo_Override(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestOverride_Match(t *testing.T) {
+func TestOverride_Match(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title    string
@@ -143,29 +143,100 @@ func TestOverride_Match(t *testing.T) {
 				GOOS: "linux",
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "amd64",
+				GOOS:   osDarwin,
+				GOARCH: archAmd64,
 			},
 		},
 		{
 			title: "goarch doesn't match",
 			override: &registry.Override{
-				GOArch: "arm64",
+				GOArch: archArm64,
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "amd64",
+				GOOS:   osDarwin,
+				GOARCH: archAmd64,
 			},
 		},
 		{
 			title: "match",
 			exp:   true,
 			override: &registry.Override{
-				GOOS: "darwin",
+				GOOS: osDarwin,
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "darwin",
-				GOARCH: "amd64",
+				GOOS:   osDarwin,
+				GOARCH: archAmd64,
+			},
+		},
+		{
+			title: "variant libc musl matches",
+			exp:   true,
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: archAmd64,
+				LibC:   "musl",
+			},
+		},
+		{
+			title: "variant libc musl doesn't match glibc runtime",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: archAmd64,
+				LibC:   "glibc",
+			},
+		},
+		{
+			title: "variant libc constraint with empty runtime libc doesn't match",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: archAmd64,
+			},
+		},
+		{
+			title: "unknown variant key skips the override",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "cpu", Value: "avx2"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: archAmd64,
+				LibC:   "glibc",
+			},
+		},
+		{
+			title: "all variants must match",
+			override: &registry.Override{
+				GOOS: "linux",
+				Variants: registry.Variants{
+					{Key: "libc", Value: "musl"},
+					{Key: "libc", Value: "glibc"},
+				},
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: archAmd64,
+				LibC:   "musl",
 			},
 		},
 	}

@@ -36,7 +36,6 @@ func Exclude(pkgName, assetName string) bool {
 		"s390x",
 		"solaris",
 		"wasm",
-		"win32",
 	}
 	for _, s := range words {
 		if strings.Contains(asset, s) && !strings.Contains(pkgName, s) {

@@ -1,19 +1,21 @@
 package expr
 
+import "log/slog"
+
 func emptySemver(_ string) bool {
 	return false
 }
 
-func EvaluateVersionConstraints(constraint, v, semver string) (bool, error) {
+func EvaluateVersionConstraints(logger *slog.Logger, constraint, v, semver string) (bool, error) {
 	return evaluateBool(constraint, map[string]any{
-		"Version":           "",
-		"SemVer":            "",
-		"semver":            emptySemver,
-		"semverWithVersion": compare,
+		keyVersion:           "",
+		"SemVer":             "",
+		keySemver:            emptySemver,
+		keySemverWithVersion: emptySemverWithVersion,
 	}, map[string]any{
-		"Version":           v,
-		"SemVer":            semver,
-		"semver":            getCompareFunc(semver),
-		"semverWithVersion": compare,
+		keyVersion:           v,
+		"SemVer":             semver,
+		keySemver:            getCompareFunc(logger, semver),
+		keySemverWithVersion: compareFunc(logger),
 	})
 }

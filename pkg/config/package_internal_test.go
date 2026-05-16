@@ -31,41 +31,41 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title: "github_release",
-			exp:   "aqua",
+			title: PkgInfoTypeGitHubRelease,
+			exp:   pkgNameAqua,
 			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua",
+					Type:      PkgInfoTypeGitHubRelease,
+					RepoOwner: repoOwnerAquaproj,
+					RepoName:  pkgNameAqua,
 					Asset:     "aqua.{{.Format}}",
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
-					Version: "v0.7.7",
+					Version: versionV077,
 				},
 			},
 			file: &registry.File{
-				Name: "aqua",
+				Name: pkgNameAqua,
 			},
 		},
 		{
-			title: "github_release",
+			title: PkgInfoTypeGitHubRelease,
 			exp:   "bin/aqua",
 			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "aquaproj",
-					RepoName:  "aqua",
+					Type:      PkgInfoTypeGitHubRelease,
+					RepoOwner: repoOwnerAquaproj,
+					RepoName:  pkgNameAqua,
 					Asset:     "aqua.{{.Format}}",
 					Format:    "tar.gz",
 				},
 				Package: &aqua.Package{
-					Version: "v0.7.7",
+					Version: versionV077,
 				},
 			},
 			file: &registry.File{
-				Name: "aqua",
+				Name: pkgNameAqua,
 				Src:  "bin/aqua",
 			},
 		},
@@ -74,37 +74,37 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 			exp:   "gh.exe",
 			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "cli",
-					RepoName:  "cli",
-					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
-					Format:    "zip",
+					Type:      PkgInfoTypeGitHubRelease,
+					RepoOwner: repoOwnerCli,
+					RepoName:  repoOwnerCli,
+					Asset:     tmplGhAsset,
+					Format:    formatZip,
 				},
 				Package: &aqua.Package{
-					Version: "v0.7.7",
+					Version: versionV077,
 				},
 			},
 			file: &registry.File{
 				Name: "gh",
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "windows",
-				GOARCH: "amd64",
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
 			},
 		},
 		{
 			title: "set .exe in windows (with src)",
-			exp:   "bin/gh.exe",
+			exp:   fileBinGhExe,
 			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "cli",
-					RepoName:  "cli",
-					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
-					Format:    "zip",
+					Type:      PkgInfoTypeGitHubRelease,
+					RepoOwner: repoOwnerCli,
+					RepoName:  repoOwnerCli,
+					Asset:     tmplGhAsset,
+					Format:    formatZip,
 				},
 				Package: &aqua.Package{
-					Version: "v0.7.7",
+					Version: versionV077,
 				},
 			},
 			file: &registry.File{
@@ -112,32 +112,32 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 				Src:  "bin/gh",
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "windows",
-				GOARCH: "amd64",
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
 			},
 		},
 		{
 			title: "set .exe in windows (src already has .exe)",
-			exp:   "bin/gh.exe",
+			exp:   fileBinGhExe,
 			pkg: &Package{
 				PackageInfo: &registry.PackageInfo{
-					Type:      "github_release",
-					RepoOwner: "cli",
-					RepoName:  "cli",
-					Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
-					Format:    "zip",
+					Type:      PkgInfoTypeGitHubRelease,
+					RepoOwner: repoOwnerCli,
+					RepoName:  repoOwnerCli,
+					Asset:     tmplGhAsset,
+					Format:    formatZip,
 				},
 				Package: &aqua.Package{
-					Version: "v0.7.7",
+					Version: versionV077,
 				},
 			},
 			file: &registry.File{
 				Name: "gh",
-				Src:  "bin/gh.exe",
+				Src:  fileBinGhExe,
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "windows",
-				GOARCH: "amd64",
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
 			},
 		},
 		{
@@ -152,19 +152,19 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 					Path:      "extras/dcgoss/dcgoss",
 				},
 				Package: &aqua.Package{
-					Version: "v0.7.7",
+					Version: versionV077,
 				},
 			},
 			file: &registry.File{
 				Name: "dcgoss",
 			},
 			rt: &runtime.Runtime{
-				GOOS:   "windows",
-				GOARCH: "amd64",
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
 			},
 		},
 	}
-	rt := runtime.New()
+	rt := runtime.New(t.Context())
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()

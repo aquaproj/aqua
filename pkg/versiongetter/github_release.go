@@ -103,7 +103,7 @@ func (g *GitHubReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logge
 			return "", fmt.Errorf("list tags: %w", err)
 		}
 		for _, release := range releases {
-			if filterRelease(release, filters) {
+			if filterRelease(logger, release, filters) {
 				candidates = append(candidates, convRelease(release))
 			}
 		}
@@ -137,7 +137,7 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logger *slog.Logg
 				continue
 			}
 			tags[tagName] = struct{}{}
-			if filterRelease(release, filters) {
+			if filterRelease(logger, release, filters) {
 				v := &fuzzyfinder.Version{
 					Name:        release.GetName(),
 					Version:     tagName,
@@ -160,7 +160,7 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logger *slog.Logg
 	}
 }
 
-func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
+func filterRelease(logger *slog.Logger, release *github.RepositoryRelease, filters []*Filter) bool {
 	if release.GetPrerelease() {
 		return false
 	}
@@ -168,7 +168,7 @@ func filterRelease(release *github.RepositoryRelease, filters []*Filter) bool {
 	tagName := release.GetTagName()
 
 	for _, filter := range filters {
-		if matchTagByFilter(tagName, filter) {
+		if matchTagByFilter(logger, tagName, filter) {
 			return !filter.NoAsset
 		}
 	}

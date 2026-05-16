@@ -26,9 +26,9 @@ type FindResult struct {
 func (c *Controller) Which(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*FindResult, error) {
 	var filePaths []string
 	if param.ConfigFilePath != "" {
-		filePaths = []string{osfile.Abs(param.PWD, param.ConfigFilePath)}
+		filePaths = []string{osfile.Abs(param.CWD, param.ConfigFilePath)}
 	}
-	for _, cfgFilePath := range append(filePaths, c.configFinder.Finds(param.PWD, "")...) {
+	for _, cfgFilePath := range append(filePaths, c.configFinder.Finds(param.CWD, "")...) {
 		logger := logger.With("config_file_path", cfgFilePath)
 		findResult, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeName)
 		if err != nil {

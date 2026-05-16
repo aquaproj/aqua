@@ -7,7 +7,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller/initcmd"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 )
 
@@ -23,7 +22,7 @@ func TestController_Init(t *testing.T) { //nolint:funlen
 		{
 			name: "file already exists",
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				MaxParallelism: 5,
 			},
@@ -38,13 +37,13 @@ packages:
 		{
 			name: "normal",
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            "/home/foo/workspace",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: ptr.String("v2.16.0"),
+					TagName: new("v2.16.0"),
 				},
 			},
 		},

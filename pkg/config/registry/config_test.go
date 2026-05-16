@@ -19,14 +19,14 @@ func TestPackageInfos_ToMap(t *testing.T) {
 			title: "normal",
 			pkgInfos: &registry.PackageInfos{
 				&registry.PackageInfo{
-					Type: "github_release",
-					Name: "foo",
+					Type: pkgTypeGitHubRelease,
+					Name: pkgFoo,
 				},
 			},
 			exp: map[string]*registry.PackageInfo{
-				"foo": {
-					Type: "github_release",
-					Name: "foo",
+				pkgFoo: {
+					Type: pkgTypeGitHubRelease,
+					Name: pkgFoo,
 				},
 			},
 		},

@@ -27,23 +27,23 @@ func TestCosign_GetEnabled(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "enabled explicitly true",
+			name: caseEnabledTrue,
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
-			name: "enabled explicitly false",
+			name: caseEnabledFalse,
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
 		{
 			name: "enabled by having opts",
 			cosign: &registry.Cosign{
-				Opts: []string{"--rekor-url", "https://rekor.sigstore.dev"},
+				Opts: []string{flagRekorURL, "https://rekor.sigstore.dev"},
 			},
 			expected: true,
 		},
@@ -51,8 +51,8 @@ func TestCosign_GetEnabled(t *testing.T) {
 			name: "enabled by having signature",
 			cosign: &registry.Cosign{
 				Signature: &registry.DownloadedFile{
-					Type:  "github_release",
-					Asset: stringPtr("binary.sig"),
+					Type:  pkgTypeGitHubRelease,
+					Asset: new("binary.sig"),
 				},
 			},
 			expected: true,
@@ -61,8 +61,8 @@ func TestCosign_GetEnabled(t *testing.T) {
 			name: "enabled by having certificate",
 			cosign: &registry.Cosign{
 				Certificate: &registry.DownloadedFile{
-					Type: "http",
-					URL:  stringPtr("https://example.com/cert.pem"),
+					Type: pkgTypeHTTP,
+					URL:  new("https://example.com/cert.pem"),
 				},
 			},
 			expected: true,
@@ -71,8 +71,8 @@ func TestCosign_GetEnabled(t *testing.T) {
 			name: "enabled by having key",
 			cosign: &registry.Cosign{
 				Key: &registry.DownloadedFile{
-					Type:  "github_release",
-					Asset: stringPtr("key.pub"),
+					Type:  pkgTypeGitHubRelease,
+					Asset: new("key.pub"),
 				},
 			},
 			expected: true,
@@ -81,8 +81,8 @@ func TestCosign_GetEnabled(t *testing.T) {
 			name: "enabled by having bundle",
 			cosign: &registry.Cosign{
 				Bundle: &registry.DownloadedFile{
-					Type:  "github_release",
-					Asset: stringPtr("bundle.json"),
+					Type:  pkgTypeGitHubRelease,
+					Asset: new("bundle.json"),
 				},
 			},
 			expected: true,
@@ -90,11 +90,11 @@ func TestCosign_GetEnabled(t *testing.T) {
 		{
 			name: "disabled even with opts when explicitly false",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(false),
-				Opts:    []string{"--rekor-url", "https://rekor.sigstore.dev"},
+				Enabled: new(false),
+				Opts:    []string{flagRekorURL, "https://rekor.sigstore.dev"},
 				Signature: &registry.DownloadedFile{
-					Type:  "github_release",
-					Asset: stringPtr("binary.sig"),
+					Type:  pkgTypeGitHubRelease,
+					Asset: new("binary.sig"),
 				},
 			},
 			expected: false,
@@ -102,17 +102,17 @@ func TestCosign_GetEnabled(t *testing.T) {
 		{
 			name: "full configuration enabled",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(true),
-				Opts:    []string{"--certificate-identity", "test@example.com"},
+				Enabled: new(true),
+				Opts:    []string{flagCertIdentity, "test@example.com"},
 				Signature: &registry.DownloadedFile{
-					Type:      "github_release",
+					Type:      pkgTypeGitHubRelease,
 					RepoOwner: "owner",
 					RepoName:  "repo",
-					Asset:     stringPtr("{{.Asset}}.sig"),
+					Asset:     new("{{.Asset}}.sig"),
 				},
 				Certificate: &registry.DownloadedFile{
-					Type: "http",
-					URL:  stringPtr("https://fulcio.sigstore.dev/api/v1/rootcert"),
+					Type: pkgTypeHTTP,
+					URL:  new("https://fulcio.sigstore.dev/api/v1/rootcert"),
 				},
 			},
 			expected: true,
@@ -143,9 +143,9 @@ func TestCosign_RenderOpts(t *testing.T) {
 		{
 			name: "no opts",
 			cosign: &registry.Cosign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
-			runtime:  &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"},
+			runtime:  &runtime.Runtime{GOOS: "linux", GOARCH: archAmd64},
 			artifact: &template.Artifact{Version: "v1.0.0"},
 			expected: []string{},
 		},
@@ -154,41 +154,41 @@ func TestCosign_RenderOpts(t *testing.T) {
 			cosign: &registry.Cosign{
 				Opts: []string{"--insecure-ignore-tlog", "--insecure-ignore-sct"},
 			},
-			runtime:  &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"},
+			runtime:  &runtime.Runtime{GOOS: "linux", GOARCH: archAmd64},
 			artifact: &template.Artifact{Version: "v1.0.0"},
 			expected: []string{"--insecure-ignore-tlog", "--insecure-ignore-sct"},
 		},
 		{
 			name: "opts with version template",
 			cosign: &registry.Cosign{
-				Opts: []string{"--certificate-identity", "release-{{.Version}}@example.com"},
+				Opts: []string{flagCertIdentity, "release-{{.Version}}@example.com"},
 			},
-			runtime: &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"},
+			runtime: &runtime.Runtime{GOOS: "linux", GOARCH: archAmd64},
 			artifact: &template.Artifact{
 				Version: "v1.2.3",
 			},
-			expected: []string{"--certificate-identity", "release-v1.2.3@example.com"},
+			expected: []string{flagCertIdentity, "release-v1.2.3@example.com"},
 		},
 		{
 			name: "opts with multiple templates",
 			cosign: &registry.Cosign{
 				Opts: []string{
-					"--certificate-identity",
+					flagCertIdentity,
 					"{{.Version}}@{{.OS}}.example.com",
-					"--rekor-url",
+					flagRekorURL,
 					"https://rekor-{{.Arch}}.sigstore.dev",
 				},
 			},
-			runtime: &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"},
+			runtime: &runtime.Runtime{GOOS: "linux", GOARCH: archAmd64},
 			artifact: &template.Artifact{
 				Version: "v2.0.0",
-				OS:      "Linux",
+				OS:      osLinuxCapitalized,
 				Arch:    "x86_64",
 			},
 			expected: []string{
-				"--certificate-identity",
+				flagCertIdentity,
 				"v2.0.0@Linux.example.com",
-				"--rekor-url",
+				flagRekorURL,
 				"https://rekor-x86_64.sigstore.dev",
 			},
 		},
@@ -197,7 +197,7 @@ func TestCosign_RenderOpts(t *testing.T) {
 			cosign: &registry.Cosign{
 				Opts: []string{"--signature", "{{.Asset}}.sig"},
 			},
-			runtime: &runtime.Runtime{GOOS: "darwin", GOARCH: "arm64"},
+			runtime: &runtime.Runtime{GOOS: osDarwin, GOARCH: archArm64},
 			artifact: &template.Artifact{
 				Version: "v1.0.0",
 				Asset:   "tool_darwin_arm64.tar.gz",

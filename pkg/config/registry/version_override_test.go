@@ -87,7 +87,7 @@ func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 				VersionOverrides: []*registry.VersionOverride{
 					{
 						VersionConstraints: "true",
-						VersionPrefix:      stringPtr("v"),
+						VersionPrefix:      new("v"),
 						Type:               "github_release",
 					},
 				},
@@ -103,7 +103,7 @@ func TestPackageInfo_SetVersion(t *testing.T) { //nolint:funlen
 				VersionOverrides: []*registry.VersionOverride{
 					{
 						VersionConstraints: "true",
-						VersionPrefix:      stringPtr("release-"),
+						VersionPrefix:      new("release-"),
 						Type:               "github_release",
 					},
 				},

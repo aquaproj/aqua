@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/aquaproj/aqua/v2/pkg/ptr"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/spf13/afero"
 )
@@ -56,8 +55,8 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 					},
 					Config: &aqua.Config{
 						Checksum: &aqua.Checksum{
-							Enabled:         ptr.Bool(true),
-							RequireChecksum: ptr.Bool(true),
+							Enabled:         new(true),
+							RequireChecksum: new(true),
 						},
 					},
 					ConfigFilePath: "aqua.yaml",

@@ -38,25 +38,25 @@ func Test_controller_Which(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            pathHomeFooWorkspace,
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        pathHomeFooLocalShare,
 				MaxParallelism: 5,
 			},
-			exeName: "aqua-installer",
+			exeName: pkgNameAquaInstaller,
 			files: map[string]string{
-				"/home/foo/workspace/aqua.yaml": `registries:
+				pathHomeFooWorkspaceAquaYaml: `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"/home/foo/workspace/registry.yaml": `packages:
+				pathHomeFooWorkspaceRegistryYaml: `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -66,58 +66,58 @@ packages:
 			exp: &which.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
-						Name:     "aquaproj/aqua-installer",
-						Registry: "standard",
-						Version:  "v1.0.0",
-						FilePath: "/home/foo/workspace/aqua.yaml",
+						Name:     repoAquaInstaller,
+						Registry: regTypeStandard,
+						Version:  versionV1,
+						FilePath: pathHomeFooWorkspaceAquaYaml,
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
 						RepoOwner: "aquaproj",
-						RepoName:  "aqua-installer",
-						Path:      "aqua-installer",
+						RepoName:  pkgNameAquaInstaller,
+						Path:      pkgNameAquaInstaller,
 					},
 					Registry: &aqua.Registry{
-						Name: "standard",
-						Type: "local",
-						Path: "/home/foo/workspace/registry.yaml",
+						Name: regTypeStandard,
+						Type: regTypeLocal,
+						Path: pathHomeFooWorkspaceRegistryYaml,
 					},
 				},
 				File: &cfgRegistry.File{
-					Name: "aqua-installer",
+					Name: pkgNameAquaInstaller,
 				},
 				Config: &aqua.Config{
 					Packages: []*aqua.Package{
 						{
-							Name:     "aquaproj/aqua-installer",
-							Registry: "standard",
-							Version:  "v1.0.0",
-							FilePath: "/home/foo/workspace/aqua.yaml",
+							Name:     repoAquaInstaller,
+							Registry: regTypeStandard,
+							Version:  versionV1,
+							FilePath: pathHomeFooWorkspaceAquaYaml,
 						},
 					},
 					Registries: aqua.Registries{
-						"standard": {
-							Name: "standard",
-							Type: "local",
-							Path: "/home/foo/workspace/registry.yaml",
+						regTypeStandard: {
+							Name: regTypeStandard,
+							Type: regTypeLocal,
+							Path: pathHomeFooWorkspaceRegistryYaml,
 						},
 					},
 				},
 
 				ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
-				ConfigFilePath: "/home/foo/workspace/aqua.yaml",
+				ConfigFilePath: pathHomeFooWorkspaceAquaYaml,
 			},
 		},
 		{
 			name: "outside aqua",
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				PWD:            "/home/foo/workspace",
+				CWD:            pathHomeFooWorkspace,
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
+				RootDir:        pathHomeFooLocalShare,
 				MaxParallelism: 5,
 			},
 			exeName: "gh",
@@ -125,14 +125,14 @@ packages:
 				"PATH": "/home/foo/.local/share/aquaproj-aqua/bin:/usr/local/bin:/usr/bin",
 			},
 			files: map[string]string{
-				"/home/foo/workspace/aqua.yaml": `registries:
+				pathHomeFooWorkspaceAquaYaml: `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"/home/foo/workspace/registry.yaml": `packages:
+				pathHomeFooWorkspaceRegistryYaml: `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -150,18 +150,18 @@ packages:
 		{
 			name: "global config",
 			rt: &runtime.Runtime{
-				GOOS:   "linux",
-				GOARCH: "amd64",
+				GOOS:   osLinux,
+				GOARCH: archAmd64,
 			},
 			param: &config.Param{
-				PWD:                   "/home/foo/workspace",
-				RootDir:               "/home/foo/.local/share/aquaproj-aqua",
+				CWD:                   pathHomeFooWorkspace,
+				RootDir:               pathHomeFooLocalShare,
 				MaxParallelism:        5,
-				GlobalConfigFilePaths: []string{"/etc/aqua/aqua.yaml"},
+				GlobalConfigFilePaths: []string{pathEtcAquaAquaYaml},
 			},
-			exeName: "aqua-installer",
+			exeName: pkgNameAquaInstaller,
 			files: map[string]string{
-				"/etc/aqua/aqua.yaml": `registries:
+				pathEtcAquaAquaYaml: `registries:
 - type: local
   name: standard
   path: registry.yaml
@@ -169,7 +169,7 @@ packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"/etc/aqua/registry.yaml": `packages:
+				pathEtcAquaRegistryYaml: `packages:
 - type: github_release
   repo_owner: suzuki-shunsuke
   repo_name: ci-info
@@ -187,51 +187,51 @@ packages:
 			exp: &which.FindResult{
 				Package: &config.Package{
 					Package: &aqua.Package{
-						Name:     "aquaproj/aqua-installer",
-						Registry: "standard",
-						Version:  "v1.0.0",
-						FilePath: "/etc/aqua/aqua.yaml",
+						Name:     repoAquaInstaller,
+						Registry: regTypeStandard,
+						Version:  versionV1,
+						FilePath: pathEtcAquaAquaYaml,
 					},
 					PackageInfo: &cfgRegistry.PackageInfo{
 						Type:      "github_content",
 						RepoOwner: "aquaproj",
-						RepoName:  "aqua-installer",
-						Path:      "aqua-installer",
+						RepoName:  pkgNameAquaInstaller,
+						Path:      pkgNameAquaInstaller,
 					},
 					Registry: &aqua.Registry{
-						Name: "standard",
-						Type: "local",
-						Path: "/etc/aqua/registry.yaml",
+						Name: regTypeStandard,
+						Type: regTypeLocal,
+						Path: pathEtcAquaRegistryYaml,
 					},
 				},
 				File: &cfgRegistry.File{
-					Name: "aqua-installer",
+					Name: pkgNameAquaInstaller,
 				},
 				Config: &aqua.Config{
 					Packages: []*aqua.Package{
 						{
 							Name:     "suzuki-shunsuke/ci-info",
-							Registry: "standard",
-							Version:  "v1.0.0",
-							FilePath: "/etc/aqua/aqua.yaml",
+							Registry: regTypeStandard,
+							Version:  versionV1,
+							FilePath: pathEtcAquaAquaYaml,
 						},
 						{
-							Name:     "aquaproj/aqua-installer",
-							Registry: "standard",
-							Version:  "v1.0.0",
-							FilePath: "/etc/aqua/aqua.yaml",
+							Name:     repoAquaInstaller,
+							Registry: regTypeStandard,
+							Version:  versionV1,
+							FilePath: pathEtcAquaAquaYaml,
 						},
 					},
 					Registries: aqua.Registries{
-						"standard": {
-							Name: "standard",
-							Type: "local",
-							Path: "/etc/aqua/registry.yaml",
+						regTypeStandard: {
+							Name: regTypeStandard,
+							Type: regTypeLocal,
+							Path: pathEtcAquaRegistryYaml,
 						},
 					},
 				},
 				ExePath:        "/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer",
-				ConfigFilePath: "/etc/aqua/aqua.yaml",
+				ConfigFilePath: pathEtcAquaAquaYaml,
 			},
 		},
 	}

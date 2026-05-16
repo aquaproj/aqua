@@ -52,7 +52,7 @@ func IsUnarchived(archiveType, assetName string) bool {
 		return false
 	}
 	ext := filepath.Ext(assetName)
-	return ext == "" || ext == ".exe"
+	return ext == "" || ext == ".exe" || ext == ".jar"
 }
 
 func (u *Unarchiver) getUnarchiver(logger *slog.Logger, src *File, dest string) coreUnarchiver {

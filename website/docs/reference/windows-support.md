@@ -49,7 +49,7 @@ Currently, tools written in shell scripts aren't supported.
 
 ## Windows specific features
 
-### Auto complesion of the file extension
+### Auto completion of the file extension
 
 Please see [complete_windows_ext](/docs/reference/registry-config/complete-windows-ext).
 

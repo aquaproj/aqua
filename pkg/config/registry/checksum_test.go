@@ -28,13 +28,13 @@ func TestChecksum_GetReplacements(t *testing.T) {
 			name: "checksum with replacements",
 			checksum: &registry.Checksum{
 				Replacements: registry.Replacements{
-					"linux":  "Linux",
-					"darwin": "macOS",
+					"linux":  osLinuxCapitalized,
+					osDarwin: "macOS",
 				},
 			},
 			expected: registry.Replacements{
-				"linux":  "Linux",
-				"darwin": "macOS",
+				"linux":  osLinuxCapitalized,
+				osDarwin: "macOS",
 			},
 		},
 		{
@@ -89,26 +89,26 @@ func TestChecksum_GetEnabled(t *testing.T) {
 		{
 			name: "enabled is true",
 			checksum: &registry.Checksum{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 			expected: true,
 		},
 		{
 			name: "enabled is false",
 			checksum: &registry.Checksum{
-				Enabled: boolPtr(false),
+				Enabled: new(false),
 			},
 			expected: false,
 		},
 		{
 			name: "full checksum configuration with enabled true",
 			checksum: &registry.Checksum{
-				Type:      "github_release",
+				Type:      pkgTypeGitHubRelease,
 				Asset:     "checksums.txt",
 				Algorithm: "sha256",
-				Enabled:   boolPtr(true),
+				Enabled:   new(true),
 				Replacements: registry.Replacements{
-					"linux": "Linux",
+					"linux": osLinuxCapitalized,
 				},
 			},
 			expected: true,
@@ -116,10 +116,10 @@ func TestChecksum_GetEnabled(t *testing.T) {
 		{
 			name: "full checksum configuration with enabled false",
 			checksum: &registry.Checksum{
-				Type:      "http",
+				Type:      pkgTypeHTTP,
 				URL:       "https://example.com/checksums.txt",
 				Algorithm: "sha512",
-				Enabled:   boolPtr(false),
+				Enabled:   new(false),
 			},
 			expected: false,
 		},
@@ -195,11 +195,6 @@ func TestChecksum_GetAlgorithm(t *testing.T) {
 	}
 }
 
-// Helper function to create bool pointers
-func boolPtr(b bool) *bool {
-	return &b
-}
-
 func TestChecksum_GetCosign(t *testing.T) { //nolint:dupl
 	t.Parallel()
 	data := []struct {
@@ -221,11 +216,11 @@ func TestChecksum_GetCosign(t *testing.T) { //nolint:dupl
 			name: "checksum with cosign",
 			checksum: &registry.Checksum{
 				Cosign: &registry.Cosign{
-					Enabled: boolPtr(true),
+					Enabled: new(true),
 				},
 			},
 			expected: &registry.Cosign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 		},
 	}
@@ -272,11 +267,11 @@ func TestChecksum_GetMinisign(t *testing.T) { //nolint:dupl
 			name: "checksum with minisign",
 			checksum: &registry.Checksum{
 				Minisign: &registry.Minisign{
-					Enabled: boolPtr(true),
+					Enabled: new(true),
 				},
 			},
 			expected: &registry.Minisign{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 		},
 	}
@@ -323,11 +318,11 @@ func TestChecksum_GetGitHubArtifactAttestations(t *testing.T) { //nolint:dupl
 			name: "checksum with github artifact attestations",
 			checksum: &registry.Checksum{
 				GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{
-					Enabled: boolPtr(true),
+					Enabled: new(true),
 				},
 			},
 			expected: &registry.GitHubArtifactAttestations{
-				Enabled: boolPtr(true),
+				Enabled: new(true),
 			},
 		},
 	}
@@ -351,9 +346,4 @@ func TestChecksum_GetGitHubArtifactAttestations(t *testing.T) { //nolint:dupl
 			}
 		})
 	}
-}
-
-// Helper function to create string pointers
-func stringPtr(s string) *string {
-	return &s
 }

@@ -33,17 +33,17 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 						Version: "v2.17.0",
 					},
 					PackageInfo: &registry.PackageInfo{
-						Type:      "github_release",
+						Type:      pkgTypeGitHubRelease,
 						RepoOwner: "cli",
 						RepoName:  "cli",
 						Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
 						Rosetta2:  true,
 						Checksum: &registry.Checksum{
-							Type:       "github_release",
-							Algorithm:  "sha256",
-							FileFormat: "regexp",
+							Type:       pkgTypeGitHubRelease,
+							Algorithm:  algoSHA256,
+							FileFormat: algoTypeRegexp,
 							Pattern: &registry.ChecksumPattern{
-								Checksum: `^(\b[A-Fa-f0-9]{64}\b)`,
+								Checksum: regexpSHA256,
 								File:     "^\\b[A-Fa-f0-9]{64}\\b\\s+(\\S+)$",
 							},
 						},
@@ -55,7 +55,7 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 			inst: &Installer{
 				progressBar: true,
 				runtime: &runtime.Runtime{
-					GOOS:   "darwin",
+					GOOS:   osDarwin,
 					GOARCH: "arm64",
 				},
 				fs: afero.NewMemMapFs(),

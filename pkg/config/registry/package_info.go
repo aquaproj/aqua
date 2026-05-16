@@ -21,7 +21,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/invopop/jsonschema"
-	orderedmap "github.com/wk8/go-ordered-map/v2"
+	orderedmap "github.com/pb33f/ordered-map/v2"
 )
 
 // Package type constants define the supported package installation methods.
@@ -84,10 +84,19 @@ type PackageInfo struct {
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
-	GitHubImmutableRelease     bool                        `yaml:"github_immutable_release,omitempty" json:"github_immutable_release,omitempty"`
-	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
-	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	VersionOverrides           []*VersionOverride          `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+	GitHubReleaseAttestations  bool                        `yaml:"github_release_attestations,omitempty" json:"github_release_attestations,omitempty" jsonschema:"description=For backwards compatibility\\, if this is false\\, github_immutable_release will be used instead"`
+	// Deprecated: use GitHubReleaseAttestations instead
+	GitHubImmutableRelease bool               `yaml:"github_immutable_release,omitempty" json:"github_immutable_release,omitempty" jsonschema:"description=Deprecated: use github_release_attestations instead"`
+	Vars                   []*Var             `yaml:",omitempty" json:"vars,omitempty"`
+	VersionConstraints     string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	VersionOverrides       []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
+}
+
+// GitHubReleaseAttestationsAvailable returns true if GitHub release attestations are available.
+// For some backwards compatibility to times where GitHubReleaseAttestations did not exist and GitHubImmutableRelease did, it returns true if either field is true,
+// meaning that explicitly setting GitHubReleaseAttestations to false does not necessarily disable them, due to fallback to GitHubImmutableRelease.
+func (p *PackageInfo) GitHubReleaseAttestationsAvailable() bool {
+	return p.GitHubReleaseAttestations || p.GitHubImmutableRelease
 }
 
 // Var represents a template variable that can be used in package configurations
@@ -171,11 +180,34 @@ type VersionOverride struct {
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
-	GitHubImmutableRelease     *bool                       `yaml:"github_immutable_release,omitempty" json:"github_immutable_release,omitempty"`
-	Build                      *Build                      `yaml:",omitempty" json:"build,omitempty"`
-	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
-	Overrides                  Overrides                   `yaml:",omitempty" json:"overrides,omitempty"`
-	SupportedEnvs              SupportedEnvs               `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	GitHubReleaseAttestations  *bool                       `yaml:"github_release_attestations,omitempty" json:"github_release_attestations,omitempty"`
+	// Deprecated: use GitHubReleaseAttestations instead
+	GitHubImmutableRelease *bool         `yaml:"github_immutable_release,omitempty" json:"github_immutable_release,omitempty" jsonschema:"description=Deprecated: use github_release_attestations instead"`
+	Build                  *Build        `yaml:",omitempty" json:"build,omitempty"`
+	Vars                   []*Var        `yaml:",omitempty" json:"vars,omitempty"`
+	Overrides              Overrides     `yaml:",omitempty" json:"overrides,omitempty"`
+	SupportedEnvs          SupportedEnvs `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+}
+
+// Variant represents an additional matching condition for an Override beyond
+// the standard goos/goarch axis. Each variant is a single key/value pair that
+// must equal the corresponding value reported by the runtime environment for
+// the override to match. Supported keys are maintained as an allowlist in aqua;
+// an override that references an unknown key is treated as non-matching so
+// registries can include fallback overrides for older aqua versions.
+type Variant struct {
+	Key   string `yaml:",omitempty" json:"key,omitempty" jsonschema:"enum=libc"`
+	Value string `yaml:",omitempty" json:"value,omitempty"`
+}
+
+// Variants is a list of Variant conditions that must all match for the
+// containing Override to apply.
+type Variants []*Variant
+
+// IsZero implements the [go.yaml.in/yaml/v3.IsZeroer] interface.
+// It returns true if the Variants slice is nil.
+func (v Variants) IsZero() bool {
+	return v == nil
 }
 
 // Override provides platform-specific package configuration that overrides
@@ -203,6 +235,7 @@ type Override struct {
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
 	Envs                       SupportedEnvs               `yaml:",omitempty" json:"envs,omitempty"`
+	Variants                   Variants                    `yaml:",omitempty" json:"variants,omitempty"`
 }
 
 // Copy creates a deep copy of the PackageInfo struct.
@@ -243,6 +276,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		SLSAProvenance:             p.SLSAProvenance,
 		Minisign:                   p.Minisign,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
+		GitHubReleaseAttestations:  p.GitHubReleaseAttestations,
 		GitHubImmutableRelease:     p.GitHubImmutableRelease,
 		Private:                    p.Private,
 		ErrorMessage:               p.ErrorMessage,
@@ -821,7 +855,11 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.GitHubArtifactAttestations != nil {
 		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
 	}
-	if child.GitHubImmutableRelease != nil {
+	if child.GitHubReleaseAttestations != nil {
+		pkg.GitHubReleaseAttestations = *child.GitHubReleaseAttestations
+		pkg.GitHubImmutableRelease = *child.GitHubReleaseAttestations
+	} else if child.GitHubImmutableRelease != nil {
+		pkg.GitHubReleaseAttestations = *child.GitHubImmutableRelease
 		pkg.GitHubImmutableRelease = *child.GitHubImmutableRelease
 	}
 	if child.ErrorMessage != nil {
@@ -881,6 +919,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubReleaseAttestations = false
 		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
@@ -897,6 +936,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubReleaseAttestations = false
 		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
@@ -912,6 +952,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
+		p.GitHubReleaseAttestations = false
 		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
