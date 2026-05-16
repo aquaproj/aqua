@@ -39,7 +39,8 @@ func (dl *GitHubReleaseDownloader) DownloadGitHubRelease(ctx context.Context, lo
 		// It avoids the rate limit of the access token.
 		b, length, err := dl.http.Download(ctx, fmt.Sprintf(
 			"https://github.com/%s/%s/releases/download/%s/%s",
-			param.RepoOwner, param.RepoName, param.Version, param.Asset))
+			param.RepoOwner, param.RepoName, param.Version, param.Asset,
+		))
 		if err == nil {
 			return b, length, nil
 		}
@@ -98,7 +99,8 @@ func (r *releaseAssetsImpl) GetDigest(assetName string) *domain.AssetDigest {
 }
 
 // GetReleaseAssets retrieves all asset digests from a GitHub Release.
-// Returns nil without error if the release is not found or has no digest-enabled assets.
+// Returns nil without error if the release has no digest-enabled assets.
+// Any error from the GitHub API (including 404 Not Found) is returned to the caller.
 func (dl *GitHubReleaseDownloader) GetReleaseAssets(ctx context.Context, logger *slog.Logger, owner, repo, version string) (domain.ReleaseAssets, error) {
 	release, _, err := dl.github.GetReleaseByTag(ctx, owner, repo, version)
 	if err != nil {
