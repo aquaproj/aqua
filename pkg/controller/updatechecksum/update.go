@@ -158,17 +158,7 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, che
 		return nil
 	}
 
-	// Pre-fetch release assets from GitHub API for github_release type without signature verification.
-	// This allows retrieving digests for multiple assets with a single API call.
-	var releaseAssets domain.ReleaseAssets
-	if pkg.PackageInfo.Type == config.PkgInfoTypeGitHubRelease &&
-		!hasChecksumSignatureVerification(pkg.PackageInfo.Checksum) {
-		var err error
-		releaseAssets, err = c.chkDL.GetReleaseAssets(ctx, logger, pkg)
-		if err != nil {
-			slogerr.WithError(logger, err).Debug("failed to get release assets from GitHub API")
-		}
-	}
+	releaseAssets := c.prefetchReleaseAssets(ctx, logger, pkgs, rts)
 
 	checksumFiles := map[string]struct{}{}
 	for _, rt := range rts {
@@ -237,6 +227,31 @@ func allChecksumsCached(checksums *checksum.Checksums, pkgs map[string]*config.P
 		}
 	}
 	return true
+}
+
+// prefetchReleaseAssets returns the GitHub Release Asset digests for pkgs if
+// any per-runtime config qualifies (github_release type with no checksum-file
+// signature verification). RepoOwner/RepoName/Version cannot be overridden per
+// runtime, so one API call serves every matching runtime. Returns nil when no
+// runtime can use the API or when the API call fails.
+func (c *Controller) prefetchReleaseAssets(ctx context.Context, logger *slog.Logger, pkgs map[string]*config.Package, rts []*runtime.Runtime) domain.ReleaseAssets {
+	for _, rt := range rts {
+		p, ok := pkgs[rt.Env()]
+		if !ok {
+			continue
+		}
+		if p.PackageInfo.Type != config.PkgInfoTypeGitHubRelease ||
+			hasChecksumSignatureVerification(p.PackageInfo.Checksum) {
+			continue
+		}
+		releaseAssets, err := c.chkDL.GetReleaseAssets(ctx, logger, p)
+		if err != nil {
+			slogerr.WithError(logger, err).Debug("failed to get release assets from GitHub API")
+			return nil
+		}
+		return releaseAssets
+	}
+	return nil
 }
 
 // hasChecksumSignatureVerification returns true if the checksum has signature verification configured
