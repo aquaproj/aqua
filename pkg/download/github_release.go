@@ -2,6 +2,8 @@ package download
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log/slog"
@@ -127,7 +129,7 @@ func (dl *GitHubReleaseDownloader) GetReleaseAssets(ctx context.Context, logger 
 // Currently only sha256 is supported.
 // Returns nil if the format is unsupported.
 func parseDigest(logger *slog.Logger, digest string) *domain.AssetDigest {
-	algorithm, hex, found := strings.Cut(digest, ":")
+	algorithm, digestHex, found := strings.Cut(digest, ":")
 	if !found {
 		logger.Debug("unsupported digest format", "digest", digest)
 		return nil
@@ -136,8 +138,16 @@ func parseDigest(logger *slog.Logger, digest string) *domain.AssetDigest {
 		logger.Debug("unsupported digest algorithm", "algorithm", algorithm)
 		return nil
 	}
+	if len(digestHex) != sha256.Size*2 {
+		logger.Debug("invalid sha256 digest length", "length", len(digestHex))
+		return nil
+	}
+	if _, err := hex.DecodeString(digestHex); err != nil {
+		logger.Debug("invalid sha256 digest hex", "error", err)
+		return nil
+	}
 	return &domain.AssetDigest{
-		Digest:    strings.ToUpper(hex),
+		Digest:    strings.ToUpper(digestHex),
 		Algorithm: algorithm,
 	}
 }
