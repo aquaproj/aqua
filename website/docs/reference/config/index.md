@@ -123,6 +123,7 @@ Registry types
 * [standard](#standard-registry): aqua's [Standard Registry](https://github.com/aquaproj/aqua-registry)
 * [local](#local-registry): local file
 * [github_content](#github_content-registry): Get the registry by GitHub Repository Content API
+* [http](#http-registry): Get the registry from HTTP(S) endpoints (aqua >= v2.56.0)
 
 ### `standard` registry
 
@@ -205,6 +206,49 @@ registries:
 * `repo_name`: Repository name
 * `ref`: Repository tag or commit hash. Don't specify a branch name as `ref`, because aqua treats the ref as immutable
 * `path`: file path from the repository root directory
+
+### `http` registry
+
+:::info
+aqua >= v2.56.0
+:::
+
+The `http` registry type allows you to load registries from HTTP(S) endpoints, enabling private registries hosted on internal HTTP servers.
+
+e.g.
+
+```yaml
+registries:
+  - name: my-registry
+    type: http
+    url: https://my.registry.com/team/{{.Version}}/registry.yaml
+    version: v1.0.0
+    format: raw
+```
+
+Required attributes:
+
+* `name`: Registry name
+* `url`: HTTP(S) URL to fetch the registry. Must contain `{{.Version}}` template placeholder for determinism
+* `version`: Registry version to use
+
+Optional attributes:
+
+* `format`: Registry file format. Either `raw` (default, for YAML/JSON) or `tar.gz` (for archived registries)
+
+The `url` supports [Go templates](/docs/reference/registry-config/template) with the `{{.Version}}` placeholder and [Sprig functions](http://masterminds.github.io/sprig/):
+
+```yaml
+registries:
+  - name: my-registry
+    type: http
+    url: https://my.registry.com/registries/{{trimV .Version}}/registry.yaml
+    version: v1.0.0
+```
+
+This renders as: `https://my.registry.com/registries/1.0.0/registry.yaml`
+
+**Security**: The version field is validated to prevent path traversal attacks (e.g., `../` is not allowed).
 
 ## `packages`
 
