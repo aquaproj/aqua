@@ -40,8 +40,8 @@ func TestAllChecksumsCached(t *testing.T) { //nolint:funlen
 	pkgDarwin, idDarwin := newGitHubReleasePkg(t, "cli", "cli", "v2.17.0", "gh_darwin_arm64.tar.gz", rtDarwin)
 
 	pkgs := map[string]*config.Package{
-		rtLinux.Env():  pkgLinux,
-		rtDarwin.Env(): pkgDarwin,
+		runtimeKey(rtLinux):  pkgLinux,
+		runtimeKey(rtDarwin): pkgDarwin,
 	}
 	rts := []*runtime.Runtime{rtLinux, rtDarwin}
 
