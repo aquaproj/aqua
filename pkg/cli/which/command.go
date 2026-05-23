@@ -98,7 +98,10 @@ func (i *command) action(ctx context.Context, args *Args) error {
 		return fmt.Errorf("set param: %w", err)
 	}
 	param.ShowVersion = args.ShowVersion
-	ctrl := controller.InitializeWhichCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeWhichCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	if err != nil {
+		return fmt.Errorf("initialize a WhichController: %w", err)
+	}
 	if args.Command == "" {
 		return errCommandIsRequired
 	}

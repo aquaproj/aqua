@@ -192,6 +192,9 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param.GenerateConfigFilePath = args.GenerateConfig
 	param.Limit = args.Limit
 	param.InitConfig = args.Init
-	ctrl := controller.InitializeGenerateRegistryCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, os.Stdout)
+	ctrl, err := controller.InitializeGenerateRegistryCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, os.Stdout)
+	if err != nil {
+		return fmt.Errorf("initialize a GenerateRegistryController: %w", err)
+	}
 	return ctrl.GenerateRegistry(ctx, param, i.r.Logger.Logger, args.Packages...) //nolint:wrapcheck
 }

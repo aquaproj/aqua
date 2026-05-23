@@ -128,7 +128,10 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param.All = args.All
 	param.SelectVersion = args.Interactive
 	param.Args = args.Packages
-	ctrl := controller.InitializeRemoveCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime, mode)
+	ctrl, err := controller.InitializeRemoveCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime, mode)
+	if err != nil {
+		return fmt.Errorf("initialize a RemoveController: %w", err)
+	}
 	if err := ctrl.Remove(ctx, i.r.Logger.Logger, param); err != nil {
 		return err //nolint:wrapcheck
 	}

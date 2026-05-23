@@ -100,6 +100,9 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	}
 	param.Installed = args.Installed
 	param.All = args.All
-	ctrl := controller.InitializeListCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeListCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	if err != nil {
+		return fmt.Errorf("initialize a ListController: %w", err)
+	}
 	return ctrl.List(ctx, i.r.Logger.Logger, param) //nolint:wrapcheck
 }

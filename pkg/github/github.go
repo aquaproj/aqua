@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -29,15 +30,12 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context, logger *slog.Logger) *RepositoriesService {
-	// The error from github.NewClient is only returned when the options fail.
-	// WithHTTPClient only fails if the http.Client is nil, but MakeRetryable
-	// always returns a non-nil client, so this error is unreachable.
+func New(ctx context.Context, logger *slog.Logger) (*RepositoriesService, error) {
 	client, err := github.NewClient(github.WithHTTPClient(MakeRetryable(getHTTPClientForGitHub(ctx, logger, getGitHubToken()), logger)))
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("create a GitHub client: %w", err)
 	}
-	return client.Repositories
+	return client.Repositories, nil
 }
 
 func getGitHubToken() string {

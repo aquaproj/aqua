@@ -99,7 +99,10 @@ func (ic *initCommand) action(ctx context.Context, args *Args) error {
 	if err := util.SetParam(args.GlobalArgs, ic.r.Logger, param, ic.r.Version); err != nil {
 		return fmt.Errorf("set param: %w", err)
 	}
-	ctrl := controller.InitializeInitCommandController(ctx, ic.r.Logger.Logger, param)
+	ctrl, err := controller.InitializeInitCommandController(ctx, ic.r.Logger.Logger, param)
+	if err != nil {
+		return fmt.Errorf("initialize an InitController: %w", err)
+	}
 	cParam := &initcmd.Param{
 		IsDir:     args.CreateDir,
 		ImportDir: args.ImportDir,

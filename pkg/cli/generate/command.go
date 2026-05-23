@@ -135,7 +135,10 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param.SelectVersion = args.SelectVersion
 	param.Limit = args.Limit
 
-	ctrl := controller.InitializeGenerateCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	ctrl, err := controller.InitializeGenerateCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
+	if err != nil {
+		return fmt.Errorf("initialize a GenerateController: %w", err)
+	}
 	return ctrl.Generate(ctx, i.r.Logger.Logger, param, args.Packages...) //nolint:wrapcheck
 }
 
