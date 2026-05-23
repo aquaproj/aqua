@@ -30,7 +30,14 @@ type (
 const Tarball = github.Tarball
 
 func New(ctx context.Context, logger *slog.Logger) *RepositoriesService {
-	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logger, getGitHubToken()), logger)).Repositories
+	// The error from github.NewClient is only returned when the options fail.
+	// WithHTTPClient only fails if the http.Client is nil, but MakeRetryable
+	// always returns a non-nil client, so this error is unreachable.
+	client, err := github.NewClient(github.WithHTTPClient(MakeRetryable(getHTTPClientForGitHub(ctx, logger, getGitHubToken()), logger)))
+	if err != nil {
+		panic(err)
+	}
+	return client.Repositories
 }
 
 func getGitHubToken() string {
