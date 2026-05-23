@@ -2,12 +2,13 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 	"github.com/suzuki-shunsuke/ghtkn-go-sdk/ghtkn"
 	"github.com/suzuki-shunsuke/go-retryablehttp"
 	"github.com/suzuki-shunsuke/urfave-cli-v3-util/keyring/ghtoken"
@@ -29,8 +30,12 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context, logger *slog.Logger) *RepositoriesService {
-	return github.NewClient(MakeRetryable(getHTTPClientForGitHub(ctx, logger, getGitHubToken()), logger)).Repositories
+func New(ctx context.Context, logger *slog.Logger) (*RepositoriesService, error) {
+	client, err := github.NewClient(github.WithHTTPClient(MakeRetryable(getHTTPClientForGitHub(ctx, logger, getGitHubToken()), logger)))
+	if err != nil {
+		return nil, fmt.Errorf("create a GitHub client: %w", err)
+	}
+	return client.Repositories, nil
 }
 
 func getGitHubToken() string {

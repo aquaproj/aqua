@@ -8,10 +8,6 @@ package controller
 
 import (
 	"context"
-	"io"
-	"log/slog"
-	"net/http"
-
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -55,15 +51,21 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+	"io"
+	"log/slog"
+	"net/http"
 )
 
 // Injectors from wire.go:
 
-func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *list.Controller {
+func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*list.Controller, error) {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -73,23 +75,29 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	controller := list.NewController(configFinder, configReader, installer, fs)
-	return controller
+	return controller, nil
 }
 
-func InitializeGenerateRegistryCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, stdout io.Writer) (*genrgst.Controller, error) {
 	fs := afero.NewOsFs()
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	outputter := output.New(stdout, fs)
 	client := cargo.NewClient(httpClient)
 	controller := genrgst.NewController(fs, repositoriesService, outputter, client, stdout)
-	return controller
+	return controller, nil
 }
 
-func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param) *initcmd.Controller {
-	repositoriesService := github.New(ctx, logger)
+func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param) (*initcmd.Controller, error) {
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	fs := afero.NewOsFs()
 	controller := initcmd.New(repositoriesService, fs)
-	return controller
+	return controller, nil
 }
 
 func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Controller {
@@ -98,11 +106,14 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 	return controller
 }
 
-func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *generate.Controller {
+func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*generate.Controller, error) {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -121,14 +132,17 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyfinderFinder, fuzzyGetter)
-	return controller
+	return controller, nil
 }
 
 func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -164,11 +178,14 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 	return controller, nil
 }
 
-func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
+func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*which.Controller, error) {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -180,11 +197,14 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 	osEnv := osenv.New()
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	return controller
+	return controller, nil
 }
 
 func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*exec.Controller, error) {
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	fs := afero.NewOsFs()
@@ -227,7 +247,10 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 
 func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
 	fs := afero.NewOsFs()
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	linker := link.New()
@@ -258,7 +281,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 }
 
 func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	fs := afero.NewOsFs()
@@ -304,7 +330,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -336,8 +365,11 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	return controller, nil
 }
 
-func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
-	repositoriesService := github.New(ctx, logger)
+func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*update.Controller, error) {
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
@@ -362,7 +394,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	updateController := update.New(param, repositoriesService, configFinder, configReader, installer, fs, rt, fuzzyGetter, fuzzyfinderFinder, controller)
-	return updateController
+	return updateController, nil
 }
 
 func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
@@ -388,11 +420,14 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return controller
 }
 
-func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) *remove.Controller {
+func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) (*remove.Controller, error) {
 	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -407,7 +442,7 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
 	client := vacuum.New(fs, param)
 	removeController := remove.New(param, target, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, client)
-	return removeController
+	return removeController, nil
 }
 
 func InitializeVacuumCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *vacuum2.Controller {
@@ -417,12 +452,15 @@ func InitializeVacuumCommandController(ctx context.Context, param *config.Param,
 	return controller
 }
 
-func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) *initialize.Controller {
+func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) (*initialize.Controller, error) {
 	fs := afero.NewOsFs()
 	client := vacuum.New(fs, param)
 	configFinder := finder.NewConfigFinder(fs)
 	configReader := reader.New(fs, param)
-	repositoriesService := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
@@ -432,5 +470,5 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 	slsaVerifier := slsa.New(downloader, fs, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
 	controller := initialize.New(param, rt, fs, client, configFinder, configReader, installer)
-	return controller
+	return controller, nil
 }

@@ -55,7 +55,7 @@ import (
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
-func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *list.Controller {
+func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*list.Controller, error) {
 	wire.Build(
 		list.NewController,
 		wire.NewSet(
@@ -105,10 +105,10 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
-	return &list.Controller{}
+	return &list.Controller{}, nil
 }
 
-func InitializeGenerateRegistryCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, stdout io.Writer) *genrgst.Controller {
+func InitializeGenerateRegistryCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, stdout io.Writer) (*genrgst.Controller, error) {
 	wire.Build(
 		genrgst.NewController,
 		wire.NewSet(
@@ -125,10 +125,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logger *sl
 			wire.Bind(new(genrgst.CargoClient), new(*cargo.Client)),
 		),
 	)
-	return &genrgst.Controller{}
+	return &genrgst.Controller{}, nil
 }
 
-func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param) *initcmd.Controller {
+func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param) (*initcmd.Controller, error) {
 	wire.Build(
 		initcmd.New,
 		wire.NewSet(
@@ -137,7 +137,7 @@ func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, p
 		),
 		afero.NewOsFs,
 	)
-	return &initcmd.Controller{}
+	return &initcmd.Controller{}, nil
 }
 
 func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Controller {
@@ -148,7 +148,7 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 	return &initpolicy.Controller{}
 }
 
-func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *generate.Controller {
+func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*generate.Controller, error) {
 	wire.Build(
 		generate.New,
 		wire.NewSet(
@@ -227,7 +227,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 			wire.Bind(new(versiongetter.GoProxyClient), new(*goproxy.Client)),
 		),
 	)
-	return &generate.Controller{}
+	return &generate.Controller{}, nil
 }
 
 func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
@@ -358,7 +358,7 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 	return &install.Controller{}, nil
 }
 
-func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *which.Controller {
+func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*which.Controller, error) {
 	wire.Build(
 		which.New,
 		wire.NewSet(
@@ -414,7 +414,7 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
-	return nil
+	return nil, nil
 }
 
 func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
@@ -907,7 +907,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	return &updatechecksum.Controller{}, nil
 }
 
-func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) *update.Controller {
+func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*update.Controller, error) {
 	wire.Build(
 		update.New,
 		wire.NewSet(
@@ -998,7 +998,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		),
 		osenv.New,
 	)
-	return &update.Controller{}
+	return &update.Controller{}, nil
 }
 
 func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
@@ -1045,7 +1045,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 	return &info.Controller{}
 }
 
-func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) *remove.Controller {
+func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) (*remove.Controller, error) {
 	wire.Build(
 		remove.New,
 		wire.NewSet(
@@ -1116,7 +1116,7 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 			wire.Bind(new(remove.Vacuum), new(*vacuum.Client)),
 		),
 	)
-	return &remove.Controller{}
+	return &remove.Controller{}, nil
 }
 
 func InitializeVacuumCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *cvacuum.Controller {
@@ -1131,7 +1131,7 @@ func InitializeVacuumCommandController(ctx context.Context, param *config.Param,
 	return &cvacuum.Controller{}
 }
 
-func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) *initialize.Controller {
+func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) (*initialize.Controller, error) {
 	wire.Build(
 		initialize.New,
 		afero.NewOsFs,
@@ -1185,5 +1185,5 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
 		),
 	)
-	return &initialize.Controller{}
+	return &initialize.Controller{}, nil
 }
