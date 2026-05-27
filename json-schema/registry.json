@@ -271,6 +271,12 @@
           "type": "string",
           "format": "regex",
           "description": "Deprecated: use signer_workflow instead"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "signer_repo": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
