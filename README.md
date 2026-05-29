@@ -39,6 +39,7 @@ Declarative CLI Version Manager written in Go.
 - [Studist](https://studist.jp/) ([ref](https://studist.tech/entrance-book-4a57bc50aace))
 - [Connehito Inc.](https://connehito.com/) ([ref](https://tech.connehito.com/entry/2024/10/01/184156#%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%A7%E6%89%B1%E3%81%86CLI%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AF-aqua-%E3%81%A7%E7%AE%A1%E7%90%86))
 - [LayerX Inc.](https://layerx.co.jp/) ([ref](https://tech.layerx.co.jp/entry/aqua-local-setup))
+- [Cybozu, Inc.](https://cybozu.co.jp/) ([ref](https://blog.cybozu.io/entry/2025/04/14/100000#%E3%83%93%E3%83%AB%E3%83%89%E3%82%84%E3%83%AA%E3%83%B3%E3%83%88%E3%83%84%E3%83%BC%E3%83%AB))
 
 ## License
 
