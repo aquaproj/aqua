@@ -261,23 +261,23 @@ Your contribution is welcome.
 
 ### Compared with Homebrew
 
-- :thumbsup: [Strict Version Control](#strict-version-control)
-- :thumbsup: [Windows Support](/docs/reference/windows-support/)
+- :+1: [Strict Version Control](#strict-version-control)
+- :+1: [Windows Support](/docs/reference/windows-support/)
 
 You can use Homebrew to install tools aqua can't install.
 
 ### Compared with asdf
 
-- :thumbsup: [Easy to use](#easy-to-use)
-- :thumbsup: [Lazy Install](https://aquaproj.github.io/docs/tutorial/lazy-install/)
-- :thumbsup: You don't have to install plugins in advance
-- :thumbsup: [Continuous update by Renovate](#continuous-update-by-renovate)
-- :thumbsup: [Security](reference/security/index.md) ([Checksum Verification](/docs/guides/checksum/))
-- :thumbsup: [aqua doesn't force to manage a tool by aqua in a project even if aqua is used to manage the tool in the other project](#aqua-doesnt-force-to-manage-a-tool-by-aqua-in-a-project-even-if-aqua-is-used-to-manage-the-tool-in-the-other-project)
-- :thumbsup: [aqua Registry is much easier to maintain than asdf plugins](#easy-to-support-new-tools)
-- :thumbsup: Small things
-  - :thumbsup: [Share aqua configuration for teams and organizations with AQUA_GLOBAL_CONFIG](/docs/guides/team-config)
-  * :thumbsup: [Split the list of packages](/docs/guides/split-config)
+- :+1: [Easy to use](#easy-to-use)
+- :+1: [Lazy Install](https://aquaproj.github.io/docs/tutorial/lazy-install/)
+- :+1: You don't have to install plugins in advance
+- :+1: [Continuous update by Renovate](#continuous-update-by-renovate)
+- :+1: [Security](reference/security/index.md) ([Checksum Verification](/docs/guides/checksum/))
+- :+1: [aqua doesn't force to manage a tool by aqua in a project even if aqua is used to manage the tool in the other project](#aqua-doesnt-force-to-manage-a-tool-by-aqua-in-a-project-even-if-aqua-is-used-to-manage-the-tool-in-the-other-project)
+- :+1: [aqua Registry is much easier to maintain than asdf plugins](#easy-to-support-new-tools)
+- :+1: Small things
+  - :+1: [Share aqua configuration for teams and organizations with AQUA_GLOBAL_CONFIG](/docs/guides/team-config)
+  * :+1: [Split the list of packages](/docs/guides/split-config)
 
 #### aqua doesn't force to manage a tool by aqua in a project even if aqua is used to manage the tool in the other project
 
@@ -299,10 +299,10 @@ You can use asdf for them and can use aqua for other tools.
 
 ### Compared with GitHub Actions
 
-- :thumbsup: [Strict Version Control](#strict-version-control)
-- :thumbsup: Unify how to install tools in both local development and CI
-- :thumbsup: [Continuous update by Renovate](#continuous-update-by-renovate)
-- :thumbsup: [Security](reference/security/index.md) ([Checksum Verification](/docs/guides/checksum/))
+- :+1: [Strict Version Control](#strict-version-control)
+- :+1: Unify how to install tools in both local development and CI
+- :+1: [Continuous update by Renovate](#continuous-update-by-renovate)
+- :+1: [Security](reference/security/index.md) ([Checksum Verification](/docs/guides/checksum/))
 
 ## Restriction
 
