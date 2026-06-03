@@ -21,6 +21,7 @@ linters:
     - embeddedstructfieldcheck
     - noinlineerr
     - revive
+    - gomodguard
   exclusions:
     generated: lax
     presets:

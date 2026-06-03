@@ -31,7 +31,11 @@ type (
 const Tarball = github.Tarball
 
 func New(ctx context.Context, logger *slog.Logger) (*RepositoriesService, error) {
-	client, err := github.NewClient(github.WithHTTPClient(MakeRetryable(getHTTPClientForGitHub(ctx, logger, getGitHubToken()), logger)))
+	httpClient, err := getHTTPClientForGitHub(ctx, logger, getGitHubToken())
+	if err != nil {
+		return nil, err
+	}
+	client, err := github.NewClient(github.WithHTTPClient(MakeRetryable(httpClient, logger)))
 	if err != nil {
 		return nil, fmt.Errorf("create a GitHub client: %w", err)
 	}
@@ -52,18 +56,21 @@ func MakeRetryable(client *http.Client, logger *slog.Logger) *http.Client {
 	return c.StandardClient()
 }
 
-func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token string) *http.Client {
+func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token string) (*http.Client, error) {
 	if token == "" {
 		if keyring.Enabled() {
-			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logger, keyring.KeyService))
+			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logger, keyring.KeyService)), nil
 		}
 		if os.Getenv("AQUA_GHTKN_ENABLED") == "true" {
-			client := ghtkn.New()
-			return oauth2.NewClient(ctx, client.TokenSource(logger, &ghtkn.InputGet{}))
+			client, err := ghtkn.New()
+			if err != nil {
+				return nil, fmt.Errorf("create a ghtkn client: %w", err)
+			}
+			return oauth2.NewClient(ctx, client.TokenSource(logger, &ghtkn.InputGet{})), nil
 		}
-		return http.DefaultClient
+		return http.DefaultClient, nil
 	}
 	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
-	))
+	)), nil
 }
