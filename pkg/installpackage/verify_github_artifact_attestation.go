@@ -42,6 +42,8 @@ func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logger 
 		ArtifactPath:   file,
 		PredicateType:  g.gaa.PredicateType,
 		SignerWorkflow: g.gaa.SignerWorkflow(),
+		Owner:          g.gaa.Owner,
+		SignerRepo:     g.gaa.SignerRepo,
 	}); err != nil {
 		return fmt.Errorf("verify a package with gh attestation: %w", err)
 	}
