@@ -8,7 +8,6 @@ linters:
     - exhaustruct
     - godot
     - godox
-    - gomoddirectives
     - ireturn
     - lll
     - musttag

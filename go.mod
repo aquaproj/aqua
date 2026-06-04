@@ -21,7 +21,7 @@ require (
 	github.com/spf13/afero v1.15.0
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
-	github.com/suzuki-shunsuke/ghtkn-go-sdk v0.2.2
+	github.com/suzuki-shunsuke/ghtkn-go-sdk v0.2.3-0.20260604011649-b38c69b23adc
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
@@ -36,8 +36,6 @@ require (
 	golang.org/x/sync v0.20.0
 	golang.org/x/sys v0.45.0
 )
-
-replace github.com/suzuki-shunsuke/ghtkn-go-sdk v0.2.2 => github.com/suzuki-shunsuke/ghtkn-go-sdk v0.2.3-0.20260602232307-742ca7041604
 
 require (
 	dario.cat/mergo v1.0.1 // indirect
