@@ -178,7 +178,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 		assetNames = append(assetNames, asset.GetName())
 	}
 
-	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames)
+	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames, release.GetImmutable())
 	return pkgInfo, []string{version}
 }
 
@@ -201,11 +201,17 @@ func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.
 	return nil
 }
 
-func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string) { //nolint:cyclop
+func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string, immutable bool) { //nolint:cyclop
 	if len(assets) == 0 {
 		pkgInfo.NoAsset = true
 		return
 	}
+	// Corner case: it is possible to have immutable releases without release attestations.
+	// This happens at least if the release was marked immutable after the fact,
+	// such as with https://github.com/suzuki-shunsuke/ghir
+	// There is no way as of 2026-05-08 in the GitHub API to check release attestation availability directly,
+	// so we assume here that all releases marked as immutable have release attestations.
+	pkgInfo.GitHubReleaseAttestations = immutable
 	assetInfos := make([]*asset.AssetInfo, 0, len(assets))
 	pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
 	assetNames := map[string]struct{}{}
