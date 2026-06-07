@@ -1,6 +1,10 @@
 ---
 name: test-docker-prebuilt
-on: workflow_call
+on:
+  workflow_call:
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: true
 jobs:
   test-docker:
     # Test Dockerfile
@@ -16,7 +20,9 @@ jobs:
   test-docker-build:
     timeout-minutes: 30
     runs-on: ubuntu-24.04
-    permissions: {}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -26,6 +32,11 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+
+      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
       - run: |
           go install \
             -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" \
