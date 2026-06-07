@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -eu
+
+FILE=$1
+
+if ! perl -ne 'exit 1 if /[^\x00-\x7F]/' "$FILE"; then
+    echo "[ERROR] Non-ASCII characters found in commit message" >&2
+    exit 1
+fi
