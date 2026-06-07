@@ -5,12 +5,14 @@ permissions: {}
 jobs:
   autofix:
     runs-on: ubuntu-24.04
-    permissions: {}
+    permissions:
+      id-token: write
     timeout-minutes: 15
     steps:
-      - uses: suzuki-shunsuke/go-autofix-action@ba716cebb7767055bdde0e62bb91d715bde39ab2 # v0.1.12
+      - uses: suzuki-shunsuke/go-autofix-action@9a8682f2dc2a935fe2a2ac96deb03de2dfcb872e # v0.1.13
         with:
           aqua_version: v2.59.1
+          takumi_guard_bot_id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
       - run: aqua upc -prune
         working-directory: pkg/cosign
         env:
@@ -43,6 +45,18 @@ jobs:
           node-version: ${{steps.package_json.outputs.prop}}
           cache: npm
           cache-dependency-path: website/package-lock.json
+      - uses: flatt-security/setup-takumi-guard-npm@9a5d797c2085b6326d3a2985c08e3a114b9b88c1 # v1.1.1
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+      - name: Move the npmrc to the user npmrc
+        # setup-takumi-guard-npm writes the registry and auth token to ./.npmrc,
+        # but npm ci runs in website/ and npm does not read parent directories'
+        # .npmrc. Move it to the user-level ~/.npmrc so npm ci picks it up.
+        run: |
+          if [ -f .npmrc ]; then
+            cat .npmrc >> "$HOME/.npmrc"
+            rm .npmrc
+          fi
       - run: npm ci
         working-directory: website
       - run: bash scripts/generate-usage.sh
