@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -eu
+
+failed=0
+
+for file in "$@"; do
+  [ -f "$file" ] || continue
+  if ! file --mime "$file" | grep -q 'text/'; then
+    continue
+  fi
+  if ! perl -ne 'exit 1 if /[^\x00-\x7F]/' "$file"; then
+    echo "[ERROR] non-ascii characters detected: $file" >&2
+    failed=1
+  fi
+done
+
+exit "$failed"
