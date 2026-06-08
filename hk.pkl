@@ -1,0 +1,49 @@
+amends "package://github.com/jdx/hk/releases/download/v1.45.0/hk@1.45.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.45.0/hk@1.45.0#/Builtins.pkl"
+
+local linters = new Mapping<String, Step> {
+  ["golangci-lint"] = Builtins.golangci_lint
+  ["gomod-tidy"] = Builtins.gomod_tidy
+  ["typos"] = Builtins.typos
+  // ["lychee"] = Builtins.lychee
+  ["nllint"] {
+    glob = List("**/*")
+    check = "nllint -s {{files}}"
+    fix = "nllint -s -f {{files}}"
+    batch = true
+  }
+  ["go-test"] {
+    glob = List("go.mod", "go.sum", "**/*.go")
+    check = "go test -race -covermode=atomic ./..."
+    fix = "go test -race -covermode=atomic ./..." // run as check in fix mode (no real fix possible)
+    batch = true
+  }
+  ["ascii"] {
+    glob = List("**/*")
+    check = "bash scripts/check-ascii {{files}}"
+    fix = "bash scripts/check-ascii {{files}}" // run as check in fix mode (no real fix possible)
+    batch = true
+  }
+}
+
+hooks {
+  ["pre-commit"] {
+    fix = true
+    stash = "git"
+    steps = linters
+  }
+  ["commit-msg"] {
+    steps {
+      ["validate-commit-msg"] {
+        check = "bash scripts/validate-commit-msg {{commit_msg_file}}"
+      }
+    }
+  }
+  ["fix"] {
+    fix = true
+    steps = linters
+  }
+  ["check"] {
+    steps = linters
+  }
+}

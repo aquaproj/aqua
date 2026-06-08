@@ -1,23 +1,33 @@
 ---
 name: integration-test
-on: workflow_call
+on:
+  workflow_call:
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: true
 jobs:
   integration-test:
     timeout-minutes: 30
     runs-on: ubuntu-24.04
-    permissions: {}
+    permissions:
+      contents: read
+      id-token: write
     env:
       GITHUB_TOKEN: ${{github.token}}
       AQUA_LOG_COLOR: always
       AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
           cache: true
+
+      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
 
       - run: |
           go install \
@@ -281,17 +291,23 @@ jobs:
   integration-test-cargo:
     timeout-minutes: 30
     runs-on: ubuntu-24.04
-    permissions: {}
+    permissions:
+      contents: read
+      id-token: write
     env:
       AQUA_LOG_COLOR: always
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
           cache: true
+
+      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
 
       - run: |
           go install \
@@ -327,7 +343,9 @@ jobs:
   integration-test-all-envs:
     timeout-minutes: 30
     runs-on: ${{ matrix.env.runs-on }}
-    permissions: {}
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       matrix:
         env:
@@ -340,13 +358,20 @@ jobs:
       AQUA_LOG_COLOR: always
       AQUA_GLOBAL_CONFIG: ${{ github.workspace }}/tests/main/aqua-global.yaml:${{ github.workspace }}/tests/main/aqua-global-2.yaml
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
           cache: true
+
+      # setup-takumi-guard-golang is bash/Unix-based; only run it on Linux.
+      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+        if: runner.os == 'Linux'
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
       - run: |
           go install -ldflags "-X main.version=v2.48.2-local -X main.commit=$sha -X main.date=$(date +"%Y-%m-%dT%H:%M:%SZ%:z" | tr -d '+')" ./cmd/aqua
 
