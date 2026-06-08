@@ -57,20 +57,29 @@ func MakeRetryable(client *http.Client, logger *slog.Logger) *http.Client {
 }
 
 func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token string) (*http.Client, error) {
-	if token == "" {
-		if keyring.Enabled() {
-			return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logger, keyring.KeyService)), nil
-		}
-		if os.Getenv("AQUA_GHTKN_ENABLED") == "true" {
-			client, err := ghtkn.New()
-			if err != nil {
-				return nil, fmt.Errorf("create a ghtkn client: %w", err)
-			}
-			return oauth2.NewClient(ctx, client.TokenSource(logger, &ghtkn.InputGet{})), nil
-		}
+	if token != "" {
+		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: token},
+		)), nil
+	}
+	if keyring.Enabled() {
+		return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logger, keyring.KeyService)), nil
+	}
+
+	ghtknEnabled, err := ghtkn.Enabled(&ghtkn.InputEnabled{
+		Envs: []string{
+			"AQUA_GHTKN_ENABLED",
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("check if ghtkn is enabled: %w", err)
+	}
+	if !ghtknEnabled {
 		return http.DefaultClient, nil
 	}
-	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)), nil
+	client, err := ghtkn.New()
+	if err != nil {
+		return nil, fmt.Errorf("create a ghtkn client: %w", err)
+	}
+	return oauth2.NewClient(ctx, client.TokenSource(logger, &ghtkn.InputGet{})), nil
 }
