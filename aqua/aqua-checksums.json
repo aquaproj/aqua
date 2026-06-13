@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/anchore/syft/v1.44.0/syft_1.44.0_darwin_amd64.tar.gz",
-      "checksum": "C40ECE5407927327F94F35901727DBC604B46857E04F04EC94A310845FB71BDE",
+      "id": "github_release/github.com/anchore/syft/v1.45.0/syft_1.45.0_darwin_amd64.tar.gz",
+      "checksum": "719E4B479B77B85CF2321AD0D1C04314163B8C14832CB8DA9379D6ABA7F6DC4A",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.44.0/syft_1.44.0_darwin_arm64.tar.gz",
-      "checksum": "24E4D34078AE81DA7C82539616F0CCAC3E226CF4F74A38CE6FB3463619E50A55",
+      "id": "github_release/github.com/anchore/syft/v1.45.0/syft_1.45.0_darwin_arm64.tar.gz",
+      "checksum": "A3BE0F0329B45F87908EDA10CFEAB261936B2BFBC47EAA36694CA8D613F9CA7E",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.44.0/syft_1.44.0_linux_amd64.tar.gz",
-      "checksum": "0E91737AEE2B5BAF1D255B959630194A302335D848FF97BB07921EB6205B5F5A",
+      "id": "github_release/github.com/anchore/syft/v1.45.0/syft_1.45.0_linux_amd64.tar.gz",
+      "checksum": "CD5EFA489E93ECDE99C03A218DB5DEE8B3F03610466D7565CEFD735610D1B28B",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.44.0/syft_1.44.0_linux_arm64.tar.gz",
-      "checksum": "6F6CDCDC695721D91CE756E3B5BC3E3416599C464101F5E32E9C3F33054EE6D9",
+      "id": "github_release/github.com/anchore/syft/v1.45.0/syft_1.45.0_linux_arm64.tar.gz",
+      "checksum": "3101FC588A6662AB3D46EDA470159F82D6C6C0FD59F618FDD29928ED1C1197BB",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.44.0/syft_1.44.0_windows_amd64.zip",
-      "checksum": "195E786EB84EC145854F20528992E86637C77D1968731DFE6CE850C90E28F47A",
+      "id": "github_release/github.com/anchore/syft/v1.45.0/syft_1.45.0_windows_amd64.zip",
+      "checksum": "D50095A7D125AC8C0E27F1E2CE770EF8696D6452D08FDE61F5ADB863C16341FD",
       "algorithm": "sha256"
     },
     {
