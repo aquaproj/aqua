@@ -6,7 +6,7 @@ on:
 permissions: {}
 jobs:
   release:
-    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@884a4badb955df4a4ddddd802e433096371f3157 # v8.1.0
+    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@1cf29d7b17983b901021799b87a55d357cfff790 # v9.0.0
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     with:
