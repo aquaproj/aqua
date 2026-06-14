@@ -381,7 +381,6 @@ type Param struct {
 	OnlyRegistry                      bool
 	CosignDisabled                    bool
 	GitHubArtifactAttestationDisabled bool
-	GitHubReleaseAttestationDisabled  bool
 	SLSADisabled                      bool
 	Installed                         bool
 	InitConfig                        bool

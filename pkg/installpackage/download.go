@@ -97,13 +97,6 @@ func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *D
 			ghInstaller: is.ghInstaller,
 			ghVerifier:  is.ghVerifier,
 		},
-		&gitHubReleaseAttestationsVerifier{
-			disabled:    is.graDisabled,
-			gra:         pkgInfo.GitHubReleaseAttestationsAvailable(),
-			pkg:         ppkg,
-			ghInstaller: is.ghInstaller,
-			ghVerifier:  is.ghVerifier,
-		},
 		&cosignVerifier{
 			disabled:  is.cosignDisabled,
 			pkg:       ppkg,
