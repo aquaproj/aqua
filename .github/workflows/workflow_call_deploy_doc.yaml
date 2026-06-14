@@ -1,5 +1,9 @@
 name: Deploy document (workflow_call)
-on: workflow_call
+on:
+  workflow_call:
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: true
 jobs:
   deploy_doc:
     timeout-minutes: 15
@@ -7,7 +11,21 @@ jobs:
     permissions:
       contents: write
       issues: write
+      id-token: write
     steps:
+      - uses: flatt-security/setup-takumi-guard-npm@9a5d797c2085b6326d3a2985c08e3a114b9b88c1 # v1.1.1
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+      - name: Move the npmrc to the user npmrc
+        # setup-takumi-guard-npm writes the registry and auth token to ./.npmrc,
+        # but release-doc-action runs its own actions/checkout (clean) and npm ci
+        # in website/, which would not read this .npmrc. Move it to the
+        # user-level ~/.npmrc so it survives the checkout and npm ci picks it up.
+        run: |
+          if [ -f .npmrc ]; then
+            cat .npmrc >> "$HOME/.npmrc"
+            rm .npmrc
+          fi
       - uses: suzuki-shunsuke/release-doc-action@a9e1ea0c4ca8c62906ca2a7fd3fa33325ee43ec9 # v0.1.0
         with:
           source_dir: website

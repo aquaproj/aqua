@@ -110,7 +110,10 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	}
 
 	if args.Init {
-		ctrl := controller.InitializeVacuumInitCommandController(ctx, i.r.Logger.Logger, param, i.r.Runtime, &http.Client{})
+		ctrl, err := controller.InitializeVacuumInitCommandController(ctx, i.r.Logger.Logger, param, i.r.Runtime, &http.Client{})
+		if err != nil {
+			return fmt.Errorf("initialize a VacuumInitController: %w", err)
+		}
 		if err := ctrl.Init(ctx, logger.Logger, param); err != nil {
 			return err //nolint:wrapcheck
 		}

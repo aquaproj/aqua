@@ -9,7 +9,11 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	if client := github.New(t.Context(), slog.New(slog.DiscardHandler)); client == nil {
+	client, err := github.New(t.Context(), slog.New(slog.DiscardHandler))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if client == nil {
 		t.Fatal("client must not be nil")
 	}
 }

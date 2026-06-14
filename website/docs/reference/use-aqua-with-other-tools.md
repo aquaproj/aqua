@@ -9,7 +9,7 @@ you should add `${AQUA_ROOT_DIR}/bin` to the environment variable `PATH` after o
 
 e.g.
 
-:thumbsup:
+:+1:
 
 ```bash
 . $HOME/.asdf/asdf.sh
@@ -17,7 +17,7 @@ e.g.
 export PATH=${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin:$PATH
 ```
 
-:thumbsdown:
+:-1:
 
 ```bash
 export PATH=${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin:$PATH

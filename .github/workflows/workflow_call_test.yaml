@@ -1,6 +1,10 @@
 ---
 name: test (workflow_call)
-on: workflow_call
+on:
+  workflow_call:
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: true
 permissions: {}
 jobs:
   path-filter:
@@ -20,13 +24,16 @@ jobs:
               - .github/workflows/wc-test-docker.yaml
 
   test:
-    uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@e442a17816baa8a940edc1544cc6e739d870e165 # v5.0.2
+    uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@98ab396ba72f7b47f7e22aca7346b6e1d7ae4deb # v6.0.0
     with:
-      aqua_version: v2.59.0
+      aqua_version: v2.60.0
       golangci-lint-timeout: 120s
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:
       pull-requests: write
       contents: read
+      id-token: write
 
   test-goreleaser:
     uses: ./.github/workflows/test-goreleaser.yaml
@@ -37,17 +44,28 @@ jobs:
     uses: ./.github/workflows/wc-test-docker.yaml
     needs: path-filter
     if: needs.path-filter.outputs.test-docker == 'true'
-    permissions: {}
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+    permissions:
+      contents: read
+      id-token: write
 
   integration-test:
     uses: ./.github/workflows/wc-integration-test.yaml
-    permissions: {}
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+    permissions:
+      contents: read
+      id-token: write
 
   test_doc:
     uses: ./.github/workflows/workflow_call_deploy_doc.yaml
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:
       contents: write
       issues: write
+      id-token: write
 
   typos:
     uses: ./.github/workflows/workflow_call_typos.yaml
