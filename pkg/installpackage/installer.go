@@ -58,7 +58,6 @@ type Installer struct {
 	cosignDisabled        bool
 	slsaDisabled          bool
 	gaaDisabled           bool
-	graDisabled           bool
 	vacuum                Vacuum
 }
 
@@ -115,7 +114,6 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT
 		cosignDisabled:        param.CosignDisabled,
 		slsaDisabled:          param.SLSADisabled,
 		gaaDisabled:           param.GitHubArtifactAttestationDisabled,
-		graDisabled:           param.GitHubReleaseAttestationDisabled,
 		copyDir:               param.Dest,
 		unarchiver:            unarchiver,
 		cosign:                cosignVerifier,

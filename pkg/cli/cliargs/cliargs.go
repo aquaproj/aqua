@@ -54,8 +54,7 @@ func GlobalFlags(args *GlobalArgs) []cli.Flag {
 		},
 		&cli.BoolFlag{
 			Name:        "disable-github-immutable-release",
-			Usage:       "Disable GitHub Release Attestations verification",
-			Sources:     cli.EnvVars("AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE"),
+			Usage:       "This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.",
 			Destination: &args.DisableGitHubReleaseAttestation,
 		},
 		&cli.StringFlag{
