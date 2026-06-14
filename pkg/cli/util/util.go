@@ -46,7 +46,6 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 	param.ConfigFilePath = args.Config
 	param.CosignDisabled = args.DisableCosign
 	param.GitHubArtifactAttestationDisabled = args.DisableGitHubArtifactAttestation
-	param.GitHubReleaseAttestationDisabled = args.DisableGitHubReleaseAttestation
 	param.SLSADisabled = args.DisableSLSA
 	param.AQUAVersion = version
 	param.RootDir = config.GetRootDir(osenv.New())

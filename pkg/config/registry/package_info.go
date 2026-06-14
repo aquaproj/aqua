@@ -84,19 +84,9 @@ type PackageInfo struct {
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
-	GitHubReleaseAttestations  bool                        `yaml:"github_release_attestations,omitempty" json:"github_release_attestations,omitempty" jsonschema:"description=For backwards compatibility\\, if this is false\\, github_immutable_release will be used instead"`
-	// Deprecated: use GitHubReleaseAttestations instead
-	GitHubImmutableRelease bool               `yaml:"github_immutable_release,omitempty" json:"github_immutable_release,omitempty" jsonschema:"description=Deprecated: use github_release_attestations instead"`
-	Vars                   []*Var             `yaml:",omitempty" json:"vars,omitempty"`
-	VersionConstraints     string             `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	VersionOverrides       []*VersionOverride `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
-}
-
-// GitHubReleaseAttestationsAvailable returns true if GitHub release attestations are available.
-// For some backwards compatibility to times where GitHubReleaseAttestations did not exist and GitHubImmutableRelease did, it returns true if either field is true,
-// meaning that explicitly setting GitHubReleaseAttestations to false does not necessarily disable them, due to fallback to GitHubImmutableRelease.
-func (p *PackageInfo) GitHubReleaseAttestationsAvailable() bool {
-	return p.GitHubReleaseAttestations || p.GitHubImmutableRelease
+	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
+	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
+	VersionOverrides           []*VersionOverride          `yaml:"version_overrides,omitempty" json:"version_overrides,omitempty"`
 }
 
 // Var represents a template variable that can be used in package configurations
@@ -276,8 +266,6 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		SLSAProvenance:             p.SLSAProvenance,
 		Minisign:                   p.Minisign,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
-		GitHubReleaseAttestations:  p.GitHubReleaseAttestations,
-		GitHubImmutableRelease:     p.GitHubImmutableRelease,
 		Private:                    p.Private,
 		ErrorMessage:               p.ErrorMessage,
 		NoAsset:                    p.NoAsset,
@@ -855,13 +843,6 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	if child.GitHubArtifactAttestations != nil {
 		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
 	}
-	if child.GitHubReleaseAttestations != nil {
-		pkg.GitHubReleaseAttestations = *child.GitHubReleaseAttestations
-		pkg.GitHubImmutableRelease = *child.GitHubReleaseAttestations
-	} else if child.GitHubImmutableRelease != nil {
-		pkg.GitHubReleaseAttestations = *child.GitHubImmutableRelease
-		pkg.GitHubImmutableRelease = *child.GitHubImmutableRelease
-	}
 	if child.ErrorMessage != nil {
 		pkg.ErrorMessage = *child.ErrorMessage
 	}
@@ -919,8 +900,6 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
-		p.GitHubReleaseAttestations = false
-		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -936,8 +915,6 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
-		p.GitHubReleaseAttestations = false
-		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false
@@ -952,8 +929,6 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.Minisign = nil
 		p.GitHubArtifactAttestations = nil
-		p.GitHubReleaseAttestations = false
-		p.GitHubImmutableRelease = false
 		p.Format = ""
 		p.Rosetta2 = false
 		p.WindowsARMEmulation = false

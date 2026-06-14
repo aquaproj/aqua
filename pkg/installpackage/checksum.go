@@ -35,13 +35,6 @@ func (is *Installer) newChecksumVerifiers(pkg *config.Package, assetName string)
 			ghInstaller: is.ghInstaller,
 			ghVerifier:  is.ghVerifier,
 		},
-		&gitHubReleaseAttestationsVerifier{
-			disabled:    is.graDisabled,
-			gra:         pkgInfo.GitHubReleaseAttestationsAvailable(),
-			pkg:         pkg,
-			ghInstaller: is.ghInstaller,
-			ghVerifier:  is.ghVerifier,
-		},
 		&cosignVerifier{
 			disabled:  is.cosignDisabled,
 			cosign:    pkgInfo.Checksum.GetCosign(),

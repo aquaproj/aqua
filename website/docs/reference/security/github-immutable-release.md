@@ -4,6 +4,11 @@ sidebar_position: 1260
 
 # GitHub Immutable Releases
 
+:::warning
+This feature was abandoned at aqua v2.60.1.
+[#4862](https://github.com/aquaproj/aqua/issues/4862)
+:::
+
 - `aqua >= v2.55.0` [#4195](https://github.com/aquaproj/aqua/pull/4195)
 
 [You can verify packages' GitHub Release Attestations if they are provided.](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/verifying-the-integrity-of-a-release)

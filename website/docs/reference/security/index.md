@@ -27,4 +27,5 @@ https://github.com/search?q=org%3Aaquaproj+label%3Asecurity
 - [Minisign](minisign.md)
 - [GitHub Artifact Attestations](github-artifact-attestations.md)
 - [GitHub Immutable Releases](github-immutable-release.md)
+  - :warning: This feature was abandoned at aqua v2.60.1 [#4862](https://github.com/aquaproj/aqua/issues/4862)
 - [Manage a GitHub access token using Keyring](keyring.md)
