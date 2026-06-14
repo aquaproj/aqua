@@ -170,13 +170,10 @@ type VersionOverride struct {
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
-	GitHubReleaseAttestations  *bool                       `yaml:"github_release_attestations,omitempty" json:"github_release_attestations,omitempty"`
-	// Deprecated: use GitHubReleaseAttestations instead
-	GitHubImmutableRelease *bool         `yaml:"github_immutable_release,omitempty" json:"github_immutable_release,omitempty" jsonschema:"description=Deprecated: use github_release_attestations instead"`
-	Build                  *Build        `yaml:",omitempty" json:"build,omitempty"`
-	Vars                   []*Var        `yaml:",omitempty" json:"vars,omitempty"`
-	Overrides              Overrides     `yaml:",omitempty" json:"overrides,omitempty"`
-	SupportedEnvs          SupportedEnvs `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
+	Build                      *Build                      `yaml:",omitempty" json:"build,omitempty"`
+	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
+	Overrides                  Overrides                   `yaml:",omitempty" json:"overrides,omitempty"`
+	SupportedEnvs              SupportedEnvs               `yaml:"supported_envs,omitempty" json:"supported_envs,omitempty"`
 }
 
 // Variant represents an additional matching condition for an Override beyond

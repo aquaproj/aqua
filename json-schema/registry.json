@@ -808,13 +808,6 @@
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
-        "github_release_attestations": {
-          "type": "boolean"
-        },
-        "github_immutable_release": {
-          "type": "boolean",
-          "description": "Deprecated: use github_release_attestations instead"
-        },
         "build": {
           "$ref": "#/$defs/Build"
         },
