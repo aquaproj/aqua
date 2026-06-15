@@ -2,6 +2,8 @@ package registry
 
 import (
 	"log/slog"
+	"maps"
+	"slices"
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
@@ -70,11 +72,7 @@ func (ov *Override) MatchPlatform(rt *runtime.Runtime) bool {
 // Callers that need to enumerate variant values (e.g. update-checksum) should
 // use this list rather than hard-coding key names.
 func SupportedVariantKeys() []string {
-	keys := make([]string, 0, len(supportedVariantKeys))
-	for k := range supportedVariantKeys {
-		keys = append(keys, k)
-	}
-	return keys
+	return slices.Collect(maps.Keys(supportedVariantKeys))
 }
 
 // IsSupportedVariantKey reports whether key is in the supportedVariantKeys
