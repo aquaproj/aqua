@@ -1,10 +1,15 @@
 package unarchive_test
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -62,6 +67,128 @@ func TestIsUnarchived(t *testing.T) {
 				t.Fatalf("wanted %v, got %v", d.exp, f)
 			}
 		})
+	}
+}
+
+// TestUnarchiver_Unarchive_symlinkTraversal verifies that an archive cannot use
+// a symlink pointing outside the extraction directory followed by a regular file
+// entry at the same path to write outside the destination.
+// See https://github.com/aquaproj/aqua/security/advisories/GHSA-mf5c-hw34-4hpp
+func TestUnarchiver_Unarchive_symlinkTraversal(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	dest := t.TempDir()
+	outsideDir := t.TempDir()
+	outside := filepath.Join(outsideDir, "outside-target")
+	if err := os.WriteFile(outside, []byte("original"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Build a tar.gz: a symlink "pwn" -> outside target, then a regular file
+	// "pwn" whose write would follow the planted symlink.
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gw)
+	if err := tw.WriteHeader(&tar.Header{
+		Name:     "pwn",
+		Typeflag: tar.TypeSymlink,
+		Linkname: outside,
+		Mode:     0o777,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	payload := []byte("PWNED_BY_AQUA_SYMLINK_TRAVERSAL")
+	if err := tw.WriteHeader(&tar.Header{
+		Name:     "pwn",
+		Typeflag: tar.TypeReg,
+		Mode:     0o644,
+		Size:     int64(len(payload)),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write(payload); err != nil {
+		t.Fatal(err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "malicious.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(buf.Bytes())), nil),
+	}
+	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+		t.Fatal("an error must be returned for a symlink escaping the extraction directory")
+	}
+
+	got, err := os.ReadFile(outside)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "original" {
+		t.Fatalf("the outside file was modified through a symlink: %q", got)
+	}
+}
+
+// TestUnarchiver_Unarchive_pathTraversal verifies that an archive entry whose
+// path contains ".." cannot write outside the extraction directory.
+// See https://github.com/aquaproj/aqua/security/advisories/GHSA-mf5c-hw34-4hpp
+func TestUnarchiver_Unarchive_pathTraversal(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	parent := t.TempDir()
+	dest := filepath.Join(parent, "dest")
+	outside := filepath.Join(parent, "outside-target")
+	if err := os.WriteFile(outside, []byte("original"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Build a tar.gz with a single regular file whose name escapes dest via "..".
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gw)
+	payload := []byte("PWNED_BY_AQUA_PATH_TRAVERSAL")
+	if err := tw.WriteHeader(&tar.Header{
+		Name:     "../outside-target",
+		Typeflag: tar.TypeReg,
+		Mode:     0o644,
+		Size:     int64(len(payload)),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write(payload); err != nil {
+		t.Fatal(err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "malicious.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(buf.Bytes())), nil),
+	}
+	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+		t.Fatal("an error must be returned for an entry escaping the extraction directory")
+	}
+
+	got, err := os.ReadFile(outside)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "original" {
+		t.Fatalf("the outside file was modified via path traversal: %q", got)
 	}
 }
 

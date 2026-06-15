@@ -2,6 +2,7 @@ package unarchive
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -15,6 +16,11 @@ import (
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
+var (
+	errEscapeDest        = errors.New("the file path escapes the extraction directory")
+	errSymlinkEscapeDest = errors.New("the symlink target escapes the extraction directory")
+)
+
 type handler struct {
 	fs       afero.Fs
 	dest     string
@@ -24,6 +30,9 @@ type handler struct {
 
 func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
+	if !h.withinDest(dstPath) {
+		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
+	}
 	parentDir := filepath.Dir(dstPath)
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
 		slogerr.WithError(h.logger, err).Warn("create a directory")
@@ -40,10 +49,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	if f.LinkTarget != "" {
 		if f.Mode()&os.ModeSymlink != 0 {
-			if err := os.Symlink(f.LinkTarget, dstPath); err != nil {
-				slogerr.WithError(h.logger, err).Warn("create a symlink", "link_target", f.LinkTarget, "link_dest", dstPath)
-				return nil
-			}
+			return h.handleSymlink(dstPath, f.LinkTarget)
 		}
 		return nil
 	}
@@ -78,6 +84,47 @@ func (h *handler) Unarchive(ctx context.Context, _ *slog.Logger, src *File) erro
 		return slogerr.With(err, "archived_file", tempFilePath, "archived_filename", src.Filename) //nolint:wrapcheck
 	}
 	return nil
+}
+
+// handleSymlink creates a symlink at dstPath pointing to target. It returns an
+// error if the target resolves outside h.dest, because such a symlink could be
+// followed by a later file entry with the same path to write outside the
+// extraction directory. This indicates a malicious or broken archive, so
+// extraction is aborted rather than silently skipping the entry.
+func (h *handler) handleSymlink(dstPath, target string) error {
+	if !h.symlinkTargetWithinDest(dstPath, target) {
+		return fmt.Errorf("%w: %s -> %s", errSymlinkEscapeDest, dstPath, target)
+	}
+	if err := os.Symlink(target, dstPath); err != nil {
+		slogerr.WithError(h.logger, err).Warn("create a symlink", "link_target", target, "link_dest", dstPath)
+	}
+	return nil
+}
+
+// symlinkTargetWithinDest reports whether a symlink created at linkPath with the
+// given target resolves to a path inside h.dest. A relative target is resolved
+// against the directory containing the symlink, matching how the OS dereferences
+// it. This prevents an archive from planting a symlink that points outside the
+// extraction directory, which a later file entry with the same path could
+// otherwise follow to write outside h.dest.
+func (h *handler) symlinkTargetWithinDest(linkPath, target string) bool {
+	resolved := target
+	if !filepath.IsAbs(resolved) {
+		resolved = filepath.Join(filepath.Dir(linkPath), target)
+	}
+	return h.withinDest(resolved)
+}
+
+// withinDest reports whether the cleaned path is h.dest itself or located inside
+// it. It is used to reject archive entries whose destination escapes the
+// extraction directory (e.g. via ".." in the archived path).
+func (h *handler) withinDest(p string) bool {
+	p = filepath.Clean(p)
+	dest := filepath.Clean(h.dest)
+	if p == dest {
+		return true
+	}
+	return strings.HasPrefix(p, dest+string(filepath.Separator))
 }
 
 func (h *handler) normalizePath(nameInArchive string) string {
