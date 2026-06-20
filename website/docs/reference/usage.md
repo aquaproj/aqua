@@ -1203,10 +1203,24 @@ DESCRIPTION:
 
 
 COMMANDS:
+   pwsh  Output pwsh completion script
    bash  Output bash completion script
    zsh   Output zsh completion script
    fish  Output fish completion script
-   pwsh  Output pwsh completion script
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion pwsh
+
+```console
+$ completion pwsh --help
+NAME:
+   aqua completion pwsh - Output pwsh completion script
+
+USAGE:
+   aqua completion pwsh [options]
 
 OPTIONS:
    --help, -h  show help
@@ -1249,20 +1263,6 @@ NAME:
 
 USAGE:
    aqua completion fish [options]
-
-OPTIONS:
-   --help, -h  show help
-```
-
-### completion pwsh
-
-```console
-$ completion pwsh --help
-NAME:
-   aqua completion pwsh - Output pwsh completion script
-
-USAGE:
-   aqua completion pwsh [options]
 
 OPTIONS:
    --help, -h  show help
