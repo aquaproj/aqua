@@ -52,9 +52,9 @@ func GlobalFlags(args *GlobalArgs) []cli.Flag {
 			Destination: &args.DisableGitHubArtifactAttestation,
 		},
 		&cli.BoolFlag{
-			Name:        "disable-github-immutable-release",
-			Usage:       "This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.",
-			Hidden:      true,
+			Name:   "disable-github-immutable-release",
+			Usage:  "This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.",
+			Hidden: true,
 		},
 		&cli.StringFlag{
 			Name:        "trace",
