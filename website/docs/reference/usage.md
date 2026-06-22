@@ -46,6 +46,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
    --help, -h                             show help
@@ -84,6 +85,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -135,6 +137,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -276,6 +279,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -313,6 +317,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -357,6 +362,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -467,6 +473,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -513,6 +520,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -541,6 +549,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -593,6 +602,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -647,6 +657,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -695,6 +706,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -721,6 +733,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -775,6 +788,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -823,6 +837,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -852,6 +867,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -881,6 +897,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -913,6 +930,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -945,6 +963,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -994,6 +1013,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1091,6 +1111,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1124,6 +1145,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1148,6 +1170,7 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --disable-github-immutable-release     This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
