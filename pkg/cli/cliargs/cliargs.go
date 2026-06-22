@@ -13,7 +13,6 @@ type GlobalArgs struct {
 	DisableCosign                    bool
 	DisableSLSA                      bool
 	DisableGitHubArtifactAttestation bool
-	DisableGitHubReleaseAttestation  bool
 	Trace                            string
 	CPUProfile                       string
 }
@@ -55,7 +54,7 @@ func GlobalFlags(args *GlobalArgs) []cli.Flag {
 		&cli.BoolFlag{
 			Name:        "disable-github-immutable-release",
 			Usage:       "This flag was deprecated and had no meaning from aqua v2.60.1. This flag will be removed in aqua v3.0.0.",
-			Destination: &args.DisableGitHubReleaseAttestation,
+			Hidden:      true,
 		},
 		&cli.StringFlag{
 			Name:        "trace",
