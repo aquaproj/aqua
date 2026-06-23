@@ -13,10 +13,6 @@ func (m *MockVerifier) Verify(ctx context.Context, logger *slog.Logger, param *P
 	return m.err
 }
 
-func (m *MockVerifier) VerifyRelease(ctx context.Context, logger *slog.Logger, param *ParamVerifyRelease) error {
-	return m.err
-}
-
 type MockExecutor struct {
 	Err error
 }
