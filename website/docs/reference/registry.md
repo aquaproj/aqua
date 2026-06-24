@@ -29,6 +29,15 @@ The Standard Registry is a registry that we maintain.
 
 https://github.com/aquaproj/aqua-registry
 
+## Registry Types
+
+aqua supports multiple registry types:
+
+- **[Standard Registry](https://github.com/aquaproj/aqua-registry)**: The official aqua registry maintained by the community
+- **[Local Registry](/docs/reference/config/#local-registry)**: Use a local file as a registry
+- **[GitHub Content Registry](/docs/reference/config/#github_content-registry)**: Fetch registry from GitHub repository
+- **[HTTP Registry](/docs/reference/config/#http-registry)** (aqua >= v2.56.0): Fetch registry from HTTP(S) endpoints for private internal registries
+
 ## Create your own Registry
 
 Please see the following document.
