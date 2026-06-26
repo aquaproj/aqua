@@ -21,7 +21,7 @@ require (
 	github.com/spf13/afero v1.15.0
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
-	github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.1
+	github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.2
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/suzuki-shunsuke/go-findconfig v1.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
@@ -86,6 +86,7 @@ require (
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/suzuki-shunsuke/go-exec v0.0.1 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
+	github.com/suzuki-shunsuke/go-revoke-github-access-token v0.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/zalando/go-keyring v0.2.8 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect

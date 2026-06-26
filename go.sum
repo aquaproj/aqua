@@ -229,8 +229,8 @@ github.com/suzuki-shunsuke/flute v1.0.1 h1:qzxSX2WQ8ih378zeCrjDMW5mVCsYyEmjicYuC
 github.com/suzuki-shunsuke/flute v1.0.1/go.mod h1:lQKcCgbjiIzH4lar2V2UX1IdEwAB5KTfTckgWN1rtFg=
 github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0 h1:g7askc+nskCkKRWTVOdsAT8nMhwiaVT6Dmlnh6uvITM=
 github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0/go.mod h1:yFO7h5wwFejxi6jbtazqmk7b/JSBxHcit8DGwb1bhg0=
-github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.1 h1:2eTHYGwHs27R4GFk466ZrbiAleoFrQ6AT3e282dwtko=
-github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.1/go.mod h1:l3V+n7F4V8q6nqopI6RohWdRlh955HC+4PjCuU/waLE=
+github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.2 h1:oih0cRB7rOSJ7GeOGNFFTM4Y0bz0qYMYcOTP1eX8oZw=
+github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.2/go.mod h1:bTbYGLIP/9RW68CfUDVH8rnNs5LfjxRfGsKToRy8+lg=
 github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211154308-176f852d9bca/go.mod h1:Vq3NkhgmA9DT/2UZ08x/3A34xxvzQ/vTMABnTWKoMbY=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0 h1:oVXrrYNGBq4POyITQNWKzwsYz7B2nUcqtDbeX4BfeEc=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0/go.mod h1:kDFtLeftDiIUUHXGI3xq5eJ+uAOi50FPrxPENTHktJ0=
@@ -244,6 +244,8 @@ github.com/suzuki-shunsuke/go-osenv v0.1.0 h1:hBQ7yaeO1WBZsEWuDj1wrOWF+N7HSWSOpE
 github.com/suzuki-shunsuke/go-osenv v0.1.0/go.mod h1:ZlSVi4kYvV51JEtYpdHh9hAxXKLOWExXel3Jo74aacQ=
 github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2 h1:oOeDLYiW+X/8XC2/Wu3U3rQ0hbindlFs0I8BYpHVA9Y=
 github.com/suzuki-shunsuke/go-retryablehttp v0.7.8-2/go.mod h1:fRVZ62p4iY8BxyyhZQ++grjQIDzWtRK02mHQapxm4Kk=
+github.com/suzuki-shunsuke/go-revoke-github-access-token v0.0.1 h1:GY+LRLuKNEbJ7P5H+dyQzO6x0Rl6UyZUhyh67SVMI3A=
+github.com/suzuki-shunsuke/go-revoke-github-access-token v0.0.1/go.mod h1:fSdXI5Cc71V0VHTytPcDrvPvEFNVX3ZekhHACgYQlkE=
 github.com/suzuki-shunsuke/gomic v0.6.0 h1:oSmoXR1nmt7X05TssjBTcX9BCTNnFCcNlA5yshaTjsk=
 github.com/suzuki-shunsuke/gomic v0.6.0/go.mod h1:/+uhQJ1H5f9ythus/MbXOotAZDmkN1QOjKlsSiH2v+I=
 github.com/suzuki-shunsuke/slog-error v0.2.2 h1:z8rymlIlZcMA+ERnnhVigQ0Q+X0pxKqBfDzSIyGh6vU=
