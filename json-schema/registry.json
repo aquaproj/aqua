@@ -6,42 +6,50 @@
     "Alias": {
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name is the alternative name for the package."
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "name"
-      ]
+      ],
+      "description": "Alias represents an alternative name for a package."
     },
     "Build": {
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Enabled controls whether building from source is allowed."
         },
         "type": {
           "type": "string",
           "enum": [
             "go_install",
             "go_build"
-          ]
+          ],
+          "description": "Type specifies the build method (go_install or go_build)."
         },
         "path": {
-          "type": "string"
+          "type": "string",
+          "description": "Path is the import path or directory for Go packages."
         },
         "files": {
           "items": {
             "$ref": "#/$defs/File"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Files specifies which files to install after building."
         },
         "excluded_envs": {
-          "$ref": "#/$defs/SupportedEnvs"
+          "$ref": "#/$defs/SupportedEnvs",
+          "description": "ExcludedEnvs lists environments where building should be skipped."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Build defines configuration for building packages from source code."
     },
     "Cargo": {
       "properties": {
@@ -49,17 +57,21 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Features is a list of specific features to enable when installing."
         },
         "all_features": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "AllFeatures enables all available features for the package."
         },
         "locked": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Locked uses the exact versions from Cargo.lock file."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Cargo defines configuration options for installing Rust packages via Cargo."
     },
     "Checksum": {
       "properties": {
@@ -68,16 +80,20 @@
           "enum": [
             "github_release",
             "http"
-          ]
+          ],
+          "description": "Type specifies where to download the checksum file from."
         },
         "asset": {
-          "type": "string"
+          "type": "string",
+          "description": "Asset is the name of the checksum file asset (for github_release type)."
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "URL is the direct URL to the checksum file (for http type)."
         },
         "file_format": {
-          "type": "string"
+          "type": "string",
+          "description": "FileFormat specifies the format of the checksum file."
         },
         "algorithm": {
           "type": "string",
@@ -86,83 +102,103 @@
             "sha1",
             "sha256",
             "sha512"
-          ]
+          ],
+          "description": "Algorithm specifies the hash algorithm used for checksums."
         },
         "pattern": {
-          "$ref": "#/$defs/ChecksumPattern"
+          "$ref": "#/$defs/ChecksumPattern",
+          "description": "Pattern defines how to extract checksums from the checksum file."
         },
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Enabled controls whether checksum verification is active."
         },
         "replacements": {
-          "$ref": "#/$defs/Replacements"
+          "$ref": "#/$defs/Replacements",
+          "description": "Replacements provides template replacements for checksum URLs/assets."
         },
         "cosign": {
-          "$ref": "#/$defs/Cosign"
+          "$ref": "#/$defs/Cosign",
+          "description": "Cosign configuration for signature verification of checksums."
         },
         "minisign": {
-          "$ref": "#/$defs/Minisign"
+          "$ref": "#/$defs/Minisign",
+          "description": "Minisign configuration for signature verification of checksums."
         },
         "github_artifact_attestations": {
-          "$ref": "#/$defs/GitHubArtifactAttestations"
+          "$ref": "#/$defs/GitHubArtifactAttestations",
+          "description": "GitHubArtifactAttestations configuration for GitHub artifact attestation verification."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Checksum defines configuration for verifying package integrity using checksums."
     },
     "ChecksumPattern": {
       "properties": {
         "checksum": {
-          "type": "string"
+          "type": "string",
+          "description": "Checksum is a regex pattern to extract the checksum value."
         },
         "file": {
-          "type": "string"
+          "type": "string",
+          "description": "File is a regex pattern to extract the filename (optional)."
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "checksum"
-      ]
+      ],
+      "description": "ChecksumPattern defines regular expression patterns for extracting checksums from checksum files."
     },
     "Config": {
       "properties": {
         "packages": {
-          "$ref": "#/$defs/PackageInfos"
+          "$ref": "#/$defs/PackageInfos",
+          "description": "PackageInfos contains all package definitions in the registry."
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "packages"
-      ]
+      ],
+      "description": "Config represents a registry configuration containing package definitions."
     },
     "Cosign": {
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Enabled controls whether Cosign verification is active."
         },
         "opts": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Opts contains additional command-line options to pass to cosign verify."
         },
         "signature": {
-          "$ref": "#/$defs/DownloadedFile"
+          "$ref": "#/$defs/DownloadedFile",
+          "description": "Signature specifies where to download the signature file."
         },
         "certificate": {
-          "$ref": "#/$defs/DownloadedFile"
+          "$ref": "#/$defs/DownloadedFile",
+          "description": "Certificate specifies where to download the certificate file."
         },
         "key": {
-          "$ref": "#/$defs/DownloadedFile"
+          "$ref": "#/$defs/DownloadedFile",
+          "description": "Key specifies where to download the public key file."
         },
         "bundle": {
-          "$ref": "#/$defs/DownloadedFile"
+          "$ref": "#/$defs/DownloadedFile",
+          "description": "Bundle specifies where to download the signature bundle."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Cosign defines configuration for verifying packages using Cosign signature verification."
     },
     "DownloadedFile": {
       "properties": {
@@ -171,47 +207,59 @@
           "enum": [
             "github_release",
             "http"
-          ]
+          ],
+          "description": "Type specifies the source type for downloading the file."
         },
         "repo_owner": {
-          "type": "string"
+          "type": "string",
+          "description": "RepoOwner is the GitHub repository owner (for github_release type)."
         },
         "repo_name": {
-          "type": "string"
+          "type": "string",
+          "description": "RepoName is the GitHub repository name (for github_release type)."
         },
         "asset": {
-          "type": "string"
+          "type": "string",
+          "description": "Asset is the name of the asset to download (for github_release type)."
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "URL is the direct URL to download the file (for http type)."
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "type"
-      ]
+      ],
+      "description": "DownloadedFile represents a file that can be downloaded from various sources."
     },
     "File": {
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name is the name of the installed file."
         },
         "src": {
-          "type": "string"
+          "type": "string",
+          "description": "Src is the source path of the file within the package archive."
         },
         "dir": {
-          "type": "string"
+          "type": "string",
+          "description": "Dir is the directory where the file should be installed."
         },
         "link": {
-          "type": "string"
+          "type": "string",
+          "description": "Link is the relative path from Src to the link target."
         },
         "hard": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Hard indicates whether to create a hard link instead of a symbolic link."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "File represents a file to be installed from a package."
     },
     "FormatOverride": {
       "properties": {
@@ -231,10 +279,12 @@
             "plan9",
             "solaris",
             "windows"
-          ]
+          ],
+          "description": "GOOS specifies the target operating system for this format override."
         },
         "format": {
           "type": "string",
+          "description": "Format specifies the archive format to use for this operating system.",
           "examples": [
             "tar.gz",
             "raw",
@@ -247,25 +297,30 @@
       "required": [
         "goos",
         "format"
-      ]
+      ],
+      "description": "FormatOverride allows specifying different archive formats for specific operating systems."
     },
     "FormatOverrides": {
       "items": {
         "$ref": "#/$defs/FormatOverride"
       },
-      "type": "array"
+      "type": "array",
+      "description": "FormatOverrides is a slice of platform-specific format overrides."
     },
     "GitHubArtifactAttestations": {
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Enabled controls whether GitHub artifact attestation verification is active."
         },
         "predicate_type": {
-          "type": "string"
+          "type": "string",
+          "description": "PredicateType specifies the type of predicate to verify."
         },
         "signer_workflow": {
           "type": "string",
-          "format": "regex"
+          "format": "regex",
+          "description": "SignerWorkflow2 specifies the expected GitHub Actions workflow for signing.\nSee https://github.com/aquaproj/aqua/issues/3581"
         },
         "signer-workflow": {
           "type": "string",
@@ -274,38 +329,47 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "GitHubArtifactAttestations defines configuration for GitHub artifact attestation verification."
     },
     "Minisign": {
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Enabled controls whether Minisign verification is active."
         },
         "type": {
           "type": "string",
           "enum": [
             "github_release",
             "http"
-          ]
+          ],
+          "description": "Type specifies where to download the signature file from."
         },
         "repo_owner": {
-          "type": "string"
+          "type": "string",
+          "description": "RepoOwner is the GitHub repository owner (for github_release type)."
         },
         "repo_name": {
-          "type": "string"
+          "type": "string",
+          "description": "RepoName is the GitHub repository name (for github_release type)."
         },
         "asset": {
-          "type": "string"
+          "type": "string",
+          "description": "Asset is the name of the signature file asset (for github_release type)."
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "URL is the direct URL to the signature file (for http type)."
         },
         "public_key": {
-          "type": "string"
+          "type": "string",
+          "description": "PublicKey is the base64-encoded public key for verification."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Minisign defines configuration for verifying packages using Minisign signature verification."
     },
     "Override": {
       "properties": {
@@ -410,13 +474,15 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Override provides platform-specific package configuration that overrides the default settings when the specified OS/architecture conditions are met."
     },
     "Overrides": {
       "items": {
         "$ref": "#/$defs/Override"
       },
-      "type": "array"
+      "type": "array",
+      "description": "Overrides is a slice of platform-specific configuration overrides."
     },
     "PackageInfo": {
       "properties": {
@@ -582,13 +648,15 @@
       "type": "object",
       "required": [
         "type"
-      ]
+      ],
+      "description": "PackageInfo represents a complete package definition including metadata, installation configuration, verification settings, and platform support."
     },
     "PackageInfos": {
       "items": {
         "$ref": "#/$defs/PackageInfo"
       },
-      "type": "array"
+      "type": "array",
+      "description": "PackageInfos represents a slice of package information."
     },
     "Replacements": {
       "properties": {
@@ -613,36 +681,45 @@
     "SLSAProvenance": {
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Enabled controls whether SLSA provenance verification is active."
         },
         "type": {
           "type": "string",
           "enum": [
             "github_release",
             "http"
-          ]
+          ],
+          "description": "Type specifies where to download the provenance file from."
         },
         "repo_owner": {
-          "type": "string"
+          "type": "string",
+          "description": "RepoOwner is the GitHub repository owner (for github_release type)."
         },
         "repo_name": {
-          "type": "string"
+          "type": "string",
+          "description": "RepoName is the GitHub repository name (for github_release type)."
         },
         "asset": {
-          "type": "string"
+          "type": "string",
+          "description": "Asset is the name of the provenance file asset (for github_release type)."
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "URL is the direct URL to the provenance file (for http type)."
         },
         "source_uri": {
-          "type": "string"
+          "type": "string",
+          "description": "SourceURI is the expected source repository URI for verification."
         },
         "source_tag": {
-          "type": "string"
+          "type": "string",
+          "description": "SourceTag is the expected source tag for verification."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "SLSAProvenance defines configuration for SLSA (Supply-chain Levels for Software Artifacts) provenance verification."
     },
     "SupportedEnvs": {
       "items": {
@@ -667,18 +744,23 @@
     "Var": {
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name is the variable name used in templates."
         },
         "required": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Required indicates whether this variable must be provided."
         },
-        "default": true
+        "default": {
+          "description": "Default is the default value used when the variable is not provided."
+        }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "name"
-      ]
+      ],
+      "description": "Var represents a template variable that can be used in package configurations to customize installation behavior based on runtime values."
     },
     "Variant": {
       "properties": {
@@ -693,13 +775,15 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Variant represents an additional matching condition for an Override beyond the standard goos/goarch axis."
     },
     "Variants": {
       "items": {
         "$ref": "#/$defs/Variant"
       },
-      "type": "array"
+      "type": "array",
+      "description": "Variants is a list of Variant conditions that must all match for the containing Override to apply."
     },
     "VersionOverride": {
       "properties": {
@@ -825,7 +909,8 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "VersionOverride allows different package configurations for specific version ranges."
     }
   }
 }

@@ -6,28 +6,35 @@
     "Checksum": {
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether checksum validation is enabled"
         },
         "require_checksum": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether checksums are required for all packages"
         },
         "supported_envs": {
-          "$ref": "#/$defs/SupportedEnvs"
+          "$ref": "#/$defs/SupportedEnvs",
+          "description": "Platforms where checksum validation applies"
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Checksum contains global checksum validation configuration."
     },
     "CommandAlias": {
       "properties": {
         "command": {
-          "type": "string"
+          "type": "string",
+          "description": "Original command name"
         },
         "alias": {
-          "type": "string"
+          "type": "string",
+          "description": "Alias name"
         },
         "no_link": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether to skip creating symlinks"
         }
       },
       "additionalProperties": false,
@@ -35,7 +42,8 @@
       "required": [
         "command",
         "alias"
-      ]
+      ],
+      "description": "CommandAlias defines an alias for a package command."
     },
     "Config": {
       "properties": {
@@ -43,28 +51,34 @@
           "items": {
             "$ref": "#/$defs/Package"
           },
-          "type": "array"
+          "type": "array",
+          "description": "List of packages to manage"
         },
         "registries": {
-          "$ref": "#/$defs/Registries"
+          "$ref": "#/$defs/Registries",
+          "description": "Registry configurations"
         },
         "checksum": {
-          "$ref": "#/$defs/Checksum"
+          "$ref": "#/$defs/Checksum",
+          "description": "Checksum validation settings"
         },
         "import_dir": {
-          "type": "string"
+          "type": "string",
+          "description": "Directory for importing configurations"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "registries"
-      ]
+      ],
+      "description": "Config represents the complete aqua.yaml configuration."
     },
     "Package": {
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Package name"
         },
         "registry": {
           "type": "string",
@@ -76,47 +90,59 @@
           ]
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "description": "Package version"
         },
         "import": {
-          "type": "string"
+          "type": "string",
+          "description": "Import path for configuration inclusion"
         },
         "tags": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Package tags for filtering"
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Package description"
         },
         "link": {
-          "type": "string"
+          "type": "string",
+          "description": "Package homepage link"
         },
         "update": {
-          "$ref": "#/$defs/Update"
+          "$ref": "#/$defs/Update",
+          "description": "Update configuration"
         },
         "go_version_file": {
-          "type": "string"
+          "type": "string",
+          "description": "Go version file path"
         },
         "version_expr": {
-          "type": "string"
+          "type": "string",
+          "description": "Version expression for dynamic versions"
         },
         "version_expr_prefix": {
-          "type": "string"
+          "type": "string",
+          "description": "Prefix for version expressions"
         },
         "vars": {
-          "type": "object"
+          "type": "object",
+          "description": "Package-specific variables"
         },
         "command_aliases": {
           "items": {
             "$ref": "#/$defs/CommandAlias"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Command aliases for the package"
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Package represents a package definition in aqua.yaml configuration."
     },
     "Registries": {
       "items": {
@@ -176,20 +202,24 @@
     "Update": {
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Enabled controls whether the package is included in update operations.\nIf false, aqua up command ignores the package unless explicitly specified.\nBy default, enabled is true."
         },
         "allowed_version": {
-          "type": "string"
+          "type": "string",
+          "description": "AllowedVersion is an expression that defines which versions are allowed.\nUses expr language (https://github.com/expr-lang/expr).\nBy default, all versions are allowed."
         },
         "types": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Types specifies which update types are allowed (major, minor, patch, other).\nBy default, all types are allowed."
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "Update contains configuration for package update behavior."
     }
   }
 }
