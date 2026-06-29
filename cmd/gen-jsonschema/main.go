@@ -18,16 +18,19 @@ func main() {
 }
 
 func core() error {
-	if err := jsonschema.Write(&aqua.Config{}, "json-schema/aqua-yaml.json"); err != nil {
+	opts := &jsonschema.Options{
+		ModFile: "go.mod",
+	}
+	if err := jsonschema.Write(&aqua.Config{}, "json-schema/aqua-yaml.json", opts); err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := jsonschema.Write(&registry.Config{}, "json-schema/registry.json"); err != nil {
+	if err := jsonschema.Write(&registry.Config{}, "json-schema/registry.json", opts); err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := jsonschema.Write(&policy.ConfigYAML{}, "json-schema/policy.json"); err != nil {
+	if err := jsonschema.Write(&policy.ConfigYAML{}, "json-schema/policy.json", opts); err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
-	if err := jsonschema.Write(&genrgst.RawConfig{}, "json-schema/aqua-generate-registry.json"); err != nil {
+	if err := jsonschema.Write(&genrgst.RawConfig{}, "json-schema/aqua-generate-registry.json", opts); err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
 	return nil
