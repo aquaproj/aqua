@@ -356,3 +356,107 @@ func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+func TestGetChecksum(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name          string
+		checksumNames map[string]struct{}
+		assetName     string
+		want          *registry.Checksum
+	}{
+		{
+			name: "sha512 gets priority over sha256",
+			checksumNames: map[string]struct{}{
+				"foo-1.0.0.tar.gz.sha256": {},
+				"foo-1.0.0.tar.gz.sha512": {},
+			},
+			assetName: "foo-1.0.0.tar.gz",
+			want: &registry.Checksum{
+				Type:      pkgTypeGitHubRelease,
+						Asset:     "{{.Asset}}.sha512",
+				Algorithm: "sha512",
+			},
+		},
+		{
+			name: "sha512 gets priority over sha256 sha1 and md5",
+			checksumNames: map[string]struct{}{
+				"foo.tar.gz.md5":    {},
+				"foo.tar.gz.sha1":   {},
+				"foo.tar.gz.sha256": {},
+				"foo.tar.gz.sha512": {},
+			},
+			assetName: "foo.tar.gz",
+			want: &registry.Checksum{
+				Type:      pkgTypeGitHubRelease,
+						Asset:     "{{.Asset}}.sha512",
+				Algorithm: "sha512",
+			},
+		},
+		{
+			name: "sha256 gets priority over sha1 and md5",
+			checksumNames: map[string]struct{}{
+				"foo.tar.gz.md5":    {},
+				"foo.tar.gz.sha1":   {},
+				"foo.tar.gz.sha256": {},
+			},
+			assetName: "foo.tar.gz",
+			want: &registry.Checksum{
+				Type:      pkgTypeGitHubRelease,
+						Asset:     "{{.Asset}}.sha256",
+				Algorithm: "sha256",
+			},
+		},
+		{
+			name: "sha1 gets priority over md5",
+			checksumNames: map[string]struct{}{
+				"foo.tar.gz.md5":  {},
+				"foo.tar.gz.sha1": {},
+			},
+			assetName: "foo.tar.gz",
+			want: &registry.Checksum{
+				Type:      pkgTypeGitHubRelease,
+						Asset:     "{{.Asset}}.sha1",
+				Algorithm: "sha1",
+			},
+		},
+		{
+			name: "md5 is selected when only md5 is present",
+			checksumNames: map[string]struct{}{
+				"foo.tar.gz.md5": {},
+			},
+			assetName: "foo.tar.gz",
+			want: &registry.Checksum{
+				Type:      pkgTypeGitHubRelease,
+						Asset:     "{{.Asset}}.md5",
+				Algorithm: "md5",
+			},
+		},
+		{
+			name: "no checksum returned when no matching checksum names exist",
+			checksumNames: map[string]struct{}{
+				"foo.tar.gz.asc": {},
+			},
+			assetName: "foo.tar.gz",
+			want:      nil,
+		},
+		{
+			name: "no checksum returned when checksum names is empty",
+			checksumNames: map[string]struct{}{
+				"bar.tar.gz.sha256": {},
+			},
+			assetName: "foo.tar.gz",
+			want:      nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := getChecksum(tt.checksumNames, tt.assetName)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("getChecksum() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
