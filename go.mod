@@ -84,7 +84,6 @@ require (
 	github.com/sorairolake/lzip-go v0.3.8 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
-	github.com/suzuki-shunsuke/go-exec v0.0.1 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/suzuki-shunsuke/go-revoke-github-access-token v0.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect

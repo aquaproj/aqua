@@ -229,15 +229,11 @@ github.com/suzuki-shunsuke/flute v1.0.1 h1:qzxSX2WQ8ih378zeCrjDMW5mVCsYyEmjicYuC
 github.com/suzuki-shunsuke/flute v1.0.1/go.mod h1:lQKcCgbjiIzH4lar2V2UX1IdEwAB5KTfTckgWN1rtFg=
 github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0 h1:g7askc+nskCkKRWTVOdsAT8nMhwiaVT6Dmlnh6uvITM=
 github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0/go.mod h1:yFO7h5wwFejxi6jbtazqmk7b/JSBxHcit8DGwb1bhg0=
-github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.1 h1:2eTHYGwHs27R4GFk466ZrbiAleoFrQ6AT3e282dwtko=
-github.com/suzuki-shunsuke/ghtkn-go-sdk v0.3.1/go.mod h1:l3V+n7F4V8q6nqopI6RohWdRlh955HC+4PjCuU/waLE=
 github.com/suzuki-shunsuke/ghtkn-go-sdk v0.4.1 h1:eY7zqLdbro8R9oO0JmfqAMB7hDl02a7tmEETH+FnhV8=
 github.com/suzuki-shunsuke/ghtkn-go-sdk v0.4.1/go.mod h1:SaFGGjbIt1znlORqwOeK51GR3oDAWbQ73g0q4AKFfDI=
 github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211154308-176f852d9bca/go.mod h1:Vq3NkhgmA9DT/2UZ08x/3A34xxvzQ/vTMABnTWKoMbY=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0 h1:oVXrrYNGBq4POyITQNWKzwsYz7B2nUcqtDbeX4BfeEc=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0/go.mod h1:kDFtLeftDiIUUHXGI3xq5eJ+uAOi50FPrxPENTHktJ0=
-github.com/suzuki-shunsuke/go-exec v0.0.1 h1:xn/lvYnRQOujUd46ph6f6IT0gVJIC8+3liSZKOjNj44=
-github.com/suzuki-shunsuke/go-exec v0.0.1/go.mod h1:KstSwIiQTKY34wEurUcFyKkaJDogBr5E3xxfdkkzvb0=
 github.com/suzuki-shunsuke/go-findconfig v1.2.0 h1:PWHIyKZEsVmZVh6+K+rHVw0/XjTFmQEYfa8ZIzIJd0c=
 github.com/suzuki-shunsuke/go-findconfig v1.2.0/go.mod h1:lXzJUZQXrgsMmpHxXMVrWUAQpE4EopgDEJbwslvKbzs=
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2 h1:A4czEbmFqSELTbrEtXVo4dSgfz2e2Z0y6G3OpExUML8=
