@@ -144,7 +144,6 @@ type MinisignVerifier interface {
 
 type GitHubArtifactAttestationsVerifier interface {
 	Verify(ctx context.Context, logger *slog.Logger, param *ghattestation.ParamVerify) error
-	VerifyRelease(ctx context.Context, logger *slog.Logger, param *ghattestation.ParamVerifyRelease) error
 }
 
 type CosignVerifier interface {

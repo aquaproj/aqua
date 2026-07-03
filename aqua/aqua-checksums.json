@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/anchore/syft/v1.45.1/syft_1.45.1_darwin_amd64.tar.gz",
-      "checksum": "ABE6E73B819F433B69ECE755DC180A19C7694896062BF806F89D0E3CA5DB710A",
+      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_darwin_amd64.tar.gz",
+      "checksum": "5C983DB13533DE02E5331AAE88091116F25365840741F86234084A30166672A7",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.45.1/syft_1.45.1_darwin_arm64.tar.gz",
-      "checksum": "2F79CCBBA6236636125D1ECE60A6DC71D4E4F91B9F580CC2AFBBAFC763FF353D",
+      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_darwin_arm64.tar.gz",
+      "checksum": "CD4E2C40E075684A5746D8959F76B6572BB2D2DDA8CF6877DBFFF1CC0BAEEA01",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.45.1/syft_1.45.1_linux_amd64.tar.gz",
-      "checksum": "20C84195E24927F50A3B2269946BE51F4C4ABC9D2F145FEE7388B4199149F716",
+      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_linux_amd64.tar.gz",
+      "checksum": "D654F678B709EB53C393D38519D5ED7D2E57205529404018614CFEFA0FB2B5CA",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.45.1/syft_1.45.1_linux_arm64.tar.gz",
-      "checksum": "7DF9F45CBA1F6358ECFC7FAC349D43B4605137001F9646B41267ABE15A7C6CD7",
+      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_linux_arm64.tar.gz",
+      "checksum": "9FAFEF4DB4F032CE81008D3A1529985D41CEB6CCDF2B388C9CE2F1ED7D32082E",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.45.1/syft_1.45.1_windows_amd64.zip",
-      "checksum": "A9D12C26521E09213745884B8B7DC361DFF83188C3A1ADA0DA1AF71012DBCD52",
+      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_windows_amd64.zip",
+      "checksum": "1E515C1AC4BC65917F8D0A52B6AE0E611082779CBF2DA9D470282158DD24EA13",
       "algorithm": "sha256"
     },
     {
@@ -361,28 +361,28 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.16.0/node-v24.16.0-darwin-arm64.tar.gz",
-      "checksum": "39189DAB4EEB15706C424AF0AC08A3044C9E48F7DB12A7D77F6B7AAFC7DD5DF6",
+      "id": "http/nodejs.org/dist/v24.18.0/node-v24.18.0-darwin-arm64.tar.gz",
+      "checksum": "E1A97E14C99C803E96C7339403282EA05A499C32F8D83DEFE9EF5EC66F979ED1",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.16.0/node-v24.16.0-darwin-x64.tar.gz",
-      "checksum": "298B4C7B3CB80765C8703E42B90324A4ECE3B6634947B89E769C3C980AB55185",
+      "id": "http/nodejs.org/dist/v24.18.0/node-v24.18.0-darwin-x64.tar.gz",
+      "checksum": "DFD0DBD3E721503434DF7B7205E719F61B3A3A31B2BCF9729B8B91FEA240F080",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.16.0/node-v24.16.0-linux-arm64.tar.gz",
-      "checksum": "589F5B6DD4FCFEE4DFDA73013903C966ABAA8ABD93DBC9D436544E472B4F0E74",
+      "id": "http/nodejs.org/dist/v24.18.0/node-v24.18.0-linux-arm64.tar.gz",
+      "checksum": "6B4484C2190274175DF9AA8F28E2D758A819CB1C1FE6AB481E2F95B463AB8508",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.16.0/node-v24.16.0-linux-x64.tar.gz",
-      "checksum": "2FAF6A387E9B62B888E21C54F01249FB27537FFECF1842F29F4C919D0A59A0FF",
+      "id": "http/nodejs.org/dist/v24.18.0/node-v24.18.0-linux-x64.tar.gz",
+      "checksum": "783130984963DB7BA9CBD01089EAF2C2EFB055C7C1693C943174B967B3050CB8",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.16.0/node-v24.16.0-win-x64.zip",
-      "checksum": "EDACA9BD58EC8E92037DAC4E877D52F6B8F430B81C18B57E264B4E2FB111CD56",
+      "id": "http/nodejs.org/dist/v24.18.0/node-v24.18.0-win-x64.zip",
+      "checksum": "0AE68406B42D7725661DA979B1403EC9926DA205C6770827F33AAC9D8F26E821",
       "algorithm": "sha256"
     },
     {
