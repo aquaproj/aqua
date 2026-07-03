@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.60.2-0
+   2.60.2-1
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -670,6 +670,15 @@ COMMANDS:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ### token set
@@ -796,6 +805,15 @@ COMMANDS:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ### policy allow
@@ -1180,24 +1198,10 @@ DESCRIPTION:
 
 
 COMMANDS:
-   pwsh  Output pwsh completion script
    bash  Output bash completion script
    zsh   Output zsh completion script
    fish  Output fish completion script
-
-OPTIONS:
-   --help, -h  show help
-```
-
-### completion pwsh
-
-```console
-$ completion pwsh --help
-NAME:
-   aqua completion pwsh - Output pwsh completion script
-
-USAGE:
-   aqua completion pwsh [options]
+   pwsh  Output pwsh completion script
 
 OPTIONS:
    --help, -h  show help
@@ -1240,6 +1244,20 @@ NAME:
 
 USAGE:
    aqua completion fish [options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion pwsh
+
+```console
+$ completion pwsh --help
+NAME:
+   aqua completion pwsh - Output pwsh completion script
+
+USAGE:
+   aqua completion pwsh [options]
 
 OPTIONS:
    --help, -h  show help
