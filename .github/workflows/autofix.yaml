@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: suzuki-shunsuke/go-autofix-action@9a8682f2dc2a935fe2a2ac96deb03de2dfcb872e # v0.1.13
         with:
-          aqua_version: v2.60.1
+          aqua_version: v2.60.2-0
           takumi_guard_bot_id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
       - run: aqua upc -prune
         working-directory: pkg/cosign
