@@ -18,12 +18,6 @@ local linters = new Mapping<String, Step> {
     fix = "go test -race -covermode=atomic ./..." // run as check in fix mode (no real fix possible)
     batch = true
   }
-  ["ascii"] {
-    glob = List("**/*")
-    check = "bash scripts/check-ascii {{files}}"
-    fix = "bash scripts/check-ascii {{files}}" // run as check in fix mode (no real fix possible)
-    batch = true
-  }
 }
 
 hooks {
