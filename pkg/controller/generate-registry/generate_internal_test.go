@@ -374,7 +374,7 @@ func TestGetChecksum(t *testing.T) {
 			assetName: "foo-1.0.0.tar.gz",
 			want: &registry.Checksum{
 				Type:      pkgTypeGitHubRelease,
-						Asset:     "{{.Asset}}.sha512",
+				Asset:     "{{.Asset}}.sha512",
 				Algorithm: "sha512",
 			},
 		},
@@ -389,7 +389,7 @@ func TestGetChecksum(t *testing.T) {
 			assetName: "foo.tar.gz",
 			want: &registry.Checksum{
 				Type:      pkgTypeGitHubRelease,
-						Asset:     "{{.Asset}}.sha512",
+				Asset:     "{{.Asset}}.sha512",
 				Algorithm: "sha512",
 			},
 		},
@@ -403,7 +403,7 @@ func TestGetChecksum(t *testing.T) {
 			assetName: "foo.tar.gz",
 			want: &registry.Checksum{
 				Type:      pkgTypeGitHubRelease,
-						Asset:     "{{.Asset}}.sha256",
+				Asset:     "{{.Asset}}.sha256",
 				Algorithm: "sha256",
 			},
 		},
@@ -416,7 +416,7 @@ func TestGetChecksum(t *testing.T) {
 			assetName: "foo.tar.gz",
 			want: &registry.Checksum{
 				Type:      pkgTypeGitHubRelease,
-						Asset:     "{{.Asset}}.sha1",
+				Asset:     "{{.Asset}}.sha1",
 				Algorithm: "sha1",
 			},
 		},
@@ -428,7 +428,7 @@ func TestGetChecksum(t *testing.T) {
 			assetName: "foo.tar.gz",
 			want: &registry.Checksum{
 				Type:      pkgTypeGitHubRelease,
-						Asset:     "{{.Asset}}.md5",
+				Asset:     "{{.Asset}}.md5",
 				Algorithm: "md5",
 			},
 		},
