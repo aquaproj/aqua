@@ -17,7 +17,7 @@ require (
 	github.com/mholt/archives v0.1.5
 	github.com/otiai10/copy v1.14.1
 	github.com/pb33f/ordered-map/v2 v2.3.1
-	github.com/schollz/progressbar/v3 v3.19.0
+	github.com/schollz/progressbar/v3 v3.19.1
 	github.com/spf13/afero v1.15.0
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
@@ -66,7 +66,7 @@ require (
 	github.com/lmittmann/tint v1.1.3 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mikelolasagasti/xz v1.0.1 // indirect
 	github.com/minio/minlz v1.0.1 // indirect
