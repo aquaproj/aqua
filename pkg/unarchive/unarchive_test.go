@@ -70,6 +70,36 @@ func TestIsUnarchived(t *testing.T) {
 	}
 }
 
+type tarEntry struct {
+	hdr     *tar.Header
+	payload []byte
+}
+
+// buildTarGz builds a gzip-compressed tar archive from the given entries. When
+// an entry has a payload, its header Size is set from the payload length.
+func buildTarGz(t *testing.T, entries ...tarEntry) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gw)
+	for _, e := range entries {
+		e.hdr.Size = int64(len(e.payload))
+		if err := tw.WriteHeader(e.hdr); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tw.Write(e.payload); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
 // TestUnarchiver_Unarchive_symlinkTraversal verifies that an archive cannot use
 // a symlink pointing outside the extraction directory followed by a regular file
 // entry at the same path to write outside the destination.
@@ -86,45 +116,21 @@ func TestUnarchiver_Unarchive_symlinkTraversal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Build a tar.gz: a symlink "pwn" -> outside target, then a regular file
-	// "pwn" whose write would follow the planted symlink.
-	var buf bytes.Buffer
-	gw := gzip.NewWriter(&buf)
-	tw := tar.NewWriter(gw)
-	if err := tw.WriteHeader(&tar.Header{
-		Name:     "pwn",
-		Typeflag: tar.TypeSymlink,
-		Linkname: outside,
-		Mode:     0o777,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	payload := []byte("PWNED_BY_AQUA_SYMLINK_TRAVERSAL")
-	if err := tw.WriteHeader(&tar.Header{
-		Name:     "pwn",
-		Typeflag: tar.TypeReg,
-		Mode:     0o644,
-		Size:     int64(len(payload)),
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := tw.Write(payload); err != nil {
-		t.Fatal(err)
-	}
-	if err := tw.Close(); err != nil {
-		t.Fatal(err)
-	}
-	if err := gw.Close(); err != nil {
-		t.Fatal(err)
-	}
+	// A symlink "pwn" -> outside target, then a regular file "pwn" whose write
+	// would follow the planted symlink.
+	archive := buildTarGz(
+		t,
+		tarEntry{hdr: &tar.Header{Name: "pwn", Typeflag: tar.TypeSymlink, Linkname: outside, Mode: 0o777}},
+		tarEntry{hdr: &tar.Header{Name: "pwn", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_SYMLINK_TRAVERSAL")},
+	)
 
 	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "malicious.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(buf.Bytes())), nil),
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
 	}
 	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
-		t.Fatal("an error must be returned for a symlink escaping the extraction directory")
+		t.Fatal("an error must be returned for a regular file that follows a symlink escaping the extraction directory")
 	}
 
 	got, err := os.ReadFile(outside)
@@ -133,6 +139,120 @@ func TestUnarchiver_Unarchive_symlinkTraversal(t *testing.T) {
 	}
 	if string(got) != "original" {
 		t.Fatalf("the outside file was modified through a symlink: %q", got)
+	}
+}
+
+// TestUnarchiver_Unarchive_symlinkDirTraversal verifies that a regular file
+// whose path descends through a symlink pointing outside the extraction
+// directory cannot be written outside it. This is the multi-entry variant of
+// the traversal: "pwn" -> outside dir, then "pwn/file".
+// See https://github.com/aquaproj/aqua/security/advisories/GHSA-mf5c-hw34-4hpp
+func TestUnarchiver_Unarchive_symlinkDirTraversal(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	dest := t.TempDir()
+	outsideDir := t.TempDir()
+
+	// A symlink "pwn" -> outside dir, then a regular file "pwn/file" whose write
+	// would descend through the planted symlink.
+	archive := buildTarGz(
+		t,
+		tarEntry{hdr: &tar.Header{Name: "pwn", Typeflag: tar.TypeSymlink, Linkname: outsideDir, Mode: 0o777}},
+		tarEntry{hdr: &tar.Header{Name: "pwn/file", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_SYMLINK_DIR_TRAVERSAL")},
+	)
+
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "malicious.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+	}
+	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+		t.Fatal("an error must be returned for a file escaping via a symlinked directory")
+	}
+	if _, err := os.Stat(filepath.Join(outsideDir, "file")); !os.IsNotExist(err) {
+		t.Fatalf("a file was written outside dest through a symlinked directory: %v", err)
+	}
+}
+
+// TestUnarchiver_Unarchive_symlinkOutsideAllowed verifies that a symlink whose
+// target points outside the extraction directory is created successfully when
+// no later entry follows it to write outside. Such symlinks are common in
+// legitimate archives such as root filesystem images (e.g. "var/run -> /run"),
+// so extraction must not fail on their mere presence.
+func TestUnarchiver_Unarchive_symlinkOutsideAllowed(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	dest := t.TempDir()
+
+	// An absolute symlink escaping dest (mirroring a rootfs "var/run -> /run")
+	// followed by a normal file that must still be extracted.
+	archive := buildTarGz(
+		t,
+		tarEntry{hdr: &tar.Header{Name: "var/run", Typeflag: tar.TypeSymlink, Linkname: "/run", Mode: 0o777}},
+		tarEntry{hdr: &tar.Header{Name: "bin/tool", Typeflag: tar.TypeReg, Mode: 0o755}, payload: []byte("hello")},
+	)
+
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "rootfs.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+	}
+	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err != nil {
+		t.Fatalf("extraction must succeed for a benign escaping symlink: %v", err)
+	}
+
+	target, err := os.Readlink(filepath.Join(dest, "var/run"))
+	if err != nil {
+		t.Fatalf("the escaping symlink must be created: %v", err)
+	}
+	if target != "/run" {
+		t.Fatalf("unexpected symlink target: %q", target)
+	}
+	got, err := os.ReadFile(filepath.Join(dest, "bin/tool"))
+	if err != nil {
+		t.Fatalf("the regular file must be extracted: %v", err)
+	}
+	if string(got) != "hello" {
+		t.Fatalf("unexpected file content: %q", got)
+	}
+}
+
+// TestUnarchiver_Unarchive_rootEntry verifies that an archive whose first entry
+// is the root directory "./" (as produced by e.g. crate-ci/typos releases)
+// extracts successfully. Its dstPath equals dest, so its parent is legitimately
+// outside dest and must not be treated as an escape.
+func TestUnarchiver_Unarchive_rootEntry(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	dest := t.TempDir()
+
+	archive := buildTarGz(
+		t,
+		tarEntry{hdr: &tar.Header{Name: "./", Typeflag: tar.TypeDir, Mode: 0o755}},
+		tarEntry{hdr: &tar.Header{Name: "./tool", Typeflag: tar.TypeReg, Mode: 0o755}, payload: []byte("hello")},
+	)
+
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "tool.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+	}
+	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err != nil {
+		t.Fatalf("extraction must succeed for an archive with a \"./\" root entry: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(dest, "tool"))
+	if err != nil {
+		t.Fatalf("the regular file must be extracted: %v", err)
+	}
+	if string(got) != "hello" {
+		t.Fatalf("unexpected file content: %q", got)
 	}
 }
 
@@ -151,33 +271,16 @@ func TestUnarchiver_Unarchive_pathTraversal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Build a tar.gz with a single regular file whose name escapes dest via "..".
-	var buf bytes.Buffer
-	gw := gzip.NewWriter(&buf)
-	tw := tar.NewWriter(gw)
-	payload := []byte("PWNED_BY_AQUA_PATH_TRAVERSAL")
-	if err := tw.WriteHeader(&tar.Header{
-		Name:     "../outside-target",
-		Typeflag: tar.TypeReg,
-		Mode:     0o644,
-		Size:     int64(len(payload)),
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := tw.Write(payload); err != nil {
-		t.Fatal(err)
-	}
-	if err := tw.Close(); err != nil {
-		t.Fatal(err)
-	}
-	if err := gw.Close(); err != nil {
-		t.Fatal(err)
-	}
+	// A single regular file whose name escapes dest via "..".
+	archive := buildTarGz(
+		t,
+		tarEntry{hdr: &tar.Header{Name: "../outside-target", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_PATH_TRAVERSAL")},
+	)
 
 	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "malicious.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(buf.Bytes())), nil),
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
 	}
 	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
 		t.Fatal("an error must be returned for an entry escaping the extraction directory")
