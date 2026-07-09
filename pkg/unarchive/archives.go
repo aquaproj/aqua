@@ -16,10 +16,7 @@ import (
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-var (
-	errEscapeDest        = errors.New("the file path escapes the extraction directory")
-	errSymlinkEscapeDest = errors.New("the symlink target escapes the extraction directory")
-)
+var errEscapeDest = errors.New("the file path escapes the extraction directory")
 
 type handler struct {
 	fs       afero.Fs
@@ -34,24 +31,60 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
 	}
 	parentDir := filepath.Dir(dstPath)
+	// Reject an entry whose parent directory resolves outside dest through a
+	// symlink planted by an earlier entry. Creating the parent directories or
+	// writing the entry would otherwise follow that symlink and escape dest.
+	if h.escapesDest(parentDir) {
+		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
+	}
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
 		slogerr.WithError(h.logger, err).Warn("create a directory")
 		return nil
 	}
 
 	if f.IsDir() {
-		if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
-			slogerr.WithError(h.logger, err).Warn("create a directory")
-			return nil
-		}
-		return nil
+		return h.handleDir(dstPath, f)
 	}
 
 	if f.LinkTarget != "" {
 		if f.Mode()&os.ModeSymlink != 0 {
-			return h.handleSymlink(dstPath, f.LinkTarget)
+			h.handleSymlink(dstPath, f.LinkTarget)
 		}
 		return nil
+	}
+
+	return h.handleRegularFile(dstPath, f)
+}
+
+func (h *handler) Unarchive(ctx context.Context, _ *slog.Logger, src *File) error {
+	tempFilePath, err := src.Body.Path()
+	if err != nil {
+		return fmt.Errorf("get a temporary file path: %w", err)
+	}
+	if err := h.unarchive(ctx, src.Filename, tempFilePath); err != nil {
+		return slogerr.With(err, "archived_file", tempFilePath, "archived_filename", src.Filename) //nolint:wrapcheck
+	}
+	return nil
+}
+
+func (h *handler) handleDir(dstPath string, f archives.FileInfo) error {
+	// Guard against a directory entry whose path was planted as an escaping
+	// symlink by an earlier entry; MkdirAll would otherwise follow it.
+	if h.escapesDest(dstPath) {
+		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
+	}
+	if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
+		slogerr.WithError(h.logger, err).Warn("create a directory")
+	}
+	return nil
+}
+
+func (h *handler) handleRegularFile(dstPath string, f archives.FileInfo) error {
+	// Refuse to write through an escaping symlink planted at dstPath itself. An
+	// archive can create "pwn -> /outside" and then a regular file entry "pwn";
+	// opening it with O_CREATE would follow the symlink and write outside dest.
+	if h.escapesDest(dstPath) {
+		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
 	}
 
 	reader, err := f.Open()
@@ -70,49 +103,51 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 
 	if _, err := io.Copy(dstFile, reader); err != nil {
 		slogerr.WithError(h.logger, err).Warn("copy a file")
-		return nil
 	}
 	return nil
 }
 
-func (h *handler) Unarchive(ctx context.Context, _ *slog.Logger, src *File) error {
-	tempFilePath, err := src.Body.Path()
-	if err != nil {
-		return fmt.Errorf("get a temporary file path: %w", err)
-	}
-	if err := h.unarchive(ctx, src.Filename, tempFilePath); err != nil {
-		return slogerr.With(err, "archived_file", tempFilePath, "archived_filename", src.Filename) //nolint:wrapcheck
-	}
-	return nil
-}
-
-// handleSymlink creates a symlink at dstPath pointing to target. It returns an
-// error if the target resolves outside h.dest, because such a symlink could be
-// followed by a later file entry with the same path to write outside the
-// extraction directory. This indicates a malicious or broken archive, so
-// extraction is aborted rather than silently skipping the entry.
-func (h *handler) handleSymlink(dstPath, target string) error {
-	if !h.symlinkTargetWithinDest(dstPath, target) {
-		return fmt.Errorf("%w: %s -> %s", errSymlinkEscapeDest, dstPath, target)
-	}
+// handleSymlink creates a symlink at dstPath pointing to target. The symlink is
+// created even when target resolves outside h.dest: the symlink inode itself
+// writes nothing outside the extraction directory, and such symlinks are common
+// in legitimate archives (e.g. a root filesystem's "var/run -> /run"). Escaping
+// through the symlink is instead prevented at write time by escapesDest, which
+// rejects any later entry that would follow it out of h.dest. The caller has
+// already verified dstPath's parent directory stays within h.dest.
+func (h *handler) handleSymlink(dstPath, target string) {
 	if err := os.Symlink(target, dstPath); err != nil {
 		slogerr.WithError(h.logger, err).Warn("create a symlink", "link_target", target, "link_dest", dstPath)
 	}
-	return nil
 }
 
-// symlinkTargetWithinDest reports whether a symlink created at linkPath with the
-// given target resolves to a path inside h.dest. A relative target is resolved
-// against the directory containing the symlink, matching how the OS dereferences
-// it. This prevents an archive from planting a symlink that points outside the
-// extraction directory, which a later file entry with the same path could
-// otherwise follow to write outside h.dest.
-func (h *handler) symlinkTargetWithinDest(linkPath, target string) bool {
-	resolved := target
-	if !filepath.IsAbs(resolved) {
-		resolved = filepath.Join(filepath.Dir(linkPath), target)
+// escapesDest reports whether path resolves outside h.dest once the symlinks in
+// its already-existing portion are followed. It resolves the deepest existing
+// ancestor of path (or path itself), so it detects both a symlink planted at
+// path and an escaping symlink in any of its parent directories. h.dest is
+// resolved too because it may itself contain symlinks (e.g. macOS /var ->
+// /private/var), which would otherwise make every entry look like an escape.
+func (h *handler) escapesDest(path string) bool {
+	dest, err := filepath.EvalSymlinks(h.dest)
+	if err != nil {
+		dest = filepath.Clean(h.dest)
 	}
-	return h.withinDest(resolved)
+	p := path
+	for {
+		resolved, err := filepath.EvalSymlinks(p)
+		if err == nil {
+			resolved = filepath.Clean(resolved)
+			if resolved == dest {
+				return false
+			}
+			return !strings.HasPrefix(resolved, dest+string(filepath.Separator))
+		}
+		parent := filepath.Dir(p)
+		if parent == p {
+			// Reached the filesystem root without finding an existing path.
+			return false
+		}
+		p = parent
+	}
 }
 
 // withinDest reports whether the cleaned path is h.dest itself or located inside
