@@ -34,7 +34,9 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	// Reject an entry whose parent directory resolves outside dest through a
 	// symlink planted by an earlier entry. Creating the parent directories or
 	// writing the entry would otherwise follow that symlink and escape dest.
-	if h.escapesDest(parentDir) {
+	// The root entry ("./") is exempt: its dstPath equals dest, so its parent is
+	// legitimately outside dest. dest itself is validated in the handlers below.
+	if dstPath != filepath.Clean(h.dest) && h.escapesDest(parentDir) {
 		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
 	}
 	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {

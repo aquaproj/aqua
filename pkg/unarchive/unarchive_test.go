@@ -267,6 +267,41 @@ func TestUnarchiver_Unarchive_symlinkOutsideAllowed(t *testing.T) {
 	}
 }
 
+// TestUnarchiver_Unarchive_rootEntry verifies that an archive whose first entry
+// is the root directory "./" (as produced by e.g. crate-ci/typos releases)
+// extracts successfully. Its dstPath equals dest, so its parent is legitimately
+// outside dest and must not be treated as an escape.
+func TestUnarchiver_Unarchive_rootEntry(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	dest := t.TempDir()
+
+	archive := buildTarGz(
+		t,
+		tarEntry{hdr: &tar.Header{Name: "./", Typeflag: tar.TypeDir, Mode: 0o755}},
+		tarEntry{hdr: &tar.Header{Name: "./tool", Typeflag: tar.TypeReg, Mode: 0o755}, payload: []byte("hello")},
+	)
+
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "tool.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+	}
+	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err != nil {
+		t.Fatalf("extraction must succeed for an archive with a \"./\" root entry: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(dest, "tool"))
+	if err != nil {
+		t.Fatalf("the regular file must be extracted: %v", err)
+	}
+	if string(got) != "hello" {
+		t.Fatalf("unexpected file content: %q", got)
+	}
+}
+
 // TestUnarchiver_Unarchive_pathTraversal verifies that an archive entry whose
 // path contains ".." cannot write outside the extraction directory.
 // See https://github.com/aquaproj/aqua/security/advisories/GHSA-mf5c-hw34-4hpp
