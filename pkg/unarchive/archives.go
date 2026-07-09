@@ -122,34 +122,70 @@ func (h *handler) handleSymlink(dstPath, target string) {
 	}
 }
 
-// escapesDest reports whether path resolves outside h.dest once the symlinks in
-// its already-existing portion are followed. It resolves the deepest existing
-// ancestor of path (or path itself), so it detects both a symlink planted at
-// path and an escaping symlink in any of its parent directories. h.dest is
-// resolved too because it may itself contain symlinks (e.g. macOS /var ->
-// /private/var), which would otherwise make every entry look like an escape.
+// maxSymlinkHops bounds how many symlinks escapesDest follows before giving up,
+// guarding against symlink cycles. It matches the conventional MAXSYMLINKS.
+const maxSymlinkHops = 255
+
+// escapesDest reports whether writing to path would land outside h.dest once the
+// symlinks along path are followed. Unlike filepath.EvalSymlinks it does not
+// require path's final target to exist, so it also catches a dangling symlink
+// planted at path that a later O_CREATE write would follow out of h.dest. It
+// detects a symlink planted at path itself as well as an escaping symlink in any
+// parent directory. h.dest is resolved too because it may itself contain
+// symlinks (e.g. macOS /var -> /private/var), which would otherwise make every
+// entry look like an escape.
 func (h *handler) escapesDest(path string) bool {
 	dest, err := filepath.EvalSymlinks(h.dest)
 	if err != nil {
 		dest = filepath.Clean(h.dest)
 	}
-	p := path
-	for {
-		resolved, err := filepath.EvalSymlinks(p)
-		if err == nil {
-			resolved = filepath.Clean(resolved)
-			if resolved == dest {
-				return false
-			}
-			return !strings.HasPrefix(resolved, dest+string(filepath.Separator))
-		}
-		parent := filepath.Dir(p)
-		if parent == p {
-			// Reached the filesystem root without finding an existing path.
-			return false
-		}
-		p = parent
+	resolved, ok := h.resolveSymlinks(path, 0)
+	if !ok {
+		// A symlink cycle or an unreadable link: treat as unsafe.
+		return true
 	}
+	resolved = filepath.Clean(resolved)
+	if resolved == dest {
+		return false
+	}
+	return !strings.HasPrefix(resolved, dest+string(filepath.Separator))
+}
+
+// resolveSymlinks resolves the symlinks in path, following even a dangling
+// symlink whose final target does not exist yet (which filepath.EvalSymlinks
+// refuses to do). Components that do not exist and are not symlinks are kept
+// literally. It returns false if a symlink cycle or an unreadable link is hit.
+func (h *handler) resolveSymlinks(path string, hops int) (string, bool) {
+	if hops > maxSymlinkHops {
+		return "", false
+	}
+	// Fast path: a fully existing path resolves cleanly.
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		return resolved, true
+	}
+	// path did not fully resolve. If path itself is a symlink (possibly
+	// dangling), follow its target manually.
+	if fi, err := os.Lstat(path); err == nil && fi.Mode()&os.ModeSymlink != 0 {
+		target, err := os.Readlink(path)
+		if err != nil {
+			return "", false
+		}
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(path), target)
+		}
+		return h.resolveSymlinks(target, hops+1)
+	}
+	// path does not exist and is not a symlink. Resolve its parent so an escaping
+	// symlink in an ancestor is still followed, then re-attach the base name.
+	parent := filepath.Dir(path)
+	if parent == path {
+		return path, true
+	}
+	resolvedParent, ok := h.resolveSymlinks(parent, hops)
+	if !ok {
+		return "", false
+	}
+	return filepath.Join(resolvedParent, filepath.Base(path)), true
 }
 
 // withinDest reports whether the cleaned path is h.dest itself or located inside
