@@ -176,6 +176,43 @@ func TestUnarchiver_Unarchive_symlinkDirTraversal(t *testing.T) {
 	}
 }
 
+// TestUnarchiver_Unarchive_danglingSymlinkTraversal verifies that a symlink
+// whose target does not exist yet, followed by a regular file at the same path,
+// cannot create a file outside the extraction directory. filepath.EvalSymlinks
+// fails on such a dangling link, so the escape guard must not rely on the final
+// target already existing.
+// See https://github.com/aquaproj/aqua/security/advisories/GHSA-mf5c-hw34-4hpp
+func TestUnarchiver_Unarchive_danglingSymlinkTraversal(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	dest := t.TempDir()
+	outsideDir := t.TempDir()
+	// The target intentionally does not exist yet.
+	outside := filepath.Join(outsideDir, "created-outside-target")
+
+	// A symlink "pwn" -> not-yet-existing outside target, then a regular file
+	// "pwn" whose O_CREATE write would follow the dangling symlink.
+	archive := buildTarGz(
+		t,
+		tarEntry{hdr: &tar.Header{Name: "pwn", Typeflag: tar.TypeSymlink, Linkname: outside, Mode: 0o777}},
+		tarEntry{hdr: &tar.Header{Name: "pwn", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_DANGLING_SYMLINK")},
+	)
+
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "malicious.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+	}
+	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+		t.Fatal("an error must be returned for a regular file that follows a dangling symlink escaping the extraction directory")
+	}
+	if _, err := os.Stat(outside); !os.IsNotExist(err) {
+		t.Fatalf("a file was created outside dest through a dangling symlink: %v", err)
+	}
+}
+
 // TestUnarchiver_Unarchive_symlinkOutsideAllowed verifies that a symlink whose
 // target points outside the extraction directory is created successfully when
 // no later entry follows it to write outside. Such symlinks are common in
