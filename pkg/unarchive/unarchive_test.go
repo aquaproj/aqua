@@ -130,7 +130,7 @@ func TestUnarchiver_Unarchive_symlinkTraversal(t *testing.T) {
 		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
 	}
 	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
-		t.Fatal("an error must be returned for a symlink escaping the extraction directory")
+		t.Fatal("an error must be returned for a regular file that follows a symlink escaping the extraction directory")
 	}
 
 	got, err := os.ReadFile(outside)
