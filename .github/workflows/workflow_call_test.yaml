@@ -26,7 +26,7 @@ jobs:
   test:
     uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@98ab396ba72f7b47f7e22aca7346b6e1d7ae4deb # v6.0.0
     with:
-      aqua_version: v2.60.1
+      aqua_version: v2.60.2
       golangci-lint-timeout: 120s
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
