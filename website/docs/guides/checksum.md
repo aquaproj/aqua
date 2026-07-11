@@ -83,7 +83,7 @@ on:
       - aqua-checksums.json
 jobs:
   update-aqua-checksums:
-    uses: aquaproj/update-checksum-workflow/.github/workflows/update-checksum.yaml@eba908314cdc3b2ab7fb7546950c05a666effbc0 # v1.0.5
+    uses: aquaproj/update-checksum-workflow/.github/workflows/update-checksum.yaml@d3ab3ae1f9db2320a23efeaf9baaafeaae45af56 # v1.0.6
     permissions:
       contents: read
     with:
