@@ -1,15 +1,18 @@
 package unarchive
 
 import (
+	"archive/tar"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/mholt/archives"
 	"github.com/spf13/afero"
@@ -20,12 +23,27 @@ var errEscapeDest = errors.New("the file path escapes the extraction directory")
 
 type handler struct {
 	fs       afero.Fs
+	executor Executor
 	dest     string
 	filename string
 	logger   *slog.Logger
+	// sparse records that the archive contains a GNU sparse entry that Go's
+	// archive/tar cannot extract. It is set during HandleFile so that unarchive
+	// can fall back to the system tar command after the walk is aborted.
+	sparse bool
 }
 
 func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
+	// GNU sparse entries (PAX GNU.sparse.* or the old GNU sparse type) are not
+	// reliably extractable by Go's archive/tar. Detect them before reading the
+	// body -- reading a sparse body would materialize its full logical size (up
+	// to many GiB of zeros) before failing -- and abort the walk so unarchive
+	// can re-extract the whole archive with the system tar command.
+	if isGNUSparse(f) {
+		h.sparse = true
+		return fs.SkipAll
+	}
+
 	dstPath := filepath.Join(h.dest, h.normalizePath(f.NameInArchive))
 	if !h.withinDest(dstPath) {
 		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
@@ -229,12 +247,57 @@ func (h *handler) unarchive(ctx context.Context, fileName, file string) error {
 		if err := extractor.Extract(ctx, input, h.HandleFile); err != nil {
 			return fmt.Errorf("extract files: %w", err)
 		}
+		if h.sparse {
+			return h.extractWithSystemTar(ctx, file)
+		}
 		return nil
 	}
 	if decomp, ok := format.(archives.Decompressor); ok {
 		return h.decompress(input, decomp)
 	}
 	return errUnsupportedFileFormat
+}
+
+// isGNUSparse reports whether f is a GNU sparse tar entry. Such entries are
+// stored either in the old GNU sparse format (Typeflag TypeGNUSparse) or the
+// PAX-based GNU sparse 0.x/1.0 format (a GNU.sparse.* extended header record).
+// Go's archive/tar cannot reliably extract these, so aqua falls back to the
+// system tar command when one is found.
+func isGNUSparse(f archives.FileInfo) bool {
+	th, ok := f.Header.(*tar.Header)
+	if !ok {
+		return false
+	}
+	if th.Typeflag == tar.TypeGNUSparse {
+		return true
+	}
+	for k := range th.PAXRecords {
+		if strings.HasPrefix(k, "GNU.sparse.") {
+			return true
+		}
+	}
+	return false
+}
+
+// extractWithSystemTar extracts the archive with the system tar command. It is
+// used as a fallback for GNU sparse archives, which Go's archive/tar cannot
+// extract but GNU tar and bsdtar can. The system tar also restores the files as
+// sparse on disk instead of materializing the holes as zeros. A tar binary on
+// PATH is required; on macOS and Linux it is available by default.
+//
+// The destination directory has already been created by unarchive. The system
+// tar auto-detects the compression (gzip, xz, zstd, ...) from the archive
+// content, so no compression flag is needed.
+func (h *handler) extractWithSystemTar(ctx context.Context, file string) error {
+	h.logger.Warn("the archive contains GNU sparse files unsupported by the Go tar reader; falling back to the system tar command")
+	if h.executor == nil {
+		return errors.New("cannot extract a GNU sparse archive: no command executor is available")
+	}
+	cmd := osexec.Command(ctx, "tar", "-x", "-f", file, "-C", h.dest)
+	if _, err := h.executor.ExecAndOutputWhenFailure(cmd); err != nil {
+		return fmt.Errorf("extract a GNU sparse archive with the system tar command (a `tar` binary on PATH is required for GNU sparse archives): %w", err)
+	}
+	return nil
 }
 
 func (h *handler) decompress(input io.Reader, decomp archives.Decompressor) error {

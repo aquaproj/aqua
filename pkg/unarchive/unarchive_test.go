@@ -9,11 +9,13 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/spf13/afero"
 )
@@ -396,5 +398,48 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 				t.Fatal("error must be returned")
 			}
 		})
+	}
+}
+
+// TestUnarchiver_Unarchive_gnuSparse verifies that an archive containing a GNU
+// sparse file (PAX GNU.sparse.* records), which Go's archive/tar cannot reliably
+// extract, is extracted by falling back to the system tar command.
+// testdata/gnu-sparse.tar.gz holds a well-formed GNU sparse 1.0 member
+// "sparse.img" of logical size 131072 with "HELLO" at offset 0 and a hole after.
+func TestUnarchiver_Unarchive_gnuSparse(t *testing.T) {
+	t.Parallel()
+	if _, err := exec.LookPath("tar"); err != nil {
+		t.Skip("the system tar command is required to extract GNU sparse archives")
+	}
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	archive, err := os.ReadFile(filepath.Join("testdata", "gnu-sparse.tar.gz"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dest := t.TempDir()
+	fs := afero.NewOsFs()
+	src := &unarchive.File{
+		Filename: "gnu-sparse.tar.gz",
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+	}
+	if err := unarchive.New(osexec.New(), fs).Unarchive(ctx, logger, src, dest); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(dest, "sparse.img"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 131072 {
+		t.Fatalf("extracted file size: want 131072, got %d", len(got))
+	}
+	if string(got[:5]) != "HELLO" {
+		t.Fatalf("extracted file head: want HELLO, got %q", got[:5])
+	}
+	if got[70000] != 0 {
+		t.Fatalf("the hole region must be zero, got %d at offset 70000", got[70000])
 	}
 }
