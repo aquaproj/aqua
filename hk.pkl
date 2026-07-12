@@ -1,5 +1,5 @@
-amends "package://github.com/jdx/hk/releases/download/v1.45.0/hk@1.45.0#/Config.pkl"
-import "package://github.com/jdx/hk/releases/download/v1.45.0/hk@1.45.0#/Builtins.pkl"
+amends "package://github.com/jdx/hk/releases/download/v1.50.0/hk@1.50.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.50.0/hk@1.50.0#/Builtins.pkl"
 
 local linters = new Mapping<String, Step> {
   ["golangci-lint"] = Builtins.golangci_lint
@@ -10,6 +10,13 @@ local linters = new Mapping<String, Step> {
     glob = List("**/*")
     check = "nllint -s {{files}}"
     fix = "nllint -s -f {{files}}"
+    batch = true
+  }
+  ["langcheck"] {
+    // https://github.com/suzuki-shunsuke/langcheck
+    glob = List("**/*")
+    check = "langcheck check {{files}}"
+    fix = "langcheck check {{files}}" // run as check in fix mode (no real fix possible)
     batch = true
   }
   ["go-test"] {
@@ -29,7 +36,8 @@ hooks {
   ["commit-msg"] {
     steps {
       ["validate-commit-msg"] {
-        check = "bash scripts/validate-commit-msg {{commit_msg_file}}"
+        // https://github.com/suzuki-shunsuke/langcheck
+        check = "langcheck check {{commit_msg_file}}"
       }
     }
   }
