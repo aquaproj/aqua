@@ -301,33 +301,63 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.1.0/nllint_darwin_amd64.tar.gz",
-      "checksum": "25D719C1B23D37F748B6453A2DBFFC3E9C998731AF1E8114956A4AEBA413760C",
+      "id": "github_release/github.com/suzuki-shunsuke/langcheck/v0.0.1/langcheck_darwin_amd64.tar.gz",
+      "checksum": "A08838FE7D3DF20A7F5EB9063DCD07A00411B6E54877FC49797F086CA9597027",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.1.0/nllint_darwin_arm64.tar.gz",
-      "checksum": "B17088ADAA6D29CD59CFE3142CFBB082874F52039D39BEB3DE0F4209895E44F7",
+      "id": "github_release/github.com/suzuki-shunsuke/langcheck/v0.0.1/langcheck_darwin_arm64.tar.gz",
+      "checksum": "EAD68F618347DD51EDE98C1CB9D72DD4685B4ACCC0EFFA6CE4F941C1612EF846",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.1.0/nllint_linux_amd64.tar.gz",
-      "checksum": "4ADB11D727BE9EA1220A6A63B2413EDBAFEC1E86C58BFFE772043AFC500F1FB9",
+      "id": "github_release/github.com/suzuki-shunsuke/langcheck/v0.0.1/langcheck_linux_amd64.tar.gz",
+      "checksum": "A1629059EEB51F499B6869CD734F25F682126B83AE1FF0865AC2FCDFB1ED8B32",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.1.0/nllint_linux_arm64.tar.gz",
-      "checksum": "F7EF1B230E32943AA128C2152A477C1229592E973C3399DB4EAB4E123660464B",
+      "id": "github_release/github.com/suzuki-shunsuke/langcheck/v0.0.1/langcheck_linux_arm64.tar.gz",
+      "checksum": "874C1EF129691B76C09D5B5DEB69FA34C9D25C2F78CF53801C67D6A8E3C4DC71",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.1.0/nllint_windows_amd64.zip",
-      "checksum": "79F84AB841B7F990480D9E2920F1F78A256DCE9F15E6F5F66612E747A6283C8D",
+      "id": "github_release/github.com/suzuki-shunsuke/langcheck/v0.0.1/langcheck_windows_amd64.zip",
+      "checksum": "D4D153863C1E564CDED12CCFEBC41367268F3B8D9AF093C92EB2F12CC9120EC2",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.1.0/nllint_windows_arm64.zip",
-      "checksum": "F2BE3CC16A4684D4DD511A1339554FC85B3E5FFC74061801BA18F680527E29DE",
+      "id": "github_release/github.com/suzuki-shunsuke/langcheck/v0.0.1/langcheck_windows_arm64.zip",
+      "checksum": "8E50DBC9438A3F857B636D4585C10175080506493ED264FBA27D7E888DFEC416",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.2.0/nllint_darwin_amd64.tar.gz",
+      "checksum": "0D9A6CD52F337F597E3C06BF29BDAE55BBE58BE2447E1D7CC2818DA10336626C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.2.0/nllint_darwin_arm64.tar.gz",
+      "checksum": "BFF59EF81786E8D9CAEE953854C803563D7D880DBC748885064445D1443725DF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.2.0/nllint_linux_amd64.tar.gz",
+      "checksum": "E5D885845FA6A36C5984C15E8DC6988AA8EA49683B999CB797ED87A9196B99EF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.2.0/nllint_linux_arm64.tar.gz",
+      "checksum": "2A1ACC20503265564AC8CE230A81FF989E03505432E30DA9B24A771FE7D8EEF3",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.2.0/nllint_windows_amd64.zip",
+      "checksum": "896A1D33CFCFCA4B59AE2D6D7A3AD25E881C7711E82CF303D391FDBB74061F87",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/suzuki-shunsuke/nllint/v1.2.0/nllint_windows_arm64.zip",
+      "checksum": "D614EA44097D6D11E2263E2A34232DB3366CB7EA00ABC760E6D8179CE2295C26",
       "algorithm": "sha256"
     },
     {
@@ -386,8 +416,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.535.0/registry.yaml",
-      "checksum": "90426D07FB041F17580C542525787E5DB0E3A8C1279EC252BA55AFA7D61E7833",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.536.1/registry.yaml",
+      "checksum": "149100F507AD8C4E75D9C5CA5DB050FB88817005DDD72E76A40C92379233C170",
       "algorithm": "sha256"
     }
   ]
