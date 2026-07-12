@@ -194,7 +194,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.60.0"),
+					TagName: "v4.60.0",
 				},
 			},
 		},
@@ -224,7 +224,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.60.0"),
+					TagName: "v4.60.0",
 				},
 			},
 		},
@@ -404,7 +404,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.60.0"),
+					TagName: "v4.60.0",
 				},
 			},
 		},

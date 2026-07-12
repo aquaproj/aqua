@@ -67,7 +67,7 @@ packages:
 			idxs: []int{0},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -102,7 +102,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -136,7 +136,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -170,10 +170,10 @@ packages:
 			args: []string{"kubernetes-sigs/kustomize"},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.0.0"),
+					TagName: "v4.0.0",
 				},
 				{
-					TagName: new("kustomize/v4.2.0"),
+					TagName: "kustomize/v4.2.0",
 				},
 			},
 		},
@@ -209,7 +209,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -246,10 +246,10 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.1.0"),
+					TagName: "v1.1.0",
 				},
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},

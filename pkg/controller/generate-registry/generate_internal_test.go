@@ -87,7 +87,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v2.13.0"),
+					TagName: "v2.13.0",
 				},
 			},
 			assets: []*github.ReleaseAsset{

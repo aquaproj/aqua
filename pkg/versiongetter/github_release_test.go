@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
+func TestGitHubReleaseVersionGetter_Get(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -29,13 +29,13 @@ func TestGitHubReleaseVersionGetter_Get(t *testing.T) { //nolint:dupl
 			releases: map[string][]*github.RepositoryRelease{
 				"suzuki-shunsuke/tfcmt": {
 					{
-						TagName: new("v3.0.0"),
+						TagName: "v3.0.0",
 					},
 					{
-						TagName: new("v2.0.0"),
+						TagName: "v2.0.0",
 					},
 					{
-						TagName: new("v1.0.0"),
+						TagName: "v1.0.0",
 					},
 				},
 			},
@@ -88,19 +88,19 @@ func TestGitHubReleaseVersionGetter_List(t *testing.T) { //nolint:funlen
 			releases: map[string][]*github.RepositoryRelease{
 				"suzuki-shunsuke/tfcmt": {
 					{
-						TagName: new("v3.0.0"),
+						TagName: "v3.0.0",
 						Body:    new("body(v3)"),
-						HTMLURL: new("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v3.0.0"),
+						HTMLURL: "https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v3.0.0",
 					},
 					{
-						TagName: new("v2.0.0"),
+						TagName: "v2.0.0",
 						Body:    new("body(v2)"),
-						HTMLURL: new("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v2.0.0"),
+						HTMLURL: "https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v2.0.0",
 					},
 					{
-						TagName: new("v1.0.0"),
+						TagName: "v1.0.0",
 						Body:    new("body(v1)"),
-						HTMLURL: new("https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v1.0.0"),
+						HTMLURL: "https://github.com/suzuki-shunsuke/tfcmt/releases/tag/v1.0.0",
 					},
 				},
 			},

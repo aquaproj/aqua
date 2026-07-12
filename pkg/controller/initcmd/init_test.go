@@ -43,7 +43,7 @@ packages:
 			files: map[string]string{},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v2.16.0"),
+					TagName: "v2.16.0",
 				},
 			},
 		},
