@@ -182,9 +182,11 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	return pkgInfo, []string{version}
 }
 
+const sha512 = "sha512"
+
 func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.Checksum {
 	suffixes := []string{
-		"sha512",
+		sha512,
 		"sha256",
 		"sha1",
 		"md5",

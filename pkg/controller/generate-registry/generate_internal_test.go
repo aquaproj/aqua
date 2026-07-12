@@ -357,7 +357,7 @@ func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestGetChecksum(t *testing.T) {
+func TestGetChecksum(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	tests := []struct {
 		name          string
@@ -375,7 +375,7 @@ func TestGetChecksum(t *testing.T) {
 			want: &registry.Checksum{
 				Type:      pkgTypeGitHubRelease,
 				Asset:     "{{.Asset}}.sha512",
-				Algorithm: "sha512",
+				Algorithm: sha512,
 			},
 		},
 		{
@@ -390,7 +390,7 @@ func TestGetChecksum(t *testing.T) {
 			want: &registry.Checksum{
 				Type:      pkgTypeGitHubRelease,
 				Asset:     "{{.Asset}}.sha512",
-				Algorithm: "sha512",
+				Algorithm: sha512,
 			},
 		},
 		{
