@@ -94,6 +94,7 @@ func (u *Unarchiver) getUnarchiver(logger *slog.Logger, src *File, dest string) 
 
 	return &handler{
 		fs:       u.fs,
+		executor: u.executor,
 		dest:     dest,
 		filename: filename,
 		logger:   logger,
