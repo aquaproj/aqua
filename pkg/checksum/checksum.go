@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"math"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -81,47 +82,94 @@ func convertChecksumFileName(filename, version string) string {
 		strings.TrimPrefix(version, "v"), "{{trimV .Version}}")
 }
 
-// GetChecksumConfigFromFilename analyzes a filename to determine checksum configuration.
-// It identifies the hash algorithm based on filename patterns and excludes signature files.
-// Returns a checksum configuration for github_release type or nil if no pattern matches.
-func GetChecksumConfigFromFilename(filename, version string) *registry.Checksum {
+// isSignatureFile reports whether a filename looks like a signature file.
+func isSignatureFile(filename string) bool {
 	s := strings.ToLower(filename)
 	for _, suffix := range []string{"sig", "asc", "pem", "bundle", "sigstore", "sigstore.json", "minisig"} {
 		if strings.HasSuffix(s, "."+suffix) {
-			return nil
+			return true
 		}
 	}
-	arr := []struct {
+	return false
+}
+
+// matchAlgorithm returns the checksum algorithm corresponding to a filename and its
+// priority, or an empty string and a negative priority if the filename does not look
+// like a checksum file. The priority is the index in the inlined patterns below
+// (lower index = higher preference: sha512 > sha256 > sha1 > md5).
+func matchAlgorithm(filename string) (string, int) {
+	if isSignatureFile(filename) {
+		return "", math.MaxInt
+	}
+	s := strings.ToLower(filename)
+	// Ordered by preference: sha512 > sha256 > sha1 > md5 (lower index = higher priority).
+	for i, p := range []struct {
 		words     []string
 		algorithm string
 	}{
-		{
-			words:     []string{algoSHA512, "shasums512"},
-			algorithm: algoSHA512,
-		},
-		{
-			words:     []string{algoMD5},
-			algorithm: algoMD5,
-		},
-		{
-			words:     []string{algoSHA1, "shasum1"},
-			algorithm: algoSHA1,
-		},
-		{
-			words:     []string{algoSHA256, "shasums", "checksum"},
-			algorithm: algoSHA256,
-		},
-	}
-	for _, a := range arr {
-		for _, w := range a.words {
+		{words: []string{algoSHA512, "shasums512"}, algorithm: algoSHA512},
+		{words: []string{algoSHA256, "shasums", "checksum"}, algorithm: algoSHA256},
+		{words: []string{algoSHA1, "shasum1"}, algorithm: algoSHA1},
+		{words: []string{algoMD5}, algorithm: algoMD5},
+	} {
+		for _, w := range p.words {
 			if strings.Contains(s, w) {
-				return &registry.Checksum{
-					Type:      "github_release",
-					Algorithm: a.algorithm,
-					Asset:     convertChecksumFileName(filename, version),
-				}
+				return p.algorithm, i
 			}
 		}
 	}
-	return nil
+	return "", math.MaxInt
+}
+
+// IsChecksumFile reports whether a single filename appears to be a checksum file.
+// Signature files are never treated as checksum files.
+func IsChecksumFile(filename string) bool {
+	algorithm, _ := matchAlgorithm(filename)
+	return algorithm != ""
+}
+
+// GetChecksumConfigFromFilename analyzes a list of asset names to determine the best
+// checksum configuration. It identifies checksum files by their filename patterns,
+// excludes signature files, and selects the one with the most preferred hash algorithm
+// (sha512 > sha256 > sha1 > md5).
+// It returns the checksum configuration for github_release type, or nil if no asset matches.
+// The returned checksum's Asset field uses convertChecksumFileName.
+func GetChecksumConfigFromFilename(assets []string, version string) *registry.Checksum {
+	_, chksum := GetChecksumConfigFromFilenameWithName(assets, version)
+	return chksum
+}
+
+// GetChecksumConfigFromFilenameWithName is like GetChecksumConfigFromFilename but also
+// returns the original matched asset name alongside the checksum configuration.
+func GetChecksumConfigFromFilenameWithName(assets []string, version string) (string, *registry.Checksum) {
+	type candidate struct {
+		filename  string
+		algorithm string
+		priority  int
+	}
+	var best *candidate
+
+	for _, filename := range assets {
+		algorithm, prio := matchAlgorithm(filename)
+		if algorithm == "" {
+			continue
+		}
+		if best == nil || prio < best.priority {
+			best = &candidate{
+				filename:  filename,
+				algorithm: algorithm,
+				priority:  prio,
+			}
+		}
+	}
+
+	if best == nil {
+		return "", nil
+	}
+
+	return best.filename, &registry.Checksum{
+		Type:      "github_release",
+		Algorithm: best.algorithm,
+		Asset:     convertChecksumFileName(best.filename, version),
+	}
 }
