@@ -85,7 +85,7 @@ func convertChecksumFileName(filename, version string) string {
 // isSignatureFile reports whether a filename looks like a signature file.
 func isSignatureFile(filename string) bool {
 	s := strings.ToLower(filename)
-	for _, suffix := range []string{"sig", "asc", "pem", "bundle", "sigstore", "sigstore.json", "minisig"} {
+	for _, suffix := range []string{"sig", "asc", "pem", "cert", "bundle", "sigstore", "sigstore.json", "minisig", "gpg", "gpgsig"} {
 		if strings.HasSuffix(s, "."+suffix) {
 			return true
 		}
