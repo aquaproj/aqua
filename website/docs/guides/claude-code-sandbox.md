@@ -18,9 +18,11 @@ Add the following to `.claude/settings.json`:
 
 ```json
 {
+  "env": {
+    "GODEBUG": "x509usefallbackroots=1"
+  },
   "sandbox": {
     "enabled": true,
-    "enableWeakerNetworkIsolation": true,
     "network": {
       "allowedDomains": [
         "github.com",
@@ -36,7 +38,9 @@ Add the following to `.claude/settings.json`:
 }
 ```
 
-`enableWeakerNetworkIsolation` weakens the sandbox. Please read [Why enableWeakerNetworkIsolation is required](#why-enableweakernetworkisolation-is-required) before enabling it, and decide for yourself whether the trade-off is acceptable.
+`GODEBUG=x509usefallbackroots=1` requires aqua [v2.62.0](https://github.com/aquaproj/aqua/releases/tag/v2.62.0) or later [#5024](https://github.com/aquaproj/aqua/pull/5024). For older versions, see [Older versions of aqua](#older-versions-of-aqua).
+
+Don't set `GODEBUG` if you rely on a custom CA in the macOS system trust store, such as behind a TLS-inspecting proxy. See [the caution below](#why-godebug-is-needed).
 
 :::caution
 Sandbox settings are read when Claude Code starts.
@@ -80,11 +84,11 @@ Add the hosts aqua downloads from to `network.allowedDomains`:
 
 Packages aren't limited to GitHub. If you install packages hosted elsewhere (`http` type packages, Go modules, npm, and so on), add those hosts too.
 
-### 3. Access to the system TLS trust service
+### 3. A way to verify TLS certificates
 
 This is the one that isn't obvious. See below.
 
-## Why enableWeakerNetworkIsolation is required
+## Why GODEBUG is needed
 
 Allowing the hosts above isn't enough. On macOS, aqua still fails:
 
@@ -99,12 +103,31 @@ This isn't a problem with `allowedDomains`. The host is reachable; other tools c
 
 This affects every Go-based CLI, not just aqua. Claude Code's documentation lists the same symptom for `gh`, `gcloud`, and `terraform` under [Troubleshooting](https://code.claude.com/docs/en/sandboxing#troubleshooting), and it's reported in [anthropics/claude-code#34876](https://github.com/anthropics/claude-code/issues/34876), which was closed as not planned.
 
-Neither `SSL_CERT_FILE` nor `GODEBUG=x509usefallbackroots=1` helps:
+Since [v2.62.0](https://github.com/aquaproj/aqua/releases/tag/v2.62.0), aqua embeds a copy of the Mozilla root certificates [#5024](https://github.com/aquaproj/aqua/pull/5024). Setting `GODEBUG=x509usefallbackroots=1` makes Go verify certificates with its own pure Go verifier and those embedded roots, so it never talks to the trust service and the sandbox doesn't need to be weakened:
 
-- `SSL_CERT_FILE` is ignored on macOS. As [golang/go#77865](https://github.com/golang/go/issues/77865) puts it, "On darwin systems we use the platform certificate verifier, instead of the native Go one, by default". Supporting it on Darwin is an accepted proposal, so this may change in a future Go release.
-- `GODEBUG=x509usefallbackroots=1` only takes effect if the binary calls [`x509.SetFallbackRoots`](https://pkg.go.dev/crypto/x509#SetFallbackRoots): "Setting x509usefallbackroots=1 without calling SetFallbackRoots has no effect". aqua doesn't embed fallback roots, so it does nothing.
+```json
+{
+  "env": {
+    "GODEBUG": "x509usefallbackroots=1"
+  }
+}
+```
 
-The fix is to allow the sandbox to reach the trust service:
+Setting it in `env` applies it to every Bash command in the session, which is what you want: aqua also downloads packages when you run an installed tool for the first time, and that runs under the tool's own name rather than `aqua`.
+
+:::caution
+`GODEBUG=x509usefallbackroots=1` makes Go ignore the macOS system trust store and trust only the embedded roots. If you are behind a TLS-inspecting proxy, or otherwise rely on a CA added to the system trust store, aqua fails to verify certificates with this set. In that case, use [`enableWeakerNetworkIsolation`](#older-versions-of-aqua) instead.
+
+Setting it session-wide is harmless for other Go tools. `x509usefallbackroots=1` has no effect unless the binary embeds fallback roots, which most tools don't.
+:::
+
+`SSL_CERT_FILE` is not an alternative: it's ignored on macOS. As [golang/go#77865](https://github.com/golang/go/issues/77865) puts it, "On darwin systems we use the platform certificate verifier, instead of the native Go one, by default". Supporting it on Darwin is an accepted proposal, so this may change in a future Go release.
+
+## Older versions of aqua
+
+Before v2.62.0, aqua doesn't embed fallback roots, and `GODEBUG=x509usefallbackroots=1` does nothing: per [`x509.SetFallbackRoots`](https://pkg.go.dev/crypto/x509#SetFallbackRoots), "Setting x509usefallbackroots=1 without calling SetFallbackRoots has no effect".
+
+The only remaining option is to let the sandbox reach the trust service:
 
 ```json
 {
@@ -114,25 +137,15 @@ The fix is to allow the sandbox to reach the trust service:
 }
 ```
 
+This is also the option to use if you can't set `GODEBUG` because you rely on a custom CA.
+
 :::caution
 As the name says, this weakens the sandbox. Claude Code's documentation describes it as reducing security "by opening a potential data exfiltration path": the trust service fetches OCSP/CRL data over the network without going through the sandbox's proxy, so it isn't covered by `allowedDomains`.
 
-Decide whether this trade-off is acceptable for you. It only matters on macOS; on Linux the sandbox uses bubblewrap and this setting does nothing.
+It only matters on macOS. On Linux the sandbox uses bubblewrap, and this setting does nothing.
 :::
 
-`network.allowMachLookup` is equivalent:
-
-```json
-{
-  "sandbox": {
-    "network": {
-      "allowMachLookup": ["com.apple.trustd.agent"]
-    }
-  }
-}
-```
-
-Both grant the same Mach service lookup, and both were confirmed to work. `allowMachLookup` isn't safer just because it names the service explicitly; the trade-off is the same. Use `enableWeakerNetworkIsolation`, which is the documented setting for this purpose.
+`network.allowMachLookup: ["com.apple.trustd.agent"]` is equivalent. Both grant the same Mach service lookup, and `allowMachLookup` isn't safer just because it names the service explicitly; the trade-off is the same.
 
 ## Why excludedCommands isn't enough
 
@@ -158,7 +171,7 @@ ERR request failed error="Get \"https://github.com/mikefarah/yq/releases/downloa
 
 The pattern is matched against the command string, and the match is easy to miss. Prefixing environment variables defeats it: `AQUA_ROOT_DIR=/tmp/foo aqua i` doesn't match `aqua *`, so it runs sandboxed and fails, while `cd /tmp/foo && aqua i` does match.
 
-When it does match, it excludes more than you might expect. The exclusion applies to the whole command, so `aqua i && rm -rf ~/.config` runs entirely outside the sandbox, including the part that has nothing to do with aqua. That's a weaker outcome than `enableWeakerNetworkIsolation`, which keeps aqua inside the sandbox and subject to `allowedDomains` and `allowWrite`.
+When it does match, it excludes more than you might expect. The exclusion applies to the whole command, so `aqua i && rm -rf ~/.config` runs entirely outside the sandbox, including the part that has nothing to do with aqua.
 
 ## Notes
 
