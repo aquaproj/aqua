@@ -50,9 +50,9 @@ On macOS, add `env.GODEBUG` as well:
 
 `GODEBUG` works around a TLS verification failure that only happens on macOS, so it isn't needed on Linux or WSL2. Don't set it there: it would replace the system's certificate store with the roots embedded in aqua for no benefit.
 
-It requires aqua [v2.62.0](https://github.com/aquaproj/aqua/releases/tag/v2.62.0) or later [#5024](https://github.com/aquaproj/aqua/pull/5024). For older versions, see [Older versions of aqua](#older-versions-of-aqua).
+It requires aqua [v2.62.0](https://github.com/aquaproj/aqua/releases/tag/v2.62.0) or later [#5024](https://github.com/aquaproj/aqua/pull/5024). For older versions, see [Old versions of aqua](#old-versions-of-aqua).
 
-Don't set it either if you rely on a custom CA in the system trust store, such as behind a TLS-inspecting proxy. See [the caution below](#why-godebug-is-needed).
+Don't set it either if you rely on a custom CA in the system trust store, such as behind a TLS-inspecting proxy. See [TLS verification issue on macOS](#tls-verification-issue-on-macos).
 
 :::caution
 Sandbox settings are read when Claude Code starts.
@@ -98,10 +98,12 @@ Packages aren't limited to GitHub. If you install packages hosted elsewhere (`ht
 
 ### 3. A way to verify TLS certificates (macOS only)
 
-This is the one that isn't obvious. See below.
+This is the one that isn't obvious. See [TLS verification issue on macOS](#tls-verification-issue-on-macos).
 On Linux and WSL2, Go verifies certificates itself and the two requirements above are enough.
 
-## Why GODEBUG is needed
+## TLS verification issue on macOS
+
+Everything in this section applies to macOS only. On Linux and WSL2, the two requirements above are enough.
 
 Allowing the hosts above isn't enough. On macOS, aqua still fails:
 
@@ -116,6 +118,8 @@ This isn't a problem with `allowedDomains`. The host is reachable; other tools c
 
 This affects every Go-based CLI, not just aqua. Claude Code's documentation lists the same symptom for `gh`, `gcloud`, and `terraform` under [Troubleshooting](https://code.claude.com/docs/en/sandboxing#troubleshooting), and it's reported in [anthropics/claude-code#34876](https://github.com/anthropics/claude-code/issues/34876), which was closed as not planned.
 
+### aqua v2.62.0 or later
+
 Since [v2.62.0](https://github.com/aquaproj/aqua/releases/tag/v2.62.0), aqua embeds a copy of the Mozilla root certificates [#5024](https://github.com/aquaproj/aqua/pull/5024). Setting `GODEBUG=x509usefallbackroots=1` makes Go verify certificates with its own pure Go verifier and those embedded roots, so it never talks to the trust service and the sandbox doesn't need to be weakened:
 
 ```json
@@ -129,14 +133,14 @@ Since [v2.62.0](https://github.com/aquaproj/aqua/releases/tag/v2.62.0), aqua emb
 Setting it in `env` applies it to every Bash command in the session, which is what you want: aqua also downloads packages when you run an installed tool for the first time, and that runs under the tool's own name rather than `aqua`.
 
 :::caution
-`GODEBUG=x509usefallbackroots=1` makes Go ignore the system trust store, on every platform, and trust only the roots embedded in the binary. If you are behind a TLS-inspecting proxy, or otherwise rely on a CA added to the system trust store, aqua fails to verify certificates with this set. On macOS, use [`enableWeakerNetworkIsolation`](#older-versions-of-aqua) instead. This is also why you shouldn't set it on Linux or WSL2, where it buys you nothing.
+`GODEBUG=x509usefallbackroots=1` makes Go ignore the system trust store, on every platform, and trust only the roots embedded in the binary. If you are behind a TLS-inspecting proxy, or otherwise rely on a CA added to the system trust store, aqua fails to verify certificates with this set. On macOS, use [`enableWeakerNetworkIsolation`](#old-versions-of-aqua) instead. This is also why you shouldn't set it on Linux or WSL2, where it buys you nothing.
 
 Setting it session-wide is harmless for other Go tools. `x509usefallbackroots=1` has no effect unless the binary embeds fallback roots, which most tools don't.
 :::
 
 `SSL_CERT_FILE` is not an alternative: it's ignored on macOS. As [golang/go#77865](https://github.com/golang/go/issues/77865) puts it, "On darwin systems we use the platform certificate verifier, instead of the native Go one, by default". Supporting it on Darwin is an accepted proposal, so this may change in a future Go release.
 
-## Older versions of aqua
+### Old versions of aqua
 
 Before v2.62.0, aqua doesn't embed fallback roots, and `GODEBUG=x509usefallbackroots=1` does nothing: per [`x509.SetFallbackRoots`](https://pkg.go.dev/crypto/x509#SetFallbackRoots), "Setting x509usefallbackroots=1 without calling SetFallbackRoots has no effect".
 
@@ -160,7 +164,7 @@ It only matters on macOS. On Linux the sandbox uses bubblewrap, and this setting
 
 `network.allowMachLookup: ["com.apple.trustd.agent"]` is equivalent. Both grant the same Mach service lookup, and `allowMachLookup` isn't safer just because it names the service explicitly; the trade-off is the same.
 
-## Why excludedCommands isn't enough
+### Why excludedCommands isn't enough
 
 Claude Code's documentation recommends `excludedCommands` for Go-based CLIs, which runs them outside the sandbox:
 
