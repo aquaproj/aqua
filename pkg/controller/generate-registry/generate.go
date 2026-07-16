@@ -212,9 +212,11 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 	pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
 	assetNames := map[string]struct{}{}
 	checksumNames := map[string]struct{}{}
+	checksumNamesList := make([]string, 0, len(assets))
 	for _, assetName := range assets {
 		if !pkgNameContainChecksum && checksum.IsChecksumFile(assetName) {
 			checksumNames[assetName] = struct{}{}
+			checksumNamesList = append(checksumNamesList, assetName)
 			continue
 		}
 		if asset.Exclude(pkgName, assetName) {
@@ -238,11 +240,7 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 		}
 	}
 	if len(checksumNames) > 0 && pkgInfo.Checksum == nil {
-		checksumNamesList := make([]string, 0, len(checksumNames))
-		for name := range checksumNames {
-			checksumNamesList = append(checksumNamesList, name)
-		}
-		checksumName, chksum := checksum.GetChecksumConfigFromFilenameWithName(checksumNamesList, tagName)
+		checksumName, chksum := checksum.GetChecksumConfigFromFilename(checksumNamesList, tagName)
 		if chksum != nil {
 			assetInfo := asset.ParseAssetName(checksumName, tagName)
 			chksum.Asset = assetInfo.Template
