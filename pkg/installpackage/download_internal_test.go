@@ -1,8 +1,11 @@
 package installpackage
 
 import (
+	"context"
+	"errors"
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -15,6 +18,137 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/spf13/afero"
 )
+
+// writeUnarchiver stands in for a real unarchiver by writing exeName into the
+// destination it is handed, so that tests can tell which directory the
+// extraction went to.
+type writeUnarchiver struct {
+	fs      afero.Fs
+	exeName string
+	err     error
+}
+
+func (u *writeUnarchiver) Unarchive(_ context.Context, _ *slog.Logger, _ *unarchive.File, dest string) error {
+	if u.err != nil {
+		return u.err
+	}
+	p := filepath.Join(dest, u.exeName)
+	if err := u.fs.MkdirAll(filepath.Dir(p), dirPerm); err != nil {
+		return err //nolint:wrapcheck
+	}
+	return afero.WriteFile(u.fs, p, []byte("gh"), dirPerm) //nolint:wrapcheck
+}
+
+const dirPerm = 0o755
+
+// newUnarchiveTestInstaller returns an installer rooted at a fresh temporary
+// directory, along with that root and the package destination under it.
+func newUnarchiveTestInstaller(t *testing.T, unarchiveErr error) (*Installer, string, string) {
+	t.Helper()
+	fs := afero.NewOsFs()
+	rootDir := t.TempDir()
+	dest := filepath.Join(rootDir, "pkgs", "github_release", "github.com", "cli", "cli", "v2.96.0", "gh_2.96.0_linux_amd64.tar.gz")
+	return &Installer{
+		fs:      fs,
+		rootDir: rootDir,
+		unarchiver: &writeUnarchiver{
+			fs:      fs,
+			exeName: filepath.Join("bin", "gh"),
+			err:     unarchiveErr,
+		},
+	}, rootDir, dest
+}
+
+// assertTempDirIsEmpty checks that neither a discarded nor a failed extraction
+// left a temporary directory behind.
+func assertTempDirIsEmpty(t *testing.T, fs afero.Fs, rootDir string) {
+	t.Helper()
+	entries, err := afero.ReadDir(fs, filepath.Join(rootDir, "temp"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("%d temporary directories are left", len(entries))
+	}
+}
+
+// The OS filesystem is used rather than a memory-mapped one because these tests
+// turn on Rename's real behaviour: MemMapFs happily renames onto an existing
+// directory, which is exactly the case the lost-race test needs to exercise.
+func TestInstaller_unarchive(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, nil)
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := afero.ReadFile(inst.fs, filepath.Join(dest, "bin", "gh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "gh" {
+		t.Fatalf("the executable file is %q, want %q", b, "gh")
+	}
+	assertTempDirIsEmpty(t, inst.fs, rootDir)
+}
+
+// A package another process finished extracting first must be left alone, and
+// this installer's own copy discarded.
+func TestInstaller_unarchive_destExists(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, nil)
+	exePath := filepath.Join(dest, "bin", "gh")
+	if err := inst.fs.MkdirAll(filepath.Dir(exePath), dirPerm); err != nil {
+		t.Fatal(err)
+	}
+	if err := afero.WriteFile(inst.fs, exePath, []byte("installed by someone else"), dirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := afero.ReadFile(inst.fs, exePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "installed by someone else" {
+		t.Fatalf("the executable file is %q, want %q", b, "installed by someone else")
+	}
+	assertTempDirIsEmpty(t, inst.fs, rootDir)
+}
+
+// The destination must not be created at all when the extraction fails,
+// otherwise downloadWithRetry would treat the package as installed.
+func TestInstaller_unarchive_failure(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, errors.New("unarchive failed"))
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err == nil {
+		t.Fatal("error must be returned")
+	}
+
+	if f, err := afero.Exists(inst.fs, dest); err != nil {
+		t.Fatal(err)
+	} else if f {
+		t.Fatal("the destination must not be created when the extraction fails")
+	}
+	assertTempDirIsEmpty(t, inst.fs, rootDir)
+}
 
 func TestInstaller_download(t *testing.T) { //nolint:funlen
 	t.Parallel()
