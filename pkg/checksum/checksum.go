@@ -142,7 +142,7 @@ func IsChecksumFile(filename string) bool {
 	return algorithm != ""
 }
 
-// GetChecksumConfigFromFilenameWithName analyzes a list of asset names to determine the best
+// GetChecksumConfigFromFilename analyzes a list of asset names to determine the best
 // checksum configuration. It identifies checksum files by their filename patterns,
 // excludes signature files, and selects the one with the most preferred hash algorithm
 // (sha512 > sha256 > sha1 > md5).
