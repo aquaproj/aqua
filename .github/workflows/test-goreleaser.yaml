@@ -15,7 +15,7 @@ jobs:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
         with:
-          aqua_version: v2.61.0
+          aqua_version: v2.62.0
       - run: goreleaser check
       # Build is too slow for a test
       # - run: goreleaser release --snapshot
