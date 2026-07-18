@@ -85,11 +85,11 @@ func convertChecksumFileName(filename, version string) string {
 // checksum files are available: sha512 > sha256 > sha1 > md5 (higher value = higher
 // preference). It is kept separate from the pattern matching order, which is driven by
 // pattern specificity (see matchAlgorithm).
-var algoPriority = map[string]int{
+var algoPriority = map[string]int{ //nolint:gochecknoglobals
 	algoMD5:    1,
-	algoSHA1:   2,
-	algoSHA256: 3,
-	algoSHA512: 4,
+	algoSHA1:   2, //nolint:mnd
+	algoSHA256: 3, //nolint:mnd
+	algoSHA512: 4, //nolint:mnd
 }
 
 // isSignatureFile reports whether a filename looks like a signature file.
