@@ -2,7 +2,9 @@ package unarchive
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"path/filepath"
 
@@ -27,6 +29,14 @@ func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *slog.Logger, src *File
 	tempFilePath, err := src.Body.Path()
 	if err != nil {
 		return fmt.Errorf("get a temporary file path: %w", err)
+	}
+
+	// pkgutil --expand-full fails with "File exists" unless the destination is
+	// absent, but the caller hands over a directory it has already created.
+	// Remove only succeeds on an empty directory, so a populated destination is
+	// never destroyed here.
+	if err := u.fs.Remove(u.dest); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("remove the destination directory before expanding a pkg file: %w", err)
 	}
 
 	if _, err := u.executor.ExecAndOutputWhenFailure(osexec.Command(ctx, "pkgutil", "--expand-full", tempFilePath, u.dest)); err != nil {
