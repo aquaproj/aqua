@@ -244,12 +244,11 @@ func TestCache_WriteReadRoundTrip(t *testing.T) {
 func TestCache_WriteError(t *testing.T) {
 	t.Parallel()
 
-	// Start with a working filesystem to create the cache
-	normalFs := afero.NewOsFs()
+	fs := afero.NewOsFs()
 	rootDir, cacheDir := newRootDir(t)
 
 	cacheFile := filepath.Join(cacheDir, "L2NvbmZpZy55YW1s.json")
-	file, err := normalFs.Create(cacheFile)
+	file, err := fs.Create(cacheFile)
 	if err != nil {
 		t.Fatalf("failed to create cache file: %v", err)
 	}
@@ -261,17 +260,25 @@ func TestCache_WriteError(t *testing.T) {
 	}
 	file.Close()
 
-	cache, err := registry.NewCache(normalFs, rootDir, "/config.yaml")
+	cache, err := registry.NewCache(fs, rootDir, "/config.yaml")
 	if err != nil {
 		t.Fatalf("failed to create cache: %v", err)
 	}
 
-	// Add data to trigger write
+	// Add data so that Write has something to write.
 	cache.Add("registry1", &registry.PackageInfo{Name: "pkg1"})
 
-	// This test shows that write would succeed normally
-	err = cache.Write()
-	if err != nil {
-		t.Errorf("write should succeed normally: %v", err)
+	// Replace the cache file with a directory. Creating the file then fails,
+	// which is what this test is about: the error must be reported rather than
+	// swallowed. A memory-mapped filesystem made this awkward to arrange.
+	if err := os.Remove(cacheFile); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(cacheFile, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cache.Write(); err == nil {
+		t.Fatal("an error must be returned when the cache file can't be created")
 	}
 }
