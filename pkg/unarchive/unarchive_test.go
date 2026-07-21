@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -331,6 +332,101 @@ func TestUnarchiver_Unarchive_pathTraversal(t *testing.T) {
 	}
 	if string(got) != "original" {
 		t.Fatalf("the outside file was modified via path traversal: %q", got)
+	}
+}
+
+// pkgutilStub stands in for the pkgutil command. It records whether the
+// destination existed when the command was invoked, then creates it as
+// "pkgutil --expand-full" does.
+type pkgutilStub struct {
+	fs          afero.Fs
+	args        []string
+	destExisted bool
+}
+
+func (e *pkgutilStub) ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error) {
+	e.args = cmd.Args
+	dest := cmd.Args[len(cmd.Args)-1]
+	if _, err := e.fs.Stat(dest); err == nil {
+		e.destExisted = true
+	}
+	if err := e.fs.MkdirAll(dest, 0o755); err != nil {
+		return 1, fmt.Errorf("create the destination: %w", err)
+	}
+	return 0, nil
+}
+
+// newPkgFile returns a pkg format source file along with a destination
+// directory that the caller has already created, as Installer.unarchive does.
+func newPkgFile(t *testing.T, fs afero.Fs) (*unarchive.File, string) {
+	t.Helper()
+	dest := filepath.Join(t.TempDir(), "dest")
+	if err := fs.MkdirAll(dest, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return &unarchive.File{
+		Filename: "s3deploy_2.16.0_darwin-universal.pkg",
+		Type:     unarchive.FormatPKG,
+		Body:     download.NewDownloadedFile(fs, io.NopCloser(strings.NewReader("pkg")), nil),
+	}, dest
+}
+
+// TestUnarchiver_Unarchive_pkg verifies that the destination handed to
+// "pkgutil --expand-full" does not exist when the command runs. pkgutil refuses
+// to expand into an existing path and fails with "File exists", so every pkg
+// format package failed to install once the caller started creating the
+// extraction directory itself.
+// See https://github.com/aquaproj/aqua/issues/5040
+func TestUnarchiver_Unarchive_pkg(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	fs := afero.NewOsFs()
+	src, dest := newPkgFile(t, fs)
+	executor := &pkgutilStub{fs: fs}
+
+	if err := unarchive.New(executor, fs).Unarchive(ctx, logger, src, dest); err != nil {
+		t.Fatal(err)
+	}
+
+	if executor.destExisted {
+		t.Fatal("the destination must not exist when pkgutil --expand-full is executed")
+	}
+	if len(executor.args) != 4 || executor.args[1] != "--expand-full" || executor.args[3] != dest {
+		t.Fatalf("unexpected command: %v", executor.args)
+	}
+	if f, err := afero.DirExists(fs, dest); err != nil {
+		t.Fatal(err)
+	} else if !f {
+		t.Fatal("the destination must be created by pkgutil")
+	}
+}
+
+// A destination that already holds files belongs to something else, so it must
+// not be removed to make room for pkgutil.
+func TestUnarchiver_Unarchive_pkg_destNotEmpty(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	fs := afero.NewOsFs()
+	src, dest := newPkgFile(t, fs)
+	payload := filepath.Join(dest, "Payload")
+	if err := afero.WriteFile(fs, payload, []byte("installed by someone else"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := unarchive.New(&pkgutilStub{fs: fs}, fs).Unarchive(ctx, logger, src, dest); err == nil {
+		t.Fatal("an error must be returned for a destination that is not empty")
+	}
+
+	b, err := afero.ReadFile(fs, payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "installed by someone else" {
+		t.Fatalf("the existing file is %q, want %q", b, "installed by someone else")
 	}
 }
 
