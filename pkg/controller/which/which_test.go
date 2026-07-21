@@ -3,6 +3,7 @@ package which_test
 import (
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -14,13 +15,44 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
-	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/link"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
+
+// rewrite roots the absolute paths of an expectation at dir. The test cases are
+// written with readable paths such as /home/foo/aqua.yaml, but the files really
+// live in a temporary directory. Relative paths, such as the path of a standard
+// registry, are left alone.
+func rewrite(dir string, r *which.FindResult) *which.FindResult {
+	if r == nil {
+		return nil
+	}
+	r.ExePath = testutil.Abs(dir, r.ExePath)
+	r.ConfigFilePath = testutil.Abs(dir, r.ConfigFilePath)
+	if r.Package != nil {
+		if r.Package.Package != nil {
+			r.Package.Package.FilePath = testutil.Abs(dir, r.Package.Package.FilePath)
+		}
+		if r.Package.Registry != nil {
+			r.Package.Registry.Path = testutil.Abs(dir, r.Package.Registry.Path)
+		}
+	}
+	if r.Config != nil {
+		for _, pkg := range r.Config.Packages {
+			pkg.FilePath = testutil.Abs(dir, pkg.FilePath)
+		}
+		for _, rgst := range r.Config.Registries {
+			rgst.Path = testutil.Abs(dir, rgst.Path)
+		}
+	}
+	return r
+}
 
 func Test_controller_Which(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -240,18 +272,23 @@ packages:
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
-			linker := installpackage.NewMockLinker(fs)
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			linker := link.New()
 			for dest, src := range d.links {
+				src = testutil.Abs(dir, src)
+				if err := osfile.MkdirAll(filepath.Dir(src)); err != nil {
+					t.Fatal(err)
+				}
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)
 				}
 			}
+			testutil.RootParam(dir, d.param)
+			env := testutil.RootEnv(dir, d.env)
+			fs := afero.NewOsFs()
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(d.env), fs, linker)
+			ctrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(env), fs, linker)
 			which, err := ctrl.Which(ctx, logger, d.param, d.exeName)
 			if err != nil {
 				if d.isErr {
@@ -262,7 +299,7 @@ packages:
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if diff := cmp.Diff(d.exp, which); diff != "" {
+			if diff := cmp.Diff(rewrite(dir, d.exp), which); diff != "" {
 				t.Fatal(diff)
 			}
 		})

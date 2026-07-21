@@ -3,19 +3,19 @@ package reader
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 var goVersionPattern = regexp.MustCompile(`(?m)^go (\d+\.\d+.\d+)$`)
 
-func readGoVersionFile(fs afero.Fs, filePath string, pkg *aqua.Package) error {
+func readGoVersionFile(filePath string, pkg *aqua.Package) error {
 	p := filepath.Join(filepath.Dir(filePath), pkg.GoVersionFile)
-	b, err := afero.ReadFile(fs, p)
+	b, err := os.ReadFile(p)
 	if err != nil {
 		return fmt.Errorf("open a go version file: %w", slogerr.With(err,
 			"go_version_file", p,

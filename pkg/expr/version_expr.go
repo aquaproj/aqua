@@ -4,26 +4,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/expr-lang/expr"
-	"github.com/spf13/afero"
 	"go.yaml.in/yaml/v3"
 )
 
 type Reader struct {
 	pwd string
-	fs  afero.Fs
 }
 
 const safeVersionPattern = `^v?\d+\.\d+(\.\d+)*[.-]?((alpha|beta|dev|rc)[.-]?)?\d*`
 
 var safeVersionRegexp = regexp.MustCompile(safeVersionPattern)
 
-func EvalVersionExpr(fs afero.Fs, pwd string, expression string) (string, error) {
-	r := Reader{fs: fs, pwd: pwd}
+func EvalVersionExpr(pwd string, expression string) (string, error) {
+	r := Reader{pwd: pwd}
 	compiled, err := expr.Compile(expression, expr.Env(map[string]any{
 		"readFile": r.readFile,
 		"readJSON": r.readJSON,
@@ -60,7 +59,7 @@ func (r *Reader) read(s string) []byte {
 	if !filepath.IsAbs(s) {
 		s = filepath.Join(r.pwd, s)
 	}
-	b, err := afero.ReadFile(r.fs, s)
+	b, err := os.ReadFile(s)
 	if err != nil {
 		panic(err)
 	}

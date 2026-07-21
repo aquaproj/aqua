@@ -20,8 +20,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -44,7 +46,10 @@ func Test_controller_Exec(t *testing.T) { //nolint:funlen
 		exeName string
 		rt      *runtime.Runtime
 		args    []string
-		isErr   bool
+		// allowPolicy is the path of a policy file to allow before the command
+		// runs, as "aqua policy allow" does.
+		allowPolicy string
+		isErr       bool
 	}{
 		{
 			name: "normal",
@@ -85,15 +90,8 @@ registries:
 packages:
 - type: local
 `,
-				"/home/foo/.local/share/aquaproj-aqua/policies/home/foo/workspace/aqua-policy.yaml": `
-registries:
-- type: local
-  name: standard
-  path: registry.yaml
-packages:
-- type: local
-`,
 			},
+			allowPolicy: "/home/foo/workspace/aqua-policy.yaml",
 		},
 		{
 			name: "outside aqua",
@@ -137,24 +135,35 @@ packages:
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files, d.dirs...)
-			if err != nil {
-				t.Fatal(err)
-			}
-			linker := installpackage.NewMockLinker(fs)
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files, d.dirs...)
+			fs := afero.NewOsFs()
+			linker := link.New()
 			for dest, src := range d.links {
+				src = testutil.Abs(dir, src)
+				if err := osfile.MkdirAll(filepath.Dir(src)); err != nil {
+					t.Fatal(err)
+				}
 				if err := linker.Symlink(dest, src); err != nil {
 					t.Fatal(err)
 				}
 			}
+			testutil.RootParam(dir, d.param)
+			env := testutil.RootEnv(dir, d.env)
+			policyValidator := policy.NewValidator(d.param, fs)
+			if d.allowPolicy != "" {
+				if err := policyValidator.Allow(testutil.Abs(dir, d.allowPolicy)); err != nil {
+					t.Fatal(err)
+				}
+			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
-			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
+			osEnv := osenv.NewMock(env)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuum.NewMock(d.param.RootDir, nil, nil))
 			policyFinder := policy.NewConfigFinder(fs)
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policy.NewValidator(d.param, fs), policyFinder, policy.NewConfigReader(fs)), vacuum.NewMock(d.param.RootDir, nil, nil))
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policyValidator, policyFinder, policy.NewConfigReader(fs)), vacuum.NewMock(d.param.RootDir, nil, nil))
 			if err := ctrl.Exec(ctx, logger, d.param, d.exeName, d.args...); err != nil {
 				if d.isErr {
 					return
@@ -199,7 +208,10 @@ func Benchmark_controller_Exec(b *testing.B) { //nolint:funlen,gocognit
 		exeName string
 		rt      *runtime.Runtime
 		args    []string
-		isErr   bool
+		// allowPolicy is the path of a policy file to allow before the command
+		// runs, as "aqua policy allow" does.
+		allowPolicy string
+		isErr       bool
 	}{
 		{
 			name: "normal",
@@ -244,7 +256,7 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, afero.NewOsFs(), d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
