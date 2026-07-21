@@ -179,7 +179,7 @@ type ParamInstallPackage struct {
 }
 
 type ChecksumCalculator interface {
-	Calculate(fs afero.Fs, filename, algorithm string) (string, error)
+	Calculate(filename, algorithm string) (string, error)
 }
 
 func (is *Installer) SetCopyDir(copyDir string) {

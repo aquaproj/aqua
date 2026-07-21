@@ -111,7 +111,7 @@ func (c *Controller) updateTimestamp(ctx context.Context, pkg *config.Package) e
 
 func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResult *which.FindResult, policies []*policy.Config, param *config.Param) error {
 	checksums, updateChecksum, err := checksum.Open(
-		logger, c.fs, findResult.ConfigFilePath,
+		logger, findResult.ConfigFilePath,
 		param.ChecksumEnabled(findResult.Config))
 	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)

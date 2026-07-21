@@ -3,6 +3,7 @@ package updatechecksum_test
 import (
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -23,7 +24,7 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 	data := []struct {
 		name               string
 		param              *config.Param
-		cfgFinder          updatechecksum.ConfigFinder
+		cfgFiles           []string
 		cfgReader          updatechecksum.ConfigReader
 		registryInstaller  updatechecksum.RegistryInstaller
 		registryDownloader updatechecksum.GitHubContentFileDownloader
@@ -36,17 +37,9 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		{
 			name: "normal",
 			param: &config.Param{
-				CWD: "/home/foo/workspace",
 				All: true,
-				GlobalConfigFilePaths: []string{
-					"/home/foo/global/aqua.yaml",
-				},
 			},
-			cfgFinder: &updatechecksum.MockConfigFinder{
-				Files: []string{
-					"/home/foo/workspace/aqua.yaml",
-				},
-			},
+			cfgFiles: []string{"aqua.yaml"},
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
@@ -97,17 +90,9 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 		{
 			name: "enabled",
 			param: &config.Param{
-				CWD: "/home/foo/workspace",
 				All: true,
-				GlobalConfigFilePaths: []string{
-					"/home/foo/global/aqua.yaml",
-				},
 			},
-			cfgFinder: &updatechecksum.MockConfigFinder{
-				Files: []string{
-					"/home/foo/workspace/aqua.yaml",
-				},
-			},
+			cfgFiles: []string{"aqua.yaml"},
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
 					Checksum: &aqua.Checksum{
@@ -185,7 +170,16 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registryInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
+			// The configuration files don't have to exist. Only the directory
+			// they are in matters, because the checksum file is created there.
+			dir := t.TempDir()
+			d.param.CWD = dir
+			cfgFiles := make([]string, len(d.cfgFiles))
+			for i, f := range d.cfgFiles {
+				cfgFiles[i] = filepath.Join(dir, f)
+			}
+			cfgFinder := &updatechecksum.MockConfigFinder{Files: cfgFiles}
+			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
 			if err := ctrl.UpdateChecksum(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

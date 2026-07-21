@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/spf13/afero"
 )
 
 // Calculator provides checksum calculation functionality for files and streams.
@@ -29,8 +29,8 @@ func NewCalculator() *Calculator {
 // Calculate computes the checksum of a file using the specified algorithm.
 // It opens the file from the filesystem and delegates to CalculateReader.
 // Returns the hexadecimal representation of the computed hash.
-func (*Calculator) Calculate(fs afero.Fs, filename, algorithm string) (string, error) {
-	f, err := fs.Open(filename)
+func (*Calculator) Calculate(filename, algorithm string) (string, error) {
+	f, err := os.Open(filename)
 	if err != nil {
 		return "", fmt.Errorf("open a file to calculate the checksum: %w", err)
 	}

@@ -1,12 +1,12 @@
 package checksum_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 )
 
 func TestChecksums_Get(t *testing.T) {
@@ -79,12 +79,10 @@ func TestChecksums_ReadFile(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs, err := testutil.NewFs(d.m)
-			if err != nil {
-				t.Fatal(err)
-			}
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.m)
 			checksums := checksum.New()
-			if err := checksums.ReadFile(fs, d.p); err != nil {
+			if err := checksums.ReadFile(filepath.Join(dir, d.p)); err != nil {
 				if d.isErr {
 					return
 				}
@@ -120,12 +118,12 @@ func TestChecksums_UpdateFile(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
+			p := filepath.Join(t.TempDir(), d.p)
 			checksums := checksum.New()
 			for _, v := range d.m {
 				checksums.Set(v.ID, v)
 			}
-			if err := checksums.UpdateFile(fs, d.p); err != nil {
+			if err := checksums.UpdateFile(p); err != nil {
 				if d.isErr {
 					return
 				}
@@ -134,12 +132,24 @@ func TestChecksums_UpdateFile(t *testing.T) {
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
+			// The checksums must be readable again, so that the file aqua wrote
+			// is the file aqua reads on the next run.
+			read := checksum.New()
+			if err := read.ReadFile(p); err != nil {
+				t.Fatal(err)
+			}
+			for _, v := range d.m {
+				if diff := cmp.Diff(v, read.Get(v.ID)); diff != "" {
+					t.Fatal(diff)
+				}
+			}
 		})
 	}
 }
 
-func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) { //nolint:funlen
+func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) {
 	t.Parallel()
+	// The paths are relative to a directory created for each test case.
 	data := []struct {
 		name        string
 		cfgFilePath string
@@ -169,41 +179,23 @@ func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			name:        "new absolute",
-			cfgFilePath: pathHomeFooAquaYaml,
-			exp:         pathHomeFooAquaChecksums,
-		},
-		{
-			name:        "absolute aqua-checksums.json > .aqua-checksums.json",
-			cfgFilePath: pathHomeFooAquaYaml,
-			exp:         pathHomeFooAquaChecksums,
+			name:        "a configuration file in a sub directory",
+			cfgFilePath: "foo/" + fileAquaYaml,
+			exp:         "foo/" + fileDotAquaChecksums,
 			files: map[string]string{
-				pathHomeFooDotAquaChecksums: "",
-				pathHomeFooAquaChecksums:    "",
-			},
-		},
-		{
-			name:        "absolute .aqua-checksums.json",
-			cfgFilePath: pathHomeFooAquaYaml,
-			exp:         pathHomeFooDotAquaChecksums,
-			files: map[string]string{
-				pathHomeFooDotAquaChecksums: "",
+				"foo/" + fileDotAquaChecksums: "",
+				fileAquaChecksums:             "",
 			},
 		},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
-			p, err := checksum.GetChecksumFilePathFromConfigFilePath(fs, d.cfgFilePath)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if p != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, p)
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			p := checksum.GetChecksumFilePathFromConfigFilePath(filepath.Join(dir, filepath.FromSlash(d.cfgFilePath)))
+			if exp := filepath.Join(dir, filepath.FromSlash(d.exp)); p != exp {
+				t.Fatalf("wanted %s, got %s", exp, p)
 			}
 		})
 	}

@@ -25,7 +25,7 @@ func (c *Controller) List(ctx context.Context, logger *slog.Logger, param *confi
 	}
 
 	checksums, updateChecksum, err := checksum.Open(
-		logger, c.fs, cfgFilePath,
+		logger, cfgFilePath,
 		param.ChecksumEnabled(cfg))
 	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)

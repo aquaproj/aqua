@@ -55,11 +55,8 @@ func (c *Controller) updateChecksum(ctx context.Context, logger *slog.Logger, cf
 
 	checksums := checksum.New()
 	checksums.EnableOutput()
-	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-	if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
+	checksumFilePath := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
+	if err := checksums.ReadFile(checksumFilePath); err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
 
@@ -73,7 +70,7 @@ func (c *Controller) updateChecksum(ctx context.Context, logger *slog.Logger, cf
 		if c.prune {
 			checksums.Prune()
 		}
-		if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
+		if err := checksums.UpdateFile(checksumFilePath); err != nil {
 			namedErr = fmt.Errorf("update a checksum file: %w", err)
 		}
 	}()

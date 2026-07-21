@@ -232,7 +232,7 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 	if chksum != nil {
 		algorithm = chksum.Algorithm
 	}
-	calculatedSum, err := is.checksumCalculator.Calculate(is.fs, tempFilePath, algorithm)
+	calculatedSum, err := is.checksumCalculator.Calculate(tempFilePath, algorithm)
 	if err != nil {
 		return fmt.Errorf("calculate a checksum of downloaded file: %w", slogerr.With(err,
 			"temp_file", tempFilePath))

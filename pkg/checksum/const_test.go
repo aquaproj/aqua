@@ -27,8 +27,4 @@ const (
 	fileAquaYaml         = "aqua.yaml"
 	fileAquaChecksums    = "aqua-checksums.json"
 	fileDotAquaChecksums = ".aqua-checksums.json"
-
-	pathHomeFooAquaYaml         = "/home/foo/aqua.yaml"
-	pathHomeFooAquaChecksums    = "/home/foo/aqua-checksums.json"
-	pathHomeFooDotAquaChecksums = "/home/foo/.aqua-checksums.json"
 )
