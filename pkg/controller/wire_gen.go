@@ -59,7 +59,6 @@ import (
 // Injectors from wire.go:
 
 func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*list.Controller, error) {
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -68,6 +67,7 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
@@ -107,7 +107,6 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 }
 
 func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*generate.Controller, error) {
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -116,6 +115,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
@@ -136,7 +136,6 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 }
 
 func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -145,6 +144,7 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
@@ -179,7 +179,6 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 }
 
 func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*which.Controller, error) {
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -188,6 +187,7 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
@@ -327,7 +327,6 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 }
 
 func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updatechecksum.Controller, error) {
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -336,6 +335,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)
@@ -370,11 +370,11 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	if err != nil {
 		return nil, err
 	}
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
 	verifier := cosign.NewVerifier(executor, fs, downloader, param)

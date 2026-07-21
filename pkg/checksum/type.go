@@ -2,6 +2,7 @@ package checksum
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,7 +12,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -43,7 +43,10 @@ func Open(logger *slog.Logger, cfgFilePath string, enabled bool) (*Checksums, fu
 	if !enabled {
 		return nil, func() {}, nil
 	}
-	checksumFilePath := GetChecksumFilePathFromConfigFilePath(cfgFilePath)
+	checksumFilePath, err := GetChecksumFilePathFromConfigFilePath(cfgFilePath)
+	if err != nil {
+		return nil, nil, err
+	}
 	checksums := New()
 	if err := checksums.ReadFile(checksumFilePath); err != nil {
 		return nil, nil, fmt.Errorf("read a checksum JSON: %w", err)
@@ -136,7 +139,9 @@ func (c *Checksums) UnmarshalJSON(b []byte) error {
 // If the file doesn't exist, it returns without error (empty state).
 // Otherwise, it reads and parses the JSON content into the checksum collection.
 func (c *Checksums) ReadFile(p string) error {
-	if !osfile.Exists(p) {
+	if f, err := exists(p); err != nil {
+		return err
+	} else if !f {
 		return nil
 	}
 	f, err := os.Open(p)
@@ -186,16 +191,34 @@ func (c *Checksums) UpdateFile(p string) error {
 // GetChecksumFilePathFromConfigFilePath determines the checksum file path from a config file path.
 // It checks for both "aqua-checksums.json" and ".aqua-checksums.json" in the config directory,
 // preferring the non-hidden version. If neither exists, it returns the non-hidden path for creation.
-func GetChecksumFilePathFromConfigFilePath(cfgFilePath string) string {
+func GetChecksumFilePathFromConfigFilePath(cfgFilePath string) (string, error) {
 	p1 := filepath.Join(filepath.Dir(cfgFilePath), "aqua-checksums.json")
-	if osfile.Exists(p1) {
-		return p1
+	if f, err := exists(p1); err != nil {
+		return "", err
+	} else if f {
+		return p1, nil
 	}
 
 	p2 := filepath.Join(filepath.Dir(cfgFilePath), ".aqua-checksums.json")
-	if osfile.Exists(p2) {
-		return p2
+	if f, err := exists(p2); err != nil {
+		return "", err
+	} else if f {
+		return p2, nil
 	}
 
-	return p1
+	return p1, nil
+}
+
+// exists reports whether p exists. Unlike osfile.Exists, an error other than
+// os.ErrNotExist, such as a permission error, is returned rather than treated
+// as a missing file: a checksum file that exists but can't be read must not be
+// silently replaced with a newly generated one.
+func exists(p string) (bool, error) {
+	if _, err := os.Stat(p); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+		return false, fmt.Errorf("check if a checksum file exists: %w", err)
+	}
+	return true, nil
 }

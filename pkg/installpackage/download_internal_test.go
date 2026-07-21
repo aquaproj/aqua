@@ -229,7 +229,6 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 					GOOS:   osDarwin,
 					GOARCH: "arm64",
 				},
-				fs: afero.NewMemMapFs(),
 				downloader: &download.Mock{
 					RC: io.NopCloser(strings.NewReader("hello")),
 				},
@@ -262,6 +261,12 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+			// The installer extracts into a temporary directory in the root
+			// directory, so the root directory must not be the working
+			// directory of the test process.
+			d.inst.fs = afero.NewOsFs()
+			d.inst.rootDir = t.TempDir()
+			d.param.Dest = filepath.Join(d.inst.rootDir, "pkgs", "dest")
 			if err := d.inst.download(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

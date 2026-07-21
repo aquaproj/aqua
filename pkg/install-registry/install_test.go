@@ -3,6 +3,7 @@ package registry_test
 import (
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -15,6 +16,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
+	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
@@ -164,12 +166,15 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
+			// The registries are installed into the root directory, so it must
+			// be a temporary directory rather than the working directory of the
+			// test process.
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			d.param.RootDir = dir
+			fs := afero.NewOsFs()
 			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			registries, err := inst.InstallRegistries(ctx, logger, d.cfg, d.cfgFilePath, nil)
+			registries, err := inst.InstallRegistries(ctx, logger, d.cfg, filepath.Join(dir, d.cfgFilePath), nil)
 			if err != nil {
 				if d.isErr {
 					return

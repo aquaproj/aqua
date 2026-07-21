@@ -55,7 +55,10 @@ func (c *Controller) updateChecksum(ctx context.Context, logger *slog.Logger, cf
 
 	checksums := checksum.New()
 	checksums.EnableOutput()
-	checksumFilePath := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
+	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
 	if err := checksums.ReadFile(checksumFilePath); err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}

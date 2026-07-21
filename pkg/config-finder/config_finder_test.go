@@ -1,6 +1,7 @@
 package finder_test
 
 import (
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -36,6 +37,26 @@ func TestParseGlobalConfigFilePaths(t *testing.T) {
 				t.Fatalf("wanted %+v, got %+v", d.exp, paths)
 			}
 		})
+	}
+}
+
+// skipIfConfigFileAbove skips the test when a configuration file exists in a
+// parent of dir. Find and Finds walk up to the root of the filesystem, so a
+// stray aqua.yaml anywhere above the temporary directory is found instead of
+// the files of the test case. Without this the test fails with a confusing
+// diff that has nothing to do with the code under test.
+func skipIfConfigFileAbove(t *testing.T, dir string) {
+	t.Helper()
+	for p := filepath.Dir(dir); ; p = filepath.Dir(p) {
+		for _, name := range finder.ConfigFileNames() {
+			f := filepath.Join(p, name)
+			if _, err := os.Stat(f); err == nil {
+				t.Skipf("%s exists, so it is found instead of the files of this test case", f)
+			}
+		}
+		if parent := filepath.Dir(p); parent == p {
+			return
+		}
 	}
 }
 
@@ -99,6 +120,7 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			root := t.TempDir()
+			skipIfConfigFileAbove(t, root)
 			testutil.WriteFiles(t, root, d.files, d.wd)
 			configFilePath := d.configFilePath
 			if d.absConfigFilePath {
@@ -165,6 +187,7 @@ func Test_configFinderFinds(t *testing.T) {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			root := t.TempDir()
+			skipIfConfigFileAbove(t, root)
 			testutil.WriteFiles(t, root, d.files, d.wd)
 			configFinder := finder.NewConfigFinder()
 			arr := configFinder.Finds(join(root, d.wd)[0], d.configFilePath)

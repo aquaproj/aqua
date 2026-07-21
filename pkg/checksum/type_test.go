@@ -193,7 +193,10 @@ func TestGetChecksumFilePathFromConfigFilePath(t *testing.T) {
 			t.Parallel()
 			dir := t.TempDir()
 			testutil.WriteFiles(t, dir, d.files)
-			p := checksum.GetChecksumFilePathFromConfigFilePath(filepath.Join(dir, filepath.FromSlash(d.cfgFilePath)))
+			p, err := checksum.GetChecksumFilePathFromConfigFilePath(filepath.Join(dir, filepath.FromSlash(d.cfgFilePath)))
+			if err != nil {
+				t.Fatal(err)
+			}
 			if exp := filepath.Join(dir, filepath.FromSlash(d.exp)); p != exp {
 				t.Fatalf("wanted %s, got %s", exp, p)
 			}
