@@ -158,7 +158,7 @@ func (is *Installer) copyAquaOnWindows(exePath string) error {
 		// afero.Tempfile can't be used
 		// > The system cannot move the file to a different disk drive
 		tempDir := filepath.Join(is.rootDir, "temp")
-		if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
+		if err := osfile.MkdirAll(tempDir); err != nil {
 			return fmt.Errorf("create a temporary directory: %w", err)
 		}
 		if err := is.fs.Rename(dest, filepath.Join(tempDir, "aqua.exe")); err != nil {

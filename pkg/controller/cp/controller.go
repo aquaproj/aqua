@@ -63,7 +63,7 @@ type ConfigFinder interface {
 var errCopyFailure = errors.New("it failed to copy some tools")
 
 func (c *Controller) Copy(ctx context.Context, logger *slog.Logger, param *config.Param) error {
-	if err := osfile.MkdirAll(c.fs, param.Dest); err != nil {
+	if err := osfile.MkdirAll(param.Dest); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	if len(param.Args) == 0 {

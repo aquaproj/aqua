@@ -13,7 +13,7 @@ import (
 
 func (c *Controller) UpdateAqua(ctx context.Context, logger *slog.Logger, param *config.Param) error {
 	rootBin := filepath.Join(c.rootDir, "bin")
-	if err := osfile.MkdirAll(c.fs, rootBin); err != nil {
+	if err := osfile.MkdirAll(rootBin); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 

@@ -47,7 +47,7 @@ func (c *Cache) Write() error {
 	if !c.updated {
 		return nil
 	}
-	if err := osfile.MkdirAll(c.fs, filepath.Dir(c.path)); err != nil {
+	if err := osfile.MkdirAll(filepath.Dir(c.path)); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 	f, err := c.fs.Create(c.path)

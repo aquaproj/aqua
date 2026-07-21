@@ -118,7 +118,7 @@ func TestInstaller_unarchive_destPermission(t *testing.T) {
 	// The expectation is a directory created the way aqua creates its own, so
 	// that neither the umask nor the platform's handling of modes matters.
 	want := filepath.Join(rootDir, "reference")
-	if err := osfile.MkdirAll(inst.fs, want); err != nil {
+	if err := osfile.MkdirAll(want); err != nil {
 		t.Fatal(err)
 	}
 	wantInfo, err := inst.fs.Stat(want)

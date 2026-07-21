@@ -57,7 +57,7 @@ func (h *handler) HandleFile(_ context.Context, f archives.FileInfo) error {
 	if dstPath != filepath.Clean(h.dest) && h.escapesDest(parentDir) {
 		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
 	}
-	if err := osfile.MkdirAll(h.fs, parentDir); err != nil {
+	if err := osfile.MkdirAll(parentDir); err != nil {
 		slogerr.WithError(h.logger, err).Warn("create a directory")
 		return nil
 	}
@@ -240,7 +240,7 @@ func (h *handler) unarchive(ctx context.Context, fileName, file string) error {
 	}
 
 	if extractor, ok := format.(archives.Extractor); ok {
-		if err := osfile.MkdirAll(h.fs, h.dest); err != nil {
+		if err := osfile.MkdirAll(h.dest); err != nil {
 			return fmt.Errorf("create a destination directory: %w", err)
 		}
 
@@ -306,7 +306,7 @@ func (h *handler) decompress(input io.Reader, decomp archives.Decompressor) erro
 		return fmt.Errorf("open a decompressed file: %w", err)
 	}
 	defer rc.Close()
-	if err := osfile.MkdirAll(h.fs, h.dest); err != nil {
+	if err := osfile.MkdirAll(h.dest); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", h.dest, err)
 	}
 	dst, err := h.fs.Create(filepath.Join(h.dest, strings.TrimSuffix(h.filename, filepath.Ext(h.filename))))

@@ -100,7 +100,7 @@ func (c *Client) FindAll(logger *slog.Logger) (map[string]time.Time, error) {
 }
 
 func (c *Client) update(file, dir string, timestamp time.Time) error {
-	if err := osfile.MkdirAll(c.fs, dir); err != nil {
+	if err := osfile.MkdirAll(dir); err != nil {
 		return fmt.Errorf("create a package metadata directory: %w", err)
 	}
 	timestampStr := FormatTime(timestamp)

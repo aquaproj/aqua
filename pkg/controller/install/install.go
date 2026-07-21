@@ -59,7 +59,7 @@ func (c *Controller) Install(ctx context.Context, logger *slog.Logger, param *co
 }
 
 func (c *Controller) mkBinDir() error {
-	if err := osfile.MkdirAll(c.fs, filepath.Join(c.rootDir, "bin")); err != nil {
+	if err := osfile.MkdirAll(filepath.Join(c.rootDir, "bin")); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	if c.runtime.IsWindows() {

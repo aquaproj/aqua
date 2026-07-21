@@ -22,7 +22,7 @@ type pkgUnarchiver struct {
 }
 
 func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *slog.Logger, src *File) error {
-	if err := osfile.MkdirAll(u.fs, filepath.Dir(u.dest)); err != nil {
+	if err := osfile.MkdirAll(filepath.Dir(u.dest)); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 

@@ -72,7 +72,7 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath 
 	}
 
 	if param.IsDir {
-		if err := osfile.MkdirAll(c.fs, "aqua"); err != nil {
+		if err := osfile.MkdirAll("aqua"); err != nil {
 			return err //nolint:wrapcheck
 		}
 	}

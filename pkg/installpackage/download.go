@@ -168,13 +168,13 @@ func (is *Installer) unarchive(ctx context.Context, logger *slog.Logger, param *
 	// The temporary directory must live under rootDir so that it is on the same
 	// filesystem as the destination; renaming across drives fails on Windows.
 	tempDir := filepath.Join(is.rootDir, "temp")
-	if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
+	if err := osfile.MkdirAll(tempDir); err != nil {
 		return fmt.Errorf("create a temporary directory: %w", err)
 	}
 	// The directory is renamed into place as is, so it must be created with the
 	// permissions a package directory needs. afero.TempDir would create it with
 	// 0700 and leave the package unreadable to every other user.
-	tempDir, err := osfile.MkdirTemp(is.fs, tempDir)
+	tempDir, err := osfile.MkdirTemp(tempDir)
 	if err != nil {
 		return fmt.Errorf("create a temporary directory: %w", err)
 	}
@@ -192,7 +192,7 @@ func (is *Installer) unarchive(ctx context.Context, logger *slog.Logger, param *
 		return err //nolint:wrapcheck
 	}
 
-	if err := osfile.MkdirAll(is.fs, filepath.Dir(param.Dest)); err != nil {
+	if err := osfile.MkdirAll(filepath.Dir(param.Dest)); err != nil {
 		return fmt.Errorf("create the parent directory of the package: %w", err)
 	}
 	if err := is.fs.Rename(tempDir, param.Dest); err != nil {

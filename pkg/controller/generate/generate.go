@@ -68,7 +68,7 @@ func (c *Controller) Generate(ctx context.Context, logger *slog.Logger, param *c
 		})
 	}
 	if param.Insert {
-		if err := osfile.MkdirAll(c.fs, filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
+		if err := osfile.MkdirAll(filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
 			return fmt.Errorf("create a directory specified by import_dir: %w", err)
 		}
 	}

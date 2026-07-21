@@ -70,6 +70,7 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+			d.param.Dest = t.TempDir()
 			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockReader{})
 			if err := ctrl.Copy(ctx, logger, d.param); err != nil {
 				if d.isErr {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/otiai10/copy"
 	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
@@ -24,7 +25,7 @@ type Executor interface {
 }
 
 func (u *dmgUnarchiver) Unarchive(ctx context.Context, logger *slog.Logger, src *File) error {
-	if err := osfile.MkdirAll(u.fs, u.dest); err != nil {
+	if err := osfile.MkdirAll(u.dest); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
 
@@ -53,7 +54,7 @@ func (u *dmgUnarchiver) Unarchive(ctx context.Context, logger *slog.Logger, src 
 		}
 	}()
 
-	if err := osfile.Copy(u.fs, tmpMountPoint, u.dest); err != nil {
+	if err := copy.Copy(tmpMountPoint, u.dest); err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
 	}
 

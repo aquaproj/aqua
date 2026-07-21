@@ -19,7 +19,7 @@ type rawUnarchiver struct {
 
 func (u *rawUnarchiver) Unarchive(_ context.Context, _ *slog.Logger, src *File) error {
 	dest := u.dest
-	if err := osfile.MkdirAll(u.fs, filepath.Dir(dest)); err != nil {
+	if err := osfile.MkdirAll(filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
 	f, err := u.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase

@@ -56,7 +56,7 @@ func (v *ValidatorImpl) Allow(p string) error {
 	policyPath := filepath.Join(v.rootDir, "policies", normalizedP)
 	dir := filepath.Dir(policyPath)
 	fs := v.fs
-	if err := osfile.MkdirAll(fs, dir); err != nil {
+	if err := osfile.MkdirAll(dir); err != nil {
 		return fmt.Errorf("create a directory where the policy file is stored: %w", err)
 	}
 	f1, err := fs.Open(p)
@@ -104,7 +104,7 @@ func (v *ValidatorImpl) Deny(p string) error {
 
 	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizedP)
 	warnFileDir := filepath.Dir(warnFilePath)
-	if err := osfile.MkdirAll(fs, warnFileDir); err != nil {
+	if err := osfile.MkdirAll(warnFileDir); err != nil {
 		return fmt.Errorf("create a directory where the policy warning file is stored: %w", err)
 	}
 	warnFile, err := v.fs.Create(warnFilePath)
