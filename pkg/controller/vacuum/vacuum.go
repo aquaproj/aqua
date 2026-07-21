@@ -3,6 +3,7 @@ package vacuum
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -24,7 +25,7 @@ func (c *Controller) Vacuum(logger *slog.Logger, param *config.Param) error {
 		}
 		// remove the package
 		p := filepath.Join(c.rootDir, pkgPath)
-		if err := c.fs.RemoveAll(p); err != nil {
+		if err := os.RemoveAll(p); err != nil {
 			return fmt.Errorf("remove a package: %w", slogerr.With(err,
 				"package_path", p,
 			))

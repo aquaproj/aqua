@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/spf13/afero"
 )
 
 func TestVerifier_Verify(t *testing.T) { //nolint:funlen
@@ -19,7 +18,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 	data := []struct {
 		name             string
 		isErr            bool
-		fs               afero.Fs
 		downloader       download.ClientAPI
 		rt               *runtime.Runtime
 		file             *download.File
@@ -31,7 +29,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 	}{
 		{
 			name: "normal",
-			fs:   afero.NewMemMapFs(),
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),
 			},
@@ -72,7 +69,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			verifier := slsa.New(d.downloader, d.fs, d.exe)
+			verifier := slsa.New(d.downloader, d.exe)
 			if err := verifier.Verify(ctx, logger, d.rt, d.sp, d.art, d.file, d.param); err != nil {
 				if d.isErr {
 					return

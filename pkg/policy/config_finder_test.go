@@ -1,10 +1,11 @@
 package policy_test
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/spf13/afero"
+	"github.com/aquaproj/aqua/v2/pkg/testutil"
 )
 
 func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
@@ -53,19 +54,16 @@ func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			for name, body := range d.files {
-				if err := afero.WriteFile(fs, name, []byte(body), 0o644); err != nil {
-					t.Fatal(err)
-				}
-			}
+			// The paths of the test cases are rooted at a temporary directory.
+			dir := t.TempDir()
+			files := maps.Clone(d.files)
+			dirs := make([]string, 0, len(d.dirs))
 			for name := range d.dirs {
-				if err := fs.MkdirAll(name, 0o775); err != nil {
-					t.Fatal(err)
-				}
+				dirs = append(dirs, name)
 			}
-			configFinder := policy.NewConfigFinder(fs)
-			p, err := configFinder.Find(d.configFilePath, d.wd)
+			testutil.WriteFiles(t, dir, files, dirs...)
+			configFinder := policy.NewConfigFinder()
+			p, err := configFinder.Find(testutil.Abs(dir, d.configFilePath), testutil.Abs(dir, d.wd))
 			if err != nil {
 				if d.isErr {
 					return
@@ -75,8 +73,8 @@ func TestConfigFinderImpl_Find(t *testing.T) { //nolint:funlen
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if p != d.exp {
-				t.Fatalf("wanted %v, got %v", d.exp, p)
+			if exp := testutil.Abs(dir, d.exp); p != exp {
+				t.Fatalf("wanted %v, got %v", exp, p)
 			}
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 	"time"
 
@@ -59,7 +60,7 @@ func (c *Controller) Exec(ctx context.Context, logger *slog.Logger, param *confi
 	}
 
 	if param.DisableLazyInstall {
-		if _, err := c.fs.Stat(findResult.ExePath); err != nil {
+		if _, err := os.Stat(findResult.ExePath); err != nil {
 			return slogerr.With(errExecNotFoundDisableLazyInstall, "doc", "https://aquaproj.github.io/docs/reference/codes/006") //nolint:wrapcheck
 		}
 	}
@@ -129,7 +130,7 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResul
 	}
 	for i := range 10 {
 		logger.Debug("check if exec file exists")
-		if fi, err := c.fs.Stat(findResult.ExePath); err == nil {
+		if fi, err := os.Stat(findResult.ExePath); err == nil {
 			if osfile.IsOwnerExecutable(fi.Mode()) {
 				break
 			}

@@ -27,7 +27,7 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 	}
 	cfg := &Config{}
 	if param.GenerateConfigFilePath != "" {
-		if err := readConfig(c.fs, param.GenerateConfigFilePath, cfg); err != nil {
+		if err := readConfig(param.GenerateConfigFilePath, cfg); err != nil {
 			return err
 		}
 	}

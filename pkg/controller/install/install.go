@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -63,7 +64,7 @@ func (c *Controller) mkBinDir() error {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	if c.runtime.IsWindows() {
-		if err := c.fs.RemoveAll(filepath.Join(c.rootDir, "bat")); err != nil {
+		if err := os.RemoveAll(filepath.Join(c.rootDir, "bat")); err != nil {
 			return fmt.Errorf("remove the bat directory: %w", err)
 		}
 	}
@@ -75,7 +76,7 @@ func (c *Controller) installAll(ctx context.Context, logger *slog.Logger, param 
 		return nil
 	}
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		if _, err := c.fs.Stat(cfgFilePath); err != nil {
+		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
 		policyConfigs, err := c.policyReader.Append(logger, cfgFilePath, policyConfigs, globalPolicyPaths)

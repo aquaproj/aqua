@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/spf13/afero"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -22,7 +23,7 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, param *confi
 		}
 	}
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		if _, err := c.fs.Stat(cfgFilePath); err != nil {
+		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
 		if err := c.create(ctx, logger, cfgFilePath, param); err != nil {
@@ -63,10 +64,7 @@ func (c *Controller) create(ctx context.Context, logger *slog.Logger, cfgFilePat
 			continue
 		}
 		absPkgPath := filepath.Join(c.rootDir, pkgPath)
-		if f, err := afero.Exists(c.fs, absPkgPath); err != nil {
-			slogerr.WithError(logger, err).Warn("check if the package is installed")
-			continue
-		} else if !f {
+		if !osfile.Exists(absPkgPath) {
 			continue
 		}
 		if err := c.vacuum.Create(pkgPath, now); err != nil {

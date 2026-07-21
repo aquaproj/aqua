@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 )
 
 const FormatPKG string = "pkg"
@@ -18,7 +18,6 @@ const FormatPKG string = "pkg"
 type pkgUnarchiver struct {
 	dest     string
 	executor Executor
-	fs       afero.Fs
 }
 
 func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *slog.Logger, src *File) error {
@@ -35,7 +34,7 @@ func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *slog.Logger, src *File
 	// absent, but the caller hands over a directory it has already created.
 	// Remove only succeeds on an empty directory, so a populated destination is
 	// never destroyed here.
-	if err := u.fs.Remove(u.dest); err != nil && !errors.Is(err, fs.ErrNotExist) {
+	if err := os.Remove(u.dest); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("remove the destination directory before expanding a pkg file: %w", err)
 	}
 

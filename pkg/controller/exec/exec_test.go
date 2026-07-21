@@ -30,7 +30,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -137,7 +136,6 @@ packages:
 			ctx := t.Context()
 			dir := t.TempDir()
 			testutil.WriteFiles(t, dir, d.files, d.dirs...)
-			fs := afero.NewOsFs()
 			linker := link.New()
 			for dest, src := range d.links {
 				src = testutil.Abs(dir, src)
@@ -150,7 +148,7 @@ packages:
 			}
 			testutil.RootParam(dir, d.param)
 			env := testutil.RootEnv(dir, d.env)
-			policyValidator := policy.NewValidator(d.param, fs)
+			policyValidator := policy.NewValidator(d.param)
 			if d.allowPolicy != "" {
 				if err := policyValidator.Allow(testutil.Abs(dir, d.allowPolicy)); err != nil {
 					t.Fatal(err)
@@ -158,12 +156,12 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			osEnv := osenv.NewMock(env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuum.NewMock(d.param.RootDir, nil, nil))
-			policyFinder := policy.NewConfigFinder(fs)
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, policy.NewReader(fs, policyValidator, policyFinder, policy.NewConfigReader(fs)), vacuum.NewMock(d.param.RootDir, nil, nil))
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuum.NewMock(d.param.RootDir, nil, nil))
+			policyFinder := policy.NewConfigFinder()
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, policy.NewReader(policyValidator, policyFinder, policy.NewConfigReader()), vacuum.NewMock(d.param.RootDir, nil, nil))
 			if err := ctrl.Exec(ctx, logger, d.param, d.exeName, d.args...); err != nil {
 				if d.isErr {
 					return
@@ -281,7 +279,6 @@ packages:
 				b.Fatal(err)
 			}
 			writeFiles(b, tempDir, d.files)
-			fs := afero.NewOsFs()
 			linker := link.New()
 			for dest, src := range d.links {
 				if err := linker.Symlink(dest, filepath.Join(tempDir, src)); err != nil {
@@ -290,12 +287,12 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, fs, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, fs, newLocalPolicyReader(b, tempDir), vacuumMock)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
+			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, newLocalPolicyReader(b, tempDir), vacuumMock)
 			b.ResetTimer()
 			for b.Loop() {
 				func() {

@@ -14,7 +14,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -25,7 +24,6 @@ type Controller struct {
 	which            WhichController
 	packageInstaller Installer
 	executor         Executor
-	fs               afero.Fs
 	policyReader     PolicyReader
 	enabledXSysExec  bool
 	vacuum           Vacuum
@@ -40,7 +38,7 @@ type Installer interface {
 	InstallPackage(ctx context.Context, logger *slog.Logger, param *installpackage.ParamInstallPackage) error
 }
 
-func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, fs afero.Fs, policyReader PolicyReader, vacuum Vacuum) *Controller {
+func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, osEnv osenv.OSEnv, policyReader PolicyReader, vacuum Vacuum) *Controller {
 	return &Controller{
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
@@ -49,7 +47,6 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 		which:            whichCtrl,
 		executor:         executor,
 		enabledXSysExec:  getEnabledXSysExec(osEnv, runtime.GOOS),
-		fs:               fs,
 		policyReader:     policyReader,
 		vacuum:           vacuum,
 		lookPath:         exec.LookPath,

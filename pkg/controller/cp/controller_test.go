@@ -10,7 +10,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 func TestController_Copy(t *testing.T) { //nolint:funlen
@@ -19,7 +18,6 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		name         string
 		param        *config.Param
 		pkgInstaller cp.PackageInstaller
-		fs           afero.Fs
 		rt           *runtime.Runtime
 		whichCtrl    cp.WhichController
 		installer    cp.Installer
@@ -28,7 +26,6 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 		{
 			name:      "no arg",
 			param:     &config.Param{},
-			fs:        afero.NewMemMapFs(),
 			installer: &cp.MockInstaller{},
 		},
 		{
@@ -43,7 +40,6 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 				GOOS:   "darwin",
 				GOARCH: "amd64",
 			},
-			fs:        afero.NewMemMapFs(),
 			installer: &cp.MockInstaller{},
 			whichCtrl: &which.MockController{
 				FindResult: &which.FindResult{
@@ -71,7 +67,7 @@ func TestController_Copy(t *testing.T) { //nolint:funlen
 			t.Parallel()
 			ctx := t.Context()
 			d.param.Dest = t.TempDir()
-			ctrl := cp.New(d.param, d.pkgInstaller, d.fs, d.rt, d.whichCtrl, d.installer, &policy.MockReader{})
+			ctrl := cp.New(d.param, d.pkgInstaller, d.rt, d.whichCtrl, d.installer, &policy.MockReader{})
 			if err := ctrl.Copy(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

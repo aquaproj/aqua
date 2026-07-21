@@ -21,7 +21,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -286,9 +285,8 @@ packages:
 			}
 			testutil.RootParam(dir, d.param)
 			env := testutil.RootEnv(dir, d.env)
-			fs := afero.NewOsFs()
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(env), fs, linker)
+			ctrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(env), linker)
 			which, err := ctrl.Which(ctx, logger, d.param, d.exeName)
 			if err != nil {
 				if d.isErr {

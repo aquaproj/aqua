@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -42,7 +43,7 @@ func (c *Controller) Which(ctx context.Context, logger *slog.Logger, param *conf
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		logger := logger.With("config_file_path", cfgFilePath)
 		logger.Debug("checking a global configuration file")
-		if _, err := c.fs.Stat(cfgFilePath); err != nil {
+		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
 		findResult, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeName)
@@ -96,7 +97,7 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	defer updateChecksum()
 
 	logger.Debug("reading registry cache")
-	registryCache, err := registry.NewCache(c.fs, param.RootDir, cfgFilePath)
+	registryCache, err := registry.NewCache(param.RootDir, cfgFilePath)
 	if err != nil {
 		slogerr.WithError(logger, err).Debug("read a registry cache file", "config_file_path", cfgFilePath)
 	}

@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/spf13/afero"
 )
 
 type Controller struct {
@@ -17,16 +16,14 @@ type Controller struct {
 	configFinder      ConfigFinder
 	configReader      ConfigReader
 	registryInstaller RegistryInstaller
-	fs                afero.Fs
 }
 
-func NewController(configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fs afero.Fs) *Controller {
+func NewController(configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registryInstaller,
-		fs:                fs,
 	}
 }
 

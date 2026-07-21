@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 )
 
 type Validator interface {
@@ -23,14 +23,12 @@ type Validator interface {
 
 type ValidatorImpl struct {
 	rootDir  string
-	fs       afero.Fs
 	disabled bool
 }
 
-func NewValidator(param *config.Param, fs afero.Fs) *ValidatorImpl {
+func NewValidator(param *config.Param) *ValidatorImpl {
 	return &ValidatorImpl{
 		rootDir:  param.RootDir,
-		fs:       fs,
 		disabled: param.DisablePolicy,
 	}
 }
@@ -55,16 +53,15 @@ func (v *ValidatorImpl) Allow(p string) error {
 	normalizedP := normalizePath(p)
 	policyPath := filepath.Join(v.rootDir, "policies", normalizedP)
 	dir := filepath.Dir(policyPath)
-	fs := v.fs
 	if err := osfile.MkdirAll(dir); err != nil {
 		return fmt.Errorf("create a directory where the policy file is stored: %w", err)
 	}
-	f1, err := fs.Open(p)
+	f1, err := os.Open(p)
 	if err != nil {
 		return fmt.Errorf("open a policy file: %w", err)
 	}
 	defer f1.Close()
-	f2, err := fs.Create(policyPath)
+	f2, err := os.Create(policyPath)
 	if err != nil {
 		return fmt.Errorf("create a policy file: %w", err)
 	}
@@ -73,14 +70,10 @@ func (v *ValidatorImpl) Allow(p string) error {
 		return fmt.Errorf("copy a policy file: %w", err)
 	}
 	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizedP)
-	warnExist, err := afero.Exists(fs, warnFilePath)
-	if err != nil {
-		return fmt.Errorf("check if a warn file exists: %w", err)
-	}
-	if !warnExist {
+	if !osfile.Exists(warnFilePath) {
 		return nil
 	}
-	if err := fs.Remove(warnFilePath); err != nil {
+	if err := os.Remove(warnFilePath); err != nil {
 		return fmt.Errorf("remove a warn file: %w", err)
 	}
 	return nil
@@ -89,15 +82,10 @@ func (v *ValidatorImpl) Allow(p string) error {
 func (v *ValidatorImpl) Deny(p string) error {
 	normalizedP := normalizePath(p)
 	policyPath := filepath.Join(v.rootDir, "policies", normalizedP)
-	fs := v.fs
 
 	// remove allow file
-	policyExist, err := afero.Exists(fs, policyPath)
-	if err != nil {
-		return fmt.Errorf("check if a policy file exists: %w", err)
-	}
-	if policyExist {
-		if err := fs.Remove(policyPath); err != nil {
+	if osfile.Exists(policyPath) {
+		if err := os.Remove(policyPath); err != nil {
 			return fmt.Errorf("remove a policy file: %w", err)
 		}
 	}
@@ -107,7 +95,7 @@ func (v *ValidatorImpl) Deny(p string) error {
 	if err := osfile.MkdirAll(warnFileDir); err != nil {
 		return fmt.Errorf("create a directory where the policy warning file is stored: %w", err)
 	}
-	warnFile, err := v.fs.Create(warnFilePath)
+	warnFile, err := os.Create(warnFilePath)
 	if err != nil {
 		return fmt.Errorf("create a policy warn file: %w", err)
 	}
@@ -117,12 +105,7 @@ func (v *ValidatorImpl) Deny(p string) error {
 
 func (v *ValidatorImpl) Warn(logger *slog.Logger, policyFilePath string, updated bool) error {
 	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizePath(policyFilePath))
-	fs := v.fs
-	f, err := afero.Exists(fs, warnFilePath)
-	if err != nil {
-		return fmt.Errorf("find a policy warning file: %w", err)
-	}
-	if f {
+	if osfile.Exists(warnFilePath) {
 		return nil
 	}
 	msg := `The policy file is ignored unless it is allowed by "aqua policy allow" command.
@@ -148,18 +131,14 @@ func (v *ValidatorImpl) Validate(p string) error {
 		return nil
 	}
 	policyPath := filepath.Join(v.rootDir, "policies", normalizePath(p))
-	f, err := afero.Exists(v.fs, policyPath)
-	if err != nil {
-		return fmt.Errorf("find a policy file: %w", err)
-	}
-	if !f {
+	if !osfile.Exists(policyPath) {
 		return errPolicyNotFound
 	}
-	b1, err := afero.ReadFile(v.fs, p)
+	b1, err := os.ReadFile(p)
 	if err != nil {
 		return fmt.Errorf("read a policy file: %w", err)
 	}
-	b2, err := afero.ReadFile(v.fs, policyPath)
+	b2, err := os.ReadFile(policyPath)
 	if err != nil {
 		return fmt.Errorf("read a policy file: %w", err)
 	}

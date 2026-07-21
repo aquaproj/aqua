@@ -18,7 +18,6 @@ require (
 	github.com/otiai10/copy v1.14.1
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/schollz/progressbar/v3 v3.19.1
-	github.com/spf13/afero v1.15.0
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
 	github.com/suzuki-shunsuke/ghtkn-go-sdk v0.4.1
@@ -83,6 +82,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sorairolake/lzip-go v0.3.8 // indirect
+	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect

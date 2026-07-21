@@ -11,12 +11,12 @@ const (
 )
 
 func (is *Installer) Copy(dest, src string) error {
-	dst, err := is.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, executableFilePermission) //nolint:nosnakecase
+	dst, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, executableFilePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)
 	}
 	defer dst.Close()
-	srcFile, err := is.fs.Open(src)
+	srcFile, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("open a file: %w", err)
 	}

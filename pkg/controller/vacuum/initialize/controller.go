@@ -10,24 +10,21 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 type Controller struct {
 	rootDir           string
 	runtime           *runtime.Runtime
-	fs                afero.Fs
 	vacuum            Vacuum
 	configFinder      ConfigFinder
 	configReader      ConfigReader
 	registryInstaller RegistryInstaller
 }
 
-func New(param *config.Param, rt *runtime.Runtime, fs afero.Fs, vc Vacuum, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller) *Controller {
+func New(param *config.Param, rt *runtime.Runtime, vc Vacuum, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		runtime:           rt,
-		fs:                fs,
 		vacuum:            vc,
 		configFinder:      configFinder,
 		configReader:      configReader,

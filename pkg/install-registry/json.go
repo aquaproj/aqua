@@ -23,7 +23,7 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logger *slog.L
 	if err := is.readJSONRegistry(jsonPath, registryContent); err != nil { //nolint:nestif
 		if !errors.Is(err, os.ErrNotExist) {
 			slogerr.WithError(logger, err).Warn("failed to read a registry JSON file. Will remove and recreate the file", "registry_json_path", jsonPath)
-			if err := is.fs.Remove(jsonPath); err != nil {
+			if err := os.Remove(jsonPath); err != nil {
 				slogerr.WithError(logger, err).Warn("failed to remove a registry JSON file", "registry_json_path", jsonPath)
 			} else {
 				logger.Debug("remove a registry JSON file",
@@ -49,7 +49,7 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logger *slog.L
 }
 
 func (is *Installer) createJSON(jsonPath string, content *registry.Config) error {
-	jsonFile, err := is.fs.Create(jsonPath)
+	jsonFile, err := os.Create(jsonPath)
 	if err != nil {
 		return fmt.Errorf("create a file to convert registry YAML to JSON: %w", err)
 	}

@@ -5,24 +5,22 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/spf13/afero"
 )
 
 type Verifier struct {
 	downloader download.ClientAPI
-	fs         afero.Fs
 	exe        Executor
 }
 
-func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *Verifier {
+func New(downloader download.ClientAPI, exe Executor) *Verifier {
 	return &Verifier{
 		downloader: downloader,
-		fs:         fs,
 		exe:        exe,
 	}
 }
@@ -46,12 +44,12 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 	}
 	defer rc.Close()
 
-	provenanceFile, err := afero.TempFile(v.fs, "", "")
+	provenanceFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	defer provenanceFile.Close()
-	defer v.fs.Remove(provenanceFile.Name()) //nolint:errcheck
+	defer os.Remove(provenanceFile.Name())
 	if _, err := io.Copy(provenanceFile, rc); err != nil {
 		return fmt.Errorf("copy a provenance to a temporary file: %w", err)
 	}

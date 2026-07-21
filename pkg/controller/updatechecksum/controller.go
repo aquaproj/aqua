@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 type ChecksumFileVerifier interface {
@@ -24,7 +23,6 @@ type Controller struct {
 	configReader         ConfigReader
 	registryInstaller    RegistryInstaller
 	registryDownloader   GitHubContentFileDownloader
-	fs                   afero.Fs
 	runtime              *runtime.Runtime
 	chkDL                download.ChecksumDownloader
 	downloader           download.ClientAPI
@@ -32,14 +30,13 @@ type Controller struct {
 	prune                bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registryDownloader GitHubContentFileDownloader, checksumFileVerifier ChecksumFileVerifier) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registryDownloader GitHubContentFileDownloader, checksumFileVerifier ChecksumFileVerifier) *Controller {
 	return &Controller{
 		rootDir:              param.RootDir,
 		configFinder:         configFinder,
 		configReader:         configReader,
 		registryInstaller:    registryInstaller,
 		registryDownloader:   registryDownloader,
-		fs:                   fs,
 		runtime:              rt,
 		chkDL:                chkDL,
 		downloader:           pkgDownloader,

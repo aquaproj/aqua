@@ -9,12 +9,10 @@ import (
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 )
 
 type rawUnarchiver struct {
 	dest string
-	fs   afero.Fs
 }
 
 func (u *rawUnarchiver) Unarchive(_ context.Context, _ *slog.Logger, src *File) error {
@@ -22,7 +20,7 @@ func (u *rawUnarchiver) Unarchive(_ context.Context, _ *slog.Logger, src *File) 
 	if err := osfile.MkdirAll(filepath.Dir(dest)); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", dest, err)
 	}
-	f, err := u.fs.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
+	f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, filePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("open the file (%s): %w", dest, err)
 	}

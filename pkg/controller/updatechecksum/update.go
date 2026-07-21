@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -34,7 +35,7 @@ func (c *Controller) updateGlobalChecksumFiles(ctx context.Context, logger *slog
 		return nil
 	}
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		if _, err := c.fs.Stat(cfgFilePath); err != nil {
+		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
 		if err := c.updateChecksum(ctx, logger, cfgFilePath); err != nil {

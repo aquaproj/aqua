@@ -6,8 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"path/filepath"
-
-	"github.com/spf13/afero"
 )
 
 var errUnsupportedFileFormat = errors.New("unsupported file format")
@@ -24,7 +22,6 @@ type File struct {
 
 type Unarchiver struct {
 	executor Executor
-	fs       afero.Fs
 }
 
 type DownloadedFile interface {
@@ -33,10 +30,9 @@ type DownloadedFile interface {
 	Wrap(w io.Writer) io.Writer
 }
 
-func New(executor Executor, fs afero.Fs) *Unarchiver {
+func New(executor Executor) *Unarchiver {
 	return &Unarchiver{
 		executor: executor,
-		fs:       fs,
 	}
 }
 
@@ -60,21 +56,18 @@ func (u *Unarchiver) getUnarchiver(logger *slog.Logger, src *File, dest string) 
 	if IsUnarchived(src.Type, filename) {
 		return &rawUnarchiver{
 			dest: filepath.Join(dest, filename),
-			fs:   u.fs,
 		}
 	}
 	if src.Type == "dmg" {
 		return &dmgUnarchiver{
 			dest:     dest,
 			executor: u.executor,
-			fs:       u.fs,
 		}
 	}
 	if src.Type == "pkg" {
 		return &pkgUnarchiver{
 			dest:     dest,
 			executor: u.executor,
-			fs:       u.fs,
 		}
 	}
 	switch ext := filepath.Ext(filename); ext {
@@ -82,18 +75,15 @@ func (u *Unarchiver) getUnarchiver(logger *slog.Logger, src *File, dest string) 
 		return &dmgUnarchiver{
 			dest:     dest,
 			executor: u.executor,
-			fs:       u.fs,
 		}
 	case ".pkg":
 		return &pkgUnarchiver{
 			dest:     dest,
 			executor: u.executor,
-			fs:       u.fs,
 		}
 	}
 
 	return &handler{
-		fs:       u.fs,
 		executor: u.executor,
 		dest:     dest,
 		filename: filename,

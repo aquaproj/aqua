@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -101,13 +101,13 @@ func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger
 	if len(verifiers) == 0 {
 		return nil
 	}
-	f, err := afero.TempFile(is.fs, "", "")
+	f, err := os.CreateTemp("", "")
 	if err != nil {
 		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	tempFilePath := f.Name()
 	defer f.Close()
-	defer is.fs.Remove(tempFilePath) //nolint:errcheck
+	defer os.Remove(tempFilePath)
 	if _, err := f.Write(b); err != nil {
 		return fmt.Errorf("write a checksum to a temporary file: %w", err)
 	}

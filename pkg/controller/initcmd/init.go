@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -45,13 +45,11 @@ import_dir: %%IMPORT_DIR%%
 
 type Controller struct {
 	github RepositoriesService
-	fs     afero.Fs
 }
 
-func New(gh RepositoriesService, fs afero.Fs) *Controller {
+func New(gh RepositoriesService) *Controller {
 	return &Controller{
 		github: gh,
-		fs:     fs,
 	}
 }
 
@@ -64,7 +62,7 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath 
 	cfgFilePath = c.cfgFilePath(cfgFilePath, param)
 
 	for _, name := range append(finder.DuplicateFilePaths(cfgFilePath), cfgFilePath) {
-		if _, err := c.fs.Stat(name); err == nil {
+		if _, err := os.Stat(name); err == nil {
 			// configuration file already exists, then do nothing.
 			logger.Info("configuration file already exists", "configuration_file_path", name)
 			return nil
@@ -96,7 +94,7 @@ func (c *Controller) Init(ctx context.Context, logger *slog.Logger, cfgFilePath 
 			strings.Replace(importDirConfigTemplate, "%%STANDARD_REGISTRY_VERSION%%", registryVersion, 1),
 			"%%IMPORT_DIR%%", param.ImportDir, 1)
 	}
-	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(cfgStr), osfile.FilePermission); err != nil {
+	if err := os.WriteFile(cfgFilePath, []byte(cfgStr), osfile.FilePermission); err != nil {
 		return fmt.Errorf("write a configuration file: %w", slogerr.With(err, "configuration_file_path", cfgFilePath))
 	}
 	return nil

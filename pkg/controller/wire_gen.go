@@ -49,7 +49,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
 	"log/slog"
@@ -67,26 +66,24 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
-	controller := list.NewController(configFinder, configReader, installer, fs)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
+	controller := list.NewController(configFinder, configReader, installer)
 	return controller, nil
 }
 
 func InitializeGenerateRegistryCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, stdout io.Writer) (*genrgst.Controller, error) {
-	fs := afero.NewOsFs()
 	repositoriesService, err := github.New(ctx, logger)
 	if err != nil {
 		return nil, err
 	}
-	outputter := output.New(stdout, fs)
+	outputter := output.New(stdout)
 	client := cargo.NewClient(httpClient)
-	controller := genrgst.NewController(fs, repositoriesService, outputter, client, stdout)
+	controller := genrgst.NewController(repositoriesService, outputter, client, stdout)
 	return controller, nil
 }
 
@@ -95,14 +92,12 @@ func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, p
 	if err != nil {
 		return nil, err
 	}
-	fs := afero.NewOsFs()
-	controller := initcmd.New(repositoriesService, fs)
+	controller := initcmd.New(repositoriesService)
 	return controller, nil
 }
 
 func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Controller {
-	fs := afero.NewOsFs()
-	controller := initpolicy.New(fs)
+	controller := initpolicy.New()
 	return controller
 }
 
@@ -115,13 +110,12 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	client := cargo.NewClient(httpClient)
 	cargoVersionGetter := versiongetter.NewCargo(client)
@@ -131,7 +125,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
-	controller := generate.New(configFinder, configReader, installer, repositoriesService, fs, fuzzyfinderFinder, fuzzyGetter)
+	controller := generate.New(configFinder, configReader, installer, repositoriesService, fuzzyfinderFinder, fuzzyGetter)
 	return controller, nil
 }
 
@@ -144,22 +138,21 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
-	unarchiver := unarchive.New(executor, fs)
+	unarchiver := unarchive.New(executor)
 	minisignExecutorImpl, err := minisign.NewExecutor(logger, executor, param)
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -167,14 +160,14 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
-	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	client := vacuum.New(fs, param)
-	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
-	validatorImpl := policy.NewValidator(param, fs)
-	configFinderImpl := policy.NewConfigFinder(fs)
-	configReaderImpl := policy.NewConfigReader(fs)
-	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, fs, rt, policyReader)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
+	client := vacuum.New(param)
+	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	validatorImpl := policy.NewValidator(param)
+	configFinderImpl := policy.NewConfigFinder()
+	configReaderImpl := policy.NewConfigReader()
+	policyReader := policy.NewReader(validatorImpl, configFinderImpl, configReaderImpl)
+	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, rt, policyReader)
 	return controller, nil
 }
 
@@ -187,16 +180,15 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)
 	return controller, nil
 }
 
@@ -207,20 +199,19 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	executor := osexec.New()
-	unarchiver := unarchive.New(executor, fs)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	unarchiver := unarchive.New(executor)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
+	slsaVerifier := slsa.New(downloader, executorImpl)
 	minisignExecutorImpl, err := minisign.NewExecutor(logger, executor, param)
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -228,25 +219,24 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
-	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	client := vacuum.New(fs, param)
-	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
+	client := vacuum.New(param)
+	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
-	validatorImpl := policy.NewValidator(param, fs)
-	configFinderImpl := policy.NewConfigFinder(fs)
-	configReaderImpl := policy.NewConfigReader(fs)
-	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	execController := exec.New(installer, controller, executor, osEnv, fs, policyReader, client)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, linker)
+	validatorImpl := policy.NewValidator(param)
+	configFinderImpl := policy.NewConfigFinder()
+	configReaderImpl := policy.NewConfigReader()
+	policyReader := policy.NewReader(validatorImpl, configFinderImpl, configReaderImpl)
+	execController := exec.New(installer, controller, executor, osEnv, policyReader, client)
 	return execController, nil
 }
 
 func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
-	fs := afero.NewOsFs()
 	repositoriesService, err := github.New(ctx, logger)
 	if err != nil {
 		return nil, err
@@ -257,15 +247,15 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	executor := osexec.New()
-	unarchiver := unarchive.New(executor, fs)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	unarchiver := unarchive.New(executor)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
+	slsaVerifier := slsa.New(downloader, executorImpl)
 	minisignExecutorImpl, err := minisign.NewExecutor(logger, executor, param)
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -273,10 +263,10 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
-	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	client := vacuum.New(fs, param)
-	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
-	controller := updateaqua.New(param, fs, rt, repositoriesService, installer)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
+	client := vacuum.New(param)
+	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	controller := updateaqua.New(param, rt, repositoriesService, installer)
 	return controller, nil
 }
 
@@ -287,20 +277,19 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	linker := link.New()
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	calculator := checksum.NewCalculator()
 	executor := osexec.New()
-	unarchiver := unarchive.New(executor, fs)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	unarchiver := unarchive.New(executor)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
+	slsaVerifier := slsa.New(downloader, executorImpl)
 	minisignExecutorImpl, err := minisign.NewExecutor(logger, executor, param)
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -308,21 +297,21 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
-	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	client := vacuum.New(fs, param)
-	installer := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
+	client := vacuum.New(param)
+	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	registryInstaller := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	registryInstaller := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, fs, linker)
-	validatorImpl := policy.NewValidator(param, fs)
-	configFinderImpl := policy.NewConfigFinder(fs)
-	configReaderImpl := policy.NewConfigReader(fs)
-	policyReader := policy.NewReader(fs, validatorImpl, configFinderImpl, configReaderImpl)
-	installController := install.New(param, configFinder, configReader, registryInstaller, installer, fs, rt, policyReader)
-	cpController := cp.New(param, installer, fs, rt, controller, installController, policyReader)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, linker)
+	validatorImpl := policy.NewValidator(param)
+	configFinderImpl := policy.NewConfigFinder()
+	configReaderImpl := policy.NewConfigReader()
+	policyReader := policy.NewReader(validatorImpl, configFinderImpl, configReaderImpl)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, rt, policyReader)
+	cpController := cp.New(param, installer, rt, controller, installController, policyReader)
 	return cpController, nil
 }
 
@@ -335,22 +324,21 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
 	linker := link.New()
 	calculator := checksum.NewCalculator()
-	unarchiver := unarchive.New(executor, fs)
+	unarchiver := unarchive.New(executor)
 	minisignExecutorImpl, err := minisign.NewExecutor(logger, executor, param)
 	if err != nil {
 		return nil, err
 	}
-	minisignVerifier := minisign.New(downloader, fs, minisignExecutorImpl)
+	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -358,10 +346,10 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
 	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
-	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor, fs)
-	client := vacuum.New(fs, param)
-	installpackageInstaller := installpackage.New(param, downloader, rt, fs, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
-	controller := updatechecksum.New(param, configFinder, configReader, installer, fs, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader, installpackageInstaller)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
+	client := vacuum.New(param)
+	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	controller := updatechecksum.New(param, configFinder, configReader, installer, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader, installpackageInstaller)
 	return controller, nil
 }
 
@@ -374,13 +362,12 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	configReader := reader.New(param)
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	fs := afero.NewOsFs()
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	client := cargo.NewClient(httpClient)
 	cargoVersionGetter := versiongetter.NewCargo(client)
@@ -392,36 +379,32 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	updateController := update.New(param, repositoriesService, configFinder, configReader, installer, fs, rt, fuzzyGetter, fuzzyfinderFinder, controller)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)
+	updateController := update.New(param, repositoriesService, configFinder, configReader, installer, rt, fuzzyGetter, fuzzyfinderFinder, controller)
 	return updateController, nil
 }
 
 func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
-	fs := afero.NewOsFs()
-	configFinderImpl := policy.NewConfigFinder(fs)
-	validatorImpl := policy.NewValidator(param, fs)
-	controller := allowpolicy.New(fs, configFinderImpl, validatorImpl)
+	configFinderImpl := policy.NewConfigFinder()
+	validatorImpl := policy.NewValidator(param)
+	controller := allowpolicy.New(configFinderImpl, validatorImpl)
 	return controller
 }
 
 func InitializeDenyPolicyCommandController(ctx context.Context, param *config.Param) *denypolicy.Controller {
-	fs := afero.NewOsFs()
-	configFinderImpl := policy.NewConfigFinder(fs)
-	validatorImpl := policy.NewValidator(param, fs)
-	controller := denypolicy.New(fs, configFinderImpl, validatorImpl)
+	configFinderImpl := policy.NewConfigFinder()
+	validatorImpl := policy.NewValidator(param)
+	controller := denypolicy.New(configFinderImpl, validatorImpl)
 	return controller
 }
 
 func InitializeInfoCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *info.Controller {
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
-	controller := info.New(fs, configFinder, rt)
+	controller := info.New(configFinder, rt)
 	return controller
 }
 
 func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) (*remove.Controller, error) {
-	fs := afero.NewOsFs()
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -432,29 +415,27 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	fuzzyfinderFinder := fuzzyfinder.New()
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, fs, linker)
-	client := vacuum.New(fs, param)
-	removeController := remove.New(param, target, fs, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, client)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)
+	client := vacuum.New(param)
+	removeController := remove.New(param, target, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, client)
 	return removeController, nil
 }
 
 func InitializeVacuumCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *vacuum2.Controller {
-	fs := afero.NewOsFs()
-	client := vacuum.New(fs, param)
-	controller := vacuum2.New(param, rt, fs, client)
+	client := vacuum.New(param)
+	controller := vacuum2.New(param, rt, client)
 	return controller
 }
 
 func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) (*initialize.Controller, error) {
-	fs := afero.NewOsFs()
-	client := vacuum.New(fs, param)
+	client := vacuum.New(param)
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -465,10 +446,10 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
 	executor := osexec.New()
 	downloader := download.NewDownloader(repositoriesService, httpDownloader)
-	verifier := cosign.NewVerifier(executor, fs, downloader, param)
+	verifier := cosign.NewVerifier(executor, downloader, param)
 	executorImpl := slsa.NewExecutor(executor, param)
-	slsaVerifier := slsa.New(downloader, fs, executorImpl)
-	installer := registry.New(param, gitHubContentFileDownloader, fs, rt, verifier, slsaVerifier)
-	controller := initialize.New(param, rt, fs, client, configFinder, configReader, installer)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
+	controller := initialize.New(param, rt, client, configFinder, configReader, installer)
 	return controller, nil
 }

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -29,20 +29,18 @@ func ParseTime(s string) (time.Time, error) {
 }
 
 type Client struct {
-	fs      afero.Fs
 	rootDir string
 }
 
-func New(fs afero.Fs, param *config.Param) *Client {
+func New(param *config.Param) *Client {
 	return &Client{
-		fs:      fs,
 		rootDir: filepath.Join(param.RootDir, baseDir),
 	}
 }
 
 func (c *Client) Remove(pkgPath string) error {
 	file := c.file(pkgPath)
-	if err := c.fs.Remove(file); err != nil {
+	if err := os.Remove(file); err != nil {
 		return fmt.Errorf("reamove a package timestamp file: %w", err)
 	}
 	return nil
@@ -57,9 +55,7 @@ func (c *Client) Update(pkgPath string, timestamp time.Time) error {
 func (c *Client) Create(pkgPath string, timestamp time.Time) error {
 	dir := c.dir(pkgPath)
 	file := filepath.Join(dir, fileName)
-	if f, err := afero.Exists(c.fs, file); err != nil {
-		return fmt.Errorf("check whether a package timestamp file exists: %w", err)
-	} else if f {
+	if osfile.Exists(file) {
 		return nil
 	}
 	return c.update(file, dir, timestamp)
@@ -67,15 +63,14 @@ func (c *Client) Create(pkgPath string, timestamp time.Time) error {
 
 func (c *Client) FindAll(logger *slog.Logger) (map[string]time.Time, error) {
 	timestamps := map[string]time.Time{}
-	if err := afero.Walk(c.fs, filepath.Join(c.rootDir, "pkgs"), func(path string, info fs.FileInfo, err error) error {
+	if err := filepath.WalkDir(filepath.Join(c.rootDir, "pkgs"), func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("walk directory to find timestamp files: %w", err)
 		}
-		name := info.Name()
-		if name != fileName {
+		if entry.Name() != fileName {
 			return nil
 		}
-		b, err := afero.ReadFile(c.fs, path)
+		b, err := os.ReadFile(path) //nolint:gosec // the path comes from walking aqua's own metadata directory
 		if err != nil {
 			return fmt.Errorf("read a timestamp file: %w", err)
 		}
@@ -104,7 +99,7 @@ func (c *Client) update(file, dir string, timestamp time.Time) error {
 		return fmt.Errorf("create a package metadata directory: %w", err)
 	}
 	timestampStr := FormatTime(timestamp)
-	if err := afero.WriteFile(c.fs, file, []byte(timestampStr+"\n"), filePermission); err != nil {
+	if err := os.WriteFile(file, []byte(timestampStr+"\n"), filePermission); err != nil {
 		return fmt.Errorf("create a package timestamp file: %w", err)
 	}
 	return nil

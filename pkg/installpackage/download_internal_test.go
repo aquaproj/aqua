@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -17,14 +18,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/spf13/afero"
 )
 
 // writeUnarchiver stands in for a real unarchiver by writing exeName into the
 // destination it is handed, so that tests can tell which directory the
 // extraction went to.
 type writeUnarchiver struct {
-	fs      afero.Fs
 	exeName string
 	err     error
 }
@@ -34,10 +33,10 @@ func (u *writeUnarchiver) Unarchive(_ context.Context, _ *slog.Logger, _ *unarch
 		return u.err
 	}
 	p := filepath.Join(dest, u.exeName)
-	if err := u.fs.MkdirAll(filepath.Dir(p), dirPerm); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), dirPerm); err != nil {
 		return err //nolint:wrapcheck
 	}
-	return afero.WriteFile(u.fs, p, []byte("gh"), dirPerm) //nolint:wrapcheck
+	return os.WriteFile(p, []byte("gh"), dirPerm) //nolint:wrapcheck
 }
 
 const dirPerm = 0o755
@@ -46,14 +45,11 @@ const dirPerm = 0o755
 // directory, along with that root and the package destination under it.
 func newUnarchiveTestInstaller(t *testing.T, unarchiveErr error) (*Installer, string, string) {
 	t.Helper()
-	fs := afero.NewOsFs()
 	rootDir := t.TempDir()
 	dest := filepath.Join(rootDir, "pkgs", "github_release", "github.com", "cli", "cli", "v2.96.0", "gh_2.96.0_linux_amd64.tar.gz")
 	return &Installer{
-		fs:      fs,
 		rootDir: rootDir,
 		unarchiver: &writeUnarchiver{
-			fs:      fs,
 			exeName: filepath.Join("bin", "gh"),
 			err:     unarchiveErr,
 		},
@@ -62,9 +58,9 @@ func newUnarchiveTestInstaller(t *testing.T, unarchiveErr error) (*Installer, st
 
 // assertTempDirIsEmpty checks that neither a discarded nor a failed extraction
 // left a temporary directory behind.
-func assertTempDirIsEmpty(t *testing.T, fs afero.Fs, rootDir string) {
+func assertTempDirIsEmpty(t *testing.T, rootDir string) {
 	t.Helper()
-	entries, err := afero.ReadDir(fs, filepath.Join(rootDir, "temp"))
+	entries, err := os.ReadDir(filepath.Join(rootDir, "temp"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,9 +69,6 @@ func assertTempDirIsEmpty(t *testing.T, fs afero.Fs, rootDir string) {
 	}
 }
 
-// The OS filesystem is used rather than a memory-mapped one because these tests
-// turn on Rename's real behaviour: MemMapFs happily renames onto an existing
-// directory, which is exactly the case the lost-race test needs to exercise.
 func TestInstaller_unarchive(t *testing.T) {
 	t.Parallel()
 
@@ -88,14 +81,14 @@ func TestInstaller_unarchive(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err := afero.ReadFile(inst.fs, filepath.Join(dest, "bin", "gh"))
+	b, err := os.ReadFile(filepath.Join(dest, "bin", "gh"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(b) != "gh" {
 		t.Fatalf("the executable file is %q, want %q", b, "gh")
 	}
-	assertTempDirIsEmpty(t, inst.fs, rootDir)
+	assertTempDirIsEmpty(t, rootDir)
 }
 
 // The destination is renamed into place from a temporary directory, so it must
@@ -121,11 +114,11 @@ func TestInstaller_unarchive_destPermission(t *testing.T) {
 	if err := osfile.MkdirAll(want); err != nil {
 		t.Fatal(err)
 	}
-	wantInfo, err := inst.fs.Stat(want)
+	wantInfo, err := os.Stat(want)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotInfo, err := inst.fs.Stat(dest)
+	gotInfo, err := os.Stat(dest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,10 +134,10 @@ func TestInstaller_unarchive_destExists(t *testing.T) {
 
 	inst, rootDir, dest := newUnarchiveTestInstaller(t, nil)
 	exePath := filepath.Join(dest, "bin", "gh")
-	if err := inst.fs.MkdirAll(filepath.Dir(exePath), dirPerm); err != nil {
+	if err := os.MkdirAll(filepath.Dir(exePath), dirPerm); err != nil {
 		t.Fatal(err)
 	}
-	if err := afero.WriteFile(inst.fs, exePath, []byte("installed by someone else"), dirPerm); err != nil {
+	if err := os.WriteFile(exePath, []byte("installed by someone else"), dirPerm); err != nil {
 		t.Fatal(err)
 	}
 
@@ -155,14 +148,14 @@ func TestInstaller_unarchive_destExists(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err := afero.ReadFile(inst.fs, exePath)
+	b, err := os.ReadFile(exePath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(b) != "installed by someone else" {
 		t.Fatalf("the executable file is %q, want %q", b, "installed by someone else")
 	}
-	assertTempDirIsEmpty(t, inst.fs, rootDir)
+	assertTempDirIsEmpty(t, rootDir)
 }
 
 // The destination must not be created at all when the extraction fails,
@@ -179,12 +172,10 @@ func TestInstaller_unarchive_failure(t *testing.T) {
 		t.Fatal("error must be returned")
 	}
 
-	if f, err := afero.Exists(inst.fs, dest); err != nil {
-		t.Fatal(err)
-	} else if f {
+	if osfile.Exists(dest) {
 		t.Fatal("the destination must not be created when the extraction fails")
 	}
-	assertTempDirIsEmpty(t, inst.fs, rootDir)
+	assertTempDirIsEmpty(t, rootDir)
 }
 
 func TestInstaller_download(t *testing.T) { //nolint:funlen
@@ -264,7 +255,6 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 			// The installer extracts into a temporary directory in the root
 			// directory, so the root directory must not be the working
 			// directory of the test process.
-			d.inst.fs = afero.NewOsFs()
 			d.inst.rootDir = t.TempDir()
 			d.param.Dest = filepath.Join(d.inst.rootDir, "pkgs", "dest")
 			if err := d.inst.download(ctx, logger, d.param); err != nil {

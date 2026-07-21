@@ -2,10 +2,10 @@ package genrgst
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/expr-lang/expr/vm"
-	"github.com/spf13/afero"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -50,11 +50,11 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 	return nil
 }
 
-func readConfig(fs afero.Fs, path string, cfg *Config) error {
+func readConfig(path string, cfg *Config) error {
 	if path == "" {
 		return nil
 	}
-	f, err := fs.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("open a generate configuration file: %w", err)
 	}

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
-	"github.com/spf13/afero"
 )
 
 // newTestValidator creates a validator whose root directory is empty, and a
@@ -21,7 +20,7 @@ func newTestValidator(t *testing.T, policy string) (*ValidatorImpl, string) {
 	}
 	v := NewValidator(&config.Param{
 		RootDir: t.TempDir(),
-	}, afero.NewOsFs())
+	})
 	return v, policyFilePath
 }
 
@@ -170,7 +169,7 @@ func TestValidatorImpl_Validate_disabled(t *testing.T) {
 	v := NewValidator(&config.Param{
 		RootDir:       t.TempDir(),
 		DisablePolicy: true,
-	}, afero.NewOsFs())
+	})
 	// The policy file doesn't exist, but the validation is skipped.
 	if err := v.Validate(filepath.Join(t.TempDir(), "aqua-policy.yaml")); err != nil {
 		t.Fatal(err)

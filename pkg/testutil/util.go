@@ -8,25 +8,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 )
-
-const dirPermission os.FileMode = 0o775
-
-func NewFs(files map[string]string, dirs ...string) (afero.Fs, error) {
-	fs := afero.NewMemMapFs()
-	for name, body := range files {
-		if err := afero.WriteFile(fs, name, []byte(body), osfile.FilePermission); err != nil {
-			return nil, err //nolint:wrapcheck
-		}
-	}
-	for _, dir := range dirs {
-		if err := fs.MkdirAll(dir, dirPermission); err != nil {
-			return nil, err //nolint:wrapcheck
-		}
-	}
-	return fs, nil
-}
 
 // Abs roots p at dir if p starts with a slash, and returns p as it is
 // otherwise. It lets a test case keep the readable absolute paths it was

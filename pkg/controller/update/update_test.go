@@ -19,7 +19,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 )
 
 func TestController_Update(t *testing.T) { //nolint:funlen,maintidx
@@ -520,7 +519,6 @@ packages:
 			for _, r := range d.findResults {
 				r.ConfigFilePath = testutil.Abs(dir, r.ConfigFilePath)
 			}
-			fs := afero.NewOsFs()
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Tags:     d.tags,
@@ -535,7 +533,7 @@ packages:
 				FindResults: d.findResults,
 			}
 			fuzzyGetter := versiongetter.NewMockFuzzyGetter(d.versions)
-			ctrl := update.New(d.param, gh, configFinder, configReader, registryInstaller, fs, d.rt, fuzzyGetter, fuzzyFinder, whichCtrl)
+			ctrl := update.New(d.param, gh, configFinder, configReader, registryInstaller, d.rt, fuzzyGetter, fuzzyFinder, whichCtrl)
 			if err := ctrl.Update(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

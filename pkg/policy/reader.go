@@ -7,24 +7,21 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Reader struct {
 	mutex     *sync.RWMutex
 	policies  map[string]*Config
-	fs        afero.Fs
 	validator Validator
 	finder    ConfigFinder
 	reader    ConfigReader
 }
 
-func NewReader(fs afero.Fs, validator Validator, finder ConfigFinder, reader ConfigReader) *Reader {
+func NewReader(validator Validator, finder ConfigFinder, reader ConfigReader) *Reader {
 	return &Reader{
 		mutex:     &sync.RWMutex{},
 		policies:  map[string]*Config{},
-		fs:        fs,
 		validator: validator,
 		finder:    finder,
 		reader:    reader,

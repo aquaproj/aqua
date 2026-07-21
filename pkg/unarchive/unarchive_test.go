@@ -17,8 +17,8 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/spf13/afero"
 )
 
 func TestIsUnarchived(t *testing.T) {
@@ -127,12 +127,11 @@ func TestUnarchiver_Unarchive_symlinkTraversal(t *testing.T) {
 		tarEntry{hdr: &tar.Header{Name: "pwn", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_SYMLINK_TRAVERSAL")},
 	)
 
-	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "malicious.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
 	}
-	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+	if err := unarchive.New(nil).Unarchive(ctx, logger, src, dest); err == nil {
 		t.Fatal("an error must be returned for a regular file that follows a symlink escaping the extraction directory")
 	}
 
@@ -166,12 +165,11 @@ func TestUnarchiver_Unarchive_symlinkDirTraversal(t *testing.T) {
 		tarEntry{hdr: &tar.Header{Name: "pwn/file", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_SYMLINK_DIR_TRAVERSAL")},
 	)
 
-	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "malicious.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
 	}
-	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+	if err := unarchive.New(nil).Unarchive(ctx, logger, src, dest); err == nil {
 		t.Fatal("an error must be returned for a file escaping via a symlinked directory")
 	}
 	if _, err := os.Stat(filepath.Join(outsideDir, "file")); !os.IsNotExist(err) {
@@ -203,12 +201,11 @@ func TestUnarchiver_Unarchive_danglingSymlinkTraversal(t *testing.T) {
 		tarEntry{hdr: &tar.Header{Name: "pwn", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_DANGLING_SYMLINK")},
 	)
 
-	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "malicious.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
 	}
-	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+	if err := unarchive.New(nil).Unarchive(ctx, logger, src, dest); err == nil {
 		t.Fatal("an error must be returned for a regular file that follows a dangling symlink escaping the extraction directory")
 	}
 	if _, err := os.Stat(outside); !os.IsNotExist(err) {
@@ -236,12 +233,11 @@ func TestUnarchiver_Unarchive_symlinkOutsideAllowed(t *testing.T) {
 		tarEntry{hdr: &tar.Header{Name: "bin/tool", Typeflag: tar.TypeReg, Mode: 0o755}, payload: []byte("hello")},
 	)
 
-	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "rootfs.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
 	}
-	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err != nil {
+	if err := unarchive.New(nil).Unarchive(ctx, logger, src, dest); err != nil {
 		t.Fatalf("extraction must succeed for a benign escaping symlink: %v", err)
 	}
 
@@ -278,12 +274,11 @@ func TestUnarchiver_Unarchive_rootEntry(t *testing.T) {
 		tarEntry{hdr: &tar.Header{Name: "./tool", Typeflag: tar.TypeReg, Mode: 0o755}, payload: []byte("hello")},
 	)
 
-	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "tool.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
 	}
-	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err != nil {
+	if err := unarchive.New(nil).Unarchive(ctx, logger, src, dest); err != nil {
 		t.Fatalf("extraction must succeed for an archive with a \"./\" root entry: %v", err)
 	}
 
@@ -317,12 +312,11 @@ func TestUnarchiver_Unarchive_pathTraversal(t *testing.T) {
 		tarEntry{hdr: &tar.Header{Name: "../outside-target", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_PATH_TRAVERSAL")},
 	)
 
-	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "malicious.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
 	}
-	if err := unarchive.New(nil, fs).Unarchive(ctx, logger, src, dest); err == nil {
+	if err := unarchive.New(nil).Unarchive(ctx, logger, src, dest); err == nil {
 		t.Fatal("an error must be returned for an entry escaping the extraction directory")
 	}
 
@@ -339,7 +333,6 @@ func TestUnarchiver_Unarchive_pathTraversal(t *testing.T) {
 // destination existed when the command was invoked, then creates it as
 // "pkgutil --expand-full" does.
 type pkgutilStub struct {
-	fs          afero.Fs
 	args        []string
 	destExisted bool
 }
@@ -347,10 +340,10 @@ type pkgutilStub struct {
 func (e *pkgutilStub) ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error) {
 	e.args = cmd.Args
 	dest := cmd.Args[len(cmd.Args)-1]
-	if _, err := e.fs.Stat(dest); err == nil {
+	if osfile.Exists(dest) {
 		e.destExisted = true
 	}
-	if err := e.fs.MkdirAll(dest, 0o755); err != nil {
+	if err := os.MkdirAll(dest, 0o755); err != nil {
 		return 1, fmt.Errorf("create the destination: %w", err)
 	}
 	return 0, nil
@@ -358,16 +351,16 @@ func (e *pkgutilStub) ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error) {
 
 // newPkgFile returns a pkg format source file along with a destination
 // directory that the caller has already created, as Installer.unarchive does.
-func newPkgFile(t *testing.T, fs afero.Fs) (*unarchive.File, string) {
+func newPkgFile(t *testing.T) (*unarchive.File, string) {
 	t.Helper()
 	dest := filepath.Join(t.TempDir(), "dest")
-	if err := fs.MkdirAll(dest, 0o755); err != nil {
+	if err := os.MkdirAll(dest, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	return &unarchive.File{
 		Filename: "s3deploy_2.16.0_darwin-universal.pkg",
 		Type:     unarchive.FormatPKG,
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(strings.NewReader("pkg")), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(strings.NewReader("pkg")), nil),
 	}, dest
 }
 
@@ -382,11 +375,10 @@ func TestUnarchiver_Unarchive_pkg(t *testing.T) {
 	ctx := t.Context()
 	logger := slog.New(slog.DiscardHandler)
 
-	fs := afero.NewOsFs()
-	src, dest := newPkgFile(t, fs)
-	executor := &pkgutilStub{fs: fs}
+	src, dest := newPkgFile(t)
+	executor := &pkgutilStub{}
 
-	if err := unarchive.New(executor, fs).Unarchive(ctx, logger, src, dest); err != nil {
+	if err := unarchive.New(executor).Unarchive(ctx, logger, src, dest); err != nil {
 		t.Fatal(err)
 	}
 
@@ -396,9 +388,7 @@ func TestUnarchiver_Unarchive_pkg(t *testing.T) {
 	if len(executor.args) != 4 || executor.args[1] != "--expand-full" || executor.args[3] != dest {
 		t.Fatalf("unexpected command: %v", executor.args)
 	}
-	if f, err := afero.DirExists(fs, dest); err != nil {
-		t.Fatal(err)
-	} else if !f {
+	if !osfile.Exists(dest) {
 		t.Fatal("the destination must be created by pkgutil")
 	}
 }
@@ -410,18 +400,17 @@ func TestUnarchiver_Unarchive_pkg_destNotEmpty(t *testing.T) {
 	ctx := t.Context()
 	logger := slog.New(slog.DiscardHandler)
 
-	fs := afero.NewOsFs()
-	src, dest := newPkgFile(t, fs)
+	src, dest := newPkgFile(t)
 	payload := filepath.Join(dest, "Payload")
-	if err := afero.WriteFile(fs, payload, []byte("installed by someone else"), 0o600); err != nil {
+	if err := os.WriteFile(payload, []byte("installed by someone else"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := unarchive.New(&pkgutilStub{fs: fs}, fs).Unarchive(ctx, logger, src, dest); err == nil {
+	if err := unarchive.New(&pkgutilStub{}).Unarchive(ctx, logger, src, dest); err == nil {
 		t.Fatal("an error must be returned for a destination that is not empty")
 	}
 
-	b, err := afero.ReadFile(fs, payload)
+	b, err := os.ReadFile(payload)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -474,7 +463,6 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs := afero.NewOsFs()
 			body, _, err := getReadCloser(ctx, httpDownloader, d.body, d.url)
 			if body != nil {
 				defer body.Close()
@@ -482,8 +470,8 @@ func TestUnarchiver_Unarchive(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			d.src.Body = download.NewDownloadedFile(fs, body, nil)
-			unarchiver := unarchive.New(nil, fs)
+			d.src.Body = download.NewDownloadedFile(body, nil)
+			unarchiver := unarchive.New(nil)
 			if err := unarchiver.Unarchive(ctx, logger, d.src, t.TempDir()); err != nil {
 				if d.isErr {
 					return
@@ -516,12 +504,11 @@ func TestUnarchiver_Unarchive_gnuSparse(t *testing.T) {
 	}
 
 	dest := t.TempDir()
-	fs := afero.NewOsFs()
 	src := &unarchive.File{
 		Filename: "gnu-sparse.tar.gz",
-		Body:     download.NewDownloadedFile(fs, io.NopCloser(bytes.NewReader(archive)), nil),
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
 	}
-	if err := unarchive.New(osexec.New(), fs).Unarchive(ctx, logger, src, dest); err != nil {
+	if err := unarchive.New(osexec.New()).Unarchive(ctx, logger, src, dest); err != nil {
 		t.Fatal(err)
 	}
 

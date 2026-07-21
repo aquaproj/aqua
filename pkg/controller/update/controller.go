@@ -12,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 type Controller struct {
@@ -21,7 +20,6 @@ type Controller struct {
 	configFinder      ConfigFinder
 	configReader      ConfigReader
 	registryInstaller RegistryInstaller
-	fs                afero.Fs
 	runtime           *runtime.Runtime
 	fuzzyGetter       FuzzyGetter
 	fuzzyFinder       FuzzyFinder
@@ -52,14 +50,13 @@ type RepositoriesService interface {
 	ListTags(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.RepositoryTag, *github.Response, error)
 }
 
-func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fs afero.Fs, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
+func New(param *config.Param, gh RepositoriesService, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, fuzzyGetter FuzzyGetter, fuzzyFinder FuzzyFinder, whichController WhichController) *Controller {
 	return &Controller{
 		gh:                gh,
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registryInstaller,
-		fs:                fs,
 		runtime:           rt,
 		fuzzyGetter:       fuzzyGetter,
 		fuzzyFinder:       fuzzyFinder,

@@ -26,7 +26,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
-	"github.com/spf13/afero"
 )
 
 func TestController_Install(t *testing.T) { //nolint:funlen
@@ -111,14 +110,13 @@ packages:
 			d.param.CWD = filepath.Join(home, workspace)
 			d.param.RootDir = filepath.Join(home, filepath.FromSlash(rootDir))
 
-			fs := afero.NewOsFs()
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			policyFinder := policy.NewConfigFinder(fs)
-			policyReader := policy.NewReader(fs, &policy.MockValidator{}, policyFinder, policy.NewConfigReader(fs))
-			ctrl := install.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
+			policyFinder := policy.NewConfigFinder()
+			policyReader := policy.NewReader(&policy.MockValidator{}, policyFinder, policy.NewConfigReader())
+			ctrl := install.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, registryDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, d.rt, policyReader)
 			if err := ctrl.Install(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -12,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/update/ast"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/spf13/afero"
 )
 
 func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, param *config.Param, cfgFilePath string, rgstCfgs map[string]*registry.Config) error {
@@ -134,7 +134,7 @@ func (c *Controller) selectPackages(logger *slog.Logger, cfgFilePath string) (ma
 }
 
 func (c *Controller) updateFile(logger *slog.Logger, cfgFilePath string, newVersions map[string]string) error {
-	b, err := afero.ReadFile(c.fs, cfgFilePath)
+	b, err := os.ReadFile(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
@@ -153,11 +153,11 @@ func (c *Controller) updateFile(logger *slog.Logger, cfgFilePath string, newVers
 		return nil
 	}
 
-	stat, err := c.fs.Stat(cfgFilePath)
+	stat, err := os.Stat(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()), stat.Mode()); err != nil {
+	if err := os.WriteFile(cfgFilePath, []byte(file.String()), stat.Mode()); err != nil { //nolint:gosec // the path is the configuration file aqua was pointed at
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil

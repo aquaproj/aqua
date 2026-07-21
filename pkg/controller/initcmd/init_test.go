@@ -2,6 +2,7 @@ package initcmd_test
 
 import (
 	"log/slog"
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -10,7 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 )
 
-func TestController_Init(t *testing.T) { //nolint:funlen
+func TestController_Init(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name     string
@@ -53,15 +54,15 @@ packages:
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 			}
-			ctrl := initcmd.New(gh, fs)
-			if err := ctrl.Init(ctx, logger, "", &initcmd.Param{}); err != nil {
+			ctrl := initcmd.New(gh)
+			// The configuration file is created relative to the working
+			// directory when no path is given, so the test must give one.
+			if err := ctrl.Init(ctx, logger, filepath.Join(dir, "aqua.yaml"), &initcmd.Param{}); err != nil {
 				if d.isErr {
 					return
 				}

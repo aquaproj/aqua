@@ -11,23 +11,20 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/spf13/afero"
 )
 
 type Installer struct {
 	registryDownloader GitHubContentFileDownloader
 	param              *config.Param
-	fs                 afero.Fs
 	cosign             CosignVerifier
 	slsaVerifier       SLSAVerifier
 	rt                 *runtime.Runtime
 }
 
-func New(param *config.Param, downloader GitHubContentFileDownloader, fs afero.Fs, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *Installer {
+func New(param *config.Param, downloader GitHubContentFileDownloader, rt *runtime.Runtime, cos CosignVerifier, slsaVerifier SLSAVerifier) *Installer {
 	return &Installer{
 		param:              param,
 		registryDownloader: downloader,
-		fs:                 fs,
 		rt:                 rt,
 		cosign:             cos,
 		slsaVerifier:       slsaVerifier,

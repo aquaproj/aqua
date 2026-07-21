@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 )
 
 const pkgPath = "pkgs/github_release/github.com/cli/cli/v2.65.0/gh_2.65.0_macOS_arm64.zip"
@@ -63,7 +62,7 @@ func TestClient_Create(t *testing.T) { //nolint:dupl
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			rootDir := newRootDir(t, tt.files)
-			client := vacuum.New(afero.NewOsFs(), &config.Param{
+			client := vacuum.New(&config.Param{
 				RootDir: rootDir,
 			})
 			ts, err := vacuum.ParseTime(tt.timestamp)
@@ -116,7 +115,7 @@ func TestClient_Update(t *testing.T) { //nolint:dupl
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			rootDir := newRootDir(t, tt.files)
-			client := vacuum.New(afero.NewOsFs(), &config.Param{
+			client := vacuum.New(&config.Param{
 				RootDir: rootDir,
 			})
 			ts, err := vacuum.ParseTime(tt.timestamp)
@@ -158,7 +157,7 @@ func TestClient_Remove(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			rootDir := newRootDir(t, tt.files)
-			client := vacuum.New(afero.NewOsFs(), &config.Param{
+			client := vacuum.New(&config.Param{
 				RootDir: rootDir,
 			})
 			if err := client.Remove(tt.pkgPath); err != nil {
@@ -195,7 +194,7 @@ func TestClient_FindAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			rootDir := newRootDir(t, tt.files)
-			client := vacuum.New(afero.NewOsFs(), &config.Param{
+			client := vacuum.New(&config.Param{
 				RootDir: rootDir,
 			})
 			timestamps, err := client.FindAll(logger)

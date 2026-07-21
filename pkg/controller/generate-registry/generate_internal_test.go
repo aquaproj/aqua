@@ -139,7 +139,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				CratePayload: d.crate,
 			}
 			var buf bytes.Buffer
-			ctrl := NewController(nil, gh, nil, cargoClient, &buf)
+			ctrl := NewController(gh, nil, cargoClient, &buf)
 			pkgInfo, _ := ctrl.getPackageInfo(ctx, logger, d.pkgName, &config.Param{}, &Config{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)

@@ -16,7 +16,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
 
@@ -172,8 +171,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 			dir := t.TempDir()
 			testutil.WriteFiles(t, dir, d.files)
 			d.param.RootDir = dir
-			fs := afero.NewOsFs()
-			inst := registry.New(d.param, d.downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			inst := registry.New(d.param, d.downloader, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			registries, err := inst.InstallRegistries(ctx, logger, d.cfg, filepath.Join(dir, d.cfgFilePath), nil)
 			if err != nil {
 				if d.isErr {

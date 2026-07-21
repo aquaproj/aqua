@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -19,7 +20,7 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logger *slog.Logger,
 	retryCount := 0
 	for {
 		logger.Debug("check if the package is already installed")
-		finfo, err := is.fs.Stat(param.Dest)
+		finfo, err := os.Stat(param.Dest)
 		if err != nil { //nolint:nestif
 			// file doesn't exist
 			if err := is.download(ctx, logger, param); err != nil {
@@ -84,7 +85,7 @@ func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *D
 			fmt.Sprintf("Downloading %s %s", pkg.Name, pkg.Version),
 		)
 	}
-	bodyFile := download.NewDownloadedFile(is.fs, body, pb)
+	bodyFile := download.NewDownloadedFile(body, pb)
 	defer func() {
 		if err := bodyFile.Remove(); err != nil {
 			slogerr.WithError(logger, err).Warn("remove a temporary file")
@@ -172,14 +173,14 @@ func (is *Installer) unarchive(ctx context.Context, logger *slog.Logger, param *
 		return fmt.Errorf("create a temporary directory: %w", err)
 	}
 	// The directory is renamed into place as is, so it must be created with the
-	// permissions a package directory needs. afero.TempDir would create it with
+	// permissions a package directory needs. os.MkdirTemp would create it with
 	// 0700 and leave the package unreadable to every other user.
 	tempDir, err := osfile.MkdirTemp(tempDir)
 	if err != nil {
 		return fmt.Errorf("create a temporary directory: %w", err)
 	}
 	defer func() {
-		if err := is.fs.RemoveAll(tempDir); err != nil {
+		if err := os.RemoveAll(tempDir); err != nil {
 			slogerr.WithError(logger, err).Warn("remove a temporary directory")
 		}
 	}()
@@ -195,10 +196,10 @@ func (is *Installer) unarchive(ctx context.Context, logger *slog.Logger, param *
 	if err := osfile.MkdirAll(filepath.Dir(param.Dest)); err != nil {
 		return fmt.Errorf("create the parent directory of the package: %w", err)
 	}
-	if err := is.fs.Rename(tempDir, param.Dest); err != nil {
+	if err := os.Rename(tempDir, param.Dest); err != nil {
 		// The rename fails if something else already installed the package. Ask the
 		// destination rather than the error, whose text differs per platform.
-		if _, e := is.fs.Stat(param.Dest); e == nil {
+		if _, e := os.Stat(param.Dest); e == nil {
 			logger.Debug("the package has been installed by another process")
 			return nil
 		}

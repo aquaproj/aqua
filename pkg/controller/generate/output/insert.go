@@ -3,6 +3,7 @@ package output
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	wast "github.com/aquaproj/aqua/v2/pkg/ast"
@@ -10,12 +11,11 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) error {
-	b, err := afero.ReadFile(o.fs, cfgFilePath)
+	b, err := os.ReadFile(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
@@ -34,11 +34,11 @@ func (o *Outputter) generateInsert(cfgFilePath string, pkgs []*aqua.Package) err
 		return err
 	}
 
-	stat, err := o.fs.Stat(cfgFilePath)
+	stat, err := os.Stat(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(o.fs, cfgFilePath, []byte(s), stat.Mode()); err != nil {
+	if err := os.WriteFile(cfgFilePath, []byte(s), stat.Mode()); err != nil { //nolint:gosec // the path is the configuration file aqua was pointed at
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil
@@ -89,7 +89,7 @@ func (o *Outputter) appendPkgsTxt(cfgFilePath string, pkgs []*aqua.Package) (str
 	if err != nil {
 		return "", fmt.Errorf("marshal packages: %w", err)
 	}
-	b, err := afero.ReadFile(o.fs, cfgFilePath)
+	b, err := os.ReadFile(cfgFilePath)
 	if err != nil {
 		return "", fmt.Errorf("read a configuration file: %w", err)
 	}

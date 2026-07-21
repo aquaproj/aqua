@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/spf13/afero"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 )
 
 // newRootDir creates a root directory with the cache directory in it, and
@@ -25,7 +25,6 @@ func newRootDir(t *testing.T) (string, string) {
 
 func TestNewCache_WithExistingFile(t *testing.T) {
 	t.Parallel()
-	fs := afero.NewOsFs()
 	rootDir, cacheDir := newRootDir(t)
 
 	// Create sample cache data
@@ -39,7 +38,7 @@ func TestNewCache_WithExistingFile(t *testing.T) {
 	}
 
 	cacheFile := filepath.Join(cacheDir, "L3BhdGgvdG8vY29uZmlnLnlhbWw=.json")
-	file, err := fs.Create(cacheFile)
+	file, err := os.Create(cacheFile)
 	if err != nil {
 		t.Fatalf("failed to create cache file: %v", err)
 	}
@@ -51,7 +50,7 @@ func TestNewCache_WithExistingFile(t *testing.T) {
 	file.Close()
 
 	// Test NewCache with existing file
-	cache, err := registry.NewCache(fs, rootDir, "/path/to/config.yaml")
+	cache, err := registry.NewCache(rootDir, "/path/to/config.yaml")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -71,11 +70,10 @@ func TestNewCache_WithExistingFile(t *testing.T) {
 
 func TestNewCache_WithInvalidJSON(t *testing.T) {
 	t.Parallel()
-	fs := afero.NewOsFs()
 	rootDir, cacheDir := newRootDir(t)
 
 	cacheFile := filepath.Join(cacheDir, "L3BhdGgvdG8vY29uZmlnLnlhbWw=.json")
-	file, err := fs.Create(cacheFile)
+	file, err := os.Create(cacheFile)
 	if err != nil {
 		t.Fatalf("failed to create cache file: %v", err)
 	}
@@ -87,7 +85,7 @@ func TestNewCache_WithInvalidJSON(t *testing.T) {
 	file.Close()
 
 	// Test NewCache with invalid JSON
-	_, err = registry.NewCache(fs, rootDir, "/path/to/config.yaml")
+	_, err = registry.NewCache(rootDir, "/path/to/config.yaml")
 	if err == nil {
 		t.Error("expected error for invalid JSON")
 	}
@@ -98,12 +96,11 @@ func TestCache_Operations(t *testing.T) { //nolint:cyclop
 	t.Parallel()
 
 	// Create cache with valid data using direct setup
-	fs := afero.NewOsFs()
 	rootDir, cacheDir := newRootDir(t)
 
 	// Create initial cache file
 	cacheFile := filepath.Join(cacheDir, "L2NvbmZpZy55YW1s.json")
-	file, err := fs.Create(cacheFile)
+	file, err := os.Create(cacheFile)
 	if err != nil {
 		t.Fatalf("failed to create cache file: %v", err)
 	}
@@ -115,7 +112,7 @@ func TestCache_Operations(t *testing.T) { //nolint:cyclop
 	}
 	file.Close()
 
-	cache, err := registry.NewCache(fs, rootDir, "/config.yaml")
+	cache, err := registry.NewCache(rootDir, "/config.yaml")
 	if err != nil {
 		t.Fatalf("failed to create cache: %v", err)
 	}
@@ -172,22 +169,17 @@ func TestCache_Operations(t *testing.T) { //nolint:cyclop
 	}
 
 	// Verify file was written
-	exists, err := afero.Exists(fs, cacheFile)
-	if err != nil {
-		t.Fatalf("failed to check file existence: %v", err)
-	}
-	if !exists {
+	if !osfile.Exists(cacheFile) {
 		t.Error("cache file should exist after write")
 	}
 }
 
 func TestCache_WriteReadRoundTrip(t *testing.T) {
 	t.Parallel()
-	fs := afero.NewOsFs()
 	rootDir, cacheDir := newRootDir(t)
 
 	cacheFile := filepath.Join(cacheDir, "L2NvbmZpZy55YW1s.json")
-	file, err := fs.Create(cacheFile)
+	file, err := os.Create(cacheFile)
 	if err != nil {
 		t.Fatalf("failed to create cache file: %v", err)
 	}
@@ -200,7 +192,7 @@ func TestCache_WriteReadRoundTrip(t *testing.T) {
 	file.Close()
 
 	// Create first cache and add data
-	cache1, err := registry.NewCache(fs, rootDir, "/config.yaml")
+	cache1, err := registry.NewCache(rootDir, "/config.yaml")
 	if err != nil {
 		t.Fatalf("failed to create cache1: %v", err)
 	}
@@ -219,7 +211,7 @@ func TestCache_WriteReadRoundTrip(t *testing.T) {
 	}
 
 	// Create second cache (should read the written data)
-	cache2, err := registry.NewCache(fs, rootDir, "/config.yaml")
+	cache2, err := registry.NewCache(rootDir, "/config.yaml")
 	if err != nil {
 		t.Fatalf("failed to create cache2: %v", err)
 	}
@@ -244,11 +236,10 @@ func TestCache_WriteReadRoundTrip(t *testing.T) {
 func TestCache_WriteError(t *testing.T) {
 	t.Parallel()
 
-	fs := afero.NewOsFs()
 	rootDir, cacheDir := newRootDir(t)
 
 	cacheFile := filepath.Join(cacheDir, "L2NvbmZpZy55YW1s.json")
-	file, err := fs.Create(cacheFile)
+	file, err := os.Create(cacheFile)
 	if err != nil {
 		t.Fatalf("failed to create cache file: %v", err)
 	}
@@ -260,7 +251,7 @@ func TestCache_WriteError(t *testing.T) {
 	}
 	file.Close()
 
-	cache, err := registry.NewCache(fs, rootDir, "/config.yaml")
+	cache, err := registry.NewCache(rootDir, "/config.yaml")
 	if err != nil {
 		t.Fatalf("failed to create cache: %v", err)
 	}

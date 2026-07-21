@@ -15,14 +15,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/mholt/archives"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 var errEscapeDest = errors.New("the file path escapes the extraction directory")
 
 type handler struct {
-	fs       afero.Fs
 	executor Executor
 	dest     string
 	filename string
@@ -93,7 +91,7 @@ func (h *handler) handleDir(dstPath string, f archives.FileInfo) error {
 	if h.escapesDest(dstPath) {
 		return fmt.Errorf("%w: %s", errEscapeDest, f.NameInArchive)
 	}
-	if err := h.fs.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
+	if err := os.MkdirAll(dstPath, f.Mode()|0o700); err != nil { //nolint:mnd
 		slogerr.WithError(h.logger, err).Warn("create a directory")
 	}
 	return nil
@@ -114,7 +112,7 @@ func (h *handler) handleRegularFile(dstPath string, f archives.FileInfo) error {
 	}
 	defer reader.Close()
 
-	dstFile, err := h.fs.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, f.Mode())
+	dstFile, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, f.Mode())
 	if err != nil {
 		slogerr.WithError(h.logger, err).Warn("create a file")
 		return nil
@@ -228,7 +226,7 @@ func (h *handler) normalizePath(nameInArchive string) string {
 }
 
 func (h *handler) unarchive(ctx context.Context, fileName, file string) error {
-	archiveFile, err := h.fs.Open(file)
+	archiveFile, err := os.Open(file)
 	if err != nil {
 		return fmt.Errorf("open a files: %w", err)
 	}
@@ -309,7 +307,7 @@ func (h *handler) decompress(input io.Reader, decomp archives.Decompressor) erro
 	if err := osfile.MkdirAll(h.dest); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", h.dest, err)
 	}
-	dst, err := h.fs.Create(filepath.Join(h.dest, strings.TrimSuffix(h.filename, filepath.Ext(h.filename))))
+	dst, err := os.Create(filepath.Join(h.dest, strings.TrimSuffix(h.filename, filepath.Ext(h.filename))))
 	if err != nil {
 		return fmt.Errorf("create a destination file: %w", err)
 	}

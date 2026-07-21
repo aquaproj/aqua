@@ -18,7 +18,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
-	"github.com/spf13/afero"
 )
 
 func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
@@ -383,17 +382,16 @@ packages:
 			testutil.WriteFiles(t, dir, d.files)
 			d.param.CWD = testutil.Abs(dir, d.param.CWD)
 			d.param.File = testutil.Abs(dir, d.param.File)
-			fs := afero.NewOsFs()
 			configFinder := finder.NewConfigFinder()
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Tags:     d.tags,
 			}
 			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(logger, http.DefaultClient))
-			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			registryInstaller := registry.New(d.param, downloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
 			configReader := reader.New(d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versiongetter.NewMockFuzzyGetter(map[string]string{}))
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fuzzyFinder, versiongetter.NewMockFuzzyGetter(map[string]string{}))
 			if err := ctrl.Generate(ctx, logger, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

@@ -15,7 +15,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
-	"github.com/spf13/afero"
 )
 
 func TestController_List(t *testing.T) {
@@ -59,8 +58,7 @@ packages:
 			ctx := t.Context()
 			d.param.CWD = t.TempDir()
 			testutil.WriteFiles(t, d.param.CWD, d.files)
-			fs := afero.NewOsFs()
-			ctrl := list.NewController(finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
+			ctrl := list.NewController(finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}))
 			if err := ctrl.List(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

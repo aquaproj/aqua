@@ -17,7 +17,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
@@ -32,7 +31,6 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		// expChecksums are IDs that must appear in the checksum file the command
 		// writes next to the configuration file.
 		expChecksums []string
-		fs           afero.Fs
 		rt           *runtime.Runtime
 		chkDL        download.ChecksumDownloader
 		downloader   download.ClientAPI
@@ -84,7 +82,6 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 `,
 				},
 			},
-			fs: afero.NewMemMapFs(),
 			rt: &runtime.Runtime{
 				GOOS:   "darwin",
 				GOARCH: "arm64",
@@ -150,7 +147,6 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz
 `,
 				},
 			},
-			fs: afero.NewMemMapFs(),
 			rt: &runtime.Runtime{
 				GOOS:   "darwin",
 				GOARCH: "arm64",
@@ -189,7 +185,7 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 				cfgFiles[i] = filepath.Join(dir, f)
 			}
 			cfgFinder := &updatechecksum.MockConfigFinder{Files: cfgFiles}
-			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
+			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
 			if err := ctrl.UpdateChecksum(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

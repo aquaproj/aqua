@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -94,7 +94,7 @@ func (is *Installer) checkFileSrcGo(ctx context.Context, logger *slog.Logger, pk
 		return "", fmt.Errorf("render file dir: %w", err)
 	}
 	exeDir := filepath.Join(is.rootDir, "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, "src", dir)
-	if _, err := is.fs.Stat(exePath); err == nil {
+	if _, err := os.Stat(exePath); err == nil {
 		return exePath, nil
 	}
 	src := file.Src
@@ -121,13 +121,13 @@ func (is *Installer) checkFileSrc(ctx context.Context, logger *slog.Logger, pkg 
 		return "", fmt.Errorf("get the package install path: %w", err)
 	}
 
-	fileSrc, err := pkg.RenameFile(logger, is.fs, pkgPath, file, is.runtime)
+	fileSrc, err := pkg.RenameFile(logger, pkgPath, file, is.runtime)
 	if err != nil {
 		return "", fmt.Errorf("get file_src: %w", err)
 	}
 
 	exePath := filepath.Join(pkgPath, fileSrc)
-	finfo, err := is.fs.Stat(exePath)
+	finfo, err := os.Stat(exePath)
 	if err != nil {
 		return "", fmt.Errorf("exe_path isn't found: %w", slogerr.With(&config.FileNotFoundError{
 			Err: err,
@@ -140,7 +140,7 @@ func (is *Installer) checkFileSrc(ctx context.Context, logger *slog.Logger, pkg 
 	logger.Debug("check the permission")
 	if mode := finfo.Mode().Perm(); !osfile.IsOwnerExecutable(mode) {
 		logger.Debug("add the permission to execute the command")
-		if err := is.fs.Chmod(exePath, osfile.AllowOwnerExec(mode)); err != nil {
+		if err := os.Chmod(exePath, osfile.AllowOwnerExec(mode)); err != nil {
 			return "", errChmod
 		}
 	}
@@ -157,9 +157,7 @@ func (is *Installer) createFileHardLink(logger *slog.Logger, file *registry.File
 	if is.runtime.IsWindows() && filepath.Ext(link) == "" {
 		link += exeExt
 	}
-	if f, err := afero.Exists(is.fs, link); err != nil {
-		return fmt.Errorf("check if a hardlink exists: %w", err)
-	} else if f {
+	if osfile.Exists(link) {
 		// do nothing
 		return nil
 	}
