@@ -12,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/schollz/progressbar/v3"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -172,7 +171,10 @@ func (is *Installer) unarchive(ctx context.Context, logger *slog.Logger, param *
 	if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
 		return fmt.Errorf("create a temporary directory: %w", err)
 	}
-	tempDir, err := afero.TempDir(is.fs, tempDir, "")
+	// The directory is renamed into place as is, so it must be created with the
+	// permissions a package directory needs. afero.TempDir would create it with
+	// 0700 and leave the package unreadable to every other user.
+	tempDir, err := osfile.MkdirTemp(is.fs, tempDir)
 	if err != nil {
 		return fmt.Errorf("create a temporary directory: %w", err)
 	}

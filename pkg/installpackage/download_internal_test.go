@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/spf13/afero"
@@ -95,6 +96,42 @@ func TestInstaller_unarchive(t *testing.T) {
 		t.Fatalf("the executable file is %q, want %q", b, "gh")
 	}
 	assertTempDirIsEmpty(t, inst.fs, rootDir)
+}
+
+// The destination is renamed into place from a temporary directory, so it must
+// end up with the permissions aqua grants its own directories. A temporary
+// directory defaults to 0700, which would leave the package unreadable to every
+// other user.
+// See https://github.com/aquaproj/aqua/issues/5049
+func TestInstaller_unarchive_destPermission(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, nil)
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The expectation is a directory created the way aqua creates its own, so
+	// that neither the umask nor the platform's handling of modes matters.
+	want := filepath.Join(rootDir, "reference")
+	if err := osfile.MkdirAll(inst.fs, want); err != nil {
+		t.Fatal(err)
+	}
+	wantInfo, err := inst.fs.Stat(want)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotInfo, err := inst.fs.Stat(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotInfo.Mode().Perm() != wantInfo.Mode().Perm() {
+		t.Fatalf("the permission of the package directory is %o, want %o", gotInfo.Mode().Perm(), wantInfo.Mode().Perm())
+	}
 }
 
 // A package another process finished extracting first must be left alone, and
