@@ -3,10 +3,10 @@ package list
 import (
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -38,7 +38,7 @@ func (c *Controller) listInstalled(logger *slog.Logger, param *config.Param) err
 		cfgFileMap[cfgFilePath] = struct{}{}
 
 		logger.Debug("checking a global configuration file")
-		if _, err := os.Stat(cfgFilePath); err != nil {
+		if !osfile.Exists(cfgFilePath) {
 			continue
 		}
 		if err := c.listInstalledByConfig(logger, cfgFilePath); err != nil {

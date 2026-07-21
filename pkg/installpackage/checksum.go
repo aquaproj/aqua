@@ -106,8 +106,16 @@ func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger
 		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	tempFilePath := f.Name()
-	defer f.Close()
-	defer os.Remove(tempFilePath)
+	// Close before removing: deferred calls run in reverse order, and Windows
+	// refuses to remove a file that is still open.
+	defer func() {
+		if err := f.Close(); err != nil {
+			slogerr.WithError(logger, err).Warn("close a temporary file")
+		}
+		if err := os.Remove(tempFilePath); err != nil {
+			slogerr.WithError(logger, err).Warn("remove a temporary file")
+		}
+	}()
 	if _, err := f.Write(b); err != nil {
 		return fmt.Errorf("write a checksum to a temporary file: %w", err)
 	}

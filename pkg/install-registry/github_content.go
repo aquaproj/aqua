@@ -39,12 +39,9 @@ func (is *Installer) getGitHubContentRegistry(ctx context.Context, logger *slog.
 		}
 	}
 
-	file, err := os.Create(registryFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("create a registry file: %w", err)
-	}
-	defer file.Close()
-
+	// WriteFile applies the permissions only when it creates the file, so the
+	// file must not be created before it. Creating it first left every registry
+	// file at 0644 rather than the 0600 intended here.
 	if err := os.WriteFile(registryFilePath, content, registryFilePermission); err != nil {
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -43,7 +42,7 @@ func (c *Controller) Which(ctx context.Context, logger *slog.Logger, param *conf
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		logger := logger.With("config_file_path", cfgFilePath)
 		logger.Debug("checking a global configuration file")
-		if _, err := os.Stat(cfgFilePath); err != nil {
+		if !osfile.Exists(cfgFilePath) {
 			continue
 		}
 		findResult, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeName)

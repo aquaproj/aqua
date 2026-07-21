@@ -24,6 +24,11 @@ func (is *Installer) Copy(dest, src string) error {
 	if _, err := io.Copy(dst, srcFile); err != nil {
 		return fmt.Errorf("copy a file: %w", err)
 	}
+	// The deferred Close would drop an error from flushing the executable to
+	// disk, and a truncated file would be reported as installed.
+	if err := dst.Close(); err != nil {
+		return fmt.Errorf("close the destination file: %w", err)
+	}
 
 	return nil
 }

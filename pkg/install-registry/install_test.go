@@ -1,6 +1,8 @@
 package registry_test
 
 import (
+	"errors"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"path/filepath"
@@ -18,6 +20,36 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/suzuki-shunsuke/flute/flute"
 )
+
+// assertRegistryFilesArePrivate checks the permissions of the registry files
+// downloaded into dir. Creating the file before writing it used to leave them
+// at 0644, because WriteFile applies the permissions only when it creates the
+// file itself.
+//
+// The JSON cache written next to each registry is skipped: createJSON uses
+// os.Create and has always left it at 0644. That is inconsistent with the 0600
+// of the registry it caches, but it is not what this change is about.
+func assertRegistryFilesArePrivate(t *testing.T, dir string) {
+	t.Helper()
+	if err := filepath.WalkDir(dir, func(p string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+		if filepath.Ext(p) == ".json" {
+			return nil
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
+		if perm := info.Mode().Perm(); perm != 0o600 {
+			t.Errorf("the permission of %s is %o, want 600", p, perm)
+		}
+		return nil
+	}); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		t.Fatal(err)
+	}
+}
 
 func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -185,6 +217,7 @@ func TestInstaller_InstallRegistries(t *testing.T) { //nolint:funlen
 			if diff := cmp.Diff(d.exp, registries, cmp.AllowUnexported(cfgRegistry.Config{})); diff != "" {
 				t.Fatal(diff)
 			}
+			assertRegistryFilesArePrivate(t, filepath.Join(dir, "registries"))
 		})
 	}
 }
