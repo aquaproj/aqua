@@ -52,6 +52,11 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+
+      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
       - run: go test ./... > /dev/null
       - name: Check that the tests left nothing behind
         run: |
