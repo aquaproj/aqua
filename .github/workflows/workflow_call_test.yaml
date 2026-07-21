@@ -39,7 +39,7 @@ jobs:
   # while afero was being removed, a package created a directory for real while
   # the file next to it still went into a memory-mapped filesystem, and
   # git status stayed quiet because git doesn't track empty directories.
-  # git clean -and does list them.
+  # git clean does list them.
   test-no-side-effect:
     timeout-minutes: 30
     runs-on: ubuntu-24.04
@@ -60,7 +60,7 @@ jobs:
       - run: go test ./... > /dev/null
       - name: Check that the tests left nothing behind
         run: |
-          dirty=$(git status --porcelain; git clean -and)
+          dirty=$(git status --porcelain; git clean --dry-run -d)
           if [ -n "$dirty" ]; then
             echo "::error::the tests modified the working tree"
             echo "$dirty"
