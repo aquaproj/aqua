@@ -94,6 +94,12 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 	if param.PredicateType != "" {
 		args = append(args, "--predicate-type", param.PredicateType)
 	}
+	if param.Owner != "" {
+		args = append(args, "--owner", param.Owner)
+	}
+	if param.SignerRepo != "" {
+		args = append(args, "--signer-repo", param.SignerRepo)
+	}
 	for i := range 5 {
 		err := e.exec(ctx, args)
 		if err == nil {
