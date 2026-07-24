@@ -2,6 +2,8 @@ package registry
 
 import (
 	"log/slog"
+	"maps"
+	"slices"
 
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
@@ -34,6 +36,24 @@ func (p *PackageInfo) getOverride(rt *runtime.Runtime) *Override {
 }
 
 func (ov *Override) Match(rt *runtime.Runtime) bool {
+	if !ov.MatchPlatform(rt) {
+		return false
+	}
+	for _, v := range ov.Variants {
+		if _, ok := supportedVariantKeys[v.Key]; !ok {
+			return false
+		}
+		if runtimeVariantValue(rt, v.Key) != v.Value {
+			return false
+		}
+	}
+	return true
+}
+
+// MatchPlatform reports whether ov matches rt by GOOS, GOArch, and Envs only,
+// ignoring Variants. Variant-expansion code uses this to find candidate
+// overrides for a given platform before enumerating variant values.
+func (ov *Override) MatchPlatform(rt *runtime.Runtime) bool {
 	if ov.GOOS != "" && ov.GOOS != rt.GOOS {
 		return false
 	}
@@ -45,15 +65,21 @@ func (ov *Override) Match(rt *runtime.Runtime) bool {
 			return false
 		}
 	}
-	for _, v := range ov.Variants {
-		if _, ok := supportedVariantKeys[v.Key]; !ok {
-			return false
-		}
-		if runtimeVariantValue(rt, v.Key) != v.Value {
-			return false
-		}
-	}
 	return true
+}
+
+// SupportedVariantKeys returns the variant keys aqua knows how to evaluate.
+// Callers that need to enumerate variant values (e.g. update-checksum) should
+// use this list rather than hard-coding key names.
+func SupportedVariantKeys() []string {
+	return slices.Collect(maps.Keys(supportedVariantKeys))
+}
+
+// IsSupportedVariantKey reports whether key is in the supportedVariantKeys
+// allowlist.
+func IsSupportedVariantKey(key string) bool {
+	_, ok := supportedVariantKeys[key]
+	return ok
 }
 
 func runtimeVariantValue(rt *runtime.Runtime, key string) string {
