@@ -10,12 +10,19 @@ const (
 	executableFilePermission os.FileMode = 0o755
 )
 
-func (is *Installer) Copy(dest, src string) error {
+func (is *Installer) Copy(dest, src string) (gErr error) {
 	dst, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, executableFilePermission) //nolint:nosnakecase
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)
 	}
-	defer dst.Close()
+	// Close exactly once, in the deferred call. A failure to flush the
+	// executable to disk must not be reported as a successful install, but it
+	// must not overwrite an earlier error either.
+	defer func() {
+		if err := dst.Close(); err != nil && gErr == nil {
+			gErr = fmt.Errorf("close the destination file: %w", err)
+		}
+	}()
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("open a file: %w", err)
@@ -24,11 +31,5 @@ func (is *Installer) Copy(dest, src string) error {
 	if _, err := io.Copy(dst, srcFile); err != nil {
 		return fmt.Errorf("copy a file: %w", err)
 	}
-	// The deferred Close would drop an error from flushing the executable to
-	// disk, and a truncated file would be reported as installed.
-	if err := dst.Close(); err != nil {
-		return fmt.Errorf("close the destination file: %w", err)
-	}
-
 	return nil
 }
