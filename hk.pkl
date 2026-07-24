@@ -4,7 +4,13 @@ import "package://github.com/jdx/hk/releases/download/v1.50.0/hk@1.50.0#/Builtin
 local linters = new Mapping<String, Step> {
   ["golangci-lint"] = Builtins.golangci_lint
   ["gomod-tidy"] = Builtins.gomod_tidy
-  ["typos"] = Builtins.typos
+  // Report typos, never rewrite them. `typos --write-changes` edits code as
+  // readily as prose: it rewrote the short flags of a `git clean` invocation in
+  // a workflow file into a flag that doesn't exist, and the commit hook applied
+  // it silently.
+  ["typos"] = (Builtins.typos) {
+    fix = check
+  }
   // ["lychee"] = Builtins.lychee
   ["nllint"] {
     glob = List("**/*")

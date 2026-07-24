@@ -3,9 +3,9 @@ package initpolicy
 import (
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -35,28 +35,24 @@ packages:
   - registry: standard
 `
 
-type Controller struct {
-	fs afero.Fs
-}
+type Controller struct{}
 
-func New(fs afero.Fs) *Controller {
-	return &Controller{
-		fs: fs,
-	}
+func New() *Controller {
+	return &Controller{}
 }
 
 func (c *Controller) Init(logger *slog.Logger, cfgFilePath string) error {
 	if cfgFilePath == "" {
 		cfgFilePath = "aqua-policy.yaml"
 	}
-	if _, err := c.fs.Stat(cfgFilePath); err == nil {
+	if _, err := os.Stat(cfgFilePath); err == nil {
 		// configuration file already exists, then do nothing.
 		logger.Info("policy file already exists",
 			"policy_file_path", cfgFilePath)
 		return nil
 	}
 
-	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(configTemplate), osfile.FilePermission); err != nil {
+	if err := os.WriteFile(cfgFilePath, []byte(configTemplate), osfile.FilePermission); err != nil {
 		return fmt.Errorf("write a policy file: %w", slogerr.With(err,
 			"policy_file_path", cfgFilePath,
 		))

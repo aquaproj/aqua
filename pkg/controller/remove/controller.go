@@ -11,12 +11,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 type Controller struct {
 	rootDir           string
-	fs                afero.Fs
 	runtime           *runtime.Runtime
 	configFinder      ConfigFinder
 	configReader      ConfigReader
@@ -39,10 +37,9 @@ type FuzzyFinder interface {
 	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(param *config.Param, target *config.RemoveMode, fs afero.Fs, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController, vacuum Vacuum) *Controller {
+func New(param *config.Param, target *config.RemoveMode, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController, vacuum Vacuum) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
-		fs:                fs,
 		runtime:           rt,
 		configFinder:      configFinder,
 		configReader:      configReader,

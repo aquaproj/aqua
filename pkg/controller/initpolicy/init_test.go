@@ -2,6 +2,8 @@ package initpolicy_test
 
 import (
 	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -40,12 +42,12 @@ packages:
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
-			ctrl := initpolicy.New(fs)
-			if err := ctrl.Init(logger, ""); err != nil {
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			ctrl := initpolicy.New()
+			// The policy file is created relative to the working directory when
+			// no path is given, so the test must give one.
+			if err := ctrl.Init(logger, filepath.Join(dir, "aqua-policy.yaml")); err != nil {
 				if d.isErr {
 					return
 				}
@@ -55,5 +57,24 @@ packages:
 				t.Fatal("error must be returned")
 			}
 		})
+	}
+}
+
+// An empty path defaults to aqua-policy.yaml in the working directory. The test
+// changes into a temporary directory to exercise that default without writing
+// into the package directory, which is why it can't run in parallel.
+func TestController_Init_defaultPath(t *testing.T) { //nolint:paralleltest // t.Chdir can't be used in a parallel test
+	t.Chdir(t.TempDir())
+	logger := slog.New(slog.DiscardHandler)
+	ctrl := initpolicy.New()
+	if err := ctrl.Init(logger, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat("aqua-policy.yaml"); err != nil {
+		t.Fatal(err)
+	}
+	// Running it again finds the existing file and does nothing.
+	if err := ctrl.Init(logger, ""); err != nil {
+		t.Fatal(err)
 	}
 }

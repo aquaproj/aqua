@@ -9,7 +9,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/spf13/afero"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -92,8 +92,8 @@ func (is *Installer) createCmdLink(logger *slog.Logger, file *registry.File, cmd
 
 func (is *Installer) createHardLinkToProxy(logger *slog.Logger, cmd, aquaProxyPathOnWindows string) error {
 	hardLink := filepath.Join(is.rootDir, "bin", cmd+exeExt)
-	if f, err := afero.Exists(is.fs, hardLink); err != nil {
-		return fmt.Errorf("check if a hard link to aqua-proxy exists: %w", err)
+	if f, err := osfile.Exists(hardLink); err != nil {
+		return err //nolint:wrapcheck
 	} else if f {
 		return nil
 	}
@@ -106,7 +106,7 @@ func (is *Installer) createHardLinkToProxy(logger *slog.Logger, cmd, aquaProxyPa
 
 func (is *Installer) recreateHardLinks() error {
 	binDir := filepath.Join(is.rootDir, "bin")
-	infos, err := afero.ReadDir(is.fs, binDir)
+	infos, err := os.ReadDir(binDir)
 	if err != nil {
 		return fmt.Errorf("read a bin dir: %w", err)
 	}
@@ -123,7 +123,7 @@ func (is *Installer) recreateHardLinks() error {
 			continue
 		}
 		p := filepath.Join(binDir, info.Name())
-		if err := is.fs.Remove(p); err != nil {
+		if err := os.Remove(p); err != nil {
 			return fmt.Errorf("remove a file to replace it with a hard link: %w", err)
 		}
 		if strings.HasSuffix(info.Name(), exeExt) {
@@ -146,7 +146,7 @@ func (is *Installer) createLink(logger *slog.Logger, linkPath, linkDest string) 
 			return fmt.Errorf("%s has already existed and is a named pipe", linkPath)
 		case mode.IsRegular():
 			// if file is a regular file, remove it and create a symlink.
-			if err := is.fs.Remove(linkPath); err != nil {
+			if err := os.Remove(linkPath); err != nil {
 				return fmt.Errorf("remove a file to create a symbolic link (%s): %w", linkPath, err)
 			}
 			if err := is.linker.Symlink(linkDest, linkPath); err != nil {
@@ -180,7 +180,7 @@ func (is *Installer) recreateLink(logger *slog.Logger, linkPath, linkDest string
 		"link_file", linkPath,
 		"old", lnDest,
 		"new", linkDest)
-	if err := is.fs.Remove(linkPath); err != nil {
+	if err := os.Remove(linkPath); err != nil {
 		return fmt.Errorf("remove a symbolic link (%s): %w", linkPath, err)
 	}
 	if err := is.linker.Symlink(linkDest, linkPath); err != nil {

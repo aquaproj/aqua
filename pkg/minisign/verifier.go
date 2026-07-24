@@ -5,24 +5,22 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/spf13/afero"
 )
 
 type Verifier struct {
 	downloader download.ClientAPI
-	fs         afero.Fs
 	exe        Executor
 }
 
-func New(downloader download.ClientAPI, fs afero.Fs, exe Executor) *Verifier {
+func New(downloader download.ClientAPI, exe Executor) *Verifier {
 	return &Verifier{
 		downloader: downloader,
-		fs:         fs,
 		exe:        exe,
 	}
 }
@@ -37,7 +35,7 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 	if err != nil {
 		return err
 	}
-	defer v.fs.Remove(sigFile)                       //nolint:errcheck
+	defer os.Remove(sigFile)
 	return v.exe.Verify(ctx, logger, param, sigFile) //nolint:wrapcheck
 }
 
@@ -53,7 +51,7 @@ func (v *Verifier) downloadSignature(ctx context.Context, logger *slog.Logger, r
 	}
 	defer rc.Close()
 
-	signatureFile, err := afero.TempFile(v.fs, "", "")
+	signatureFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return "", fmt.Errorf("create a temporary file: %w", err)
 	}

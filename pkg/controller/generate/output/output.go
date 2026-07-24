@@ -3,22 +3,20 @@ package output
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	goccyYAML "github.com/goccy/go-yaml"
-	"github.com/spf13/afero"
 	"go.yaml.in/yaml/v2"
 )
 
 type Outputter struct {
 	stdout io.Writer
-	fs     afero.Fs
 }
 
-func New(stdout io.Writer, fs afero.Fs) *Outputter {
+func New(stdout io.Writer) *Outputter {
 	return &Outputter{
 		stdout: stdout,
-		fs:     fs,
 	}
 }
 
@@ -41,11 +39,11 @@ func (o *Outputter) Output(param *Param) error {
 		return o.generateInsert(param.ConfigFilePath, param.List)
 	}
 
-	if _, err := o.fs.Stat(param.Dest); err == nil {
+	if _, err := os.Stat(param.Dest); err == nil {
 		return o.generateInsert(param.Dest, param.List)
 	}
 
-	f, err := o.fs.Create(param.Dest)
+	f, err := os.Create(param.Dest)
 	if err != nil {
 		return fmt.Errorf("create a file: %w", err)
 	}

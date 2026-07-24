@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
@@ -13,7 +14,7 @@ import (
 func (is *Installer) WaitExe(ctx context.Context, logger *slog.Logger, exePath string) error {
 	for i := range 10 {
 		logger.Debug("check if exec file exists")
-		if fi, err := is.fs.Stat(exePath); err == nil {
+		if fi, err := os.Stat(exePath); err == nil {
 			if osfile.IsOwnerExecutable(fi.Mode()) {
 				break
 			}

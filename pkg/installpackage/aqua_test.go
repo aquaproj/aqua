@@ -3,6 +3,7 @@ package installpackage_test
 import (
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -11,7 +12,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
@@ -62,14 +65,18 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			testutil.RootParam(dir, d.param)
+			// The commands that install aqua create the bin directory before
+			// they link into it, so the test does too.
+			if err := osfile.MkdirAll(filepath.Join(d.param.RootDir, "bin")); err != nil {
 				t.Fatal(err)
 			}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			ctrl := installpackage.New(d.param, &download.Mock{
 				RC: io.NopCloser(strings.NewReader("xxx")),
-			}, d.rt, fs, installpackage.NewMockLinker(fs), d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
+			}, d.rt, link.New(), d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			if err := ctrl.InstallAqua(ctx, logger, d.version); err != nil {
 				if d.isErr {
 					return

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -72,7 +73,7 @@ func (is *Installer) InstallProxy(ctx context.Context, logger *slog.Logger) erro
 	}
 
 	logger.Debug("check if aqua-proxy is already installed")
-	finfo, err := is.fs.Stat(pkgPath)
+	finfo, err := os.Stat(pkgPath)
 	if err != nil {
 		// file doesn't exist
 		chksum := ProxyChecksums()[is.runtime.Env()]

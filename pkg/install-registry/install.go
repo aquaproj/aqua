@@ -96,7 +96,7 @@ func (is *Installer) InstallRegistry(ctx context.Context, logger *slog.Logger, r
 		if !errors.Is(err, os.ErrNotExist) {
 			return nil, err
 		}
-		if err := osfile.MkdirAll(is.fs, filepath.Dir(registryFilePath)); err != nil {
+		if err := osfile.MkdirAll(filepath.Dir(registryFilePath)); err != nil {
 			return nil, fmt.Errorf("create the parent directory of the configuration file: %w", err)
 		}
 		return is.getRegistry(ctx, logger, regist, registryFilePath, checksums)

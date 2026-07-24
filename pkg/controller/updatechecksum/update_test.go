@@ -3,6 +3,8 @@ package updatechecksum_test
 import (
 	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	rgst "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
@@ -23,29 +24,26 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 	data := []struct {
 		name               string
 		param              *config.Param
-		cfgFinder          updatechecksum.ConfigFinder
+		cfgFiles           []string
 		cfgReader          updatechecksum.ConfigReader
 		registryInstaller  updatechecksum.RegistryInstaller
 		registryDownloader updatechecksum.GitHubContentFileDownloader
-		fs                 afero.Fs
-		rt                 *runtime.Runtime
-		chkDL              download.ChecksumDownloader
-		downloader         download.ClientAPI
-		isErr              bool
+		// expChecksums are IDs that must appear in the checksum file the command
+		// writes next to the configuration file.
+		expChecksums []string
+		rt           *runtime.Runtime
+		chkDL        download.ChecksumDownloader
+		downloader   download.ClientAPI
+		isErr        bool
 	}{
 		{
 			name: "normal",
 			param: &config.Param{
-				CWD: "/home/foo/workspace",
 				All: true,
-				GlobalConfigFilePaths: []string{
-					"/home/foo/global/aqua.yaml",
-				},
 			},
-			cfgFinder: &updatechecksum.MockConfigFinder{
-				Files: []string{
-					"/home/foo/workspace/aqua.yaml",
-				},
+			cfgFiles: []string{"aqua.yaml"},
+			expChecksums: []string{
+				"github_release/github.com/cli/cli/v2.17.0/",
 			},
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
@@ -84,7 +82,6 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 `,
 				},
 			},
-			fs: afero.NewMemMapFs(),
 			rt: &runtime.Runtime{
 				GOOS:   "darwin",
 				GOARCH: "arm64",
@@ -97,16 +94,11 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 		{
 			name: "enabled",
 			param: &config.Param{
-				CWD: "/home/foo/workspace",
 				All: true,
-				GlobalConfigFilePaths: []string{
-					"/home/foo/global/aqua.yaml",
-				},
 			},
-			cfgFinder: &updatechecksum.MockConfigFinder{
-				Files: []string{
-					"/home/foo/workspace/aqua.yaml",
-				},
+			cfgFiles: []string{"aqua.yaml"},
+			expChecksums: []string{
+				"github_release/github.com/cli/cli/v2.17.0/",
 			},
 			cfgReader: &reader.MockConfigReader{
 				Cfg: &aqua.Config{
@@ -130,7 +122,7 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 								RepoOwner: "cli",
 								RepoName:  "cli",
 								Type:      "github_release",
-								Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+								Asset:     "gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz",
 								Checksum: &registry.Checksum{
 									Type:       "github_release",
 									Asset:      "gh_{{trimV .Version}}_checksums.txt",
@@ -151,11 +143,10 @@ asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
 					String: `type: github_release
 repo_owner: cli
 repo_name: cli
-asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
+asset: gh_{{trimV .Version}}_{{.OS}}_{{.Arch}}.tar.gz
 `,
 				},
 			},
-			fs: afero.NewMemMapFs(),
 			rt: &runtime.Runtime{
 				GOOS:   "darwin",
 				GOARCH: "arm64",
@@ -185,7 +176,16 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			ctrl := updatechecksum.New(d.param, d.cfgFinder, d.cfgReader, d.registryInstaller, d.fs, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
+			// The configuration files don't have to exist. Only the directory
+			// they are in matters, because the checksum file is created there.
+			dir := t.TempDir()
+			d.param.CWD = dir
+			cfgFiles := make([]string, len(d.cfgFiles))
+			for i, f := range d.cfgFiles {
+				cfgFiles[i] = filepath.Join(dir, f)
+			}
+			cfgFinder := &updatechecksum.MockConfigFinder{Files: cfgFiles}
+			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
 			if err := ctrl.UpdateChecksum(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
@@ -194,6 +194,21 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 			}
 			if d.isErr {
 				t.Fatal("error should be returned")
+			}
+			// The checksums are written next to the configuration file. Without
+			// this the test only checks that the command doesn't fail, which it
+			// also doesn't when every checksum is silently discarded.
+			for _, f := range cfgFiles {
+				p := filepath.Join(filepath.Dir(f), "aqua-checksums.json")
+				b, err := os.ReadFile(p)
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, id := range d.expChecksums {
+					if !strings.Contains(string(b), id) {
+						t.Fatalf("%s doesn't have the checksum of %s: %s", p, id, string(b))
+					}
+				}
 			}
 		})
 	}

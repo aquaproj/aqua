@@ -2,6 +2,7 @@ package reader_test
 
 import (
 	"log/slog"
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -13,22 +14,26 @@ import (
 
 func Test_configReader_Read(t *testing.T) { //nolint:funlen
 	t.Parallel()
+	// The keys of files and configFilePath are relative to a directory created
+	// for each test case, which is also passed to exp so that it can build the
+	// absolute paths the reader returns.
 	data := []struct {
 		name           string
-		exp            *aqua.Config
+		exp            func(dir string) *aqua.Config
 		isErr          bool
 		files          map[string]string
 		configFilePath string
 		homeDir        string
 	}{
 		{
-			name:  "file isn't found",
-			isErr: true,
+			name:           "file isn't found",
+			configFilePath: fileAquaYaml,
+			isErr:          true,
 		},
 		{
 			name: "normal",
 			files: map[string]string{
-				pathHomeWorkspaceFooAquaYaml: `registries:
+				fileAquaYaml: `registries:
 - type: standard
   ref: v2.5.0
 - type: local
@@ -36,66 +41,70 @@ func Test_configReader_Read(t *testing.T) { //nolint:funlen
   path: registry.yaml
 packages:`,
 			},
-			configFilePath: pathHomeWorkspaceFooAquaYaml,
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
-					regTypeStandard: {
-						Type:      pkgTypeGitHubContent,
-						Name:      regTypeStandard,
-						Ref:       "v2.5.0",
-						RepoOwner: regOwnerAquaproj,
-						RepoName:  regNameAquaRegistry,
-						Path:      regFileRegistryYaml,
+			configFilePath: fileAquaYaml,
+			exp: func(dir string) *aqua.Config {
+				return &aqua.Config{
+					Registries: aqua.Registries{
+						regTypeStandard: {
+							Type:      pkgTypeGitHubContent,
+							Name:      regTypeStandard,
+							Ref:       "v2.5.0",
+							RepoOwner: regOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
+							Path:      regFileRegistryYaml,
+						},
+						regTypeLocal: {
+							Type: regTypeLocal,
+							Name: regTypeLocal,
+							Path: filepath.Join(dir, regFileRegistryYaml),
+						},
 					},
-					regTypeLocal: {
-						Type: regTypeLocal,
-						Name: regTypeLocal,
-						Path: "/home/workspace/foo/registry.yaml",
-					},
-				},
-				Packages: []*aqua.Package{},
+					Packages: []*aqua.Package{},
+				}
 			},
 		},
 		{
 			name: "import package",
 			files: map[string]string{
-				pathHomeWorkspaceFooAquaYaml: `registries:
+				fileAquaYaml: `registries:
 - type: standard
   ref: v2.5.0
 packages:
 - name: suzuki-shunsuke/ci-info@v1.0.0
 - import: aqua-installer.yaml
 `,
-				pathHomeWorkspaceFooAquaInstallerYaml: `packages:
+				fileAquaInstallerYaml: `packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
 			},
-			configFilePath: pathHomeWorkspaceFooAquaYaml,
-			exp: &aqua.Config{
-				Registries: aqua.Registries{
-					regTypeStandard: {
-						Type:      pkgTypeGitHubContent,
-						Name:      regTypeStandard,
-						Ref:       "v2.5.0",
-						RepoOwner: regOwnerAquaproj,
-						RepoName:  regNameAquaRegistry,
-						Path:      regFileRegistryYaml,
+			configFilePath: fileAquaYaml,
+			exp: func(dir string) *aqua.Config {
+				return &aqua.Config{
+					Registries: aqua.Registries{
+						regTypeStandard: {
+							Type:      pkgTypeGitHubContent,
+							Name:      regTypeStandard,
+							Ref:       "v2.5.0",
+							RepoOwner: regOwnerAquaproj,
+							RepoName:  regNameAquaRegistry,
+							Path:      regFileRegistryYaml,
+						},
 					},
-				},
-				Packages: []*aqua.Package{
-					{
-						Name:     "suzuki-shunsuke/ci-info",
-						Registry: regTypeStandard,
-						Version:  versionV1,
-						FilePath: pathHomeWorkspaceFooAquaYaml,
+					Packages: []*aqua.Package{
+						{
+							Name:     "suzuki-shunsuke/ci-info",
+							Registry: regTypeStandard,
+							Version:  versionV1,
+							FilePath: filepath.Join(dir, fileAquaYaml),
+						},
+						{
+							Name:     "aquaproj/aqua-installer",
+							Registry: regTypeStandard,
+							Version:  versionV1,
+							FilePath: filepath.Join(dir, fileAquaInstallerYaml),
+						},
 					},
-					{
-						Name:     "aquaproj/aqua-installer",
-						Registry: regTypeStandard,
-						Version:  versionV1,
-						FilePath: pathHomeWorkspaceFooAquaInstallerYaml,
-					},
-				},
+				}
 			},
 		},
 	}
@@ -103,15 +112,13 @@ packages:
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
-			reader := reader.New(fs, &config.Param{
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			reader := reader.New(&config.Param{
 				HomeDir: d.homeDir,
 			})
 			cfg := &aqua.Config{}
-			if err := reader.Read(logger, d.configFilePath, cfg); err != nil {
+			if err := reader.Read(logger, filepath.Join(dir, d.configFilePath), cfg); err != nil {
 				if d.isErr {
 					return
 				}
@@ -120,7 +127,7 @@ packages:
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if diff := cmp.Diff(d.exp, cfg); diff != "" {
+			if diff := cmp.Diff(d.exp(dir), cfg); diff != "" {
 				t.Fatal(diff)
 			}
 		})

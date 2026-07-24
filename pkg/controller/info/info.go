@@ -12,18 +12,15 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	rt "github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 type Controller struct {
-	fs     afero.Fs
 	finder ConfigFinder
 	rt     *rt.Runtime
 }
 
-func New(fs afero.Fs, finder ConfigFinder, rt *rt.Runtime) *Controller {
+func New(finder ConfigFinder, rt *rt.Runtime) *Controller {
 	return &Controller{
-		fs:     fs,
 		finder: finder,
 		rt:     rt,
 	}

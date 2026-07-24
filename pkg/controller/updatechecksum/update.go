@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -34,7 +35,7 @@ func (c *Controller) updateGlobalChecksumFiles(ctx context.Context, logger *slog
 		return nil
 	}
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		if _, err := c.fs.Stat(cfgFilePath); err != nil {
+		if _, err := os.Stat(cfgFilePath); err != nil {
 			continue
 		}
 		if err := c.updateChecksum(ctx, logger, cfgFilePath); err != nil {
@@ -55,11 +56,11 @@ func (c *Controller) updateChecksum(ctx context.Context, logger *slog.Logger, cf
 
 	checksums := checksum.New()
 	checksums.EnableOutput()
-	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(c.fs, cfgFilePath)
+	checksumFilePath, err := checksum.GetChecksumFilePathFromConfigFilePath(cfgFilePath)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	if err := checksums.ReadFile(c.fs, checksumFilePath); err != nil {
+	if err := checksums.ReadFile(checksumFilePath); err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
 	}
 
@@ -73,7 +74,7 @@ func (c *Controller) updateChecksum(ctx context.Context, logger *slog.Logger, cf
 		if c.prune {
 			checksums.Prune()
 		}
-		if err := checksums.UpdateFile(c.fs, checksumFilePath); err != nil {
+		if err := checksums.UpdateFile(checksumFilePath); err != nil {
 			namedErr = fmt.Errorf("update a checksum file: %w", err)
 		}
 	}()

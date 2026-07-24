@@ -13,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"go.yaml.in/yaml/v2"
 )
@@ -21,13 +20,11 @@ import (
 var errHomeDirEmpty = errors.New("failed to get a user home directory")
 
 type ConfigReader struct {
-	fs      afero.Fs
 	homeDir string
 }
 
-func New(fs afero.Fs, param *config.Param) *ConfigReader {
+func New(param *config.Param) *ConfigReader {
 	return &ConfigReader{
-		fs:      fs,
 		homeDir: param.HomeDir,
 	}
 }
@@ -36,7 +33,7 @@ const homePrefix = "$HOME" + string(os.PathSeparator)
 
 func (r *ConfigReader) Read(logger *slog.Logger, configFilePath string, cfg *aqua.Config) error {
 	logger = logger.With("config_file_path", configFilePath)
-	file, err := r.fs.Open(configFilePath)
+	file, err := os.Open(configFilePath)
 	if err != nil {
 		return fmt.Errorf("open a file: %w", err)
 	}
@@ -109,7 +106,7 @@ func (r *ConfigReader) readImportDir(logger *slog.Logger, configFilePath string,
 func (r *ConfigReader) readPackage(logger *slog.Logger, configFilePath string, pkg *aqua.Package) ([]*aqua.Package, error) {
 	if pkg.GoVersionFile != "" {
 		// go_version_file
-		if err := readGoVersionFile(r.fs, configFilePath, pkg); err != nil {
+		if err := readGoVersionFile(configFilePath, pkg); err != nil {
 			return nil, fmt.Errorf("read a go version file: %w", slogerr.With(err,
 				"go_version_file", pkg.GoVersionFile,
 			))
@@ -119,7 +116,7 @@ func (r *ConfigReader) readPackage(logger *slog.Logger, configFilePath string, p
 	if pkg.VersionExpr != "" {
 		// version_expr
 		dir := filepath.Dir(configFilePath)
-		s, err := expr.EvalVersionExpr(r.fs, dir, pkg.VersionExpr)
+		s, err := expr.EvalVersionExpr(dir, pkg.VersionExpr)
 		if err != nil {
 			return nil, fmt.Errorf("evaluate a version_expr: %w", slogerr.With(err,
 				"version_expr", pkg.VersionExpr,
@@ -139,7 +136,7 @@ func (r *ConfigReader) readPackage(logger *slog.Logger, configFilePath string, p
 
 func (r *ConfigReader) importFiles(logger *slog.Logger, configFilePath string, importGlob string) ([]*aqua.Package, error) {
 	p := filepath.Join(filepath.Dir(configFilePath), importGlob)
-	filePaths, err := afero.Glob(r.fs, p)
+	filePaths, err := filepath.Glob(p)
 	if err != nil {
 		return nil, fmt.Errorf("find files with a glob pattern: %w", err)
 	}

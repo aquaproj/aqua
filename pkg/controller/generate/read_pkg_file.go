@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -18,7 +19,7 @@ func (c *Controller) readGeneratedPkgsFromFile(ctx context.Context, logger *slog
 	if param.File == "-" {
 		file = c.stdin
 	} else {
-		f, err := c.fs.Open(param.File)
+		f, err := os.Open(param.File)
 		if err != nil {
 			return nil, fmt.Errorf("open the package list file: %w", err)
 		}

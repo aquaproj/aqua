@@ -1,10 +1,9 @@
 package policy
 
 import (
-	"fmt"
 	"path/filepath"
 
-	"github.com/spf13/afero"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 )
 
@@ -12,14 +11,10 @@ type ConfigFinder interface {
 	Find(policyFilePath, wd string) (string, error)
 }
 
-type ConfigFinderImpl struct {
-	fs afero.Fs
-}
+type ConfigFinderImpl struct{}
 
-func NewConfigFinder(fs afero.Fs) *ConfigFinderImpl {
-	return &ConfigFinderImpl{
-		fs: fs,
-	}
+func NewConfigFinder() *ConfigFinderImpl {
+	return &ConfigFinderImpl{}
 }
 
 func configFileNames() []string {
@@ -33,11 +28,11 @@ func configFileNames() []string {
 
 func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 	if policyFilePath != "" {
-		f, err := afero.Exists(f.fs, policyFilePath)
-		if err != nil {
-			return "", fmt.Errorf("check if a policy file exists: %w", err)
-		}
-		if !f {
+		// The user named this file, so a stat failure other than "not found"
+		// must not be reported as "not found".
+		if e, err := osfile.Exists(policyFilePath); err != nil {
+			return "", err //nolint:wrapcheck
+		} else if !e {
 			return "", ErrConfigFileNotFound
 		}
 		if filepath.IsAbs(policyFilePath) {
@@ -46,26 +41,28 @@ func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 		return filepath.Join(wd, policyFilePath), nil
 	}
 
-	gitDir := findconfig.Find(wd, f.exist, ".git")
+	// https://github.com/orgs/aquaproj/discussions/2476
+	// Using `git worktree`, .git is a file.
+	gitDir := findconfig.Find(wd, existsBestEffort, ".git")
 	if gitDir == "" {
 		return "", nil
 	}
 	gitParentDir := filepath.Dir(gitDir)
 	for _, p := range configFileNames() {
-		if _, err := f.fs.Stat(filepath.Join(gitParentDir, p)); err != nil {
-			continue
+		p := filepath.Join(gitParentDir, p)
+		if e, err := osfile.Exists(p); err != nil {
+			return "", err //nolint:wrapcheck
+		} else if e {
+			return p, nil
 		}
-		return filepath.Join(gitParentDir, p), nil
 	}
 	return "", nil
 }
 
-func (f *ConfigFinderImpl) exist(p string) bool {
-	// https://github.com/orgs/aquaproj/discussions/2476
-	// Using `git worktree`, .git is a file.
-	b, err := afero.Exists(f.fs, p)
-	if err != nil {
-		return false
-	}
-	return b
+// exists adapts osfile.Exists to findconfig's predicate, which walks up the
+// directory tree and has no way to report an error. A path that can't be
+// stat'd is treated as absent, so the walk moves on to the parent directory.
+func existsBestEffort(p string) bool {
+	f, _ := osfile.Exists(p)
+	return f
 }

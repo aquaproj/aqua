@@ -68,7 +68,7 @@ func (c *Controller) Generate(ctx context.Context, logger *slog.Logger, param *c
 		})
 	}
 	if param.Insert {
-		if err := osfile.MkdirAll(c.fs, filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
+		if err := osfile.MkdirAll(filepath.Join(filepath.Dir(cfgFilePath), cfg.ImportDir)); err != nil {
 			return fmt.Errorf("create a directory specified by import_dir: %w", err)
 		}
 	}
@@ -104,7 +104,7 @@ func (c *Controller) getConfigFile(param *config.Param) (string, error) {
 
 func (c *Controller) listPkgs(ctx context.Context, logger *slog.Logger, param *config.Param, cfg *aqua.Config, cfgFilePath string, args ...string) ([]*config.Package, error) {
 	checksums, updateChecksum, err := checksum.Open(
-		logger, c.fs, cfgFilePath, param.ChecksumEnabled(cfg))
+		logger, cfgFilePath, param.ChecksumEnabled(cfg))
 	if err != nil {
 		return nil, fmt.Errorf("read a checksum JSON: %w", err)
 	}

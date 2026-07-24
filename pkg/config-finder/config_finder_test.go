@@ -1,6 +1,8 @@
 package finder_test
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -38,12 +40,52 @@ func TestParseGlobalConfigFilePaths(t *testing.T) {
 	}
 }
 
+// requireNoConfigFileAbove reports a configuration file in a parent of dir.
+// Find and Finds walk up to the root of the filesystem, so a stray aqua.yaml
+// anywhere above the temporary directory is found instead of the files of the
+// test case, and the test fails with a diff that has nothing to do with the
+// code under test.
+//
+// On a developer machine that is the environment's fault and the test is
+// skipped. On CI it is a hole in the test run, so it fails instead: a test that
+// silently stops running is worse than one that complains.
+func requireNoConfigFileAbove(t *testing.T, dir string) {
+	t.Helper()
+	for p := filepath.Dir(dir); ; p = filepath.Dir(p) {
+		for _, name := range finder.ConfigFileNames() {
+			f := filepath.Join(p, name)
+			if _, err := os.Stat(f); err == nil {
+				msg := "%s exists, so it is found instead of the files of this test case"
+				if os.Getenv("CI") != "" {
+					t.Fatalf(msg, f)
+				}
+				t.Skipf(msg, f)
+			}
+		}
+		if parent := filepath.Dir(p); parent == p {
+			return
+		}
+	}
+}
+
+// join makes the slash separated paths of a test case absolute.
+func join(root string, paths ...string) []string {
+	arr := make([]string, len(paths))
+	for i, p := range paths {
+		arr[i] = filepath.Join(root, filepath.FromSlash(p))
+	}
+	return arr
+}
+
 func Test_configFinderFind(t *testing.T) { //nolint:funlen
 	t.Parallel()
+	// Every path is relative to a root directory created for each test case,
+	// except configFilePath when absConfigFilePath is false.
 	data := []struct {
 		name                  string
 		wd                    string
 		configFilePath        string
+		absConfigFilePath     bool
 		globalConfigFilePaths []string
 		exp                   string
 		files                 map[string]string
@@ -51,45 +93,49 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 	}{
 		{
 			name:  "not found",
-			wd:    "/home/foo",
+			wd:    "foo",
 			isErr: true,
 		},
 		{
-			name:           "configFilePath",
-			wd:             "/home/foo",
-			configFilePath: "/home/foo/aqua.yaml",
-			exp:            "/home/foo/aqua.yaml",
+			name:              "configFilePath",
+			wd:                "foo",
+			configFilePath:    "foo/aqua.yaml",
+			absConfigFilePath: true,
+			exp:               "foo/aqua.yaml",
 		},
 		{
 			name: "find",
-			wd:   "/home/foo",
+			wd:   "foo",
 			files: map[string]string{
-				"/home/foo/.aqua.yaml": "",
+				"foo/.aqua.yaml": "",
 			},
-			exp: "/home/foo/.aqua.yaml",
+			exp: "foo/.aqua.yaml",
 		},
 		{
 			name: "global config",
-			wd:   "/home/foo",
+			wd:   "foo",
 			globalConfigFilePaths: []string{
-				"/home/.config/aqua.yaml",
-				"/etc/aqua/aqua.yaml",
+				"config/aqua.yaml",
+				"etc/aqua/aqua.yaml",
 			},
 			files: map[string]string{
-				"/etc/aqua/aqua.yaml": "",
+				"etc/aqua/aqua.yaml": "",
 			},
-			exp: "/etc/aqua/aqua.yaml",
+			exp: "etc/aqua/aqua.yaml",
 		},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
+			root := t.TempDir()
+			requireNoConfigFileAbove(t, root)
+			testutil.WriteFiles(t, root, d.files, d.wd)
+			configFilePath := d.configFilePath
+			if d.absConfigFilePath {
+				configFilePath = join(root, d.configFilePath)[0]
 			}
-			configFinder := finder.NewConfigFinder(fs)
-			p, err := configFinder.Find(d.wd, d.configFilePath, d.globalConfigFilePaths...)
+			configFinder := finder.NewConfigFinder()
+			p, err := configFinder.Find(join(root, d.wd)[0], configFilePath, join(root, d.globalConfigFilePaths...)...)
 			if err != nil {
 				if d.isErr {
 					return
@@ -99,8 +145,8 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 			if d.isErr {
 				t.Fatal("error must be returned")
 			}
-			if p != d.exp {
-				t.Fatalf("wanted %v, got %v", d.exp, p)
+			if exp := join(root, d.exp)[0]; p != exp {
+				t.Fatalf("wanted %v, got %v", exp, p)
 			}
 		})
 	}
@@ -108,6 +154,8 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 
 func Test_configFinderFinds(t *testing.T) {
 	t.Parallel()
+	// Every path is relative to a root directory created for each test case,
+	// except configFilePath, which is passed to Finds as it is.
 	data := []struct {
 		name           string
 		wd             string
@@ -117,49 +165,45 @@ func Test_configFinderFinds(t *testing.T) {
 	}{
 		{
 			name: "not found",
-			wd:   "/home/foo",
-			exp:  nil,
-		},
-		{
-			name:           "configFilePath",
-			wd:             "/home/foo",
-			configFilePath: "/home/foo/aqua-2.yaml",
-			exp:            []string{"/home/foo/aqua-2.yaml"},
+			wd:   "home/foo",
 		},
 		{
 			name: "find",
-			wd:   "/home/foo",
+			wd:   "home/foo",
 			files: map[string]string{
-				"/home/foo/.aqua.yaml": "",
-				"/home/aqua.yaml":      "",
+				"home/foo/.aqua.yaml": "",
+				"home/aqua.yaml":      "",
 			},
 			exp: []string{
-				"/home/foo/.aqua.yaml",
-				"/home/aqua.yaml",
+				"home/foo/.aqua.yaml",
+				"home/aqua.yaml",
 			},
 		},
 		{
 			name:           "find and configFilePath",
-			wd:             "/home/foo",
+			wd:             "home/foo",
 			configFilePath: "aqua-2.yaml",
 			files: map[string]string{
-				"/home/.aqua.yaml": "",
+				"home/.aqua.yaml": "",
 			},
 			exp: []string{
-				"/home/foo/aqua-2.yaml",
+				"home/foo/aqua-2.yaml",
 			},
 		},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
+			root := t.TempDir()
+			requireNoConfigFileAbove(t, root)
+			testutil.WriteFiles(t, root, d.files, d.wd)
+			configFinder := finder.NewConfigFinder()
+			arr := configFinder.Finds(join(root, d.wd)[0], d.configFilePath)
+			var exp []string
+			if d.exp != nil {
+				exp = join(root, d.exp...)
 			}
-			configFinder := finder.NewConfigFinder(fs)
-			arr := configFinder.Finds(d.wd, d.configFilePath)
-			if diff := cmp.Diff(d.exp, arr); diff != "" {
+			if diff := cmp.Diff(exp, arr); diff != "" {
 				t.Fatal(diff)
 			}
 		})

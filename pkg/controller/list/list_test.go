@@ -29,19 +29,18 @@ func TestController_List(t *testing.T) {
 		{
 			name: "normal",
 			param: &config.Param{
-				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"/home/foo/workspace/aqua.yaml": `registries:
+				"aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"/home/foo/workspace/registry.yaml": `packages:
+				"registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
@@ -57,11 +56,9 @@ packages:
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
-			ctrl := list.NewController(finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, downloader, fs, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), fs)
+			d.param.CWD = t.TempDir()
+			testutil.WriteFiles(t, d.param.CWD, d.files)
+			ctrl := list.NewController(finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}))
 			if err := ctrl.List(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 type Controller struct {
@@ -20,7 +19,6 @@ type Controller struct {
 	configFinder      ConfigFinder
 	configReader      ConfigReader
 	registryInstaller RegistryInstaller
-	fs                afero.Fs
 	runtime           *runtime.Runtime
 	tags              map[string]struct{}
 	excludedTags      map[string]struct{}
@@ -28,14 +26,13 @@ type Controller struct {
 	skipLink          bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, pkgInstaller Installer, fs afero.Fs, rt *runtime.Runtime, policyReader PolicyReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, pkgInstaller Installer, rt *runtime.Runtime, policyReader PolicyReader) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registryInstaller,
 		packageInstaller:  pkgInstaller,
-		fs:                fs,
 		runtime:           rt,
 		skipLink:          param.SkipLink,
 		tags:              param.Tags,
