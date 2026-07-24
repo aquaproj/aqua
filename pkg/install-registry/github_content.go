@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"github.com/spf13/afero"
 	"go.yaml.in/yaml/v2"
 )
 
@@ -39,13 +39,10 @@ func (is *Installer) getGitHubContentRegistry(ctx context.Context, logger *slog.
 		}
 	}
 
-	file, err := is.fs.Create(registryFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("create a registry file: %w", err)
-	}
-	defer file.Close()
-
-	if err := afero.WriteFile(is.fs, registryFilePath, content, registryFilePermission); err != nil {
+	// WriteFile applies the permissions only when it creates the file, so the
+	// file must not be created before it. Creating it first left every registry
+	// file at 0644 rather than the 0600 intended here.
+	if err := os.WriteFile(registryFilePath, content, registryFilePermission); err != nil {
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
 	registryContent := &registry.Config{}

@@ -13,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
-	"github.com/spf13/afero"
 )
 
 func TestVerifier_Verify(t *testing.T) { //nolint:funlen
@@ -22,7 +21,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		name             string
 		isErr            bool
 		executor         cosign.Executor
-		fs               afero.Fs
 		downloader       download.ClientAPI
 		cosignExePath    string
 		rt               *runtime.Runtime
@@ -35,7 +33,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		{
 			name:     "normal",
 			executor: &osexec.Mock{},
-			fs:       afero.NewMemMapFs(),
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),
 			},
@@ -73,7 +70,6 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		{
 			name:     "signature, key, certificate",
 			executor: &osexec.Mock{},
-			fs:       afero.NewMemMapFs(),
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),
 			},
@@ -120,7 +116,7 @@ func TestVerifier_Verify(t *testing.T) { //nolint:funlen
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			verifier := cosign.NewVerifier(d.executor, d.fs, d.downloader, d.param)
+			verifier := cosign.NewVerifier(d.executor, d.downloader, d.param)
 			if err := verifier.Verify(ctx, logger, d.rt, d.file, d.cos, d.art, d.verifiedFilePath); err != nil {
 				if d.isErr {
 					return

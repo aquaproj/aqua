@@ -99,4 +99,5 @@ pattern:
 ```
 
 aqua extracts pairs of checksum and asset name using regular expressions.
+Extracted values are contents of the first capturing groups.
 If the checksum file includes only one checksum, you can omit `pattern.file`.

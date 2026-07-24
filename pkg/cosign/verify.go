@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"math/rand/v2"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -18,7 +19,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -30,17 +30,15 @@ func GetMutex() *sync.Mutex {
 
 type Verifier struct {
 	executor      Executor
-	fs            afero.Fs
 	downloader    download.ClientAPI
 	cosignExePath string
 	disabled      bool
 }
 
-func NewVerifier(executor Executor, fs afero.Fs, downloader download.ClientAPI, param *config.Param) *Verifier {
+func NewVerifier(executor Executor, downloader download.ClientAPI, param *config.Param) *Verifier {
 	rt := runtime.NewR(context.Background())
 	return &Verifier{
 		executor:   executor,
-		fs:         fs,
 		downloader: downloader,
 		cosignExePath: ExePath(&ParamExePath{
 			RootDir: param.RootDir,
@@ -75,7 +73,7 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 		}
 		f, err := v.downloadFile(ctx, logger, rt, file, art, df)
 		if f != "" {
-			defer v.fs.Remove(f) //nolint:errcheck
+			defer os.Remove(f)
 		}
 		if err != nil {
 			return err
@@ -160,7 +158,7 @@ func (v *Verifier) downloadCosignFile(ctx context.Context, logger *slog.Logger, 
 
 func (v *Verifier) downloadFile(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, art *template.Artifact, downloadedFile *registry.DownloadedFile) (string, error) {
 	// --signature cos.Signature - Download a signature file
-	sigFile, err := afero.TempFile(v.fs, "", "")
+	sigFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return "", fmt.Errorf("create a temporary file: %w", err)
 	}

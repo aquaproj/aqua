@@ -13,14 +13,12 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 type Controller struct {
 	packageInstaller PackageInstaller
 	rootDir          string
-	fs               afero.Fs
 	runtime          *runtime.Runtime
 	which            WhichController
 	installer        Installer
@@ -39,11 +37,10 @@ type WhichController interface {
 	Which(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*which.FindResult, error)
 }
 
-func New(param *config.Param, pkgInstaller PackageInstaller, fs afero.Fs, rt *runtime.Runtime, whichCtrl WhichController, installer Installer, policyReader PolicyReader) *Controller {
+func New(param *config.Param, pkgInstaller PackageInstaller, rt *runtime.Runtime, whichCtrl WhichController, installer Installer, policyReader PolicyReader) *Controller {
 	return &Controller{
 		rootDir:          param.RootDir,
 		packageInstaller: pkgInstaller,
-		fs:               fs,
 		runtime:          rt,
 		which:            whichCtrl,
 		installer:        installer,
@@ -63,7 +60,7 @@ type ConfigFinder interface {
 var errCopyFailure = errors.New("it failed to copy some tools")
 
 func (c *Controller) Copy(ctx context.Context, logger *slog.Logger, param *config.Param) error {
-	if err := osfile.MkdirAll(c.fs, param.Dest); err != nil {
+	if err := osfile.MkdirAll(param.Dest); err != nil {
 		return fmt.Errorf("create the directory: %w", err)
 	}
 	if len(param.Args) == 0 {

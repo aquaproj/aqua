@@ -3,18 +3,18 @@ package reader
 import (
 	"fmt"
 	"maps"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 	"go.yaml.in/yaml/v2"
 )
 
 func (r *ConfigReader) ReadToUpdate(configFilePath string, cfg *aqua.Config) (map[string]*aqua.Config, error) {
-	file, err := r.fs.Open(configFilePath)
+	file, err := os.Open(configFilePath)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -77,7 +77,7 @@ func (r *ConfigReader) readImportsToUpdate(configFilePath string, cfg *aqua.Conf
 
 func (r *ConfigReader) readImportToUpdate(configFilePath, importPath string, cfg *aqua.Config, cfgs map[string]*aqua.Config) error {
 	p := filepath.Join(filepath.Dir(configFilePath), importPath)
-	filePaths, err := afero.Glob(r.fs, p)
+	filePaths, err := filepath.Glob(p)
 	if err != nil {
 		return fmt.Errorf("read files with glob pattern (%s): %w", p, err)
 	}

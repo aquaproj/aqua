@@ -51,7 +51,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/google/wire"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -79,7 +78,6 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 			reader.New,
 			wire.Bind(new(list.ConfigReader), new(*reader.ConfigReader)),
 		),
-		afero.NewOsFs,
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			cosign.NewVerifier,
@@ -115,7 +113,6 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logger *sl
 			github.New,
 			wire.Bind(new(genrgst.RepositoriesService), new(*github.RepositoriesService)),
 		),
-		afero.NewOsFs,
 		wire.NewSet(
 			output.New,
 			wire.Bind(new(genrgst.TestdataOutputter), new(*output.Outputter)),
@@ -135,7 +132,6 @@ func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, p
 			github.New,
 			wire.Bind(new(initcmd.RepositoriesService), new(*github.RepositoriesService)),
 		),
-		afero.NewOsFs,
 	)
 	return &initcmd.Controller{}, nil
 }
@@ -143,7 +139,6 @@ func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, p
 func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Controller {
 	wire.Build(
 		initpolicy.New,
-		afero.NewOsFs,
 	)
 	return &initpolicy.Controller{}
 }
@@ -175,7 +170,6 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 			reader.New,
 			wire.Bind(new(generate.ConfigReader), new(*reader.ConfigReader)),
 		),
-		afero.NewOsFs,
 		wire.NewSet(
 			fuzzyfinder.New,
 			wire.Bind(new(generate.FuzzyFinder), new(*fuzzyfinder.Finder)),
@@ -261,10 +255,6 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 		wire.NewSet(
 			download.NewDownloader,
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
-		),
-		wire.NewSet(
-			afero.NewOsFs,
-			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
 		),
 		wire.NewSet(
 			link.New,
@@ -383,7 +373,6 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 			wire.Bind(new(which.ConfigReader), new(*reader.ConfigReader)),
 		),
 		osenv.New,
-		afero.NewOsFs,
 		download.NewHTTPDownloader,
 		wire.NewSet(
 			link.New,
@@ -469,10 +458,6 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 		),
 		osenv.New,
 		wire.NewSet(
-			afero.NewOsFs,
-			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
-		),
-		wire.NewSet(
 			link.New,
 			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
 			wire.Bind(new(which.Linker), new(*link.Linker)),
@@ -556,10 +541,6 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
 	wire.Build(
 		updateaqua.New,
-		wire.NewSet(
-			afero.NewOsFs,
-			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
-		),
 		wire.NewSet(
 			github.New,
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
@@ -709,10 +690,6 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 		),
 		osenv.New,
 		wire.NewSet(
-			afero.NewOsFs,
-			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
-		),
-		wire.NewSet(
 			link.New,
 			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
 			wire.Bind(new(which.Linker), new(*link.Linker)),
@@ -829,10 +806,6 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			afero.NewOsFs,
-			wire.Bind(new(installpackage.Cleaner), new(afero.Fs)),
-		),
-		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
 			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
@@ -942,7 +915,6 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 			download.NewDownloader,
 			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
-		afero.NewOsFs,
 		wire.NewSet(
 			cosign.NewVerifier,
 			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
@@ -1004,7 +976,6 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 func InitializeAllowPolicyCommandController(ctx context.Context, param *config.Param) *allowpolicy.Controller {
 	wire.Build(
 		allowpolicy.New,
-		afero.NewOsFs,
 		wire.NewSet(
 			policy.NewConfigFinder,
 			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
@@ -1020,7 +991,6 @@ func InitializeAllowPolicyCommandController(ctx context.Context, param *config.P
 func InitializeDenyPolicyCommandController(ctx context.Context, param *config.Param) *denypolicy.Controller {
 	wire.Build(
 		denypolicy.New,
-		afero.NewOsFs,
 		wire.NewSet(
 			policy.NewConfigFinder,
 			wire.Bind(new(policy.ConfigFinder), new(*policy.ConfigFinderImpl)),
@@ -1040,7 +1010,6 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 			finder.NewConfigFinder,
 			wire.Bind(new(info.ConfigFinder), new(*finder.ConfigFinder)),
 		),
-		afero.NewOsFs,
 	)
 	return &info.Controller{}
 }
@@ -1063,7 +1032,6 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 			wire.Bind(new(remove.RegistryInstaller), new(*registry.Installer)),
 			wire.Bind(new(which.RegistryInstaller), new(*registry.Installer)),
 		),
-		afero.NewOsFs,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
@@ -1122,7 +1090,6 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 func InitializeVacuumCommandController(ctx context.Context, param *config.Param, rt *runtime.Runtime) *cvacuum.Controller {
 	wire.Build(
 		cvacuum.New,
-		afero.NewOsFs,
 		wire.NewSet(
 			vacuum.New,
 			wire.Bind(new(cvacuum.Vacuum), new(*vacuum.Client)),
@@ -1134,7 +1101,6 @@ func InitializeVacuumCommandController(ctx context.Context, param *config.Param,
 func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) (*initialize.Controller, error) {
 	wire.Build(
 		initialize.New,
-		afero.NewOsFs,
 		wire.NewSet(
 			vacuum.New,
 			wire.Bind(new(initialize.Vacuum), new(*vacuum.Client)),

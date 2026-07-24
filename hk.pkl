@@ -1,10 +1,16 @@
-amends "package://github.com/jdx/hk/releases/download/v1.45.0/hk@1.45.0#/Config.pkl"
-import "package://github.com/jdx/hk/releases/download/v1.45.0/hk@1.45.0#/Builtins.pkl"
+amends "package://github.com/jdx/hk/releases/download/v1.50.0/hk@1.50.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.50.0/hk@1.50.0#/Builtins.pkl"
 
 local linters = new Mapping<String, Step> {
   ["golangci-lint"] = Builtins.golangci_lint
   ["gomod-tidy"] = Builtins.gomod_tidy
-  ["typos"] = Builtins.typos
+  // Report typos, never rewrite them. `typos --write-changes` edits code as
+  // readily as prose: it rewrote the short flags of a `git clean` invocation in
+  // a workflow file into a flag that doesn't exist, and the commit hook applied
+  // it silently.
+  ["typos"] = (Builtins.typos) {
+    fix = check
+  }
   // ["lychee"] = Builtins.lychee
   ["nllint"] {
     glob = List("**/*")
@@ -12,16 +18,17 @@ local linters = new Mapping<String, Step> {
     fix = "nllint -s -f {{files}}"
     batch = true
   }
+  ["langcheck"] {
+    // https://github.com/suzuki-shunsuke/langcheck
+    glob = List("**/*")
+    check = "langcheck check {{files}}"
+    fix = "langcheck check {{files}}" // run as check in fix mode (no real fix possible)
+    batch = true
+  }
   ["go-test"] {
     glob = List("go.mod", "go.sum", "**/*.go")
     check = "go test -race -covermode=atomic ./..."
     fix = "go test -race -covermode=atomic ./..." // run as check in fix mode (no real fix possible)
-    batch = true
-  }
-  ["ascii"] {
-    glob = List("**/*")
-    check = "bash scripts/check-ascii {{files}}"
-    fix = "bash scripts/check-ascii {{files}}" // run as check in fix mode (no real fix possible)
     batch = true
   }
 }
@@ -35,7 +42,8 @@ hooks {
   ["commit-msg"] {
     steps {
       ["validate-commit-msg"] {
-        check = "bash scripts/validate-commit-msg {{commit_msg_file}}"
+        // https://github.com/suzuki-shunsuke/langcheck
+        check = "langcheck check {{commit_msg_file}}"
       }
     }
   }

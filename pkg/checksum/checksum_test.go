@@ -1,20 +1,20 @@
 package checksum_test
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 )
 
 func TestCalculator_Calculate(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name      string
-		filename  string
 		content   string
 		algorithm string
 		checksum  string
@@ -29,16 +29,28 @@ func TestCalculator_Calculate(t *testing.T) {
 			isErr:     true,
 			algorithm: pkgFoo,
 		},
+		{
+			name:      "sha256",
+			content:   helloWorld,
+			algorithm: algoSHA256,
+			checksum:  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+		},
+		{
+			name:      "sha512",
+			content:   helloWorld,
+			algorithm: algoSHA512,
+			checksum:  "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f",
+		},
 	}
 	calculator := &checksum.Calculator{}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			fs := afero.NewMemMapFs()
-			if err := afero.WriteFile(fs, d.filename, []byte(d.content), osfile.FilePermission); err != nil {
+			filename := filepath.Join(t.TempDir(), "asset.tar.gz")
+			if err := os.WriteFile(filename, []byte(d.content), osfile.FilePermission); err != nil {
 				t.Fatal(err)
 			}
-			c, err := calculator.Calculate(fs, d.filename, d.algorithm)
+			c, err := calculator.Calculate(filename, d.algorithm)
 			if err != nil {
 				if d.isErr {
 					return

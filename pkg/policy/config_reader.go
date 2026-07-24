@@ -2,20 +2,16 @@ package policy
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
-	"github.com/spf13/afero"
 	"go.yaml.in/yaml/v2"
 )
 
-type ConfigReaderImpl struct {
-	fs afero.Fs
-}
+type ConfigReaderImpl struct{}
 
-func NewConfigReader(fs afero.Fs) *ConfigReaderImpl {
-	return &ConfigReaderImpl{
-		fs: fs,
-	}
+func NewConfigReader() *ConfigReaderImpl {
+	return &ConfigReaderImpl{}
 }
 
 type ConfigReader interface {
@@ -50,7 +46,7 @@ func (r *ConfigReaderImpl) ReadFile(file string) (*Config, error) {
 }
 
 func (r *ConfigReaderImpl) read(cfg *Config) error {
-	file, err := r.fs.Open(cfg.Path)
+	file, err := os.Open(cfg.Path)
 	if err != nil {
 		return err //nolint:wrapcheck
 	}

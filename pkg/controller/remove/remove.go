@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -56,7 +56,7 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 	}
 
 	checksums, updateChecksum, err := checksum.Open(
-		logger, c.fs, cfgFilePath,
+		logger, cfgFilePath,
 		param.ChecksumEnabled(cfg))
 	if err != nil {
 		return fmt.Errorf("read a checksum JSON: %w", err)
@@ -141,7 +141,7 @@ func (c *Controller) removeCommands(ctx context.Context, logger *slog.Logger, pa
 		for _, cmd := range cmds {
 			logger := logger.With("exe_name", cmd)
 			logger.Info("removing a link")
-			if err := c.fs.Remove(filepath.Join(c.rootDir, "bin", cmd)); err != nil {
+			if err := os.Remove(filepath.Join(c.rootDir, "bin", cmd)); err != nil {
 				if errors.Is(err, fs.ErrNotExist) {
 					continue
 				}
@@ -191,7 +191,7 @@ func (c *Controller) removePackage(logger *slog.Logger, rootDir string, pkg *reg
 	logger.Info("removing a package")
 	if c.mode.Link {
 		for _, file := range pkg.GetFiles() {
-			if err := c.fs.Remove(filepath.Join(rootDir, "bin", file.Name)); err != nil {
+			if err := os.Remove(filepath.Join(rootDir, "bin", file.Name)); err != nil {
 				if errors.Is(err, fs.ErrNotExist) {
 					continue
 				}
@@ -222,13 +222,13 @@ func (c *Controller) removePackage(logger *slog.Logger, rootDir string, pkg *reg
 
 func (c *Controller) removePath(logger *slog.Logger, rootDir string, path string) error {
 	pkgPath := filepath.Join(rootDir, "pkgs", path)
-	arr, err := afero.Glob(c.fs, pkgPath)
+	arr, err := filepath.Glob(pkgPath)
 	if err != nil {
 		return fmt.Errorf("find directories: %w", err)
 	}
 	for _, p := range arr {
 		logger.Debug("removing a directory", "removed_path", p)
-		if err := c.fs.RemoveAll(p); err != nil {
+		if err := os.RemoveAll(p); err != nil {
 			return fmt.Errorf("remove directories: %w", err)
 		}
 	}
@@ -237,13 +237,13 @@ func (c *Controller) removePath(logger *slog.Logger, rootDir string, path string
 
 func (c *Controller) removeMetadataPath(logger *slog.Logger, rootDir string, path string) error {
 	pkgPath := filepath.Join(rootDir, "metadata", "pkgs", path)
-	arr, err := afero.Glob(c.fs, pkgPath)
+	arr, err := filepath.Glob(pkgPath)
 	if err != nil {
 		return fmt.Errorf("find directories: %w", err)
 	}
 	for _, p := range arr {
 		logger.Debug("removing a directory", "removed_path", p)
-		if err := c.fs.RemoveAll(p); err != nil {
+		if err := os.RemoveAll(p); err != nil {
 			return fmt.Errorf("remove directories: %w", err)
 		}
 	}
@@ -276,17 +276,17 @@ func findPkg(pkgName string, registryContents map[string]*registry.Config) (*reg
 func (c *Controller) removeAll(rootDir string) error {
 	var gErr error
 	if c.mode.Link {
-		if err := c.fs.RemoveAll(filepath.Join(rootDir, "bin")); err != nil {
+		if err := os.RemoveAll(filepath.Join(rootDir, "bin")); err != nil {
 			gErr = fmt.Errorf("remove the bin directory: %w", err)
 		}
 	}
 	if !c.mode.Package {
 		return gErr
 	}
-	if err := c.fs.RemoveAll(filepath.Join(rootDir, "pkgs")); err != nil {
+	if err := os.RemoveAll(filepath.Join(rootDir, "pkgs")); err != nil {
 		return fmt.Errorf("remove all packages: %w", err)
 	}
-	if err := c.fs.RemoveAll(filepath.Join(rootDir, "metadata")); err != nil {
+	if err := os.RemoveAll(filepath.Join(rootDir, "metadata")); err != nil {
 		return fmt.Errorf("remove all package metadata: %w", err)
 	}
 	return gErr

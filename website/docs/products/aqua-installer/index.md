@@ -55,13 +55,13 @@ If the version isn't specified, the latest version would be installed.
 e.g.
 
 ```yaml
-- uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
+- uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
   with:
     aqua_version: v2.43.1
 ```
 
 ```yaml
-- uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
+- uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
   with:
     aqua_version: v2.43.1
     working_directory: foo
@@ -108,13 +108,13 @@ aqua-installer doesn't support caching, but you can cache packages and registrie
 e.g.
 
 ```yaml
-- uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+- uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
   with:
     path: ~/.local/share/aquaproj-aqua
     key: v2-aqua-installer-${{runner.os}}-${{runner.arch}}-${{hashFiles('aqua.yaml')}}
     restore-keys: |
       v2-aqua-installer-${{runner.os}}-${{runner.arch}}-
-- uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
+- uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
   with:
     aqua_version: v2.43.1
 ```
@@ -125,7 +125,7 @@ If you [split `aqua.yaml` using import](/docs/guides/split-config) or use local 
 e.g.
 
 ```yaml
-- uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+- uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
   with:
     path: ~/.local/share/aquaproj-aqua
     key: v2-aqua-installer-${{runner.os}}-${{runner.arch}}-${{hashFiles('.aqua/*.yaml')}} # Change key
@@ -137,7 +137,7 @@ aqua-installer runs aqua with [-l](https://aquaproj.github.io/docs/tutorial/inst
 If you want to cache all packages, please set `aqua_opts` to unset `-l` option.
 
 ```yaml
-- uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
+- uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
   with:
     aqua_version: v2.43.1
     aqua_opts: "" # Unset `-l` option

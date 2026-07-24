@@ -9,7 +9,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 )
 
 func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
@@ -47,7 +46,6 @@ func TestInstaller_verifyChecksum(t *testing.T) { //nolint:funlen
 				TempFilePath: "/tmp/verify_checksum/tempfile",
 			},
 			inst: &Installer{
-				fs: afero.NewMemMapFs(),
 				checksumDownloader: &download.MockChecksumDownloader{
 					Body: `2005b4aef5fec0336cb552c74f3e4c445dcdd9e9c1e217d8de3acd45ee152470  gh_2.17.0_linux_386.deb
 34c0ba49d290ffe108c723ffb0063a4a749a8810979b71fc503434b839688b5c  gh_2.17.0_linux_386.rpm

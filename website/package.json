@@ -41,10 +41,10 @@
     ]
   },
   "volta": {
-    "node": "24.16.0"
+    "node": "24.18.0"
   },
   "devDependencies": {
     "ts-node": "10.9.2",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   }
 }

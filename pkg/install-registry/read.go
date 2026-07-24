@@ -3,13 +3,14 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"go.yaml.in/yaml/v2"
 )
 
 func (is *Installer) readYAMLRegistry(p string, registry *registry.Config) error {
-	f, err := is.fs.Open(p)
+	f, err := os.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
 	}
@@ -21,7 +22,7 @@ func (is *Installer) readYAMLRegistry(p string, registry *registry.Config) error
 }
 
 func (is *Installer) readJSONRegistry(p string, registry *registry.Config) error {
-	f, err := is.fs.Open(p)
+	f, err := os.Open(p)
 	if err != nil {
 		return fmt.Errorf("open the registry configuration file: %w", err)
 	}

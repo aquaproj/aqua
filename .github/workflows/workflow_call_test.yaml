@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: {}
     steps:
-      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: changes
         with:
           filters: |
@@ -26,7 +26,7 @@ jobs:
   test:
     uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@98ab396ba72f7b47f7e22aca7346b6e1d7ae4deb # v6.0.0
     with:
-      aqua_version: v2.60.0
+      aqua_version: v2.62.0
       golangci-lint-timeout: 120s
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
@@ -34,6 +34,39 @@ jobs:
       pull-requests: write
       contents: read
       id-token: write
+
+  # The unit tests must not write anything into the working tree. They used to:
+  # while afero was being removed, a package created a directory for real while
+  # the file next to it still went into a memory-mapped filesystem, and
+  # git status stayed quiet because git doesn't track empty directories.
+  # git clean does list them.
+  test-no-side-effect:
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
+      - run: go test ./... > /dev/null
+      - name: Check that the tests left nothing behind
+        run: |
+          dirty=$(git status --porcelain; git clean --dry-run -d)
+          if [ -n "$dirty" ]; then
+            echo "::error::the tests modified the working tree"
+            echo "$dirty"
+            exit 1
+          fi
 
   test-goreleaser:
     uses: ./.github/workflows/test-goreleaser.yaml

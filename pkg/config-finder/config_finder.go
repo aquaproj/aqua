@@ -6,20 +6,15 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 )
 
 var ErrConfigFileNotFound = errors.New("configuration file isn't found")
 
-type ConfigFinder struct {
-	fs afero.Fs
-}
+type ConfigFinder struct{}
 
-func NewConfigFinder(fs afero.Fs) *ConfigFinder {
-	return &ConfigFinder{
-		fs: fs,
-	}
+func NewConfigFinder() *ConfigFinder {
+	return &ConfigFinder{}
 }
 
 func ParseGlobalConfigFilePaths(pwd, env string) []string {
@@ -87,30 +82,31 @@ func (f *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...
 	if configFilePath != "" {
 		return osfile.Abs(wd, configFilePath), nil
 	}
-	configFilePath = findconfig.Find(wd, f.exist, ConfigFileNames()...)
+	configFilePath = findconfig.Find(wd, exists, ConfigFileNames()...)
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
 	for _, p := range globalConfigFilePaths {
-		if _, err := f.fs.Stat(p); err != nil {
-			continue
+		if f, err := osfile.Exists(p); err != nil {
+			return "", err //nolint:wrapcheck
+		} else if f {
+			return p, nil
 		}
-		return p, nil
 	}
 	return "", ErrConfigFileNotFound
 }
 
 func (f *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
-		return findconfig.Finds(wd, f.exist, ConfigFileNames()...)
+		return findconfig.Finds(wd, exists, ConfigFileNames()...)
 	}
 	return []string{osfile.Abs(wd, configFilePath)}
 }
 
-func (f *ConfigFinder) exist(p string) bool {
-	b, err := afero.Exists(f.fs, p)
-	if err != nil {
-		return false
-	}
-	return b
+// exists adapts osfile.Exists to findconfig's predicate, which walks up the
+// directory tree and has no way to report an error. A path that can't be
+// stat'd is treated as absent, so the walk moves on to the parent directory.
+func exists(p string) bool {
+	f, _ := osfile.Exists(p)
+	return f
 }

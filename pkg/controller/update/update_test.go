@@ -2,6 +2,7 @@ package update_test
 
 import (
 	"log/slog"
+	"os"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -18,7 +19,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
-	"github.com/spf13/afero"
 )
 
 func TestController_Update(t *testing.T) { //nolint:funlen,maintidx
@@ -194,7 +194,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.60.0"),
+					TagName: "v4.60.0",
 				},
 			},
 		},
@@ -224,7 +224,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.60.0"),
+					TagName: "v4.60.0",
 				},
 			},
 		},
@@ -404,7 +404,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.60.0"),
+					TagName: "v4.60.0",
 				},
 			},
 		},
@@ -509,16 +509,22 @@ packages:
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
+			// The paths of the test cases are rooted at a temporary directory.
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			if d.param.CWD == "" {
+				d.param.CWD = pathWorkspace
+			}
+			d.param.CWD = testutil.Abs(dir, d.param.CWD)
+			for _, r := range d.findResults {
+				r.ConfigFilePath = testutil.Abs(dir, r.ConfigFilePath)
 			}
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Tags:     d.tags,
 			}
-			configReader := reader.New(fs, d.param)
-			configFinder := finder.NewConfigFinder(fs)
+			configReader := reader.New(d.param)
+			configFinder := finder.NewConfigFinder()
 			registryInstaller := &rgst.MockInstaller{
 				M: d.registries,
 			}
@@ -527,7 +533,7 @@ packages:
 				FindResults: d.findResults,
 			}
 			fuzzyGetter := versiongetter.NewMockFuzzyGetter(d.versions)
-			ctrl := update.New(d.param, gh, configFinder, configReader, registryInstaller, fs, d.rt, fuzzyGetter, fuzzyFinder, whichCtrl)
+			ctrl := update.New(d.param, gh, configFinder, configReader, registryInstaller, d.rt, fuzzyGetter, fuzzyFinder, whichCtrl)
 			if err := ctrl.Update(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
@@ -538,7 +544,7 @@ packages:
 				t.Fatal("error must be returned")
 			}
 			for path, expBody := range d.expFiles {
-				b, err := afero.ReadFile(fs, path)
+				b, err := os.ReadFile(testutil.Abs(dir, path))
 				if err != nil {
 					t.Fatal(err)
 				}

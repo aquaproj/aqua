@@ -3,21 +3,19 @@ package download
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/schollz/progressbar/v3"
-	"github.com/spf13/afero"
 )
 
 type DownloadedFile struct {
-	fs   afero.Fs
 	path string
 	body io.ReadCloser
 	pb   *progressbar.ProgressBar
 }
 
-func NewDownloadedFile(fs afero.Fs, body io.ReadCloser, pb *progressbar.ProgressBar) *DownloadedFile {
+func NewDownloadedFile(body io.ReadCloser, pb *progressbar.ProgressBar) *DownloadedFile {
 	return &DownloadedFile{
-		fs:   fs,
 		body: body,
 		pb:   pb,
 	}
@@ -31,7 +29,7 @@ func (f *DownloadedFile) Remove() error {
 	if f.path == "" {
 		return nil
 	}
-	return f.fs.Remove(f.path) //nolint:wrapcheck //nolint:errcheck
+	return os.Remove(f.path) //nolint:wrapcheck //nolint:errcheck
 }
 
 func (f *DownloadedFile) Path() (string, error) {
@@ -68,7 +66,7 @@ func (f *DownloadedFile) Wrap(w io.Writer) io.Writer {
 }
 
 func (f *DownloadedFile) copy() error {
-	tmp, err := afero.TempFile(f.fs, "", "")
+	tmp, err := os.CreateTemp("", "")
 	if err != nil {
 		return fmt.Errorf("create a temporary file: %w", err)
 	}
@@ -84,7 +82,7 @@ func (f *DownloadedFile) copy() error {
 }
 
 func (f *DownloadedFile) read() (io.ReadCloser, error) {
-	file, err := f.fs.Open(f.path)
+	file, err := os.Open(f.path)
 	if err != nil {
 		return nil, fmt.Errorf("open a file: %w", err)
 	}

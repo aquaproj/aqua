@@ -4,23 +4,21 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 )
 
 type Cache struct {
 	m       map[string]map[string]*PackageInfo
-	fs      afero.Fs
 	path    string
 	updated bool
 }
 
-func NewCache(fs afero.Fs, rootDir, cfgFilePath string) (*Cache, error) {
+func NewCache(rootDir, cfgFilePath string) (*Cache, error) {
 	c := &Cache{
 		m:    map[string]map[string]*PackageInfo{},
-		fs:   fs,
 		path: filepath.Join(rootDir, "registry-cache", base64.StdEncoding.EncodeToString([]byte(cfgFilePath))+".json"),
 	}
 	return c, c.read()
@@ -47,10 +45,10 @@ func (c *Cache) Write() error {
 	if !c.updated {
 		return nil
 	}
-	if err := osfile.MkdirAll(c.fs, filepath.Dir(c.path)); err != nil {
+	if err := osfile.MkdirAll(filepath.Dir(c.path)); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}
-	f, err := c.fs.Create(c.path)
+	f, err := os.Create(c.path)
 	if err != nil {
 		return fmt.Errorf("create a registry cache: %w", err)
 	}
@@ -80,7 +78,7 @@ func (c *Cache) Get(rgPath, pkgName string) *PackageInfo {
 }
 
 func (c *Cache) read() error {
-	f, err := c.fs.Open(c.path)
+	f, err := os.Open(c.path)
 	if err != nil {
 		return fmt.Errorf("open a registry cache: %w", err)
 	}

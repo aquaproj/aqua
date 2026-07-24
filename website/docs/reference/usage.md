@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.60.0
+   2.62.0
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -46,7 +46,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
    --help, -h                             show help
@@ -85,7 +84,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -137,7 +135,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -279,7 +276,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -317,7 +313,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -362,7 +357,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -473,7 +467,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -520,7 +513,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -549,7 +541,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -602,7 +593,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -657,7 +647,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -681,6 +670,15 @@ COMMANDS:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ### token set
@@ -706,7 +704,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -733,7 +730,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -788,7 +784,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -810,6 +805,15 @@ COMMANDS:
 
 OPTIONS:
    --help, -h  show help
+
+GLOBAL OPTIONS:
+   --log-level string                     log level [$AQUA_LOG_LEVEL]
+   --config string, -c string             configuration file path [$AQUA_CONFIG]
+   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
+   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
+   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
+   --trace string                         trace output file path
+   --cpu-profile string                   cpu profile output file path
 ```
 
 ### policy allow
@@ -837,7 +841,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -867,7 +870,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -897,7 +899,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -930,7 +931,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -963,7 +963,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1013,7 +1012,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1111,7 +1109,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1145,7 +1142,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1170,7 +1166,6 @@ GLOBAL OPTIONS:
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
    --trace string                         trace output file path
    --cpu-profile string                   cpu profile output file path
 ```
@@ -1183,7 +1178,7 @@ NAME:
    aqua completion - Output shell completion script for bash, zsh, fish, or Powershell
 
 USAGE:
-   aqua completion [options]
+   aqua completion [command [command options]]
 
 DESCRIPTION:
    Output shell completion script for bash, zsh, fish, or Powershell.
@@ -1202,16 +1197,68 @@ DESCRIPTION:
    Output the script to path/to/autocomplete/aqua.ps1 an run it.
 
 
+COMMANDS:
+   bash  Output bash completion script
+   zsh   Output zsh completion script
+   fish  Output fish completion script
+   pwsh  Output pwsh completion script
+
 OPTIONS:
    --help, -h  show help
+```
 
-GLOBAL OPTIONS:
-   --log-level string                     log level [$AQUA_LOG_LEVEL]
-   --config string, -c string             configuration file path [$AQUA_CONFIG]
-   --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
-   --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
-   --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]
-   --disable-github-immutable-release     Disable GitHub Release Attestations verification [$AQUA_DISABLE_GITHUB_IMMUTABLE_RELEASE]
-   --trace string                         trace output file path
-   --cpu-profile string                   cpu profile output file path
+### completion bash
+
+```console
+$ completion bash --help
+NAME:
+   aqua completion bash - Output bash completion script
+
+USAGE:
+   aqua completion bash [options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion zsh
+
+```console
+$ completion zsh --help
+NAME:
+   aqua completion zsh - Output zsh completion script
+
+USAGE:
+   aqua completion zsh [options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion fish
+
+```console
+$ completion fish --help
+NAME:
+   aqua completion fish - Output fish completion script
+
+USAGE:
+   aqua completion fish [options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+### completion pwsh
+
+```console
+$ completion pwsh --help
+NAME:
+   aqua completion pwsh - Output pwsh completion script
+
+USAGE:
+   aqua completion pwsh [options]
+
+OPTIONS:
+   --help, -h  show help
 ```

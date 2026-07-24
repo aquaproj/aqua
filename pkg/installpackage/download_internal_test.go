@@ -1,8 +1,12 @@
 package installpackage
 
 import (
+	"context"
+	"errors"
 	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -11,10 +15,168 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
-	"github.com/spf13/afero"
 )
+
+// writeUnarchiver stands in for a real unarchiver by writing exeName into the
+// destination it is handed, so that tests can tell which directory the
+// extraction went to.
+type writeUnarchiver struct {
+	exeName string
+	err     error
+}
+
+func (u *writeUnarchiver) Unarchive(_ context.Context, _ *slog.Logger, _ *unarchive.File, dest string) error {
+	if u.err != nil {
+		return u.err
+	}
+	p := filepath.Join(dest, u.exeName)
+	if err := os.MkdirAll(filepath.Dir(p), dirPerm); err != nil {
+		return err //nolint:wrapcheck
+	}
+	return os.WriteFile(p, []byte("gh"), dirPerm) //nolint:wrapcheck
+}
+
+const dirPerm = 0o755
+
+// newUnarchiveTestInstaller returns an installer rooted at a fresh temporary
+// directory, along with that root and the package destination under it.
+func newUnarchiveTestInstaller(t *testing.T, unarchiveErr error) (*Installer, string, string) {
+	t.Helper()
+	rootDir := t.TempDir()
+	dest := filepath.Join(rootDir, "pkgs", "github_release", "github.com", "cli", "cli", "v2.96.0", "gh_2.96.0_linux_amd64.tar.gz")
+	return &Installer{
+		rootDir: rootDir,
+		unarchiver: &writeUnarchiver{
+			exeName: filepath.Join("bin", "gh"),
+			err:     unarchiveErr,
+		},
+	}, rootDir, dest
+}
+
+// assertTempDirIsEmpty checks that neither a discarded nor a failed extraction
+// left a temporary directory behind.
+func assertTempDirIsEmpty(t *testing.T, rootDir string) {
+	t.Helper()
+	entries, err := os.ReadDir(filepath.Join(rootDir, "temp"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("%d temporary directories are left", len(entries))
+	}
+}
+
+func TestInstaller_unarchive(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, nil)
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := os.ReadFile(filepath.Join(dest, "bin", "gh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "gh" {
+		t.Fatalf("the executable file is %q, want %q", b, "gh")
+	}
+	assertTempDirIsEmpty(t, rootDir)
+}
+
+// The destination is renamed into place from a temporary directory, so it must
+// end up with the permissions aqua grants its own directories. A temporary
+// directory defaults to 0700, which would leave the package unreadable to every
+// other user.
+// See https://github.com/aquaproj/aqua/issues/5049
+func TestInstaller_unarchive_destPermission(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, nil)
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The expectation is a directory created the way aqua creates its own, so
+	// that neither the umask nor the platform's handling of modes matters.
+	want := filepath.Join(rootDir, "reference")
+	if err := osfile.MkdirAll(want); err != nil {
+		t.Fatal(err)
+	}
+	wantInfo, err := os.Stat(want)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotInfo, err := os.Stat(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotInfo.Mode().Perm() != wantInfo.Mode().Perm() {
+		t.Fatalf("the permission of the package directory is %o, want %o", gotInfo.Mode().Perm(), wantInfo.Mode().Perm())
+	}
+}
+
+// A package another process finished extracting first must be left alone, and
+// this installer's own copy discarded.
+func TestInstaller_unarchive_destExists(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, nil)
+	exePath := filepath.Join(dest, "bin", "gh")
+	if err := os.MkdirAll(filepath.Dir(exePath), dirPerm); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(exePath, []byte("installed by someone else"), dirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := os.ReadFile(exePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "installed by someone else" {
+		t.Fatalf("the executable file is %q, want %q", b, "installed by someone else")
+	}
+	assertTempDirIsEmpty(t, rootDir)
+}
+
+// The destination must not be created at all when the extraction fails,
+// otherwise downloadWithRetry would treat the package as installed.
+func TestInstaller_unarchive_failure(t *testing.T) {
+	t.Parallel()
+
+	inst, rootDir, dest := newUnarchiveTestInstaller(t, errors.New("unarchive failed"))
+
+	if err := inst.unarchive(t.Context(), slog.New(slog.DiscardHandler), &DownloadParam{
+		Dest:  dest,
+		Asset: "gh_2.96.0_linux_amd64.tar.gz",
+	}, nil, "tar.gz"); err == nil {
+		t.Fatal("error must be returned")
+	}
+
+	if _, err := os.Stat(dest); err == nil {
+		t.Fatal("the destination must not be created when the extraction fails")
+	}
+	assertTempDirIsEmpty(t, rootDir)
+}
 
 func TestInstaller_download(t *testing.T) { //nolint:funlen
 	t.Parallel()
@@ -58,7 +220,6 @@ func TestInstaller_download(t *testing.T) { //nolint:funlen
 					GOOS:   osDarwin,
 					GOARCH: "arm64",
 				},
-				fs: afero.NewMemMapFs(),
 				downloader: &download.Mock{
 					RC: io.NopCloser(strings.NewReader("hello")),
 				},
@@ -91,6 +252,11 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+			// The installer extracts into a temporary directory in the root
+			// directory, so the root directory must not be the working
+			// directory of the test process.
+			d.inst.rootDir = t.TempDir()
+			d.param.Dest = filepath.Join(d.inst.rootDir, "pkgs", "dest")
 			if err := d.inst.download(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

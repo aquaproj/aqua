@@ -24,7 +24,6 @@ type CommandExecutor interface {
 
 type Executor interface {
 	Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error
-	VerifyRelease(ctx context.Context, logger *slog.Logger, param *ParamVerifyRelease) error
 }
 
 type ExecutorImpl struct {
@@ -106,49 +105,6 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 			return nil
 		}
 		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
-			"exe", e.exePath,
-			"args", strings.Join(args, " "))
-		if i == 4 { //nolint:mnd
-			break
-		}
-		if err := wait(ctx, logger, i+1); err != nil {
-			return err
-		}
-	}
-	return errVerify
-}
-
-type ParamVerifyRelease struct {
-	ArtifactPath string
-	Repository   string
-	Version      string
-}
-
-func (e *ExecutorImpl) VerifyRelease(ctx context.Context, logger *slog.Logger, param *ParamVerifyRelease) error {
-	/*
-		$ gh release verify-asset hello \
-		  -R suzuki-shunsuke/test-github-artifact-attestation
-	*/
-
-	args := []string{
-		"release",
-		"verify-asset",
-		"-R",
-		param.Repository,
-		param.Version,
-		param.ArtifactPath,
-	}
-	for i := range 5 {
-		err := e.exec(ctx, args)
-		if err == nil {
-			return nil
-		}
-		ae := &AuthError{}
-		if errors.As(err, &ae) {
-			slogerr.WithError(logger, err).Warn("skip verifying GitHub Release Attestations because of the authentication error")
-			return nil
-		}
-		slogerr.WithError(logger, err).Warn("execute gh release verify-asset",
 			"exe", e.exePath,
 			"args", strings.Join(args, " "))
 		if i == 4 { //nolint:mnd

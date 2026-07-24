@@ -14,7 +14,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
-	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
@@ -26,7 +25,6 @@ func Test_controller_Generate(t *testing.T) { //nolint:funlen,maintidx
 	data := []struct {
 		name               string
 		files              map[string]string
-		links              map[string]string
 		args               []string
 		env                map[string]string
 		param              *config.Param
@@ -67,7 +65,7 @@ packages:
 			idxs: []int{0},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -102,7 +100,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -117,7 +115,7 @@ packages:
 				ConfigFilePath: "aqua.yaml",
 				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
-				File:           "list.txt",
+				File:           "/home/foo/workspace/list.txt",
 			},
 			files: map[string]string{
 				"/home/foo/workspace/aqua.yaml": `registries:
@@ -132,11 +130,11 @@ packages:
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"list.txt": "aquaproj/aqua-installer\n",
+				"/home/foo/workspace/list.txt": "aquaproj/aqua-installer\n",
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -170,10 +168,10 @@ packages:
 			args: []string{"kubernetes-sigs/kustomize"},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v4.0.0"),
+					TagName: "v4.0.0",
 				},
 				{
-					TagName: new("kustomize/v4.2.0"),
+					TagName: "kustomize/v4.2.0",
 				},
 			},
 		},
@@ -209,7 +207,7 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -246,10 +244,10 @@ packages:
 			},
 			releases: []*github.RepositoryRelease{
 				{
-					TagName: new("v1.1.0"),
+					TagName: "v1.1.0",
 				},
 				{
-					TagName: new("v1.0.0"),
+					TagName: "v1.0.0",
 				},
 			},
 		},
@@ -379,26 +377,21 @@ packages:
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files)
-			if err != nil {
-				t.Fatal(err)
-			}
-			linker := installpackage.NewMockLinker(fs)
-			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
-					t.Fatal(err)
-				}
-			}
-			configFinder := finder.NewConfigFinder(fs)
+			// The paths of the test cases are rooted at a temporary directory.
+			dir := t.TempDir()
+			testutil.WriteFiles(t, dir, d.files)
+			d.param.CWD = testutil.Abs(dir, d.param.CWD)
+			d.param.File = testutil.Abs(dir, d.param.File)
+			configFinder := finder.NewConfigFinder()
 			gh := &github.MockRepositoriesService{
 				Releases: d.releases,
 				Tags:     d.tags,
 			}
 			downloader := download.NewGitHubContentFileDownloader(gh, download.NewHTTPDownloader(logger, http.DefaultClient))
-			registryInstaller := registry.New(d.param, downloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
-			configReader := reader.New(fs, d.param)
+			registryInstaller := registry.New(d.param, downloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{})
+			configReader := reader.New(d.param)
 			fuzzyFinder := fuzzyfinder.NewMock(d.idxs, d.fuzzyFinderErr)
-			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fs, fuzzyFinder, versiongetter.NewMockFuzzyGetter(map[string]string{}))
+			ctrl := generate.New(configFinder, configReader, registryInstaller, gh, fuzzyFinder, versiongetter.NewMockFuzzyGetter(map[string]string{}))
 			if err := ctrl.Generate(ctx, logger, d.param, d.args...); err != nil {
 				if d.isErr {
 					return

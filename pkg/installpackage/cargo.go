@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -17,18 +18,12 @@ type CargoPackageInstaller interface {
 }
 
 type CargoPackageInstallerImpl struct {
-	exec    Executor
-	cleaner Cleaner
+	exec Executor
 }
 
-type Cleaner interface {
-	RemoveAll(name string) (err error)
-}
-
-func NewCargoPackageInstallerImpl(exec Executor, cleaner Cleaner) *CargoPackageInstallerImpl {
+func NewCargoPackageInstallerImpl(exec Executor) *CargoPackageInstallerImpl {
 	return &CargoPackageInstallerImpl{
-		exec:    exec,
-		cleaner: cleaner,
+		exec: exec,
 	}
 }
 
@@ -53,7 +48,7 @@ func (is *CargoPackageInstallerImpl) Install(ctx context.Context, logger *slog.L
 		// Clean up root
 		logger := logger.With("install_dir", root)
 		logger.Info("removing the install directory because the installation failed")
-		if err := is.cleaner.RemoveAll(root); err != nil {
+		if err := os.RemoveAll(root); err != nil {
 			slogerr.WithError(logger, err).Error("aqua tried to remove the install directory because the installation failed, but it failed")
 		}
 		return fmt.Errorf("install a crate: %w", slogerr.With(err,

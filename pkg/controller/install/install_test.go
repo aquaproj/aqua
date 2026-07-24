@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -16,6 +17,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
@@ -28,6 +30,14 @@ import (
 
 func TestController_Install(t *testing.T) { //nolint:funlen
 	t.Parallel()
+	// The paths of files, dirs, and links are relative to a home directory
+	// created for each test case.
+	const (
+		workspace = "workspace"
+		rootDir   = ".local/share/aquaproj-aqua"
+	)
+	// The path of aqua-proxy relative to the root directory.
+	proxyPath := fmt.Sprintf("internal/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion)
 	data := []struct {
 		name              string
 		files             map[string]string
@@ -45,43 +55,41 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 				GOARCH: "amd64",
 			},
 			param: &config.Param{
-				CWD:            "/home/foo/workspace",
 				ConfigFilePath: "aqua.yaml",
-				RootDir:        "/home/foo/.local/share/aquaproj-aqua",
 				MaxParallelism: 5,
 			},
 			files: map[string]string{
-				"/home/foo/workspace/aqua.yaml": `registries:
+				workspace + "/aqua.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - name: aquaproj/aqua-installer@v1.0.0
 `,
-				"/home/foo/workspace/aqua-policy.yaml": `registries:
+				workspace + "/aqua-policy.yaml": `registries:
 - type: local
   name: standard
   path: registry.yaml
 packages:
 - registry: standard
 `,
-				"/home/foo/workspace/registry.yaml": `packages:
+				workspace + "/registry.yaml": `packages:
 - type: github_content
   repo_owner: aquaproj
   repo_name: aqua-installer
   path: aqua-installer
 `,
-				"/home/foo/.local/share/aquaproj-aqua/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer":                                                       ``,
-				fmt.Sprintf("/home/foo/.local/share/aquaproj-aqua/internal/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): ``,
-				"/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer": ``,
-				"/home/foo/.local/share/aquaproj-aqua/aqua-proxy":         ``,
+				rootDir + "/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": ``,
+				rootDir + "/" + proxyPath: ``,
+				rootDir + "/aqua-proxy":   ``,
 			},
 			dirs: []string{
-				"/home/foo/workspace/.git",
+				workspace + "/.git",
+				rootDir + "/bin",
 			},
 			links: map[string]string{
-				"../aqua-proxy": "/home/foo/.local/share/aquaproj-aqua/bin/aqua-installer",
-				fmt.Sprintf("../internal/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion): "/home/foo/.local/share/aquaproj-aqua/bin/aqua-proxy",
+				rootDir + "/bin/aqua-installer": "../aqua-proxy",
+				rootDir + "/bin/aqua-proxy":     "../" + proxyPath,
 			},
 		},
 	}
@@ -91,23 +99,24 @@ packages:
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-			fs, err := testutil.NewFs(d.files, d.dirs...)
-			if err != nil {
-				t.Fatal(err)
-			}
-			linker := installpackage.NewMockLinker(fs)
-			for dest, src := range d.links {
-				if err := linker.Symlink(dest, src); err != nil {
+			home := t.TempDir()
+			testutil.WriteFiles(t, home, d.files, d.dirs...)
+			linker := link.New()
+			for src, dest := range d.links {
+				if err := linker.Symlink(dest, filepath.Join(home, filepath.FromSlash(src))); err != nil {
 					t.Fatal(err)
 				}
 			}
+			d.param.CWD = filepath.Join(home, workspace)
+			d.param.RootDir = filepath.Join(home, filepath.FromSlash(rootDir))
+
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, fs, linker, nil, &checksum.Calculator{}, unarchive.New(executor, fs), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
-			policyFinder := policy.NewConfigFinder(fs)
-			policyReader := policy.NewReader(fs, &policy.MockValidator{}, policyFinder, policy.NewConfigReader(fs))
-			ctrl := install.New(d.param, finder.NewConfigFinder(fs), reader.New(fs, d.param), registry.New(d.param, registryDownloader, fs, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, fs, d.rt, policyReader)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
+			policyFinder := policy.NewConfigFinder()
+			policyReader := policy.NewReader(&policy.MockValidator{}, policyFinder, policy.NewConfigReader())
+			ctrl := install.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, registryDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, d.rt, policyReader)
 			if err := ctrl.Install(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

@@ -39,19 +39,10 @@ func (c *Controller) Which(ctx context.Context, logger *slog.Logger, param *conf
 		}
 	}
 
-	for _, cfgFilePath := range param.GlobalConfigFilePaths {
-		logger := logger.With("config_file_path", cfgFilePath)
-		logger.Debug("checking a global configuration file")
-		if _, err := c.fs.Stat(cfgFilePath); err != nil {
-			continue
-		}
-		findResult, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeName)
-		if err != nil {
-			return nil, err
-		}
-		if findResult != nil {
-			return findResult, nil
-		}
+	if findResult, err := c.findInGlobalConfigs(ctx, logger, param, exeName); err != nil {
+		return nil, err
+	} else if findResult != nil {
+		return findResult, nil
 	}
 
 	if exePath := c.lookPath(c.osenv.Getenv("PATH"), exeName); exePath != "" {
@@ -63,6 +54,30 @@ func (c *Controller) Which(ctx context.Context, logger *slog.Logger, param *conf
 		"exe_name", exeName,
 		"doc", "https://aquaproj.github.io/docs/reference/codes/004",
 	)
+}
+
+// findInGlobalConfigs looks the command up in each global configuration file
+// that exists, returning the first match. A global path that can't be stat'd is
+// an error rather than a skipped file, so a permission problem isn't mistaken
+// for an absent configuration.
+func (c *Controller) findInGlobalConfigs(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*FindResult, error) {
+	for _, cfgFilePath := range param.GlobalConfigFilePaths {
+		logger := logger.With("config_file_path", cfgFilePath)
+		logger.Debug("checking a global configuration file")
+		if f, err := osfile.Exists(cfgFilePath); err != nil {
+			return nil, err //nolint:wrapcheck
+		} else if !f {
+			continue
+		}
+		findResult, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeName)
+		if err != nil {
+			return nil, err
+		}
+		if findResult != nil {
+			return findResult, nil
+		}
+	}
+	return nil, nil //nolint:nilnil
 }
 
 func (c *Controller) getExePath(findResult *FindResult) (string, error) {
@@ -88,7 +103,7 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	}
 
 	checksums, updateChecksum, err := checksum.Open(
-		logger, c.fs, cfgFilePath,
+		logger, cfgFilePath,
 		param.ChecksumEnabled(cfg))
 	if err != nil {
 		return nil, fmt.Errorf("read a checksum JSON: %w", err)
@@ -96,7 +111,7 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	defer updateChecksum()
 
 	logger.Debug("reading registry cache")
-	registryCache, err := registry.NewCache(c.fs, param.RootDir, cfgFilePath)
+	registryCache, err := registry.NewCache(param.RootDir, cfgFilePath)
 	if err != nil {
 		slogerr.WithError(logger, err).Debug("read a registry cache file", "config_file_path", cfgFilePath)
 	}

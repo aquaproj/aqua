@@ -117,10 +117,3 @@ func TestNewCalculator(t *testing.T) {
 		t.Error("Expected non-nil calculator")
 	}
 }
-
-func TestCalculator_CalculateWithValidFile(t *testing.T) {
-	t.Parallel()
-	// This test would require a real file system setup
-	// We'll add a basic test structure here
-	t.Skip("Skipping file-based test - would need filesystem setup")
-}

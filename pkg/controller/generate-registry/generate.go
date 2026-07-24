@@ -27,7 +27,7 @@ func (c *Controller) GenerateRegistry(ctx context.Context, param *config.Param, 
 	}
 	cfg := &Config{}
 	if param.GenerateConfigFilePath != "" {
-		if err := readConfig(c.fs, param.GenerateConfigFilePath, cfg); err != nil {
+		if err := readConfig(param.GenerateConfigFilePath, cfg); err != nil {
 			return err
 		}
 	}
@@ -182,12 +182,14 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	return pkgInfo, []string{version}
 }
 
+const sha512 = "sha512"
+
 func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.Checksum {
 	suffixes := []string{
-		"md5",
+		sha512,
 		"sha256",
-		"sha512",
 		"sha1",
+		"md5",
 	}
 	for _, suffix := range suffixes {
 		if _, ok := checksumNames[assetName+"."+suffix]; ok {

@@ -11,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
-	"github.com/spf13/afero"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
 
@@ -23,11 +22,10 @@ type Controller struct {
 	registryInstaller RegistryInstaller
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
-	fs                afero.Fs
 	linker            Linker
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, fs afero.Fs, linker Linker) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, linker Linker) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -36,7 +34,6 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		registryInstaller: registryInstaller,
 		runtime:           rt,
 		osenv:             osEnv,
-		fs:                fs,
 		linker:            linker,
 	}
 }

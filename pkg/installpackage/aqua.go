@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -11,7 +12,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/spf13/afero"
 )
 
 func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, version string) error { //nolint:funlen
@@ -152,16 +152,18 @@ func (is *Installer) copyAquaOnWindows(exePath string) error {
 	// https://stackoverflow.com/questions/1211948/best-method-for-implementing-self-updating-software
 	// https://github.com/aquaproj/aqua/issues/2918
 	dest := filepath.Join(is.rootDir, "bin", "aqua.exe")
-	if f, err := afero.Exists(is.fs, dest); err != nil {
-		return fmt.Errorf("check if aqua.exe exists: %w", err)
-	} else if f {
-		// afero.Tempfile can't be used
+	f, err := osfile.Exists(dest)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	if f {
+		// A temporary file elsewhere can't be used
 		// > The system cannot move the file to a different disk drive
 		tempDir := filepath.Join(is.rootDir, "temp")
-		if err := osfile.MkdirAll(is.fs, tempDir); err != nil {
+		if err := osfile.MkdirAll(tempDir); err != nil {
 			return fmt.Errorf("create a temporary directory: %w", err)
 		}
-		if err := is.fs.Rename(dest, filepath.Join(tempDir, "aqua.exe")); err != nil {
+		if err := os.Rename(dest, filepath.Join(tempDir, "aqua.exe")); err != nil {
 			return fmt.Errorf("rename aqua.exe to update: %w", err)
 		}
 	}

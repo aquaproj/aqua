@@ -19,7 +19,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "no filter",
 			release: &github.RepositoryRelease{
-				TagName: new("v1.0.0"),
+				TagName: "v1.0.0",
 			},
 			filters: []*Filter{
 				{},
@@ -29,7 +29,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_filter",
 			release: &github.RepositoryRelease{
-				TagName: new("v1.0.0"),
+				TagName: "v1.0.0",
 			},
 			filters: []*Filter{
 				{
@@ -41,7 +41,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_prefix",
 			release: &github.RepositoryRelease{
-				TagName: new("v1.0.0"),
+				TagName: "v1.0.0",
 			},
 			filters: []*Filter{
 				{
@@ -53,7 +53,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_constraints 1",
 			release: &github.RepositoryRelease{
-				TagName: new("v1.0.0"),
+				TagName: "v1.0.0",
 			},
 			filters: []*Filter{
 				{
@@ -70,7 +70,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_constraints 2",
 			release: &github.RepositoryRelease{
-				TagName: new("v2.0.0"),
+				TagName: "v2.0.0",
 			},
 			filters: []*Filter{
 				{
@@ -86,7 +86,7 @@ func Test_filterRelease(t *testing.T) { //nolint:funlen
 		{
 			name: "version_constraints 3",
 			release: &github.RepositoryRelease{
-				TagName: new("cli/v1.0.0"),
+				TagName: "cli/v1.0.0",
 			},
 			filters: []*Filter{
 				{

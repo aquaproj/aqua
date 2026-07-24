@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/spf13/afero"
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -39,20 +39,20 @@ func New() *Checksums {
 // Open loads checksums from a file and returns a cleanup function.
 // If checksum validation is disabled, it returns nil. Otherwise, it reads
 // the checksum file and provides a cleanup function to save changes on exit.
-func Open(logger *slog.Logger, fs afero.Fs, cfgFilePath string, enabled bool) (*Checksums, func(), error) {
+func Open(logger *slog.Logger, cfgFilePath string, enabled bool) (*Checksums, func(), error) {
 	if !enabled {
 		return nil, func() {}, nil
 	}
-	checksumFilePath, err := GetChecksumFilePathFromConfigFilePath(fs, cfgFilePath)
+	checksumFilePath, err := GetChecksumFilePathFromConfigFilePath(cfgFilePath)
 	if err != nil {
 		return nil, nil, err
 	}
 	checksums := New()
-	if err := checksums.ReadFile(fs, checksumFilePath); err != nil {
+	if err := checksums.ReadFile(checksumFilePath); err != nil {
 		return nil, nil, fmt.Errorf("read a checksum JSON: %w", err)
 	}
 	return checksums, func() {
-		if err := checksums.UpdateFile(fs, checksumFilePath); err != nil {
+		if err := checksums.UpdateFile(checksumFilePath); err != nil {
 			slogerr.WithError(logger, err).Error("update a checksum file")
 		}
 	}, nil
@@ -138,13 +138,13 @@ func (c *Checksums) UnmarshalJSON(b []byte) error {
 // ReadFile loads checksums from a JSON file.
 // If the file doesn't exist, it returns without error (empty state).
 // Otherwise, it reads and parses the JSON content into the checksum collection.
-func (c *Checksums) ReadFile(fs afero.Fs, p string) error {
-	if f, err := afero.Exists(fs, p); err != nil {
-		return fmt.Errorf("check if checksum file exists: %w", err)
+func (c *Checksums) ReadFile(p string) error {
+	if f, err := osfile.Exists(p); err != nil {
+		return err //nolint:wrapcheck
 	} else if !f {
 		return nil
 	}
-	f, err := fs.Open(p)
+	f, err := os.Open(p)
 	if err != nil {
 		return fmt.Errorf("open a checksum file: %w", err)
 	}
@@ -158,11 +158,11 @@ func (c *Checksums) ReadFile(fs afero.Fs, p string) error {
 // UpdateFile saves the current checksums to a JSON file if changes were made.
 // It sorts checksums by ID for consistent output and optionally prints the file path.
 // The operation is skipped if no changes have been made since the last save.
-func (c *Checksums) UpdateFile(fs afero.Fs, p string) error {
+func (c *Checksums) UpdateFile(p string) error {
 	if !c.changed {
 		return nil
 	}
-	f, err := fs.Create(p)
+	f, err := os.Create(p)
 	if err != nil {
 		return fmt.Errorf("create a checksum file: %w", err)
 	}
@@ -191,22 +191,21 @@ func (c *Checksums) UpdateFile(fs afero.Fs, p string) error {
 // GetChecksumFilePathFromConfigFilePath determines the checksum file path from a config file path.
 // It checks for both "aqua-checksums.json" and ".aqua-checksums.json" in the config directory,
 // preferring the non-hidden version. If neither exists, it returns the non-hidden path for creation.
-func GetChecksumFilePathFromConfigFilePath(fs afero.Fs, cfgFilePath string) (string, error) {
+func GetChecksumFilePathFromConfigFilePath(cfgFilePath string) (string, error) {
+	// A checksum file that exists but can't be read must not be silently
+	// replaced with a newly generated one, so a stat error other than "not
+	// found" is returned rather than treated as absent.
 	p1 := filepath.Join(filepath.Dir(cfgFilePath), "aqua-checksums.json")
-	f, err := afero.Exists(fs, p1)
-	if err != nil {
-		return "", fmt.Errorf("check if checksum file exists: %w", err)
-	}
-	if f {
+	if f, err := osfile.Exists(p1); err != nil {
+		return "", err //nolint:wrapcheck
+	} else if f {
 		return p1, nil
 	}
 
 	p2 := filepath.Join(filepath.Dir(cfgFilePath), ".aqua-checksums.json")
-	f, err = afero.Exists(fs, p2)
-	if err != nil {
-		return "", fmt.Errorf("check if checksum file exists: %w", err)
-	}
-	if f {
+	if f, err := osfile.Exists(p2); err != nil {
+		return "", err //nolint:wrapcheck
+	} else if f {
 		return p2, nil
 	}
 

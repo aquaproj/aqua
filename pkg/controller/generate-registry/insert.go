@@ -2,14 +2,14 @@ package genrgst
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/spf13/afero"
 )
 
 func (c *Controller) insert(cfgFilePath string, pkgs any) error {
-	b, err := afero.ReadFile(c.fs, cfgFilePath)
+	b, err := os.ReadFile(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
 	}
@@ -22,11 +22,11 @@ func (c *Controller) insert(cfgFilePath string, pkgs any) error {
 		return fmt.Errorf("update an AST file: %w", err)
 	}
 
-	stat, err := c.fs.Stat(cfgFilePath)
+	stat, err := os.Stat(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("get configuration file stat: %w", err)
 	}
-	if err := afero.WriteFile(c.fs, cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil {
+	if err := os.WriteFile(cfgFilePath, []byte(file.String()+"\n"), stat.Mode()); err != nil { //nolint:gosec // the path is the configuration file aqua was pointed at
 		return fmt.Errorf("write the configuration file: %w", err)
 	}
 	return nil
