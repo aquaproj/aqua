@@ -212,13 +212,12 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 	pkgNameContainChecksum := strings.Contains(strings.ToLower(pkgName), "checksum")
 	assetNames := map[string]struct{}{}
 	checksumNames := map[string]struct{}{}
+	checksumNamesList := make([]string, 0, len(assets))
 	for _, assetName := range assets {
-		if !pkgNameContainChecksum {
-			chksum := checksum.GetChecksumConfigFromFilename(assetName, tagName)
-			if chksum != nil {
-				checksumNames[assetName] = struct{}{}
-				continue
-			}
+		if !pkgNameContainChecksum && checksum.IsChecksumFile(assetName) {
+			checksumNames[assetName] = struct{}{}
+			checksumNamesList = append(checksumNamesList, assetName)
+			continue
 		}
 		if asset.Exclude(pkgName, assetName) {
 			logger.Debug("exclude an asset", "asset_name", assetName)
@@ -241,15 +240,12 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 		}
 	}
 	if len(checksumNames) > 0 && pkgInfo.Checksum == nil {
-		for checksumName := range checksumNames {
-			chksum := checksum.GetChecksumConfigFromFilename(checksumName, tagName)
-			if chksum != nil {
-				assetInfo := asset.ParseAssetName(checksumName, tagName)
-				chksum.Asset = assetInfo.Template
-				chksum.Cosign = checkChecksumCosign(pkgInfo, checksumName, assetNames)
-				pkgInfo.Checksum = chksum
-				break
-			}
+		checksumName, chksum := checksum.GetChecksumConfigFromFilename(checksumNamesList, tagName)
+		if chksum != nil {
+			assetInfo := asset.ParseAssetName(checksumName, tagName)
+			chksum.Asset = assetInfo.Template
+			chksum.Cosign = checkChecksumCosign(pkgInfo, checksumName, assetNames)
+			pkgInfo.Checksum = chksum
 		}
 	}
 	asset.ParseAssetInfos(pkgInfo, assetInfos)
