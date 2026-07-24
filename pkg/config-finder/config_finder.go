@@ -82,12 +82,14 @@ func (f *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...
 	if configFilePath != "" {
 		return osfile.Abs(wd, configFilePath), nil
 	}
-	configFilePath = findconfig.Find(wd, osfile.Exists, ConfigFileNames()...)
+	configFilePath = findconfig.Find(wd, exists, ConfigFileNames()...)
 	if configFilePath != "" {
 		return configFilePath, nil
 	}
 	for _, p := range globalConfigFilePaths {
-		if osfile.Exists(p) {
+		if f, err := osfile.Exists(p); err != nil {
+			return "", err //nolint:wrapcheck
+		} else if f {
 			return p, nil
 		}
 	}
@@ -96,7 +98,15 @@ func (f *ConfigFinder) Find(wd, configFilePath string, globalConfigFilePaths ...
 
 func (f *ConfigFinder) Finds(wd, configFilePath string) []string {
 	if configFilePath == "" {
-		return findconfig.Finds(wd, osfile.Exists, ConfigFileNames()...)
+		return findconfig.Finds(wd, exists, ConfigFileNames()...)
 	}
 	return []string{osfile.Abs(wd, configFilePath)}
+}
+
+// exists adapts osfile.Exists to findconfig's predicate, which walks up the
+// directory tree and has no way to report an error. A path that can't be
+// stat'd is treated as absent, so the walk moves on to the parent directory.
+func exists(p string) bool {
+	f, _ := osfile.Exists(p)
+	return f
 }

@@ -163,6 +163,39 @@ func TestValidatorImpl_Validate_updated(t *testing.T) {
 	}
 }
 
+// A policy file that exists in the root directory but can't be stat'd must not
+// be reported as errPolicyNotFound: a permission problem would then be
+// misdiagnosed, and the user told to allow a policy that is already there.
+func TestValidatorImpl_Validate_unreadable(t *testing.T) {
+	t.Parallel()
+
+	if os.Geteuid() == 0 {
+		t.Skip("root bypasses directory permissions")
+	}
+
+	v, policyFilePath := newTestValidator(t, "packages:\n")
+	if err := v.Allow(policyFilePath); err != nil {
+		t.Fatal(err)
+	}
+	// Make the directory that holds the copied policy file unsearchable, so
+	// stat of the policy file fails with a permission error rather than
+	// os.ErrNotExist.
+	policyDir := filepath.Dir(filepath.Join(v.rootDir, "policies", normalizePath(policyFilePath)))
+	if err := os.Chmod(policyDir, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chmod(policyDir, 0o755)
+	})
+	err := v.Validate(policyFilePath)
+	if err == nil {
+		t.Fatal("an error must be returned when the policy file can't be stat'd")
+	}
+	if errors.Is(err, errPolicyNotFound) {
+		t.Fatal("a permission error must not be reported as errPolicyNotFound")
+	}
+}
+
 func TestValidatorImpl_Validate_disabled(t *testing.T) {
 	t.Parallel()
 

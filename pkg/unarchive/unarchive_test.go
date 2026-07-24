@@ -17,7 +17,6 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
-	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 )
 
@@ -340,7 +339,7 @@ type pkgutilStub struct {
 func (e *pkgutilStub) ExecAndOutputWhenFailure(cmd *osexec.Cmd) (int, error) {
 	e.args = cmd.Args
 	dest := cmd.Args[len(cmd.Args)-1]
-	if osfile.Exists(dest) {
+	if _, err := os.Stat(dest); err == nil {
 		e.destExisted = true
 	}
 	if err := os.MkdirAll(dest, 0o755); err != nil {
@@ -388,7 +387,7 @@ func TestUnarchiver_Unarchive_pkg(t *testing.T) {
 	if len(executor.args) != 4 || executor.args[1] != "--expand-full" || executor.args[3] != dest {
 		t.Fatalf("unexpected command: %v", executor.args)
 	}
-	if !osfile.Exists(dest) {
+	if _, err := os.Stat(dest); err != nil {
 		t.Fatal("the destination must be created by pkgutil")
 	}
 }

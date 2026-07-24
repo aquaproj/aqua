@@ -2,7 +2,6 @@ package checksum
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -139,8 +139,8 @@ func (c *Checksums) UnmarshalJSON(b []byte) error {
 // If the file doesn't exist, it returns without error (empty state).
 // Otherwise, it reads and parses the JSON content into the checksum collection.
 func (c *Checksums) ReadFile(p string) error {
-	if f, err := exists(p); err != nil {
-		return err
+	if f, err := osfile.Exists(p); err != nil {
+		return err //nolint:wrapcheck
 	} else if !f {
 		return nil
 	}
@@ -192,33 +192,22 @@ func (c *Checksums) UpdateFile(p string) error {
 // It checks for both "aqua-checksums.json" and ".aqua-checksums.json" in the config directory,
 // preferring the non-hidden version. If neither exists, it returns the non-hidden path for creation.
 func GetChecksumFilePathFromConfigFilePath(cfgFilePath string) (string, error) {
+	// A checksum file that exists but can't be read must not be silently
+	// replaced with a newly generated one, so a stat error other than "not
+	// found" is returned rather than treated as absent.
 	p1 := filepath.Join(filepath.Dir(cfgFilePath), "aqua-checksums.json")
-	if f, err := exists(p1); err != nil {
-		return "", err
+	if f, err := osfile.Exists(p1); err != nil {
+		return "", err //nolint:wrapcheck
 	} else if f {
 		return p1, nil
 	}
 
 	p2 := filepath.Join(filepath.Dir(cfgFilePath), ".aqua-checksums.json")
-	if f, err := exists(p2); err != nil {
-		return "", err
+	if f, err := osfile.Exists(p2); err != nil {
+		return "", err //nolint:wrapcheck
 	} else if f {
 		return p2, nil
 	}
 
 	return p1, nil
-}
-
-// exists reports whether p exists. Unlike osfile.Exists, an error other than
-// os.ErrNotExist, such as a permission error, is returned rather than treated
-// as a missing file: a checksum file that exists but can't be read must not be
-// silently replaced with a newly generated one.
-func exists(p string) (bool, error) {
-	if _, err := os.Stat(p); err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return false, nil
-		}
-		return false, fmt.Errorf("check if a checksum file exists: %w", err)
-	}
-	return true, nil
 }

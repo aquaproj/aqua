@@ -28,7 +28,11 @@ func configFileNames() []string {
 
 func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 	if policyFilePath != "" {
-		if !osfile.Exists(policyFilePath) {
+		// The user named this file, so a stat failure other than "not found"
+		// must not be reported as "not found".
+		if e, err := osfile.Exists(policyFilePath); err != nil {
+			return "", err //nolint:wrapcheck
+		} else if !e {
 			return "", ErrConfigFileNotFound
 		}
 		if filepath.IsAbs(policyFilePath) {
@@ -39,15 +43,26 @@ func (f *ConfigFinderImpl) Find(policyFilePath, wd string) (string, error) {
 
 	// https://github.com/orgs/aquaproj/discussions/2476
 	// Using `git worktree`, .git is a file.
-	gitDir := findconfig.Find(wd, osfile.Exists, ".git")
+	gitDir := findconfig.Find(wd, existsBestEffort, ".git")
 	if gitDir == "" {
 		return "", nil
 	}
 	gitParentDir := filepath.Dir(gitDir)
 	for _, p := range configFileNames() {
-		if p := filepath.Join(gitParentDir, p); osfile.Exists(p) {
+		p := filepath.Join(gitParentDir, p)
+		if e, err := osfile.Exists(p); err != nil {
+			return "", err //nolint:wrapcheck
+		} else if e {
 			return p, nil
 		}
 	}
 	return "", nil
+}
+
+// exists adapts osfile.Exists to findconfig's predicate, which walks up the
+// directory tree and has no way to report an error. A path that can't be
+// stat'd is treated as absent, so the walk moves on to the parent directory.
+func existsBestEffort(p string) bool {
+	f, _ := osfile.Exists(p)
+	return f
 }

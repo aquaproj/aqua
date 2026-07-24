@@ -34,7 +34,9 @@ func (p *Package) RenameFile(logger *slog.Logger, pkgPath string, file *registry
 func (p *Package) renameFile(logger *slog.Logger, pkgPath, oldName string) (string, error) {
 	newName := oldName + p.windowsExt()
 	newPath := filepath.Join(pkgPath, newName)
-	if osfile.Exists(newPath) {
+	if f, err := osfile.Exists(newPath); err != nil {
+		return "", err //nolint:wrapcheck
+	} else if f {
 		return newName, nil
 	}
 	old := filepath.Join(pkgPath, oldName)

@@ -70,7 +70,9 @@ func (v *ValidatorImpl) Allow(p string) error {
 		return fmt.Errorf("copy a policy file: %w", err)
 	}
 	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizedP)
-	if !osfile.Exists(warnFilePath) {
+	if f, err := osfile.Exists(warnFilePath); err != nil {
+		return err //nolint:wrapcheck
+	} else if !f {
 		return nil
 	}
 	if err := os.Remove(warnFilePath); err != nil {
@@ -83,8 +85,12 @@ func (v *ValidatorImpl) Deny(p string) error {
 	normalizedP := normalizePath(p)
 	policyPath := filepath.Join(v.rootDir, "policies", normalizedP)
 
-	// remove allow file
-	if osfile.Exists(policyPath) {
+	// remove allow file. A stat failure other than "not found" must abort:
+	// otherwise Deny would report success while the file that allows the
+	// package stays in place.
+	if f, err := osfile.Exists(policyPath); err != nil {
+		return err //nolint:wrapcheck
+	} else if f {
 		if err := os.Remove(policyPath); err != nil {
 			return fmt.Errorf("remove a policy file: %w", err)
 		}
@@ -105,7 +111,9 @@ func (v *ValidatorImpl) Deny(p string) error {
 
 func (v *ValidatorImpl) Warn(logger *slog.Logger, policyFilePath string, updated bool) error {
 	warnFilePath := filepath.Join(v.rootDir, "policy-warnings", normalizePath(policyFilePath))
-	if osfile.Exists(warnFilePath) {
+	if f, err := osfile.Exists(warnFilePath); err != nil {
+		return err //nolint:wrapcheck
+	} else if f {
 		return nil
 	}
 	msg := `The policy file is ignored unless it is allowed by "aqua policy allow" command.
@@ -131,7 +139,12 @@ func (v *ValidatorImpl) Validate(p string) error {
 		return nil
 	}
 	policyPath := filepath.Join(v.rootDir, "policies", normalizePath(p))
-	if !osfile.Exists(policyPath) {
+	// A stat failure other than "not found" must not be reported as
+	// errPolicyNotFound: a permission problem would then be misdiagnosed, and
+	// the user told to allow a policy that is already there.
+	if f, err := osfile.Exists(policyPath); err != nil {
+		return err //nolint:wrapcheck
+	} else if !f {
 		return errPolicyNotFound
 	}
 	b1, err := os.ReadFile(p)

@@ -64,7 +64,12 @@ func (c *Controller) create(ctx context.Context, logger *slog.Logger, cfgFilePat
 			continue
 		}
 		absPkgPath := filepath.Join(c.rootDir, pkgPath)
-		if !osfile.Exists(absPkgPath) {
+		// A best-effort scan of every configured package: a package that can't
+		// be stat'd is logged and skipped rather than aborting the whole scan.
+		if f, err := osfile.Exists(absPkgPath); err != nil {
+			slogerr.WithError(logger, err).Warn("check if the package is installed")
+			continue
+		} else if !f {
 			continue
 		}
 		if err := c.vacuum.Create(pkgPath, now); err != nil {

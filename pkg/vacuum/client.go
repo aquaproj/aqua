@@ -55,7 +55,9 @@ func (c *Client) Update(pkgPath string, timestamp time.Time) error {
 func (c *Client) Create(pkgPath string, timestamp time.Time) error {
 	dir := c.dir(pkgPath)
 	file := filepath.Join(dir, fileName)
-	if osfile.Exists(file) {
+	if f, err := osfile.Exists(file); err != nil {
+		return err //nolint:wrapcheck
+	} else if f {
 		return nil
 	}
 	return c.update(file, dir, timestamp)

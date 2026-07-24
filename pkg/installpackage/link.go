@@ -92,7 +92,9 @@ func (is *Installer) createCmdLink(logger *slog.Logger, file *registry.File, cmd
 
 func (is *Installer) createHardLinkToProxy(logger *slog.Logger, cmd, aquaProxyPathOnWindows string) error {
 	hardLink := filepath.Join(is.rootDir, "bin", cmd+exeExt)
-	if osfile.Exists(hardLink) {
+	if f, err := osfile.Exists(hardLink); err != nil {
+		return err //nolint:wrapcheck
+	} else if f {
 		return nil
 	}
 	logger.Info("creating a hard link to aqua-proxy")

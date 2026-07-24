@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/osfile"
 )
 
 // newRootDir creates a root directory with the cache directory in it, and
@@ -169,7 +168,7 @@ func TestCache_Operations(t *testing.T) { //nolint:cyclop
 	}
 
 	// Verify file was written
-	if !osfile.Exists(cacheFile) {
+	if _, err := os.Stat(cacheFile); err != nil {
 		t.Error("cache file should exist after write")
 	}
 }

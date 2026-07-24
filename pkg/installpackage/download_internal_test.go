@@ -172,7 +172,7 @@ func TestInstaller_unarchive_failure(t *testing.T) {
 		t.Fatal("error must be returned")
 	}
 
-	if osfile.Exists(dest) {
+	if _, err := os.Stat(dest); err == nil {
 		t.Fatal("the destination must not be created when the extraction fails")
 	}
 	assertTempDirIsEmpty(t, rootDir)

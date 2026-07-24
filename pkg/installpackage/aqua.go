@@ -152,7 +152,11 @@ func (is *Installer) copyAquaOnWindows(exePath string) error {
 	// https://stackoverflow.com/questions/1211948/best-method-for-implementing-self-updating-software
 	// https://github.com/aquaproj/aqua/issues/2918
 	dest := filepath.Join(is.rootDir, "bin", "aqua.exe")
-	if osfile.Exists(dest) {
+	f, err := osfile.Exists(dest)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	if f {
 		// A temporary file elsewhere can't be used
 		// > The system cannot move the file to a different disk drive
 		tempDir := filepath.Join(is.rootDir, "temp")

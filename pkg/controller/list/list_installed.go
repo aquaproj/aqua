@@ -38,7 +38,9 @@ func (c *Controller) listInstalled(logger *slog.Logger, param *config.Param) err
 		cfgFileMap[cfgFilePath] = struct{}{}
 
 		logger.Debug("checking a global configuration file")
-		if !osfile.Exists(cfgFilePath) {
+		if f, err := osfile.Exists(cfgFilePath); err != nil {
+			return err //nolint:wrapcheck
+		} else if !f {
 			continue
 		}
 		if err := c.listInstalledByConfig(logger, cfgFilePath); err != nil {

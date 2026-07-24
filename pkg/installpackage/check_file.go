@@ -157,7 +157,9 @@ func (is *Installer) createFileHardLink(logger *slog.Logger, file *registry.File
 	if is.runtime.IsWindows() && filepath.Ext(link) == "" {
 		link += exeExt
 	}
-	if osfile.Exists(link) {
+	if f, err := osfile.Exists(link); err != nil {
+		return err //nolint:wrapcheck
+	} else if f {
 		// do nothing
 		return nil
 	}
