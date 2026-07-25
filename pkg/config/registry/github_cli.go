@@ -14,6 +14,8 @@ type GitHubArtifactAttestations struct {
 	//
 	// Deprecated: Use SignerWorkflow2 instead. This will be removed in aqua v3.
 	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty" jsonschema:"description=Deprecated: use signer_workflow instead,format=regex"`
+	Owner           string `yaml:",omitempty" json:"owner,omitempty"`
+	SignerRepo      string `yaml:"signer_repo,omitempty" json:"signer_repo,omitempty"`
 }
 
 // SignerWorkflow returns the configured signer workflow.
