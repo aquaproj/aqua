@@ -13,7 +13,7 @@ registries:
     ref: 98524ca5b420af9115275d110b2cadeab60f49e2 # TODO update
     name: soulshack
   - type: standard
-    ref: 52c9bfe694d3a246691ad17fa5718b74c806a56e # v4.543.0 TODO update
+    ref: 52c9bfe694d3a246691ad17fa5718b74c806a56e # v4.543.0
     name: tfcmt
 packages:
   - name: suzuki-shunsuke/mkghtag@v0.1.11
