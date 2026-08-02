@@ -38,7 +38,7 @@ func expandRuntimesByVariants(pkgInfo *registry.PackageInfo, rts []*runtime.Runt
 			continue
 		}
 		valueSets := collectVariantValueSets(matching, keys)
-		for _, combo := range cartesianProduct(keys, valueSets) {
+		for _, combo := range cartesianProduct(valueSets) {
 			newRT := *rt
 			applyVariantCombo(&newRT, combo)
 			add(&newRT)
@@ -108,10 +108,9 @@ func collectVariantValueSets(overrides []*registry.Override, keys []string) map[
 	return sets
 }
 
-func cartesianProduct(keys []string, sets map[string]map[string]struct{}) []map[string]string {
+func cartesianProduct(sets map[string]map[string]struct{}) []map[string]string {
 	combos := []map[string]string{{}}
-	for _, key := range keys {
-		values := sets[key]
+	for key, values := range sets {
 		next := make([]map[string]string, 0, len(combos)*len(values))
 		for _, c := range combos {
 			for v := range values {
