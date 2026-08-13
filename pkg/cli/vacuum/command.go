@@ -43,10 +43,10 @@ To solve the problem, "aqua vacuum --init" is available.
 "aqua vacuum --init" searches installed packages from aqua.yaml including $AQUA_GLOBAL_CONFIG and records the current date time as the last used date time of those packages if their last used date times aren't recorded.
 
 "aqua vacuum --init" can't record date times of install packages which are not found in aqua.yaml.
-
-If the environment variable $AQUA_DISABLE_VACUUM is true, aqua doesn't record last used date times and this command fails.
-This is useful if $AQUA_ROOT_DIR is read only.
 If you want to record their date times, you need to remove them by "aqua rm" command and re-install them.
+
+If the environment variable $AQUA_DISABLE_TRACKING is true, aqua doesn't record last used date times, so this command fails.
+This is useful if $AQUA_ROOT_DIR is read only.
 `
 
 // Args holds command-line arguments for the vacuum command.
@@ -113,11 +113,11 @@ func (i *command) action(ctx context.Context, args *Args) error {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
 
-	if param.DisableVacuum {
+	if param.DisableTracking {
 		// aqua doesn't record packages' last used date times, so the recorded
 		// date times are stale. Removing packages based on them would remove
 		// packages in use.
-		return slogerr.With(errVacuumDisabled, "doc", "https://aquaproj.github.io/docs/reference/codes/007") //nolint:wrapcheck
+		return slogerr.With(errVacuumTrackingDisabled, "doc", "https://aquaproj.github.io/docs/reference/codes/007") //nolint:wrapcheck
 	}
 
 	if args.Init {

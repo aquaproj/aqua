@@ -47,30 +47,31 @@ aqua vacuum --init
 `aqua vacuum --init` can't record date times of install packages which are not found in aqua.yaml.
 If you want to record their date times, you need to remove them by `aqua rm` command and re-install them.
 
-## Disable Vacuum
+## Disable tracking
 
 `aqua >= v2.63.0`
 
-If the environment variable `AQUA_DISABLE_VACUUM` is `true`, aqua doesn't record packages' last used date times and the `aqua vacuum` command fails.
+If the environment variable `AQUA_DISABLE_TRACKING` is `true`, aqua doesn't record packages' last used date times.
 
 ```sh
-export AQUA_DISABLE_VACUUM=true
-```
-
-```console
-$ aqua vacuum
-ERR aqua failed doc="https://aquaproj.github.io/docs/reference/codes/007" error="the vacuum command is disabled" program=aqua
+export AQUA_DISABLE_TRACKING=true
 ```
 
 This is useful if `$AQUA_ROOT_DIR` is read only.
 For instance, an administrator installs packages in a shared directory and other users only execute them.
 In that case aqua fails to record last used date times and outputs warning logs every time packages are executed.
-`AQUA_DISABLE_VACUUM` suppresses those warning logs.
+`AQUA_DISABLE_TRACKING` suppresses those warning logs.
 
-`aqua vacuum` fails rather than doing nothing because last used date times get stale while `AQUA_DISABLE_VACUUM` is set.
+`aqua vacuum` and `aqua vacuum --init` fail while `AQUA_DISABLE_TRACKING` is set.
+
+```console
+$ aqua vacuum
+ERR aqua failed doc="https://aquaproj.github.io/docs/reference/codes/007" error="the vacuum command isn't available. Tracking is disabled" program=aqua
+```
+
+They fail rather than doing nothing because last used date times get stale without tracking.
 `aqua vacuum` would judge packages in use as unused and remove them.
-`aqua vacuum --init` fails too because it records last used date times.
 
-If you want to run `aqua vacuum` again, please unset `AQUA_DISABLE_VACUUM` and run `aqua vacuum --init` to record the current date time as the last used date time of installed packages.
+If you want to run `aqua vacuum` again, please unset `AQUA_DISABLE_TRACKING` and run `aqua vacuum --init` to record the current date time as the last used date time of installed packages.
 
-Note that `aqua rm` still removes a timestamp file of a removed package even if `AQUA_DISABLE_VACUUM` is `true`, so that stale files aren't left behind.
+Note that `aqua rm` still removes a timestamp file of a removed package even if `AQUA_DISABLE_TRACKING` is `true`, so that stale files aren't left behind.

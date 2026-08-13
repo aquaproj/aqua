@@ -137,9 +137,9 @@ func TestClient_Update(t *testing.T) { //nolint:dupl
 	}
 }
 
-// TestClient_Update_disableVacuum checks that Update does nothing if
-// AQUA_DISABLE_VACUUM is set.
-func TestClient_Update_disableVacuum(t *testing.T) {
+// TestClient_Update_disableTracking checks that Update does nothing if
+// AQUA_DISABLE_TRACKING is set.
+func TestClient_Update_disableTracking(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name       string
@@ -163,8 +163,8 @@ func TestClient_Update_disableVacuum(t *testing.T) {
 			t.Parallel()
 			rootDir := newRootDir(t, tt.files)
 			client := vacuum.New(&config.Param{
-				RootDir:       rootDir,
-				DisableVacuum: true,
+				RootDir:         rootDir,
+				DisableTracking: true,
 			})
 			ts, err := vacuum.ParseTime("2025-01-10T00:15:00+09:00")
 			if err != nil {
@@ -272,15 +272,15 @@ func TestClient_FindAll(t *testing.T) {
 func TestClient_FindAll_brokenTimestamp(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		name          string
-		disableVacuum bool
+		name            string
+		disableTracking bool
 	}{
 		{
-			name: "vacuum is enabled",
+			name: "tracking is enabled",
 		},
 		{
-			name:          "vacuum is disabled",
-			disableVacuum: true,
+			name:            "tracking is disabled",
+			disableTracking: true,
 		},
 	}
 	logger := slog.New(slog.DiscardHandler)
@@ -292,8 +292,8 @@ func TestClient_FindAll_brokenTimestamp(t *testing.T) {
 				timestampFile: "broken\n",
 			})
 			client := vacuum.New(&config.Param{
-				RootDir:       rootDir,
-				DisableVacuum: tt.disableVacuum,
+				RootDir:         rootDir,
+				DisableTracking: tt.disableTracking,
 			})
 			timestamps, err := client.FindAll(logger)
 			if err != nil {
