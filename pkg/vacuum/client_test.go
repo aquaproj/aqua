@@ -137,9 +137,9 @@ func TestClient_Update(t *testing.T) { //nolint:dupl
 	}
 }
 
-// TestClient_Update_disableTracking checks that Update does nothing if
-// AQUA_DISABLE_TRACKING is set.
-func TestClient_Update_disableTracking(t *testing.T) {
+// TestClient_Update_disableVacuum checks that Update does nothing if
+// AQUA_DISABLE_VACUUM is set.
+func TestClient_Update_disableVacuum(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		name       string
@@ -163,8 +163,8 @@ func TestClient_Update_disableTracking(t *testing.T) {
 			t.Parallel()
 			rootDir := newRootDir(t, tt.files)
 			client := vacuum.New(&config.Param{
-				RootDir:         rootDir,
-				DisableTracking: true,
+				RootDir:       rootDir,
+				DisableVacuum: true,
 			})
 			ts, err := vacuum.ParseTime("2025-01-10T00:15:00+09:00")
 			if err != nil {
@@ -267,20 +267,20 @@ func TestClient_FindAll(t *testing.T) {
 }
 
 // TestClient_FindAll_brokenTimestamp checks that FindAll recreates a broken
-// timestamp file in place even if tracking is disabled, because the vacuum
+// timestamp file in place even if vacuum is disabled, because the vacuum
 // command needs the timestamp to judge whether a package is unused.
 func TestClient_FindAll_brokenTimestamp(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		name            string
-		disableTracking bool
+		name          string
+		disableVacuum bool
 	}{
 		{
-			name: "tracking is enabled",
+			name: "vacuum is enabled",
 		},
 		{
-			name:            "tracking is disabled",
-			disableTracking: true,
+			name:          "vacuum is disabled",
+			disableVacuum: true,
 		},
 	}
 	logger := slog.New(slog.DiscardHandler)
@@ -292,8 +292,8 @@ func TestClient_FindAll_brokenTimestamp(t *testing.T) {
 				timestampFile: "broken\n",
 			})
 			client := vacuum.New(&config.Param{
-				RootDir:         rootDir,
-				DisableTracking: tt.disableTracking,
+				RootDir:       rootDir,
+				DisableVacuum: tt.disableVacuum,
 			})
 			timestamps, err := client.FindAll(logger)
 			if err != nil {

@@ -376,7 +376,7 @@ type Param struct {
 	EnforceChecksum                   bool
 	EnforceRequireChecksum            bool
 	DisablePolicy                     bool
-	DisableTracking                   bool
+	DisableVacuum                     bool
 	Detail                            bool
 	OnlyPackage                       bool
 	OnlyRegistry                      bool

@@ -14,6 +14,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/controller"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 	"github.com/urfave/cli/v3"
 )
 
@@ -42,6 +43,9 @@ To solve the problem, "aqua vacuum --init" is available.
 "aqua vacuum --init" searches installed packages from aqua.yaml including $AQUA_GLOBAL_CONFIG and records the current date time as the last used date time of those packages if their last used date times aren't recorded.
 
 "aqua vacuum --init" can't record date times of install packages which are not found in aqua.yaml.
+
+If the environment variable $AQUA_DISABLE_VACUUM is true, aqua doesn't record last used date times and this command fails.
+This is useful if $AQUA_ROOT_DIR is read only.
 If you want to record their date times, you need to remove them by "aqua rm" command and re-install them.
 `
 
@@ -107,6 +111,13 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param := &config.Param{}
 	if err := util.SetParam(args.GlobalArgs, logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
+	}
+
+	if param.DisableVacuum {
+		// aqua doesn't record packages' last used date times, so the recorded
+		// date times are stale. Removing packages based on them would remove
+		// packages in use.
+		return slogerr.With(errVacuumDisabled, "doc", "https://aquaproj.github.io/docs/reference/codes/007") //nolint:wrapcheck
 	}
 
 	if args.Init {
