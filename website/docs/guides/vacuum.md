@@ -47,20 +47,63 @@ aqua vacuum --init
 `aqua vacuum --init` can't record date times of install packages which are not found in aqua.yaml.
 If you want to record their date times, you need to remove them by `aqua rm` command and re-install them.
 
-## Disable tracking
+## Read only `$AQUA_ROOT_DIR`
+
+Sometimes `$AQUA_ROOT_DIR` is read only for users.
+For instance, an administrator installs packages in a shared directory such as `/opt/aqua` and other users only execute them.
+
+In that case aqua fails to record last used date times and outputs a warning log every time packages are executed.
+
+```
+WRN update the last used datetime ... error="update the last used datetime: create a package timestamp file: open /opt/aqua/metadata/pkgs/http/get.helm.sh/helm-v4.2.3-linux-amd64.tar.gz/timestamp.txt: permission denied"
+```
+
+There are two solutions.
+[Granting write permission](#grant-write-permission-to-the-metadata-directory) is better if it's acceptable, because [disabling tracking](#disable-tracking) makes `aqua vacuum` unavailable for everyone including the administrator.
+
+### Grant write permission to the metadata directory
 
 `aqua >= v2.63.0`
 
-If the environment variable `AQUA_DISABLE_TRACKING` is `true`, aqua doesn't record packages' last used date times.
+aqua records last used date times in `$AQUA_ROOT_DIR/metadata`, which is separated from installed packages in `$AQUA_ROOT_DIR/pkgs`.
+So you can allow users to record last used date times while keeping installed packages read only.
+
+```sh
+sudo chgrp -R aqua /opt/aqua/metadata
+sudo chmod -R g+w /opt/aqua/metadata
+sudo find /opt/aqua/metadata -type d -exec chmod g+s {} +
+```
+
+Users need to belong to the group and to set `umask` to `0002`, because aqua creates timestamp files and directories with `0664` and `0775` and `umask` removes the group write permission.
+
+```sh
+umask 0002
+```
+
+The administrator needs to set `umask` too when installing packages.
+aqua records the last used date time when it installs a package, so timestamp files of newly installed packages are created by the administrator.
+Users can't update them if they aren't group writable.
+
+Warning logs go away, and the administrator can run `aqua vacuum` based on the actual usage of all users.
+
+:::info
+aqua < v2.63.0 creates timestamp files with `0644`, so a timestamp file created by a user can't be updated by other users.
+:::
+
+### Disable tracking
+
+`aqua >= v2.63.0`
+
+If you can't grant write permission, for instance because `$AQUA_ROOT_DIR` is on a read only file system, you can disable the tracking of last used date times.
+If the environment variable `AQUA_DISABLE_TRACKING` is `true`, aqua doesn't record packages' last used date times, so the warning logs go away.
 
 ```sh
 export AQUA_DISABLE_TRACKING=true
 ```
 
-This is useful if `$AQUA_ROOT_DIR` is read only.
-For instance, an administrator installs packages in a shared directory and other users only execute them.
-In that case aqua fails to record last used date times and outputs warning logs every time packages are executed.
-`AQUA_DISABLE_TRACKING` suppresses those warning logs.
+:::caution
+Last used date times aren't recorded while `AQUA_DISABLE_TRACKING` is set, so the administrator can't remove unused packages based on the actual usage either.
+:::
 
 `aqua vacuum` and `aqua vacuum --init` fail while `AQUA_DISABLE_TRACKING` is set.
 

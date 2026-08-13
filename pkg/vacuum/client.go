@@ -15,7 +15,12 @@ import (
 )
 
 const (
-	filePermission = 0o644
+	// filePermission is group writable so that several users can update the same
+	// timestamp file if they share $AQUA_ROOT_DIR. A file created with 0o644
+	// can't be updated by other users, and umask can't add the permission.
+	// Note that umask still removes the permission, so this doesn't grant it to
+	// users whose umask is 0o022.
+	filePermission = 0o664
 	fileName       = "timestamp.txt"
 	baseDir        = "metadata"
 )

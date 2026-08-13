@@ -42,7 +42,7 @@ To install tools in global configuration files, you have to set `-a` to `aqua in
 * [`AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION`: `aqua >= v2.35.0` If true, the verification using GitHub Artifact Attestations is disabled](/docs/reference/security/github-artifact-attestations#disable-the-verification-of-github-artifact-attestations)
 * `AQUA_DISABLE_POLICY`: If true, [Policy](/docs/reference/security/policy-as-code) is disabled (aqua >= v2.1.0)
 * `AQUA_DISABLE_LAZY_INSTALL`: If true, [Lazy Install](/docs/reference/lazy-install/) is disabled (aqua >= v2.9.0)
-* `AQUA_DISABLE_TRACKING`: If true, aqua doesn't record packages' last used date times and the [aqua vacuum](/docs/guides/vacuum#disable-tracking) command fails (aqua >= v2.63.0)
+* `AQUA_DISABLE_TRACKING`: If true, aqua doesn't record packages' last used date times and the [aqua vacuum](/docs/guides/vacuum#disable-tracking) command fails. This is a solution for [read only `$AQUA_ROOT_DIR`](/docs/guides/vacuum#read-only-aqua_root_dir) (aqua >= v2.63.0)
 * `AQUA_ROOT_DIR`: The directory path where aqua install tools
   * default (linux and macOS): `${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua`
   * default (windows): `${HOME/AppData/Local}/aquaproj-aqua`
