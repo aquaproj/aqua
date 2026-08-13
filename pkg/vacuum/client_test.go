@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -136,6 +137,59 @@ func TestClient_Update(t *testing.T) { //nolint:dupl
 	}
 }
 
+// TestClient_Update_disableTracking checks that Update does nothing if
+// AQUA_DISABLE_TRACKING is set.
+func TestClient_Update_disableTracking(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		name       string
+		files      map[string]string
+		expContent string
+	}{
+		{
+			name: "no timestamp file",
+		},
+		{
+			name: "keep an existing timestamp file",
+			files: map[string]string{
+				"metadata/" + pkgPath + "/timestamp.txt": "2025-01-01T00:15:00+09:00\n",
+			},
+			expContent: "2025-01-01T00:15:00+09:00\n",
+		},
+	}
+	timestampFile := "metadata/" + pkgPath + "/timestamp.txt"
+	for _, tt := range data {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			rootDir := newRootDir(t, tt.files)
+			client := vacuum.New(&config.Param{
+				RootDir:         rootDir,
+				DisableTracking: true,
+			})
+			ts, err := vacuum.ParseTime("2025-01-10T00:15:00+09:00")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := client.Update(pkgPath, ts); err != nil {
+				t.Fatal(err)
+			}
+			b, err := os.ReadFile(filepath.Join(rootDir, filepath.FromSlash(timestampFile)))
+			if tt.expContent == "" {
+				if !os.IsNotExist(err) {
+					t.Fatal("a timestamp file must not be created")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tt.expContent, string(b)); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
+}
+
 func TestClient_Remove(t *testing.T) {
 	t.Parallel()
 	data := []struct {
@@ -207,6 +261,53 @@ func TestClient_FindAll(t *testing.T) {
 			}
 			if diff := cmp.Diff(tt.exp, a); diff != "" {
 				t.Fatal(diff)
+			}
+		})
+	}
+}
+
+// TestClient_FindAll_brokenTimestamp checks that FindAll recreates a broken
+// timestamp file in place even if tracking is disabled, because the vacuum
+// command needs the timestamp to judge whether a package is unused.
+func TestClient_FindAll_brokenTimestamp(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		name            string
+		disableTracking bool
+	}{
+		{
+			name: "tracking is enabled",
+		},
+		{
+			name:            "tracking is disabled",
+			disableTracking: true,
+		},
+	}
+	logger := slog.New(slog.DiscardHandler)
+	timestampFile := "metadata/" + pkgPath + "/timestamp.txt"
+	for _, tt := range data {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			rootDir := newRootDir(t, map[string]string{
+				timestampFile: "broken\n",
+			})
+			client := vacuum.New(&config.Param{
+				RootDir:         rootDir,
+				DisableTracking: tt.disableTracking,
+			})
+			timestamps, err := client.FindAll(logger)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(timestamps) != 0 {
+				t.Fatalf("a broken timestamp file must be excluded from the result: %v", timestamps)
+			}
+			b, err := os.ReadFile(filepath.Join(rootDir, filepath.FromSlash(timestampFile)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := vacuum.ParseTime(strings.TrimSpace(string(b))); err != nil {
+				t.Fatalf("the broken timestamp file must be recreated in place: %v", err)
 			}
 		})
 	}

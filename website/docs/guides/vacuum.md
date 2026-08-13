@@ -46,3 +46,20 @@ aqua vacuum --init
 
 `aqua vacuum --init` can't record date times of install packages which are not found in aqua.yaml.
 If you want to record their date times, you need to remove them by `aqua rm` command and re-install them.
+
+## Disable the tracking of last used date times
+
+`aqua >= v2.63.0`
+
+If the environment variable `AQUA_DISABLE_TRACKING` is `true`, aqua doesn't record packages' last used date times.
+
+```sh
+export AQUA_DISABLE_TRACKING=true
+```
+
+This is useful if `$AQUA_ROOT_DIR` is read only.
+For instance, an administrator installs packages in a shared directory and other users only execute them.
+In that case aqua fails to record last used date times and outputs warning logs every time packages are executed.
+`AQUA_DISABLE_TRACKING` suppresses those warning logs.
+
+`aqua vacuum` and `aqua vacuum --init` still work even if `AQUA_DISABLE_TRACKING` is `true`, but note that `aqua vacuum` can't remove packages whose last used date times aren't recorded.

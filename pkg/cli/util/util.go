@@ -69,6 +69,7 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 	}{
 		{"AQUA_DISABLE_LAZY_INSTALL", &param.DisableLazyInstall},
 		{"AQUA_DISABLE_POLICY", &param.DisablePolicy},
+		{"AQUA_DISABLE_TRACKING", &param.DisableTracking},
 		{"AQUA_CHECKSUM", &param.Checksum},
 		{"AQUA_REQUIRE_CHECKSUM", &param.RequireChecksum},
 		{"AQUA_ENFORCE_CHECKSUM", &param.EnforceChecksum},
