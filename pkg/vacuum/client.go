@@ -30,11 +30,18 @@ func ParseTime(s string) (time.Time, error) {
 
 type Client struct {
 	rootDir string
+	// updateDisabled disables only Update, which is called on every package
+	// execution and installation. Create and FindAll are called from the vacuum
+	// commands, which are rejected by the CLI if AQUA_DISABLE_TRACKING is set, and
+	// Remove is also called from the remove command to clean up a timestamp file
+	// of a removed package.
+	updateDisabled bool
 }
 
 func New(param *config.Param) *Client {
 	return &Client{
-		rootDir: filepath.Join(param.RootDir, baseDir),
+		rootDir:        filepath.Join(param.RootDir, baseDir),
+		updateDisabled: param.DisableTracking,
 	}
 }
 
@@ -47,6 +54,9 @@ func (c *Client) Remove(pkgPath string) error {
 }
 
 func (c *Client) Update(pkgPath string, timestamp time.Time) error {
+	if c.updateDisabled {
+		return nil
+	}
 	dir := c.dir(pkgPath)
 	file := filepath.Join(dir, fileName)
 	return c.update(file, dir, timestamp)
@@ -79,7 +89,10 @@ func (c *Client) FindAll(logger *slog.Logger) (map[string]time.Time, error) {
 		t, err := ParseTime(strings.TrimSpace(string(b)))
 		if err != nil {
 			slogerr.WithError(logger, err).Warn("a timestamp file is broken, so recreating it", "timestamp_file", path)
-			if err := c.Update(path, time.Now()); err != nil {
+			// Call update() instead of Update() because path is an absolute path
+			// of a timestamp file, and because the vacuum command must recreate
+			// broken files even if AQUA_DISABLE_TRACKING is set.
+			if err := c.update(path, filepath.Dir(path), time.Now()); err != nil {
 				return fmt.Errorf("recreate a broken package timestamp file: %w", err)
 			}
 			return nil
