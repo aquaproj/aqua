@@ -229,8 +229,6 @@ github.com/suzuki-shunsuke/flute v1.0.1 h1:qzxSX2WQ8ih378zeCrjDMW5mVCsYyEmjicYuC
 github.com/suzuki-shunsuke/flute v1.0.1/go.mod h1:lQKcCgbjiIzH4lar2V2UX1IdEwAB5KTfTckgWN1rtFg=
 github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0 h1:g7askc+nskCkKRWTVOdsAT8nMhwiaVT6Dmlnh6uvITM=
 github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0/go.mod h1:yFO7h5wwFejxi6jbtazqmk7b/JSBxHcit8DGwb1bhg0=
-github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.0 h1:zpml2+760pYhvuv7D561Zor5oavQd7ShSEZgbkUti6A=
-github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.0/go.mod h1:HzPUgGvdUg/TFZM2U0ih81zk2y0fflbFZBzHT70AN0w=
 github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.1 h1:IDvTocqxIfZVMK8Km/5Zk4/bMjDKKY9Z1bPK0mqX71s=
 github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.1/go.mod h1:HzPUgGvdUg/TFZM2U0ih81zk2y0fflbFZBzHT70AN0w=
 github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211154308-176f852d9bca/go.mod h1:Vq3NkhgmA9DT/2UZ08x/3A34xxvzQ/vTMABnTWKoMbY=
