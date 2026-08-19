@@ -104,8 +104,9 @@ func (is *Installer) checkFileSrcGo(ctx context.Context, logger *slog.Logger, pk
 	logger.Info("building Go tool",
 		"exe_path", exePath,
 		"go_src", src,
-		"go_build_dir", exeDir)
-	if err := is.goBuildInstaller.Install(ctx, exePath, exeDir, src); err != nil {
+		"go_build_dir", exeDir,
+		"go_build_tags", file.BuildTags)
+	if err := is.goBuildInstaller.Install(ctx, exePath, exeDir, src, file.BuildTags); err != nil {
 		return "", fmt.Errorf("build Go tool: %w", err)
 	}
 	return exePath, nil

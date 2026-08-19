@@ -30,6 +30,9 @@ type File struct {
 	Link string `yaml:",omitempty" json:"link,omitempty"`
 	// Hard indicates whether to create a hard link instead of a symbolic link.
 	Hard bool `yaml:",omitempty" json:"hard,omitempty"`
+	// BuildTags is a list of Go build tags passed to "go build -tags".
+	// Only the go_build package type uses this field.
+	BuildTags []string `yaml:"build_tags,omitempty" json:"build_tags,omitempty"`
 }
 
 // ToMap converts the PackageInfos slice to a map indexed by package name.
