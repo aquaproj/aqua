@@ -10,6 +10,10 @@ sidebar_position: 1250
 aqua supports verifying packages with [minisign](https://github.com/jedisct1/minisign) to install some packages securely.
 For example, [zig](https://ziglang.org/download/) is signed by minisign.
 
+To verify signatures aqua installs and runs minisign itself.
+In environments where aqua doesn't provide a minisign binary (for example `linux/arm64`), aqua looks for a `minisign` command in `PATH` and uses it instead, so you can still verify packages by installing minisign yourself (e.g. with a package manager).
+If minisign isn't managed by aqua and isn't found in `PATH`, the verification is skipped.
+
 ## Example
 
 ```yaml

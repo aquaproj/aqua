@@ -42,8 +42,18 @@ func NewExecutor(logger *slog.Logger, executor CommandExecutor, param *config.Pa
 		return nil, fmt.Errorf("check if the package is supported in the environment: %w", err)
 	}
 	if !supported {
-		logger.Debug("the package isn't supported in the environment")
-		return nil, nil //nolint:nilnil
+		// aqua doesn't manage a minisign binary for this environment.
+		// Fall back to a minisign command installed on the system (e.g. via a package manager).
+		exePath, err := LookSystemExe()
+		if err != nil {
+			logger.Debug("aqua doesn't manage minisign in this environment and minisign isn't found in PATH")
+			return nil, nil //nolint:nilnil,nilerr
+		}
+		logger.Debug("aqua doesn't manage minisign in this environment; using the minisign found in PATH", "minisign_path", exePath)
+		return &ExecutorImpl{
+			executor:        executor,
+			minisignExePath: exePath,
+		}, nil
 	}
 	pkg.PackageInfo = pkgInfo
 	exePath, err := pkg.ExePath(param.RootDir, pkgInfo.GetFiles()[0], rt)
