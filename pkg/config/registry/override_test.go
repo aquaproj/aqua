@@ -169,6 +169,29 @@ func TestOverride_Match(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			title: "goarch arm matches a 32-bit ARM runtime",
+			exp:   true,
+			override: &registry.Override{
+				GOOS:   "linux",
+				GOArch: archArm,
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: archArm,
+			},
+		},
+		{
+			title: "goarch arm doesn't match arm64",
+			override: &registry.Override{
+				GOOS:   "linux",
+				GOArch: archArm,
+			},
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: archArm64,
+			},
+		},
+		{
 			title: "variant libc musl matches",
 			exp:   true,
 			override: &registry.Override{

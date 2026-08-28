@@ -201,7 +201,7 @@ func (v Variants) IsZero() bool {
 // the default settings when the specified OS/architecture conditions are met.
 type Override struct {
 	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
-	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
+	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64,enum=arm"`
 	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
 	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`

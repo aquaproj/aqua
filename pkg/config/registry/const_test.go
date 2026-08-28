@@ -9,6 +9,7 @@ const (
 	osDarwin           = "darwin"
 	archAmd64          = "amd64"
 	archArm64          = "arm64"
+	archArm            = "arm"
 
 	pkgTypeGitHubRelease = "github_release"
 	pkgTypeHTTP          = "http"

@@ -59,6 +59,39 @@ For example, Darwin AMD64 matches with second element but the second element isn
     asset: 'arkade-darwin-{{.Arch}}'
 ```
 
+## goos and goarch
+
+`goos` is Go's `GOOS` and `goarch` is Go's `GOARCH`.
+
+- `goos`: `darwin`, `linux`, `windows`
+- `goarch`: `amd64`, `arm64`, `arm`
+
+`arm` means 32 bit ARM.
+aqua compares `goos` and `goarch` with the runtime values as strings, so `goarch: arm` works on any aqua version.
+
+Note that aqua doesn't release binaries for 32 bit ARM, and `aqua gr` doesn't generate 32 bit ARM assets either.
+So 32 bit ARM support is best effort.
+You have to write `overrides` by hand and confirm the asset names by yourself.
+
+e.g. Many Rust tools publish 32 bit ARM assets with the `eabihf` suffix.
+
+```yaml
+  replacements:
+    amd64: x86_64
+    arm64: aarch64
+    linux: unknown-linux-musl
+  overrides:
+  - goos: linux
+    goarch: arm
+    replacements:
+      linux: unknown-linux-musleabihf
+  - goos: linux
+    replacements:
+      arm64: aarch64
+```
+
+The `goarch: arm` element must come before the element without `goarch`, because only the first matched element is applied.
+
 ## envs
 
 [#2318](https://github.com/aquaproj/aqua/issues/2318) [#2320](https://github.com/aquaproj/aqua/pull/2320) aqua >= [v2.13.0](https://github.com/aquaproj/aqua/releases/tag/v2.13.0)
