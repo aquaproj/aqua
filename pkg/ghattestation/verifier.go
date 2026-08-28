@@ -19,6 +19,9 @@ type ParamVerify struct {
 	ArtifactPath   string
 	Repository     string
 	SignerWorkflow string
+	SignerRepo     string
+	Owner          string
+	Repo           string
 	PredicateType  string
 }
 
