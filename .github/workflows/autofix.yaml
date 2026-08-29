@@ -29,6 +29,10 @@ jobs:
         working-directory: pkg/ghattestation
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: aqua upc -prune
+        working-directory: tests/pnpm
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
 
       - run: git ls-files docs | xargs pinact run -u
         working-directory: website
