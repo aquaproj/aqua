@@ -416,18 +416,18 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/unofficial-builds.nodejs.org/download/release/v24.18.1/node-v24.18.1-linux-arm64-musl.tar.gz",
-      "checksum": "AE1B6457EDB875FD98130B37C853E51A53AC0CC40850ECCCD490B61C5A3558FA",
+      "id": "http/unofficial-builds.nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-arm64-musl.tar.gz",
+      "checksum": "2C8C507CCB0F20812D9526BA8CA454B1652AADEF68FC8BAD06F07FB1122DD1EF",
       "algorithm": "sha256"
     },
     {
-      "id": "http/unofficial-builds.nodejs.org/download/release/v24.18.1/node-v24.18.1-linux-x64-musl.tar.gz",
-      "checksum": "696979CAEF92505AD7566A3674CA9A93D8558E282F34E7899181C0321821AE5F",
+      "id": "http/unofficial-builds.nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-x64-musl.tar.gz",
+      "checksum": "9AE1399FEF4BD8990E15773CE1327B336A20B9E97D8C7549F4F42CA73C43F562",
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.547.0/registry.yaml",
-      "checksum": "BE4FB3294CC6A9E6B9D674C9A93093B902AE62244E5B1B80DC2C451C01E61E09",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.556.0/registry.yaml",
+      "checksum": "38D433AD50D8CC48A1B6200BDA9C46DE488F8E790803973F8DE1D066385DB080",
       "algorithm": "sha256"
     }
   ]
