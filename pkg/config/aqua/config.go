@@ -121,7 +121,7 @@ func (c *Config) Validate() error {
 
 // Registries maps registry names to their configurations.
 // It provides custom JSON schema generation for better documentation.
-type Registries map[string]*Registry //nolint:recvcheck
+type Registries map[string]*Registry
 
 // JSONSchema generates a JSON schema for registries configuration.
 // It creates an array schema with Registry items for validation purposes.
