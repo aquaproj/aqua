@@ -264,12 +264,10 @@
           "type": "string"
         },
         "signer_workflow": {
-          "type": "string",
-          "format": "regex"
+          "type": "string"
         },
         "signer-workflow": {
           "type": "string",
-          "format": "regex",
           "description": "Deprecated: use signer_workflow instead"
         }
       },

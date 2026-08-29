@@ -8,12 +8,17 @@ type GitHubArtifactAttestations struct {
 	// PredicateType specifies the type of predicate to verify.
 	PredicateType string `yaml:"predicate_type,omitempty" json:"predicate_type,omitempty"`
 	// SignerWorkflow2 specifies the expected GitHub Actions workflow for signing.
+	// It is a literal path such as owner/repo/.github/workflows/release.yml, not a
+	// regular expression: gh >= v2.97.0 passes the value through regexp.QuoteMeta,
+	// so any regex metacharacter in it is matched literally. Registries written for
+	// older gh escaped the dots; ghattestation.unescapeSignerWorkflow undoes that,
+	// so those values keep working, but new entries should be plain paths.
 	// See https://github.com/aquaproj/aqua/issues/3581
-	SignerWorkflow2 string `yaml:"signer_workflow,omitempty" json:"signer_workflow,omitempty" jsonschema:"format=regex"`
+	SignerWorkflow2 string `yaml:"signer_workflow,omitempty" json:"signer_workflow,omitempty"`
 	// SignerWorkflow3 is the deprecated field name for signer workflow.
 	//
 	// Deprecated: Use SignerWorkflow2 instead. This will be removed in aqua v3.
-	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty" jsonschema:"description=Deprecated: use signer_workflow instead,format=regex"`
+	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty" jsonschema:"description=Deprecated: use signer_workflow instead"`
 }
 
 // SignerWorkflow returns the configured signer workflow.
