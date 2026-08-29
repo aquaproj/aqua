@@ -89,7 +89,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 		param.Repository,
 	}
 	if param.SignerWorkflow != "" {
-		args = append(args, "--signer-workflow", param.SignerWorkflow)
+		args = append(args, "--signer-workflow", unescapeSignerWorkflow(param.SignerWorkflow))
 	}
 	if param.PredicateType != "" {
 		args = append(args, "--predicate-type", param.PredicateType)

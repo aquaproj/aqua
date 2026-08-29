@@ -1,6 +1,6 @@
 module github.com/aquaproj/aqua/v2
 
-go 1.26.6
+go 1.27.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
@@ -93,7 +93,7 @@ require (
 	github.com/zalando/go-keyring v0.2.8 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
 	go4.org v0.0.0-20260112195520-a5071408f32f // indirect
-	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect

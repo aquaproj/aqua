@@ -25,9 +25,8 @@ func (is *Installer) checkFilesWrap(ctx context.Context, logger *slog.Logger, pa
 	notFound := false
 	for _, file := range pkgInfo.GetFiles() {
 		logger := logger.With("file_name", file.Name)
-		var errFileNotFound *config.FileNotFoundError
 		if err := is.checkAndCopyFile(ctx, logger, pkg, file); err != nil {
-			if errors.As(err, &errFileNotFound) {
+			if _, ok := errors.AsType[*config.FileNotFoundError](err); ok {
 				notFound = true
 			}
 			failed = true

@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_darwin_amd64.tar.gz",
-      "checksum": "5C983DB13533DE02E5331AAE88091116F25365840741F86234084A30166672A7",
+      "id": "github_release/github.com/anchore/syft/v1.51.0/syft_1.51.0_darwin_amd64.tar.gz",
+      "checksum": "CDDF9A044145CAF0A1A3194D00D1DD51A1666F4814F2919CDB4768A0C062AD95",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_darwin_arm64.tar.gz",
-      "checksum": "CD4E2C40E075684A5746D8959F76B6572BB2D2DDA8CF6877DBFFF1CC0BAEEA01",
+      "id": "github_release/github.com/anchore/syft/v1.51.0/syft_1.51.0_darwin_arm64.tar.gz",
+      "checksum": "4F37F4C7FEFCE0A68E4CF71BA3F5F9829A99E65D89B29F7EE41B8C2C10EA8C59",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_linux_amd64.tar.gz",
-      "checksum": "D654F678B709EB53C393D38519D5ED7D2E57205529404018614CFEFA0FB2B5CA",
+      "id": "github_release/github.com/anchore/syft/v1.51.0/syft_1.51.0_linux_amd64.tar.gz",
+      "checksum": "2A2E837A2C8D59EC9AF5472EE22D3B04EE463C4E44476ECF993FD1E5AB6EBC7F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_linux_arm64.tar.gz",
-      "checksum": "9FAFEF4DB4F032CE81008D3A1529985D41CEB6CCDF2B388C9CE2F1ED7D32082E",
+      "id": "github_release/github.com/anchore/syft/v1.51.0/syft_1.51.0_linux_arm64.tar.gz",
+      "checksum": "6C0466811541EA03ADD5213A60A1562F0851E4C0B0ECFDEE1A694A9455285900",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/anchore/syft/v1.46.0/syft_1.46.0_windows_amd64.zip",
-      "checksum": "1E515C1AC4BC65917F8D0A52B6AE0E611082779CBF2DA9D470282158DD24EA13",
+      "id": "github_release/github.com/anchore/syft/v1.51.0/syft_1.51.0_windows_amd64.zip",
+      "checksum": "FC5FFAEFFB993576ECE9C791DA5A688FB2C8969A1479BBFE58583672C64DA336",
       "algorithm": "sha256"
     },
     {
@@ -51,33 +51,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/golangci/golangci-lint/v2.12.2/golangci-lint-2.12.2-darwin-amd64.tar.gz",
-      "checksum": "F6F06D94B6241521C53D15450C5209B028270BF966F842AFB11C030C79F5BC16",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.13.1/golangci-lint-2.13.1-darwin-amd64.tar.gz",
+      "checksum": "2C373363953E4E0BEE2A03B7FE864A5EB6A3822927CB077D9CA33F2AE3CB2DA2",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/golangci/golangci-lint/v2.12.2/golangci-lint-2.12.2-darwin-arm64.tar.gz",
-      "checksum": "A9C54498731B3128F79E090BE6110F3E5FFFCCC617B08142ED244D4126C73F29",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.13.1/golangci-lint-2.13.1-darwin-arm64.tar.gz",
+      "checksum": "0C9818BAF6FB8AD26C6D2EF51B68D5A1E260EF07727036B1431647CC44637C7C",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/golangci/golangci-lint/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz",
-      "checksum": "8DF580D2670FED8FA984AAC0507099AF8DF275E665215F5C7A2AE3943893A553",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.13.1/golangci-lint-2.13.1-linux-amd64.tar.gz",
+      "checksum": "B17BFBC9D4AAA48BE7F4F1CE3240BC3D8200C870C072BACF15C26219E2CFB9CC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/golangci/golangci-lint/v2.12.2/golangci-lint-2.12.2-linux-arm64.tar.gz",
-      "checksum": "44CD40A8C76C86755375ADFEEA52CFD3533CB43D7BD647771E0AE065E166DF3A",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.13.1/golangci-lint-2.13.1-linux-arm64.tar.gz",
+      "checksum": "908317C23DB18448F924E853B3D8A659FD919614CD438F224810A4053DAA2607",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/golangci/golangci-lint/v2.12.2/golangci-lint-2.12.2-windows-amd64.zip",
-      "checksum": "BD42E3EBC8CB4ECECB86941983BAAF1DC221BBB04D838E94CE63B49CC91E02BB",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.13.1/golangci-lint-2.13.1-windows-amd64.zip",
+      "checksum": "CC119BDD57D2B35CE36FBC174B54949E1A1E45F2CADAF64372CC799CABAF88A9",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/golangci/golangci-lint/v2.12.2/golangci-lint-2.12.2-windows-arm64.zip",
-      "checksum": "947B9A5BF762D465710B376C156F0184ABB2168378B0826AF1899E0EE7183742",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.13.1/golangci-lint-2.13.1-windows-arm64.zip",
+      "checksum": "88EE9636AB1EEAFF9384A8894B377FB8C2F4A820310FFA2FF5BAFB1173DC87CE",
       "algorithm": "sha256"
     },
     {
@@ -391,33 +391,43 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.19.0/node-v24.19.0-darwin-arm64.tar.gz",
-      "checksum": "8294B7AA9B03997481C06BABF1E8B270C859358F27DA57A11509AFE537AC381D",
+      "id": "http/nodejs.org/dist/v24.20.0/node-v24.20.0-darwin-arm64.tar.gz",
+      "checksum": "40E5607E5ECB3DB9192723776DA2D75D966260FC74A7A9E731C1BD67DDA96BC8",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.19.0/node-v24.19.0-darwin-x64.tar.gz",
-      "checksum": "D1B5E999DB158C62FE8F7267A4476B035D8BD93B1A605BAC24A3F0DD166E3316",
+      "id": "http/nodejs.org/dist/v24.20.0/node-v24.20.0-darwin-x64.tar.gz",
+      "checksum": "9E5B2644CF107BEFB6AEFCA676B96D3296BC10138096F022ED378D6233ED81F4",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.19.0/node-v24.19.0-linux-arm64.tar.gz",
-      "checksum": "D28C8A5BF0A808F0ED434A1DCE8C54AE98F0371C0BD86AC58ABC613F73E6643F",
+      "id": "http/nodejs.org/dist/v24.20.0/node-v24.20.0-linux-arm64.tar.gz",
+      "checksum": "3515603E2487879A39BC75716F1A2AFFD027500C64BA50E845CF72CB33219013",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.gz",
-      "checksum": "F625D97CD707DF4FF96254916FBC5FF014F09C09EFFE5A1E0CA8F6D41A8789D4",
+      "id": "http/nodejs.org/dist/v24.20.0/node-v24.20.0-linux-x64.tar.gz",
+      "checksum": "855D581F8A4EB1A8117E3426DE25FE02770592FEBCFB31369AEE1FFBFEE9E8EC",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.19.0/node-v24.19.0-win-x64.zip",
-      "checksum": "57F71AB3652E797D84ACDDC79C81CC9FF1C6DDB2A1974CDB83F00FEE9BFF4C73",
+      "id": "http/nodejs.org/dist/v24.20.0/node-v24.20.0-win-x64.zip",
+      "checksum": "6CAC9FFBCA8F6A47091E4B5C772E0606049C3871CB67D900C0CEDDE630E545BA",
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.546.0/registry.yaml",
-      "checksum": "934EBC672E08D6EB10711D0D805573ED40CD9A36A2FA97BD8374805FA62316E8",
+      "id": "http/unofficial-builds.nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-arm64-musl.tar.gz",
+      "checksum": "2C8C507CCB0F20812D9526BA8CA454B1652AADEF68FC8BAD06F07FB1122DD1EF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/unofficial-builds.nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-x64-musl.tar.gz",
+      "checksum": "9AE1399FEF4BD8990E15773CE1327B336A20B9E97D8C7549F4F42CA73C43F562",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.557.0/registry.yaml",
+      "checksum": "43B82E8B025E6AD42D09C02B194593D0AC8EEDBD47B9982A88C1651CE76A51FA",
       "algorithm": "sha256"
     }
   ]
