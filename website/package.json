@@ -26,7 +26,8 @@
     "url-loader": "4.1.1"
   },
   "overrides": {
-    "serialize-javascript": "^7.0.5"
+    "serialize-javascript": "^7.0.5",
+    "uuid": "^11.1.1"
   },
   "browserslist": {
     "production": [
