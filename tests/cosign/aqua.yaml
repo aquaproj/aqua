@@ -13,7 +13,7 @@ registries:
     ref: 98524ca5b420af9115275d110b2cadeab60f49e2 # TODO update
     name: soulshack
   - type: standard
-    ref: v4.543.0 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.557.0 # renovate: depName=aquaproj/aqua-registry
     name: tfcmt
 packages:
   - name: suzuki-shunsuke/mkghtag@v0.1.11
