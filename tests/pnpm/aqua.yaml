@@ -7,6 +7,8 @@ checksum:
   require_checksum: true
 registries:
   - type: standard
-    ref: v4.546.0 # renovate: depName=aquaproj/aqua-registry
+    # TODO restore "ref: <version> # renovate: depName=aquaproj/aqua-registry"
+    # once the signer_workflow fix is in an aqua-registry release.
+    ref: 19070e42149f21efadd310d28c20caa9496fb105
 packages:
   - name: pnpm/pnpm@v11.5.2

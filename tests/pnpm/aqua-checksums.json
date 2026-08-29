@@ -6,8 +6,18 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/pnpm/pnpm/v11.5.2/pnpm-linux-arm64-musl.tar.gz",
+      "checksum": "843BEED7BCA760276D29F8950CA219600995D345DBC93FAD8150B3E5F83B74D4",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/pnpm/pnpm/v11.5.2/pnpm-linux-arm64.tar.gz",
       "checksum": "7FEF0C74081135D777754FCCF25272F698E504B26BA0568504846C0CEA402F8F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/pnpm/pnpm/v11.5.2/pnpm-linux-x64-musl.tar.gz",
+      "checksum": "0B794B23461C7475F7FFC29C4945692838B51DDADD857A2ACE8EDF0018798305",
       "algorithm": "sha256"
     },
     {
@@ -23,6 +33,11 @@
     {
       "id": "github_release/github.com/pnpm/pnpm/v11.5.2/pnpm-win32-x64.zip",
       "checksum": "B3DDFF2C2BF87D3996FADF074BAC58CD2259F718A17912A04AE930E3775B30E9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/19070e42149f21efadd310d28c20caa9496fb105/registry.yaml",
+      "checksum": "F4DF47DF148AEEB3E669DD740B5EEAF3238C26AD95FF2B4C84DE5E90077E5794",
       "algorithm": "sha256"
     },
     {
