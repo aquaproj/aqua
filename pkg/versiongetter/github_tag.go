@@ -105,6 +105,10 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logger *slog.Logger, 
 
 func filterTag(logger *slog.Logger, tag *github.RepositoryTag, filters []*Filter) bool {
 	tagName := tag.GetName()
+	v, _, _ := GetVersionAndPrefix(tagName)
+	if v != nil && v.Prerelease() != "" {
+		return false
+	}
 	for _, filter := range filters {
 		if matchTagByFilter(logger, tagName, filter) {
 			return !filter.NoAsset
