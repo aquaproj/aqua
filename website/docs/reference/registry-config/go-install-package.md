@@ -61,3 +61,20 @@ packages:
     description: Generate a Go ORM tailored to your database schema
     path: github.com/volatiletech/sqlboiler/v{{(semver .Version).Major}}
 ```
+
+## `files[].src`
+
+`go install` names the built binary after the base name of the Go package path, but the command name isn't always the same as it.
+In that case, you can specify the built binary name by `files[].src`.
+
+e.g. `go install github.com/in-toto/in-toto-golang@v0.9.0` builds the binary `in-toto-golang`, but the command name is `in-toto`.
+
+```yaml
+packages:
+  - type: go_install
+    repo_owner: in-toto
+    repo_name: in-toto-golang
+    files:
+      - name: in-toto
+        src: in-toto-golang
+```

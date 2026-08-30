@@ -293,6 +293,13 @@ func (p *Package) fileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runt
 	if pkgInfo.Type == "cargo" {
 		return filepath.Join("bin", file.Name), nil
 	}
+	if pkgInfo.Type == PkgInfoTypeGoInstall && file.Src != "" {
+		src, err := p.RenderTemplateString(file.Src, rt)
+		if err != nil {
+			return "", fmt.Errorf("render the template file.src: %w", err)
+		}
+		return src, nil
+	}
 	assetName, err := p.RenderAsset(rt)
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
