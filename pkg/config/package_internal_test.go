@@ -141,6 +141,77 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			title: "go_install",
+			exp:   "in-toto",
+			pkg: &Package{
+				PackageInfo: &registry.PackageInfo{
+					Type: PkgInfoTypeGoInstall,
+					Path: "github.com/in-toto/in-toto-golang",
+					Files: []*registry.File{
+						{
+							Name: "in-toto",
+						},
+					},
+				},
+				Package: &aqua.Package{
+					Version: versionV077,
+				},
+			},
+			file: &registry.File{
+				Name: "in-toto",
+			},
+		},
+		{
+			title: "go_install (with src)",
+			exp:   "in-toto-golang",
+			pkg: &Package{
+				PackageInfo: &registry.PackageInfo{
+					Type: PkgInfoTypeGoInstall,
+					Path: "github.com/in-toto/in-toto-golang",
+					Files: []*registry.File{
+						{
+							Name: "in-toto",
+							Src:  "in-toto-golang",
+						},
+					},
+				},
+				Package: &aqua.Package{
+					Version: versionV077,
+				},
+			},
+			file: &registry.File{
+				Name: "in-toto",
+				Src:  "in-toto-golang",
+			},
+		},
+		{
+			title: "go_install (with src, windows)",
+			exp:   "in-toto-golang.exe",
+			pkg: &Package{
+				PackageInfo: &registry.PackageInfo{
+					Type: PkgInfoTypeGoInstall,
+					Path: "github.com/in-toto/in-toto-golang",
+					Files: []*registry.File{
+						{
+							Name: "in-toto",
+							Src:  "in-toto-golang",
+						},
+					},
+				},
+				Package: &aqua.Package{
+					Version: versionV077,
+				},
+			},
+			file: &registry.File{
+				Name: "in-toto",
+				Src:  "in-toto-golang",
+			},
+			rt: &runtime.Runtime{
+				GOOS:   osWindows,
+				GOARCH: archAmd64,
+			},
+		},
+		{
 			title: "add .sh in case of github_content",
 			exp:   "dcgoss.sh",
 			pkg: &Package{
