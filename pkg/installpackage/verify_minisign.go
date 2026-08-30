@@ -27,19 +27,37 @@ func (s *minisignVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	}
 
 	mPkg := minisign.Package()
-	if f, err := mPkg.PackageInfo.CheckSupported(s.runtime, s.runtime.Env()); err != nil {
+	f, err := mPkg.PackageInfo.CheckSupported(s.runtime, s.runtime.Env())
+	if err != nil {
 		return false, fmt.Errorf("check if minisign supports this environment: %w", err)
-	} else if !f {
-		logger.Warn("minisign doesn't support this environment")
-		return false, nil
 	}
+	if f {
+		return true, nil
+	}
+
+	// aqua doesn't manage a minisign binary for this environment, but
+	// verification is still possible with a minisign command installed on the system.
+	if _, err := minisign.LookSystemExe(); err != nil {
+		logger.Warn("minisign doesn't support this environment and minisign isn't found in PATH")
+		return false, nil //nolint:nilerr
+	}
+	logger.Debug("aqua doesn't manage minisign in this environment; using the minisign found in PATH")
 	return true, nil
 }
 
 func (s *minisignVerifier) Verify(ctx context.Context, logger *slog.Logger, file string) error {
 	logger.Info("verify a package with minisign")
-	if err := s.installer.install(ctx, logger); err != nil {
-		return fmt.Errorf("install minisign: %w", err)
+
+	// aqua's managed minisign is only installed for environments it supports.
+	// Otherwise verification relies on a minisign command installed on the system.
+	supported, err := minisign.Package().PackageInfo.CheckSupported(s.runtime, s.runtime.Env())
+	if err != nil {
+		return fmt.Errorf("check if minisign supports this environment: %w", err)
+	}
+	if supported {
+		if err := s.installer.install(ctx, logger); err != nil {
+			return fmt.Errorf("install minisign: %w", err)
+		}
 	}
 
 	pkg := s.pkg
