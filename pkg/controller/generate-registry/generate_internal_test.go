@@ -92,16 +92,25 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			},
 			assets: []*github.ReleaseAsset{
 				{
-					Name: new("gh_2.13.0_linux_amd64.tar.gz"),
+					Name:  new("gh_2.13.0_linux_amd64.tar.gz"),
+					State: new(assetStateUploaded),
 				},
 				{
-					Name: new("gh_2.13.0_linux_arm64.tar.gz"),
+					Name:  new("gh_2.13.0_linux_arm64.tar.gz"),
+					State: new(assetStateUploaded),
 				},
 				{
-					Name: new("gh_2.13.0_macOS_amd64.tar.gz"),
+					Name:  new("gh_2.13.0_macOS_amd64.tar.gz"),
+					State: new(assetStateUploaded),
 				},
 				{
-					Name: new("gh_2.13.0_windows_amd64.zip"),
+					Name:  new("gh_2.13.0_windows_amd64.zip"),
+					State: new(assetStateUploaded),
+				},
+				{
+					// An incomplete upload. It must be ignored.
+					Name:  new("gh_2.13.0_windows_arm64.zip"),
+					State: new("starter"),
 				},
 			},
 		},

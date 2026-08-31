@@ -269,7 +269,15 @@ func (c *Controller) listReleaseAssets(ctx context.Context, logger *slog.Logger,
 			)
 			return arr
 		}
-		arr = append(arr, assets...)
+		for _, a := range assets {
+			// GitHub keeps assets whose upload didn't complete with the state "starter".
+			// They are hidden from the release page and can't be downloaded,
+			// so they must not be used to generate a package configuration.
+			if a.GetState() != assetStateUploaded {
+				continue
+			}
+			arr = append(arr, a)
+		}
 		if len(assets) < opts.PerPage {
 			return arr
 		}
