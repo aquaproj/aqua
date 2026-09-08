@@ -34,7 +34,7 @@ require (
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20260714033321-10b54ffa51b1
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/sync v0.22.0
-	golang.org/x/sys v0.47.0
+	golang.org/x/sys v0.48.0
 )
 
 require (
