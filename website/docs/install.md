@@ -5,7 +5,7 @@ mdx:
 ---
 
 import TabItem from '@theme/TabItem';
-import InstallationSetup, {InstallationMethodTabs, InstallationShellTabs, InstallationTabLabel} from '@site/src/components/InstallationSetup';
+import InstallationSetup, {InstallationMethodTabs, InstallationShellTabs, InstallationTabLabel, InstallationShellLink} from '@site/src/components/InstallationSetup';
 
 # Install
 
@@ -14,7 +14,7 @@ aqua is a single binary written in Go.
 For your local terminal, complete all three steps:
 
 1. **Install aqua** using one of the methods below.
-2. **Save the `PATH` setting** in your shell configuration: [Bash](?platform=linux#bash), [Zsh](?platform=macos#zsh), or [Windows](?platform=windows#powershell). Running `export` only in your terminal does not persist the setting.
+2. **Save the `PATH` setting** in your shell configuration: <InstallationShellLink platform="linux" hash="#bash">Bash</InstallationShellLink>, <InstallationShellLink platform="macos" hash="#zsh">Zsh</InstallationShellLink>, or <InstallationShellLink platform="windows" hash="#powershell">Windows</InstallationShellLink>. Running `export` only in your terminal does not persist the setting.
 3. **Open a new terminal** and run `aqua -v` to check that aqua is still available.
 
 You can also enable [shell completion](/docs/reference/config/shell-completion) after setup.
@@ -147,7 +147,7 @@ You still need to complete step 2 to save this PATH setting for new terminal ses
 
 </TabItem>
 
-<TabItem value="binary" label={<InstallationTabLabel title="Prebuilt binaries" detail="Manual download" />}>
+<TabItem value="binary" label={<InstallationTabLabel title="Prebuilt binaries" detail="GitHub Releases" />}>
 
 ### Download prebuilt binaries from GitHub Releases
 
@@ -277,15 +277,21 @@ The action configures `PATH` for the workflow, so the local shell setup in steps
 :::
 
 </TabItem>
-<TabItem value="others" label={<InstallationTabLabel title="Others" detail="CI / containers" />}>
+<TabItem value="circleci" label={<InstallationTabLabel title="CircleCI Orb" detail="CI workflows" />}>
 
-Follow the setup instructions for your CI or development container:
-
-- [CircleCI Orb](/docs/products/circleci-orb-aqua)
-- [Dev Container Feature](https://github.com/aquaproj/devcontainer-features/tree/main/src/aqua-installer)
+Follow the [CircleCI Orb setup instructions](/docs/products/circleci-orb-aqua).
 
 :::info Follow the integration setup
-Use the linked instructions to configure your CI or development container. Steps 2 and 3 below are for local terminal installations.
+Use the linked instructions to configure CircleCI. Steps 2 and 3 below are for local terminal installations.
+:::
+
+</TabItem>
+<TabItem value="devcontainer" label={<InstallationTabLabel title="Dev Container Feature" detail="Development containers" />}>
+
+Follow the [Dev Container Feature setup instructions](https://github.com/aquaproj/devcontainer-features/tree/main/src/aqua-installer).
+
+:::info Follow the integration setup
+Use the linked instructions to configure your development container. Steps 2 and 3 below are for local terminal installations.
 :::
 
 </TabItem>
@@ -471,7 +477,11 @@ These commands only update the current session. Use the steps above to persist t
 </TabItem>
 </InstallationShellTabs>
 
+</InstallationSetup>
+
 ## 3. Check your setup
+
+<InstallationSetup>
 
 Open a new terminal and confirm aqua is still available:
 

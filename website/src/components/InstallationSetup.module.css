@@ -12,6 +12,9 @@
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: var(--ifm-global-radius);
   text-align: left;
+  background: transparent;
+  color: inherit;
+  font: inherit;
 }
 
 .tabs > [aria-selected='true'] {
