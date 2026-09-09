@@ -4,6 +4,7 @@
 const {themes} = require('prism-react-renderer');
 const lightCodeTheme = themes.github;
 const darkCodeTheme = themes.dracula;
+const copyright = `Copyright © ${new Date().getFullYear()} Shunsuke Suzuki. Built with Docusaurus.`;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -37,7 +38,7 @@ const config = {
           routeBasePath: '/blog',
           feedOptions: {
             type: 'all',
-            copyright: `Copyright © 2021 Shunsuke Suzuki. Built with Docusaurus.`,
+            copyright,
           },
         },
       }),
@@ -152,7 +153,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © 2021 Shunsuke Suzuki. Built with Docusaurus.`,
+        copyright,
       },
       prism: {
         theme: lightCodeTheme,
