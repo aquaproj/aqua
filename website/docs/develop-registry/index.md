@@ -86,3 +86,55 @@ packages:
 ```
 
 If the Registry is private, you have to set a GitHub Access Token to the environment variable `AQUA_GITHUB_TOKEN` or `GITHUB_TOKEN`.
+
+## Use as an HTTP Registry
+
+:::info
+aqua >= v2.56.0
+:::
+
+You can host your registry on any HTTP server and use it as an HTTP registry. This is useful when:
+
+- You want to host registries on internal infrastructure
+- You prefer not to use GitHub for registry hosting
+- You want to integrate with existing artifact repositories
+
+Upload your `registry.yaml` to an HTTP server (e.g., nginx, Apache, S3 with static hosting, internal artifact repository).
+
+aqua.yaml
+
+```yaml
+registries:
+  - name: foo
+    type: http
+    url: https://my.registry.com/aqua/{{.Version}}/registry.yaml
+    version: v1.0.0
+    format: raw
+
+packages:
+  - name: suzuki-shunsuke/tfcmt@v3.2.4
+    registry: foo
+```
+
+The `url` field must contain `{{.Version}}` for determinism and supports [Go templates](/docs/reference/registry-config/template) with [Sprig functions](http://masterminds.github.io/sprig/):
+
+```yaml
+registries:
+  - name: foo
+    type: http
+    url: https://my.registry.com/aqua/{{trimV .Version}}/registry.yaml
+    version: v1.0.0
+```
+
+You can also use tar.gz archives:
+
+```yaml
+registries:
+  - name: foo
+    type: http
+    url: https://my.registry.com/aqua/{{.Version}}/registry.tar.gz
+    version: v1.0.0
+    format: tar.gz
+```
+
+For more details, see [HTTP Registry configuration](/docs/reference/config/#http-registry).
