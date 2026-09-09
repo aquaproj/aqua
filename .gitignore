@@ -9,3 +9,5 @@ node_modules
 third_party_licenses
 
 .claude/settings.local.json
+
+**/.DS_Store
