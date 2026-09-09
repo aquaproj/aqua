@@ -4,8 +4,22 @@ import useIsBrowser from '@docusaurus/useIsBrowser';
 import Link from '@docusaurus/Link';
 import styles from './InstallationSetup.module.css';
 
-const suggestions = {homebrew: 'macos', winget: 'windows', scoop: 'windows'};
-const integrationMethods = ['github-actions', 'circleci', 'devcontainer'];
+const installationMethods = {
+  script: {platform: 'linux'},
+  homebrew: {platform: 'macos'},
+  winget: {platform: 'windows'},
+  scoop: {platform: 'windows'},
+  go: {platform: 'linux'},
+  binary: {platform: 'linux'},
+  'github-actions': {message: 'The GitHub Actions installer configures PATH for your workflow. No local shell setup or new-terminal check is needed.'},
+  circleci: {message: 'Follow the CircleCI Orb instructions in step 1. No local shell setup or new-terminal check is needed.'},
+  devcontainer: {message: 'Follow the Dev Container Feature instructions in step 1. No local shell setup or new-terminal check is needed.'},
+};
+
+function getInstallationMethod(search) {
+  const method = new URLSearchParams(search).get('method');
+  return Object.hasOwn(installationMethods, method) ? installationMethods[method] : installationMethods.script;
+}
 
 function useInstallationLocation() {
   const location = useLocation();
@@ -22,7 +36,7 @@ export function InstallationShellLink({platform, children, hash}) {
   const location = useInstallationLocation();
   const params = new URLSearchParams(location.search);
   params.set('platform', platform);
-  const targetHash = integrationMethods.includes(params.get('method')) ? '#2-set-the-environment-variable-path' : hash;
+  const targetHash = getInstallationMethod(location.search).message ? '#2-set-the-environment-variable-path' : hash;
   return <Link to={`${location.pathname}?${params}${targetHash}`}>{children}</Link>;
 }
 
@@ -36,6 +50,7 @@ function InstallationTabs({children, parameter, fallback, label}) {
   const selected = items.some(({props}) => props.value === requested) ? requested : fallback;
 
   function select(value) {
+    if (value === selected) return;
     const top = tabList.current.getBoundingClientRect().top;
     params.set(parameter, value);
     if (parameter === 'method') params.delete('platform');
@@ -78,6 +93,7 @@ export function InstallationMethodTabs({children}) {
   const location = useInstallationLocation();
   const history = useHistory();
   useEffect(() => {
+    let cancelDetailsScroll = () => {};
     // Hidden headings cannot be native scroll targets. Reveal their panel first,
     // including on a full page load when Docusaurus does not scroll again.
     function reveal(hash) {
@@ -93,6 +109,21 @@ export function InstallationMethodTabs({children}) {
         history.replace({...location, search: `?${params}`, hash});
         return;
       }
+      const details = target.closest('details[data-collapsed="true"]');
+      if (details) {
+        // Docusaurus tracks collapse state separately from the native open
+        // attribute. Use its toggle and wait until the content is expanded.
+        cancelDetailsScroll();
+        function onExpanded(event) {
+          if (event.propertyName !== 'height' || event.target.parentElement !== details) return;
+          cancelDetailsScroll();
+          reveal(hash);
+        }
+        details.addEventListener('transitionend', onExpanded);
+        cancelDetailsScroll = () => details.removeEventListener('transitionend', onExpanded);
+        details.querySelector('summary').click();
+        return;
+      }
       target.scrollIntoView();
     }
     const frame = requestAnimationFrame(() => reveal(location.hash));
@@ -105,25 +136,25 @@ export function InstallationMethodTabs({children}) {
       // Repeated clicks on an unchanged hash must reveal and scroll too.
       if (url.search === location.search && url.hash === location.hash) reveal(url.hash);
     }
-    document.addEventListener('click', onClick);
-    return () => { cancelAnimationFrame(frame); document.removeEventListener('click', onClick); };
+    // Details stops bubbling clicks, including clicks on heading permalinks.
+    document.addEventListener('click', onClick, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      cancelDetailsScroll();
+      document.removeEventListener('click', onClick, true);
+    };
   }, [location.search, location.hash, location.pathname, history]);
   return <InstallationTabs parameter="method" fallback="script" label="Installation method">{children}</InstallationTabs>;
 }
 
 export default function InstallationSetup({children}) {
   const {search} = useInstallationLocation();
-  const method = new URLSearchParams(search).get('method');
-  const integrations = {
-    'github-actions': 'The GitHub Actions installer configures PATH for your workflow. No local shell setup or new-terminal check is needed.',
-    circleci: 'Follow the CircleCI Orb instructions in step 1. No local shell setup or new-terminal check is needed.',
-    devcontainer: 'Follow the Dev Container Feature instructions in step 1. No local shell setup or new-terminal check is needed.',
-  };
-  return integrations[method] ? <p>{integrations[method]}</p> : children;
+  const {message} = getInstallationMethod(search);
+  return message ? <p>{message}</p> : children;
 }
 
 export function InstallationShellTabs({children}) {
   const {search} = useInstallationLocation();
-  const method = new URLSearchParams(search).get('method');
-  return <InstallationTabs parameter="platform" fallback={suggestions[method] || 'linux'} label="Shell">{children}</InstallationTabs>;
+  const {platform} = getInstallationMethod(search);
+  return <InstallationTabs parameter="platform" fallback={platform || 'linux'} label="Shell">{children}</InstallationTabs>;
 }
