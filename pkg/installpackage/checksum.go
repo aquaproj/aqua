@@ -45,12 +45,13 @@ func (is *Installer) newChecksumVerifiers(pkg *config.Package, assetName string)
 			asset:     assetName,
 		},
 		&minisignVerifier{
-			pkg:       pkg,
-			minisign:  pkgInfo.Checksum.GetMinisign(),
-			installer: is.minisignInstaller,
-			verifier:  is.minisignVerifier,
-			runtime:   is.runtime,
-			asset:     assetName,
+			pkg:         pkg,
+			minisign:    pkgInfo.Checksum.GetMinisign(),
+			installer:   is.minisignInstaller,
+			verifier:    is.minisignVerifier,
+			runtime:     is.runtime,
+			realRuntime: is.realRuntime,
+			asset:       assetName,
 		},
 	}
 }

@@ -17,8 +17,11 @@ type minisignVerifier struct {
 	installer *DedicatedInstaller
 	verifier  MinisignVerifier
 	runtime   *runtime.Runtime
-	asset     string
-	minisign  *registry.Minisign
+	// realRuntime is the host platform. It can be different from runtime,
+	// which AQUA_GOOS and AQUA_GOARCH can change.
+	realRuntime *runtime.Runtime
+	asset       string
+	minisign    *registry.Minisign
 }
 
 func (s *minisignVerifier) Enabled(logger *slog.Logger) (bool, error) {
@@ -26,11 +29,15 @@ func (s *minisignVerifier) Enabled(logger *slog.Logger) (bool, error) {
 		return false, nil
 	}
 
+	// minisign is executed on the host, so its support must be checked with the
+	// host platform, not the target platform.
+	rt := s.realRuntime
 	mPkg := minisign.Package()
-	if f, err := mPkg.PackageInfo.CheckSupported(s.runtime, s.runtime.Env()); err != nil {
+	if f, err := mPkg.PackageInfo.CheckSupported(rt, rt.Env()); err != nil {
 		return false, fmt.Errorf("check if minisign supports this environment: %w", err)
 	} else if !f {
-		logger.Warn("minisign doesn't support this environment")
+		logger.Warn("minisign doesn't support this environment, so the package isn't verified with minisign",
+			"minisign_env", rt.Env())
 		return false, nil
 	}
 	return true, nil
