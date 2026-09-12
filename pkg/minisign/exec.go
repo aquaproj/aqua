@@ -67,11 +67,16 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	return nil
 }
 
-var errVerify = errors.New("verify with minisign")
+var (
+	errVerify = errors.New("verify with minisign")
+	// errUnsupportedEnv is returned when NewExecutor returned a nil executor
+	// because minisign doesn't support the host platform.
+	errUnsupportedEnv = errors.New("minisign doesn't support this environment, so aqua can't verify the package with minisign")
+)
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, signature string) error {
 	if e == nil {
-		return errors.New("executor is nil")
+		return errUnsupportedEnv
 	}
 	// minisign -Vm myfile.txt -P <pub key>
 	args := []string{
@@ -102,7 +107,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 	if e == nil {
-		return errors.New("executor is nil")
+		return errUnsupportedEnv
 	}
 	if e.executor == nil {
 		return errors.New("e.executor is nil")

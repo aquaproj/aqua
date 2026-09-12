@@ -118,12 +118,13 @@ func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *D
 			asset:     param.Asset,
 		},
 		&minisignVerifier{
-			pkg:       ppkg,
-			installer: is.minisignInstaller,
-			verifier:  is.minisignVerifier,
-			runtime:   is.runtime,
-			asset:     param.Asset,
-			minisign:  pkgInfo.Minisign,
+			pkg:         ppkg,
+			installer:   is.minisignInstaller,
+			verifier:    is.minisignVerifier,
+			runtime:     is.runtime,
+			realRuntime: is.realRuntime,
+			asset:       param.Asset,
+			minisign:    pkgInfo.Minisign,
 		},
 	}
 
