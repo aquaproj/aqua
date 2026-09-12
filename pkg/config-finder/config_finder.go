@@ -9,7 +9,7 @@ import (
 	"github.com/suzuki-shunsuke/go-findconfig/findconfig"
 )
 
-var ErrConfigFileNotFound = errors.New("configuration file isn't found")
+var ErrConfigFileNotFound = errors.New("configuration file isn't found; run \"aqua init\" to create one")
 
 type ConfigFinder struct{}
 
