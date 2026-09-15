@@ -179,6 +179,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	}
 
 	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames)
+	c.patchGitHubArtifactAttestations(ctx, logger, pkgInfo, release.GetTagName(), arr)
 	return pkgInfo, []string{version}
 }
 
