@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.62.3
+   2.63.0
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -635,6 +635,9 @@ DESCRIPTION:
    "aqua vacuum --init" can't record date times of install packages which are not found in aqua.yaml.
    If you want to record their date times, you need to remove them by "aqua rm" command and re-install them.
 
+   If the environment variable $AQUA_DISABLE_TRACKING is true, aqua doesn't record last used date times, so this command fails.
+   This is useful if $AQUA_ROOT_DIR is read only.
+
 
 OPTIONS:
    --init              Create timestamp files.
@@ -1194,7 +1197,7 @@ DESCRIPTION:
    aqua completion fish > ~/.config/fish/completions/aqua.fish
 
    # Powershell
-   Output the script to path/to/autocomplete/aqua.ps1 an run it.
+   Output the script to path/to/autocomplete/aqua.ps1 and run it.
 
 
 COMMANDS:
