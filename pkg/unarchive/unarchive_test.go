@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -524,4 +525,340 @@ func TestUnarchiver_Unarchive_gnuSparse(t *testing.T) {
 	if got[70000] != 0 {
 		t.Fatalf("the hole region must be zero, got %d at offset 70000", got[70000])
 	}
+}
+
+// TestUnarchiver_Unarchive_gnuSparse_symlinkTraversal verifies that a GNU sparse
+// member cannot be used to bypass the symlink-traversal guards. Extracting a
+// sparse member shells out to the system tar, which applies no containment of its
+// own, so a sparse member must neither disable aqua's checks on the archive's
+// other entries nor let the system tar write through an escaping symlink.
+// The archive plants a symlink whose backslash name aqua rewrites to "x/evil"
+// pointing outside dest, then a sparse member reaching the system-tar fallback,
+// then a regular file "x/evil/pwned" whose write would follow the planted
+// symlink -- the layout of the reported bypass.
+// See https://github.com/aquaproj/aqua/security/advisories/GHSA-286g-rf2x-cv99
+func TestUnarchiver_Unarchive_gnuSparse_symlinkTraversal(t *testing.T) {
+	t.Parallel()
+	if _, err := exec.LookPath("tar"); err != nil {
+		t.Skip("the system tar command is required to extract GNU sparse archives")
+	}
+	ctx := t.Context()
+	logger := slog.New(slog.DiscardHandler)
+
+	dest := t.TempDir()
+	outsideDir := t.TempDir()
+	outside := filepath.Join(outsideDir, "outside-target")
+	if err := os.WriteFile(outside, []byte("original"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	archive := buildSparseTarGz(
+		t,
+		[]tarEntry{{hdr: &tar.Header{Name: `x\evil`, Typeflag: tar.TypeSymlink, Linkname: outside, Mode: 0o777}}},
+		[]tarEntry{{hdr: &tar.Header{Name: "x/evil/pwned", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_SPARSE_FALLBACK")}},
+	)
+
+	src := &unarchive.File{
+		Filename: "malicious.tar.gz",
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(archive)), nil),
+	}
+	if err := unarchive.New(osexec.New()).Unarchive(ctx, logger, src, dest); err == nil {
+		t.Fatal("an error must be returned for an archive that escapes the extraction directory through the sparse fallback")
+	}
+
+	got, err := os.ReadFile(outside)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "original" {
+		t.Fatalf("the outside file was modified through the sparse fallback: %q", got)
+	}
+}
+
+// buildSparseTarGz builds a gzip-compressed tar archive containing the leading
+// entries, then the real GNU sparse member from testdata (so the extraction
+// triggers aqua's system-tar fallback), then the trailing entries. It lets a
+// test reproduce an archive that mixes attacker-controlled entries with a GNU
+// sparse member that Go's archive/tar cannot synthesize.
+func buildSparseTarGz(t *testing.T, leading, trailing []tarEntry) []byte {
+	t.Helper()
+	var raw bytes.Buffer
+	for _, e := range leading {
+		raw.Write(tarEntryBlocks(t, e))
+	}
+	raw.Write(sparseMemberBlocks(t))
+	for _, e := range trailing {
+		raw.Write(tarEntryBlocks(t, e))
+	}
+	return gzipTarBlocks(t, raw.Bytes())
+}
+
+// gzipTarBlocks terminates a stream of raw tar blocks with the two zero blocks
+// that end an archive and gzips the result.
+func gzipTarBlocks(t *testing.T, raw []byte) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	if _, err := gw.Write(raw); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := gw.Write(make([]byte, 1024)); err != nil { // two zero blocks terminate the archive
+		t.Fatal(err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+// tarEntryBlocks returns the raw tar blocks (header plus padded payload) for a
+// single entry, with the trailing zero-block trailer that tar.Writer.Close
+// appends removed so the blocks can be spliced next to other entries.
+func tarEntryBlocks(t *testing.T, e tarEntry) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	e.hdr.Size = int64(len(e.payload))
+	if err := tw.WriteHeader(e.hdr); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write(e.payload); err != nil {
+		t.Fatal(err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()[:buf.Len()-1024]
+}
+
+// sparseMemberBlocks returns the raw tar blocks of the GNU sparse member
+// "sparse.img" stored in testdata/gnu-sparse.tar.gz, with the archive's trailing
+// zero blocks removed so the member can be spliced between other entries.
+func sparseMemberBlocks(t *testing.T) []byte {
+	t.Helper()
+	gzb, err := os.ReadFile(filepath.Join("testdata", "gnu-sparse.tar.gz"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	gr, err := gzip.NewReader(bytes.NewReader(gzb))
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := io.ReadAll(gr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for len(raw) >= 512 {
+		block := raw[len(raw)-512:]
+		zero := true
+		for _, c := range block {
+			if c != 0 {
+				zero = false
+				break
+			}
+		}
+		if !zero {
+			break
+		}
+		raw = raw[:len(raw)-512]
+	}
+	return raw
+}
+
+// TestUnarchiver_Unarchive_gnuSparse_globMemberName verifies that a GNU sparse
+// member whose name is a glob pattern is rejected instead of being handed to the
+// system tar as a member operand. bsdtar -- the tar of macOS, FreeBSD and Windows
+// -- matches those operands as shell globs, so a member named "*" would make it
+// extract every member of the archive, i.e. entries the Go walk never validated
+// at the path the system tar writes them to.
+func TestUnarchiver_Unarchive_gnuSparse_globMemberName(t *testing.T) {
+	t.Parallel()
+	if _, err := exec.LookPath("tar"); err != nil {
+		t.Skip("the system tar command is required to extract GNU sparse archives")
+	}
+	dest := t.TempDir()
+
+	var raw bytes.Buffer
+	// aqua's Go walk writes this entry to "a/b" because normalizePath rewrites the
+	// backslash; the system tar writes it to the literal name `a\b` instead.
+	raw.Write(tarEntryBlocks(t, tarEntry{
+		hdr:     &tar.Header{Name: `a\b`, Typeflag: tar.TypeReg, Mode: 0o644},
+		payload: []byte("written-by-the-system-tar"),
+	}))
+	raw.Write(renamedSparseMemberBlocks(t, "*"))
+
+	src := &unarchive.File{
+		Filename: "malicious.tar.gz",
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(gzipTarBlocks(t, raw.Bytes()))), nil),
+	}
+	if err := unarchive.New(osexec.New()).Unarchive(t.Context(), slog.New(slog.DiscardHandler), src, dest); err == nil {
+		t.Fatal("an error must be returned for a GNU sparse member whose name is a glob pattern")
+	}
+	if _, err := os.Lstat(filepath.Join(dest, `a\b`)); err == nil {
+		t.Fatal(`the system tar extracted "a\b", an entry the Go walk never validated at that path`)
+	}
+}
+
+// TestUnarchiver_Unarchive_gnuSparse_prefixMemberName verifies that a GNU sparse
+// member is rejected when the archive also holds entries below "<name>/". Every
+// tar selects those entries along with the named member, which hands the system
+// tar -- which applies no containment of its own -- entries the Go walk never
+// wrote. The archive below is the escape this buys: the Go walk completes with
+// warnings only, because the symlink entry cannot be created over the regular
+// file of the same name, so the write through it lands on a plain file inside
+// dest. A system tar replaying those three entries instead unlinks the regular
+// file, plants the symlink pointing outside dest, and writes through it.
+func TestUnarchiver_Unarchive_gnuSparse_prefixMemberName(t *testing.T) {
+	t.Parallel()
+	if _, err := exec.LookPath("tar"); err != nil {
+		t.Skip("the system tar command is required to extract GNU sparse archives")
+	}
+	dest := t.TempDir()
+	outsideDir := t.TempDir()
+
+	var raw bytes.Buffer
+	for _, e := range []tarEntry{
+		{hdr: &tar.Header{Name: "x/link", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("decoy")},
+		{hdr: &tar.Header{Name: "x/link", Typeflag: tar.TypeSymlink, Linkname: outsideDir, Mode: 0o777}},
+		{hdr: &tar.Header{Name: "x/link/pwned", Typeflag: tar.TypeReg, Mode: 0o644}, payload: []byte("PWNED_BY_AQUA_SPARSE_MEMBER_PREFIX")},
+	} {
+		raw.Write(tarEntryBlocks(t, e))
+	}
+	raw.Write(renamedSparseMemberBlocks(t, "x"))
+
+	src := &unarchive.File{
+		Filename: "malicious.tar.gz",
+		Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(gzipTarBlocks(t, raw.Bytes()))), nil),
+	}
+	if err := unarchive.New(osexec.New()).Unarchive(t.Context(), slog.New(slog.DiscardHandler), src, dest); err == nil {
+		t.Fatal("an error must be returned for a GNU sparse member that also selects the entries below it")
+	}
+
+	if _, err := os.Lstat(filepath.Join(outsideDir, "pwned")); err == nil {
+		t.Fatal("a file was written outside the extraction directory")
+	}
+	// The system tar must not have replaced the regular file the Go walk wrote
+	// with the escaping symlink: planting it is the first half of the escape, and
+	// whether the write through it then succeeds is up to the host tar.
+	fi, err := os.Lstat(filepath.Join(dest, "x", "link"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		t.Fatal("the system tar planted a symlink pointing outside the extraction directory")
+	}
+}
+
+// TestUnarchiver_Unarchive_gnuSparse_subDir verifies that a GNU sparse member
+// stored in a subdirectory is moved out of the staging directory to the right
+// place, and that the staging directory itself does not survive the extraction.
+func TestUnarchiver_Unarchive_gnuSparse_subDir(t *testing.T) {
+	t.Parallel()
+	if _, err := exec.LookPath("tar"); err != nil {
+		t.Skip("the system tar command is required to extract GNU sparse archives")
+	}
+	dest := t.TempDir()
+
+	src := &unarchive.File{
+		Filename: "gnu-sparse.tar.gz",
+		Body: download.NewDownloadedFile(
+			io.NopCloser(bytes.NewReader(gzipTarBlocks(t, renamedSparseMemberBlocks(t, "d/sparse.img")))), nil),
+	}
+	if err := unarchive.New(osexec.New()).Unarchive(t.Context(), slog.New(slog.DiscardHandler), src, dest); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(dest, "d", "sparse.img"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 131072 || string(got[:5]) != "HELLO" {
+		t.Fatalf("extracted file: want 131072 bytes starting with HELLO, got %d bytes starting with %q", len(got), got[:5])
+	}
+	entries, err := os.ReadDir(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != "d" {
+		t.Fatalf(`the extraction directory must hold only "d", got %v`, entries)
+	}
+}
+
+// renamedSparseMemberBlocks returns the raw tar blocks of the GNU sparse member
+// stored in testdata/gnu-sparse.tar.gz with its GNU.sparse.name PAX record
+// rewritten to name, so a test can control the member name aqua passes to the
+// system tar. Go's archive/tar cannot write sparse members, hence the rewrite of
+// a real one.
+func renamedSparseMemberBlocks(t *testing.T, name string) []byte {
+	t.Helper()
+	raw := sparseMemberBlocks(t)
+	if len(raw) < 1024 {
+		t.Fatalf("the sparse member must hold a PAX header block and its records, got %d bytes", len(raw))
+	}
+	records := rewritePAXRecord(t, raw[512:1024], "GNU.sparse.name", name)
+	if len(records) > 512 {
+		t.Fatalf("the rewritten PAX records must fit in one block, got %d bytes", len(records))
+	}
+
+	out := make([]byte, 0, len(raw))
+	hdr := make([]byte, 512)
+	copy(hdr, raw[:512])
+	// The PAX extended header's payload size changed, so rewrite the size field
+	// (12 bytes at offset 124) and the header checksum.
+	copy(hdr[124:136], fmt.Sprintf("%011o\x00", len(records)))
+	setTarChecksum(hdr)
+	out = append(out, hdr...)
+	block := make([]byte, 512)
+	copy(block, records)
+	out = append(out, block...)
+	return append(out, raw[1024:]...)
+}
+
+// rewritePAXRecord returns the PAX extended header records in data with key's
+// value replaced by value, keeping every other record untouched.
+func rewritePAXRecord(t *testing.T, data []byte, key, value string) []byte {
+	t.Helper()
+	var out strings.Builder
+	for len(data) > 0 && data[0] != 0 {
+		sp := bytes.IndexByte(data, ' ')
+		if sp < 0 {
+			t.Fatalf("a PAX record must start with its length, got %q", data)
+		}
+		size, err := strconv.Atoi(string(data[:sp]))
+		if err != nil || size > len(data) {
+			t.Fatalf("invalid PAX record length %q: %v", data[:sp], err)
+		}
+		record := string(data[:size])
+		if k, _, ok := strings.Cut(record[sp+1:], "="); ok && k == key {
+			record = paxRecord(key, value)
+		}
+		out.WriteString(record)
+		data = data[size:]
+	}
+	return []byte(out.String())
+}
+
+// paxRecord formats a PAX extended header record, whose length prefix counts the
+// length prefix itself.
+func paxRecord(key, value string) string {
+	body := " " + key + "=" + value + "\n"
+	for digits := 1; ; digits++ {
+		record := strconv.Itoa(len(body)+digits) + body
+		if len(record) == len(body)+digits {
+			return record
+		}
+	}
+}
+
+// setTarChecksum stores the checksum of a 512 byte tar header block in its
+// chksum field, which is computed with that field filled with spaces.
+func setTarChecksum(hdr []byte) {
+	for i := 148; i < 156; i++ {
+		hdr[i] = ' '
+	}
+	sum := 0
+	for _, c := range hdr {
+		sum += int(c)
+	}
+	copy(hdr[148:], fmt.Sprintf("%06o\x00 ", sum))
 }
