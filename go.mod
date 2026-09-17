@@ -28,7 +28,7 @@ require (
 	github.com/suzuki-shunsuke/slog-error v0.2.2
 	github.com/suzuki-shunsuke/slog-util v0.3.2
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.3
-	github.com/urfave/cli/v3 v3.11.0
+	github.com/urfave/cli/v3 v3.12.0
 	go.yaml.in/yaml/v2 v2.4.4
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20260714033321-10b54ffa51b1
@@ -85,7 +85,7 @@ require (
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/stangelandcl/ppmd v0.1.1 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/stretchr/testify v1.12.1 // indirect
 	github.com/suzuki-shunsuke/go-github-device-flow v0.0.2 // indirect
 	github.com/suzuki-shunsuke/go-jsoneq v0.1.2 // indirect
 	github.com/suzuki-shunsuke/go-revoke-github-access-token v0.0.2 // indirect
