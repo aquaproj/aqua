@@ -171,14 +171,17 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	arr := c.listReleaseAssets(ctx, logger, pkgInfo, release.GetID())
 	logger.Debug("got assets", "num_of_assets", len(arr))
 	assetNames := make([]string, 0, len(arr))
+	assets := make([]*github.ReleaseAsset, 0, len(arr))
 	for _, asset := range arr {
 		if excludeAsset(logger, asset.GetName(), cfg) {
 			continue
 		}
 		assetNames = append(assetNames, asset.GetName())
+		assets = append(assets, asset)
 	}
 
 	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames)
+	c.patchGitHubArtifactAttestations(ctx, logger, pkgInfo, release.GetTagName(), assets)
 	return pkgInfo, []string{version}
 }
 
