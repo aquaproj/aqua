@@ -10,6 +10,7 @@ package resolve
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -115,12 +116,20 @@ func collectVariantValueSets(overrides []*registry.Override, keys []string) map[
 	return sets
 }
 
+// cartesianProduct enumerates every combination of variant values.
+//
+// Keys and values are walked in sorted order rather than in map order, so that the
+// environments come out the same on every run. What is generated from them is written
+// to a file and read as a diff, and an order that changed between runs would show up
+// as a change that isn't one. Sorting also puts the unconstrained value first, since
+// the empty string sorts before any other.
 func cartesianProduct(sets map[string]map[string]struct{}) []map[string]string {
 	combos := []map[string]string{{}}
-	for key, values := range sets {
+	for _, key := range slices.Sorted(maps.Keys(sets)) {
+		values := slices.Sorted(maps.Keys(sets[key]))
 		next := make([]map[string]string, 0, len(combos)*len(values))
 		for _, c := range combos {
-			for v := range values {
+			for _, v := range values {
 				nc := make(map[string]string, len(c)+1)
 				maps.Copy(nc, c)
 				nc[key] = v

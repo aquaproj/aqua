@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -61,7 +62,40 @@ func Resolve(logger *slog.Logger, param *Param) ([]*lockfile.Package, error) {
 	if len(pkgs) == 0 {
 		return nil, errNoSupportedEnv
 	}
-	return pkgs, nil
+	return dropRedundantVariants(pkgs), nil
+}
+
+// dropRedundantVariants removes entries a machine would resolve the same way without
+// them.
+//
+// A package that declares a glibc override changing nothing produces a glibc entry
+// identical to the unconstrained one. Keeping both writes the same answer twice: a
+// glibc machine that finds no glibc entry falls through to the unconstrained entry
+// and installs exactly the same thing. The unconstrained one is what stays, because
+// it also answers for the machines whose libc is something else or can't be detected.
+func dropRedundantVariants(pkgs []*lockfile.Package) []*lockfile.Package {
+	fallbacks := make(map[string]*lockfile.Package, len(pkgs))
+	for _, pkg := range pkgs {
+		if len(pkg.Variants) == 0 {
+			fallbacks[pkg.OS+"/"+pkg.Arch] = pkg
+		}
+	}
+	out := make([]*lockfile.Package, 0, len(pkgs))
+	for _, pkg := range pkgs {
+		if fallback, ok := fallbacks[pkg.OS+"/"+pkg.Arch]; ok && len(pkg.Variants) != 0 && sameExceptVariants(fallback, pkg) {
+			continue
+		}
+		out = append(out, pkg)
+	}
+	return out
+}
+
+func sameExceptVariants(a, b *lockfile.Package) bool {
+	x := *a
+	y := *b
+	x.Variants = nil
+	y.Variants = nil
+	return reflect.DeepEqual(&x, &y)
 }
 
 // Runtimes returns the environments to resolve a package for.

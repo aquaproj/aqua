@@ -175,3 +175,73 @@ func TestResolve_noSupportedEnv(t *testing.T) {
 		t.Fatal("an error must be returned")
 	}
 }
+
+// An override that declares a variant without changing anything produces an entry
+// identical to the unconstrained one. A machine finding no entry for its libc falls
+// through to the unconstrained entry and installs the same thing, so keeping both
+// writes the same answer twice.
+func TestResolve_dropRedundantVariants(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "foo/foo",
+		Version: "v1.0.0",
+		PkgInfo: &registry.PackageInfo{
+			Type:          "github_release",
+			RepoOwner:     "foo",
+			RepoName:      "foo",
+			Asset:         "foo_{{.OS}}_{{.Arch}}.tar.gz",
+			Format:        "tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+			Overrides: []*registry.Override{
+				// glibc changes nothing, so its entry is the unconstrained one.
+				{GOOS: "linux", Variants: []*registry.Variant{{Key: "libc", Value: "glibc"}}},
+				{
+					GOOS:     "linux",
+					Variants: []*registry.Variant{{Key: "libc", Value: "musl"}},
+					Asset:    "foo_{{.OS}}_{{.Arch}}_musl.tar.gz",
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"linux/amd64", "linux/amd64/musl"}, envs(pkgs)); diff != "" {
+		t.Errorf("the environments are wrong (-want +got):\n%s", diff)
+	}
+}
+
+// The entry kept is the unconstrained one, even when the package's base is the musl
+// build and the override is the glibc one. Dropping it would leave nothing for a musl
+// machine, which is the one the base was written for.
+func TestResolve_keepDifferingVariants(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "foo/foo",
+		Version: "v1.0.0",
+		PkgInfo: &registry.PackageInfo{
+			Type:          "github_release",
+			RepoOwner:     "foo",
+			RepoName:      "foo",
+			Asset:         "foo_{{.OS}}_{{.Arch}}_musl.tar.gz",
+			Format:        "tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+			Overrides: []*registry.Override{
+				{
+					GOOS:     "linux",
+					Variants: []*registry.Variant{{Key: "libc", Value: "glibc"}},
+					Asset:    "foo_{{.OS}}_{{.Arch}}_gnu.tar.gz",
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"linux/amd64", "linux/amd64/glibc"}, envs(pkgs)); diff != "" {
+		t.Fatalf("the environments are wrong (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff("foo_linux_amd64_musl.tar.gz", pkgs[0].Asset); diff != "" {
+		t.Errorf("the fallback asset is wrong (-want +got):\n%s", diff)
+	}
+}
