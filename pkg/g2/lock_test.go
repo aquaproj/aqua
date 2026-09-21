@@ -119,3 +119,15 @@ func TestClient_LockPackages_noFile(t *testing.T) {
 		t.Errorf("Registry is %+v, want the client's repository", pkgs[0].Registry)
 	}
 }
+
+// registry.json and a lock entry describe the same thing, so converting one way and
+// back has to give what it started with, minus what the branch and the path already
+// say.
+func TestNewRegistry(t *testing.T) {
+	t.Parallel()
+	c := g2.New(nil, nil, "", "")
+	reg := testRegistry()
+	if diff := cmp.Diff(reg, g2.NewRegistry(c.LockPackages(reg, "cli/cli", "v2.1.0"))); diff != "" {
+		t.Errorf("the registry is wrong (-want +got):\n%s", diff)
+	}
+}

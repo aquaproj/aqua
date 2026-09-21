@@ -27,6 +27,15 @@ type Param struct {
 	// checksum.supported_envs does. Empty means every environment the package
 	// itself supports.
 	SupportedEnvs []string
+	// FilesFrom, when set, supplies the executables instead of PkgInfo.
+	//
+	// It exists for a caller that infers a package's asset naming from the release
+	// itself, so that an upstream renaming can't break it, because a release says
+	// nothing about what the executables inside the archive are called. Those come
+	// from the written definition, resolved for the same environment, since an
+	// override can move them: cli/cli's Windows build puts the executable at
+	// bin/gh.exe while every other platform has it under a versioned directory.
+	FilesFrom *registry.PackageInfo
 }
 
 // Resolve returns one entry per environment the package supports.
@@ -44,13 +53,20 @@ func Resolve(logger *slog.Logger, param *Param) ([]*lockfile.Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("evaluate the version constraints: %w", err)
 	}
+	var filesFrom *registry.PackageInfo
+	if param.FilesFrom != nil {
+		filesFrom, err = param.FilesFrom.SetVersion(logger, param.Version)
+		if err != nil {
+			return nil, fmt.Errorf("evaluate the version constraints of the files: %w", err)
+		}
+	}
 	rts, err := Runtimes(versioned, param.SupportedEnvs)
 	if err != nil {
 		return nil, err
 	}
 	pkgs := make([]*lockfile.Package, 0, len(rts))
 	for _, rt := range rts {
-		pkg, err := resolveOne(param, versioned, rt)
+		pkg, err := resolveOne(param, versioned, filesFrom, rt)
 		if err != nil {
 			return nil, err
 		}
@@ -109,13 +125,20 @@ func Runtimes(pkgInfo *registry.PackageInfo, supportedEnvs []string) ([]*runtime
 
 // resolveOne resolves a single environment, or returns nil when the package doesn't
 // support it or resolves to nothing there.
-func resolveOne(param *Param, versioned *registry.PackageInfo, rt *runtime.Runtime) (*lockfile.Package, error) {
+func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *runtime.Runtime) (*lockfile.Package, error) {
 	// Copy first: SetVersion returns the receiver itself when the package has no
 	// top-level version_constraint, and OverrideByRuntime then mutates it in place.
 	// Without the copy, an override applied for one environment leaks into every
 	// environment resolved afterwards.
 	info := versioned.Copy()
 	info.OverrideByRuntime(rt)
+	if filesFrom != nil {
+		other := filesFrom.Copy()
+		other.OverrideByRuntime(rt)
+		if files := other.GetFiles(); len(files) > 0 {
+			info.Files = files
+		}
+	}
 	pkg := &config.Package{
 		Package:     &aqua.Package{Name: param.PkgName, Version: param.Version},
 		PackageInfo: info,

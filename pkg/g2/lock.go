@@ -89,3 +89,51 @@ func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, vers
 func NewDefault(dl Downloader, cache *Cache) *Client {
 	return New(dl, cache, "", "")
 }
+
+// NewRegistry builds a package version's registry.json from resolved entries.
+//
+// It is the reverse of LockPackages, and exists so that what generates aqua-registry-g2
+// and what reads it agree on the format by construction rather than by two
+// descriptions of it being kept in step. The package name, the version and the
+// registry are dropped: the branch and the path already say which package and which
+// version this is, and the registry is the repository the file sits in.
+func NewRegistry(pkgs []*lockfile.Package) *Registry {
+	reg := &Registry{Assets: make([]*Asset, 0, len(pkgs))}
+	for _, pkg := range pkgs {
+		reg.Assets = append(reg.Assets, &Asset{
+			OS:                         pkg.OS,
+			Arch:                       pkg.Arch,
+			Variants:                   pkg.Variants,
+			Type:                       pkg.Type,
+			RepoOwner:                  pkg.RepoOwner,
+			RepoName:                   pkg.RepoName,
+			Asset:                      pkg.Asset,
+			URL:                        pkg.URL,
+			Format:                     pkg.Format,
+			Path:                       pkg.Path,
+			Crate:                      pkg.Crate,
+			Cargo:                      pkg.Cargo,
+			Checksum:                   pkg.Checksum,
+			ChecksumAlgorithm:          pkg.ChecksumAlgorithm,
+			Files:                      registryFiles(pkg.Files),
+			Cosign:                     pkg.Cosign,
+			GitHubArtifactAttestations: pkg.GitHubArtifactAttestations,
+			Minisign:                   pkg.Minisign,
+		})
+	}
+	return reg
+}
+
+func registryFiles(files []*lockfile.File) []*File {
+	if len(files) == 0 {
+		return nil
+	}
+	out := make([]*File, len(files))
+	for i, f := range files {
+		out[i] = &File{
+			Name: f.Name,
+			Src:  f.Src,
+		}
+	}
+	return out
+}
