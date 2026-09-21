@@ -197,8 +197,10 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 		return nil, err
 	}
 
+	// Nothing to look at: either the registry doesn't have the package, which
+	// findPkgInfo has already said, or it has no build for this machine, which is
+	// not worth saying.
 	if pkgInfo == nil {
-		logger.Warn("package isn't found")
 		return nil, nil //nolint:nilnil
 	}
 
@@ -291,7 +293,11 @@ func (c *Controller) findPkgInfo(ctx context.Context, logger *slog.Logger, cfgFi
 			rc = a
 			registries[pkg.Registry] = rc
 		}
-		return rc.Package(logger, pkg.Name), nil
+		pkgInfo := rc.Package(logger, pkg.Name)
+		if pkgInfo == nil {
+			logger.Warn("package isn't found")
+		}
+		return pkgInfo, nil
 	}
 	rgPath, ok := rgPaths[pkg.Registry]
 	if !ok {
