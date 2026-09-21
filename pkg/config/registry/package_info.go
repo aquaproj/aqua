@@ -161,12 +161,12 @@ type VersionOverride struct {
 	CompleteWindowsExt         *bool                       `yaml:"complete_windows_ext,omitempty" json:"complete_windows_ext,omitempty"`
 	NoAsset                    *bool                       `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	AppendExt                  *bool                       `yaml:"append_ext,omitempty" json:"append_ext,omitempty"`
-	Cargo                      *Cargo                      `json:"cargo,omitempty"`
+	Cargo                      *Cargo                      `yaml:",omitempty" json:"cargo,omitempty"`
 	Files                      []*File                     `yaml:",omitempty" json:"files,omitempty"`
 	FormatOverrides            FormatOverrides             `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Replacements               Replacements                `yaml:",omitempty" json:"replacements,omitempty"`
-	Checksum                   *Checksum                   `json:"checksum,omitempty"`
-	Cosign                     *Cosign                     `json:"cosign,omitempty"`
+	Checksum                   *Checksum                   `yaml:",omitempty" json:"checksum,omitempty"`
+	Cosign                     *Cosign                     `yaml:",omitempty" json:"cosign,omitempty"`
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
