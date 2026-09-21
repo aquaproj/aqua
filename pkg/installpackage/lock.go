@@ -27,6 +27,9 @@ type Target struct {
 // SplitByLockFile divides the packages in cfg into those to install from the lock
 // file and those to resolve through a registry.
 //
+// A package the lock file describes but not for this machine is in neither: it has no
+// build here, which aqua passes over rather than fails on.
+//
 // Which one a package takes is decided by the lock file as a whole, not per package.
 // No lock file means the repository hasn't adopted one, so everything goes to the
 // registries exactly as before. A lock file that exists is the authority: every
@@ -50,6 +53,13 @@ func SplitByLockFile(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Confi
 			slogerr.WithError(logger, err).Error("install the package from the lock file")
 			continue
 		}
+		if t == nil {
+			// The package supports no build for this machine. That is a property
+			// of the package rather than a problem with the lock file, and aqua
+			// has always passed over such a package rather than failing on it.
+			logger.Debug("the package isn't supported on this environment")
+			continue
+		}
 		logger.Debug("install the package from the lock file")
 		locked = append(locked, t)
 	}
@@ -68,6 +78,14 @@ func lockedTarget(lf *lockfile.LockFile, cfg *aqua.Config, pkg *aqua.Package, rt
 	}
 	entry := lf.Find(pkg.Name, pkg.Version, rt)
 	if entry == nil {
+		// Two different things look the same here, and the lock file tells them
+		// apart. Entries for the package but none for this machine means the
+		// package has no build for it, which is what supported_envs says and what
+		// aqua passes over. No entries at all means the lock file doesn't know the
+		// package, which is a file to bring up to date.
+		if lf.Has(pkg.Name, pkg.Version) {
+			return nil, nil //nolint:nilnil
+		}
 		return nil, errNotInLockFile
 	}
 	return newTarget(pkg, entry, cfg.Registries[pkg.Registry], rt)

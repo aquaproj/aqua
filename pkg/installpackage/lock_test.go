@@ -101,14 +101,6 @@ func TestSplitByLockFile_missingEntry(t *testing.T) {
 			lf:   &lockfile.LockFile{},
 		},
 		{
-			// Another environment's entry is not this one's.
-			name: "no entry for this environment",
-			pkg:  lockTestPackage("baz/baz", "v1.0.0"),
-			lf: &lockfile.LockFile{Packages: []*lockfile.Package{
-				{Name: "baz/baz", Version: "v1.0.0", OS: "darwin", Arch: "arm64", Type: "github_release", Asset: "baz.tar.gz", Checksum: "ccc"},
-			}},
-		},
-		{
 			// An entry whose type downloads an artifact but carries no checksum is
 			// wrong rather than absent, and installing it would be a hole in the
 			// guarantee the lock file exists to make.
@@ -135,5 +127,29 @@ func TestSplitByLockFile_missingEntry(t *testing.T) {
 				t.Errorf("got %d locked and %d remaining packages, want none", len(locked), len(rest))
 			}
 		})
+	}
+}
+
+// A package the lock file describes but not for this machine has no build here. That
+// is what supported_envs says, and aqua has always passed over such a package rather
+// than failing on it, so it is neither installed nor sent to a registry.
+func TestSplitByLockFile_unsupportedEnvironment(t *testing.T) {
+	t.Parallel()
+	cfg := lockTestConfig(lockTestPackage("baz/baz", "v1.0.0"))
+	lf := &lockfile.LockFile{Packages: []*lockfile.Package{
+		{Name: "baz/baz", Version: "v1.0.0", OS: "darwin", Arch: "arm64", Type: "github_release", Asset: "baz.tar.gz", Checksum: "ccc"},
+	}}
+
+	locked, rest, err := installpackage.SplitByLockFile(slog.New(slog.DiscardHandler), lf, cfg, &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(locked) != 0 {
+		t.Errorf("got %d locked packages, want none", len(locked))
+	}
+	// Not sent to a registry either: the lock file answered, and the answer is that
+	// there is nothing to install here.
+	if len(rest) != 0 {
+		t.Errorf("got %d packages for the registries, want none", len(rest))
 	}
 }

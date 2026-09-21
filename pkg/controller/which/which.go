@@ -244,12 +244,24 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 // error rather than something to look up in a registry, the same as when installing.
 // Running a command aqua would refuse to install would be the worse answer, and the
 // registry it would come from may no longer describe the version that is on disk.
+//
+// A package the lock file describes but not for this machine returns nothing, so the
+// search carries on to the next package.
 func (c *Controller) packageInfo(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lf *lockfile.LockFile, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) {
 	if lf == nil {
 		return c.findPkgInfo(ctx, logger, cfgFilePath, cfg, rCache, rgPaths, registries, pkg, checksums)
 	}
 	entry := lf.Find(pkg.Name, pkg.Version, c.runtime)
 	if entry == nil {
+		// Entries for the package but none for this machine means it has no build
+		// here, which is what supported_envs says and what aqua passes over: the
+		// command simply isn't provided, and the search moves on. No entries at all
+		// means the lock file doesn't know the package, which is a file to bring up
+		// to date.
+		if lf.Has(pkg.Name, pkg.Version) {
+			logger.Debug("the package isn't supported on this environment")
+			return nil, nil //nolint:nilnil
+		}
 		return nil, slogerr.With(errNotInLockFile, //nolint:wrapcheck
 			"package_name", pkg.Name,
 			"package_version", pkg.Version,
