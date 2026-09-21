@@ -80,6 +80,7 @@ func (p *Package) PackageInfo() *registry.PackageInfo {
 		Cosign:                     p.Cosign,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
 		Minisign:                   p.Minisign,
+		SLSAProvenance:             p.SLSAProvenance,
 	}
 }
 

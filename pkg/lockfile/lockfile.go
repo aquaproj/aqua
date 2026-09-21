@@ -90,6 +90,7 @@ type Package struct {
 	Cosign                     *registry.Cosign                     `json:"cosign,omitempty"`
 	GitHubArtifactAttestations *registry.GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty"`
 	Minisign                   *registry.Minisign                   `json:"minisign,omitempty"`
+	SLSAProvenance             *registry.SLSAProvenance             `json:"slsa_provenance,omitempty"`
 }
 
 // Registry names where the entry was resolved from.
