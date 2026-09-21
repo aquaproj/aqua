@@ -111,9 +111,9 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	}
 	defer updateChecksum()
 
-	lf, err := c.readLockFile(logger, cfgFilePath, cfg)
+	lf, err := lockfile.ReadFile(filepath.Join(filepath.Dir(cfgFilePath), lockfile.FileName))
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 
 	logger.Debug("reading registry cache")
@@ -232,42 +232,6 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 		}
 	}
 	return nil, nil //nolint:nilnil
-}
-
-// readLockFile reads the lock file beside cfgFilePath and checks that every package
-// in cfg is in it. It returns nil when the repository has no lock file.
-//
-// The check covers the whole configuration before the search starts, rather than each
-// package as the search reaches it. Otherwise whether a stale lock file was noticed
-// would depend on where the command being looked up sits in aqua.yaml, and the same
-// configuration that "aqua i" refuses would run some commands and not others.
-func (c *Controller) readLockFile(logger *slog.Logger, cfgFilePath string, cfg *aqua.Config) (*lockfile.LockFile, error) {
-	lf, err := lockfile.ReadFile(filepath.Join(filepath.Dir(cfgFilePath), lockfile.FileName))
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-	if lf == nil {
-		return nil, nil //nolint:nilnil
-	}
-	failed := false
-	for _, pkg := range cfg.Packages {
-		if pkg.Name == "" || pkg.Version == "" {
-			// ListPackages reports these when installing. Here they simply can't
-			// provide a command.
-			continue
-		}
-		if lf.Find(pkg.Name, pkg.Version, c.runtime) != nil {
-			continue
-		}
-		failed = true
-		logger.Error("the package isn't in the lock file",
-			"package_name", pkg.Name,
-			"package_version", pkg.Version)
-	}
-	if failed {
-		return nil, errNotInLockFile
-	}
-	return lf, nil
 }
 
 // packageInfo returns the package definition, from the lock file where there is one.
