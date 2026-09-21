@@ -34,6 +34,17 @@ type Asset struct {
 	// linux/amd64 build for musl and one for glibc.
 	Variants map[string]string `json:"variants,omitempty"`
 
+	// LinkedLibc is the libc the executables in this asset are linked against:
+	// "musl", "glibc", or "static" when they need none. It is read from the binary
+	// rather than from the asset's name, and is absent when the asset holds nothing
+	// that can be read that way, such as a script.
+	//
+	// Nothing selects on it today; Variants does that. It is recorded because which
+	// build a machine should prefer is a choice worth leaving open: a statically
+	// linked musl build runs anywhere, while a glibc one depends on the version of
+	// glibc it was built against.
+	LinkedLibc string `json:"linked_libc,omitempty"`
+
 	Type      string `json:"type"`
 	RepoOwner string `json:"repo_owner,omitempty"`
 	RepoName  string `json:"repo_name,omitempty"`
