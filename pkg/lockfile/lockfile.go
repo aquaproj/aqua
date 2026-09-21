@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
 
 // SchemaVersion is the version of the format aqua writes.
@@ -62,12 +64,21 @@ type Package struct {
 	Asset     string `json:"asset,omitempty"`
 	URL       string `json:"url,omitempty"`
 	Format    string `json:"format,omitempty"`
+	// Path is the Go module path of a go_install package. Crate and Cargo describe a
+	// cargo one. Neither can be derived from a release, so they are carried here the
+	// same way an asset name is.
+	Path  string          `json:"path,omitempty"`
+	Crate string          `json:"crate,omitempty"`
+	Cargo *registry.Cargo `json:"cargo,omitempty"`
 
 	Files []*File `json:"files,omitempty"`
 
-	Cosign                     any `json:"cosign,omitempty"`
-	GitHubArtifactAttestations any `json:"github_artifact_attestations,omitempty"`
-	Minisign                   any `json:"minisign,omitempty"`
+	// The signing configuration is aqua's own, copied through from aqua-registry
+	// rather than restated, so that verification at install time reads the same
+	// shape whether the package came from a lock file or a registry.
+	Cosign                     *registry.Cosign                     `json:"cosign,omitempty"`
+	GitHubArtifactAttestations *registry.GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty"`
+	Minisign                   *registry.Minisign                   `json:"minisign,omitempty"`
 }
 
 // Registry names where the entry was resolved from.

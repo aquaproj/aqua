@@ -3,6 +3,7 @@ package g2_test
 import (
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/google/go-cmp/cmp"
@@ -24,8 +25,8 @@ func testRegistry() *g2.Registry {
 				Files: []*g2.File{
 					{Name: "gh", Src: "gh_2.1.0_macOS_arm64/bin/gh"},
 				},
-				GitHubArtifactAttestations: map[string]any{
-					"signer_workflow": "cli/cli/.github/workflows/release.yml",
+				GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{
+					SignerWorkflow2: "cli/cli/.github/workflows/release.yml",
 				},
 			},
 			{
@@ -66,8 +67,8 @@ func wantPackages() []*lockfile.Package {
 			Files: []*lockfile.File{
 				{Name: "gh", Src: "gh_2.1.0_macOS_arm64/bin/gh"},
 			},
-			GitHubArtifactAttestations: map[string]any{
-				"signer_workflow": "cli/cli/.github/workflows/release.yml",
+			GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{
+				SignerWorkflow2: "cli/cli/.github/workflows/release.yml",
 			},
 		},
 		{

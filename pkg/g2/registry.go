@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 )
 
@@ -37,15 +38,24 @@ type Asset struct {
 	Asset     string `json:"asset,omitempty"`
 	URL       string `json:"url,omitempty"`
 	Format    string `json:"format,omitempty"`
+	// Path is the Go module path of a go_install package. Crate and Cargo describe a
+	// cargo one. A release says nothing about either, so ar2 copies them from
+	// registry.yaml rather than inferring them.
+	Path  string          `json:"path,omitempty"`
+	Crate string          `json:"crate,omitempty"`
+	Cargo *registry.Cargo `json:"cargo,omitempty"`
 
 	Checksum          string `json:"checksum,omitempty"`
 	ChecksumAlgorithm string `json:"checksum_algorithm,omitempty"`
 
 	Files []*File `json:"files,omitempty"`
 
-	Cosign                     any `json:"cosign,omitempty"`
-	GitHubArtifactAttestations any `json:"github_artifact_attestations,omitempty"`
-	Minisign                   any `json:"minisign,omitempty"`
+	// The signing configuration is aqua's own, copied through from aqua-registry
+	// rather than restated, so that verification at install time reads the same
+	// shape whether the package came from a lock file or a registry.
+	Cosign                     *registry.Cosign                     `json:"cosign,omitempty"`
+	GitHubArtifactAttestations *registry.GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty"`
+	Minisign                   *registry.Minisign                   `json:"minisign,omitempty"`
 }
 
 // File is an executable inside the asset.

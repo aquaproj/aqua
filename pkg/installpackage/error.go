@@ -11,3 +11,5 @@ var (
 	errChecksumIsRequired    = errors.New("checksum is required")
 	errNoAsset               = errors.New("no asset is released for this version")
 )
+
+var errNoChecksumInLockFile = errors.New("the lock file entry has no checksum")
