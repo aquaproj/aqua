@@ -49,6 +49,7 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 	param.SLSADisabled = args.DisableSLSA
 	param.AQUAVersion = version
 	param.RootDir = config.GetRootDir(osenv.New())
+	param.CacheDir = config.GetCacheDir(osenv.New())
 	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
 	if err := logger.SetLevel(param.LogLevel); err != nil {

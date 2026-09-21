@@ -87,7 +87,8 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
-	client := g2.NewDefault(gitHubContentFileDownloader)
+	cache := g2.NewCache(param)
+	client := g2.NewDefault(gitHubContentFileDownloader, cache)
 	controller := lockupdate.New(configFinder, configReader, client)
 	return controller, nil
 }

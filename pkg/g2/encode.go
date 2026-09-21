@@ -18,6 +18,9 @@ const BranchPrefix = "pkg_"
 // VersionDir is the directory those files live in on the branch.
 const VersionDir = "versions"
 
+// FileName is the generated file a version directory holds.
+const FileName = "registry.json"
+
 // BranchName returns the branch holding the package's generated registry.json.
 func BranchName(pkgName string) string {
 	return BranchPrefix + EncodePackageName(pkgName)
@@ -25,7 +28,7 @@ func BranchName(pkgName string) string {
 
 // Path returns where the package's registry.json sits on its branch.
 func Path(version string) string {
-	return VersionDir + "/" + version + "/registry.json"
+	return VersionDir + "/" + version + "/" + FileName
 }
 
 // EncodePackageName escapes a package name so it can be used as a git ref.

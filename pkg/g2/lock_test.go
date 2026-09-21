@@ -95,7 +95,7 @@ func wantPackages() []*lockfile.Package {
 
 func TestClient_LockPackages(t *testing.T) {
 	t.Parallel()
-	c := g2.New(nil, "", "")
+	c := g2.New(nil, nil, "", "")
 	if diff := cmp.Diff(wantPackages(), c.LockPackages(testRegistry(), "cli/cli", "v2.1.0")); diff != "" {
 		t.Fatalf("LockPackages is wrong (-want +got):\n%s", diff)
 	}
@@ -105,7 +105,7 @@ func TestClient_LockPackages(t *testing.T) {
 // it doesn't have, and an empty array would show up as a diff on every rewrite.
 func TestClient_LockPackages_noFile(t *testing.T) {
 	t.Parallel()
-	c := g2.New(nil, "owner", "name")
+	c := g2.New(nil, nil, "owner", "name")
 	pkgs := c.LockPackages(&g2.Registry{
 		Assets: []*g2.Asset{{OS: "linux", Arch: "amd64", Type: "go_install"}},
 	}, "golang.org/x/tools/gopls", "v0.14.0")

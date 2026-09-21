@@ -35,12 +35,19 @@ the same "<package name>@<version>" form aqua.yaml uses.
 
 	$ aqua lock update cli/cli
 	$ aqua lock update --force cli/cli@v2.70.0
+
+Each package version is cached once it has been resolved, and the cache never expires:
+what it holds describes one version of one package, which doesn't change. --no-cache
+refetches and rewrites it, for the case where a cached file was written wrong.
+
+	$ aqua lock update --no-cache cli/cli@v2.70.0
 `
 
 type updateArgs struct {
 	*cliargs.GlobalArgs
 
 	Force    bool
+	NoCache  bool
 	Packages []string
 }
 
@@ -70,6 +77,11 @@ func newUpdate(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command {
 				Usage:       "Update packages which are already in the lock file",
 				Destination: &args.Force,
 			},
+			&cli.BoolFlag{
+				Name:        "no-cache",
+				Usage:       "Ignore the cache and fetch registries again",
+				Destination: &args.NoCache,
+			},
 		},
 		Arguments: []cli.Argument{
 			&cli.StringArgs{
@@ -95,6 +107,7 @@ func (i *updateCommand) action(ctx context.Context, args *updateArgs) error {
 	if err := util.SetParam(args.GlobalArgs, logger, param, i.r.Version); err != nil {
 		return fmt.Errorf("parse the command line arguments: %w", err)
 	}
+	param.NoCache = args.NoCache
 
 	ctrl, err := controller.InitializeLockUpdateCommandController(ctx, logger.Logger, param, &http.Client{})
 	if err != nil {

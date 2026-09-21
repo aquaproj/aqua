@@ -351,6 +351,7 @@ type Param struct {
 	AQUAVersion                       string
 	NewAquaVersion                    string
 	RootDir                           string
+	CacheDir                          string
 	CWD                               string
 	InsertFile                        string
 	LogColor                          string
@@ -367,6 +368,7 @@ type Param struct {
 	Tags                              map[string]struct{}
 	ExcludedTags                      map[string]struct{}
 	DisableLazyInstall                bool
+	NoCache                           bool
 	OnlyLink                          bool
 	All                               bool
 	Global                            bool

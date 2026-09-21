@@ -1183,6 +1183,7 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 			g2.NewDefault,
 			wire.Bind(new(lockupdate.Resolver), new(*g2.Client)),
 		),
+		g2.NewCache,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),

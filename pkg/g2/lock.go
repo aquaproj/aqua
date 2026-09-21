@@ -86,6 +86,6 @@ func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, vers
 //
 // The dependency injection graph has no string to pass, so the repository is fixed
 // here rather than plumbed through as configuration nobody sets.
-func NewDefault(dl Downloader) *Client {
-	return New(dl, "", "")
+func NewDefault(dl Downloader, cache *Cache) *Client {
+	return New(dl, cache, "", "")
 }

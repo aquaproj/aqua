@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // DefaultRepoOwner and DefaultRepoName are where aqua-registry-g2 lives.
@@ -72,19 +74,21 @@ type Downloader interface {
 // Client reads aqua-registry-g2.
 type Client struct {
 	dl        Downloader
+	cache     *Cache
 	repoOwner string
 	repoName  string
 }
 
-// New creates a Client. An empty owner or name falls back to aqua-registry-g2.
-func New(dl Downloader, repoOwner, repoName string) *Client {
+// New creates a Client. An empty owner or name falls back to aqua-registry-g2, and a
+// nil cache means every read goes to the network.
+func New(dl Downloader, cache *Cache, repoOwner, repoName string) *Client {
 	if repoOwner == "" {
 		repoOwner = DefaultRepoOwner
 	}
 	if repoName == "" {
 		repoName = DefaultRepoName
 	}
-	return &Client{dl: dl, repoOwner: repoOwner, repoName: repoName}
+	return &Client{dl: dl, cache: cache, repoOwner: repoOwner, repoName: repoName}
 }
 
 // Get returns the registry.json of one package version.
@@ -93,6 +97,41 @@ func New(dl Downloader, repoOwner, repoName string) *Client {
 // returning something empty: the caller decides whether to fall back to another
 // registry, and an empty result would look like a package supporting no environment.
 func (c *Client) Get(ctx context.Context, logger *slog.Logger, pkgName, version string) (*Registry, error) {
+	cachePath := ""
+	if c.cache != nil {
+		cachePath = c.cache.Path(c.repoOwner, c.repoName, pkgName, version)
+		if b := c.cache.Read(cachePath); b != nil {
+			if registry, err := parseRegistry(b); err == nil {
+				logger.Debug("read registry.json from the cache", "cache_path", cachePath)
+				return registry, nil
+			}
+			// A cached file that doesn't parse is a copy gone wrong, and the
+			// original can be fetched again. Fetching replaces it.
+			logger.Debug("the cached registry.json is broken", "cache_path", cachePath)
+		}
+	}
+
+	b, err := c.download(ctx, logger, pkgName, version)
+	if err != nil {
+		return nil, err
+	}
+	registry, err := parseRegistry(b)
+	if err != nil {
+		return nil, err
+	}
+
+	// Only a file that parsed is cached, so a bad response isn't kept.
+	if cachePath != "" {
+		if err := c.cache.Write(cachePath, b); err != nil {
+			// The fetch succeeded, so failing here would throw away a good
+			// answer over a copy of it.
+			slogerr.WithError(logger, err).Warn("cache registry.json", "cache_path", cachePath)
+		}
+	}
+	return registry, nil
+}
+
+func (c *Client) download(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]byte, error) {
 	file, err := c.dl.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
 		RepoOwner: c.repoOwner,
 		RepoName:  c.repoName,
@@ -106,8 +145,19 @@ func (c *Client) Get(ctx context.Context, logger *slog.Logger, pkgName, version 
 	}
 	defer file.Close()
 
+	// The whole file is read rather than streamed into the decoder, because the
+	// same bytes are what gets cached. registry.json describes one version of one
+	// package, so it is small.
+	b, err := io.ReadAll(file.Reader())
+	if err != nil {
+		return nil, fmt.Errorf("read registry.json: %w", err)
+	}
+	return b, nil
+}
+
+func parseRegistry(b []byte) (*Registry, error) {
 	registry := &Registry{}
-	if err := json.NewDecoder(file.Reader()).Decode(registry); err != nil {
+	if err := json.Unmarshal(b, registry); err != nil {
 		return nil, fmt.Errorf("read registry.json as JSON: %w", err)
 	}
 	if len(registry.Assets) == 0 {
