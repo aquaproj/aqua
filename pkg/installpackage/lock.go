@@ -24,42 +24,53 @@ type Target struct {
 	Checksum *checksum.Checksum
 }
 
-// SplitByLockFile divides the packages in cfg into those the lock file already
-// describes and those it doesn't.
+// SplitByLockFile divides the packages in cfg into those to install from the lock
+// file and those to resolve through a registry.
 //
-// The point of the split is what the caller can skip: a run whose packages are all
-// locked needs no registry at all, so nothing is downloaded and nothing is evaluated.
-// Packages the lock file doesn't cover fall back to the registry, which is what keeps
-// a configuration that predates the lock file working.
-func SplitByLockFile(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, rt *runtime.Runtime) ([]*Target, []*aqua.Package) {
+// Which one a package takes is decided by the lock file as a whole, not per package.
+// No lock file means the repository hasn't adopted one, so everything goes to the
+// registries exactly as before. A lock file that exists is the authority: every
+// package must be in it, nothing is resolved anywhere else, and one that is missing
+// is reported rather than looked up, because silently reading a registry would
+// install something the lock file never described while the file still claims to say
+// what is installed.
+//
+// A run whose packages are all locked therefore downloads no registry at all.
+func SplitByLockFile(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, rt *runtime.Runtime) ([]*Target, []*aqua.Package, error) {
+	if lf == nil {
+		return nil, cfg.Packages, nil
+	}
 	locked := make([]*Target, 0, len(cfg.Packages))
-	rest := make([]*aqua.Package, 0, len(cfg.Packages))
+	failed := false
 	for _, pkg := range cfg.Packages {
-		if pkg.Name == "" || pkg.Version == "" {
-			// ListPackages reports these, so leaving them in rest keeps one place
-			// where a broken entry is described.
-			rest = append(rest, pkg)
-			continue
-		}
-		entry := lf.Find(pkg.Name, pkg.Version, rt)
-		if entry == nil {
-			rest = append(rest, pkg)
-			continue
-		}
 		logger := logger.With("package_name", pkg.Name, "package_version", pkg.Version)
-		t, err := newTarget(pkg, entry, cfg.Registries[pkg.Registry], rt)
+		t, err := lockedTarget(lf, cfg, pkg, rt)
 		if err != nil {
-			// The lock file is wrong about this package rather than silent about
-			// it, so falling back to the registry would hide the problem behind a
-			// result that looks fine.
-			slogerr.WithError(logger, err).Warn("ignore a lock file entry")
-			rest = append(rest, pkg)
+			failed = true
+			slogerr.WithError(logger, err).Error("install the package from the lock file")
 			continue
 		}
 		logger.Debug("install the package from the lock file")
 		locked = append(locked, t)
 	}
-	return locked, rest
+	if failed {
+		return nil, nil, errLockFile
+	}
+	return locked, nil, nil
+}
+
+func lockedTarget(lf *lockfile.LockFile, cfg *aqua.Config, pkg *aqua.Package, rt *runtime.Runtime) (*Target, error) {
+	if pkg.Name == "" {
+		return nil, errPkgNameIsEmpty
+	}
+	if pkg.Version == "" {
+		return nil, errPkgVersionIsEmpty
+	}
+	entry := lf.Find(pkg.Name, pkg.Version, rt)
+	if entry == nil {
+		return nil, errNotInLockFile
+	}
+	return newTarget(pkg, entry, cfg.Registries[pkg.Registry], rt)
 }
 
 func newTarget(pkg *aqua.Package, entry *lockfile.Package, rgst *aqua.Registry, rt *runtime.Runtime) (*Target, error) {

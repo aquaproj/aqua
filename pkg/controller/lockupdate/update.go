@@ -50,6 +50,11 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
+	if lf == nil {
+		// Creating the file a repository doesn't have yet is exactly what this
+		// command is for, so starting from an empty one isn't an assumption.
+		lf = lockfile.New()
+	}
 
 	updated := false
 	failed := false

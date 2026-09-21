@@ -117,14 +117,19 @@ func Read(r io.Reader) (*LockFile, error) {
 	return lf, nil
 }
 
-// ReadFile reads the lock file at path. It returns an empty lock file when there is
-// none, because a repository that has never run 'aqua lock update' has no file yet
-// and building one is exactly what that command does.
+// ReadFile reads the lock file at path, returning nil when there is none.
+//
+// Absent and empty are different answers. A repository with no lock file hasn't
+// adopted one, and aqua still resolves its packages through registries; a lock file
+// that exists is the statement that it is now the authority, and a package missing
+// from it is a gap to report rather than something to look up elsewhere. Callers
+// therefore have to tell the two apart, so this doesn't paper over the difference by
+// returning an empty file.
 func ReadFile(path string) (*LockFile, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return New(), nil
+			return nil, nil //nolint:nilnil
 		}
 		return nil, fmt.Errorf("open the lock file: %w", err)
 	}

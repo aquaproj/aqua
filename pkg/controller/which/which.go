@@ -111,9 +111,9 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	}
 	defer updateChecksum()
 
-	lf, err := lockfile.ReadFile(filepath.Join(filepath.Dir(cfgFilePath), lockfile.FileName))
+	lf, err := c.readLockFile(logger, cfgFilePath, cfg)
 	if err != nil {
-		return nil, err //nolint:wrapcheck
+		return nil, err
 	}
 
 	logger.Debug("reading registry cache")
@@ -234,17 +234,65 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 	return nil, nil //nolint:nilnil
 }
 
-// packageInfo returns the package definition, preferring what the lock file records.
+// readLockFile reads the lock file beside cfgFilePath and checks that every package
+// in cfg is in it. It returns nil when the repository has no lock file.
+//
+// The check covers the whole configuration before the search starts, rather than each
+// package as the search reaches it. Otherwise whether a stale lock file was noticed
+// would depend on where the command being looked up sits in aqua.yaml, and the same
+// configuration that "aqua i" refuses would run some commands and not others.
+func (c *Controller) readLockFile(logger *slog.Logger, cfgFilePath string, cfg *aqua.Config) (*lockfile.LockFile, error) {
+	lf, err := lockfile.ReadFile(filepath.Join(filepath.Dir(cfgFilePath), lockfile.FileName))
+	if err != nil {
+		return nil, err //nolint:wrapcheck
+	}
+	if lf == nil {
+		return nil, nil //nolint:nilnil
+	}
+	failed := false
+	for _, pkg := range cfg.Packages {
+		if pkg.Name == "" || pkg.Version == "" {
+			// ListPackages reports these when installing. Here they simply can't
+			// provide a command.
+			continue
+		}
+		if lf.Find(pkg.Name, pkg.Version, c.runtime) != nil {
+			continue
+		}
+		failed = true
+		logger.Error("the package isn't in the lock file",
+			"package_name", pkg.Name,
+			"package_version", pkg.Version)
+	}
+	if failed {
+		return nil, errNotInLockFile
+	}
+	return lf, nil
+}
+
+// packageInfo returns the package definition, from the lock file where there is one.
 //
 // A lock file entry is already resolved for this environment, so taking it means aqua
-// doesn't read a registry to answer where a command lives. That is what lets "aqua
-// exec" run on a locked configuration without downloading anything.
+// reads no registry to answer where a command lives. That is what lets "aqua exec"
+// run on a locked configuration without downloading anything.
+//
+// Where a lock file exists, it is the only source: a package missing from it is an
+// error rather than something to look up in a registry, the same as when installing.
+// Running a command aqua would refuse to install would be the worse answer, and the
+// registry it would come from may no longer describe the version that is on disk.
 func (c *Controller) packageInfo(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lf *lockfile.LockFile, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) {
-	if entry := lf.Find(pkg.Name, pkg.Version, c.runtime); entry != nil {
-		logger.Debug("getting a package from the lock file")
-		return entry.PackageInfo(), nil
+	if lf == nil {
+		return c.findPkgInfo(ctx, logger, cfgFilePath, cfg, rCache, rgPaths, registries, pkg, checksums)
 	}
-	return c.findPkgInfo(ctx, logger, cfgFilePath, cfg, rCache, rgPaths, registries, pkg, checksums)
+	entry := lf.Find(pkg.Name, pkg.Version, c.runtime)
+	if entry == nil {
+		return nil, slogerr.With(errNotInLockFile, //nolint:wrapcheck
+			"package_name", pkg.Name,
+			"package_version", pkg.Version,
+		)
+	}
+	logger.Debug("getting a package from the lock file")
+	return entry.PackageInfo(), nil
 }
 
 func (c *Controller) findPkgInfo(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) { //nolint:cyclop,funlen

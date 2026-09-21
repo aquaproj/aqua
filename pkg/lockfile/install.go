@@ -13,6 +13,9 @@ import (
 // Override does: an entry constraining libc beats one constraining nothing, so the
 // unconstrained entry acts as the fallback rather than shadowing its siblings.
 func (lf *LockFile) Find(name, version string, rt *runtime.Runtime) *Package {
+	if lf == nil {
+		return nil
+	}
 	var best *Package
 	for _, pkg := range lf.Packages {
 		if pkg.Name != name || pkg.Version != version {

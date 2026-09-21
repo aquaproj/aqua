@@ -112,12 +112,15 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePa
 	if err != nil {
 		return err //nolint:wrapcheck
 	}
-	locked, rest := installpackage.SplitByLockFile(logger, lf, cfg, c.runtime)
+	locked, rest, err := installpackage.SplitByLockFile(logger, lf, cfg, c.runtime)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
 
-	// A package the lock file describes needs no registry, so a configuration that
-	// is fully locked downloads and evaluates none of them. The registries are
-	// installed only for what is left, which is what keeps a configuration written
-	// before the lock file working.
+	// A package the lock file describes needs no registry, so a configuration with a
+	// lock file downloads and evaluates none of them. rest is everything when there
+	// is no lock file, which is what keeps a repository that hasn't adopted one
+	// working as before.
 	cfgRest := *cfg
 	cfgRest.Packages = rest
 

@@ -76,14 +76,16 @@ func TestHasAndRemove(t *testing.T) {
 // TestReadFile_missing checks that a repository which has never run
 // 'aqua lock update' reads as an empty lock file rather than an error, since
 // building one is what that command does.
+// A repository with no lock file reads as nothing, not as an empty lock file. The
+// difference decides whether aqua may still resolve a package through a registry.
 func TestReadFile_missing(t *testing.T) {
 	t.Parallel()
 	lf, err := lockfile.ReadFile(filepath.Join(t.TempDir(), "aqua-lock.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if lf.SchemaVersion != lockfile.SchemaVersion {
-		t.Errorf("a new lock file should carry the schema version, got %q", lf.SchemaVersion)
+	if lf != nil {
+		t.Errorf("got %+v, want nothing", lf)
 	}
 }
 
