@@ -1170,7 +1170,7 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 	return &initialize.Controller{}, nil
 }
 
-func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client) (*lockupdate.Controller, error) {
+func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*lockupdate.Controller, error) {
 	wire.Build(
 		lockupdate.New,
 		wire.NewSet(
@@ -1182,19 +1182,109 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 			wire.Bind(new(lockupdate.ConfigReader), new(*reader.ConfigReader)),
 		),
 		wire.NewSet(
+			download.NewChecksumDownloader,
+			wire.Bind(new(download.ChecksumDownloader), new(*download.ChecksumDownloaderImpl)),
+		),
+		wire.NewSet(
+			registry.New,
+			wire.Bind(new(lockupdate.RegistryInstaller), new(*registry.Installer)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(domain.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
+		),
+		download.NewHTTPDownloader,
+		wire.NewSet(
 			g2.NewDefault,
 			wire.Bind(new(lockupdate.Resolver), new(*g2.Client)),
 		),
 		g2.NewCache,
 		wire.NewSet(
-			download.NewGitHubContentFileDownloader,
-			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
+			download.NewDownloader,
+			wire.Bind(new(download.ClientAPI), new(*download.Downloader)),
 		),
 		wire.NewSet(
-			github.New,
-			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			cosign.NewVerifier,
+			wire.Bind(new(installpackage.CosignVerifier), new(*cosign.Verifier)),
+			wire.Bind(new(registry.CosignVerifier), new(*cosign.Verifier)),
 		),
-		download.NewHTTPDownloader,
+		wire.NewSet(
+			osexec.New,
+			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
+			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
+			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
+		),
+		wire.NewSet(
+			slsa.New,
+			wire.Bind(new(installpackage.SLSAVerifier), new(*slsa.Verifier)),
+			wire.Bind(new(registry.SLSAVerifier), new(*slsa.Verifier)),
+		),
+		wire.NewSet(
+			slsa.NewExecutor,
+			wire.Bind(new(slsa.Executor), new(*slsa.ExecutorImpl)),
+		),
+		wire.NewSet(
+			installpackage.New,
+			wire.Bind(new(checksumgetter.ChecksumFileVerifier), new(*installpackage.Installer)),
+		),
+		wire.NewSet(
+			checksumgetter.New,
+			wire.Bind(new(lockupdate.ChecksumGetter), new(*checksumgetter.Getter)),
+		),
+		wire.NewSet(
+			link.New,
+			wire.Bind(new(installpackage.Linker), new(*link.Linker)),
+		),
+		wire.NewSet(
+			checksum.NewCalculator,
+			wire.Bind(new(installpackage.ChecksumCalculator), new(*checksum.Calculator)),
+		),
+		wire.NewSet(
+			unarchive.New,
+			wire.Bind(new(installpackage.Unarchiver), new(*unarchive.Unarchiver)),
+		),
+		wire.NewSet(
+			minisign.New,
+			wire.Bind(new(installpackage.MinisignVerifier), new(*minisign.Verifier)),
+		),
+		wire.NewSet(
+			minisign.NewExecutor,
+			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
+			ghattestation.New,
+			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
+		),
+		wire.NewSet(
+			ghattestation.NewExecutor,
+			wire.Bind(new(ghattestation.Executor), new(*ghattestation.ExecutorImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoInstallInstallerImpl,
+			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewGoBuildInstallerImpl,
+			wire.Bind(new(installpackage.GoBuildInstaller), new(*installpackage.GoBuildInstallerImpl)),
+		),
+		wire.NewSet(
+			installpackage.NewCargoPackageInstallerImpl,
+			wire.Bind(new(installpackage.CargoPackageInstaller), new(*installpackage.CargoPackageInstallerImpl)),
+		),
+		wire.NewSet(
+			vacuum.New,
+			wire.Bind(new(installpackage.Vacuum), new(*vacuum.Client)),
+		),
 	)
 	return &lockupdate.Controller{}, nil
 }

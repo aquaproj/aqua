@@ -2,7 +2,6 @@ package lockupdate
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"path/filepath"
 	"strings"
@@ -56,11 +55,17 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		lf = lockfile.New()
 	}
 
+	rgsts := &registries{
+		installer:   c.registryInstaller,
+		cfg:         cfg,
+		cfgFilePath: cfgFilePath,
+	}
+
 	updated := false
 	failed := false
 	for _, pkg := range cfg.Packages {
 		logger := logger.With("package_name", pkg.Name, "package_version", pkg.Version)
-		changed, err := c.updatePackage(ctx, logger, lf, pkg, args)
+		changed, err := c.updatePackage(ctx, logger, lf, rgsts, pkg, args)
 		if err != nil {
 			// One package that can't be resolved shouldn't cost the rest their
 			// entries, so the run keeps going and reports at the end.
@@ -84,7 +89,7 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 	return nil
 }
 
-func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, pkg *aqua.Package, args *Args) (bool, error) {
+func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *registries, pkg *aqua.Package, args *Args) (bool, error) {
 	if !match(args.Packages, pkg) {
 		return false, nil
 	}
@@ -95,17 +100,11 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf 
 		logger.Warn("skip a package whose version isn't written in aqua.yaml")
 		return false, nil
 	}
-	if pkg.Registry != aqua.RegistryTypeStandard {
-		// Only the standard registry has a g2 counterpart so far. Falling back to
-		// reading the registry itself is the next arm of the resolution order.
-		logger.Warn("skip a package from a registry other than the standard one")
-		return false, nil
-	}
 	if !args.Force && lf.Has(pkg.Name, pkg.Version) {
 		return false, nil
 	}
 
-	pkgs, err := c.resolve(ctx, logger, pkg.Name, pkg.Version)
+	pkgs, err := c.resolve(ctx, logger, rgsts, pkg)
 	if err != nil {
 		return false, err
 	}
@@ -119,16 +118,16 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf 
 	return true, nil
 }
 
-func (c *Controller) resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
-	var errs []error
-	for _, resolver := range c.resolvers {
-		pkgs, err := resolver.Resolve(ctx, logger, pkgName, version)
-		if err == nil {
-			return pkgs, nil
-		}
-		errs = append(errs, err)
+// resolve reads the package from where its registry says it lives.
+//
+// The standard registry is mirrored by aqua-registry-g2, which serves a registry.json
+// resolved and checksummed ahead of time. Any other registry has no branch there, so
+// its own definition is resolved here instead.
+func (c *Controller) resolve(ctx context.Context, logger *slog.Logger, rgsts *registries, pkg *aqua.Package) ([]*lockfile.Package, error) {
+	if pkg.Registry == aqua.RegistryTypeStandard {
+		return c.g2.Resolve(ctx, logger, pkg.Name, pkg.Version) //nolint:wrapcheck
 	}
-	return nil, errors.Join(errs...)
+	return c.resolveFromRegistry(ctx, logger, rgsts, pkg)
 }
 
 // match reports whether pkg is one of the packages named on the command line. Each

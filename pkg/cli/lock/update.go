@@ -109,7 +109,7 @@ func (i *updateCommand) action(ctx context.Context, args *updateArgs) error {
 	}
 	param.NoCache = args.NoCache
 
-	ctrl, err := controller.InitializeLockUpdateCommandController(ctx, logger.Logger, param, &http.Client{})
+	ctrl, err := controller.InitializeLockUpdateCommandController(ctx, logger.Logger, param, &http.Client{}, i.r.Runtime)
 	if err != nil {
 		return fmt.Errorf("initialize a LockUpdateController: %w", err)
 	}

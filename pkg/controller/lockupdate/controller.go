@@ -10,7 +10,10 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 )
 
@@ -26,25 +29,39 @@ type ConfigReader interface {
 
 // Resolver turns a package version into lock file entries, one per environment.
 //
-// Resolution has an order to it: the local registry cache, then aqua-registry-g2,
-// then aqua-registry. They differ in where they read from, not in what they answer,
-// so they share this interface and the controller tries them in turn.
+// This is the arm for the standard registry, which aqua-registry-g2 mirrors: it reads
+// a generated registry.json, falling back to the local cache first. A package from any
+// other registry has no branch there and is resolved from its registry instead.
 type Resolver interface {
 	Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
 }
 
+// ChecksumGetter reads the checksum of every environment a package supports.
+type ChecksumGetter interface {
+	Get(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error
+}
+
+// RegistryInstaller installs the registries a configuration declares.
+type RegistryInstaller interface {
+	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
+}
+
 // Controller updates lock files.
 type Controller struct {
-	configFinder ConfigFinder
-	configReader ConfigReader
-	resolvers    []Resolver
+	configFinder      ConfigFinder
+	configReader      ConfigReader
+	registryInstaller RegistryInstaller
+	checksumGetter    ChecksumGetter
+	g2                Resolver
 }
 
 // New creates a Controller.
-func New(configFinder ConfigFinder, configReader ConfigReader, g2 Resolver) *Controller {
+func New(configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, checksumGetter ChecksumGetter, g2 Resolver) *Controller {
 	return &Controller{
-		configFinder: configFinder,
-		configReader: configReader,
-		resolvers:    []Resolver{g2},
+		configFinder:      configFinder,
+		configReader:      configReader,
+		registryInstaller: registryInstaller,
+		checksumGetter:    checksumGetter,
+		g2:                g2,
 	}
 }

@@ -3,15 +3,19 @@ package lockupdate_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/lockupdate"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
+	"github.com/aquaproj/aqua/v2/pkg/resolve"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -48,6 +52,46 @@ func (r *fakeResolver) Resolve(_ context.Context, _ *slog.Logger, pkgName, versi
 	}, nil
 }
 
+// fakeRegistryInstaller answers with one package definition, whatever is asked for.
+type fakeRegistryInstaller struct {
+	pkgInfo *registry.PackageInfo
+}
+
+func (i *fakeRegistryInstaller) InstallRegistries(_ context.Context, _ *slog.Logger, cfg *aqua.Config, _ string, _ *checksum.Checksums) (map[string]*registry.Config, error) {
+	contents := make(map[string]*registry.Config, len(cfg.Registries))
+	for name := range cfg.Registries {
+		contents[name] = &registry.Config{PackageInfos: registry.PackageInfos{i.pkgInfo}}
+	}
+	return contents, nil
+}
+
+// fakeChecksumGetter answers with one checksum for every environment, under the
+// identifier the entry computes for itself.
+type fakeChecksumGetter struct {
+	checksum string
+}
+
+func (g *fakeChecksumGetter) Get(_ context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	if g.checksum == "" {
+		return nil
+	}
+	rts, err := resolve.Runtimes(pkg.PackageInfo, supportedEnvs)
+	if err != nil {
+		return fmt.Errorf("get the runtimes: %w", err)
+	}
+	for _, rt := range rts {
+		info := pkg.PackageInfo.Copy()
+		info.OverrideByRuntime(rt)
+		p := &config.Package{Package: pkg.Package, PackageInfo: info}
+		id, err := p.ChecksumID(rt)
+		if err != nil {
+			return fmt.Errorf("get a checksum id: %w", err)
+		}
+		checksums.Set(id, &checksum.Checksum{ID: id, Checksum: g.checksum, Algorithm: "sha256"})
+	}
+	return nil
+}
+
 func pkg(name, version string) *aqua.Package {
 	return &aqua.Package{Name: name, Version: version, Registry: aqua.RegistryTypeStandard}
 }
@@ -56,7 +100,7 @@ func run(t *testing.T, cfg *aqua.Config, resolver *fakeResolver, args *lockupdat
 	t.Helper()
 	dir := t.TempDir()
 	cfgFilePath := filepath.Join(dir, "aqua.yaml")
-	ctrl := lockupdate.New(&fakeFinder{paths: []string{cfgFilePath}}, &fakeReader{cfg: cfg}, resolver)
+	ctrl := lockupdate.New(&fakeFinder{paths: []string{cfgFilePath}}, &fakeReader{cfg: cfg}, nil, nil, resolver)
 	err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, args)
 	return filepath.Join(dir, lockfile.FileName), err
 }
@@ -108,7 +152,7 @@ func TestController_Update_alreadyLocked(t *testing.T) {
 	ctrl := lockupdate.New(
 		&fakeFinder{paths: []string{cfgFilePath}},
 		&fakeReader{cfg: &aqua.Config{Packages: []*aqua.Package{pkg("cli/cli", "v2.1.0")}}},
-		resolver,
+		nil, nil, resolver,
 	)
 	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{}); err != nil {
 		t.Fatal(err)
@@ -147,7 +191,7 @@ func TestController_Update_force(t *testing.T) {
 	ctrl := lockupdate.New(
 		&fakeFinder{paths: []string{cfgFilePath}},
 		&fakeReader{cfg: &aqua.Config{Packages: []*aqua.Package{pkg("cli/cli", "v2.1.0")}}},
-		resolver,
+		nil, nil, resolver,
 	)
 	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{Force: true}); err != nil {
 		t.Fatal(err)
@@ -209,15 +253,13 @@ func TestController_Update_selectPackages(t *testing.T) {
 	}
 }
 
-// A package aqua can't resolve yet is skipped, not failed on: aqua.yaml is allowed to
-// hold packages g2 doesn't cover, and refusing to write the file would cost every
-// other package its entry.
-func TestController_Update_skip(t *testing.T) {
+// A version the machine decides can't be locked, and failing the run over it would
+// cost every other package its entry.
+func TestController_Update_skipNoVersion(t *testing.T) {
 	t.Parallel()
 	resolver := &fakeResolver{}
 	cfg := &aqua.Config{Packages: []*aqua.Package{
 		{Name: "cli/cli", Registry: aqua.RegistryTypeStandard},
-		{Name: "foo/foo", Version: "v1.0.0", Registry: "local"},
 		pkg("suzuki-shunsuke/tfcmt", "v4.0.0"),
 	}}
 	if _, err := run(t, cfg, resolver, &lockupdate.Args{}); err != nil {
@@ -225,6 +267,89 @@ func TestController_Update_skip(t *testing.T) {
 	}
 	if diff := cmp.Diff([]string{"suzuki-shunsuke/tfcmt@v4.0.0"}, resolver.resolved); diff != "" {
 		t.Errorf("the resolved packages are wrong (-want +got):\n%s", diff)
+	}
+}
+
+// A package from a registry other than the standard one has no branch in
+// aqua-registry-g2, so it is resolved from its own registry rather than asked for
+// there.
+func TestController_Update_otherRegistry(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	cfgFilePath := filepath.Join(dir, "aqua.yaml")
+	cfg := &aqua.Config{
+		Registries: aqua.Registries{
+			"foo": {Name: "foo", Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "v1.0.0", Path: "registry.yaml"},
+		},
+		Packages: []*aqua.Package{{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"}},
+	}
+	g2 := &fakeResolver{}
+	ctrl := lockupdate.New(
+		&fakeFinder{paths: []string{cfgFilePath}},
+		&fakeReader{cfg: cfg},
+		&fakeRegistryInstaller{pkgInfo: &registry.PackageInfo{
+			Name:          "foo/foo",
+			Type:          "github_release",
+			RepoOwner:     "foo",
+			RepoName:      "foo",
+			Asset:         "foo_{{.OS}}_{{.Arch}}.tar.gz",
+			Format:        "tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		}},
+		&fakeChecksumGetter{checksum: "abc"},
+		g2,
+	)
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(g2.resolved) != 0 {
+		t.Errorf("g2 was asked for %v, want nothing", g2.resolved)
+	}
+	lf, err := lockfile.ReadFile(filepath.Join(dir, lockfile.FileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lf.Packages) != 1 {
+		t.Fatalf("got %d entries, want 1", len(lf.Packages))
+	}
+	got := lf.Packages[0]
+	if got.Asset != "foo_linux_amd64.tar.gz" {
+		t.Errorf("the asset is %q, want foo_linux_amd64.tar.gz", got.Asset)
+	}
+	// The checksum comes from the getter, not from the registry.
+	if got.Checksum != "abc" {
+		t.Errorf("the checksum is %q, want abc", got.Checksum)
+	}
+	// The entry records which registry answered.
+	if got.Registry == nil || got.Registry.RepoName != "my-registry" {
+		t.Errorf("the registry is %+v, want my-registry", got.Registry)
+	}
+}
+
+// The lock file has to carry a checksum for anything aqua downloads, so a package
+// whose checksum can't be found is an error rather than an entry without one.
+func TestController_Update_otherRegistry_noChecksum(t *testing.T) {
+	t.Parallel()
+	cfg := &aqua.Config{
+		Registries: aqua.Registries{"foo": {Name: "foo", Type: "github_content"}},
+		Packages:   []*aqua.Package{{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"}},
+	}
+	ctrl := lockupdate.New(
+		&fakeFinder{paths: []string{filepath.Join(t.TempDir(), "aqua.yaml")}},
+		&fakeReader{cfg: cfg},
+		&fakeRegistryInstaller{pkgInfo: &registry.PackageInfo{
+			Type:          "github_release",
+			RepoOwner:     "foo",
+			RepoName:      "foo",
+			Asset:         "foo_{{.OS}}_{{.Arch}}.tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		}},
+		&fakeChecksumGetter{},
+		&fakeResolver{},
+	)
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{}); err == nil {
+		t.Fatal("an error must be returned")
 	}
 }
 

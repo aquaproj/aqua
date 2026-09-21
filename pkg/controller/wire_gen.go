@@ -79,7 +79,7 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 	return controller, nil
 }
 
-func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client) (*lockupdate.Controller, error) {
+func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*lockupdate.Controller, error) {
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	repositoriesService, err := github.New(ctx, logger)
@@ -88,9 +88,35 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 	}
 	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	executor := osexec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, downloader, param)
+	executorImpl := slsa.NewExecutor(executor, param)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
+	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	linker := link.New()
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New(executor)
+	minisignExecutorImpl, err := minisign.NewExecutor(logger, executor, param)
+	if err != nil {
+		return nil, err
+	}
+	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
+	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
+	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
+	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
+	client := vacuum.New(param)
+	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	getter := checksumgetter.New(checksumDownloaderImpl, downloader, installpackageInstaller)
 	cache := g2.NewCache(param)
-	client := g2.NewDefault(gitHubContentFileDownloader, cache)
-	controller := lockupdate.New(configFinder, configReader, client)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := lockupdate.New(configFinder, configReader, installer, getter, g2Client)
 	return controller, nil
 }
 
