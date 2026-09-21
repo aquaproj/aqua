@@ -336,12 +336,28 @@ func findCosignBundle(assetNames map[string]struct{}, assetName string) string {
 	return ""
 }
 
-func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
+	return InferCosign(pkgInfo.RepoOwner, pkgInfo.RepoName, checksumAssetName, assetNames)
+}
+
+// InferCosign reads a release's asset list and returns how the named asset is signed
+// with cosign, or nil when nothing there signs it.
+//
+// The signature, certificate, bundle and public key are found by name. The signer
+// can't be read off a release the same way, so the identity is constrained to a
+// workflow in the package's own repository, which is what makes the result a check
+// rather than an acceptance of any signature at all.
+//
+// The asset it is asked about is usually the checksum file, which is what signs a
+// release as a whole. It works for any asset, which is what lets a generator that
+// records one entry per environment ask about each of them.
+func InferCosign(repoOwner, repoName, assetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
 	cosign := &registry.Cosign{
 		Opts: make([]string, 0, 8), //nolint:mnd // we generate max 8 arguments (certificate case)
 	}
 	downloadURL := fmt.Sprintf("https://github.com/%s/%s/releases/download/{{.Version}}/",
-		pkgInfo.RepoOwner, pkgInfo.RepoName)
+		repoOwner, repoName)
+	checksumAssetName := assetName
 
 	var bundleAssetName, certificateAssetName string
 	if bundleAssetName = findCosignBundle(assetNames, checksumAssetName); bundleAssetName != "" {
@@ -360,8 +376,8 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 			flagCertIdentityRegexp,
 			fmt.Sprintf(
 				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
-				regexp.QuoteMeta(pkgInfo.RepoOwner),
-				regexp.QuoteMeta(pkgInfo.RepoName),
+				regexp.QuoteMeta(repoOwner),
+				regexp.QuoteMeta(repoName),
 			),
 			flagCertOIDCIssuer,
 			urlOIDCIssuer,
