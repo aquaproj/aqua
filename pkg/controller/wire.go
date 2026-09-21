@@ -25,6 +25,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/lockupdate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
@@ -36,6 +37,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
@@ -1152,4 +1154,32 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 		),
 	)
 	return &initialize.Controller{}, nil
+}
+
+func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client) (*lockupdate.Controller, error) {
+	wire.Build(
+		lockupdate.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(lockupdate.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(lockupdate.ConfigReader), new(*reader.ConfigReader)),
+		),
+		wire.NewSet(
+			g2.NewDefault,
+			wire.Bind(new(lockupdate.Resolver), new(*g2.Client)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
+		),
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		download.NewHTTPDownloader,
+	)
+	return &lockupdate.Controller{}, nil
 }

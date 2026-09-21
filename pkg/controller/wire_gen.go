@@ -25,6 +25,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/lockupdate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
@@ -35,6 +36,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/install-registry"
@@ -73,6 +75,20 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 	slsaVerifier := slsa.New(downloader, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	controller := list.NewController(configFinder, configReader, installer)
+	return controller, nil
+}
+
+func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client) (*lockupdate.Controller, error) {
+	configFinder := finder.NewConfigFinder()
+	configReader := reader.New(param)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	client := g2.NewDefault(gitHubContentFileDownloader)
+	controller := lockupdate.New(configFinder, configReader, client)
 	return controller, nil
 }
 
