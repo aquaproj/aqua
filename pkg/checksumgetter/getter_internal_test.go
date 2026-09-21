@@ -1,4 +1,4 @@
-package updatechecksum
+package checksumgetter
 
 import (
 	"testing"

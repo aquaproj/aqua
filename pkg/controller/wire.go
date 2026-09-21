@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/checksumgetter"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
@@ -838,8 +839,9 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 		),
 		wire.NewSet(
 			installpackage.New,
-			wire.Bind(new(updatechecksum.ChecksumFileVerifier), new(*installpackage.Installer)),
+			wire.Bind(new(checksumgetter.ChecksumFileVerifier), new(*installpackage.Installer)),
 		),
+		checksumgetter.New,
 		wire.NewSet(
 			link.New,
 			wire.Bind(new(installpackage.Linker), new(*link.Linker)),

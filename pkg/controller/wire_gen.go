@@ -10,6 +10,7 @@ import (
 	"context"
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/checksumgetter"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config-reader"
@@ -372,7 +373,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
 	client := vacuum.New(param)
 	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
-	controller := updatechecksum.New(param, configFinder, configReader, installer, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader, installpackageInstaller)
+	getter := checksumgetter.New(checksumDownloaderImpl, downloader, installpackageInstaller)
+	controller := updatechecksum.New(param, configFinder, configReader, installer, rt, getter, gitHubContentFileDownloader)
 	return controller, nil
 }
 
