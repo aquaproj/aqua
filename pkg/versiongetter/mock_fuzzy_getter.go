@@ -17,6 +17,6 @@ func NewMockFuzzyGetter(versions map[string]string) *MockFuzzyGetter {
 	}
 }
 
-func (g *MockFuzzyGetter) Get(_ context.Context, _ *slog.Logger, pkg *registry.PackageInfo, _ string, _ bool, _ int) string {
+func (g *MockFuzzyGetter) Get(_ context.Context, _ *slog.Logger, _ string, pkg *registry.PackageInfo, _ string, _ bool, _ int) string {
 	return g.versions[pkg.GetName()]
 }

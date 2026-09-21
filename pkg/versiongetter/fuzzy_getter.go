@@ -11,24 +11,25 @@ import (
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
+// RegistryStandard is the name of the registry aqua-registry-g2 mirrors.
+const RegistryStandard = "standard"
+
 type FuzzyGetter struct {
 	fuzzyFinder FuzzyFinder
 	getter      VersionGetter
+	g2          VersionGetter
 }
 
-func NewFuzzy(finder FuzzyFinder, getter VersionGetter) *FuzzyGetter {
+func NewFuzzy(finder FuzzyFinder, getter VersionGetter, g2 *G2VersionGetter) *FuzzyGetter {
 	return &FuzzyGetter{
 		fuzzyFinder: finder,
 		getter:      getter,
+		g2:          g2,
 	}
 }
 
-type FuzzyFinder interface {
-	Find(items []*fuzzyfinder.Item, hasPreview bool) (int, error)
-	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
-}
-
-func (g *FuzzyGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string { //nolint:cyclop
+func (g *FuzzyGetter) Get(ctx context.Context, logger *slog.Logger, registryName string, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string { //nolint:cyclop
+	getter := g.get(registryName)
 	filters, err := createFilters(pkg)
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("create filters")
@@ -40,7 +41,7 @@ func (g *FuzzyGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registr
 	if useFinder { //nolint:nestif
 		logger := logger.With() // Copy logger because g.getter.List has a side effect to change logger
 		start := time.Now()
-		versions, err := g.getter.List(ctx, logger, pkg, filters, limit)
+		versions, err := getter.List(ctx, logger, pkg, filters, limit)
 		elapsed := time.Since(start)
 		if err != nil {
 			slogerr.WithError(logger, err).Warn("retrieve package versions")
@@ -71,11 +72,29 @@ func (g *FuzzyGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registr
 	}
 
 	start := time.Now()
-	version, err := g.getter.Get(ctx, logger, pkg, filters)
+	version, err := getter.Get(ctx, logger, pkg, filters)
 	logger.Debug("retrieve package versions in " + time.Since(start).String())
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("retrieve package versions")
 		return ""
 	}
 	return version
+}
+
+// get picks where the versions come from.
+//
+// A package from the standard registry is offered the versions aqua-registry-g2 has
+// generated a registry.json for, because those are the ones "aqua lock update" can
+// lock. A package from any other registry has no branch there, so it keeps asking
+// upstream and keeps having its registry's version_filter applied.
+func (g *FuzzyGetter) get(registryName string) VersionGetter {
+	if registryName == RegistryStandard {
+		return g.g2
+	}
+	return g.getter
+}
+
+type FuzzyFinder interface {
+	Find(items []*fuzzyfinder.Item, hasPreview bool) (int, error)
+	FindMulti(items []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }

@@ -140,7 +140,13 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
-	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
+	gitService, err := github.NewGit(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	versionLister := g2.NewDefaultVersionLister(gitService)
+	g2VersionGetter := versiongetter.NewG2(versionLister)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter, g2VersionGetter)
 	controller := generate.New(configFinder, configReader, installer, repositoriesService, fuzzyfinderFinder, fuzzyGetter)
 	return controller, nil
 }
@@ -392,7 +398,13 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
-	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
+	gitService, err := github.NewGit(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	versionLister := g2.NewDefaultVersionLister(gitService)
+	g2VersionGetter := versiongetter.NewG2(versionLister)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter, g2VersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)
