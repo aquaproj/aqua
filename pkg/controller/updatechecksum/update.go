@@ -16,6 +16,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/resolve"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
@@ -152,7 +153,7 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, che
 	// package's Overrides. Without this, a package with multiple Overrides
 	// for the same (GOOS, GOARCH) differing only by variants (e.g.
 	// libc=musl vs libc=glibc) would have only one of its assets checksummed.
-	rts = expandRuntimesByVariants(pkg.PackageInfo, rts)
+	rts = resolve.ExpandByVariants(pkg.PackageInfo, rts)
 
 	pkgs, assetNames, err := c.getPkgs(pkg, rts)
 	if err != nil {
@@ -175,7 +176,7 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, che
 		if rt.LibC != "" {
 			logger = logger.With("checksum_libc", rt.LibC)
 		}
-		pkg, ok := pkgs[runtimeKey(rt)]
+		pkg, ok := pkgs[resolve.RuntimeKey(rt)]
 		if !ok {
 			continue
 		}
@@ -184,12 +185,6 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, che
 		}
 	}
 	return nil
-}
-
-// runtimeKey returns a unique map key for rt that includes variant axes, so
-// runtimes differing only by variant (e.g. libc) do not collide.
-func runtimeKey(rt *runtime.Runtime) string {
-	return rt.GOOS + "/" + rt.GOARCH + "/" + rt.LibC
 }
 
 func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[string]*config.Package, map[string]struct{}, error) {
@@ -213,7 +208,7 @@ func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[s
 			return nil, nil, fmt.Errorf("render an asset: %w", err)
 		}
 		assets[asset] = struct{}{}
-		pkgs[runtimeKey(rt)] = pkgWithEnv
+		pkgs[resolve.RuntimeKey(rt)] = pkgWithEnv
 	}
 	return pkgs, assets, nil
 }
@@ -228,7 +223,7 @@ func (c *Controller) getPkgs(pkg *config.Package, rts []*runtime.Runtime) (map[s
 // context in updatePackageByRuntime.
 func allChecksumsCached(checksums *checksum.Checksums, pkgs map[string]*config.Package, rts []*runtime.Runtime) bool {
 	for _, rt := range rts {
-		p, ok := pkgs[runtimeKey(rt)]
+		p, ok := pkgs[resolve.RuntimeKey(rt)]
 		if !ok {
 			continue
 		}
@@ -250,7 +245,7 @@ func allChecksumsCached(checksums *checksum.Checksums, pkgs map[string]*config.P
 // runtime can use the API or when the API call fails.
 func (c *Controller) prefetchReleaseAssets(ctx context.Context, logger *slog.Logger, pkgs map[string]*config.Package, rts []*runtime.Runtime) domain.ReleaseAssets {
 	for _, rt := range rts {
-		p, ok := pkgs[runtimeKey(rt)]
+		p, ok := pkgs[resolve.RuntimeKey(rt)]
 		if !ok {
 			continue
 		}

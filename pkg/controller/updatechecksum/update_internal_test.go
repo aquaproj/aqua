@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/resolve"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -40,8 +41,8 @@ func TestAllChecksumsCached(t *testing.T) { //nolint:funlen
 	pkgDarwin, idDarwin := newGitHubReleasePkg(t, "cli", "cli", "v2.17.0", "gh_darwin_arm64.tar.gz", rtDarwin)
 
 	pkgs := map[string]*config.Package{
-		runtimeKey(rtLinux):  pkgLinux,
-		runtimeKey(rtDarwin): pkgDarwin,
+		resolve.RuntimeKey(rtLinux):  pkgLinux,
+		resolve.RuntimeKey(rtDarwin): pkgDarwin,
 	}
 	rts := []*runtime.Runtime{rtLinux, rtDarwin}
 
