@@ -67,3 +67,50 @@ func TestPath(t *testing.T) {
 		t.Errorf("Path is wrong (-want +got):\n%s", diff)
 	}
 }
+
+// Encoding and decoding have to be exact inverses: the branch name is the only place
+// a package's name is written on its branch.
+func TestPackageName(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{
+		"cli/cli",
+		"ipinfo/cli/grepip",
+		"sr.ht/~charles/rq",
+		"sue445/plant_erd",
+		"aqua-registry.v2",
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			got, ok := g2.PackageName(g2.BranchName(name))
+			if !ok {
+				t.Fatalf("%q didn't decode", name)
+			}
+			if diff := cmp.Diff(name, got); diff != "" {
+				t.Errorf("the name is wrong (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// A branch that isn't a package's, or that no encoding could have produced, is
+// reported rather than turned into a name.
+func TestPackageName_notAPackage(t *testing.T) {
+	t.Parallel()
+	for _, branch := range []string{
+		"main",
+		"ar2_cli_2fcli",
+		// A truncated escape.
+		"pkg_cli_2",
+		// Not hexadecimal.
+		"pkg_cli_zzcli",
+		// An escape of a character that would never have been escaped.
+		"pkg_cli_61cli",
+	} {
+		t.Run(branch, func(t *testing.T) {
+			t.Parallel()
+			if got, ok := g2.PackageName(branch); ok {
+				t.Errorf("%q decoded to %q, want a refusal", branch, got)
+			}
+		})
+	}
+}

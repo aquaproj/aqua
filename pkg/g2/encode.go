@@ -9,6 +9,7 @@ package g2
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -72,4 +73,54 @@ func isSafe(c byte) bool {
 		return true
 	}
 	return false
+}
+
+// PackageName returns the package a branch holds, or false when the branch isn't a
+// package's.
+//
+// The encoding was chosen to be reversible, which is why the underscore is escaped
+// along with everything else: a scheme turning a slash into two underscores couldn't
+// tell those apart from a package name that contains one.
+func PackageName(branch string) (string, bool) {
+	encoded, ok := strings.CutPrefix(branch, BranchPrefix)
+	if !ok {
+		return "", false
+	}
+	return DecodePackageName(encoded)
+}
+
+// DecodePackageName undoes EncodePackageName.
+//
+// It reports false for anything EncodePackageName couldn't have produced, such as a
+// truncated escape or a character that would never have been escaped, rather than
+// returning a name that was never encoded.
+func DecodePackageName(encoded string) (string, bool) {
+	var b strings.Builder
+	b.Grow(len(encoded))
+	for i := 0; i < len(encoded); i++ {
+		c := encoded[i]
+		if c != '_' {
+			if !isSafe(c) {
+				return "", false
+			}
+			b.WriteByte(c)
+			continue
+		}
+		if i+2 >= len(encoded) {
+			return "", false
+		}
+		n, err := strconv.ParseUint(encoded[i+1:i+3], 16, 8)
+		if err != nil {
+			return "", false
+		}
+		decoded := byte(n)
+		// Only what would have been escaped: an escape of a safe character is
+		// something else's text, not a name this produced.
+		if isSafe(decoded) {
+			return "", false
+		}
+		b.WriteByte(decoded)
+		i += 2
+	}
+	return b.String(), true
 }
