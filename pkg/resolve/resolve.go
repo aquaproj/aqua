@@ -123,22 +123,30 @@ func Runtimes(pkgInfo *registry.PackageInfo, supportedEnvs []string) ([]*runtime
 	return ExpandByVariants(pkgInfo, rts), nil
 }
 
+// forRuntime is the definition as it applies to one environment.
+//
+// The copy comes first because SetVersion returns the receiver itself when the
+// package has no top-level version_constraint, and OverrideByRuntime then mutates it
+// in place. Without the copy, an override applied for one environment leaks into
+// every environment resolved afterwards.
+func forRuntime(versioned, filesFrom *registry.PackageInfo, rt *runtime.Runtime) *registry.PackageInfo {
+	info := versioned.Copy()
+	info.OverrideByRuntime(rt)
+	if filesFrom == nil {
+		return info
+	}
+	other := filesFrom.Copy()
+	other.OverrideByRuntime(rt)
+	if files := other.GetFiles(); len(files) > 0 {
+		info.Files = files
+	}
+	return info
+}
+
 // resolveOne resolves a single environment, or returns nil when the package doesn't
 // support it or resolves to nothing there.
 func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *runtime.Runtime) (*lockfile.Package, error) {
-	// Copy first: SetVersion returns the receiver itself when the package has no
-	// top-level version_constraint, and OverrideByRuntime then mutates it in place.
-	// Without the copy, an override applied for one environment leaks into every
-	// environment resolved afterwards.
-	info := versioned.Copy()
-	info.OverrideByRuntime(rt)
-	if filesFrom != nil {
-		other := filesFrom.Copy()
-		other.OverrideByRuntime(rt)
-		if files := other.GetFiles(); len(files) > 0 {
-			info.Files = files
-		}
-	}
+	info := forRuntime(versioned, filesFrom, rt)
 	pkg := &config.Package{
 		Package:     &aqua.Package{Name: param.PkgName, Version: param.Version},
 		PackageInfo: info,
@@ -163,6 +171,10 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 	if err != nil {
 		return nil, err
 	}
+	sign, err := renderSigning(pkg, info, rt, assetName)
+	if err != nil {
+		return nil, err
+	}
 
 	return &lockfile.Package{
 		Name:                       param.PkgName,
@@ -180,10 +192,10 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		Crate:                      info.Crate,
 		Cargo:                      info.Cargo,
 		Files:                      files,
-		Cosign:                     info.Cosign,
+		Cosign:                     sign.cosign,
 		GitHubArtifactAttestations: info.GitHubArtifactAttestations,
-		Minisign:                   info.Minisign,
-		SLSAProvenance:             info.SLSAProvenance,
+		Minisign:                   sign.minisign,
+		SLSAProvenance:             sign.slsa,
 	}, nil
 }
 

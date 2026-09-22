@@ -86,7 +86,10 @@ type Package struct {
 
 	// The signing configuration is aqua's own, copied through from aqua-registry
 	// rather than restated, so that verification at install time reads the same
-	// shape whether the package came from a lock file or a registry.
+	// shape whether the package came from a lock file or a registry. The names of
+	// the signature files are rendered for this environment like everything else
+	// here: an entry that kept the templates would need the replacements kept with
+	// it to expand them again.
 	Cosign                     *registry.Cosign                     `json:"cosign,omitempty"`
 	GitHubArtifactAttestations *registry.GitHubArtifactAttestations `json:"github_artifact_attestations,omitempty"`
 	Minisign                   *registry.Minisign                   `json:"minisign,omitempty"`
