@@ -16,6 +16,12 @@
         },
         "name": {
           "type": "string"
+        },
+        "replacements": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,
