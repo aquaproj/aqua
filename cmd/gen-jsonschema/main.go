@@ -8,6 +8,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	genrgst "github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
+	"github.com/aquaproj/aqua/v2/pkg/settings"
 	"github.com/suzuki-shunsuke/gen-go-jsonschema/jsonschema"
 )
 
@@ -28,6 +29,9 @@ func core() error {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
 	if err := jsonschema.Write(&genrgst.RawConfig{}, "json-schema/aqua-generate-registry.json"); err != nil {
+		return fmt.Errorf("create or update a JSON Schema: %w", err)
+	}
+	if err := jsonschema.Write(&settings.Settings{}, "json-schema/config.json"); err != nil {
 		return fmt.Errorf("create or update a JSON Schema: %w", err)
 	}
 	return nil

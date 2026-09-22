@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/profile"
 	"github.com/aquaproj/aqua/v2/pkg/cli/util"
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/settings"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"github.com/urfave/cli/v3"
 )
@@ -62,6 +63,11 @@ func (i *command) action(args *Args) error {
 	}
 	defer profiler.Stop()
 
-	fmt.Fprintln(i.r.Stdout, config.GetRootDir(osenv.New()))
+	osEnv := osenv.New()
+	st, err := settings.Read(settings.Path(osEnv))
+	if err != nil {
+		return fmt.Errorf("read the settings file: %w", err)
+	}
+	fmt.Fprintln(i.r.Stdout, config.GetRootDir(osEnv, st.RootDir))
 	return nil
 }

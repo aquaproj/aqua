@@ -10,9 +10,10 @@ import (
 func TestGetRootDir(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		name string
-		env  map[string]string
-		exp  string
+		name    string
+		env     map[string]string
+		setting string
+		exp     string
 	}{
 		{
 			name: "AQUA_ROOT_DIR",
@@ -20,6 +21,22 @@ func TestGetRootDir(t *testing.T) {
 				"AQUA_ROOT_DIR": "/home/foo/.aqua",
 			},
 			exp: "/home/foo/.aqua",
+		},
+		{
+			name: "AQUA_ROOT_DIR wins over the settings file",
+			env: map[string]string{
+				"AQUA_ROOT_DIR": "/home/foo/.aqua",
+			},
+			setting: "/home/foo/.setting",
+			exp:     "/home/foo/.aqua",
+		},
+		{
+			name: "the settings file wins over XDG_DATA_HOME",
+			env: map[string]string{
+				"XDG_DATA_HOME": "/home/foo/.xdg",
+			},
+			setting: "/home/foo/.setting",
+			exp:     "/home/foo/.setting",
 		},
 		{
 			name: "XDG_DATA_HOME",
@@ -39,7 +56,7 @@ func TestGetRootDir(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			rootDir := config.GetRootDir(osenv.NewMock(d.env))
+			rootDir := config.GetRootDir(osenv.NewMock(d.env), d.setting)
 			if rootDir != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, rootDir)
 			}

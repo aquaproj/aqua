@@ -2,6 +2,7 @@
 
 * https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
 * https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/registry.json
+* https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/config.json
 
 These JSON Schema files are generated from aqua's source code powered by [invopop/jsonschema](https://github.com/invopop/jsonschema).
 Don't edit these files manually.
