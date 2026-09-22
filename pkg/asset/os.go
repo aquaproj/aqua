@@ -8,7 +8,7 @@ import (
 // It matches common OS patterns in asset names, handles file extensions like .exe
 // and .dmg for OS detection, and generates templates for cross-platform downloads.
 // The function also manages OS name mappings and scoring for asset selection.
-func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funlen,cyclop
+func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spellings) { //nolint:funlen,cyclop
 	if strings.Contains(lowAssetName, ".exe.") || strings.HasSuffix(lowAssetName, ".exe") {
 		assetInfo.OS = osWindows
 	} else if strings.HasSuffix(lowAssetName, ".dmg") || strings.HasSuffix(lowAssetName, ".pkg") {
@@ -94,6 +94,10 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo) { //nolint:funl
 			Name: "win",
 			OS:   osWindows,
 		},
+	}
+
+	for _, s := range extra {
+		osList = append(s.osList(), osList...)
 	}
 
 	for _, o := range osList {

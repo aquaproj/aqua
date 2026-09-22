@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/expr-lang/expr/vm"
 	"go.yaml.in/yaml/v3"
@@ -14,6 +15,10 @@ type Config struct {
 	VersionFilter   *vm.Program
 	AllAssetsFilter *vm.Program
 	Package         string
+	// Spellings names the platforms a release writes in a way the parser doesn't
+	// know. Without them an asset belongs to no platform, and the package is
+	// generated without it rather than with a wrong name for it.
+	Spellings asset.Spellings
 }
 
 type RawConfig struct {
@@ -21,6 +26,11 @@ type RawConfig struct {
 	VersionPrefix   string `yaml:"version_prefix" json:"version_prefix,omitempty"`
 	AllAssetsFilter string `yaml:"all_assets_filter" json:"all_assets_filter,omitempty"`
 	Package         string `yaml:"name" json:"name"`
+	// Replacements says how this release writes a platform, for the ones the
+	// parser doesn't recognise: luau-lang/luau calls its Linux build
+	// luau-ubuntu.zip. It is the same map a registry writes, so a caller that
+	// already has the package's definition can hand it over as it is.
+	Replacements map[string]string `yaml:"replacements" json:"replacements,omitempty"`
 }
 
 func (c *Config) FromRaw(raw *RawConfig) error {
@@ -30,6 +40,7 @@ func (c *Config) FromRaw(raw *RawConfig) error {
 
 	c.Package = raw.Package
 	c.VersionPrefix = raw.VersionPrefix
+	c.Spellings = raw.Replacements
 
 	if raw.VersionFilter != "" {
 		r, err := expr.CompileVersionFilter(raw.VersionFilter)

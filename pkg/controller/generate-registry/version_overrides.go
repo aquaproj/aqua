@@ -154,7 +154,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		release.assets = assets
 	}
 
-	versions := c.generatePackage(logger, pkgInfo, pkgName, releases)
+	versions := c.generatePackage(logger, cfg, pkgInfo, pkgName, releases)
 	if len(pkgInfo.VersionOverrides) != 0 {
 		pkgInfo.VersionConstraints = "false"
 	}

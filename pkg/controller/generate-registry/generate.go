@@ -178,7 +178,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 		assetNames = append(assetNames, asset.GetName())
 	}
 
-	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames)
+	c.patchRelease(logger, cfg, pkgInfo, pkgName, release.GetTagName(), assetNames)
 	return pkgInfo, []string{version}
 }
 
@@ -203,7 +203,7 @@ func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.
 	return nil
 }
 
-func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string) { //nolint:cyclop
+func (c *Controller) patchRelease(logger *slog.Logger, cfg *Config, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string) { //nolint:cyclop
 	if len(assets) == 0 {
 		pkgInfo.NoAsset = true
 		return
@@ -225,7 +225,7 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 			continue
 		}
 		assetNames[assetName] = struct{}{}
-		assetInfo := asset.ParseAssetName(assetName, tagName)
+		assetInfo := asset.ParseAssetName(assetName, tagName, cfg.Spellings)
 		assetInfos = append(assetInfos, assetInfo)
 	}
 	for assetName := range assetNames {
@@ -235,7 +235,7 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 		}
 	}
 	for assetName := range assetNames {
-		if p := checkSLSAProvenance(assetName, tagName); p != nil {
+		if p := checkSLSAProvenance(assetName, tagName, cfg.Spellings); p != nil {
 			pkgInfo.SLSAProvenance = p
 			break
 		}
@@ -244,7 +244,7 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 		for checksumName := range checksumNames {
 			chksum := checksum.GetChecksumConfigFromFilename(checksumName, tagName)
 			if chksum != nil {
-				assetInfo := asset.ParseAssetName(checksumName, tagName)
+				assetInfo := asset.ParseAssetName(checksumName, tagName, cfg.Spellings)
 				chksum.Asset = assetInfo.Template
 				chksum.Cosign = checkChecksumCosign(pkgInfo, checksumName, assetNames)
 				pkgInfo.Checksum = chksum
@@ -286,11 +286,11 @@ func (c *Controller) listReleaseAssets(ctx context.Context, logger *slog.Logger,
 	return arr
 }
 
-func checkSLSAProvenance(assetName, tagName string) *registry.SLSAProvenance {
+func checkSLSAProvenance(assetName, tagName string, spellings asset.Spellings) *registry.SLSAProvenance {
 	if !strings.HasSuffix(assetName, ".intoto.jsonl") {
 		return nil
 	}
-	assetInfo := asset.ParseAssetName(assetName, tagName)
+	assetInfo := asset.ParseAssetName(assetName, tagName, spellings)
 	return &registry.SLSAProvenance{
 		Type:  pkgTypeGitHubRelease,
 		Asset: &assetInfo.Template,
