@@ -63,6 +63,11 @@ type Asset struct {
 
 	Files []*File `json:"files,omitempty"`
 
+	// Private says the repository needs a token to download from. It is always
+	// false in aqua-registry-g2, which mirrors the public registry, and is here so
+	// that an entry and the file it is written from say the same things.
+	Private bool `json:"private,omitempty"`
+
 	// The signing configuration is aqua's own, copied through from aqua-registry
 	// rather than restated, so that verification at install time reads the same
 	// shape whether the package came from a lock file or a registry. The names of

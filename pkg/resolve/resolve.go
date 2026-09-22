@@ -192,6 +192,7 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		Crate:                      info.Crate,
 		Cargo:                      info.Cargo,
 		Files:                      files,
+		Private:                    info.Private,
 		Cosign:                     sign.cosign,
 		GitHubArtifactAttestations: info.GitHubArtifactAttestations,
 		Minisign:                   sign.minisign,

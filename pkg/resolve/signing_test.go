@@ -50,3 +50,34 @@ func TestResolve_signingIsRendered(t *testing.T) {
 		t.Error("the public key was lost")
 	}
 }
+
+// A package from a private repository says so, because that is what sends the
+// download straight to the API instead of trying the anonymous URL first.
+func TestResolve_private(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(slog.New(slog.DiscardHandler), &resolve.Param{
+		PkgName: "example/private",
+		Version: "v1.0.0",
+		PkgInfo: &registry.PackageInfo{
+			Name:          "example/private",
+			Type:          "github_release",
+			RepoOwner:     "example",
+			RepoName:      "private",
+			Asset:         "private_{{.OS}}_{{.Arch}}.tar.gz",
+			Format:        "tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+			Private:       true,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pkgs) != 1 || !pkgs[0].Private {
+		t.Fatalf("the entry doesn't say the repository is private: %+v", pkgs)
+	}
+	// The definition aqua installs from has to say it too, or the entry saying it
+	// changes nothing.
+	if !pkgs[0].PackageInfo().Private {
+		t.Error("the definition built from the entry lost it")
+	}
+}

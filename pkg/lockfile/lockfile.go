@@ -84,6 +84,12 @@ type Package struct {
 
 	Files []*File `json:"files,omitempty"`
 
+	// Private says the repository needs a token to download from, which changes
+	// where the download is asked for rather than whether it works: aqua tries the
+	// anonymous URL first for a public repository, to keep a token's rate limit for
+	// things that need it, and goes straight to the API for a private one.
+	Private bool `json:"private,omitempty"`
+
 	// The signing configuration is aqua's own, copied through from aqua-registry
 	// rather than restated, so that verification at install time reads the same
 	// shape whether the package came from a lock file or a registry. The names of

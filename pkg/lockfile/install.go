@@ -77,6 +77,7 @@ func (p *Package) PackageInfo() *registry.PackageInfo {
 		Files:                      p.registryFiles(),
 		AppendExt:                  &no,
 		CompleteWindowsExt:         &no,
+		Private:                    p.Private,
 		Cosign:                     p.Cosign,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
 		Minisign:                   p.Minisign,
