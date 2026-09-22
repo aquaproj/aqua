@@ -76,6 +76,10 @@ func Read(path string) (*Settings, error) {
 		return nil, fmt.Errorf("open the settings file: %w", err)
 	}
 	defer f.Close()
+	// The decoder isn't strict on purpose. A settings file is written once and
+	// then carried from machine to machine, so it outlives the version of aqua
+	// that wrote it: refusing a key a newer aqua understands would break every
+	// older aqua the file reaches.
 	if err := yaml.NewDecoder(f).Decode(s); err != nil {
 		if errors.Is(err, io.EOF) {
 			// An empty file is a settings file where nothing is set,
