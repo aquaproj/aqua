@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
 )
@@ -53,6 +54,12 @@ func (l *VersionLister) List(ctx context.Context, logger *slog.Logger, pkgName s
 	// so the newest could be among the ones lost.
 	tree, resp, err := l.git.GetTree(ctx, l.repoOwner, l.repoName, BranchName(pkgName)+":"+VersionDir, false)
 	if err != nil {
+		// No branch for the package, or no repository at all while g2 is being
+		// filled in. Either way it holds nothing for this package, which is not the
+		// same as having failed to answer.
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return nil, fmt.Errorf("%w: %s", ErrNoPackageBranch, pkgName)
+		}
 		return nil, fmt.Errorf("get the versions directory of a package branch: %w", err)
 	}
 	if resp != nil {

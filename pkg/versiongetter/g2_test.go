@@ -3,6 +3,7 @@ package versiongetter_test
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -11,13 +12,21 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
+	gogithub "github.com/google/go-github/v92/github"
 )
 
 type fakeTreeGetter struct {
 	versions []string
+	// notFound makes it answer the way GitHub does for a package aqua-registry-g2
+	// has no branch for.
+	notFound bool
 }
 
 func (g *fakeTreeGetter) GetTree(_ context.Context, _, _, _ string, _ bool) (*github.Tree, *github.Response, error) {
+	if g.notFound {
+		return nil, &github.Response{Response: &http.Response{StatusCode: http.StatusNotFound}},
+			&gogithub.ErrorResponse{Message: "Not Found"}
+	}
 	truncated := false
 	tree := &github.Tree{Truncated: &truncated}
 	for _, v := range g.versions {
@@ -29,6 +38,11 @@ func (g *fakeTreeGetter) GetTree(_ context.Context, _, _, _ string, _ bool) (*gi
 
 func newG2(versions ...string) *versiongetter.G2VersionGetter {
 	return versiongetter.NewG2(g2.NewVersionLister(&fakeTreeGetter{versions: versions}, "", ""))
+}
+
+// newG2NotFound builds a getter for a package aqua-registry-g2 has no branch for.
+func newG2NotFound() *versiongetter.G2VersionGetter {
+	return versiongetter.NewG2(g2.NewVersionLister(&fakeTreeGetter{notFound: true}, "", ""))
 }
 
 func items(versions ...string) []*fuzzyfinder.Item {
