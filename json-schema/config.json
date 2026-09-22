@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aquaproj/aqua/v2/pkg/settings/settings",
+  "$ref": "#/$defs/Settings",
+  "$defs": {
+    "Checksum": {
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Verify the checksums of packages",
+          "default": false
+        },
+        "require": {
+          "type": "boolean",
+          "description": "Fail if a checksum isn't found in aqua-checksums.json",
+          "default": false
+        },
+        "enforce": {
+          "type": "boolean",
+          "description": "Verify the checksums even if aqua.yaml disables the verification",
+          "default": false
+        },
+        "enforce_require": {
+          "type": "boolean",
+          "description": "Require the checksums even if aqua.yaml doesn't require them",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Log": {
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "description": "The log level"
+        },
+        "color": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "always",
+            "never",
+            "on",
+            "off"
+          ],
+          "description": "Whether logs are colored"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Policy": {
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Restrict registries and packages with policy files",
+          "default": true
+        },
+        "config": {
+          "type": "string",
+          "description": "Policy file paths separated by the OS specific list separator"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Settings": {
+      "properties": {
+        "checksum": {
+          "$ref": "#/$defs/Checksum"
+        },
+        "log": {
+          "$ref": "#/$defs/Log"
+        },
+        "policy": {
+          "$ref": "#/$defs/Policy"
+        },
+        "global_config": {
+          "type": "string",
+          "description": "Global configuration file paths separated by the OS specific list separator"
+        },
+        "root_dir": {
+          "type": "string",
+          "description": "The directory where aqua installs packages"
+        },
+        "lazy_install": {
+          "type": "boolean",
+          "description": "Install a package when its command is executed",
+          "default": true
+        },
+        "tracking": {
+          "type": "boolean",
+          "description": "Send anonymous usage data to aqua's maintainers",
+          "default": true
+        },
+        "progress_bar": {
+          "type": "boolean",
+          "description": "Show a progress bar while downloading packages",
+          "default": false
+        },
+        "keyring": {
+          "type": "boolean",
+          "description": "Get a GitHub access token from the secret store of the operating system",
+          "default": false
+        },
+        "max_parallelism": {
+          "type": "integer",
+          "description": "The maximum number of packages aqua installs in parallel",
+          "default": 5
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}

@@ -60,7 +60,7 @@ import (
 func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*list.Controller, error) {
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 }
 
 func InitializeGenerateRegistryCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, stdout io.Writer) (*genrgst.Controller, error) {
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logger *sl
 }
 
 func InitializeInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param) (*initcmd.Controller, error) {
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func InitializeInitPolicyCommandController(ctx context.Context) *initpolicy.Cont
 func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*generate.Controller, error) {
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*which.Controller, error) {
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 }
 
 func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*exec.Controller, error) {
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 }
 
 func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updateaqua.Controller, error) {
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +271,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 }
 
 func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*updatechecksum.Controller, error) {
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +354,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 }
 
 func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*update.Controller, error) {
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -407,7 +407,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) (*remove.Controller, error) {
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +438,7 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 	client := vacuum.New(param)
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
-	repositoriesService, err := github.New(ctx, logger)
+	repositoriesService, err := github.New(ctx, logger, param)
 	if err != nil {
 		return nil, err
 	}
