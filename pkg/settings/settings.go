@@ -34,7 +34,6 @@ type Settings struct {
 	LazyInstall    *bool     `yaml:"lazy_install,omitempty" json:"lazy_install,omitempty" jsonschema:"description=Install a package when its command is executed,default=true"`
 	Tracking       *bool     `yaml:",omitempty" json:"tracking,omitempty" jsonschema:"description=Send anonymous usage data to aqua's maintainers,default=true"`
 	ProgressBar    *bool     `yaml:"progress_bar,omitempty" json:"progress_bar,omitempty" jsonschema:"description=Show a progress bar while downloading packages,default=false"`
-	Keyring        *bool     `yaml:",omitempty" json:"keyring,omitempty" jsonschema:"description=Get a GitHub access token from the secret store of the operating system,default=false"`
 	MaxParallelism int       `yaml:"max_parallelism,omitempty" json:"max_parallelism,omitempty" jsonschema:"description=The maximum number of packages aqua installs in parallel,default=5"`
 }
 
@@ -113,12 +112,6 @@ func (s *Settings) GetTracking() bool {
 // packages. It is disabled by default.
 func (s *Settings) GetProgressBar() bool {
 	return s != nil && s.ProgressBar != nil && *s.ProgressBar
-}
-
-// GetKeyring reports whether aqua gets a GitHub access token from the secret
-// store of the operating system. It is disabled by default.
-func (s *Settings) GetKeyring() bool {
-	return s != nil && s.Keyring != nil && *s.Keyring
 }
 
 // GetEnabled reports whether aqua verifies the checksums of packages.

@@ -63,7 +63,6 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), st.MaxParallelism, logger.Logger)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, getEnv("AQUA_GLOBAL_CONFIG", st.GlobalConfig))
 	param.ProgressBar = getBoolEnv("AQUA_PROGRESS_BAR", st.GetProgressBar())
-	param.Keyring = getBoolEnv("AQUA_KEYRING_ENABLED", st.GetKeyring())
 
 	if err := setLog(args, logger, param, st); err != nil {
 		return err

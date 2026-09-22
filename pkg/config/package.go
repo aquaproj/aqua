@@ -392,7 +392,6 @@ type Param struct {
 	SLSADisabled                      bool
 	Installed                         bool
 	InitConfig                        bool
-	Keyring                           bool
 }
 
 // appendExt appends the appropriate file extension based on format.

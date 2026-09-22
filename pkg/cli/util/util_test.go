@@ -43,7 +43,6 @@ type result struct {
 	GlobalConfigFilePaths  []string
 	PolicyConfigFilePaths  []string
 	ProgressBar            bool
-	Keyring                bool
 	DisableLazyInstall     bool
 	DisablePolicy          bool
 	DisableTracking        bool
@@ -69,7 +68,6 @@ log:
 max_parallelism: 10
 global_config: /home/foo/aqua-global.yaml
 root_dir: /home/foo/.aqua
-keyring: true
 `
 
 // TestSetParam runs sequentially because it sets environment variables with
@@ -103,7 +101,6 @@ func TestSetParam(t *testing.T) { //nolint:funlen,paralleltest
 				GlobalConfigFilePaths:  []string{"/home/foo/aqua-global.yaml"},
 				PolicyConfigFilePaths:  []string{"/home/foo/policy.yaml"},
 				ProgressBar:            true,
-				Keyring:                true,
 				DisableLazyInstall:     true,
 				DisableTracking:        true,
 				Checksum:               true,
@@ -227,7 +224,6 @@ func newResult(param *config.Param) *result {
 		GlobalConfigFilePaths:  param.GlobalConfigFilePaths,
 		PolicyConfigFilePaths:  param.PolicyConfigFilePaths,
 		ProgressBar:            param.ProgressBar,
-		Keyring:                param.Keyring,
 		DisableLazyInstall:     param.DisableLazyInstall,
 		DisablePolicy:          param.DisablePolicy,
 		DisableTracking:        param.DisableTracking,

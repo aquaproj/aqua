@@ -52,7 +52,6 @@ log:
 max_parallelism: 10
 global_config: /home/foo/aqua-global.yaml
 root_dir: /home/foo/.aqua
-keyring: true
 `,
 			exp: &settings.Settings{
 				Checksum: &settings.Checksum{
@@ -74,7 +73,6 @@ keyring: true
 				LazyInstall:    new(false),
 				Tracking:       new(false),
 				ProgressBar:    new(true),
-				Keyring:        new(true),
 				MaxParallelism: 10,
 			},
 		},
@@ -137,7 +135,6 @@ func TestSettings_getters(t *testing.T) { //nolint:funlen
 				"lazy_install":             true,
 				"tracking":                 true,
 				"progress_bar":             false,
-				"keyring":                  false,
 				"checksum.enabled":         false,
 				"checksum.require":         false,
 				"checksum.enforce":         false,
@@ -168,13 +165,11 @@ func TestSettings_getters(t *testing.T) { //nolint:funlen
 				LazyInstall: new(false),
 				Tracking:    new(false),
 				ProgressBar: new(true),
-				Keyring:     new(true),
 			},
 			exp: map[string]any{
 				"lazy_install":             false,
 				"tracking":                 false,
 				"progress_bar":             true,
-				"keyring":                  true,
 				"checksum.enabled":         true,
 				"checksum.require":         true,
 				"checksum.enforce":         true,
@@ -193,7 +188,6 @@ func TestSettings_getters(t *testing.T) { //nolint:funlen
 				"lazy_install":             d.s.GetLazyInstall(),
 				"tracking":                 d.s.GetTracking(),
 				"progress_bar":             d.s.GetProgressBar(),
-				"keyring":                  d.s.GetKeyring(),
 				"checksum.enabled":         d.s.Checksum.GetEnabled(),
 				"checksum.require":         d.s.Checksum.GetRequire(),
 				"checksum.enforce":         d.s.Checksum.GetEnforce(),

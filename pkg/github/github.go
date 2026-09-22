@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/keyring"
 	"github.com/google/go-github/v92/github"
 	"github.com/suzuki-shunsuke/ghtkn-go-sdk/ghtkn"
@@ -31,8 +30,8 @@ type (
 
 const Tarball = github.Tarball
 
-func New(ctx context.Context, logger *slog.Logger, param *config.Param) (*RepositoriesService, error) {
-	httpClient, err := getHTTPClientForGitHub(ctx, logger, getGitHubToken(), param.Keyring)
+func New(ctx context.Context, logger *slog.Logger) (*RepositoriesService, error) {
+	httpClient, err := getHTTPClientForGitHub(ctx, logger, getGitHubToken())
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +56,13 @@ func MakeRetryable(client *http.Client, logger *slog.Logger) *http.Client {
 	return c.StandardClient()
 }
 
-func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token string, keyringEnabled bool) (*http.Client, error) {
+func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token string) (*http.Client, error) {
 	if token != "" {
 		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: token},
 		)), nil
 	}
-	if keyringEnabled {
+	if keyring.Enabled() {
 		return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logger, keyring.KeyService)), nil
 	}
 
