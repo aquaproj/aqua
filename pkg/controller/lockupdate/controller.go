@@ -36,9 +36,11 @@ type Resolver interface {
 	Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
 }
 
-// ChecksumGetter reads the checksum of every environment a package supports.
+// ChecksumGetter reads the checksum of every environment a package supports, after
+// verifying whatever signature the package publishes over it. The lock file stands in
+// for those signatures once it is written, so this is the only place they are seen.
 type ChecksumGetter interface {
-	Get(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error
+	GetVerified(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error
 }
 
 // RegistryInstaller installs the registries a configuration declares.

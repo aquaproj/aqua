@@ -22,6 +22,10 @@ import (
 type Target struct {
 	Pkg      *config.Package
 	Checksum *checksum.Checksum
+	// Locked says the package came from the lock file. Its signatures were verified
+	// when the entry was written, so the install verifies the checksum alone unless
+	// the caller asks for more.
+	Locked bool
 }
 
 // SplitByLockFile divides the packages in cfg into those to install from the lock
@@ -100,7 +104,7 @@ func newTarget(pkg *aqua.Package, entry *lockfile.Package, rgst *aqua.Registry, 
 		PackageInfo: entry.PackageInfo(),
 		Registry:    rgst,
 	}
-	t := &Target{Pkg: p}
+	t := &Target{Pkg: p, Locked: true}
 	if entry.Checksum == "" {
 		return t, nil
 	}

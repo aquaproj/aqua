@@ -56,6 +56,7 @@ type Installer struct {
 	cosignDisabled        bool
 	slsaDisabled          bool
 	gaaDisabled           bool
+	verifySignatures      bool
 	vacuum                Vacuum
 }
 
@@ -111,6 +112,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT
 		cosignDisabled:        param.CosignDisabled,
 		slsaDisabled:          param.SLSADisabled,
 		gaaDisabled:           param.GitHubArtifactAttestationDisabled,
+		verifySignatures:      param.VerifySignatures,
 		copyDir:               param.Dest,
 		unarchiver:            unarchiver,
 		cosign:                cosignVerifier,
@@ -171,6 +173,7 @@ type ParamInstallPackages struct {
 type ParamInstallPackage struct {
 	Pkg             *config.Package
 	Checksums       *checksum.Checksums
+	Locked          bool
 	RequireChecksum bool
 	PolicyConfigs   []*policy.Config
 	DisablePolicy   bool
@@ -193,6 +196,7 @@ type DownloadParam struct {
 	Checksum        *checksum.Checksum
 	Dest            string
 	Asset           string
+	Locked          bool
 	RequireChecksum bool
 }
 
@@ -240,6 +244,7 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 			if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
 				Pkg:             pkg,
 				Checksum:        t.Checksum,
+				Locked:          t.Locked,
 				Checksums:       param.Checksums,
 				RequireChecksum: param.RequireChecksum,
 				PolicyConfigs:   param.PolicyConfigs,
@@ -282,6 +287,7 @@ func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, pa
 		Checksums:       param.Checksums,
 		RequireChecksum: param.RequireChecksum,
 		Checksum:        param.Checksum,
+		Locked:          param.Locked,
 	}); err != nil {
 		return err
 	}

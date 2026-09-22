@@ -71,7 +71,7 @@ type fakeChecksumGetter struct {
 	checksum string
 }
 
-func (g *fakeChecksumGetter) Get(_ context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+func (g *fakeChecksumGetter) GetVerified(_ context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
 	if g.checksum == "" {
 		return nil
 	}
@@ -438,7 +438,7 @@ type recordingChecksumGetter struct {
 	asset string
 }
 
-func (g *recordingChecksumGetter) Get(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+func (g *recordingChecksumGetter) GetVerified(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
 	g.asset = pkg.PackageInfo.Asset
-	return g.inner.Get(ctx, logger, checksums, pkg, supportedEnvs)
+	return g.inner.GetVerified(ctx, logger, checksums, pkg, supportedEnvs)
 }

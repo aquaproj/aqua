@@ -107,7 +107,7 @@ func (c *Controller) resolveFromRegistry(ctx context.Context, logger *slog.Logge
 // aqua-checksums.json uses, which each entry can compute for itself.
 func (c *Controller) fillChecksums(ctx context.Context, logger *slog.Logger, pkgs []*lockfile.Package, pkg *aqua.Package, pkgInfo *registry.PackageInfo, supportedEnvs []string) error {
 	checksums := checksum.New()
-	if err := c.checksumGetter.Get(ctx, logger, checksums, &config.Package{
+	if err := c.checksumGetter.GetVerified(ctx, logger, checksums, &config.Package{
 		Package:     pkg,
 		PackageInfo: pkgInfo,
 	}, supportedEnvs); err != nil {

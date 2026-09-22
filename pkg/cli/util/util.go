@@ -75,6 +75,7 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 		{"AQUA_REQUIRE_CHECKSUM", &param.RequireChecksum},
 		{"AQUA_ENFORCE_CHECKSUM", &param.EnforceChecksum},
 		{"AQUA_ENFORCE_REQUIRE_CHECKSUM", &param.EnforceRequireChecksum},
+		{"AQUA_VERIFY_SIGNATURES", &param.VerifySignatures},
 	} {
 		if err := parseBoolEnv(e.envName, e.target); err != nil {
 			return err

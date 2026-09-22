@@ -24,9 +24,11 @@ import (
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-// ChecksumFileVerifier checks the signature of a checksum file.
+// ChecksumFileVerifier checks the signatures the checksum recorded for a package
+// rests on: the one over a checksum file, and the ones over the asset itself.
 type ChecksumFileVerifier interface {
 	VerifyChecksumFileContent(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string, content []byte) error
+	VerifyAsset(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, filePath string, rt *runtime.Runtime) error
 }
 
 // Getter reads checksums from the three sources.
@@ -56,6 +58,22 @@ func New(chkDL download.ChecksumDownloader, downloader download.ClientAPI, check
 // An unsigned checksum file is never used: it is fetched from the same place as the
 // asset, so believing it would add nothing to downloading the asset and hashing it.
 func (g *Getter) Get(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	return g.get(ctx, logger, checksums, pkg, supportedEnvs, false)
+}
+
+// GetVerified is Get, and additionally verifies the signature over an asset that
+// carries one before recording its checksum.
+//
+// This is for the lock file, which is trusted afterwards in place of the signatures:
+// an install from it verifies the checksum and nothing else. aqua-checksums.json is
+// not used that way -- an install still verifies the signatures itself -- so Get
+// leaves the asset alone rather than downloading it to check something that will be
+// checked again anyway.
+func (g *Getter) GetVerified(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	return g.get(ctx, logger, checksums, pkg, supportedEnvs, true)
+}
+
+func (g *Getter) get(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string, verifyAssets bool) error {
 	logger.Info("getting a package checksum")
 	rts, err := checksum.GetRuntimesFromSupportedEnvs(supportedEnvs, pkg.PackageInfo.SupportedEnvs)
 	if err != nil {
@@ -93,7 +111,7 @@ func (g *Getter) Get(ctx context.Context, logger *slog.Logger, checksums *checks
 		if !ok {
 			continue
 		}
-		if err := g.updatePackageByRuntime(ctx, logger, checksums, pkg, checksumFiles, rt, assetNames, releaseAssets); err != nil {
+		if err := g.updatePackageByRuntime(ctx, logger, checksums, pkg, checksumFiles, rt, assetNames, releaseAssets, verifyAssets); err != nil {
 			return err
 		}
 	}
@@ -176,6 +194,31 @@ func (g *Getter) prefetchReleaseAssets(ctx context.Context, logger *slog.Logger,
 	return nil
 }
 
+// needsAssetVerification reports whether the asset has to be downloaded and its
+// signature checked before its checksum can be recorded.
+//
+// A signed checksum file answers the same question more cheaply: it ties the digest to
+// the publisher already, so the asset's own signature would add nothing.
+func needsAssetVerification(pkgInfo *registry.PackageInfo, verifyAssets bool) bool {
+	if !verifyAssets || !hasAssetSignature(pkgInfo) {
+		return false
+	}
+	return !pkgInfo.Checksum.GetEnabled() || !hasChecksumSignatureVerification(pkgInfo.Checksum)
+}
+
+// hasAssetSignature reports whether the package signs the asset itself, as opposed to
+// a checksum file listing it.
+//
+// Such a signature is only ever checked against the asset's bytes: cosign's
+// verify-blob, slsa-verifier and gh attestation verify all want the artifact, and
+// none of them take a digest instead. So the asset has to be downloaded for the
+// signature to mean anything, which is why this is asked before the cheaper sources
+// are considered.
+func hasAssetSignature(pkgInfo *registry.PackageInfo) bool {
+	return pkgInfo.Cosign.GetEnabled() || pkgInfo.SLSAProvenance.GetEnabled() ||
+		pkgInfo.GitHubArtifactAttestations.GetEnabled() || pkgInfo.Minisign.GetEnabled()
+}
+
 // hasChecksumSignatureVerification returns true if the checksum has signature verification configured
 // (Cosign, Minisign, or GitHubArtifactAttestations).
 func hasChecksumSignatureVerification(chksum *registry.Checksum) bool {
@@ -185,7 +228,23 @@ func hasChecksumSignatureVerification(chksum *registry.Checksum) bool {
 	return chksum.GetCosign() != nil || chksum.GetMinisign() != nil || chksum.GetGitHubArtifactAttestations() != nil
 }
 
-func (g *Getter) getChecksums(ctx context.Context, logger *slog.Logger, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, checksumID string, releaseAssets domain.ReleaseAssets) ([]*checksum.Checksum, error) {
+func (g *Getter) getChecksums(ctx context.Context, logger *slog.Logger, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, checksumID string, releaseAssets domain.ReleaseAssets, verifyAssets bool) ([]*checksum.Checksum, error) {
+	// An asset signed in its own right is downloaded and verified, and the checksum
+	// recorded is the checksum of what was verified. Neither the digest the GitHub API
+	// reports nor the asset's own bytes say anything about who built them, so a
+	// checksum taken from either would be no more than "whatever was published at the
+	// time", and nothing downstream would ever look at the signature again.
+	//
+	// A signed checksum file makes the download unnecessary: it ties the digest to the
+	// publisher already, which is the same thing the asset's signature would say.
+	if needsAssetVerification(pkg.PackageInfo, verifyAssets) {
+		cs, err := g.dlAssetVerifyAndGetChecksum(ctx, logger, pkg, rt)
+		if err != nil {
+			return nil, err
+		}
+		return []*checksum.Checksum{cs}, nil
+	}
+
 	if !pkg.PackageInfo.Checksum.GetEnabled() {
 		cs, err := g.dlAssetAndGetChecksum(ctx, logger, pkg, rt, releaseAssets)
 		if err != nil {
@@ -194,28 +253,12 @@ func (g *Getter) getChecksums(ctx context.Context, logger *slog.Logger, pkg *con
 		return []*checksum.Checksum{cs}, nil
 	}
 
-	// If release assets were pre-fetched, try to get the digest from them.
-	// Re-check the per-runtime config: another runtime may have triggered the
-	// pre-fetch, but this runtime might have a per-runtime override that adds
-	// signature verification or changes the type. Skipping this check would
-	// bypass the signature verification of the checksum file.
-	if releaseAssets != nil &&
-		pkg.PackageInfo.Type == config.PkgInfoTypeGitHubRelease &&
-		!hasChecksumSignatureVerification(pkg.PackageInfo.Checksum) {
-		assetName, err := pkg.RenderAsset(rt)
-		if err != nil {
-			return nil, fmt.Errorf("render an asset: %w", err)
-		}
-		if digest := releaseAssets.GetDigest(assetName); digest != nil {
-			logger.Debug("got digest from GitHub API",
-				"checksum_id", checksumID,
-				"checksum", digest.Digest)
-			return []*checksum.Checksum{{
-				ID:        checksumID,
-				Checksum:  digest.Digest,
-				Algorithm: digest.Algorithm,
-			}}, nil
-		}
+	cs, err := prefetchedDigest(logger, pkg, rt, checksumID, releaseAssets)
+	if err != nil {
+		return nil, err
+	}
+	if cs != nil {
+		return []*checksum.Checksum{cs}, nil
 	}
 
 	checksumFileID, err := pkg.RenderChecksumFileID(rt)
@@ -289,7 +332,7 @@ func (g *Getter) getChecksumsFromChecksumFile(pkg *config.Package, assetNames ma
 	return arr, nil
 }
 
-func (g *Getter) updatePackageByRuntime(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, releaseAssets domain.ReleaseAssets) error {
+func (g *Getter) updatePackageByRuntime(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, checksumFiles map[string]struct{}, rt *runtime.Runtime, assetNames map[string]struct{}, releaseAssets domain.ReleaseAssets, verifyAssets bool) error {
 	checksumID, err := pkg.ChecksumID(rt)
 	if err != nil {
 		return fmt.Errorf("get a checksum id: %w", err)
@@ -299,7 +342,7 @@ func (g *Getter) updatePackageByRuntime(ctx context.Context, logger *slog.Logger
 		return nil
 	}
 
-	cs, err := g.getChecksums(ctx, logger, pkg, checksumFiles, rt, assetNames, checksumID, releaseAssets)
+	cs, err := g.getChecksums(ctx, logger, pkg, checksumFiles, rt, assetNames, checksumID, releaseAssets, verifyAssets)
 	if err != nil {
 		return err
 	}
@@ -358,4 +401,105 @@ func (g *Getter) dlAssetAndGetChecksum(ctx context.Context, logger *slog.Logger,
 		Checksum:  chk,
 		Algorithm: algorithm,
 	}, nil
+}
+
+// prefetchedDigest returns the checksum the GitHub Release API already reported for
+// the asset, or nil when it reported none and the asset's checksum has to come from
+// somewhere else.
+//
+// The per-runtime configuration is checked again here: another runtime may have
+// triggered the pre-fetch, while this one has an override that adds signature
+// verification or changes the type. Skipping that check would bypass the signature
+// verification of the checksum file.
+func prefetchedDigest(logger *slog.Logger, pkg *config.Package, rt *runtime.Runtime, checksumID string, releaseAssets domain.ReleaseAssets) (*checksum.Checksum, error) {
+	if releaseAssets == nil ||
+		pkg.PackageInfo.Type != config.PkgInfoTypeGitHubRelease ||
+		hasChecksumSignatureVerification(pkg.PackageInfo.Checksum) {
+		return nil, nil //nolint:nilnil
+	}
+	assetName, err := pkg.RenderAsset(rt)
+	if err != nil {
+		return nil, fmt.Errorf("render an asset: %w", err)
+	}
+	digest := releaseAssets.GetDigest(assetName)
+	if digest == nil {
+		return nil, nil //nolint:nilnil
+	}
+	logger.Debug("got digest from GitHub API",
+		"checksum_id", checksumID,
+		"checksum", digest.Digest)
+	return &checksum.Checksum{
+		ID:        checksumID,
+		Checksum:  digest.Digest,
+		Algorithm: digest.Algorithm,
+	}, nil
+}
+
+// dlAssetVerifyAndGetChecksum downloads the asset, verifies its signatures and
+// returns the checksum of what it verified.
+//
+// The asset is written to a temporary file because that is what the verifiers take:
+// they run cosign, slsa-verifier or gh as commands, and a command reads a path.
+func (g *Getter) dlAssetVerifyAndGetChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, rt *runtime.Runtime) (*checksum.Checksum, error) {
+	attrs := slogerr.NewAttrs(1)
+	checksumID, err := pkg.ChecksumID(rt)
+	if err != nil {
+		return nil, fmt.Errorf("get a checksum id: %w", err)
+	}
+	assetName, err := pkg.RenderAsset(rt)
+	if err != nil {
+		return nil, fmt.Errorf("get an asset name: %w", err)
+	}
+	logger = attrs.Add(logger, "asset_name", assetName)
+
+	logger.Info("downloading an asset to verify its signature and calculate the checksum")
+	f, err := download.ConvertPackageToFile(pkg, assetName, rt)
+	if err != nil {
+		return nil, attrs.With(err) //nolint:wrapcheck
+	}
+	body, _, err := g.downloader.ReadCloser(ctx, logger, f)
+	if body != nil {
+		defer body.Close()
+	}
+	if err != nil {
+		return nil, fmt.Errorf("download an asset: %w", attrs.With(err))
+	}
+	file := download.NewDownloadedFile(body, nil)
+	defer func() {
+		if err := file.Remove(); err != nil {
+			slogerr.WithError(logger, err).Warn("remove a temporary file")
+		}
+	}()
+	path, err := file.Path()
+	if err != nil {
+		return nil, fmt.Errorf("get a temporary file path: %w", attrs.With(err))
+	}
+	if err := g.checksumFileVerifier.VerifyAsset(ctx, logger, pkg, assetName, path, rt); err != nil {
+		return nil, fmt.Errorf("verify an asset: %w", attrs.With(err))
+	}
+
+	algorithm := "sha256"
+	chk, err := calculateFile(file, algorithm)
+	if err != nil {
+		return nil, fmt.Errorf("calculate the checksum of the asset: %w", slogerr.With(attrs.With(err), "algorithm", algorithm))
+	}
+	return &checksum.Checksum{
+		ID:        checksumID,
+		Checksum:  chk,
+		Algorithm: algorithm,
+	}, nil
+}
+
+// calculateFile hashes a file that has already been downloaded.
+func calculateFile(file *download.DownloadedFile, algorithm string) (string, error) {
+	reader, err := file.Read()
+	if err != nil {
+		return "", fmt.Errorf("read a downloaded asset: %w", err)
+	}
+	defer reader.Close()
+	chk, err := checksum.CalculateReader(reader, algorithm)
+	if err != nil {
+		return "", fmt.Errorf("calculate an asset: %w", err)
+	}
+	return chk, nil
 }
