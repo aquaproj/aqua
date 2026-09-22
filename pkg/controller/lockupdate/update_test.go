@@ -380,3 +380,65 @@ func TestController_Update_noPackage(t *testing.T) {
 		t.Error("the lock file must not be created when there is no package")
 	}
 }
+
+// A definition that keeps everything in version_overrides has no asset name at the
+// top level. The checksums have to be fetched from the definition for this version,
+// not from the one the registry holds.
+//
+// suzuki-shunsuke/tfcmt is written that way — version_constraint "false" at the top
+// and an asset in every override — and the fetch asked for an empty asset name,
+// which failed with "the asset isn't found".
+func TestController_Update_otherRegistry_versionOverrides(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	cfg := &aqua.Config{
+		Registries: aqua.Registries{"foo": {Name: "foo", Type: "local", Path: "registry.yaml"}},
+		Packages:   []*aqua.Package{{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"}},
+	}
+	getter := &recordingChecksumGetter{inner: &fakeChecksumGetter{checksum: "abc"}}
+	ctrl := lockupdate.New(
+		&fakeFinder{paths: []string{filepath.Join(dir, "aqua.yaml")}},
+		&fakeReader{cfg: cfg},
+		&fakeRegistryInstaller{pkgInfo: &registry.PackageInfo{
+			Name:               "foo/foo",
+			Type:               "github_release",
+			RepoOwner:          "foo",
+			RepoName:           "foo",
+			VersionConstraints: "false",
+			VersionOverrides: []*registry.VersionOverride{
+				{
+					VersionConstraints: "true",
+					Asset:              "foo_{{.OS}}_{{.Arch}}.tar.gz",
+					Format:             "tar.gz",
+					SupportedEnvs:      registry.SupportedEnvs{"linux/amd64"},
+				},
+			},
+		}},
+		getter,
+		&fakeResolver{},
+	)
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{}); err != nil {
+		t.Fatal(err)
+	}
+	if getter.asset != "foo_{{.OS}}_{{.Arch}}.tar.gz" {
+		t.Errorf("the checksums were fetched for asset %q, want the one the override defines", getter.asset)
+	}
+	lf, err := lockfile.ReadFile(filepath.Join(dir, lockfile.FileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lf.Packages) != 1 || lf.Packages[0].Asset != "foo_linux_amd64.tar.gz" {
+		t.Errorf("the entries are %+v", lf.Packages)
+	}
+}
+
+// recordingChecksumGetter remembers the definition it was asked about.
+type recordingChecksumGetter struct {
+	inner *fakeChecksumGetter
+	asset string
+}
+
+func (g *recordingChecksumGetter) Get(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
+	g.asset = pkg.PackageInfo.Asset
+	return g.inner.Get(ctx, logger, checksums, pkg, supportedEnvs)
+}

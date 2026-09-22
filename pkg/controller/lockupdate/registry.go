@@ -75,7 +75,16 @@ func (c *Controller) resolveFromRegistry(ctx context.Context, logger *slog.Logge
 		return nil, err //nolint:wrapcheck
 	}
 
-	if err := c.fillChecksums(ctx, logger, pkgs, pkg, pkgInfo, supportedEnvs); err != nil {
+	// The checksums are fetched from the definition for this version, not from the
+	// one the registry holds. A package that keeps everything in version_overrides
+	// — suzuki-shunsuke/tfcmt has version_constraint "false" at the top and an
+	// asset in every override — has no asset name at all until they are applied,
+	// and the fetch asked for an empty one.
+	versioned, err := pkgInfo.SetVersion(logger, pkg.Version)
+	if err != nil {
+		return nil, fmt.Errorf("apply version_overrides: %w", err)
+	}
+	if err := c.fillChecksums(ctx, logger, pkgs, pkg, versioned, supportedEnvs); err != nil {
 		return nil, err
 	}
 
