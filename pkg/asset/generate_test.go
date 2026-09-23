@@ -143,6 +143,19 @@ func TestGetOSArch(t *testing.T) { //nolint:funlen
 			expected: &asset.AssetInfo{OS: osLinux, Arch: archAmd64, Format: formatRaw, Template: "tool-{{.OS}}-{{.Arch}}"},
 		},
 		{
+			// Shorter is not the point: ollama's release also holds the desktop
+			// application, whose name is shorter than the command's and is not the
+			// command's name with a piece taken off.
+			name:   "a shorter name that isn't the same name",
+			goos:   osDarwin,
+			goarch: archArm64,
+			assetInfos: []*asset.AssetInfo{
+				{OS: osDarwin, Arch: archArm64, Format: formatTarGz, Template: "ollama-{{.OS}}.{{.Format}}"},
+				{OS: osDarwin, Arch: archArm64, Format: formatTarGz, Template: "Ollama.{{.Format}}"},
+			},
+			expected: &asset.AssetInfo{OS: osDarwin, Arch: archArm64, Format: formatTarGz, Template: "ollama-{{.OS}}.{{.Format}}"},
+		},
+		{
 			// A template that becomes a template earlier still wins: it carries
 			// less before the platform, whatever it carries after.
 			name:   "the earlier template still wins",
