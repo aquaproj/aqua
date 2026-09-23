@@ -96,7 +96,7 @@ func TestParseAssetName(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestGetOSArch(t *testing.T) {
+func TestGetOSArch(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name       string
@@ -114,6 +114,45 @@ func TestGetOSArch(t *testing.T) {
 				{OS: osWindows, Arch: archAmd64, Format: formatZip, Score: 0, Template: assetTemplateOSArchFormat},
 			},
 			expected: &asset.AssetInfo{OS: osLinux, Arch: archAmd64, Format: formatTarGz, Score: 0, Template: assetTemplateOSArchFormat},
+		},
+		{
+			// The plain build and a build for particular hardware say the same
+			// thing about the platform, so what is left to choose by is the name.
+			// The assets arrive in the order GitHub lists them, where "-mlx"
+			// sorts before ".tar".
+			name:   "a build for particular hardware isn't the ordinary one",
+			goos:   osLinux,
+			goarch: archAmd64,
+			assetInfos: []*asset.AssetInfo{
+				{OS: osLinux, Arch: archAmd64, Format: "tar.zst", Template: "ollama-{{.OS}}-{{.Arch}}-mlx.{{.Format}}"},
+				{OS: osLinux, Arch: archAmd64, Format: "tar.zst", Template: "ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}"},
+				{OS: osLinux, Arch: archAmd64, Format: "tar.zst", Template: "ollama-{{.OS}}-{{.Arch}}.{{.Format}}"},
+			},
+			expected: &asset.AssetInfo{OS: osLinux, Arch: archAmd64, Format: "tar.zst", Template: "ollama-{{.OS}}-{{.Arch}}.{{.Format}}"},
+		},
+		{
+			// The same rule decides between two bare executables, which are
+			// ranked separately from the archives.
+			name:   "a bare executable for particular hardware isn't the ordinary one",
+			goos:   osLinux,
+			goarch: archAmd64,
+			assetInfos: []*asset.AssetInfo{
+				{OS: osLinux, Arch: archAmd64, Format: formatRaw, Template: "tool-{{.OS}}-{{.Arch}}-rocm"},
+				{OS: osLinux, Arch: archAmd64, Format: formatRaw, Template: "tool-{{.OS}}-{{.Arch}}"},
+			},
+			expected: &asset.AssetInfo{OS: osLinux, Arch: archAmd64, Format: formatRaw, Template: "tool-{{.OS}}-{{.Arch}}"},
+		},
+		{
+			// A template that becomes a template earlier still wins: it carries
+			// less before the platform, whatever it carries after.
+			name:   "the earlier template still wins",
+			goos:   osLinux,
+			goarch: archAmd64,
+			assetInfos: []*asset.AssetInfo{
+				{OS: osLinux, Arch: archAmd64, Format: formatTarGz, Template: "a-very-long-prefix-{{.OS}}.{{.Format}}"},
+				{OS: osLinux, Arch: archAmd64, Format: formatTarGz, Template: "t-{{.OS}}-{{.Arch}}-with-a-long-suffix.{{.Format}}"},
+			},
+			expected: &asset.AssetInfo{OS: osLinux, Arch: archAmd64, Format: formatTarGz, Template: "t-{{.OS}}-{{.Arch}}-with-a-long-suffix.{{.Format}}"},
 		},
 		{
 			name:   "darwin all preference",
