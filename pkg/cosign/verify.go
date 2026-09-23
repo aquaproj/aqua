@@ -121,13 +121,16 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	return out, err //nolint:wrapcheck
 }
 
-// wait backs off before running cosign again.
+// wait backs off before running cosign again: 2, 4, 8 and 16 seconds, each with up
+// to a second of jitter on top.
 //
-// The wait doubles, because what it is waiting out is usually the transparency log
+// The wait doubles because what it is waiting out is usually the transparency log
 // asking to be left alone for a moment, and five tries a few hundred milliseconds
 // apart is over before that has passed. The jitter keeps a machine verifying many
 // assets from retrying all of them on the same beat.
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
+	// 1<<retryCount is two to the power of retryCount, and retryCount runs from 1
+	// to 4.
 	waitTime := time.Duration(1<<retryCount)*time.Second + time.Duration(rand.IntN(1000))*time.Millisecond //nolint:gosec,mnd
 	logger.Info("Verification by Cosign failed temporarily, retrying",
 		"retry_count", retryCount,
