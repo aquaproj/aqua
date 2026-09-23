@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
 )
 
 const (
@@ -35,9 +36,26 @@ func NewR(ctx context.Context) *Runtime {
 	return &Runtime{
 		GOOS:   runtime.GOOS,
 		GOARCH: runtime.GOARCH,
-		LibC:   detectLibC(ctx),
+		LibC:   detectLibCOnce(ctx),
 	}
 }
+
+// detectLibCOnce is the detection, done once for the process.
+//
+// One aqua invocation builds a Runtime several times -- main, the command
+// runner, and the exec controller each build one -- and the libc of the
+// machine it is running on cannot change while it runs.
+func detectLibCOnce(ctx context.Context) string {
+	libcOnce.Do(func() {
+		detectedLibC = detectLibC(ctx)
+	})
+	return detectedLibC
+}
+
+var (
+	libcOnce     sync.Once //nolint:gochecknoglobals
+	detectedLibC string    //nolint:gochecknoglobals
+)
 
 func (rt *Runtime) IsWindows() bool {
 	return rt.GOOS == windows
@@ -78,7 +96,7 @@ func libc(ctx context.Context) string {
 	if s := os.Getenv("AQUA_LIBC"); s != "" {
 		return s
 	}
-	return detectLibC(ctx)
+	return detectLibCOnce(ctx)
 }
 
 func GOOSList() []string {

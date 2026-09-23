@@ -12,6 +12,15 @@ import (
 // GetOSArch finds the best matching asset for a given OS and architecture combination.
 // It scores assets based on format preferences and template complexity, preferring
 // non-raw formats and simpler templates for better compatibility.
+// GetOSArch returns the asset to install on one platform, or nil when the release
+// has none for it.
+//
+// Several assets can claim the same platform, and they are ranked in this order: an
+// archive beats a bare executable, a higher score beats a lower one, a template that
+// becomes a template earlier beats one with a longer prefix, and a shorter template
+// beats a longer one. The last rule is what tells the ordinary build from one for
+// particular hardware, such as ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
+// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}.
 func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
@@ -29,7 +38,7 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 			}
 			rawAIdx := strings.Index(rawA.Template, "{")
 			assetIdx := strings.Index(assetInfo.Template, "{")
-			if rawAIdx != -1 && assetIdx != -1 {
+			if rawAIdx != assetIdx && rawAIdx != -1 && assetIdx != -1 {
 				if rawAIdx > assetIdx {
 					rawA = assetInfo
 				}
@@ -50,12 +59,17 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 		}
 		aIdx := strings.Index(a.Template, "{")
 		assetIdx := strings.Index(assetInfo.Template, "{")
-		if aIdx != -1 && assetIdx != -1 {
+		if aIdx != assetIdx && aIdx != -1 && assetIdx != -1 {
 			if aIdx > assetIdx {
 				a = assetInfo
 			}
 			continue
 		}
+		// The templates start being a template in the same place, so what is left
+		// to tell them apart is what they carry beyond the platform. The shorter
+		// one is the ordinary build: ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
+		// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}} is the one to install when
+		// nothing says otherwise.
 		if len(a.Template) > len(assetInfo.Template) {
 			a = assetInfo
 		}

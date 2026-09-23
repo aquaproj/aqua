@@ -156,33 +156,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.1/reviewdog_0.21.1_Darwin_arm64.tar.gz",
-      "checksum": "F5DB4AFA2B67666C69D14D4A33677D81941D011581DBD7649010C1766B578F6A",
+      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.2/reviewdog_0.21.2_Darwin_arm64.tar.gz",
+      "checksum": "54497B0F3378936CAA22A3A11D796ACEFE4D5F35D86F5CC84C622F941C3C0C68",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.1/reviewdog_0.21.1_Darwin_x86_64.tar.gz",
-      "checksum": "1A7DFB9DB22266A2D02EBC10712A666E31606751F9F4D37F3C419353248F085B",
+      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.2/reviewdog_0.21.2_Darwin_x86_64.tar.gz",
+      "checksum": "3002AD37EE7D344DE25E3C630A293AA322FC10D7B9C3FC6D4E836B616D084AE5",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.1/reviewdog_0.21.1_Linux_arm64.tar.gz",
-      "checksum": "47779FB16FED17A12940D1EE42894F98D34300BDAC46FB334CEA2B3C0530C482",
+      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.2/reviewdog_0.21.2_Linux_arm64.tar.gz",
+      "checksum": "56854C078853EA53C73E1E4D627E6A90D6B68185C46EDD46AAD8BEB94564B948",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.1/reviewdog_0.21.1_Linux_x86_64.tar.gz",
-      "checksum": "E70AED7F3617605EACCDEEBA71042BABEE65DB5268D82C0F6601ED605944B5FE",
+      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.2/reviewdog_0.21.2_Linux_x86_64.tar.gz",
+      "checksum": "30413AA3C7443E9C3C157FE5766CAD40E3BB39A32E210EE69B710A8D5C4B8E51",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.1/reviewdog_0.21.1_Windows_arm64.tar.gz",
-      "checksum": "5EE3EAD188A6521EBA614CA679A4F3A4AD5AD983BBB7118DF7DBBF20E30EA5FC",
+      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.2/reviewdog_0.21.2_Windows_arm64.tar.gz",
+      "checksum": "A7161951E19E329620CABF568E50D2431E3BF0531E8E7A2F22C6B77EE4547925",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.1/reviewdog_0.21.1_Windows_x86_64.tar.gz",
-      "checksum": "0CC0693BB07946A249828476E47643CF5F39C7FF0911C6E95D89F9748ED1347B",
+      "id": "github_release/github.com/reviewdog/reviewdog/v0.21.2/reviewdog_0.21.2_Windows_x86_64.tar.gz",
+      "checksum": "397959E250BFC6BC801FBA34B7D4922F2EAA4763DEACF7D32EF11BFFB284A315",
       "algorithm": "sha256"
     },
     {
@@ -426,8 +426,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.565.0/registry.yaml",
-      "checksum": "7E2ACD4E2EE5E784174B0AF2DC9B86A0985A41B31FDC3F2C2A52915555ACD4FE",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.566.0/registry.yaml",
+      "checksum": "8A2EE5947A46CFBE3ADD003653B47774FD61BA902ACF551839047F0E1D4674D4",
       "algorithm": "sha256"
     }
   ]
