@@ -169,3 +169,18 @@ func Test_normalizeOverridesByReplacements(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+func TestSplitFormat(t *testing.T) {
+	t.Parallel()
+	data := []struct{ in, name, format string }{
+		{"ollama-{{.OS}}-{{.Arch}}.{{.Format}}", "ollama-{{.OS}}-{{.Arch}}", ".{{.Format}}"},
+		{"tool-{{.OS}}-{{.Arch}}", "tool-{{.OS}}-{{.Arch}}", ""},
+		{"Ollama.dmg", "Ollama", ".dmg"},
+	}
+	for _, d := range data {
+		name, format := splitFormat(d.in)
+		if name != d.name || format != d.format {
+			t.Errorf("splitFormat(%q) = %q, %q; want %q, %q", d.in, name, format, d.name, d.format)
+		}
+	}
+}

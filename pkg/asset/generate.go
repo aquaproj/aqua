@@ -44,7 +44,7 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 				}
 				continue
 			}
-			if len(rawA.Template) > len(assetInfo.Template) {
+			if plainer(assetInfo.Template, rawA.Template) {
 				rawA = assetInfo
 			}
 			continue
@@ -65,12 +65,7 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 			}
 			continue
 		}
-		// The templates start being a template in the same place, so what is left
-		// to tell them apart is what they carry beyond the platform. The shorter
-		// one is the ordinary build: ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
-		// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}} is the one to install when
-		// nothing says otherwise.
-		if len(a.Template) > len(assetInfo.Template) {
+		if plainer(assetInfo.Template, a.Template) {
 			a = assetInfo
 		}
 	}
@@ -78,6 +73,51 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 		return a
 	}
 	return rawA
+}
+
+// plainer reports whether candidate is the ordinary build of what incumbent is a
+// build of.
+//
+// A release can carry the same platform twice: ollama-{{.OS}}-{{.Arch}}.{{.Format}}
+// beside ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}, one for particular hardware. The
+// one to install when nothing says otherwise is the one carrying nothing extra, and
+// what makes it that is being the other with a piece taken off rather than merely
+// being shorter.
+//
+// Being merely shorter is not enough. ollama's release also holds Ollama.dmg, the
+// desktop application, whose template is shorter than the command's and is not the
+// same name with less on it.
+func plainer(candidate, incumbent string) bool {
+	if len(candidate) >= len(incumbent) {
+		return false
+	}
+	// Both end in the same format, so comparing the names means comparing what comes
+	// before it.
+	c, cFormat := splitFormat(candidate)
+	i, iFormat := splitFormat(incumbent)
+	if cFormat != iFormat {
+		return false
+	}
+	return strings.HasPrefix(i, c)
+}
+
+// splitFormat separates a template's name from the format it ends with.
+//
+// The separator is the last dot outside a placeholder: the dots in {{.OS}} and
+// {{.Format}} belong to the placeholder rather than to the name.
+func splitFormat(template string) (string, string) {
+	depth := 0
+	for i := len(template) - 1; i >= 0; i-- {
+		switch {
+		case strings.HasPrefix(template[i:], "}}"):
+			depth++
+		case strings.HasPrefix(template[i:], "{{"):
+			depth--
+		case template[i] == '.' && depth == 0:
+			return template[:i], template[i:]
+		}
+	}
+	return template, ""
 }
 
 // mergeReplacements combines two replacement maps if they have compatible values for the given OS.
