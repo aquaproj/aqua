@@ -115,8 +115,14 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	return out, err //nolint:wrapcheck
 }
 
+// wait backs off before running cosign again.
+//
+// The wait doubles, because what it is waiting out is usually the transparency log
+// asking to be left alone for a moment, and five tries a few hundred milliseconds
+// apart is over before that has passed. The jitter keeps a machine verifying many
+// assets from retrying all of them on the same beat.
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
-	waitTime := time.Duration(rand.IntN(1000)) * time.Millisecond //nolint:gosec,mnd
+	waitTime := time.Duration(1<<retryCount)*time.Second + time.Duration(rand.IntN(1000))*time.Millisecond //nolint:gosec,mnd
 	logger.Info("Verification by Cosign failed temporarily, retrying",
 		"retry_count", retryCount,
 		"wait_time", waitTime)
@@ -128,11 +134,14 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 
 func (v *Verifier) verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
+	out := ""
 	for i := range 5 {
 		// https://github.com/aquaproj/aqua/issues/1554
-		if _, err := v.exec(ctx, args); err == nil {
+		o, err := v.exec(ctx, args)
+		if err == nil {
 			return nil
 		}
+		out = o
 		if i == 4 { //nolint:mnd
 			// skip last wait
 			break
@@ -140,6 +149,13 @@ func (v *Verifier) verify(ctx context.Context, logger *slog.Logger, param *Param
 		if err := wait(ctx, logger, i+1); err != nil {
 			return err
 		}
+	}
+	// What cosign said, because the reasons differ in what to do about them: a
+	// signature that doesn't match is a package to stop installing, and a transient
+	// failure reaching the transparency log is a command to run again. Without it
+	// both arrive as the same sentence.
+	if out = strings.TrimSpace(out); out != "" {
+		return fmt.Errorf("%w: %s", errVerify, out)
 	}
 	return errVerify
 }
