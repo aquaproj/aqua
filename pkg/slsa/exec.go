@@ -50,7 +50,13 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	return nil
 }
 
-var errVerify = errors.New("verify with slsa-verifier")
+// ErrVerify says slsa-verifier ran and didn't accept what it was given.
+//
+// It is what tells a caller apart from the failures that happen before anything is
+// verified -- a signature that isn't published, a file that can't be downloaded --
+// which say the package isn't signed the way it was thought to be rather than that
+// the signature doesn't hold. What slsa-verifier printed is wrapped with it.
+var ErrVerify = errors.New("verify with slsa-verifier")
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, provenancePath string) error {
 	if param.SourceTag == "" {
@@ -78,7 +84,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 			return err
 		}
 	}
-	return errVerify
+	return ErrVerify
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) (string, error) {

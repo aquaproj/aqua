@@ -68,7 +68,9 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 }
 
 var (
-	errVerify = errors.New("verify with minisign")
+	// ErrVerify says minisign ran and didn't accept what it was given, as
+	// opposed to a signature that isn't published at all.
+	ErrVerify = errors.New("verify with minisign")
 	// errUnsupportedEnv is returned when NewExecutor returned a nil executor
 	// because minisign doesn't support the host platform.
 	errUnsupportedEnv = errors.New("minisign doesn't support this environment, so aqua can't verify the package with minisign")
@@ -102,7 +104,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 			return err
 		}
 	}
-	return errVerify
+	return ErrVerify
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {

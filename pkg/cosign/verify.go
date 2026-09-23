@@ -103,7 +103,13 @@ type ParamVerify struct {
 	CosignExePath string
 }
 
-var errVerify = errors.New("verify with Cosign")
+// ErrVerify says the tool ran and didn't accept what it was given.
+//
+// It is what tells a caller apart from the failures that happen before anything is
+// verified -- a signature that isn't published, a file that can't be downloaded --
+// which say the package isn't signed the way it was thought to be rather than that
+// the signature doesn't hold. What the tool printed is wrapped with it.
+var ErrVerify = errors.New("verify with Cosign")
 
 func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
@@ -155,9 +161,9 @@ func (v *Verifier) verify(ctx context.Context, logger *slog.Logger, param *Param
 	// failure reaching the transparency log is a command to run again. Without it
 	// both arrive as the same sentence.
 	if out = strings.TrimSpace(out); out != "" {
-		return fmt.Errorf("%w: %s", errVerify, out)
+		return fmt.Errorf("%w: %s", ErrVerify, out)
 	}
-	return errVerify
+	return ErrVerify
 }
 
 func (v *Verifier) downloadCosignFile(ctx context.Context, logger *slog.Logger, f *download.File, tf io.Writer) error {
