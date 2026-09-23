@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math/rand/v2"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -103,7 +104,13 @@ type ParamVerify struct {
 	CosignExePath string
 }
 
-var errVerify = errors.New("verify with Cosign")
+// ErrVerify says the tool ran and didn't accept what it was given.
+//
+// It is what tells a caller apart from the failures that happen before anything is
+// verified -- a signature that isn't published, a file that can't be downloaded --
+// which say the package isn't signed the way it was thought to be rather than that
+// the signature doesn't hold. What the tool printed is wrapped with it.
+var ErrVerify = errors.New("verify with Cosign")
 
 func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	// https://github.com/aquaproj/aqua/issues/1555
@@ -115,12 +122,42 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	return out, err //nolint:wrapcheck
 }
 
+// ran reports whether the verifier ran and exited, as opposed to never starting.
+//
+// An exit status is a verdict on what it was given. Anything else -- the executable
+// isn't there, the context ended -- happened before the verifier looked at anything,
+// and saying the signature didn't hold would be answering a question nobody got to
+// ask.
+func ran(err error) bool {
+	var exitErr *exec.ExitError
+	return errors.As(err, &exitErr)
+}
+
+// maxWait caps the backoff. The doubling reaches 16 seconds in the five attempts
+// cosign is given, so nothing here meets the cap; it is what keeps raising that
+// number from turning a retry into an outage.
+const maxWait = 30 * time.Second
+
+// waitTime is how long to wait before the next attempt: 2, 4, 8 and 16 seconds, each
+// with up to a second of jitter on top.
+//
+// The wait doubles because what it is waiting out is usually the transparency log
+// asking to be left alone for a moment, and five tries a few hundred milliseconds
+// apart is over before that has passed. The jitter keeps a machine verifying many
+// assets from retrying all of them on the same beat.
+func waitTime(retryCount int) time.Duration {
+	// 1<<retryCount is two to the power of retryCount, and retryCount runs from 1
+	// to 4.
+	return min(time.Duration(1<<retryCount)*time.Second, maxWait) + time.Duration(rand.IntN(1000))*time.Millisecond //nolint:gosec,mnd
+}
+
+// wait says what it is doing and then does it.
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
-	waitTime := time.Duration(rand.IntN(1000)) * time.Millisecond //nolint:gosec,mnd
+	wait := waitTime(retryCount)
 	logger.Info("Verification by Cosign failed temporarily, retrying",
 		"retry_count", retryCount,
-		"wait_time", waitTime)
-	if err := timer.Wait(ctx, waitTime); err != nil {
+		"wait_time", wait)
+	if err := timer.Wait(ctx, wait); err != nil {
 		return fmt.Errorf("wait running Cosign: %w", err)
 	}
 	return nil
@@ -128,11 +165,17 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 
 func (v *Verifier) verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
 	args := append([]string{"verify-blob"}, append(param.Opts, param.Target)...)
+	out := ""
 	for i := range 5 {
 		// https://github.com/aquaproj/aqua/issues/1554
-		if _, err := v.exec(ctx, args); err == nil {
+		o, err := v.exec(ctx, args)
+		if err == nil {
 			return nil
 		}
+		if !ran(err) {
+			return fmt.Errorf("run cosign: %w", err)
+		}
+		out = o
 		if i == 4 { //nolint:mnd
 			// skip last wait
 			break
@@ -141,7 +184,14 @@ func (v *Verifier) verify(ctx context.Context, logger *slog.Logger, param *Param
 			return err
 		}
 	}
-	return errVerify
+	// What cosign said, because the reasons differ in what to do about them: a
+	// signature that doesn't match is a package to stop installing, and a transient
+	// failure reaching the transparency log is a command to run again. Without it
+	// both arrive as the same sentence.
+	if out = strings.TrimSpace(out); out != "" {
+		return fmt.Errorf("%w: %s", ErrVerify, out)
+	}
+	return ErrVerify
 }
 
 func (v *Verifier) downloadCosignFile(ctx context.Context, logger *slog.Logger, f *download.File, tf io.Writer) error {
