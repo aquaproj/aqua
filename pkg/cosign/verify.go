@@ -121,6 +121,11 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	return out, err //nolint:wrapcheck
 }
 
+// maxWait caps the backoff. The doubling reaches 16 seconds in the five attempts
+// cosign is given, so nothing here meets the cap; it is what keeps raising that
+// number from turning a retry into an outage.
+const maxWait = 30 * time.Second
+
 // wait backs off before running cosign again: 2, 4, 8 and 16 seconds, each with up
 // to a second of jitter on top.
 //
@@ -128,14 +133,19 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 // asking to be left alone for a moment, and five tries a few hundred milliseconds
 // apart is over before that has passed. The jitter keeps a machine verifying many
 // assets from retrying all of them on the same beat.
-func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
+// waitTime is how long the attempt after retryCount waits.
+func waitTime(retryCount int) time.Duration {
 	// 1<<retryCount is two to the power of retryCount, and retryCount runs from 1
 	// to 4.
-	waitTime := time.Duration(1<<retryCount)*time.Second + time.Duration(rand.IntN(1000))*time.Millisecond //nolint:gosec,mnd
+	return min(time.Duration(1<<retryCount)*time.Second, maxWait) + time.Duration(rand.IntN(1000))*time.Millisecond //nolint:gosec,mnd
+}
+
+func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
+	wait := waitTime(retryCount)
 	logger.Info("Verification by Cosign failed temporarily, retrying",
 		"retry_count", retryCount,
-		"wait_time", waitTime)
-	if err := timer.Wait(ctx, waitTime); err != nil {
+		"wait_time", wait)
+	if err := timer.Wait(ctx, wait); err != nil {
 		return fmt.Errorf("wait running Cosign: %w", err)
 	}
 	return nil
