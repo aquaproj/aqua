@@ -126,20 +126,20 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 // number from turning a retry into an outage.
 const maxWait = 30 * time.Second
 
-// wait backs off before running cosign again: 2, 4, 8 and 16 seconds, each with up
-// to a second of jitter on top.
+// waitTime is how long to wait before the next attempt: 2, 4, 8 and 16 seconds, each
+// with up to a second of jitter on top.
 //
 // The wait doubles because what it is waiting out is usually the transparency log
 // asking to be left alone for a moment, and five tries a few hundred milliseconds
 // apart is over before that has passed. The jitter keeps a machine verifying many
 // assets from retrying all of them on the same beat.
-// waitTime is how long the attempt after retryCount waits.
 func waitTime(retryCount int) time.Duration {
 	// 1<<retryCount is two to the power of retryCount, and retryCount runs from 1
 	// to 4.
 	return min(time.Duration(1<<retryCount)*time.Second, maxWait) + time.Duration(rand.IntN(1000))*time.Millisecond //nolint:gosec,mnd
 }
 
+// wait says what it is doing and then does it.
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	wait := waitTime(retryCount)
 	logger.Info("Verification by Cosign failed temporarily, retrying",
