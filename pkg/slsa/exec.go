@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
+	"os/exec"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -58,6 +59,17 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 // the signature doesn't hold. What slsa-verifier printed is wrapped with it.
 var ErrVerify = errors.New("verify with slsa-verifier")
 
+// ran reports whether slsa-verifier ran and exited, as opposed to never starting.
+//
+// An exit status is a verdict on what it was given. Anything else -- the executable
+// isn't there, the context ended -- happened before it looked at anything,
+// and saying the signature didn't hold would be answering a question nobody got to
+// ask.
+func ran(err error) bool {
+	var exitErr *exec.ExitError
+	return errors.As(err, &exitErr)
+}
+
 func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, provenancePath string) error {
 	if param.SourceTag == "" {
 		return errors.New("source tag is empty")
@@ -74,8 +86,12 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 		args = append(args, "--source-tag", param.SourceTag)
 	}
 	for i := range 5 {
-		if _, err := e.exec(ctx, args); err == nil {
+		_, err := e.exec(ctx, args)
+		if err == nil {
 			return nil
+		}
+		if !ran(err) {
+			return fmt.Errorf("run slsa-verifier: %w", err)
 		}
 		if i == 4 { //nolint:mnd
 			break

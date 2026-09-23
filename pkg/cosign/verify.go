@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math/rand/v2"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -121,6 +122,17 @@ func (v *Verifier) exec(ctx context.Context, args []string) (string, error) {
 	return out, err //nolint:wrapcheck
 }
 
+// ran reports whether the verifier ran and exited, as opposed to never starting.
+//
+// An exit status is a verdict on what it was given. Anything else -- the executable
+// isn't there, the context ended -- happened before the verifier looked at anything,
+// and saying the signature didn't hold would be answering a question nobody got to
+// ask.
+func ran(err error) bool {
+	var exitErr *exec.ExitError
+	return errors.As(err, &exitErr)
+}
+
 // maxWait caps the backoff. The doubling reaches 16 seconds in the five attempts
 // cosign is given, so nothing here meets the cap; it is what keeps raising that
 // number from turning a retry into an outage.
@@ -159,6 +171,9 @@ func (v *Verifier) verify(ctx context.Context, logger *slog.Logger, param *Param
 		o, err := v.exec(ctx, args)
 		if err == nil {
 			return nil
+		}
+		if !ran(err) {
+			return fmt.Errorf("run cosign: %w", err)
 		}
 		out = o
 		if i == 4 { //nolint:mnd

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -74,7 +75,20 @@ var (
 	// errUnsupportedEnv is returned when NewExecutor returned a nil executor
 	// because minisign doesn't support the host platform.
 	errUnsupportedEnv = errors.New("minisign doesn't support this environment, so aqua can't verify the package with minisign")
+	// errNoExecutor says the verifier was built without one, which is a mistake in
+	// how aqua was put together rather than anything about the package.
+	errNoExecutor = errors.New("the minisign executor is nil")
 )
+
+// ran reports whether minisign ran and exited, as opposed to never starting.
+//
+// An exit status is a verdict on what it was given. Anything else -- the executable
+// isn't there, the context ended -- happened before minisign looked at anything, and
+// saying the signature didn't hold would be answering a question nobody got to ask.
+func ran(err error) bool {
+	var exitErr *exec.ExitError
+	return errors.As(err, &exitErr)
+}
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify, signature string) error {
 	if e == nil {
@@ -94,6 +108,9 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 		if err == nil {
 			return nil
 		}
+		if !ran(err) {
+			return fmt.Errorf("run minisign: %w", err)
+		}
 		slogerr.WithError(logger, err).Warn("execute minisign",
 			"exe", e.minisignExePath,
 			"args", strings.Join(args, " "))
@@ -112,7 +129,7 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 		return errUnsupportedEnv
 	}
 	if e.executor == nil {
-		return errors.New("e.executor is nil")
+		return errNoExecutor
 	}
 	cmd := osexec.Command(ctx, e.minisignExePath, args...)
 	cmd.Args[0] = pkgName
