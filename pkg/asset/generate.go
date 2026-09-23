@@ -12,6 +12,15 @@ import (
 // GetOSArch finds the best matching asset for a given OS and architecture combination.
 // It scores assets based on format preferences and template complexity, preferring
 // non-raw formats and simpler templates for better compatibility.
+// GetOSArch returns the asset to install on one platform, or nil when the release
+// has none for it.
+//
+// Several assets can claim the same platform, and they are ranked in this order: an
+// archive beats a bare executable, a higher score beats a lower one, a template that
+// becomes a template earlier beats one with a longer prefix, and a shorter template
+// beats a longer one. The last rule is what tells the ordinary build from one for
+// particular hardware, such as ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
+// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}.
 func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {

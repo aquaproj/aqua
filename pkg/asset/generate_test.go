@@ -131,6 +131,18 @@ func TestGetOSArch(t *testing.T) { //nolint:funlen
 			expected: &asset.AssetInfo{OS: osLinux, Arch: archAmd64, Format: "tar.zst", Template: "ollama-{{.OS}}-{{.Arch}}.{{.Format}}"},
 		},
 		{
+			// The same rule decides between two bare executables, which are
+			// ranked separately from the archives.
+			name:   "a bare executable for particular hardware isn't the ordinary one",
+			goos:   osLinux,
+			goarch: archAmd64,
+			assetInfos: []*asset.AssetInfo{
+				{OS: osLinux, Arch: archAmd64, Format: formatRaw, Template: "tool-{{.OS}}-{{.Arch}}-rocm"},
+				{OS: osLinux, Arch: archAmd64, Format: formatRaw, Template: "tool-{{.OS}}-{{.Arch}}"},
+			},
+			expected: &asset.AssetInfo{OS: osLinux, Arch: archAmd64, Format: formatRaw, Template: "tool-{{.OS}}-{{.Arch}}"},
+		},
+		{
 			// A template that becomes a template earlier still wins: it carries
 			// less before the platform, whatever it carries after.
 			name:   "the earlier template still wins",
