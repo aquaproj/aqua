@@ -16,7 +16,7 @@ func TestCache_Path(t *testing.T) {
 	t.Parallel()
 	cache := g2.NewCache(&config.Param{CacheDir: "/cache"})
 	want := filepath.Join("/cache", "registries-g2", "github_content", "github.com",
-		"aquaproj", "aqua-registry-g2", "pkg_cli_2fcli", "versions", "v2.1.0", "registry.json")
+		"aquaproj", "aqua-registry-g2", "pkg_cli_2fcli", "versions", "v2.1.0", "registry-1.json")
 	if diff := cmp.Diff(want, cache.Path("aquaproj", "aqua-registry-g2", "cli/cli", "v2.1.0")); diff != "" {
 		t.Errorf("the path is wrong (-want +got):\n%s", diff)
 	}

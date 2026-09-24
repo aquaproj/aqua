@@ -56,7 +56,7 @@ func TestClient_Get(t *testing.T) {
 		RepoOwner: "aquaproj",
 		RepoName:  "aqua-registry-g2",
 		Ref:       "pkg_cli_2fcli",
-		Path:      "versions/v2.1.0/registry.json",
+		Path:      "versions/v2.1.0/registry-1.json",
 	}
 	if diff := cmp.Diff(want, dl.param); diff != "" {
 		t.Errorf("the request is wrong (-want +got):\n%s", diff)
