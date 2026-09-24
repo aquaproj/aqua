@@ -63,7 +63,7 @@ func TestBranchName_prefixPairs(t *testing.T) {
 
 func TestPath(t *testing.T) {
 	t.Parallel()
-	if diff := cmp.Diff("versions/v2.1.0/registry.json", g2.Path("v2.1.0")); diff != "" {
+	if diff := cmp.Diff("versions/v2.1.0/registry-1.json", g2.Path("v2.1.0")); diff != "" {
 		t.Errorf("Path is wrong (-want +got):\n%s", diff)
 	}
 }

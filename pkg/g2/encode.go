@@ -20,7 +20,16 @@ const BranchPrefix = "pkg_"
 const VersionDir = "versions"
 
 // FileName is the generated file a version directory holds.
-const FileName = "registry.json"
+//
+// The name carries the schema's major version. aqua fetches this file by path and has
+// no ref to pin, so a name that never changed would one day hand an older aqua a
+// schema it cannot read, with nothing to fall back to. A new major is a new name:
+// aqua asks for the newest it knows and falls back to older ones, which is what lets
+// a schema change reach users gradually instead of all at once.
+//
+// Minor additions keep the name, because the same reader reads them. The full version
+// is recorded inside the file.
+const FileName = "registry-1.json"
 
 // BranchName returns the branch holding the package's generated registry.json.
 func BranchName(pkgName string) string {
