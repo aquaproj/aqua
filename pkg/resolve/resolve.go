@@ -151,6 +151,13 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		Package:     &aqua.Package{Name: param.PkgName, Version: param.Version},
 		PackageInfo: info,
 	}
+	// A definition may write part of its URL as a variable with a default, the way
+	// flutter/flutter names its release channel. Nothing here supplies one, so the
+	// defaults are all there is: without them the template renders "<no value>" into
+	// the URL and the download fails with a 404 that says nothing about why.
+	if err := pkg.ApplyVars(); err != nil {
+		return nil, fmt.Errorf("apply the package variables: %w", err)
+	}
 
 	assetName, err := pkg.RenderAsset(rt)
 	if err != nil {

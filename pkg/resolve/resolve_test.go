@@ -245,3 +245,39 @@ func TestResolve_keepDifferingVariants(t *testing.T) {
 		t.Errorf("the fallback asset is wrong (-want +got):\n%s", diff)
 	}
 }
+
+// TestResolve_varDefault covers a definition that writes part of its URL as a
+// variable. Nothing supplies one here, so the default in the definition is all there
+// is; without it the template renders "<no value>" and the entry points at a URL that
+// answers 404.
+func TestResolve_varDefault(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "flutter/flutter",
+		Version: "3.47.5",
+		PkgInfo: &registry.PackageInfo{
+			Name:      "flutter/flutter",
+			Type:      "http",
+			RepoOwner: "flutter",
+			RepoName:  "flutter",
+			URL:       "https://example.com/releases/{{.Vars.channel}}/{{.OS}}/flutter_{{.OS}}_{{trimV .Version}}-{{.Vars.channel}}.{{.Format}}",
+			Format:    "zip",
+			Vars: []*registry.Var{
+				{Name: "channel", Default: "stable"},
+			},
+			Replacements:  map[string]string{"darwin": "macos"},
+			SupportedEnvs: []string{"darwin/arm64"},
+		},
+		SupportedEnvs: []string{"darwin/arm64"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pkgs) != 1 {
+		t.Fatalf("got %d entries, want 1", len(pkgs))
+	}
+	want := "https://example.com/releases/stable/macos/flutter_macos_3.47.5-stable.zip"
+	if diff := cmp.Diff(want, pkgs[0].URL); diff != "" {
+		t.Error(diff)
+	}
+}
