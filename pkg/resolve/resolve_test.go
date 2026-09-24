@@ -2,6 +2,7 @@ package resolve_test
 
 import (
 	"log/slog"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -243,5 +244,71 @@ func TestResolve_keepDifferingVariants(t *testing.T) {
 	}
 	if diff := cmp.Diff("foo_linux_amd64_musl.tar.gz", pkgs[0].Asset); diff != "" {
 		t.Errorf("the fallback asset is wrong (-want +got):\n%s", diff)
+	}
+}
+
+// TestResolve_varDefault covers a definition that writes part of its URL as a
+// variable. Nothing supplies one here, so the default in the definition is all there
+// is; without it the template renders "<no value>" and the entry points at a URL that
+// answers 404.
+func TestResolve_varDefault(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "flutter/flutter",
+		Version: "3.47.5",
+		PkgInfo: &registry.PackageInfo{
+			Name:      "flutter/flutter",
+			Type:      "http",
+			RepoOwner: "flutter",
+			RepoName:  "flutter",
+			URL:       "https://example.com/releases/{{.Vars.channel}}/{{.OS}}/flutter_{{.OS}}_{{trimV .Version}}-{{.Vars.channel}}.{{.Format}}",
+			Format:    "zip",
+			Vars: []*registry.Var{
+				{Name: "channel", Default: "stable"},
+			},
+			Replacements:  map[string]string{"darwin": "macos"},
+			SupportedEnvs: []string{"darwin/arm64"},
+		},
+		SupportedEnvs: []string{"darwin/arm64"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pkgs) != 1 {
+		t.Fatalf("got %d entries, want 1", len(pkgs))
+	}
+	want := "https://example.com/releases/stable/macos/flutter_macos_3.47.5-stable.zip"
+	if diff := cmp.Diff(want, pkgs[0].URL); diff != "" {
+		t.Error(diff)
+	}
+}
+
+// TestResolve_varWithoutValue covers a variable nothing can fill. ApplyVars refuses
+// only a required one, so this would otherwise be rendered as "<no value>" into the
+// URL and served as the answer.
+func TestResolve_varWithoutValue(t *testing.T) {
+	t.Parallel()
+	_, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "example/example",
+		Version: "v1.0.0",
+		PkgInfo: &registry.PackageInfo{
+			Name:      "example/example",
+			Type:      "http",
+			RepoOwner: "example",
+			RepoName:  "example",
+			URL:       "https://example.com/{{.Vars.channel}}/example.zip",
+			Format:    "zip",
+			Vars: []*registry.Var{
+				{Name: "channel"},
+			},
+			SupportedEnvs: []string{"darwin/arm64"},
+		},
+		SupportedEnvs: []string{"darwin/arm64"},
+	})
+	if err == nil {
+		t.Fatal("want an error, got none")
+	}
+	if !strings.Contains(err.Error(), "channel") {
+		t.Errorf("the error doesn't name the variable: %v", err)
 	}
 }
