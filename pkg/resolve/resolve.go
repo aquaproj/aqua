@@ -151,12 +151,8 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		Package:     &aqua.Package{Name: param.PkgName, Version: param.Version},
 		PackageInfo: info,
 	}
-	// A definition may write part of its URL as a variable with a default, the way
-	// flutter/flutter names its release channel. Nothing here supplies one, so the
-	// defaults are all there is: without them the template renders "<no value>" into
-	// the URL and the download fails with a 404 that says nothing about why.
-	if err := pkg.ApplyVars(); err != nil {
-		return nil, fmt.Errorf("apply the package variables: %w", err)
+	if err := fillVars(pkg); err != nil {
+		return nil, err
 	}
 
 	assetName, err := pkg.RenderAsset(rt)
@@ -258,4 +254,29 @@ func variantsOf(rt *runtime.Runtime) map[string]string {
 		return nil
 	}
 	return map[string]string{"libc": rt.LibC}
+}
+
+// fillVars gives every variable the definition declares a value, or says which one it
+// could not.
+//
+// A definition may write part of its URL as a variable with a default, the way
+// flutter/flutter names its release channel. Nothing here supplies one, so the
+// defaults are all there is: without them the template renders "<no value>" into the
+// URL and the download fails with a 404 that says nothing about why.
+//
+// ApplyVars leaves a variable that is neither required nor defaulted unset, which
+// renders the same way. Where a person supplies the value that is tolerable, because
+// they see the result; here there is nobody to ask, and the text goes into a file
+// that is served as the answer. A definition whose variable nothing can fill cannot
+// be resolved statically at all, so this names the variable instead.
+func fillVars(pkg *config.Package) error {
+	if err := pkg.ApplyVars(); err != nil {
+		return fmt.Errorf("apply the package variables: %w", err)
+	}
+	for _, v := range pkg.PackageInfo.Vars {
+		if _, ok := pkg.Package.Vars[v.Name]; !ok {
+			return fmt.Errorf("%w: %s", errVarHasNoValue, v.Name)
+		}
+	}
+	return nil
 }

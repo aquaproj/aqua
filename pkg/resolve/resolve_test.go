@@ -2,6 +2,7 @@ package resolve_test
 
 import (
 	"log/slog"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -279,5 +280,35 @@ func TestResolve_varDefault(t *testing.T) {
 	want := "https://example.com/releases/stable/macos/flutter_macos_3.47.5-stable.zip"
 	if diff := cmp.Diff(want, pkgs[0].URL); diff != "" {
 		t.Error(diff)
+	}
+}
+
+// TestResolve_varWithoutValue covers a variable nothing can fill. ApplyVars refuses
+// only a required one, so this would otherwise be rendered as "<no value>" into the
+// URL and served as the answer.
+func TestResolve_varWithoutValue(t *testing.T) {
+	t.Parallel()
+	_, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "example/example",
+		Version: "v1.0.0",
+		PkgInfo: &registry.PackageInfo{
+			Name:      "example/example",
+			Type:      "http",
+			RepoOwner: "example",
+			RepoName:  "example",
+			URL:       "https://example.com/{{.Vars.channel}}/example.zip",
+			Format:    "zip",
+			Vars: []*registry.Var{
+				{Name: "channel"},
+			},
+			SupportedEnvs: []string{"darwin/arm64"},
+		},
+		SupportedEnvs: []string{"darwin/arm64"},
+	})
+	if err == nil {
+		t.Fatal("want an error, got none")
+	}
+	if !strings.Contains(err.Error(), "channel") {
+		t.Errorf("the error doesn't name the variable: %v", err)
 	}
 }
