@@ -23,7 +23,14 @@ func (g *MockGitHubTagClient) ListTags(ctx context.Context, owner string, repo s
 	if !ok {
 		return nil, nil, errors.New("repository is not found")
 	}
-	m := min((opts.Page+1)*opts.PerPage, len(tags))
+	start := opts.Page * opts.PerPage
+	end := min(start+opts.PerPage, len(tags))
+	if start >= len(tags) {
+		return nil, &github.Response{}, nil
+	}
 	resp := &github.Response{}
-	return tags[opts.Page*opts.PerPage : m], resp, nil
+	if end < len(tags) {
+		resp.NextPage = opts.Page + 1
+	}
+	return tags[start:end], resp, nil
 }
