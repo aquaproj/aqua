@@ -31,6 +31,28 @@ type Config struct {
 	// which of its assets is the one to install, so this is written by hand. It
 	// matches aqua gr's option of the same name.
 	AllAssetsFilter string `yaml:"all_assets_filter,omitempty"`
+	// AssetFilters says which assets are the command for some versions rather than
+	// for all of them, and is read before AllAssetsFilter.
+	AssetFilters []*AssetFilter `yaml:"asset_filters,omitempty"`
+}
+
+// AssetFilter is which assets are the command, for the versions its constraint
+// matches.
+//
+// Which asset is the command can change over a package's history. openai/codex
+// publishes about 180 assets for a dozen programs in one release, and which of them is
+// codex was codex-<triple> until 0.133 and codex-package-<triple> after it. One filter
+// can't say that: narrowed to the newer name the older releases have no assets at all,
+// and allowing both leaves the older name matching in the newer releases, where it is a
+// different archive with the binary somewhere else.
+//
+// Nothing here evaluates these. They are carried to the generator, which reads them the
+// way a registry reads its version_overrides: the first whose constraint the version
+// meets answers, and AllAssetsFilter answers when none does. This type exists so that
+// the definition can hold them without this package depending on the generator.
+type AssetFilter struct {
+	VersionConstraint string `yaml:"version_constraint,omitempty"`
+	AllAssetsFilter   string `yaml:"all_assets_filter,omitempty"`
 }
 
 // SetVersion returns the definition of one version.
