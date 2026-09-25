@@ -8,6 +8,6 @@ type MockGoBuildInstaller struct {
 	Err error
 }
 
-func (m *MockGoBuildInstaller) Install(ctx context.Context, exePath, exeDir, src string) error {
+func (m *MockGoBuildInstaller) Install(ctx context.Context, exePath, exeDir, src string, buildTags []string) error {
 	return m.Err
 }
