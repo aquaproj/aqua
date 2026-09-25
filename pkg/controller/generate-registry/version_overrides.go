@@ -104,11 +104,16 @@ func excludeVersion(logger *slog.Logger, tag string, cfg *Config) bool {
 	return false
 }
 
-func excludeAsset(logger *slog.Logger, asset string, cfg *Config) bool {
-	if cfg.AllAssetsFilter == nil {
+// excludeAsset reports whether an asset of this release is none of the package's.
+//
+// The filter depends on the version, because which of a release's assets is the
+// package can change over its history.
+func excludeAsset(logger *slog.Logger, tag, asset string, cfg *Config) bool {
+	filter := cfg.assetFilter(logger, tag)
+	if filter == nil {
 		return false
 	}
-	f, err := expr.EvaluateAssetFilter(cfg.AllAssetsFilter, asset)
+	f, err := expr.EvaluateAssetFilter(filter, asset)
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("evaluate an asset filter", "asset", asset)
 		return false
@@ -158,7 +163,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		logger.Debug("got assets", "num_of_assets", len(arr))
 		assets := make([]*github.ReleaseAsset, 0, len(arr))
 		for _, asset := range arr {
-			if excludeAsset(logger, asset.GetName(), cfg) {
+			if excludeAsset(logger, release.Tag, asset.GetName(), cfg) {
 				continue
 			}
 			assets = append(assets, asset)

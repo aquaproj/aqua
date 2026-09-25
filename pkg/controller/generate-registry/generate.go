@@ -172,7 +172,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	logger.Debug("got assets", "num_of_assets", len(arr))
 	assetNames := make([]string, 0, len(arr))
 	for _, asset := range arr {
-		if excludeAsset(logger, asset.GetName(), cfg) {
+		if excludeAsset(logger, release.GetTagName(), asset.GetName(), cfg) {
 			continue
 		}
 		assetNames = append(assetNames, asset.GetName())

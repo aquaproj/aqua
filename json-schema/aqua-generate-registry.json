@@ -14,6 +14,12 @@
         "all_assets_filter": {
           "type": "string"
         },
+        "version_overrides": {
+          "items": {
+            "$ref": "#/$defs/RawVersionOverride"
+          },
+          "type": "array"
+        },
         "name": {
           "type": "string"
         },
@@ -29,6 +35,18 @@
       "required": [
         "name"
       ]
+    },
+    "RawVersionOverride": {
+      "properties": {
+        "version_constraint": {
+          "type": "string"
+        },
+        "all_assets_filter": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     }
   }
 }
