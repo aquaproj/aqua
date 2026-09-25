@@ -13,6 +13,16 @@ https://github.com/aquaproj/aqua-installer
 
 ## Shell Script
 
+:::info Complete your local setup
+
+Installing aqua is the first step. To use it in future terminal sessions:
+
+1. Run the installer below.
+2. Save the `PATH` setting in your shell configuration using the [Bash](/docs/install?platform=linux#bash), [Zsh](/docs/install?platform=macos#zsh), or [Windows](/docs/install?platform=windows#powershell) instructions.
+3. Open a new terminal and run `aqua -v` to check that the setting persists.
+
+:::
+
 You can install aqua by the following one liner.
 
 ```bash
@@ -33,6 +43,9 @@ aqua-installer installs aqua to the following path.
 
 - linux, macOS: `${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin/aqua`
 - windows: `${AQUA_ROOT_DIR:-$HOME/AppData/Local/aquaproj-aqua}/bin/aqua`
+
+After installation, [configure `PATH`](/docs/install#2-set-the-environment-variable-path) and save the setting in your shell configuration so aqua remains available in new shells.
+The installation guide includes copy-paste commands for Bash and Zsh.
 
 :::caution
 From aqua-installer v2, aqua-installer doesn't support specifying the install path.
