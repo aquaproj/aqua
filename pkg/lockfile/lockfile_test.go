@@ -121,3 +121,39 @@ func TestWriteAndRead(t *testing.T) {
 		t.Errorf("the lock file didn't round trip (-want +got):\n%s", diff)
 	}
 }
+
+// What a lock file is for is the packages a configuration asks for, so an entry for one it
+// doesn't answers a question nobody puts.
+func TestLockFile_Retain(t *testing.T) {
+	t.Parallel()
+	lf := &lockfile.LockFile{Packages: []*lockfile.Package{
+		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64"},
+		{Name: "cli/cli", Version: "v2.1.0", OS: "darwin", Arch: "arm64"},
+		// The version before it was bumped.
+		{Name: "cli/cli", Version: "v2.0.0", OS: "linux", Arch: "amd64"},
+		// A package that was removed from aqua.yaml.
+		{Name: "gone/gone", Version: "v1.0.0", OS: "linux", Arch: "amd64"},
+		nil,
+	}}
+	declared := map[string]struct{}{"cli/cli\tv2.1.0": {}}
+
+	got := lf.Retain(func(name, version string) bool {
+		_, ok := declared[name+"\t"+version]
+		return ok
+	})
+	// The two it doesn't ask for, and the null entry, which is the one thing in the file
+	// that can't be looked up at all.
+	if got != 3 {
+		t.Errorf("dropped %d entries, want 3", got)
+	}
+	// Every environment of what is still asked for stays: the file carries them all so
+	// that one repository resolves on every machine that shares it.
+	if len(lf.Packages) != 2 {
+		t.Fatalf("kept %d entries", len(lf.Packages))
+	}
+	for _, pkg := range lf.Packages {
+		if pkg.Version != "v2.1.0" {
+			t.Errorf("kept %s %s", pkg.Name, pkg.Version)
+		}
+	}
+}

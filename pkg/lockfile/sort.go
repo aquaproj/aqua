@@ -74,6 +74,21 @@ func (lf *LockFile) Has(name, version string) bool {
 	return false
 }
 
+// Retain drops the entries a predicate doesn't declare, and reports how many went.
+//
+// What a lock file is for is the packages a configuration asks for, so an entry for one
+// it no longer asks for answers a question nobody puts. Nothing looks one up -- a lookup
+// is by name and version -- so what it costs is the file saying more than it means.
+func (lf *LockFile) Retain(declared func(name, version string) bool) int {
+	before := len(lf.Packages)
+	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Package) bool {
+		// A null entry is nothing a configuration asks for either, and it is the one
+		// thing in the file that can't be looked up at all.
+		return pkg == nil || !declared(pkg.Name, pkg.Version)
+	})
+	return before - len(lf.Packages)
+}
+
 // Remove drops every entry of the package at that version.
 func (lf *LockFile) Remove(name, version string) {
 	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Package) bool {

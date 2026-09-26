@@ -41,6 +41,11 @@ what it holds describes one version of one package, which doesn't change. --no-c
 refetches and rewrites it, for the case where a cached file was written wrong.
 
 	$ aqua lock update --no-cache cli/cli@v2.70.0
+
+An entry for a package aqua.yaml no longer asks for is removed. What a lock file is for
+is the packages a configuration asks for, and an entry for one it doesn't answers a
+question nobody puts. Naming packages leaves the rest alone: such a run isn't about
+aqua.yaml, and every package it didn't name would go.
 `
 
 type updateArgs struct {
