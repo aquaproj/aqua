@@ -469,3 +469,82 @@ func TestGetChecksum(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+// What a provenance is about is in its name, and what it is about decides whether the
+// package claims it.
+// provenanceCase is one release, and what the package should claim over it.
+type provenanceCase struct {
+	name     string
+	tag      string
+	pkgAsset string
+	assets   []string
+	want     string
+}
+
+func provenanceCases() []provenanceCase {
+	return []provenanceCase{
+		{
+			name:     "the provenance of another artifact isn't this package's",
+			tag:      "v36.2",
+			pkgAsset: "protoc-{{trimV .Version}}-{{.OS}}-{{.Arch}}.{{.Format}}",
+			assets: []string{
+				"protoc-36.2-osx-x86_64.zip",
+				"protoc-36.2-linux-x86_64.zip",
+				"protobuf-36.2.bazel.tar.gz",
+				"protobuf-36.2.bazel.tar.gz.intoto.jsonl",
+			},
+			want: "",
+		},
+		{
+			name:     "a provenance named for nothing the release holds is the release's",
+			tag:      "v1.0.0",
+			pkgAsset: "foo_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+			assets: []string{
+				"foo_1.0.0_linux_amd64.tar.gz",
+				"multiple.intoto.jsonl",
+			},
+			want: "multiple.intoto.jsonl",
+		},
+		{
+			name:     "a provenance per asset is asked for per asset",
+			tag:      "v1.0.0",
+			pkgAsset: "foo_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+			assets: []string{
+				"foo_1.0.0_linux_amd64.tar.gz",
+				"foo_1.0.0_linux_amd64.tar.gz.intoto.jsonl",
+				"foo_1.0.0_darwin_arm64.tar.gz",
+				"foo_1.0.0_darwin_arm64.tar.gz.intoto.jsonl",
+			},
+			want: "{{.Asset}}.intoto.jsonl",
+		},
+		{
+			name:     "a release with no provenance claims none",
+			tag:      "v1.0.0",
+			pkgAsset: "foo_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+			assets:   []string{"foo_1.0.0_linux_amd64.tar.gz"},
+			want:     "",
+		},
+	}
+}
+
+func TestSLSAProvenance(t *testing.T) {
+	t.Parallel()
+	for _, tt := range provenanceCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := slsaProvenance(&registry.PackageInfo{Asset: tt.pkgAsset}, tt.assets, tt.tag, nil)
+			if tt.want == "" {
+				if got != nil {
+					t.Fatalf("claimed %q, want nothing", *got.Asset)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatalf("claimed nothing, want %q", tt.want)
+			}
+			if *got.Asset != tt.want {
+				t.Errorf("claimed %q, want %q", *got.Asset, tt.want)
+			}
+		})
+	}
+}

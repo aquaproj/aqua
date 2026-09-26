@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
@@ -234,12 +235,6 @@ func (c *Controller) patchRelease(logger *slog.Logger, cfg *Config, pkgInfo *reg
 			break
 		}
 	}
-	for assetName := range assetNames {
-		if p := checkSLSAProvenance(assetName, tagName, cfg.Spellings); p != nil {
-			pkgInfo.SLSAProvenance = p
-			break
-		}
-	}
 	if len(checksumNames) > 0 && pkgInfo.Checksum == nil {
 		for checksumName := range checksumNames {
 			chksum := checksum.GetChecksumConfigFromFilename(checksumName, tagName)
@@ -253,6 +248,12 @@ func (c *Controller) patchRelease(logger *slog.Logger, cfg *Config, pkgInfo *reg
 		}
 	}
 	asset.ParseAssetInfos(pkgInfo, assetInfos)
+
+	// After the asset template is settled, because whether a provenance is this
+	// package's is decided by comparing what it is named for against it.
+	if p := slsaProvenance(pkgInfo, assets, tagName, cfg.Spellings); p != nil {
+		pkgInfo.SLSAProvenance = p
+	}
 }
 
 func (c *Controller) listReleaseAssets(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, releaseID int64) []*github.ReleaseAsset {
@@ -286,15 +287,60 @@ func (c *Controller) listReleaseAssets(ctx context.Context, logger *slog.Logger,
 	return arr
 }
 
-func checkSLSAProvenance(assetName, tagName string, spellings asset.Spellings) *registry.SLSAProvenance {
-	if !strings.HasSuffix(assetName, ".intoto.jsonl") {
-		return nil
+// provenanceSuffix is what slsa-github-generator names a provenance file with.
+const provenanceSuffix = ".intoto.jsonl"
+
+// slsaProvenance is the provenance the release publishes over the package's assets, or
+// nil when it publishes none that is about them.
+//
+// What a provenance is about is in its name. slsa-github-generator names it after the
+// artifact it attests -- <artifact>.intoto.jsonl -- or, for a run attesting several,
+// after nothing in particular: multiple.intoto.jsonl. So the name decides which of three
+// things this is.
+//
+// Named for the package's own asset, there is one per asset, and each entry asks for its
+// own with {{.Asset}}.
+//
+// Named for nothing the release holds, it is the release's own and covers whatever that
+// run built, which is what the inference has always assumed.
+//
+// Named for another of the release's assets, it is that asset's and says nothing about
+// this package. Claiming it anyway is how protocolbuffers/protobuf/protoc came to claim
+// protobuf-<version>.bazel.tar.gz.intoto.jsonl, the provenance of the source tarball:
+// every entry then asked slsa-verifier for a subject the provenance doesn't hold, so
+// nobody could install the package at all.
+//
+// The names are read in order, so a release carrying more than one provenance answers the
+// same way every time. Before, whichever one a map happened to yield first won.
+func slsaProvenance(pkgInfo *registry.PackageInfo, assets []string, tagName string, spellings asset.Spellings) *registry.SLSAProvenance {
+	held := make(map[string]struct{}, len(assets))
+	for _, assetName := range assets {
+		held[assetName] = struct{}{}
 	}
-	assetInfo := asset.ParseAssetName(assetName, tagName, spellings)
-	return &registry.SLSAProvenance{
-		Type:  pkgTypeGitHubRelease,
-		Asset: &assetInfo.Template,
+	var release *registry.SLSAProvenance
+	for _, assetName := range slices.Sorted(slices.Values(assets)) {
+		subject, ok := strings.CutSuffix(assetName, provenanceSuffix)
+		if !ok {
+			continue
+		}
+		if pkgInfo.Asset != "" && asset.ParseAssetName(subject, tagName, spellings).Template == pkgInfo.Asset {
+			template := "{{.Asset}}" + provenanceSuffix
+			return &registry.SLSAProvenance{
+				Type:  pkgTypeGitHubRelease,
+				Asset: &template,
+			}
+		}
+		if _, ok := held[subject]; ok {
+			continue
+		}
+		if release == nil {
+			release = &registry.SLSAProvenance{
+				Type:  pkgTypeGitHubRelease,
+				Asset: &asset.ParseAssetName(assetName, tagName, spellings).Template,
+			}
+		}
 	}
+	return release
 }
 
 func findSignature(assetNames map[string]struct{}, checksumAssetName string) string {
