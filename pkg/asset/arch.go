@@ -8,8 +8,12 @@ import (
 // It matches common architecture patterns in asset names and generates templates
 // for cross-platform package downloads. The function also handles architecture
 // name mappings and scoring for asset selection.
-func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
+func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spellings) {
 	archList := knownArchs()
+	for _, s := range extra {
+		archList = append(s.archList(), archList...)
+	}
+
 	for _, o := range archList {
 		if idx := strings.Index(lowAssetName, o.Name); idx != -1 {
 			archName := assetName[idx : idx+len(o.Name)]

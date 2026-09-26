@@ -10,6 +10,7 @@ import (
 	"context"
 	"github.com/aquaproj/aqua/v2/pkg/cargo"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/checksumgetter"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config-reader"
@@ -17,6 +18,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
 	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/exec"
+	"github.com/aquaproj/aqua/v2/pkg/controller/fixcmd"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
@@ -25,6 +27,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/initpolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
+	"github.com/aquaproj/aqua/v2/pkg/controller/lockupdate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
@@ -35,6 +38,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cosign"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/install-registry"
@@ -73,6 +77,62 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 	slsaVerifier := slsa.New(downloader, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	controller := list.NewController(configFinder, configReader, installer)
+	return controller, nil
+}
+
+func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*lockupdate.Controller, error) {
+	configFinder := finder.NewConfigFinder()
+	configReader := reader.New(param)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	executor := osexec.New()
+	downloader := download.NewDownloader(repositoriesService, httpDownloader)
+	verifier := cosign.NewVerifier(executor, downloader, param)
+	executorImpl := slsa.NewExecutor(executor, param)
+	slsaVerifier := slsa.New(downloader, executorImpl)
+	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
+	checksumDownloaderImpl := download.NewChecksumDownloader(repositoriesService, rt, httpDownloader)
+	linker := link.New()
+	calculator := checksum.NewCalculator()
+	unarchiver := unarchive.New(executor)
+	minisignExecutorImpl, err := minisign.NewExecutor(logger, executor, param)
+	if err != nil {
+		return nil, err
+	}
+	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
+	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
+	if err != nil {
+		return nil, err
+	}
+	ghattestationVerifier := ghattestation.New(ghattestationExecutorImpl)
+	goInstallInstallerImpl := installpackage.NewGoInstallInstallerImpl(executor)
+	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
+	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
+	client := vacuum.New(param)
+	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	getter := checksumgetter.New(checksumDownloaderImpl, downloader, installpackageInstaller)
+	cache := g2.NewCache(param)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := lockupdate.New(configFinder, configReader, installer, getter, g2Client)
+	return controller, nil
+}
+
+func InitializeFixCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client) (*fixcmd.Controller, error) {
+	configFinder := finder.NewConfigFinder()
+	configReader := reader.New(param)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	cache := g2.NewCache(param)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := fixcmd.New(configFinder, configReader, g2Client)
 	return controller, nil
 }
 
@@ -124,7 +184,13 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
-	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
+	gitService, err := github.NewGit(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	versionLister := g2.NewDefaultVersionLister(gitService)
+	g2VersionGetter := versiongetter.NewG2(versionLister)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter, g2VersionGetter)
 	controller := generate.New(configFinder, configReader, installer, repositoriesService, fuzzyfinderFinder, fuzzyGetter)
 	return controller, nil
 }
@@ -349,7 +415,8 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
 	client := vacuum.New(param)
 	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
-	controller := updatechecksum.New(param, configFinder, configReader, installer, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader, installpackageInstaller)
+	getter := checksumgetter.New(checksumDownloaderImpl, downloader, installpackageInstaller)
+	controller := updatechecksum.New(param, configFinder, configReader, installer, rt, getter, gitHubContentFileDownloader)
 	return controller, nil
 }
 
@@ -376,7 +443,13 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
-	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
+	gitService, err := github.NewGit(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	versionLister := g2.NewDefaultVersionLister(gitService)
+	g2VersionGetter := versiongetter.NewG2(versionLister)
+	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter, g2VersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)

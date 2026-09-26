@@ -406,7 +406,7 @@ func normalizeSupportedEnvs(envs registry.SupportedEnvs) []string {
 // ParseAssetName analyzes a release asset name to extract platform, architecture, and format information.
 // It generates templates with placeholders for version, OS, architecture, and format,
 // enabling dynamic asset URL generation for different platforms.
-func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
+func ParseAssetName(assetName, version string, extra ...Spellings) *AssetInfo { //nolint:cyclop
 	assetInfo := &AssetInfo{
 		Template: strings.Replace(assetName, version, "{{.Version}}", 1),
 	}
@@ -414,8 +414,8 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 		assetInfo.Template = strings.Replace(assetName, strings.TrimPrefix(version, "v"), "{{trimV .Version}}", 1)
 	}
 	lowAssetName := strings.ToLower(assetName)
-	SetOS(assetName, lowAssetName, assetInfo)
-	SetArch(assetName, lowAssetName, assetInfo)
+	SetOS(assetName, lowAssetName, assetInfo, extra...)
+	SetArch(assetName, lowAssetName, assetInfo, extra...)
 	if assetInfo.Arch == "" && assetInfo.OS == osDarwin {
 		if strings.Contains(lowAssetName, "_all") || strings.Contains(lowAssetName, "-all") || strings.Contains(lowAssetName, ".all") {
 			assetInfo.DarwinAll = true

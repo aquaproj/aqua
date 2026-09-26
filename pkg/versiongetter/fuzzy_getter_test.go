@@ -73,11 +73,56 @@ func TestFuzzyGetter_Get(t *testing.T) { //nolint:funlen
 			t.Parallel()
 			finder := fuzzyfinder.NewMock(d.idxs, nil)
 			vg := versiongetter.NewMockVersionGetter(d.versions)
-			fg := versiongetter.NewFuzzy(finder, vg)
-			version := fg.Get(t.Context(), logger, d.pkg, d.currentVersion, d.useFinder, -1)
+			// A registry other than the standard one keeps asking upstream, which
+			// is the getter under test here.
+			fg := versiongetter.NewFuzzy(finder, vg, nil)
+			version := fg.Get(t.Context(), logger, "foo", d.pkg, d.currentVersion, d.useFinder, -1)
 			if version != d.version {
 				t.Fatalf("wanted %s, got %s", d.version, version)
 			}
 		})
+	}
+}
+
+// Where the versions come from is decided by the registry. A package from the
+// standard registry is offered what aqua-registry-g2 can lock; one from any other
+// registry keeps asking upstream, because it has no branch there.
+func TestFuzzyGetter_Get_source(t *testing.T) {
+	t.Parallel()
+	pkg := &registry.PackageInfo{Name: "cli/cli"}
+	upstream := versiongetter.NewMockVersionGetter(map[string][]*fuzzyfinder.Item{
+		"cli/cli": fuzzyfinder.ConvertStringsToItems([]string{"v3.0.0"}),
+	})
+	fg := versiongetter.NewFuzzy(fuzzyfinder.NewMock([]int{0}, nil), upstream, newG2("v2.0.0"))
+	logger := slog.New(slog.DiscardHandler)
+
+	if got := fg.Get(t.Context(), logger, "standard", pkg, "", false, -1); got != "v2.0.0" {
+		t.Errorf("the standard registry got %q, want v2.0.0 from g2", got)
+	}
+	if got := fg.Get(t.Context(), logger, "foo", pkg, "", false, -1); got != "v3.0.0" {
+		t.Errorf("another registry got %q, want v3.0.0 from upstream", got)
+	}
+}
+
+// A package aqua-registry-g2 has no branch for falls back to upstream.
+//
+// Narrowing the choice to what g2 holds is there to stop a version being picked that
+// "aqua lock update" can't lock. A package with no branch can't be locked at any
+// version, so refusing to offer one would only make it unusable while g2 is being
+// filled in. "aqua g" wrote "[SET PACKAGE VERSION]" into aqua.yaml instead.
+func TestFuzzyGetter_Get_notInG2(t *testing.T) {
+	t.Parallel()
+	pkg := &registry.PackageInfo{Name: "cli/cli"}
+	upstream := versiongetter.NewMockVersionGetter(map[string][]*fuzzyfinder.Item{
+		"cli/cli": fuzzyfinder.ConvertStringsToItems([]string{"v3.0.0"}),
+	})
+	fg := versiongetter.NewFuzzy(fuzzyfinder.NewMock([]int{0}, nil), upstream, newG2NotFound())
+	logger := slog.New(slog.DiscardHandler)
+
+	if got := fg.Get(t.Context(), logger, "standard", pkg, "", false, -1); got != "v3.0.0" {
+		t.Errorf("got %q, want v3.0.0 from upstream", got)
+	}
+	if got := fg.Get(t.Context(), logger, "standard", pkg, "", true, -1); got != "v3.0.0" {
+		t.Errorf("the finder got %q, want v3.0.0 from upstream", got)
 	}
 }

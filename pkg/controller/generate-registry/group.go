@@ -271,7 +271,7 @@ func groupByExcludedAsset(groups []*Group) []*Group {
 	return newGroups
 }
 
-func (c *Controller) group(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []*Group {
+func (c *Controller) group(logger *slog.Logger, cfg *Config, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []*Group {
 	if len(releases) == 0 {
 		return nil
 	}
@@ -285,7 +285,7 @@ func (c *Controller) group(logger *slog.Logger, pkgInfo *registry.PackageInfo, p
 			RepoOwner: pkgInfo.RepoOwner,
 			RepoName:  pkgInfo.RepoName,
 		}
-		c.patchRelease(logger, pkgInfo, pkgName, release.Tag, group.assetNames)
+		c.patchRelease(logger, cfg, pkgInfo, pkgName, release.Tag, group.assetNames)
 		group.pkg = &Package{
 			Info:    pkgInfo,
 			Version: release.Tag,
@@ -318,6 +318,6 @@ func (c *Controller) group(logger *slog.Logger, pkgInfo *registry.PackageInfo, p
 	return sortAndMergeGroups(newGroups)
 }
 
-func (c *Controller) generatePackage(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
-	return mergeGroups(pkgInfo, c.group(logger, pkgInfo, pkgName, releases))
+func (c *Controller) generatePackage(logger *slog.Logger, cfg *Config, pkgInfo *registry.PackageInfo, pkgName string, releases []*Release) []string {
+	return mergeGroups(pkgInfo, c.group(logger, cfg, pkgInfo, pkgName, releases))
 }

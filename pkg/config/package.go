@@ -351,6 +351,7 @@ type Param struct {
 	AQUAVersion                       string
 	NewAquaVersion                    string
 	RootDir                           string
+	CacheDir                          string
 	CWD                               string
 	InsertFile                        string
 	LogColor                          string
@@ -367,6 +368,7 @@ type Param struct {
 	Tags                              map[string]struct{}
 	ExcludedTags                      map[string]struct{}
 	DisableLazyInstall                bool
+	NoCache                           bool
 	OnlyLink                          bool
 	All                               bool
 	Global                            bool
@@ -390,8 +392,13 @@ type Param struct {
 	CosignDisabled                    bool
 	GitHubArtifactAttestationDisabled bool
 	SLSADisabled                      bool
-	Installed                         bool
-	InitConfig                        bool
+	// VerifySignatures asks for the signatures of a package installed from the lock
+	// file to be verified too. They are not by default: the lock file's checksum was
+	// checked against them when it was written, so the download is already pinned to
+	// the artifact they signed.
+	VerifySignatures bool
+	Installed        bool
+	InitConfig       bool
 }
 
 // appendExt appends the appropriate file extension based on format.

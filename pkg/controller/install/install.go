@@ -11,7 +11,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	finder "github.com/aquaproj/aqua/v2/pkg/config-finder"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -106,6 +108,22 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePa
 		return fmt.Errorf("validate the configuration: %w", err)
 	}
 
+	lf, err := lockfile.ReadFile(filepath.Join(filepath.Dir(cfgFilePath), lockfile.FileName))
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	locked, rest, err := installpackage.SplitByLockFile(logger, lf, cfg, c.runtime)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+
+	// A package the lock file describes needs no registry, so a configuration with a
+	// lock file downloads and evaluates none of them. rest is everything when there
+	// is no lock file, which is what keeps a repository that hasn't adopted one
+	// working as before.
+	cfgRest := *cfg
+	cfgRest.Packages = rest
+
 	checksums, updateChecksum, err := checksum.Open(
 		logger, cfgFilePath, param.ChecksumEnabled(cfg))
 	if err != nil {
@@ -113,14 +131,18 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePa
 	}
 	defer updateChecksum()
 
-	registryContents, err := c.registryInstaller.InstallRegistries(ctx, logger, cfg, cfgFilePath, checksums)
-	if err != nil {
-		return err //nolint:wrapcheck
+	var registryContents map[string]*registry.Config
+	if len(rest) > 0 {
+		registryContents, err = c.registryInstaller.InstallRegistries(ctx, logger, &cfgRest, cfgFilePath, checksums)
+		if err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 
 	return c.packageInstaller.InstallPackages(ctx, logger, &installpackage.ParamInstallPackages{ //nolint:wrapcheck
-		Config:          cfg,
+		Config:          &cfgRest,
 		Registries:      registryContents,
+		LockedPackages:  locked,
 		ConfigFilePath:  cfgFilePath,
 		SkipLink:        c.skipLink,
 		Tags:            c.tags,

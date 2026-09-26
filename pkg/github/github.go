@@ -26,11 +26,32 @@ type (
 	Response                    = github.Response
 	RepositoryTag               = github.RepositoryTag
 	ArchiveFormat               = github.ArchiveFormat
+	GitService                  = github.GitService
+	Tree                        = github.Tree
+	TreeEntry                   = github.TreeEntry
 )
 
 const Tarball = github.Tarball
 
 func New(ctx context.Context, logger *slog.Logger) (*RepositoriesService, error) {
+	client, err := newClient(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	return client.Repositories, nil
+}
+
+// NewGit returns the Git Data API, which aqua uses to list the versions
+// aqua-registry-g2 holds for a package.
+func NewGit(ctx context.Context, logger *slog.Logger) (*GitService, error) {
+	client, err := newClient(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	return client.Git, nil
+}
+
+func newClient(ctx context.Context, logger *slog.Logger) (*github.Client, error) {
 	httpClient, err := getHTTPClientForGitHub(ctx, logger, getGitHubToken())
 	if err != nil {
 		return nil, err
@@ -39,7 +60,7 @@ func New(ctx context.Context, logger *slog.Logger) (*RepositoriesService, error)
 	if err != nil {
 		return nil, fmt.Errorf("create a GitHub client: %w", err)
 	}
-	return client.Repositories, nil
+	return client, nil
 }
 
 func getGitHubToken() string {

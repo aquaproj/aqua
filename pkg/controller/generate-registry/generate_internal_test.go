@@ -532,7 +532,7 @@ func TestSLSAProvenance(t *testing.T) {
 	for _, tt := range provenanceCases() {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := slsaProvenance(&registry.PackageInfo{Asset: tt.pkgAsset}, tt.assets, tt.tag)
+			got := slsaProvenance(&registry.PackageInfo{Asset: tt.pkgAsset}, tt.assets, tt.tag, nil)
 			if tt.want == "" {
 				if got != nil {
 					t.Fatalf("claimed %q, want nothing", *got.Asset)
