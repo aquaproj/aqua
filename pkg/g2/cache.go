@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
@@ -64,8 +65,26 @@ func (c *Cache) AliasesPath(repoOwner, repoName string) string {
 // A cache that can't be read is not an error. The file is a copy of something that
 // can be fetched again, so the caller carries on and fetches it.
 func (c *Cache) Read(path string) []byte {
+	return c.ReadWithin(path, 0)
+}
+
+// ReadWithin returns the cached file when it was written no longer than ttl ago, and
+// nil otherwise. A ttl of zero or less accepts it whatever its age.
+//
+// An age is asked for by whoever is asking the file a question a missing answer looks
+// like an answer to. Reading it to find a package that wasn't where its name said can
+// take any copy, because a copy that doesn't hold the rename simply doesn't answer;
+// asking whether a name has been renamed can't tell a stale copy from a name that
+// never was.
+func (c *Cache) ReadWithin(path string, ttl time.Duration) []byte {
 	if c.skipRead {
 		return nil
+	}
+	if ttl > 0 {
+		stat, err := os.Stat(path)
+		if err != nil || time.Since(stat.ModTime()) > ttl {
+			return nil
+		}
 	}
 	b, err := os.ReadFile(path)
 	if err != nil {

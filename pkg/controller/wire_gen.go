@@ -18,6 +18,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
 	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	"github.com/aquaproj/aqua/v2/pkg/controller/exec"
+	"github.com/aquaproj/aqua/v2/pkg/controller/fixcmd"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
@@ -117,6 +118,21 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 	cache := g2.NewCache(param)
 	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
 	controller := lockupdate.New(configFinder, configReader, installer, getter, g2Client)
+	return controller, nil
+}
+
+func InitializeFixCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client) (*fixcmd.Controller, error) {
+	configFinder := finder.NewConfigFinder()
+	configReader := reader.New(param)
+	repositoriesService, err := github.New(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+	httpDownloader := download.NewHTTPDownloader(logger, httpClient)
+	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(repositoriesService, httpDownloader)
+	cache := g2.NewCache(param)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := fixcmd.New(configFinder, configReader, g2Client)
 	return controller, nil
 }
 
