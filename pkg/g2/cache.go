@@ -12,12 +12,17 @@ import (
 // CacheDirName is where cached registry.json files live under the cache directory.
 const CacheDirName = "registries-g2"
 
-// Cache holds registry.json files that have already been fetched.
+// Cache holds files that have already been fetched.
 //
-// They never expire. A registry.json describes one version of one package and ar2
-// writes it once, so a cached copy can't go stale the way a registry covering every
-// package could. --no-cache is therefore for the case where a file was written wrong,
-// not for the case where it is out of date.
+// A registry.json never expires. It describes one version of one package and ar2 writes
+// it once, so a cached copy can't go stale the way a registry covering every package
+// could. --no-cache is therefore for the case where a file was written wrong, not for
+// the case where it is out of date.
+//
+// The table of other names can go stale, since a package is renamed after it is
+// written. It is safe to keep anyway because it is only ever read to find a package
+// that wasn't where its name said: a stale copy costs the fetch that replaces it, and
+// never answers with a name it doesn't hold.
 type Cache struct {
 	dir string
 	// skipRead makes a lookup miss even when the file is there, so that --no-cache
@@ -44,6 +49,14 @@ func NewCache(param *config.Param) *Cache {
 func (c *Cache) Path(repoOwner, repoName, pkgName, version string) string {
 	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName,
 		BranchName(pkgName), VersionDir, version, FileName)
+}
+
+// AliasesPath is where the table of other names is cached.
+//
+// Beside the branches rather than inside one: it is the registry as a whole, the same
+// way it sits at the root of the default branch rather than on a package's branch.
+func (c *Cache) AliasesPath(repoOwner, repoName string) string {
+	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName, AliasesFileName)
 }
 
 // Read returns the cached file, or nil when there is none.

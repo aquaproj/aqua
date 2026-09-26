@@ -78,11 +78,53 @@ func lockFiles(files []*File) []*lockfile.File {
 // and aqua-registry arms answer the same question, so they get the same shape: the
 // caller tries each in turn and keeps the first that answers.
 func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
-	reg, err := c.Get(ctx, logger, pkgName, version)
-	if err != nil {
+	// The name is part of the path, so a package whose repository was renamed isn't
+	// where its old name says it is. aqua-registry keeps the old name as an alias, and
+	// somebody whose aqua.yaml still says it has no other way in.
+	//
+	// The cached table answers first, which costs nothing. Without one the name is
+	// used as it is: a table downloaded to say a name was never renamed would be
+	// downloaded for nearly every name.
+	name := c.cachedAliases().Resolve(pkgName)
+	c.sayRenamed(logger, pkgName, name)
+	reg, err := c.Get(ctx, logger, name, version)
+	if err == nil {
+		// The entry is named the way aqua.yaml asked for it, not the way the registry
+		// holds it. That name is what ties the entry to the configuration, so install
+		// and exec find it without resolving anything -- which is what keeps the table
+		// off the path that runs on every command.
+		return c.LockPackages(reg, pkgName, version), nil
+	}
+
+	// It wasn't there. Either the package was renamed and nothing here knew -- no
+	// cached table, or one written before the rename -- or the name is wrong and the
+	// version isn't published. The registry's own table tells those apart, and is
+	// cached so that the next run knows.
+	fresh := c.fetchAliases(ctx, logger).Resolve(pkgName)
+	if fresh == name {
+		return nil, err
+	}
+	c.sayRenamed(logger, pkgName, fresh)
+	reg, aliasErr := c.Get(ctx, logger, fresh, version)
+	if aliasErr != nil {
+		// What the caller asked for is the name in its configuration, so that is the
+		// failure to report. The other is about a name it never mentioned.
 		return nil, err
 	}
 	return c.LockPackages(reg, pkgName, version), nil
+}
+
+// sayRenamed tells whoever is watching that the package has another name now.
+//
+// Said on every run rather than once, because nothing here changes aqua.yaml: the file
+// keeps asking for the old name until a person decides otherwise, and a warning that
+// stopped would leave that decision unmade and unmentioned.
+func (c *Client) sayRenamed(logger *slog.Logger, asked, found string) {
+	if asked == found {
+		return
+	}
+	logger.Warn("the registry knows this package by another name now",
+		"package", asked, "renamed_to", found)
 }
 
 // NewDefault creates a Client reading aqua-registry-g2.

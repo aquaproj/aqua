@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
@@ -17,6 +18,10 @@ const (
 	DefaultRepoOwner = "aquaproj"
 	DefaultRepoName  = "aqua-registry-g2"
 )
+
+// DefaultBranch holds what the registry is as a whole -- the catalogue and the table of
+// other names -- as opposed to a package's own branch, which holds that package.
+const DefaultBranch = "main"
 
 // Registry is the content of a package version's registry.json.
 //
@@ -97,6 +102,11 @@ type Client struct {
 	cache     *Cache
 	repoOwner string
 	repoName  string
+	// aliases is the table of other names, read once. It is the registry's current
+	// state rather than a fact about a version, so it isn't cached on disk the way
+	// registry.json is.
+	aliases     *Aliases
+	aliasesOnce sync.Once
 }
 
 // New creates a Client. An empty owner or name falls back to aqua-registry-g2, and a
