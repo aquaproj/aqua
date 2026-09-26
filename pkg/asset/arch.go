@@ -38,43 +38,19 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spel
 }
 
 // knownArchs are the spellings of an architecture the parser recognises on its own.
+//
+// The order matters: a name that contains another has to come first, or the shorter one
+// matches the longer one's asset.
 func knownArchs() []*Arch {
 	return []*Arch{
-		{
-			Name: archAmd64,
-			Arch: archAmd64,
-		},
-		{
-			Name: archArm64,
-			Arch: archArm64,
-		},
-		{
-			Name: archX86_64,
-			Arch: archAmd64,
-		},
-		{
-			Name: "x86-64",
-			Arch: archAmd64,
-		},
-		{
-			Name: "x64",
-			Arch: archAmd64,
-		},
-		{
-			Name: "64bit",
-			Arch: archAmd64,
-		},
-		{
-			Name: "64-bit",
-			Arch: archAmd64,
-		},
-		{
-			Name: "aarch64",
-			Arch: archArm64,
-		},
-		{
-			Name: "arm",
-			Arch: archArm64,
-		},
+		{Name: archAmd64, Arch: archAmd64},
+		{Name: archArm64, Arch: archArm64},
+		{Name: archX86_64, Arch: archAmd64},
+		{Name: "x86-64", Arch: archAmd64},
+		{Name: "x64", Arch: archAmd64},
+		{Name: "64bit", Arch: archAmd64},
+		{Name: "64-bit", Arch: archAmd64},
+		{Name: "aarch64", Arch: archArm64},
+		{Name: "arm", Arch: archArm64},
 	}
 }

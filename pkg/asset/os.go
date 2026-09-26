@@ -8,7 +8,7 @@ import (
 // It matches common OS patterns in asset names, handles file extensions like .exe
 // and .dmg for OS detection, and generates templates for cross-platform downloads.
 // The function also manages OS name mappings and scoring for asset selection.
-func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spellings) { //nolint:funlen,cyclop
+func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spellings) { //nolint:cyclop
 	if strings.Contains(lowAssetName, ".exe.") || strings.HasSuffix(lowAssetName, ".exe") {
 		assetInfo.OS = osWindows
 	} else if strings.HasSuffix(lowAssetName, ".dmg") || strings.HasSuffix(lowAssetName, ".pkg") {
@@ -17,84 +17,7 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spelli
 		assetInfo.OS = osDarwin
 	}
 
-	osList := []*OS{
-		{
-			Name: "apple-darwin",
-			OS:   osDarwin,
-		},
-		{
-			Name: "unknown-linux-gnu",
-			OS:   osLinux,
-		},
-		{
-			Name: "unknown-linux-musl",
-			OS:   osLinux,
-		},
-		{
-			Name: "unknown-linux",
-			OS:   osLinux,
-		},
-		{
-			Name: "linux-gnu",
-			OS:   osLinux,
-		},
-		{
-			Name: "pc-windows-msvc",
-			OS:   osWindows,
-		},
-		{
-			Name: "pc-windows-gnu",
-			OS:   osWindows,
-		},
-		{
-			Name: "pc-windows",
-			OS:   osWindows,
-		},
-		{
-			Name: osDarwin,
-			OS:   osDarwin,
-		},
-		{
-			Name: osLinux,
-			OS:   osLinux,
-		},
-		{
-			Name: osWindows,
-			OS:   osWindows,
-		},
-		{
-			Name: "apple",
-			OS:   osDarwin,
-		},
-		{
-			Name: "macosx",
-			OS:   osDarwin,
-		},
-		{
-			Name: "osx",
-			OS:   osDarwin,
-		},
-		{
-			Name: "macos",
-			OS:   osDarwin,
-		},
-		{
-			Name: "mac",
-			OS:   osDarwin,
-		},
-		{
-			Name: "win64",
-			OS:   osWindows,
-		},
-		{
-			Name: "win32",
-			OS:   osWindows,
-		},
-		{
-			Name: "win",
-			OS:   osWindows,
-		},
-	}
+	osList := knownOSs()
 
 	for _, s := range extra {
 		osList = append(s.osList(), osList...)
@@ -120,5 +43,34 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spelli
 			}
 			return
 		}
+	}
+}
+
+// knownOSs are the spellings of an operating system the parser recognises on its own.
+//
+// The order matters: a name that contains another has to come first, or the shorter one
+// matches the longer one's asset -- "unknown-linux-musl" before "unknown-linux", "win64"
+// before "win".
+func knownOSs() []*OS {
+	return []*OS{
+		{Name: "apple-darwin", OS: osDarwin},
+		{Name: "unknown-linux-gnu", OS: osLinux},
+		{Name: "unknown-linux-musl", OS: osLinux},
+		{Name: "unknown-linux", OS: osLinux},
+		{Name: "linux-gnu", OS: osLinux},
+		{Name: "pc-windows-msvc", OS: osWindows},
+		{Name: "pc-windows-gnu", OS: osWindows},
+		{Name: "pc-windows", OS: osWindows},
+		{Name: osDarwin, OS: osDarwin},
+		{Name: osLinux, OS: osLinux},
+		{Name: osWindows, OS: osWindows},
+		{Name: "apple", OS: osDarwin},
+		{Name: "macosx", OS: osDarwin},
+		{Name: "osx", OS: osDarwin},
+		{Name: "macos", OS: osDarwin},
+		{Name: "mac", OS: osDarwin},
+		{Name: "win64", OS: osWindows},
+		{Name: "win32", OS: osWindows},
+		{Name: "win", OS: osWindows},
 	}
 }
