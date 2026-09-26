@@ -18,6 +18,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/cp"
 	"github.com/aquaproj/aqua/v2/pkg/controller/denypolicy"
 	cexec "github.com/aquaproj/aqua/v2/pkg/controller/exec"
+	"github.com/aquaproj/aqua/v2/pkg/controller/fixcmd"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate"
 	genrgst "github.com/aquaproj/aqua/v2/pkg/controller/generate-registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
@@ -1287,4 +1288,34 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 		),
 	)
 	return &lockupdate.Controller{}, nil
+}
+
+func InitializeFixCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client) (*fixcmd.Controller, error) {
+	wire.Build(
+		fixcmd.New,
+		wire.NewSet(
+			finder.NewConfigFinder,
+			wire.Bind(new(fixcmd.ConfigFinder), new(*finder.ConfigFinder)),
+		),
+		wire.NewSet(
+			reader.New,
+			wire.Bind(new(fixcmd.ConfigReader), new(*reader.ConfigReader)),
+		),
+		wire.NewSet(
+			g2.NewDefault,
+			wire.Bind(new(fixcmd.Names), new(*g2.Client)),
+		),
+		g2.NewCache,
+		wire.NewSet(
+			github.New,
+			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
+			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+		),
+		wire.NewSet(
+			download.NewGitHubContentFileDownloader,
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
+		),
+		download.NewHTTPDownloader,
+	)
+	return &fixcmd.Controller{}, nil
 }

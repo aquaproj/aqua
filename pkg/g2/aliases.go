@@ -10,6 +10,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -103,6 +104,39 @@ func (a *Aliases) Marshal() (string, error) {
 	return strings.TrimSuffix(string(b), "\n") + "\n", nil
 }
 
+// TableTTL is how long a cached table of other names answers a question about a name
+// that isn't missing.
+//
+// A day. What it costs to be late is nothing: the old name still resolves, which is why
+// there is anything to fix, so a rename noticed tomorrow is a line in a diff rather than
+// an install that fails. What it costs to be early is a request every run.
+const TableTTL = 24 * time.Hour
+
+// NameTable returns what resolves a package's other names, or nil when the registry has
+// none.
+//
+// This is the table read forwards: given a name in a configuration, what does the
+// registry call the package now. Resolve reads it backwards -- a name that fetched
+// nothing, which the table might explain -- and the difference decides how fresh a copy
+// has to be. A miss is the signal there, so a stale copy costs only the fetch that
+// replaces it. Here there is no miss: a copy written before the rename says the name
+// isn't an alias, which is the same answer a name that was never renamed gets, and
+// nothing would ever ask again. So a copy is taken while it is young and fetched once it
+// isn't.
+//
+// Offline takes whatever copy there is. A run that can't reach the registry leaves the
+// name alone, which is a subset of what it would have done rather than something else:
+// the rules are the same rules, run against a table that may be missing a rename.
+func (c *Client) NameTable(ctx context.Context, logger *slog.Logger, offline bool) *Aliases {
+	if offline {
+		return c.cachedAliases()
+	}
+	if aliases := c.aliasesWithin(TableTTL); aliases != nil {
+		return aliases
+	}
+	return c.fetchAliases(ctx, logger)
+}
+
 // cachedAliases is the table as the last run left it, or nothing.
 //
 // The registry is not asked for one here. A name that was never renamed is nearly every
@@ -114,10 +148,16 @@ func (a *Aliases) Marshal() (string, error) {
 // A copy written before a rename doesn't hold it, which is what the second read in
 // Resolve is for.
 func (c *Client) cachedAliases() *Aliases {
+	return c.aliasesWithin(0)
+}
+
+// aliasesWithin is the cached table, when it was written no longer than ttl ago. A ttl
+// of zero takes it whatever its age.
+func (c *Client) aliasesWithin(ttl time.Duration) *Aliases {
 	if c.cache == nil {
 		return nil
 	}
-	b := c.cache.Read(c.cache.AliasesPath(c.repoOwner, c.repoName))
+	b := c.cache.ReadWithin(c.cache.AliasesPath(c.repoOwner, c.repoName), ttl)
 	if b == nil {
 		return nil
 	}
