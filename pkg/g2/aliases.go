@@ -103,11 +103,24 @@ func (a *Aliases) Marshal() (string, error) {
 	return strings.TrimSuffix(string(b), "\n") + "\n", nil
 }
 
-// cachedAliases is the table as the last run left it, or an empty one.
+// aliasTable is the table of other names: the cached copy when there is one, and the
+// registry's own otherwise.
 //
-// Read without asking the registry, so that resolving a name costs nothing until a name
-// turns out not to answer. A copy from before a rename simply doesn't hold it, which is
-// the case fetchAliases answers.
+// Read before a name is used rather than after it fails, because a name is only known
+// not to have been renamed by the table saying so. Finding that out from the file not
+// being there costs a request that answers nothing, and it is the package that was
+// renamed -- the one already inconvenienced -- that would pay it.
+func (c *Client) aliasTable(ctx context.Context, logger *slog.Logger) *Aliases {
+	if cached := c.cachedAliases(); cached != nil {
+		return cached
+	}
+	return c.fetchAliases(ctx, logger)
+}
+
+// cachedAliases is the table as the last run left it, or nothing.
+//
+// A copy written before a rename doesn't hold it, which is what the second read in
+// Resolve is for.
 func (c *Client) cachedAliases() *Aliases {
 	if c.cache == nil {
 		return nil

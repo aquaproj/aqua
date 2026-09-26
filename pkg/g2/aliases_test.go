@@ -166,20 +166,82 @@ func TestClient_Resolve_alias(t *testing.T) {
 	}
 }
 
-// A name that answers costs nothing: the table is never asked for, which is nearly
-// every package.
+// The table is read once for a run however many packages it resolves, and the name it
+// gives for a package that was never renamed is that name.
 func TestClient_Resolve_noAlias(t *testing.T) {
 	t.Parallel()
 	dl := &refDownloader{files: map[string]string{
+		g2.DefaultBranch + ":" + g2.AliasesFileName: `{"aliases":{}}`,
 		g2.BranchName("cli/cli") + ":" + g2.Path("v2.1.0"): `{"assets":[
 			{"os":"linux","arch":"amd64","type":"github_release","repo_owner":"cli",
 			 "repo_name":"cli","asset":"gh.tar.gz"}]}`,
 	}}
-	if _, err := g2.New(dl, nil, "", "").Resolve(t.Context(), discardLogger(), "cli/cli", "v2.1.0"); err != nil {
+	client := g2.New(dl, nil, "", "")
+	for range 2 {
+		if _, err := client.Resolve(t.Context(), discardLogger(), "cli/cli", "v2.1.0"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := dl.calls[dl.key(g2.DefaultBranch, g2.AliasesFileName)]; got != 1 {
+		t.Errorf("read the table %d times, want once", got)
+	}
+	// And the old name was never asked for, because the table said there was none.
+	if got := dl.calls[dl.key(g2.BranchName("sst/opencode"), g2.Path("v2.1.0"))]; got != 0 {
+		t.Errorf("asked a name the table didn't give %d times", got)
+	}
+}
+
+// A renamed package is fetched under its new name on the first try, so the request that
+// would have answered nothing is never made.
+func TestClient_Resolve_noWastedRequest(t *testing.T) {
+	t.Parallel()
+	dl := opencode()
+	if _, err := g2.New(dl, nil, "", "").Resolve(t.Context(), discardLogger(),
+		"sst/opencode", "v1.0.0"); err != nil {
 		t.Fatal(err)
 	}
-	if got := dl.calls[dl.key(g2.DefaultBranch, g2.AliasesFileName)]; got != 0 {
-		t.Errorf("read the table %d times, want never", got)
+	if got := dl.calls[dl.key(g2.BranchName("sst/opencode"), g2.Path("v1.0.0"))]; got != 0 {
+		t.Errorf("asked the old name %d times, want never", got)
+	}
+}
+
+// A table written before a rename doesn't hold it, so the registry's own is read and
+// asked again. Without that the cache would never be corrected: it has no expiry.
+func TestClient_Resolve_staleCache(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	cache := g2.NewCache(&config.Param{CacheDir: dir})
+
+	// A run before the rename caches a table that says nothing about the package.
+	before := &refDownloader{files: map[string]string{
+		g2.DefaultBranch + ":" + g2.AliasesFileName: `{"aliases":{}}`,
+		g2.BranchName("sst/opencode") + ":" + g2.Path("v1.0.0"): `{"assets":[
+			{"os":"linux","arch":"amd64","type":"github_release","repo_owner":"sst",
+			 "repo_name":"opencode","asset":"opencode.tar.gz"}]}`,
+	}}
+	if _, err := g2.New(before, cache, "", "").Resolve(t.Context(), discardLogger(),
+		"sst/opencode", "v1.0.0"); err != nil {
+		t.Fatal(err)
+	}
+
+	// After the rename a version nothing has cached is asked for. The old name has
+	// nothing, and the cached table still says there is no other.
+	after := &refDownloader{files: map[string]string{
+		g2.DefaultBranch + ":" + g2.AliasesFileName: `{"aliases":{"sst/opencode":"anomalyco/opencode"}}`,
+		g2.BranchName("anomalyco/opencode") + ":" + g2.Path("v1.1.0"): `{"assets":[
+			{"os":"linux","arch":"amd64","type":"github_release","repo_owner":"anomalyco",
+			 "repo_name":"opencode","asset":"opencode.tar.gz"}]}`,
+	}}
+	pkgs, err := g2.New(after, cache, "", "").Resolve(t.Context(), discardLogger(),
+		"sst/opencode", "v1.1.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pkgs) != 1 || pkgs[0].Name != "sst/opencode" {
+		t.Errorf("got %+v", pkgs)
+	}
+	if got := after.calls[after.key(g2.DefaultBranch, g2.AliasesFileName)]; got != 1 {
+		t.Errorf("read the registry's table %d times, want once", got)
 	}
 }
 
