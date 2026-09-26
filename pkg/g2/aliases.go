@@ -103,21 +103,13 @@ func (a *Aliases) Marshal() (string, error) {
 	return strings.TrimSuffix(string(b), "\n") + "\n", nil
 }
 
-// aliasTable is the table of other names: the cached copy when there is one, and the
-// registry's own otherwise.
-//
-// Read before a name is used rather than after it fails, because a name is only known
-// not to have been renamed by the table saying so. Finding that out from the file not
-// being there costs a request that answers nothing, and it is the package that was
-// renamed -- the one already inconvenienced -- that would pay it.
-func (c *Client) aliasTable(ctx context.Context, logger *slog.Logger) *Aliases {
-	if cached := c.cachedAliases(); cached != nil {
-		return cached
-	}
-	return c.fetchAliases(ctx, logger)
-}
-
 // cachedAliases is the table as the last run left it, or nothing.
+//
+// The registry is not asked for one here. A name that was never renamed is nearly every
+// name, and downloading a table to be told so costs a request for each of them: cheap
+// where the copy survives between runs, and paid every time where it doesn't, which is
+// CI. Going by the name and finding out from the file makes the package that was
+// renamed pay instead -- one request, and only until the table it fetches is cached.
 //
 // A copy written before a rename doesn't hold it, which is what the second read in
 // Resolve is for.

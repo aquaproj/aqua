@@ -82,10 +82,10 @@ func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, vers
 	// where its old name says it is. aqua-registry keeps the old name as an alias, and
 	// somebody whose aqua.yaml still says it has no other way in.
 	//
-	// The table is read before the name is used, because a name is only known not to
-	// have been renamed by the table saying so. The cached copy answers for nothing;
-	// without one the registry's own is read, once.
-	name := c.aliasTable(ctx, logger).Resolve(pkgName)
+	// The cached table answers first, which costs nothing. Without one the name is
+	// used as it is: a table downloaded to say a name was never renamed would be
+	// downloaded for nearly every name.
+	name := c.cachedAliases().Resolve(pkgName)
 	c.sayRenamed(logger, pkgName, name)
 	reg, err := c.Get(ctx, logger, name, version)
 	if err == nil {
@@ -96,9 +96,10 @@ func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, vers
 		return c.LockPackages(reg, pkgName, version), nil
 	}
 
-	// It wasn't there. The table may have been written before the rename, so the
-	// registry's own is read and asked again. When the table already came from the
-	// registry this costs nothing and answers the same, which ends it.
+	// It wasn't there. Either the package was renamed and nothing here knew -- no
+	// cached table, or one written before the rename -- or the name is wrong and the
+	// version isn't published. The registry's own table tells those apart, and is
+	// cached so that the next run knows.
 	fresh := c.fetchAliases(ctx, logger).Resolve(pkgName)
 	if fresh == name {
 		return nil, err

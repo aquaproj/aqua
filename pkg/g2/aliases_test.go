@@ -166,8 +166,9 @@ func TestClient_Resolve_alias(t *testing.T) {
 	}
 }
 
-// The table is read once for a run however many packages it resolves, and the name it
-// gives for a package that was never renamed is that name.
+// A name that answers is never checked against the table, which is nearly every name
+// and the reason the table isn't fetched up front. With no copy on disk -- CI -- that
+// download would be paid for each of them.
 func TestClient_Resolve_noAlias(t *testing.T) {
 	t.Parallel()
 	dl := &refDownloader{files: map[string]string{
@@ -176,32 +177,12 @@ func TestClient_Resolve_noAlias(t *testing.T) {
 			{"os":"linux","arch":"amd64","type":"github_release","repo_owner":"cli",
 			 "repo_name":"cli","asset":"gh.tar.gz"}]}`,
 	}}
-	client := g2.New(dl, nil, "", "")
-	for range 2 {
-		if _, err := client.Resolve(t.Context(), discardLogger(), "cli/cli", "v2.1.0"); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if got := dl.calls[dl.key(g2.DefaultBranch, g2.AliasesFileName)]; got != 1 {
-		t.Errorf("read the table %d times, want once", got)
-	}
-	// And the old name was never asked for, because the table said there was none.
-	if got := dl.calls[dl.key(g2.BranchName("sst/opencode"), g2.Path("v2.1.0"))]; got != 0 {
-		t.Errorf("asked a name the table didn't give %d times", got)
-	}
-}
-
-// A renamed package is fetched under its new name on the first try, so the request that
-// would have answered nothing is never made.
-func TestClient_Resolve_noWastedRequest(t *testing.T) {
-	t.Parallel()
-	dl := opencode()
 	if _, err := g2.New(dl, nil, "", "").Resolve(t.Context(), discardLogger(),
-		"sst/opencode", "v1.0.0"); err != nil {
+		"cli/cli", "v2.1.0"); err != nil {
 		t.Fatal(err)
 	}
-	if got := dl.calls[dl.key(g2.BranchName("sst/opencode"), g2.Path("v1.0.0"))]; got != 0 {
-		t.Errorf("asked the old name %d times, want never", got)
+	if got := dl.calls[dl.key(g2.DefaultBranch, g2.AliasesFileName)]; got != 0 {
+		t.Errorf("read the table %d times, want never", got)
 	}
 }
 
