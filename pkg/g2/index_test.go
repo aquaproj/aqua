@@ -84,3 +84,34 @@ func TestIndex_roundTrip(t *testing.T) {
 		t.Errorf("the names are wrong (-want +got):\n%s", diff)
 	}
 }
+
+// A package leaves the catalogue when its repository is renamed: the entry under the new
+// name carries the old one as an alias, and a name that is both a package and another
+// package's alias is a state the catalogue is checked for.
+func TestIndex_Remove(t *testing.T) {
+	t.Parallel()
+	index := &g2.Index{Packages: []*g2.IndexPackage{
+		{Name: "cli/cli"},
+		{Name: "sst/opencode"},
+		nil,
+		{Name: "anomalyco/opencode", Aliases: []string{"sst/opencode"}},
+	}}
+	index.Remove("sst/opencode")
+
+	got := make([]string, 0, len(index.Packages))
+	for _, pkg := range index.Packages {
+		if pkg == nil {
+			continue
+		}
+		got = append(got, pkg.Name)
+	}
+	if diff := cmp.Diff([]string{"cli/cli", "anomalyco/opencode"}, got); diff != "" {
+		t.Errorf("the catalogue is wrong (-want +got):\n%s", diff)
+	}
+	// Removing what isn't there is not an error: a rename whose old entry was already
+	// gone has nothing to do about it.
+	index.Remove("never/there")
+	if len(index.Packages) != 3 {
+		t.Errorf("removing an absent package changed the catalogue")
+	}
+}

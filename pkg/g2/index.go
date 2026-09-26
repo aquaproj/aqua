@@ -83,6 +83,18 @@ func (i *Index) Add(pkgs ...*IndexPackage) {
 	})
 }
 
+// Remove takes a package out of the index.
+//
+// A package leaves the index when its repository is renamed: the entry under the new
+// name carries the old one as an alias, and the old entry has to go or the name is both
+// a package and another package's alias -- which is a state the catalogue is checked
+// for, because nothing can say which of the two answers.
+func (i *Index) Remove(pkgName string) {
+	i.Packages = slices.DeleteFunc(i.Packages, func(pkg *IndexPackage) bool {
+		return pkg != nil && pkg.Name == pkgName
+	})
+}
+
 // Marshal renders the index as it is committed.
 func (i *Index) Marshal() (string, error) {
 	// Indented, unlike registry.json: this one is read by whoever reviews a package
