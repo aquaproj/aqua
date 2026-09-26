@@ -61,6 +61,24 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		cfgFilePath: cfgFilePath,
 	}
 
+	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, args)
+
+	// Writing sorts, so an unchanged lock file would still be rewritten. Skipping the
+	// write keeps the file's timestamp meaningful and keeps a no-op run out of git.
+	if updated {
+		if err := lockfile.Write(lockFilePath, lf); err != nil {
+			return err //nolint:wrapcheck
+		}
+	}
+	if failed {
+		return errUpdateLockFile
+	}
+	return nil
+}
+
+// updatePackages brings the lock file to what the configuration asks for, and says
+// whether anything changed and whether anything couldn't be resolved.
+func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *registries, cfg *aqua.Config, args *Args) (bool, bool) {
 	updated := false
 	failed := false
 	for _, pkg := range cfg.Packages {
@@ -75,18 +93,45 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		}
 		updated = updated || changed
 	}
+	if prune(logger, lf, cfg, args) > 0 {
+		updated = true
+	}
+	return updated, failed
+}
 
-	// Writing sorts, so an unchanged lock file would still be rewritten. Skipping the
-	// write keeps the file's timestamp meaningful and keeps a no-op run out of git.
-	if updated {
-		if err := lockfile.Write(lockFilePath, lf); err != nil {
-			return err //nolint:wrapcheck
+// prune drops the entries aqua.yaml no longer declares, and reports how many went.
+//
+// What a lock file is for is the packages a configuration asks for, so an entry for one it
+// doesn't answers a question nobody puts. A version that was bumped leaves the one before
+// it behind, and so does a package that was removed.
+//
+// Not when the command named its packages. Then aqua.yaml isn't what the run is about, and
+// every package it didn't name would go.
+//
+// A configuration whose import can't be read comes back with fewer packages than it has,
+// and dropping on that takes entries for packages that do exist. It is done anyway: the
+// file that can't be read is a path that is wrong or a permission that is missing, which
+// the next run can't read either, and the lock file is committed -- so what it costs is a
+// diff to notice rather than an answer to lose.
+func prune(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, args *Args) int {
+	if len(args.Packages) > 0 {
+		return 0
+	}
+	declared := make(map[string]struct{}, len(cfg.Packages))
+	for _, pkg := range cfg.Packages {
+		if pkg == nil {
+			continue
 		}
+		declared[pkg.Name+"\t"+pkg.Version] = struct{}{}
 	}
-	if failed {
-		return errUpdateLockFile
+	pruned := lf.Retain(func(name, version string) bool {
+		_, ok := declared[name+"\t"+version]
+		return ok
+	})
+	if pruned > 0 {
+		logger.Info("dropped the entries aqua.yaml doesn't ask for", "num_of_entries", pruned)
 	}
-	return nil
+	return pruned
 }
 
 func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *registries, pkg *aqua.Package, args *Args) (bool, error) {
