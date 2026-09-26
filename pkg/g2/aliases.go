@@ -1,12 +1,18 @@
 package g2
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"slices"
 	"strings"
+
+	"github.com/aquaproj/aqua/v2/pkg/domain"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // AliasesFileName is the table of other names for a package, on aqua-registry-g2's
@@ -95,4 +101,75 @@ func (a *Aliases) Marshal() (string, error) {
 		return "", fmt.Errorf("marshal the aliases: %w", err)
 	}
 	return strings.TrimSuffix(string(b), "\n") + "\n", nil
+}
+
+// cachedAliases is the table as the last run left it, or an empty one.
+//
+// Read without asking the registry, so that resolving a name costs nothing until a name
+// turns out not to answer. A copy from before a rename simply doesn't hold it, which is
+// the case fetchAliases answers.
+func (c *Client) cachedAliases() *Aliases {
+	if c.cache == nil {
+		return nil
+	}
+	b := c.cache.Read(c.cache.AliasesPath(c.repoOwner, c.repoName))
+	if b == nil {
+		return nil
+	}
+	aliases, err := ReadAliases(bytes.NewReader(b))
+	if err != nil {
+		// A cached file that doesn't parse is a copy gone wrong. Fetching replaces it.
+		return nil
+	}
+	return aliases
+}
+
+// fetchAliases reads the table from the registry, once per run, and caches it.
+//
+// A registry that has none resolves every name to itself. The file arrives with the
+// renames it describes, so an older registry, or a mirror of one, simply doesn't have
+// it, and failing would break every package to serve the few that were renamed.
+func (c *Client) fetchAliases(ctx context.Context, logger *slog.Logger) *Aliases {
+	c.aliasesOnce.Do(func() {
+		b, err := c.downloadAliases(ctx, logger)
+		if err != nil {
+			logger.Debug("the registry has no table of other names", "error", err.Error())
+			return
+		}
+		aliases, err := ReadAliases(bytes.NewReader(b))
+		if err != nil {
+			logger.Debug("the table of other names isn't readable", "error", err.Error())
+			return
+		}
+		c.aliases = aliases
+		if c.cache == nil {
+			return
+		}
+		if err := c.cache.Write(c.cache.AliasesPath(c.repoOwner, c.repoName), b); err != nil {
+			// The fetch succeeded, so failing here would throw away a good answer
+			// over a copy of it.
+			slogerr.WithError(logger, err).Warn("cache the table of other names")
+		}
+	})
+	return c.aliases
+}
+
+func (c *Client) downloadAliases(ctx context.Context, logger *slog.Logger) ([]byte, error) {
+	file, err := c.dl.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
+		RepoOwner: c.repoOwner,
+		RepoName:  c.repoName,
+		// The catalogue and this table are the registry as a whole rather than one
+		// package, so they sit on the default branch.
+		Ref:  DefaultBranch,
+		Path: AliasesFileName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("download %s: %w", AliasesFileName, err)
+	}
+	defer file.Close()
+	b, err := io.ReadAll(file.Reader())
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", AliasesFileName, err)
+	}
+	return b, nil
 }
