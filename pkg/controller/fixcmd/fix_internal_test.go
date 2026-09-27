@@ -33,11 +33,19 @@ func (f *fakeReader) Read(_ *slog.Logger, _ string, cfg *aqua.Config) error {
 	return nil
 }
 
-// fakeNames is the registry's table of other names.
+// fakeNames is the registry's table of other names, and what it says it holds.
 type fakeNames struct {
 	aliases *g2.Aliases
-	offline bool
-	asked   bool
+	// catalogue is what the registry holds. Nil is a registry that publishes no
+	// catalogue, which the tests about renaming are, so nothing there is called
+	// missing.
+	catalogue *g2.Index
+	offline   bool
+	asked     bool
+}
+
+func (f *fakeNames) Catalogue(_ context.Context, _ *slog.Logger, _ bool) *g2.Index {
+	return f.catalogue
 }
 
 func (f *fakeNames) NameTable(_ context.Context, _ *slog.Logger, offline bool) *g2.Aliases {
@@ -225,5 +233,56 @@ func TestPackageNames(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("the names are wrong (-want +got):\n%s", diff)
+	}
+}
+
+// catalogue is what the registry says it holds.
+func catalogue(names ...string) *g2.Index {
+	index := &g2.Index{}
+	for _, name := range names {
+		index.Packages = append(index.Packages, &g2.IndexPackage{Name: name})
+	}
+	return index
+}
+
+// A package the registry doesn't hold is said and left alone: there is nothing to write,
+// and a configuration asking for it is out of date whether or not anything here can fix it.
+func TestController_Fix_unknownPackage(t *testing.T) {
+	t.Parallel()
+	content := "packages:\n  - name: cli/cli@v2.0.0\n  - name: nobody/nothing@v1.0.0\n"
+	path := write(t, content)
+	c := New(&fakeFinder{paths: []string{path}}, &fakeReader{cfg: &aqua.Config{
+		Packages: []*aqua.Package{
+			{Name: "cli/cli@v2.0.0"},
+			{Name: "nobody/nothing@v1.0.0"},
+		},
+	}}, &fakeNames{aliases: table(nil), catalogue: catalogue("cli/cli")})
+
+	err := c.Fix(t.Context(), discardLogger(), &config.Param{}, &Args{})
+	if !errors.Is(err, errOutOfDate) {
+		t.Fatalf("a package the registry doesn't hold should be reported, got %v", err)
+	}
+	if got := read(t, path); got != content {
+		t.Errorf("the file was written: %q", got)
+	}
+}
+
+// A package the registry holds under the name it has now is held, whichever name the
+// configuration asks for.
+func TestController_Fix_renamedIsHeld(t *testing.T) {
+	t.Parallel()
+	path := write(t, "packages:\n  - name: sst/opencode@v0.14.1\n")
+	c := New(&fakeFinder{paths: []string{path}}, &fakeReader{cfg: &aqua.Config{
+		Packages: []*aqua.Package{{Name: "sst/opencode@v0.14.1"}},
+	}}, &fakeNames{
+		aliases:   table(map[string]string{"sst/opencode": "anomalyco/opencode"}),
+		catalogue: catalogue("anomalyco/opencode"),
+	})
+
+	if err := c.Fix(t.Context(), discardLogger(), &config.Param{}, &Args{}); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := read(t, path), "packages:\n  - name: anomalyco/opencode@v0.14.1\n"; got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }

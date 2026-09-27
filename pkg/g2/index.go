@@ -1,11 +1,17 @@
 package g2
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"slices"
 	"strings"
+	"time"
+
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // IndexFileName is the catalogue on aqua-registry-g2's main branch.
@@ -104,4 +110,76 @@ func (i *Index) Marshal() (string, error) {
 		return "", fmt.Errorf("marshal the index: %w", err)
 	}
 	return string(b) + "\n", nil
+}
+
+// CatalogueTTL is how long a cached catalogue answers.
+//
+// The same day the table of other names answers for, and for the same reason: what asking
+// it costs is a request, and what being late costs is a package that left the registry
+// going unmentioned until tomorrow. Nothing installs any differently in the meantime,
+// because what installs is the lock file.
+const CatalogueTTL = TableTTL
+
+// Catalogue returns what the registry says it holds, or nil when it can't be read.
+//
+// It is the only thing that answers whether the registry has a package at all. A version
+// answers for itself -- fetching it either finds a file or doesn't -- but a package that
+// left the registry, or one that was never in it, looks from a configuration exactly like
+// a package nobody has asked for yet.
+//
+// Nil rather than an error, the way the table of other names is: a registry that doesn't
+// publish a catalogue, or a copy of one that can't be reached, is a question that goes
+// unanswered rather than a run that fails.
+func (c *Client) Catalogue(ctx context.Context, logger *slog.Logger, offline bool) *Index {
+	if offline {
+		return c.cachedCatalogue(0)
+	}
+	if index := c.cachedCatalogue(CatalogueTTL); index != nil {
+		return index
+	}
+	return c.fetchCatalogue(ctx, logger)
+}
+
+// cachedCatalogue is the catalogue on disk, when it was written no longer than ttl ago. A
+// ttl of zero takes it whatever its age.
+func (c *Client) cachedCatalogue(ttl time.Duration) *Index {
+	if c.cache == nil {
+		return nil
+	}
+	b := c.cache.ReadWithin(c.cache.CataloguePath(c.repoOwner, c.repoName), ttl)
+	if b == nil {
+		return nil
+	}
+	index, err := ReadIndex(bytes.NewReader(b))
+	if err != nil {
+		// A cached file that doesn't parse is a copy gone wrong. Fetching replaces it.
+		return nil
+	}
+	return index
+}
+
+// fetchCatalogue reads the catalogue from the registry, once per run, and caches it.
+func (c *Client) fetchCatalogue(ctx context.Context, logger *slog.Logger) *Index {
+	c.catalogueOnce.Do(func() {
+		b, err := c.downloadFromDefaultBranch(ctx, logger, IndexFileName)
+		if err != nil {
+			logger.Debug("the registry publishes no catalogue", "error", err.Error())
+			return
+		}
+		index, err := ReadIndex(bytes.NewReader(b))
+		if err != nil {
+			logger.Debug("the catalogue isn't readable", "error", err.Error())
+			return
+		}
+		c.catalogue = index
+		if c.cache == nil {
+			return
+		}
+		if err := c.cache.Write(c.cache.CataloguePath(c.repoOwner, c.repoName), b); err != nil {
+			// The fetch succeeded, so failing here would throw away a good answer over
+			// a copy of it.
+			slogerr.WithError(logger, err).Warn("cache the catalogue")
+		}
+	})
+	return c.catalogue
 }

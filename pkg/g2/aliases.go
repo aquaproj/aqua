@@ -200,21 +200,27 @@ func (c *Client) fetchAliases(ctx context.Context, logger *slog.Logger) *Aliases
 }
 
 func (c *Client) downloadAliases(ctx context.Context, logger *slog.Logger) ([]byte, error) {
+	return c.downloadFromDefaultBranch(ctx, logger, AliasesFileName)
+}
+
+// downloadFromDefaultBranch reads a file the registry keeps for itself rather than for one
+// package: the catalogue, and the table of other names beside it.
+func (c *Client) downloadFromDefaultBranch(ctx context.Context, logger *slog.Logger, path string) ([]byte, error) {
 	file, err := c.dl.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
 		RepoOwner: c.repoOwner,
 		RepoName:  c.repoName,
-		// The catalogue and this table are the registry as a whole rather than one
-		// package, so they sit on the default branch.
+		// These are the registry as a whole rather than one package, so they sit on the
+		// default branch.
 		Ref:  DefaultBranch,
-		Path: AliasesFileName,
+		Path: path,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("download %s: %w", AliasesFileName, err)
+		return nil, fmt.Errorf("download %s: %w", path, err)
 	}
 	defer file.Close()
 	b, err := io.ReadAll(file.Reader())
 	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", AliasesFileName, err)
+		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
 	return b, nil
 }

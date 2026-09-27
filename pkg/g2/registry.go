@@ -107,6 +107,9 @@ type Client struct {
 	// registry.json is.
 	aliases     *Aliases
 	aliasesOnce sync.Once
+	// catalogue is what the registry says it holds, read once, for the same reason.
+	catalogue     *Index
+	catalogueOnce sync.Once
 }
 
 // New creates a Client. An empty owner or name falls back to aqua-registry-g2, and a

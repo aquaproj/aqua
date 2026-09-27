@@ -24,6 +24,12 @@ A package's repository is renamed or transferred, the registry keeps the old nam
 alias, and the file goes on working while naming something nobody uses -- until the
 registry stops carrying the alias. This is what brings it up to date.
 
+It also says which packages the registry doesn't hold, which is the other half of the same
+question and the half nothing can answer for you. A name the registry has never had is a
+typo or a package nobody has added; a name it used to have is one somebody removed. Nothing
+else says so: installing works from aqua-lock.json, so a package the registry dropped goes
+on installing from what was recorded until the day somebody asks for another version of it.
+
 Nothing it does changes what the file means: the packages installed before and after a
 run are the same packages at the same versions. That is what makes it safe to run on
 every commit, in a hook or in the job that pushes fixes back to a pull request.
@@ -38,7 +44,9 @@ name is one it writes.
 	$ aqua fix && aqua lock update
 
 --check writes nothing and exits non-zero when there was something to do, which is how a
-CI job asks whether the configuration still says what the registry says.
+CI job asks whether the configuration still says what the registry says. A package the
+registry doesn't hold makes any run exit non-zero, --check or not: there is nothing to
+write, and a run that said so and succeeded would be a run nobody read.
 
 	$ aqua fix --check
 
