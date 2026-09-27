@@ -308,6 +308,20 @@ func (p *Package) fileSrcWithoutWindowsExt(file *registry.File, rt *runtime.Runt
 		return filepath.Base(assetName), nil
 	}
 	if file.Src == "" {
+		// A compressed single file holds no name of its own, so what the package
+		// installs from is the asset's name without the compression extension. It is
+		// the unarchived case one step later, and a definition that says nothing
+		// means the same thing in both.
+		//
+		// A definition that does say it keeps saying it. aqua-registry is read by
+		// every version of aqua, including the ones that resolved this to the command
+		// name, so taking an explicit files[].src out of one because this now infers
+		// it would break whoever hasn't updated. What it is here for is a definition
+		// whose readers all have it -- aqua-registry-g2 generates the entry it
+		// installs from, and an aqua that reads that registry at all has this.
+		if name := unarchive.SingleFileName(pkgInfo.GetFormat(), assetName); name != "" {
+			return name, nil
+		}
 		return file.Name, nil
 	}
 	src, err := p.renderSrc(assetName, file, rt)
