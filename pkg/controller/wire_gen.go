@@ -28,6 +28,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/install"
 	"github.com/aquaproj/aqua/v2/pkg/controller/list"
 	"github.com/aquaproj/aqua/v2/pkg/controller/lockupdate"
+	"github.com/aquaproj/aqua/v2/pkg/controller/migrate"
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update"
 	"github.com/aquaproj/aqua/v2/pkg/controller/updateaqua"
@@ -133,6 +134,13 @@ func InitializeFixCommandController(ctx context.Context, logger *slog.Logger, pa
 	cache := g2.NewCache(param)
 	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
 	controller := fixcmd.New(configFinder, configReader, g2Client)
+	return controller, nil
+}
+
+func InitializeMigrateCommandController(ctx context.Context, logger *slog.Logger, param *config.Param) (*migrate.Controller, error) {
+	configFinder := finder.NewConfigFinder()
+	configReader := reader.New(param)
+	controller := migrate.New(configFinder, configReader)
 	return controller, nil
 }
 
