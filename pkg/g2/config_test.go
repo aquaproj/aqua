@@ -54,13 +54,23 @@ func TestConfig_SetVersion(t *testing.T) {
 	}
 }
 
-// A file with no overrides says nothing about any version, so it is an error rather
-// than the base standing in for one.
+// A file with no overrides is a definition entirely at the top level, which is the base
+// the overrides would have inherited from, so it answers for every version on its own.
+// Saying that with one empty catch-all told a reader there was a case to think about and
+// then described none of it.
 func TestConfig_SetVersion_noOverride(t *testing.T) {
 	t.Parallel()
-	cfg := &g2.Config{PackageInfo: &registry.PackageInfo{Type: "github_release"}}
-	if _, err := cfg.SetVersion(slog.New(slog.DiscardHandler), "v1.0.0"); err == nil {
-		t.Fatal("an error must be returned")
+	cfg := &g2.Config{PackageInfo: &registry.PackageInfo{
+		Type:      "github_release",
+		RepoOwner: "istio",
+		RepoName:  "istio",
+	}}
+	pkgInfo, err := cfg.SetVersion(slog.New(slog.DiscardHandler), "1.29.8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pkgInfo.RepoOwner != "istio" || pkgInfo.RepoName != "istio" {
+		t.Errorf("got %s/%s", pkgInfo.RepoOwner, pkgInfo.RepoName)
 	}
 }
 

@@ -66,7 +66,11 @@ type AssetFilter struct {
 // have to be undone in every older override.
 func (c *Config) SetVersion(logger *slog.Logger, v string) (*registry.PackageInfo, error) {
 	if len(c.VersionOverrides) == 0 {
-		return nil, errNoVersionOverride
+		// A definition that is entirely at the top level. It is the base the overrides
+		// would have inherited from, so with none of them it answers for every version
+		// on its own -- and a file saying so with one empty catch-all told a reader
+		// there was a case to think about and then described none of it.
+		return c.Copy(), nil
 	}
 	for _, vo := range c.VersionOverrides {
 		if c.match(logger, vo, v) {
