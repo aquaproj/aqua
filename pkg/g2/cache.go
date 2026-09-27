@@ -60,6 +60,14 @@ func (c *Cache) AliasesPath(repoOwner, repoName string) string {
 	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName, AliasesFileName)
 }
 
+// CataloguePath is where the catalogue of what the registry holds is cached.
+//
+// Beside the table of other names, and for the same reason: it is the registry as a whole
+// rather than one package, the way it sits at the root of the default branch.
+func (c *Cache) CataloguePath(repoOwner, repoName string) string {
+	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName, IndexFileName)
+}
+
 // Read returns the cached file, or nil when there is none.
 //
 // A cache that can't be read is not an error. The file is a copy of something that

@@ -52,6 +52,9 @@ type ConfigReader interface {
 // and are read from it at install time.
 type Names interface {
 	NameTable(ctx context.Context, logger *slog.Logger, offline bool) *g2.Aliases
+	// Catalogue is what the registry says it holds, and the only thing that answers
+	// whether it has a package at all.
+	Catalogue(ctx context.Context, logger *slog.Logger, offline bool) *g2.Index
 }
 
 // Controller brings configuration files up to date.
