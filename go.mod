@@ -90,7 +90,6 @@ require (
 	github.com/suzuki-shunsuke/go-revoke-github-access-token v0.0.2 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/zalando/go-keyring v0.2.8 // indirect
-	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
 	go4.org v0.0.0-20260112195520-a5071408f32f // indirect
 	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
