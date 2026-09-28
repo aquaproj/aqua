@@ -16,7 +16,7 @@ require (
 	github.com/ktr0731/go-fuzzyfinder v0.9.0
 	github.com/mholt/archives v0.1.5
 	github.com/otiai10/copy v1.14.1
-	github.com/pb33f/ordered-map/v2 v2.3.1
+	github.com/pb33f/ordered-map/v2 v2.3.2
 	github.com/schollz/progressbar/v3 v3.19.1
 	github.com/suzuki-shunsuke/flute v1.0.1
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
@@ -75,6 +75,7 @@ require (
 	github.com/nsf/termbox-go v1.1.1 // indirect
 	github.com/nwaples/rardecode/v2 v2.2.0 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
+	github.com/pb33f/go-yaml v0.1.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.27 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
