@@ -126,3 +126,25 @@ func TestFuzzyGetter_Get_notInG2(t *testing.T) {
 		t.Errorf("the finder got %q, want v3.0.0 from upstream", got)
 	}
 }
+
+// A branch holding no version falls back the same way a missing branch does.
+//
+// The branch is made when a package is taken over and the versions are generated
+// afterwards, so it exists empty for a while. It is also what is left when every
+// directory on it turns out not to be a version.
+func TestFuzzyGetter_Get_emptyInG2(t *testing.T) {
+	t.Parallel()
+	pkg := &registry.PackageInfo{Name: "cli/cli"}
+	upstream := versiongetter.NewMockVersionGetter(map[string][]*fuzzyfinder.Item{
+		"cli/cli": fuzzyfinder.ConvertStringsToItems([]string{"v3.0.0"}),
+	})
+	fg := versiongetter.NewFuzzy(fuzzyfinder.NewMock([]int{0}, nil), upstream, newG2())
+	logger := slog.New(slog.DiscardHandler)
+
+	if got := fg.Get(t.Context(), logger, "standard", pkg, "", false, -1); got != "v3.0.0" {
+		t.Errorf("got %q, want v3.0.0 from upstream", got)
+	}
+	if got := fg.Get(t.Context(), logger, "standard", pkg, "", true, -1); got != "v3.0.0" {
+		t.Errorf("the finder got %q, want v3.0.0 from upstream", got)
+	}
+}
