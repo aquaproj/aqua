@@ -36,7 +36,18 @@ type Index struct {
 // Only what a search shows or matches on: the rest is on the package's own branch and
 // is read once a package has been chosen.
 type IndexPackage struct {
-	Name        string   `json:"name"`
+	Name string `json:"name"`
+	// UUID is what the package's branch is named after.
+	//
+	// A name is not an identity. A repository can be renamed, and the name it leaves
+	// behind can be taken by a different repository, so a branch named after a name is
+	// a branch whose subject can change under it. The branch is named after something
+	// that never changes instead, and this catalogue is what turns a name -- the one a
+	// package has now, or one it used to have -- into it.
+	//
+	// Empty while a package's branch is still named after it. Nothing resolves through
+	// this yet.
+	UUID        string   `json:"uuid,omitempty"`
 	Description string   `json:"description,omitempty"`
 	Link        string   `json:"link,omitempty"`
 	Aliases     []string `json:"aliases,omitempty"`
