@@ -37,7 +37,7 @@ type Index struct {
 // is read once a package has been chosen.
 type IndexPackage struct {
 	Name string `json:"name"`
-	// UUID is what the package's branch is named after.
+	// ID is what the package's branch is named after.
 	//
 	// A name is not an identity. A repository can be renamed, and the name it leaves
 	// behind can be taken by a different repository, so a branch named after a name is
@@ -45,9 +45,14 @@ type IndexPackage struct {
 	// that never changes instead, and this catalogue is what turns a name -- the one a
 	// package has now, or one it used to have -- into it.
 	//
+	// Opaque, and nothing reads anything out of it. It is a string rather than a
+	// particular format so that what a registry mints -- a UUID, a timestamp and a few
+	// random characters, a serial -- is the registry's business and not part of what a
+	// consumer has to agree to.
+	//
 	// Empty while a package's branch is still named after it. Nothing resolves through
 	// this yet.
-	UUID        string   `json:"uuid,omitempty"`
+	ID          string   `json:"id,omitempty"`
 	Description string   `json:"description,omitempty"`
 	Link        string   `json:"link,omitempty"`
 	Aliases     []string `json:"aliases,omitempty"`
