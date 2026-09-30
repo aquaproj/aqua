@@ -78,6 +78,7 @@ func InitializeListCommandController(ctx context.Context, logger *slog.Logger, p
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -170,6 +171,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -223,6 +225,11 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 			github.NewGit,
 			wire.Bind(new(g2.TreeGetter), new(*github.GitService)),
 		),
+		wire.NewSet(
+			g2.NewDefault,
+			wire.Bind(new(g2.Branches), new(*g2.Client)),
+		),
+		g2.NewCache,
 		versiongetter.NewCargo,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
@@ -254,6 +261,7 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -378,6 +386,7 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -444,6 +453,7 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -675,6 +685,7 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			reader.New,
@@ -921,6 +932,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(
@@ -965,6 +977,11 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 			github.NewGit,
 			wire.Bind(new(g2.TreeGetter), new(*github.GitService)),
 		),
+		wire.NewSet(
+			g2.NewDefault,
+			wire.Bind(new(g2.Branches), new(*g2.Client)),
+		),
+		g2.NewCache,
 		versiongetter.NewCargo,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
@@ -1053,6 +1070,7 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		wire.NewSet(
 			github.New,
@@ -1143,6 +1161,7 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,
 			wire.Bind(new(registry.GitHubContentFileDownloader), new(*download.GitHubContentFileDownloader)),
+			wire.Bind(new(g2.Downloader), new(*download.GitHubContentFileDownloader)),
 		),
 		download.NewHTTPDownloader,
 		wire.NewSet(

@@ -22,6 +22,24 @@ func (g *fakeTreeGetter) GetTree(_ context.Context, _, _, sha string, _ bool) (*
 	return g.tree, nil, g.err
 }
 
+// fakeBranches answers with the branch holding whatever package is asked for. What a lister
+// test is about is the tree, so the resolving is a constant here.
+type fakeBranches struct {
+	id  string
+	err error
+}
+
+func (f *fakeBranches) BranchOf(_ context.Context, _ *slog.Logger, _ string) (string, error) {
+	if f.err != nil {
+		return "", f.err
+	}
+	id := f.id
+	if id == "" {
+		id = "1790772767"
+	}
+	return g2.IDBranchName(id), nil
+}
+
 func tree(truncated bool, entries ...*github.TreeEntry) *github.Tree {
 	return &github.Tree{Truncated: &truncated, Entries: entries}
 }
@@ -55,7 +73,7 @@ func TestVersionLister_List(t *testing.T) {
 			[]*github.TreeEntry{entry("blob", "README.md")},
 		)...),
 	}
-	lister := g2.NewVersionLister(gh, "", "")
+	lister := g2.NewVersionLister(gh, &fakeBranches{}, "", "")
 
 	got, err := lister.List(t.Context(), slog.New(slog.DiscardHandler), "cli/cli")
 	if err != nil {
@@ -64,8 +82,9 @@ func TestVersionLister_List(t *testing.T) {
 	if diff := cmp.Diff([]string{"v1.0.0", "v10.0.0", "v2.0.0"}, got); diff != "" {
 		t.Errorf("the versions are wrong (-want +got):\n%s", diff)
 	}
-	// The package is the branch and the versions are a directory in it.
-	if diff := cmp.Diff("pkg_cli_2fcli:versions", gh.sha); diff != "" {
+	// The branch holding the package is where the versions are, and they are a directory
+	// in it.
+	if diff := cmp.Diff("pkg_1790772767:versions", gh.sha); diff != "" {
 		t.Errorf("the tree is wrong (-want +got):\n%s", diff)
 	}
 }
@@ -74,7 +93,7 @@ func TestVersionLister_List(t *testing.T) {
 // oldest, because the tree is ordered by name rather than by version.
 func TestVersionLister_List_truncated(t *testing.T) {
 	t.Parallel()
-	lister := g2.NewVersionLister(&fakeTreeGetter{tree: tree(true, version("v1.0.0")...)}, "", "")
+	lister := g2.NewVersionLister(&fakeTreeGetter{tree: tree(true, version("v1.0.0")...)}, &fakeBranches{}, "", "")
 	if _, err := lister.List(t.Context(), slog.New(slog.DiscardHandler), "cli/cli"); err == nil {
 		t.Fatal("an error must be returned")
 	}
@@ -82,7 +101,7 @@ func TestVersionLister_List_truncated(t *testing.T) {
 
 func TestVersionLister_List_error(t *testing.T) {
 	t.Parallel()
-	lister := g2.NewVersionLister(&fakeTreeGetter{err: errors.New("404")}, "", "")
+	lister := g2.NewVersionLister(&fakeTreeGetter{err: errors.New("404")}, &fakeBranches{}, "", "")
 	if _, err := lister.List(t.Context(), slog.New(slog.DiscardHandler), "cli/cli"); err == nil {
 		t.Fatal("an error must be returned")
 	}
@@ -98,7 +117,7 @@ func TestVersionLister_List_escaped(t *testing.T) {
 			version("kustomize_2fv5.8.2"),
 		)...),
 	}
-	lister := g2.NewVersionLister(gh, "", "")
+	lister := g2.NewVersionLister(gh, &fakeBranches{}, "", "")
 
 	got, err := lister.List(t.Context(), slog.New(slog.DiscardHandler), "kubernetes-sigs/kustomize")
 	if err != nil {
@@ -121,7 +140,7 @@ func TestVersionLister_List_nested(t *testing.T) {
 			entry("blob", "kustomize/v5.8.1/registry-1.json"),
 		),
 	}
-	lister := g2.NewVersionLister(gh, "", "")
+	lister := g2.NewVersionLister(gh, &fakeBranches{}, "", "")
 
 	got, err := lister.List(t.Context(), slog.New(slog.DiscardHandler), "kubernetes-sigs/kustomize")
 	if err != nil {

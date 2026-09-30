@@ -31,7 +31,21 @@ const VersionDir = "versions"
 // is recorded inside the file.
 const FileName = "registry-1.json"
 
-// BranchName returns the branch holding the package's generated registry.json.
+// IDBranchName returns the branch holding the package whose id this is.
+//
+// A branch is named after the package's id rather than after the package, so that a
+// repository being renamed moves nothing: the name is resolved to an id through the table
+// the registry publishes, and everything else addresses the id.
+func IDBranchName(id string) string {
+	return BranchPrefix + id
+}
+
+// BranchName returns the branch a package's generated registry.json was held on while
+// branches were named after the package.
+//
+// Nothing here addresses a package that way any more. It is what the registry's own tooling
+// reads to carry a package over to the branch named after its id, and it goes when those
+// branches go.
 func BranchName(pkgName string) string {
 	return BranchPrefix + EncodePackageName(pkgName)
 }

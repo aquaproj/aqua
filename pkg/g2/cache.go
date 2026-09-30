@@ -45,19 +45,21 @@ func NewCache(param *config.Param) *Cache {
 
 // Path is where one package version's registry.json is cached.
 //
-// It mirrors the repository's own layout, down to the branch name, so that a cached
-// file can be matched to what it came from by looking at it.
+// Under the package's name rather than under the branch it came from, which is named after
+// the package's id: what a caller has is a name, and a cached file it has already read is
+// found again without resolving anything -- including on a run that can't reach the registry
+// at all.
 func (c *Cache) Path(repoOwner, repoName, pkgName, version string) string {
 	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName,
-		BranchName(pkgName), VersionDir, EncodeVersion(version), FileName)
+		EncodePackageName(pkgName), VersionDir, EncodeVersion(version), FileName)
 }
 
-// AliasesPath is where the table of other names is cached.
+// NamesPath is where the table that resolves a name is cached.
 //
-// Beside the branches rather than inside one: it is the registry as a whole, the same
-// way it sits at the root of the default branch rather than on a package's branch.
-func (c *Cache) AliasesPath(repoOwner, repoName string) string {
-	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName, AliasesFileName)
+// Beside the packages rather than inside one: it is the registry as a whole, the same way it
+// sits at the root of the default branch rather than on a package's branch.
+func (c *Cache) NamesPath(repoOwner, repoName string) string {
+	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName, NamesFileName)
 }
 
 // CataloguePath is where the catalogue of what the registry holds is cached.

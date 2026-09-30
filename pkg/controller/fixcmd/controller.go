@@ -51,7 +51,7 @@ type ConfigReader interface {
 // the table sits beside its catalogue; another registry's aliases are its own business
 // and are read from it at install time.
 type Names interface {
-	NameTable(ctx context.Context, logger *slog.Logger, offline bool) *g2.Aliases
+	NameTable(ctx context.Context, logger *slog.Logger, offline bool) *g2.Names
 	// Catalogue is what the registry says it holds, and the only thing that answers
 	// whether it has a package at all.
 	Catalogue(ctx context.Context, logger *slog.Logger, offline bool) *g2.Index

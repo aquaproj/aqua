@@ -2,6 +2,7 @@ package versiongetter_test
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"testing"
@@ -40,13 +41,32 @@ func (g *fakeTreeGetter) GetTree(_ context.Context, _, _, _ string, _ bool) (*gi
 	return tree, nil, nil
 }
 
+// fakeBranches answers with the branch holding whatever package is asked for. These tests are
+// about the versions on it rather than about resolving a name.
+type fakeBranches struct {
+	// notHeld makes it answer the way the registry does for a package it doesn't hold.
+	notHeld bool
+}
+
+func (f *fakeBranches) BranchOf(_ context.Context, _ *slog.Logger, pkgName string) (string, error) {
+	if f.notHeld {
+		return "", fmt.Errorf("%w: %s", g2.ErrNoPackageBranch, pkgName)
+	}
+	return g2.IDBranchName("1790772767"), nil
+}
+
 func newG2(versions ...string) *versiongetter.G2VersionGetter {
-	return versiongetter.NewG2(g2.NewVersionLister(&fakeTreeGetter{versions: versions}, "", ""))
+	return versiongetter.NewG2(g2.NewVersionLister(
+		&fakeTreeGetter{versions: versions}, &fakeBranches{}, "", ""))
 }
 
 // newG2NotFound builds a getter for a package aqua-registry-g2 has no branch for.
+//
+// The name doesn't resolve, which is what a package the registry doesn't hold looks like
+// now: there is no branch to ask about.
 func newG2NotFound() *versiongetter.G2VersionGetter {
-	return versiongetter.NewG2(g2.NewVersionLister(&fakeTreeGetter{notFound: true}, "", ""))
+	return versiongetter.NewG2(g2.NewVersionLister(
+		&fakeTreeGetter{notFound: true}, &fakeBranches{notHeld: true}, "", ""))
 }
 
 func items(versions ...string) []*fuzzyfinder.Item {
