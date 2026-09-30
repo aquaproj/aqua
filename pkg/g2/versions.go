@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"path"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/github"
 )
@@ -52,7 +54,10 @@ func (l *VersionLister) List(ctx context.Context, logger *slog.Logger, pkgName s
 	// entries in a directory and says so only by returning fewer. Truncation there
 	// would drop versions from the middle of an order that isn't the version order,
 	// so the newest could be among the ones lost.
-	tree, resp, err := l.git.GetTree(ctx, l.repoOwner, l.repoName, BranchName(pkgName)+":"+VersionDir, false)
+	//
+	// The tree is read recursively so that a version is recognised by the file it
+	// holds rather than by being a directory. See versionOf.
+	tree, resp, err := l.git.GetTree(ctx, l.repoOwner, l.repoName, BranchName(pkgName)+":"+VersionDir, true)
 	if err != nil {
 		// No branch for the package, or no repository at all while g2 is being
 		// filled in. Either way it holds nothing for this package, which is not the
@@ -67,21 +72,40 @@ func (l *VersionLister) List(ctx context.Context, logger *slog.Logger, pkgName s
 			"github_api_rate_limit", resp.Rate.Limit,
 			"github_api_rate_remaining", resp.Rate.Remaining)
 	}
-	// This limit is 100,000 entries, so reaching it means something other than a
-	// package's version history. Returning a partial list would quietly hide
-	// versions, so it fails instead.
+	// This limit is 100,000 entries, and a version brings two of them, so reaching
+	// it means something other than a package's version history. Returning a partial
+	// list would quietly hide versions, so it fails instead.
 	if tree.GetTruncated() {
 		return nil, errTreeTruncated
 	}
 
 	versions := make([]string, 0, len(tree.Entries))
 	for _, entry := range tree.Entries {
-		// Each version is a directory holding its registry.json. Anything else is
-		// not a version.
-		if entry.GetType() != "tree" {
+		version, ok := versionOf(entry)
+		if !ok {
 			continue
 		}
-		versions = append(versions, entry.GetPath())
+		versions = append(versions, version)
 	}
 	return versions, nil
+}
+
+// versionOf reads the version whose registry.json a tree entry is, and reports false
+// for an entry that is not one.
+//
+// A version is the directory holding the generated file, rather than any directory
+// under versions/. The difference showed when the layout wrote a version's slashes as
+// directories: "kustomize/v5.8.1" became two of them, and a listing that called every
+// directory a version offered "kustomize" as a version of kustomize, which no release
+// is tagged. Such a directory holds no registry.json of its own, and its name doesn't
+// decode, so both halves of this reject it.
+func versionOf(entry *github.TreeEntry) (string, bool) {
+	if entry.GetType() != "blob" {
+		return "", false
+	}
+	dir, file := path.Split(entry.GetPath())
+	if file != FileName {
+		return "", false
+	}
+	return DecodeVersion(strings.TrimSuffix(dir, "/"))
 }

@@ -49,7 +49,7 @@ func NewCache(param *config.Param) *Cache {
 // file can be matched to what it came from by looking at it.
 func (c *Cache) Path(repoOwner, repoName, pkgName, version string) string {
 	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName,
-		BranchName(pkgName), VersionDir, version, FileName)
+		BranchName(pkgName), VersionDir, EncodeVersion(version), FileName)
 }
 
 // AliasesPath is where the table of other names is cached.
