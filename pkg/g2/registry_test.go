@@ -15,7 +15,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// fakeID is the id of the branch holding cli/cli in these tests.
+const fakeID = "1790772769"
+
 // fakeDownloader answers with fixed content and records what it was asked for.
+//
+// The table is answered separately, because a name has to become an id before the file can
+// be asked for and these tests are about the file. What it says is what the catalogue would:
+// cli/cli is on the branch named after fakeID.
 type fakeDownloader struct {
 	content string
 	err     error
@@ -24,6 +31,10 @@ type fakeDownloader struct {
 }
 
 func (d *fakeDownloader) DownloadGitHubContentFile(_ context.Context, _ *slog.Logger, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
+	if param.Path == g2.NamesFileName {
+		return &domain.GitHubContentFile{ReadCloser: io.NopCloser(strings.NewReader(
+			`{"ids":{"cli/cli":"` + fakeID + `"}}`))}, nil
+	}
 	d.param = param
 	d.calls++
 	if d.err != nil {
@@ -50,12 +61,12 @@ func TestClient_Get(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The package is carried by the branch and the version by the path, because
-	// each package has a branch of its own.
+	// The branch carries the package -- named after its id, which the table resolved the
+	// name to -- and the path carries the version.
 	want := &domain.GitHubContentFileParam{
 		RepoOwner: "aquaproj",
 		RepoName:  "aqua-registry-g2",
-		Ref:       "pkg_cli_2fcli",
+		Ref:       "pkg_" + fakeID,
 		Path:      "versions/v2.1.0/registry-1.json",
 	}
 	if diff := cmp.Diff(want, dl.param); diff != "" {

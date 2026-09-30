@@ -33,9 +33,9 @@ func (f *fakeReader) Read(_ *slog.Logger, _ string, cfg *aqua.Config) error {
 	return nil
 }
 
-// fakeNames is the registry's table of other names, and what it says it holds.
+// fakeNames is the registry's table of names, and what it says it holds.
 type fakeNames struct {
-	aliases *g2.Aliases
+	aliases *g2.Names
 	// catalogue is what the registry holds. Nil is a registry that publishes no
 	// catalogue, which the tests about renaming are, so nothing there is called
 	// missing.
@@ -48,14 +48,14 @@ func (f *fakeNames) Catalogue(_ context.Context, _ *slog.Logger, _ bool) *g2.Ind
 	return f.catalogue
 }
 
-func (f *fakeNames) NameTable(_ context.Context, _ *slog.Logger, offline bool) *g2.Aliases {
+func (f *fakeNames) NameTable(_ context.Context, _ *slog.Logger, offline bool) *g2.Names {
 	f.asked = true
 	f.offline = offline
 	return f.aliases
 }
 
-func table(aliases map[string]string) *g2.Aliases {
-	return &g2.Aliases{Aliases: aliases}
+func table(aliases map[string]string) *g2.Names {
+	return &g2.Names{Aliases: aliases}
 }
 
 func discardLogger() *slog.Logger {

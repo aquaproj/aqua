@@ -10,13 +10,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// The cache mirrors the repository's own layout so that a cached file can be matched
-// to what it came from by looking at where it sits.
+// A cached file sits under the name it was asked for rather than under the branch it came
+// from, which is named after the package's id: a file that has been read once is found again
+// without resolving anything.
 func TestCache_Path(t *testing.T) {
 	t.Parallel()
 	cache := g2.NewCache(&config.Param{CacheDir: "/cache"})
 	want := filepath.Join("/cache", "registries-g2", "github_content", "github.com",
-		"aquaproj", "aqua-registry-g2", "pkg_cli_2fcli", "versions", "v2.1.0", "registry-1.json")
+		"aquaproj", "aqua-registry-g2", "cli_2fcli", "versions", "v2.1.0", "registry-1.json")
 	if diff := cmp.Diff(want, cache.Path("aquaproj", "aqua-registry-g2", "cli/cli", "v2.1.0")); diff != "" {
 		t.Errorf("the path is wrong (-want +got):\n%s", diff)
 	}

@@ -102,11 +102,11 @@ type Client struct {
 	cache     *Cache
 	repoOwner string
 	repoName  string
-	// aliases is the table of other names, read once. It is the registry's current
-	// state rather than a fact about a version, so it isn't cached on disk the way
-	// registry.json is.
-	aliases     *Aliases
-	aliasesOnce sync.Once
+	// names is the table that resolves a name, read once. It is the registry's current
+	// state rather than a fact about a version, so what is cached on disk is read
+	// through its own age rather than kept for good the way registry.json is.
+	names     *Names
+	namesOnce sync.Once
 	// catalogue is what the registry says it holds, read once, for the same reason.
 	catalogue     *Index
 	catalogueOnce sync.Once
@@ -132,6 +132,8 @@ func New(dl Downloader, cache *Cache, repoOwner, repoName string) *Client {
 func (c *Client) Get(ctx context.Context, logger *slog.Logger, pkgName, version string) (*Registry, error) {
 	cachePath := ""
 	if c.cache != nil {
+		// Keyed by the name that was asked for, so a file that has been read once is
+		// found again without resolving anything.
 		cachePath = c.cache.Path(c.repoOwner, c.repoName, pkgName, version)
 		if b := c.cache.Read(cachePath); b != nil {
 			if registry, err := parseRegistry(b); err == nil {
@@ -164,13 +166,36 @@ func (c *Client) Get(ctx context.Context, logger *slog.Logger, pkgName, version 
 	return registry, nil
 }
 
+// BranchOf returns the branch holding the package.
+//
+// The branch is named after the package's id, so the name has to be resolved before anything
+// can be asked for. The cached table answers first, which costs nothing; a name it doesn't
+// know is a package that arrived after it was written -- or one this registry doesn't hold --
+// and the registry's own table tells those apart and is cached so that the next run knows.
+//
+// A miss is the signal rather than an age, because a miss is what a stale table looks like
+// from here: a name it knows is a name it knows, whenever it was written.
+func (c *Client) BranchOf(ctx context.Context, logger *slog.Logger, pkgName string) (string, error) {
+	if id, ok := c.cachedNames().ID(pkgName); ok {
+		return IDBranchName(id), nil
+	}
+	if id, ok := c.fetchNames(ctx, logger).ID(pkgName); ok {
+		return IDBranchName(id), nil
+	}
+	return "", fmt.Errorf("%w: %s", ErrNoPackageBranch, pkgName)
+}
+
 func (c *Client) download(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]byte, error) {
+	branch, err := c.BranchOf(ctx, logger, pkgName)
+	if err != nil {
+		return nil, err
+	}
 	file, err := c.dl.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
 		RepoOwner: c.repoOwner,
 		RepoName:  c.repoName,
 		// Each package has its own branch, so the ref carries the package and the
 		// path carries the version.
-		Ref:  BranchName(pkgName),
+		Ref:  branch,
 		Path: Path(version),
 	})
 	if err != nil {
