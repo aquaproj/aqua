@@ -30,8 +30,12 @@ func (g *fakeTreeGetter) GetTree(_ context.Context, _, _, _ string, _ bool) (*gi
 	truncated := false
 	tree := &github.Tree{Truncated: &truncated}
 	for _, v := range g.versions {
-		typ := "tree"
-		tree.Entries = append(tree.Entries, &github.TreeEntry{Type: &typ, Path: &v})
+		dir, blob := "tree", "blob"
+		path := g2.EncodeVersion(v)
+		file := path + "/registry-1.json"
+		tree.Entries = append(tree.Entries,
+			&github.TreeEntry{Type: &dir, Path: &path},
+			&github.TreeEntry{Type: &blob, Path: &file})
 	}
 	return tree, nil, nil
 }

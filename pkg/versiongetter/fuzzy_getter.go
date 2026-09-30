@@ -93,7 +93,7 @@ func (g *FuzzyGetter) list(ctx context.Context, logger *slog.Logger, registryNam
 		return g.getter.List(ctx, logger, pkg, filters, limit) //nolint:wrapcheck // the caller reports it as the failure to retrieve versions
 	}
 	versions, err := g.g2.List(ctx, logger, pkg, filters, limit)
-	if !notInG2(logger, err) {
+	if !notInG2(logger, err) && len(versions) > 0 {
 		return versions, err //nolint:wrapcheck // the caller reports it as the failure to retrieve versions
 	}
 	return g.getter.List(ctx, logger, pkg, filters, limit) //nolint:wrapcheck // the caller reports it as the failure to retrieve versions
@@ -104,7 +104,7 @@ func (g *FuzzyGetter) version(ctx context.Context, logger *slog.Logger, registry
 		return g.getter.Get(ctx, logger, pkg, filters) //nolint:wrapcheck // the caller reports it as the failure to retrieve versions
 	}
 	version, err := g.g2.Get(ctx, logger, pkg, filters)
-	if !notInG2(logger, err) {
+	if !notInG2(logger, err) && version != "" {
 		return version, err //nolint:wrapcheck // the caller reports it as the failure to retrieve versions
 	}
 	return g.getter.Get(ctx, logger, pkg, filters) //nolint:wrapcheck // the caller reports it as the failure to retrieve versions
@@ -117,6 +117,11 @@ func (g *FuzzyGetter) version(ctx context.Context, logger *slog.Logger, registry
 // "aqua lock update" can't lock. A package with no branch at all can't be locked at
 // any version, so there is nothing left for the narrowing to protect, and refusing to
 // offer a version would only make the package unusable while g2 is being filled in.
+//
+// A branch holding no version is the same situation: the branch is made when the
+// package is taken over and the versions are generated afterwards, so it exists empty
+// for a while. That is why an empty answer falls back too, rather than only an
+// explicit "no branch".
 func notInG2(logger *slog.Logger, err error) bool {
 	if !errors.Is(err, g2.ErrNoPackageBranch) {
 		return false

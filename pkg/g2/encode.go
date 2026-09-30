@@ -38,7 +38,7 @@ func BranchName(pkgName string) string {
 
 // Path returns where the package's registry.json sits on its branch.
 func Path(version string) string {
-	return VersionDir + "/" + version + "/" + FileName
+	return VersionDir + "/" + EncodeVersion(version) + "/" + FileName
 }
 
 // EncodePackageName escapes a package name so it can be used as a git ref.
@@ -61,6 +61,37 @@ func Path(version string) string {
 // directory/file conflict which would otherwise stop "ipinfo/cli" and
 // "ipinfo/cli/grepip" from existing as branches at the same time.
 func EncodePackageName(name string) string {
+	return encode(name)
+}
+
+// EncodeVersion escapes a version so that it is one path segment.
+//
+// A version is not always a plain "v1.2.3": a monorepo tags "kustomize/v5.8.1", and a
+// package published from a JavaScript monorepo tags "@yarnpkg/cli/4.16.0". Written
+// into a path as it is, the slash becomes a directory, so one version's directory is
+// another's parent and the versions a package has can no longer be told from the first
+// segments of their tags: every kustomize release is a directory called "kustomize".
+//
+//	v1.2.3             -> v1.2.3
+//	kustomize/v5.8.1   -> kustomize_2fv5.8.1
+//	@yarnpkg/cli/4.16.0 -> _40yarnpkg_2fcli_2f4.16.0
+//
+// It is the escaping a branch name uses, with the same reversibility. A version that
+// needs no escape is left as it is, which is nearly all of them.
+func EncodeVersion(version string) string {
+	return encode(version)
+}
+
+// DecodeVersion undoes EncodeVersion.
+//
+// It reports false for anything EncodeVersion couldn't have produced, which is what
+// tells a version apart from a directory left by the layout that wrote a version's
+// slashes as directories.
+func DecodeVersion(encoded string) (string, bool) {
+	return decode(encoded)
+}
+
+func encode(name string) string {
 	var b strings.Builder
 	b.Grow(len(name))
 	for _, c := range []byte(name) {
@@ -104,6 +135,10 @@ func PackageName(branch string) (string, bool) {
 // truncated escape or a character that would never have been escaped, rather than
 // returning a name that was never encoded.
 func DecodePackageName(encoded string) (string, bool) {
+	return decode(encoded)
+}
+
+func decode(encoded string) (string, bool) {
 	var b strings.Builder
 	b.Grow(len(encoded))
 	for i := 0; i < len(encoded); i++ {
