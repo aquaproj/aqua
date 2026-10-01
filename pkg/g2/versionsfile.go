@@ -25,9 +25,14 @@ const VersionsFileName = "versions.json"
 // every version at once, and answering it from the files themselves would be a request per
 // version.
 type Versions struct {
-	// Source is the commit of the package branch the list was generated from. It is what
-	// says whether the list is still the branch's: a reader comparing it with the branch
-	// knows, and the generator uses it to leave a file that is already current alone.
+	// Source is the sha of the versions directory the list was made from -- the tree
+	// object, as git names it. It is what says whether the list is still the branch's:
+	// the directory's sha moves when a version is added, taken out or generated again,
+	// and not when anything else on the branch does, which the branch's commit can't say.
+	//
+	// It is also what makes reading the list cheap for whoever keeps it: the sha is one
+	// request, and a list naming the current one needs nothing else read. The branch's
+	// commit would be no use for that, since writing the list moves it.
 	//
 	// When the list is stale the branch is right, since the branch is what aqua installs
 	// from and this is a copy of what it holds.
