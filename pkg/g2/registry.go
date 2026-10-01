@@ -28,6 +28,15 @@ const DefaultBranch = "main"
 // Nothing in it is a template: every field is already resolved for one environment,
 // which is what lets aqua install from it without evaluating anything.
 type Registry struct {
+	// PublishedAt is when the release this was generated from was published, as
+	// RFC 3339. It is what the release says rather than when the file was written: a
+	// reader deciding whether a version is old enough to install, or old enough to
+	// stop offering, is asking about the release.
+	//
+	// It is empty for a version that has no release to ask -- a package whose versions
+	// are tags -- and for a file generated before this was recorded.
+	PublishedAt string `json:"published_at,omitempty"`
+
 	Assets []*Asset `json:"assets"`
 }
 
