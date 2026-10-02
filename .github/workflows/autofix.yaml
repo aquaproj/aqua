@@ -49,7 +49,7 @@ jobs:
           node-version: ${{steps.package_json.outputs.prop}}
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - uses: flatt-security/setup-takumi-guard-npm@3d2e7e64161c6fb76c74abd6600e4248d4859153 # v1.3.0
+      - uses: flatt-security/setup-takumi-guard-npm@14f07d0cbc739b42a1b7c70a04c2b84cd1318ddd # v1.4.0
         with:
           bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
       - name: Move the npmrc to the user npmrc
