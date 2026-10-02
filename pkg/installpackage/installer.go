@@ -56,6 +56,7 @@ type Installer struct {
 	cosignDisabled        bool
 	slsaDisabled          bool
 	gaaDisabled           bool
+	verifySignatures      bool
 	vacuum                Vacuum
 }
 
@@ -111,6 +112,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT
 		cosignDisabled:        param.CosignDisabled,
 		slsaDisabled:          param.SLSADisabled,
 		gaaDisabled:           param.GitHubArtifactAttestationDisabled,
+		verifySignatures:      param.VerifySignatures,
 		copyDir:               param.Dest,
 		unarchiver:            unarchiver,
 		cosign:                cosignVerifier,
@@ -152,9 +154,13 @@ type Unarchiver interface {
 }
 
 type ParamInstallPackages struct {
-	ConfigFilePath  string
-	Config          *aqua.Config
-	Registries      map[string]*registry.Config
+	ConfigFilePath string
+	Config         *aqua.Config
+	Registries     map[string]*registry.Config
+	// LockedPackages are the packages resolved from the lock file. They arrive
+	// already built, because deciding them is also what tells the caller whether it
+	// needs a registry at all.
+	LockedPackages  []*Target
 	Tags            map[string]struct{}
 	ExcludedTags    map[string]struct{}
 	PolicyConfigs   []*policy.Config
@@ -167,6 +173,7 @@ type ParamInstallPackages struct {
 type ParamInstallPackage struct {
 	Pkg             *config.Package
 	Checksums       *checksum.Checksums
+	Locked          bool
 	RequireChecksum bool
 	PolicyConfigs   []*policy.Config
 	DisablePolicy   bool
@@ -189,11 +196,14 @@ type DownloadParam struct {
 	Checksum        *checksum.Checksum
 	Dest            string
 	Asset           string
+	Locked          bool
 	RequireChecksum bool
 }
 
 func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error { //nolint:cyclop
-	pkgs, failed := config.ListPackages(logger, param.Config, is.runtime, param.Registries)
+	targets, failed := is.listTargets(logger, param)
+	pkgs := targetPackages(targets)
+
 	if !param.SkipLink {
 		if failedCreateLinks := is.createLinks(logger, pkgs); failedCreateLinks {
 			failed = failedCreateLinks
@@ -209,7 +219,7 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 		return nil
 	}
 
-	if len(pkgs) == 0 {
+	if len(targets) == 0 {
 		if failed {
 			return errInstallFailure
 		}
@@ -219,7 +229,8 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 	eg := &errgroup.Group{}
 	eg.SetLimit(is.maxParallelism)
 
-	for _, pkg := range pkgs {
+	for _, t := range targets {
+		pkg := t.Pkg
 		logger := logger.With(
 			"package_name", pkg.Package.Name,
 			"package_version", pkg.Package.Version,
@@ -232,6 +243,8 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 		eg.Go(func() error {
 			if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
 				Pkg:             pkg,
+				Checksum:        t.Checksum,
+				Locked:          t.Locked,
 				Checksums:       param.Checksums,
 				RequireChecksum: param.RequireChecksum,
 				PolicyConfigs:   param.PolicyConfigs,
@@ -274,6 +287,7 @@ func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, pa
 		Checksums:       param.Checksums,
 		RequireChecksum: param.RequireChecksum,
 		Checksum:        param.Checksum,
+		Locked:          param.Locked,
 	}); err != nil {
 		return err
 	}

@@ -173,13 +173,13 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	logger.Debug("got assets", "num_of_assets", len(arr))
 	assetNames := make([]string, 0, len(arr))
 	for _, asset := range arr {
-		if excludeAsset(logger, asset.GetName(), cfg) {
+		if excludeAsset(logger, release.GetTagName(), asset.GetName(), cfg) {
 			continue
 		}
 		assetNames = append(assetNames, asset.GetName())
 	}
 
-	c.patchRelease(logger, pkgInfo, pkgName, release.GetTagName(), assetNames)
+	c.patchRelease(logger, cfg, pkgInfo, pkgName, release.GetTagName(), assetNames)
 	return pkgInfo, []string{version}
 }
 
@@ -204,7 +204,7 @@ func getChecksum(checksumNames map[string]struct{}, assetName string) *registry.
 	return nil
 }
 
-func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string) { //nolint:cyclop
+func (c *Controller) patchRelease(logger *slog.Logger, cfg *Config, pkgInfo *registry.PackageInfo, pkgName, tagName string, assets []string) { //nolint:cyclop
 	if len(assets) == 0 {
 		pkgInfo.NoAsset = true
 		return
@@ -226,7 +226,7 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 			continue
 		}
 		assetNames[assetName] = struct{}{}
-		assetInfo := asset.ParseAssetName(assetName, tagName)
+		assetInfo := asset.ParseAssetName(assetName, tagName, cfg.Spellings)
 		assetInfos = append(assetInfos, assetInfo)
 	}
 	for assetName := range assetNames {
@@ -239,7 +239,7 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 		for checksumName := range checksumNames {
 			chksum := checksum.GetChecksumConfigFromFilename(checksumName, tagName)
 			if chksum != nil {
-				assetInfo := asset.ParseAssetName(checksumName, tagName)
+				assetInfo := asset.ParseAssetName(checksumName, tagName, cfg.Spellings)
 				chksum.Asset = assetInfo.Template
 				chksum.Cosign = checkChecksumCosign(pkgInfo, checksumName, assetNames)
 				pkgInfo.Checksum = chksum
@@ -251,7 +251,7 @@ func (c *Controller) patchRelease(logger *slog.Logger, pkgInfo *registry.Package
 
 	// After the asset template is settled, because whether a provenance is this
 	// package's is decided by comparing what it is named for against it.
-	if p := slsaProvenance(pkgInfo, assets, tagName); p != nil {
+	if p := slsaProvenance(pkgInfo, assets, tagName, cfg.Spellings); p != nil {
 		pkgInfo.SLSAProvenance = p
 	}
 }
@@ -312,7 +312,7 @@ const provenanceSuffix = ".intoto.jsonl"
 //
 // The names are read in order, so a release carrying more than one provenance answers the
 // same way every time. Before, whichever one a map happened to yield first won.
-func slsaProvenance(pkgInfo *registry.PackageInfo, assets []string, tagName string) *registry.SLSAProvenance {
+func slsaProvenance(pkgInfo *registry.PackageInfo, assets []string, tagName string, spellings asset.Spellings) *registry.SLSAProvenance {
 	held := make(map[string]struct{}, len(assets))
 	for _, assetName := range assets {
 		held[assetName] = struct{}{}
@@ -323,7 +323,7 @@ func slsaProvenance(pkgInfo *registry.PackageInfo, assets []string, tagName stri
 		if !ok {
 			continue
 		}
-		if pkgInfo.Asset != "" && asset.ParseAssetName(subject, tagName).Template == pkgInfo.Asset {
+		if pkgInfo.Asset != "" && asset.ParseAssetName(subject, tagName, spellings).Template == pkgInfo.Asset {
 			template := "{{.Asset}}" + provenanceSuffix
 			return &registry.SLSAProvenance{
 				Type:  pkgTypeGitHubRelease,
@@ -336,7 +336,7 @@ func slsaProvenance(pkgInfo *registry.PackageInfo, assets []string, tagName stri
 		if release == nil {
 			release = &registry.SLSAProvenance{
 				Type:  pkgTypeGitHubRelease,
-				Asset: &asset.ParseAssetName(assetName, tagName).Template,
+				Asset: &asset.ParseAssetName(assetName, tagName, spellings).Template,
 			}
 		}
 	}
@@ -382,12 +382,28 @@ func findCosignBundle(assetNames map[string]struct{}, assetName string) string {
 	return ""
 }
 
-func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
+func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string, assetNames map[string]struct{}) *registry.Cosign {
+	return InferCosign(pkgInfo.RepoOwner, pkgInfo.RepoName, checksumAssetName, assetNames)
+}
+
+// InferCosign reads a release's asset list and returns how the named asset is signed
+// with cosign, or nil when nothing there signs it.
+//
+// The signature, certificate, bundle and public key are found by name. The signer
+// can't be read off a release the same way, so the identity is constrained to a
+// workflow in the package's own repository, which is what makes the result a check
+// rather than an acceptance of any signature at all.
+//
+// The asset it is asked about is usually the checksum file, which is what signs a
+// release as a whole. It works for any asset, which is what lets a generator that
+// records one entry per environment ask about each of them.
+func InferCosign(repoOwner, repoName, assetName string, assetNames map[string]struct{}) *registry.Cosign { //nolint:cyclop
 	cosign := &registry.Cosign{
 		Opts: make([]string, 0, 8), //nolint:mnd // we generate max 8 arguments (certificate case)
 	}
 	downloadURL := fmt.Sprintf("https://github.com/%s/%s/releases/download/{{.Version}}/",
-		pkgInfo.RepoOwner, pkgInfo.RepoName)
+		repoOwner, repoName)
+	checksumAssetName := assetName
 
 	var bundleAssetName, certificateAssetName string
 	if bundleAssetName = findCosignBundle(assetNames, checksumAssetName); bundleAssetName != "" {
@@ -406,8 +422,8 @@ func checkChecksumCosign(pkgInfo *registry.PackageInfo, checksumAssetName string
 			flagCertIdentityRegexp,
 			fmt.Sprintf(
 				`^https://github\.com/%s/%s/\.github/workflows/.+\.ya?ml@refs/tags/\Q{{.Version}}\E$`,
-				regexp.QuoteMeta(pkgInfo.RepoOwner),
-				regexp.QuoteMeta(pkgInfo.RepoName),
+				regexp.QuoteMeta(repoOwner),
+				regexp.QuoteMeta(repoName),
 			),
 			flagCertOIDCIssuer,
 			urlOIDCIssuer,

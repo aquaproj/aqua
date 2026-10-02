@@ -31,6 +31,29 @@ func TestPackage_fileSrc(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			// A compressed single file holds no name of its own, so the file the
+			// package installs from is the asset without the compression extension.
+			// A definition saying nothing means that, the way it means the asset
+			// itself when nothing is compressed at all.
+			title: "single compressed file",
+			exp:   "duckdb_cli-linux-amd64",
+			pkg: &Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      PkgInfoTypeGitHubRelease,
+					RepoOwner: "duckdb",
+					RepoName:  "duckdb",
+					Asset:     "duckdb_cli-linux-amd64.gz",
+					Format:    "gz",
+				},
+				Package: &aqua.Package{
+					Version: "v1.5.3",
+				},
+			},
+			file: &registry.File{
+				Name: "duckdb",
+			},
+		},
+		{
 			title: PkgInfoTypeGitHubRelease,
 			exp:   pkgNameAqua,
 			pkg: &Package{

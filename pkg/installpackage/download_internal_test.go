@@ -269,3 +269,58 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 		})
 	}
 }
+
+func TestInstallerAssetVerifiers(t *testing.T) {
+	t.Parallel()
+	rt := &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}
+	pkg := &config.Package{
+		Package: &aqua.Package{
+			Name:    "suzuki-shunsuke/ghalint",
+			Version: "v1.5.6",
+		},
+		PackageInfo: &registry.PackageInfo{
+			Type:                       "github_release",
+			RepoOwner:                  "suzuki-shunsuke",
+			RepoName:                   "ghalint",
+			GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+		},
+	}
+	data := []struct {
+		name             string
+		locked           bool
+		verifySignatures bool
+		exp              int
+	}{
+		{
+			// Everything a registry resolved is verified as it always was.
+			name: "from a registry",
+			exp:  4,
+		},
+		{
+			// The lock file's checksum already pins the download to the artifact the
+			// signatures covered.
+			name:   "from the lock file",
+			locked: true,
+		},
+		{
+			name:             "from the lock file, asked to verify anyway",
+			locked:           true,
+			verifySignatures: true,
+			exp:              4,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			is := &Installer{
+				runtime:          rt,
+				realRuntime:      rt,
+				verifySignatures: d.verifySignatures,
+			}
+			verifiers := is.assetVerifiers(slog.New(slog.DiscardHandler), pkg, "ghalint_linux_amd64.tar.gz", rt, d.locked)
+			if len(verifiers) != d.exp {
+				t.Fatalf("assetVerifiers returned %d verifiers, wanted %d", len(verifiers), d.exp)
+			}
+		})
+	}
+}

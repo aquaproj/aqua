@@ -9,7 +9,7 @@ import (
 
 const proxyName = "aqua-proxy"
 
-func TestPackageInfo_overrideVersion(t *testing.T) {
+func TestPackageInfo_OverrideVersion(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -52,7 +52,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgInfo := d.pkgInfo.overrideVersion(d.child)
+			pkgInfo := d.pkgInfo.OverrideVersion(d.child)
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}

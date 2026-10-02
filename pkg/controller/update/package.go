@@ -92,7 +92,7 @@ func (c *Controller) getPackageNewVersion(ctx context.Context, logger *slog.Logg
 			return ""
 		}
 	}
-	return c.fuzzyGetter.Get(ctx, logger, pkg.PackageInfo, pkg.Package.Version, param.SelectVersion, param.Limit)
+	return c.fuzzyGetter.Get(ctx, logger, pkg.Package.Registry, pkg.PackageInfo, pkg.Package.Version, param.SelectVersion, param.Limit)
 }
 
 func (c *Controller) selectPackages(logger *slog.Logger, cfgFilePath string) (map[string]struct{}, error) {

@@ -9,8 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/schollz/progressbar/v3"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -51,7 +53,7 @@ func (is *Installer) downloadWithRetry(ctx context.Context, logger *slog.Logger,
 	}
 }
 
-func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *DownloadParam) error { //nolint:funlen,cyclop
+func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *DownloadParam) error { //nolint:cyclop
 	ppkg := param.Package
 	pkg := ppkg.Package
 	pkgInfo := param.Package.PackageInfo
@@ -92,61 +94,8 @@ func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *D
 		}
 	}()
 
-	verifiers := []FileVerifier{
-		&gitHubArtifactAttestationsVerifier{
-			disabled:    is.gaaDisabled,
-			gaa:         pkgInfo.GitHubArtifactAttestations,
-			pkg:         ppkg,
-			ghInstaller: is.ghInstaller,
-			ghVerifier:  is.ghVerifier,
-		},
-		&cosignVerifier{
-			disabled:  is.cosignDisabled,
-			pkg:       ppkg,
-			cosign:    pkgInfo.Cosign,
-			installer: is.cosignInstaller,
-			verifier:  is.cosign,
-			runtime:   is.runtime,
-			asset:     param.Asset,
-		},
-		&slsaVerifier{
-			disabled:  is.slsaDisabled,
-			pkg:       ppkg,
-			installer: is.slsaVerifierInstaller,
-			verifier:  is.slsaVerifier,
-			runtime:   is.runtime,
-			asset:     param.Asset,
-		},
-		&minisignVerifier{
-			pkg:         ppkg,
-			installer:   is.minisignInstaller,
-			verifier:    is.minisignVerifier,
-			runtime:     is.runtime,
-			realRuntime: is.realRuntime,
-			asset:       param.Asset,
-			minisign:    pkgInfo.Minisign,
-		},
-	}
-
-	var tempFilePath string
-	for _, verifier := range verifiers {
-		a, err := verifier.Enabled(logger)
-		if err != nil {
-			return fmt.Errorf("check if the verifier is enabled: %w", err)
-		}
-		if !a {
-			continue
-		}
-		if tempFilePath == "" {
-			a, err := bodyFile.Path()
-			if err != nil {
-				return fmt.Errorf("get a temporary file path: %w", err)
-			}
-			tempFilePath = a
-		}
-		if err := verifier.Verify(ctx, logger, tempFilePath); err != nil {
-			return fmt.Errorf("verify the asset: %w", err)
-		}
+	if err := is.runVerifiers(ctx, logger, is.assetVerifiers(logger, ppkg, param.Asset, is.runtime, param.Locked), bodyFile.Path); err != nil {
+		return err
 	}
 
 	if err := is.verifyChecksumWrap(ctx, logger, param, bodyFile); err != nil {
@@ -207,4 +156,100 @@ func (is *Installer) unarchive(ctx context.Context, logger *slog.Logger, param *
 		return fmt.Errorf("move the unarchived package to the destination: %w", err)
 	}
 	return nil
+}
+
+// assetVerifiers returns the signature verifiers to run on the downloaded asset.
+//
+// A package installed from the lock file gets none of them. Its signatures were
+// verified when the entry was written, and the checksum recorded then pins the
+// download to the very artifact they signed, so checking them again proves nothing
+// the checksum hasn't already. It costs a great deal: cosign, slsa-verifier and gh
+// are themselves downloaded and run, against services that are reachable often
+// rather than always, which is where installs fail for reasons that have nothing to
+// do with the package.
+//
+// Someone who would rather not take that on trust asks for it back with
+// AQUA_VERIFY_SIGNATURES, and then an install verifies exactly as it would without a
+// lock file.
+func (is *Installer) assetVerifiers(logger *slog.Logger, pkg *config.Package, assetName string, rt *runtime.Runtime, locked bool) []FileVerifier {
+	if locked && !is.verifySignatures {
+		logger.Debug("skip verifying signatures because the package is installed from the lock file")
+		return nil
+	}
+	pkgInfo := pkg.PackageInfo
+	return []FileVerifier{
+		&gitHubArtifactAttestationsVerifier{
+			disabled:    is.gaaDisabled,
+			gaa:         pkgInfo.GitHubArtifactAttestations,
+			pkg:         pkg,
+			ghInstaller: is.ghInstaller,
+			ghVerifier:  is.ghVerifier,
+		},
+		&cosignVerifier{
+			disabled:  is.cosignDisabled,
+			pkg:       pkg,
+			cosign:    pkgInfo.Cosign,
+			installer: is.cosignInstaller,
+			verifier:  is.cosign,
+			runtime:   rt,
+			asset:     assetName,
+		},
+		&slsaVerifier{
+			disabled:  is.slsaDisabled,
+			pkg:       pkg,
+			installer: is.slsaVerifierInstaller,
+			verifier:  is.slsaVerifier,
+			runtime:   rt,
+			asset:     assetName,
+		},
+		&minisignVerifier{
+			pkg:         pkg,
+			installer:   is.minisignInstaller,
+			verifier:    is.minisignVerifier,
+			runtime:     rt,
+			realRuntime: is.realRuntime,
+			asset:       assetName,
+			minisign:    pkgInfo.Minisign,
+		},
+	}
+}
+
+// runVerifiers runs the verifiers that are enabled against the asset.
+//
+// path produces the file to verify, and is called only once a verifier turns out to
+// be enabled: the download is held in memory until something needs it on disk, and a
+// package with no signatures should never pay for a temporary file.
+func (is *Installer) runVerifiers(ctx context.Context, logger *slog.Logger, verifiers []FileVerifier, path func() (string, error)) error {
+	filePath := ""
+	for _, verifier := range verifiers {
+		a, err := verifier.Enabled(logger)
+		if err != nil {
+			return fmt.Errorf("check if the verifier is enabled: %w", err)
+		}
+		if !a {
+			continue
+		}
+		if filePath == "" {
+			a, err := path()
+			if err != nil {
+				return fmt.Errorf("get the path of the asset to verify: %w", err)
+			}
+			filePath = a
+		}
+		if err := verifier.Verify(ctx, logger, filePath); err != nil {
+			return fmt.Errorf("verify the asset: %w", err)
+		}
+	}
+	return nil
+}
+
+// VerifyAsset verifies the signatures over an asset that has already been downloaded.
+//
+// It is how the lock file comes to be worth trusting: the checksum recorded for an
+// entry is the checksum of an artifact whose signatures were checked here, once,
+// which is what lets an install verify the checksum alone.
+func (is *Installer) VerifyAsset(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, filePath string, rt *runtime.Runtime) error {
+	return is.runVerifiers(ctx, logger, is.assetVerifiers(logger, pkg, assetName, rt, false), func() (string, error) {
+		return filePath, nil
+	})
 }

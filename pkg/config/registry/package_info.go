@@ -161,12 +161,12 @@ type VersionOverride struct {
 	CompleteWindowsExt         *bool                       `yaml:"complete_windows_ext,omitempty" json:"complete_windows_ext,omitempty"`
 	NoAsset                    *bool                       `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	AppendExt                  *bool                       `yaml:"append_ext,omitempty" json:"append_ext,omitempty"`
-	Cargo                      *Cargo                      `json:"cargo,omitempty"`
+	Cargo                      *Cargo                      `yaml:",omitempty" json:"cargo,omitempty"`
 	Files                      []*File                     `yaml:",omitempty" json:"files,omitempty"`
 	FormatOverrides            FormatOverrides             `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Replacements               Replacements                `yaml:",omitempty" json:"replacements,omitempty"`
-	Checksum                   *Checksum                   `json:"checksum,omitempty"`
-	Cosign                     *Cosign                     `json:"cosign,omitempty"`
+	Checksum                   *Checksum                   `yaml:",omitempty" json:"checksum,omitempty"`
+	Cosign                     *Cosign                     `yaml:",omitempty" json:"cosign,omitempty"`
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
@@ -671,7 +671,7 @@ func (p *PackageInfo) PkgPaths() map[string]struct{} {
 		m[a] = struct{}{}
 	}
 	for _, vo := range p.VersionOverrides {
-		pkg := p.overrideVersion(vo)
+		pkg := p.OverrideVersion(vo)
 		for _, a := range pkg.pkgPaths() {
 			m[a] = struct{}{}
 		}
@@ -700,63 +700,14 @@ func (p *PackageInfo) SLSASourceURI() string {
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }
 
-// pkgPaths returns the package installation paths for this specific package configuration.
-// This is used internally by PkgPaths to compute all possible paths.
-func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
-	if p.NoAsset || p.ErrorMessage != "" {
-		return nil
-	}
-	switch p.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		if p.RepoOwner == "" || p.RepoName == "" {
-			return nil
-		}
-		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
-	case PkgInfoTypeCargo:
-		if p.Crate == "" {
-			return nil
-		}
-		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
-	case PkgInfoTypeGoInstall:
-		a := p.GetPath()
-		if a == "" {
-			return nil
-		}
-		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(a, "*")))}
-	case PkgInfoTypeHTTP:
-		if p.URL == "" {
-			return nil
-		}
-		u, err := url.Parse(placeHolderTemplate.ReplaceAllLiteralString(p.URL, "*"))
-		if err != nil {
-			return nil
-		}
-		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
-	}
-	return nil
-}
-
-// defaultCmdName returns the default command name for the package.
-// This is derived from the package name, repository name, or path.
-func (p *PackageInfo) defaultCmdName() string {
-	if p.HasRepo() {
-		if p.Name == "" {
-			return p.RepoName
-		}
-		if i := strings.LastIndex(p.Name, "/"); i != -1 {
-			return p.Name[i+1:]
-		}
-		return p.Name
-	}
-	if p.Type == PkgInfoTypeGoInstall {
-		return path.Base(p.GetPath())
-	}
-	return path.Base(p.GetName())
-}
-
-// overrideVersion applies a version override to create a new PackageInfo.
+// OverrideVersion applies a version override to create a new PackageInfo.
 // This creates a copy with version-specific configuration applied.
-func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
+//
+// It is exported because a registry format can define its own rule for which override
+// applies while meaning the same thing by applying it. aqua-registry-g2 does: its
+// overrides are ordered newest first and the first entry answers a version that
+// matches none of them.
+func (p *PackageInfo) OverrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
 	pkg := p.Copy()
 	if child.Type != "" {
 		pkg.resetByPkgType(child.Type)
@@ -856,6 +807,60 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 		pkg.Vars = child.Vars
 	}
 	return pkg
+}
+
+// pkgPaths returns the package installation paths for this specific package configuration.
+// This is used internally by PkgPaths to compute all possible paths.
+func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
+	if p.NoAsset || p.ErrorMessage != "" {
+		return nil
+	}
+	switch p.Type {
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		if p.RepoOwner == "" || p.RepoName == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
+	case PkgInfoTypeCargo:
+		if p.Crate == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, "crates.io", p.Crate)}
+	case PkgInfoTypeGoInstall:
+		a := p.GetPath()
+		if a == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, filepath.FromSlash(placeHolderTemplate.ReplaceAllLiteralString(a, "*")))}
+	case PkgInfoTypeHTTP:
+		if p.URL == "" {
+			return nil
+		}
+		u, err := url.Parse(placeHolderTemplate.ReplaceAllLiteralString(p.URL, "*"))
+		if err != nil {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
+	}
+	return nil
+}
+
+// defaultCmdName returns the default command name for the package.
+// This is derived from the package name, repository name, or path.
+func (p *PackageInfo) defaultCmdName() string {
+	if p.HasRepo() {
+		if p.Name == "" {
+			return p.RepoName
+		}
+		if i := strings.LastIndex(p.Name, "/"); i != -1 {
+			return p.Name[i+1:]
+		}
+		return p.Name
+	}
+	if p.Type == PkgInfoTypeGoInstall {
+		return path.Base(p.GetPath())
+	}
+	return path.Base(p.GetName())
 }
 
 // resetByPkgType resets package fields that are not applicable to the specified type.

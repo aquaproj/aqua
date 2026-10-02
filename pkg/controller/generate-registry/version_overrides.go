@@ -62,13 +62,28 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 	return pkgs
 }
 
+// movingTags are the tags that name a place in a release history rather than a point
+// in it. A repository moves them as it releases, so what they point at changes.
+var movingTags = map[string]struct{}{ //nolint:gochecknoglobals
+	"latest":  {},
+	"nightly": {},
+	"stable":  {},
+}
+
+// IsMovingTag reports whether a tag names a place rather than a version.
+//
+// A registry describes a package with templates, so a moving tag resolves to whatever
+// it points at when it is installed, and naming one is a way of asking for that. A
+// caller that records what a tag points at instead -- an asset name, a checksum --
+// records something that stops being true the next time the repository releases, so
+// it has to know which tags those are. This is where the list lives.
+func IsMovingTag(tag string) bool {
+	_, ok := movingTags[tag]
+	return ok
+}
+
 func excludeVersion(logger *slog.Logger, tag string, cfg *Config) bool {
-	excludedVersions := map[string]struct{}{
-		"latest":  {},
-		"nightly": {},
-		"stable":  {},
-	}
-	if _, ok := excludedVersions[tag]; ok {
+	if IsMovingTag(tag) {
 		return true
 	}
 	if cfg.VersionFilter != nil {
@@ -89,11 +104,16 @@ func excludeVersion(logger *slog.Logger, tag string, cfg *Config) bool {
 	return false
 }
 
-func excludeAsset(logger *slog.Logger, asset string, cfg *Config) bool {
-	if cfg.AllAssetsFilter == nil {
+// excludeAsset reports whether an asset of this release is none of the package's.
+//
+// The filter depends on the version, because which of a release's assets is the
+// package can change over its history.
+func excludeAsset(logger *slog.Logger, tag, asset string, cfg *Config) bool {
+	filter := cfg.assetFilter(logger, tag)
+	if filter == nil {
 		return false
 	}
-	f, err := expr.EvaluateAssetFilter(cfg.AllAssetsFilter, asset)
+	f, err := expr.EvaluateAssetFilter(filter, asset)
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("evaluate an asset filter", "asset", asset)
 		return false
@@ -143,7 +163,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		logger.Debug("got assets", "num_of_assets", len(arr))
 		assets := make([]*github.ReleaseAsset, 0, len(arr))
 		for _, asset := range arr {
-			if excludeAsset(logger, asset.GetName(), cfg) {
+			if excludeAsset(logger, release.Tag, asset.GetName(), cfg) {
 				continue
 			}
 			assets = append(assets, asset)
@@ -154,7 +174,7 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		release.assets = assets
 	}
 
-	versions := c.generatePackage(logger, pkgInfo, pkgName, releases)
+	versions := c.generatePackage(logger, cfg, pkgInfo, pkgName, releases)
 	if len(pkgInfo.VersionOverrides) != 0 {
 		pkgInfo.VersionConstraints = "false"
 	}

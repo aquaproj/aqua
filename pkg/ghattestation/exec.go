@@ -34,12 +34,12 @@ type ExecutorImpl struct {
 }
 
 func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
-	rt := runtime.NewR(context.Background())
-	pkg := Package()
-	pkg.PackageInfo.OverrideByRuntime(rt)
-	exePath, err := pkg.ExePath(param.RootDir, pkg.PackageInfo.GetFiles()[0], rt)
+	exePath, err := ExePath(&ParamExePath{
+		RootDir: param.RootDir,
+		Runtime: runtime.NewR(context.Background()),
+	})
 	if err != nil {
-		return nil, fmt.Errorf("get an executable file path of GitHub CLI: %w", err)
+		return nil, err
 	}
 	return &ExecutorImpl{
 		executor: executor,

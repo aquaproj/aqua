@@ -90,3 +90,9 @@ func (u *Unarchiver) getUnarchiver(logger *slog.Logger, src *File, dest string) 
 		logger:   logger,
 	}
 }
+
+// errNoExecutor is returned by the formats that need a platform tool when the
+// Unarchiver was built without something to run it with. dmg and pkg are opened by
+// hdiutil and pkgutil, which exist on macOS and nowhere else, so a caller that can't
+// run them builds an Unarchiver that says so rather than one that crashes.
+var errNoExecutor = errors.New("this format needs an executor to unarchive")
