@@ -45,6 +45,114 @@ func TestGitHubTagVersionGetter_Get(t *testing.T) {
 			},
 			version: "v3.0.0",
 		},
+		{
+			name: "prereleases dominated page 1, stable on page 2",
+			filters: []*versiongetter.Filter{
+				{},
+			},
+			tags: map[string][]*github.RepositoryTag{
+				"testuser/testpkg": {
+					{
+						Name: new("v1.0.1-beta.30"),
+					},
+					{
+						Name: new("v1.0.1-beta.29"),
+					},
+					{
+						Name: new("v1.0.1-beta.28"),
+					},
+					{
+						Name: new("v1.0.1-beta.27"),
+					},
+					{
+						Name: new("v1.0.1-beta.26"),
+					},
+					{
+						Name: new("v1.0.1-beta.25"),
+					},
+					{
+						Name: new("v1.0.1-beta.24"),
+					},
+					{
+						Name: new("v1.0.1-beta.23"),
+					},
+					{
+						Name: new("v1.0.1-beta.22"),
+					},
+					{
+						Name: new("v1.0.1-beta.21"),
+					},
+					{
+						Name: new("v1.0.1-beta.20"),
+					},
+					{
+						Name: new("v1.0.1-beta.19"),
+					},
+					{
+						Name: new("v1.0.1-beta.18"),
+					},
+					{
+						Name: new("v1.0.1-beta.17"),
+					},
+					{
+						Name: new("v1.0.1-beta.16"),
+					},
+					{
+						Name: new("v1.0.1-beta.15"),
+					},
+					{
+						Name: new("v1.0.1-beta.14"),
+					},
+					{
+						Name: new("v1.0.1-beta.13"),
+					},
+					{
+						Name: new("v1.0.1-beta.12"),
+					},
+					{
+						Name: new("v1.0.1-beta.11"),
+					},
+					{
+						Name: new("v1.0.1-beta.10"),
+					},
+					{
+						Name: new("v1.0.1-beta.9"),
+					},
+					{
+						Name: new("v1.0.1-beta.8"),
+					},
+					{
+						Name: new("v1.0.1-beta.7"),
+					},
+					{
+						Name: new("v1.0.1-beta.6"),
+					},
+					{
+						Name: new("v1.0.1-beta.5"),
+					},
+					{
+						Name: new("v1.0.1-beta.4"),
+					},
+					{
+						Name: new("v1.0.1-beta.3"),
+					},
+					{
+						Name: new("v1.0.1-beta.2"),
+					},
+					{
+						Name: new("v1.0.1-beta.1"),
+					},
+					{
+						Name: new("v1.0.0"),
+					},
+				},
+			},
+			pkg: &registry.PackageInfo{
+				RepoOwner: "testuser",
+				RepoName:  "testpkg",
+			},
+			version: "v1.0.0",
+		},
 	}
 
 	for _, d := range data {
