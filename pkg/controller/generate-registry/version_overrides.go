@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sort"
 	"strings"
 
@@ -158,7 +159,21 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 	if len(pkgInfo.VersionOverrides) != 0 {
 		pkgInfo.VersionConstraints = "false"
 	}
+	c.patchLatestReleaseAttestations(ctx, logger, pkgInfo, releases)
 	return versions
+}
+
+// patchLatestReleaseAttestations configures github_artifact_attestations from the latest
+// release (releases are sorted in ascending order). Older versions typically predate the
+// attestation setup, and probing every version would multiply API calls.
+func (c *Controller) patchLatestReleaseAttestations(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, releases []*Release) {
+	for _, release := range slices.Backward(releases) {
+		if len(release.assets) == 0 {
+			continue
+		}
+		c.patchGitHubArtifactAttestations(ctx, logger, pkgInfo, release.Tag, release.assets)
+		return
+	}
 }
 
 func (c *Controller) listReleases(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, limit int) []*github.RepositoryRelease {
