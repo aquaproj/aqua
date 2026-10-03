@@ -101,9 +101,9 @@ jobs:
         working-directory: ${{ env.HOME }}
 
       - name: test aqua cp
-        run: aqua cp actionlint golangci-lint
+        run: aqua cp ghalint golangci-lint
       - name: test aqua cp
-        run: dist/actionlint -version
+        run: dist/ghalint version
       - name: test aqua cp
         run: dist/golangci-lint version
 
@@ -191,9 +191,9 @@ jobs:
         working-directory: ${{env.HOME}}
 
       - name: test aqua cp
-        run: aqua cp actionlint golangci-lint
+        run: aqua cp ghalint golangci-lint
       - name: test aqua cp
-        run: dist/actionlint -version
+        run: dist/ghalint version
       - name: test aqua cp
         run: dist/golangci-lint version
 
