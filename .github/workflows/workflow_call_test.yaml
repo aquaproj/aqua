@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       test-docker: ${{steps.changes.outputs.test-docker}}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions: {}
     steps:
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -42,7 +42,7 @@ jobs:
   # git clean does list them.
   test-no-side-effect:
     timeout-minutes: 30
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       id-token: write
     steps:
