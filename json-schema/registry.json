@@ -208,6 +208,12 @@
         },
         "hard": {
           "type": "boolean"
+        },
+        "build_tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
