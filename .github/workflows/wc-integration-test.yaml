@@ -149,9 +149,9 @@ jobs:
         run: aqua gr suzuki-shunsuke/tfcmt@v3.2.4
 
       - name: test aqua cp
-        run: aqua cp actionlint
+        run: aqua cp ghalint
       - name: test aqua cp
-        run: dist/actionlint -version
+        run: dist/ghalint version
       - name: test aqua cp
         run: aqua cp
       - name: test aqua cp -a
