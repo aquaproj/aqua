@@ -165,7 +165,7 @@ Add a GitHub Actions job that runs a tampered package.
 
 ```yaml
   test:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     env:
@@ -225,7 +225,7 @@ on: pull_request
 permissions: {}
 jobs:
   autofix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions: {}
     timeout-minutes: 15
     steps:
@@ -256,7 +256,7 @@ on: pull_request
 permissions: {}
 jobs:
   securefix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions: {}
     timeout-minutes: 15
     steps:
@@ -291,7 +291,7 @@ on: pull_request
 permissions: {}
 jobs:
   update-aqua-checksums:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions: {}
     timeout-minutes: 15
     steps:
