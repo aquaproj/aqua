@@ -1,2 +1,2 @@
 packages:
-  - name: anchore/syft@v1.52.0
+  - name: anchore/syft@v1.54.0
