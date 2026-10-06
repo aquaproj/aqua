@@ -268,6 +268,22 @@ func TestPackageInfo_MaybeHasCommand(t *testing.T) {
 			},
 		},
 		{
+			title: "case-insensitive",
+			has:   []string{"CI-INFO", "Ci-Info.Prebuilt"},
+			lacks: []string{"ci-inf"},
+			pkgInfo: &registry.PackageInfo{
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Files: []*registry.File{
+					{
+						Name: "ci-info.prebuilt",
+					},
+				},
+				Build: &registry.Build{},
+			},
+		},
+		{
 			title: "has name",
 			has:   []string{"cmctl"},
 			pkgInfo: &registry.PackageInfo{
