@@ -152,11 +152,16 @@ type Unarchiver interface {
 }
 
 type ParamInstallPackages struct {
-	ConfigFilePath  string
-	Config          *aqua.Config
-	Registries      map[string]*registry.Config
-	Tags            map[string]struct{}
-	ExcludedTags    map[string]struct{}
+	ConfigFilePath string
+	Config         *aqua.Config
+	Registries     map[string]*registry.Config
+	Tags           map[string]struct{}
+	ExcludedTags   map[string]struct{}
+	// Names filters installed packages by command names or package names.
+	// If Names is empty, packages aren't filtered.
+	Names map[string]struct{}
+	// FoundNames is filled with names in Names matching packages.
+	FoundNames      map[string]struct{}
 	PolicyConfigs   []*policy.Config
 	Checksums       *checksum.Checksums
 	SkipLink        bool
@@ -199,6 +204,9 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 			failed = failedCreateLinks
 		}
 	}
+
+	// Filter packages by names before checking onlyLink so that names are validated even if onlyLink is true.
+	pkgs = filterPackagesByNames(logger, pkgs, param.Names, param.FoundNames)
 
 	if is.onlyLink {
 		logger.Debug("skip downloading the package",
