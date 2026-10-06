@@ -40,6 +40,12 @@ func Test_controller_Which_caseInsensitive(t *testing.T) { //nolint:funlen
   path: aliased
   files:
   - name: bar
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: withext
+  path: withext
+  files:
+  - name: qux.exe
 `
 	data := []struct {
 		name     string
@@ -144,6 +150,40 @@ packages:
 			},
 			pkgName:  "aquaproj/lower",
 			fileName: "foo",
+		},
+		{
+			name:    "file name with an extension on Windows",
+			goos:    "windows",
+			exeName: "qux.exe",
+			files: map[string]string{
+				pathHomeFooWorkspaceAquaYaml: `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/withext@v1.0.0
+`,
+				pathHomeFooWorkspaceRegistryYaml: registryYAML,
+			},
+			pkgName:  "aquaproj/withext",
+			fileName: "qux.exe",
+		},
+		{
+			name:    "file name with an extension on Windows, case-insensitive",
+			goos:    "windows",
+			exeName: "QUX.EXE",
+			files: map[string]string{
+				pathHomeFooWorkspaceAquaYaml: `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/withext@v1.0.0
+`,
+				pathHomeFooWorkspaceRegistryYaml: registryYAML,
+			},
+			pkgName:  "aquaproj/withext",
+			fileName: "qux.exe",
 		},
 		{
 			name:    "the extension isn't trimmed on Linux",

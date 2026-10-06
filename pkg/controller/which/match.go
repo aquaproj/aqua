@@ -3,6 +3,9 @@ package which
 import (
 	"path/filepath"
 	"strings"
+
+	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
 
 type commandMatch int
@@ -13,16 +16,30 @@ const (
 	matchExact
 )
 
-// matchCommand compares a command name with an exe name.
-// matchFold means they match only case-insensitively.
-func matchCommand(cmdName, exeName string) commandMatch {
-	if cmdName == exeName {
-		return matchExact
+// matchCommand compares a command name with exe names.
+// matchExact means it matches any exe name exactly.
+// matchFold means it matches only case-insensitively.
+func matchCommand(cmdName string, exeNames []string) commandMatch {
+	m := matchNone
+	for _, exeName := range exeNames {
+		if cmdName == exeName {
+			return matchExact
+		}
+		if strings.EqualFold(cmdName, exeName) {
+			m = matchFold
+		}
 	}
-	if strings.EqualFold(cmdName, exeName) {
-		return matchFold
+	return m
+}
+
+// maybeHasCommand returns true if the package may have a command matching any exe name.
+func maybeHasCommand(pkg *aqua.Package, pkgInfo *registry.PackageInfo, exeNames []string) bool {
+	for _, exeName := range exeNames {
+		if pkgInfo.MaybeHasCommand(exeName) || pkg.HasCommandAlias(exeName) {
+			return true
+		}
 	}
-	return matchNone
+	return false
 }
 
 // trimExeExt removes the extension .exe or .bat from the exe name case-insensitively.
