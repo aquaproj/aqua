@@ -28,24 +28,16 @@ type FindResult struct {
 // such as NTFS and APFS run a shim even if the command name's case differs from the shim's.
 // A command whose name matches exactly is preferred over one whose name matches only case-insensitively.
 func (c *Controller) Which(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*FindResult, error) {
-	// On Windows, a shim can be run with an extension such as nu.EXE.
-	// The exe name is compared both with and without the extension,
-	// because a file name in a registry can have an extension too.
-	exeNames := []string{exeName}
-	lookPathName := exeName
 	if c.runtime.IsWindows() {
-		if trimmed := trimExeExt(exeName); trimmed != exeName {
-			exeNames = append(exeNames, trimmed)
-			lookPathName = trimmed
-		}
+		exeName = trimExeExt(exeName)
 	}
-	if findResult, err := c.findInAllConfigs(ctx, logger, param, exeNames); err != nil {
+	if findResult, err := c.findInAllConfigs(ctx, logger, param, exeName); err != nil {
 		return nil, err
 	} else if findResult != nil {
 		return findResult, nil
 	}
 
-	if exePath := c.lookPath(c.osenv.Getenv("PATH"), lookPathName); exePath != "" {
+	if exePath := c.lookPath(c.osenv.Getenv("PATH"), exeName); exePath != "" {
 		return &FindResult{
 			ExePath: exePath,
 		}, nil
@@ -58,7 +50,7 @@ func (c *Controller) Which(ctx context.Context, logger *slog.Logger, param *conf
 
 // findInAllConfigs looks the command up in the local configuration files and then the global ones.
 // A command whose name matches exactly is preferred over one whose name matches only case-insensitively.
-func (c *Controller) findInAllConfigs(ctx context.Context, logger *slog.Logger, param *config.Param, exeNames []string) (*FindResult, error) {
+func (c *Controller) findInAllConfigs(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*FindResult, error) {
 	var filePaths []string
 	if param.ConfigFilePath != "" {
 		filePaths = []string{osfile.Abs(param.CWD, param.ConfigFilePath)}
@@ -66,7 +58,7 @@ func (c *Controller) findInAllConfigs(ctx context.Context, logger *slog.Logger, 
 	var fallback *FindResult
 	for _, cfgFilePath := range append(filePaths, c.configFinder.Finds(param.CWD, "")...) {
 		logger := logger.With("config_file_path", cfgFilePath)
-		findResult, exact, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeNames)
+		findResult, exact, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeName)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +70,7 @@ func (c *Controller) findInAllConfigs(ctx context.Context, logger *slog.Logger, 
 		}
 	}
 
-	findResult, exact, err := c.findInGlobalConfigs(ctx, logger, param, exeNames)
+	findResult, exact, err := c.findInGlobalConfigs(ctx, logger, param, exeName)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +85,7 @@ func (c *Controller) findInAllConfigs(ctx context.Context, logger *slog.Logger, 
 // match if there is no exact match. A global path that can't be stat'd is
 // an error rather than a skipped file, so a permission problem isn't mistaken
 // for an absent configuration.
-func (c *Controller) findInGlobalConfigs(ctx context.Context, logger *slog.Logger, param *config.Param, exeNames []string) (*FindResult, bool, error) {
+func (c *Controller) findInGlobalConfigs(ctx context.Context, logger *slog.Logger, param *config.Param, exeName string) (*FindResult, bool, error) {
 	var fallback *FindResult
 	for _, cfgFilePath := range param.GlobalConfigFilePaths {
 		logger := logger.With("config_file_path", cfgFilePath)
@@ -103,7 +95,7 @@ func (c *Controller) findInGlobalConfigs(ctx context.Context, logger *slog.Logge
 		} else if !f {
 			continue
 		}
-		findResult, exact, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeNames)
+		findResult, exact, err := c.findExecFile(ctx, logger, param, cfgFilePath, exeName)
 		if err != nil {
 			return nil, false, err
 		}
@@ -135,7 +127,7 @@ func (c *Controller) getExePath(findResult *FindResult) (string, error) {
 
 // findExecFile finds the command in the configuration file.
 // It returns true as the second return value if the command name matches exactly.
-func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, param *config.Param, cfgFilePath string, exeNames []string) (*FindResult, bool, error) {
+func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, param *config.Param, cfgFilePath, exeName string) (*FindResult, bool, error) {
 	cfg := &aqua.Config{}
 	if err := c.configReader.Read(logger, cfgFilePath, cfg); err != nil {
 		return nil, false, err //nolint:wrapcheck
@@ -171,13 +163,13 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 		}
 	}()
 
-	return c.findExecFileFromPkgs(ctx, logger, cfgFilePath, cfg, registryCache, rgPaths, registries, exeNames, checksums)
+	return c.findExecFileFromPkgs(ctx, logger, cfgFilePath, cfg, registryCache, rgPaths, registries, exeName, checksums)
 }
 
-func (c *Controller) findExecFileFromPkgs(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeNames []string, checksums *checksum.Checksums) (*FindResult, bool, error) {
+func (c *Controller) findExecFileFromPkgs(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, checksums *checksum.Checksums) (*FindResult, bool, error) {
 	var fallback *FindResult
 	for _, pkg := range cfg.Packages {
-		findResult, exact, err := c.findExecFileFromPkg(ctx, logger, cfgFilePath, cfg, rCache, rgPaths, registries, exeNames, pkg, checksums)
+		findResult, exact, err := c.findExecFileFromPkg(ctx, logger, cfgFilePath, cfg, rCache, rgPaths, registries, exeName, pkg, checksums)
 		if err != nil {
 			return nil, false, err
 		}
@@ -227,7 +219,7 @@ func (c *Controller) setRegistryCacheKeys(cfg *aqua.Config, cfgFilePath string, 
 	return nil
 }
 
-func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeNames []string, pkg *aqua.Package, checksums *checksum.Checksums) (*FindResult, bool, error) { //nolint:cyclop
+func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, pkg *aqua.Package, checksums *checksum.Checksums) (*FindResult, bool, error) { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logger.Debug("ignore a package because the package name or package registry name is empty")
 		return nil, false, nil
@@ -246,7 +238,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 		return nil, false, nil
 	}
 
-	if !maybeHasCommand(pkg, pkgInfo, exeNames) {
+	if !pkgInfo.MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {
 		return nil, false, nil
 	}
 
@@ -268,7 +260,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 
 	var fallback *FindResult
 	for _, file := range pkgInfo.GetFiles() {
-		findResult, exact, err := c.findExecFileFromFile(logger, exeNames, pkg, pkgInfo, file)
+		findResult, exact, err := c.findExecFileFromFile(logger, exeName, pkg, pkgInfo, file)
 		if err != nil {
 			return nil, false, err
 		}
@@ -339,13 +331,13 @@ func (c *Controller) findPkgInfo(ctx context.Context, logger *slog.Logger, cfgFi
 	return pkgInfo, nil
 }
 
-func (c *Controller) findExecFileFromFile(logger *slog.Logger, exeNames []string, pkg *aqua.Package, pkgInfo *registry.PackageInfo, file *registry.File) (*FindResult, bool, error) {
-	m := matchCommand(file.Name, exeNames)
+func (c *Controller) findExecFileFromFile(logger *slog.Logger, exeName string, pkg *aqua.Package, pkgInfo *registry.PackageInfo, file *registry.File) (*FindResult, bool, error) {
+	m := matchCommand(file.Name, exeName)
 	for _, alias := range pkg.CommandAliases {
 		if file.Name != alias.Command {
 			continue
 		}
-		m = max(m, matchCommand(alias.Alias, exeNames))
+		m = max(m, matchCommand(alias.Alias, exeName))
 	}
 	if m == matchNone {
 		return nil, false, nil
