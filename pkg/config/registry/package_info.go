@@ -608,7 +608,7 @@ func doFilesContain(files []*File, exeName string, isEmpty *bool) bool {
 	}
 
 	for _, f := range files {
-		if f.Name == exeName {
+		if strings.EqualFold(f.Name, exeName) {
 			return true
 		}
 	}
@@ -619,6 +619,8 @@ func doFilesContain(files []*File, exeName string, isEmpty *bool) bool {
 // MaybeHasCommand returns true if the given exe name can be in this package.
 // This includes file lists that may only be used under specific versions or
 // host platforms.
+// The exe name is compared case-insensitively, so the caller should prefer an
+// exact match.
 func (p *PackageInfo) MaybeHasCommand(exeName string) bool { //nolint:cyclop
 	anyListEmpty := false
 
@@ -654,7 +656,7 @@ func (p *PackageInfo) MaybeHasCommand(exeName string) bool { //nolint:cyclop
 
 	// If any of the file lists that could be used are empty, then the default
 	// command name would be used, so check that as well.
-	if anyListEmpty && p.defaultCmdName() == exeName {
+	if anyListEmpty && strings.EqualFold(p.defaultCmdName(), exeName) {
 		return true
 	}
 
