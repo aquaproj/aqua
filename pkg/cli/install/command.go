@@ -26,6 +26,7 @@ type Args struct {
 	All         bool
 	Tags        string
 	ExcludeTags string
+	Names       []string
 }
 
 // command holds the parameters and configuration for the install command.
@@ -44,9 +45,10 @@ func New(r *util.Param, globalArgs *cliargs.GlobalArgs) *cli.Command { //nolint:
 		r: r,
 	}
 	return &cli.Command{
-		Name:    "install",
-		Aliases: []string{"i"},
-		Usage:   "Install tools",
+		Name:      "install",
+		Aliases:   []string{"i"},
+		Usage:     "Install tools",
+		ArgsUsage: `[<command or package name> ...]`,
 		Description: `Install tools according to the configuration files.
 
 e.g.
@@ -67,6 +69,13 @@ You can filter installed packages with package tags.
 e.g.
 $ aqua i -t foo # Install only packages having a tag "foo"
 $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
+
+You can install only specific packages by passing command names or package names.
+If any of them isn't found in configuration files, the command fails.
+
+e.g.
+$ aqua i gh # Install only the package having the command "gh"
+$ aqua i cli/cli suzuki-shunsuke/tfcmt # Install only the packages "cli/cli" and "suzuki-shunsuke/tfcmt"
 `,
 		Action: func(ctx context.Context, _ *cli.Command) error {
 			return i.action(ctx, args)
@@ -101,6 +110,14 @@ $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
 				Destination: &args.ExcludeTags,
 			},
 		},
+		Arguments: []cli.Argument{
+			&cli.StringArgs{
+				Name:        "names",
+				Min:         0,
+				Max:         -1,
+				Destination: &args.Names,
+			},
+		},
 	}
 }
 
@@ -122,6 +139,7 @@ func (i *command) action(ctx context.Context, args *Args) error {
 	param.All = args.All
 	param.Tags = util.ParseTags(strings.Split(args.Tags, ","))
 	param.ExcludedTags = util.ParseTags(strings.Split(args.ExcludeTags, ","))
+	param.Args = args.Names
 
 	ctrl, err := controller.InitializeInstallCommandController(ctx, i.r.Logger.Logger, param, http.DefaultClient, i.r.Runtime)
 	if err != nil {

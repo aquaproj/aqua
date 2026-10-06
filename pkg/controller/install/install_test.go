@@ -38,6 +38,39 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 	)
 	// The path of aqua-proxy relative to the root directory.
 	proxyPath := fmt.Sprintf("internal/pkgs/github_release/github.com/aquaproj/aqua-proxy/%s/aqua-proxy_linux_amd64.tar.gz/aqua-proxy", installpackage.ProxyVersion)
+	files := map[string]string{
+		workspace + "/aqua.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- name: aquaproj/aqua-installer@v1.0.0
+`,
+		workspace + "/aqua-policy.yaml": `registries:
+- type: local
+  name: standard
+  path: registry.yaml
+packages:
+- registry: standard
+`,
+		workspace + "/registry.yaml": `packages:
+- type: github_content
+  repo_owner: aquaproj
+  repo_name: aqua-installer
+  path: aqua-installer
+`,
+		rootDir + "/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": ``,
+		rootDir + "/" + proxyPath: ``,
+		rootDir + "/aqua-proxy":   ``,
+	}
+	dirs := []string{
+		workspace + "/.git",
+		rootDir + "/bin",
+	}
+	links := map[string]string{
+		rootDir + "/bin/aqua-installer": "../aqua-proxy",
+		rootDir + "/bin/aqua-proxy":     "../" + proxyPath,
+	}
 	data := []struct {
 		name              string
 		files             map[string]string
@@ -58,39 +91,55 @@ func TestController_Install(t *testing.T) { //nolint:funlen
 				ConfigFilePath: "aqua.yaml",
 				MaxParallelism: 5,
 			},
-			files: map[string]string{
-				workspace + "/aqua.yaml": `registries:
-- type: local
-  name: standard
-  path: registry.yaml
-packages:
-- name: aquaproj/aqua-installer@v1.0.0
-`,
-				workspace + "/aqua-policy.yaml": `registries:
-- type: local
-  name: standard
-  path: registry.yaml
-packages:
-- registry: standard
-`,
-				workspace + "/registry.yaml": `packages:
-- type: github_content
-  repo_owner: aquaproj
-  repo_name: aqua-installer
-  path: aqua-installer
-`,
-				rootDir + "/pkgs/github_content/github.com/aquaproj/aqua-installer/v1.0.0/aqua-installer/aqua-installer": ``,
-				rootDir + "/" + proxyPath: ``,
-				rootDir + "/aqua-proxy":   ``,
+			files: files,
+			dirs:  dirs,
+			links: links,
+		},
+		{
+			name: "command name",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
 			},
-			dirs: []string{
-				workspace + "/.git",
-				rootDir + "/bin",
+			param: &config.Param{
+				ConfigFilePath: "aqua.yaml",
+				MaxParallelism: 5,
+				Args:           []string{"aqua-installer"},
 			},
-			links: map[string]string{
-				rootDir + "/bin/aqua-installer": "../aqua-proxy",
-				rootDir + "/bin/aqua-proxy":     "../" + proxyPath,
+			files: files,
+			dirs:  dirs,
+			links: links,
+		},
+		{
+			name: "package name",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
 			},
+			param: &config.Param{
+				ConfigFilePath: "aqua.yaml",
+				MaxParallelism: 5,
+				Args:           []string{"aquaproj/aqua-installer"},
+			},
+			files: files,
+			dirs:  dirs,
+			links: links,
+		},
+		{
+			name: "not found",
+			rt: &runtime.Runtime{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			param: &config.Param{
+				ConfigFilePath: "aqua.yaml",
+				MaxParallelism: 5,
+				Args:           []string{"aqua-installer", "foo"},
+			},
+			files: files,
+			dirs:  dirs,
+			links: links,
+			isErr: true,
 		},
 	}
 	logger := slog.New(slog.DiscardHandler)
