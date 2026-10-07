@@ -5,5 +5,5 @@ registries:
     type: local
     path: registry.yaml
 packages:
-  - name: anthropics/claude-code@v2.1.288
+  - name: anthropics/claude-code@v2.1.289
     registry: local
