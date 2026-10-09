@@ -739,7 +739,11 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 		}
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeForgejoRelease:
-		if p.Host == "" || p.RepoOwner == "" || p.RepoName == "" {
+		// The host is read here as a directory, and this is read by aqua remove,
+		// which is given a registry's packages without validating them. A host that
+		// isn't one would be a path out of where the type's packages are, and what
+		// is at the end of that path is removed.
+		if !hostOnly(p.Host) || p.RepoOwner == "" || p.RepoName == "" {
 			return nil
 		}
 		return []string{filepath.Join(p.Type, p.Host, p.RepoOwner, p.RepoName)}

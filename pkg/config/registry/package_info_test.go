@@ -2,6 +2,7 @@
 package registry_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -454,6 +455,58 @@ func TestPackageInfo_Validate(t *testing.T) {
 
 // The type is on an instance of its own, which is what every case here is about: what says
 // which instance, and what else in a definition is a thing only github.com answers.
+// What aqua remove is given is a registry's packages, which nothing validated: the path a
+// package says it is installed at has to be one that is under where the type's packages
+// go, however the definition was written.
+func TestPackageInfo_PkgPaths_forgejoRelease(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		title string
+		host  string
+		exp   string
+	}{
+		{
+			title: "an instance",
+			host:  "codeberg.org",
+			exp:   filepath.Join("forgejo_release", "codeberg.org", "mergiraf", "mergiraf"),
+		},
+		{
+			title: "a host that is a path out of the packages",
+			host:  "../../..",
+		},
+		{
+			title: "a host that is a dot",
+			host:  ".",
+		},
+		{
+			title: "no instance at all",
+			host:  "",
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			pkgInfo := &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      d.host,
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+			}
+			paths := pkgInfo.PkgPaths()
+			if d.exp == "" {
+				if len(paths) != 0 {
+					t.Fatalf("wanted no path, got %v", paths)
+				}
+				return
+			}
+			if _, ok := paths[d.exp]; !ok || len(paths) != 1 {
+				t.Fatalf("wanted %s, got %v", d.exp, paths)
+			}
+		})
+	}
+}
+
 func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
