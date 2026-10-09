@@ -43,7 +43,21 @@ const (
 	// PkgInfoTypeForgejoRelease installs packages from the release assets of a
 	// Forgejo instance, such as Codeberg.
 	PkgInfoTypeForgejoRelease = "forgejo_release"
+	// PkgInfoTypeGiteaRelease installs packages from the release assets of a Gitea
+	// instance, such as gitea.com.
+	//
+	// It is read exactly as a forgejo_release package is, because Forgejo serves the
+	// API it inherited from Gitea. The two names are separate so that the day the two
+	// differ is a change here rather than in every definition that named the wrong
+	// one.
+	PkgInfoTypeGiteaRelease = "gitea_release"
 )
+
+// onInstanceType says whether a package type is on a forge instance of its own, which is
+// what Host names and what every other type has no need of.
+func onInstanceType(typ string) bool {
+	return typ == PkgInfoTypeForgejoRelease || typ == PkgInfoTypeGiteaRelease
+}
 
 // PackageInfo represents a complete package definition including metadata,
 // installation configuration, verification settings, and platform support.
@@ -53,13 +67,13 @@ type PackageInfo struct {
 	Name        string   `yaml:",omitempty" json:"name,omitempty"`
 	Aliases     []*Alias `yaml:",omitempty" json:"aliases,omitempty"`
 	SearchWords []string `yaml:"search_words,omitempty" json:"search_words,omitempty"`
-	Type        string   `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
+	Type        string   `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release"`
 	RepoOwner   string   `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName    string   `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	// Host is the instance the repository is on, such as codeberg.org. It is read
-	// by forgejo_release packages, because a Forgejo repository says nothing about
-	// which instance holds it. GitHub needs no such field: github.com is the only
-	// host its types can mean.
+	// Host is the instance the repository is on, such as codeberg.org. It is read by
+	// forgejo_release and gitea_release packages, because a repository on either says
+	// nothing about which instance holds it. GitHub needs no such field: github.com is
+	// the only host its types can mean.
 	Host                       string                      `yaml:",omitempty" json:"host,omitempty" jsonschema:"example=codeberg.org"`
 	Description                string                      `yaml:",omitempty" json:"description,omitempty"`
 	Link                       string                      `yaml:",omitempty" json:"link,omitempty"`
@@ -150,7 +164,7 @@ func (p *PackageInfo) GetAppendExt() bool {
 // settings based on the version being installed.
 type VersionOverride struct {
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release"`
 	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Host                       string                      `yaml:",omitempty" json:"host,omitempty"`
@@ -211,7 +225,7 @@ func (v Variants) IsZero() bool {
 type Override struct {
 	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
 	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release"`
 	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
 	Crate                      string                      `yaml:",omitempty" json:"crate,omitempty"`
@@ -488,7 +502,7 @@ func (p *PackageInfo) GetName() string {
 		return p.Name
 	}
 	if p.HasRepo() {
-		if p.Type == PkgInfoTypeForgejoRelease && p.Host != "" {
+		if onInstanceType(p.Type) && p.Host != "" {
 			// The instance is part of the name: codeberg.org's mergiraf/mergiraf
 			// is not github.com's, and a name without the instance would be the
 			// name a GitHub repository of the same owner and name already has.
@@ -521,7 +535,7 @@ func (p *PackageInfo) GetLink() string {
 		return p.Link
 	}
 	if p.HasRepo() {
-		if p.Type == PkgInfoTypeForgejoRelease && p.Host != "" {
+		if onInstanceType(p.Type) && p.Host != "" {
 			return "https://" + p.Host + "/" + p.RepoOwner + "/" + p.RepoName
 		}
 		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
@@ -598,8 +612,8 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 			return errAssetRequired
 		}
 		return nil
-	case PkgInfoTypeForgejoRelease:
-		return p.validateForgejoRelease()
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+		return p.validateForgeRelease()
 	case PkgInfoTypeHTTP:
 		if p.URL == "" {
 			return errURLRequired
@@ -738,7 +752,7 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 			return nil
 		}
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
-	case PkgInfoTypeForgejoRelease:
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
 		// The host is read here as a directory, and this is read by aqua remove,
 		// which is given a registry's packages without validating them. A host that
 		// isn't one would be a path out of where the type's packages are, and what
@@ -774,21 +788,22 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 // validateFileSources checks where the files beside the asset -- the checksum file, the
 // signatures, and the signatures of the checksum file -- are said to come from.
 //
-// A forgejo_release file is on the instance the package is on, which a package of another
-// type isn't on at all. The other way round, a github_release file is a repository on
-// github.com, and that is only wrong when the file doesn't say which one: it then takes
-// the package's owner and name, which on github.com are somebody else's repository. A
-// file that names a repository of its own is a mirror, or wherever else the signature is
-// published, and is nobody's mistake.
+// A forgejo_release or gitea_release file is on the instance the package is on, and says
+// no instance of its own, so the package has to be of that same type: anything else is on
+// no instance at all, or on one reached another way. The other way round, a github_release
+// file is a repository on github.com, and that is only wrong when the file doesn't say
+// which one: it then takes the package's owner and name, which on github.com are somebody
+// else's repository. A file that names a repository of its own is a mirror, or wherever
+// else the signature is published, and is nobody's mistake.
 func (p *PackageInfo) validateFileSources() error {
 	for _, src := range p.fileSources() {
 		switch src.typ {
-		case PkgInfoTypeForgejoRelease:
-			if p.Type != PkgInfoTypeForgejoRelease {
-				return errForgejoFileSource
+		case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+			if src.typ != p.Type {
+				return errForgeFileSource
 			}
 		case PkgInfoTypeGitHubRelease:
-			if p.Type == PkgInfoTypeForgejoRelease && !src.ownRepo {
+			if onInstanceType(p.Type) && !src.ownRepo {
 				return errGitHubFileSource
 			}
 		}
@@ -865,9 +880,9 @@ func hostOnly(host string) bool {
 	return hostNamePattern.MatchString(host)
 }
 
-// validateForgejoRelease checks the fields a release on a Forgejo instance is found by.
-// The instance is one of them: unlike github.com it isn't implied by the type.
-func (p *PackageInfo) validateForgejoRelease() error {
+// validateForgeRelease checks the fields a release on a forge instance is found by. The
+// instance is one of them: unlike github.com it isn't implied by the type.
+func (p *PackageInfo) validateForgeRelease() error {
 	if p.Host == "" {
 		return errHostRequired
 	}
@@ -879,7 +894,7 @@ func (p *PackageInfo) validateForgejoRelease() error {
 		// yet to say which credential an instance should be read with. Refusing it
 		// says so, where accepting it would download the instance's sign-in page
 		// and fail on an archive that isn't one.
-		return errForgejoPrivate
+		return errForgePrivate
 	}
 	if !p.HasRepo() {
 		return errRepoRequired
@@ -890,11 +905,11 @@ func (p *PackageInfo) validateForgejoRelease() error {
 	if p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil ||
 		(p.Checksum != nil && p.Checksum.GitHubArtifactAttestations != nil) {
 		// Both verify what GitHub signed, and the source they are checked against
-		// is a github.com repository named after the package. A Forgejo release has
-		// neither, and saying so is better than verifying a package against a
-		// repository that is somebody else's. The checksum file has its own
-		// attestations and is no different.
-		return errForgejoGitHubVerification
+		// is a github.com repository named after the package. A release on a Forgejo
+		// or Gitea instance has neither, and saying so is better than verifying a
+		// package against a repository that is somebody else's. The checksum file
+		// has its own attestations and is no different.
+		return errForgeGitHubVerification
 	}
 	return nil
 }
@@ -1027,8 +1042,8 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 // resetByPkgType resets package fields that are not applicable to the specified type.
 // This cleans up conflicting configuration when changing package types.
 func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
-	if typ != PkgInfoTypeForgejoRelease {
-		// Only a forgejo_release package is on an instance other than github.com.
+	if !onInstanceType(typ) {
+		// Only a package on a forge instance is on a host other than github.com.
 		p.Host = ""
 	}
 	switch typ {
@@ -1038,7 +1053,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Crate = ""
 		p.GoVersionPath = ""
 		p.Cargo = nil
-	case PkgInfoTypeForgejoRelease:
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
 		p.URL = ""
 		p.Path = ""
 		p.Crate = ""

@@ -31,6 +31,7 @@ packages:
 
 - [cargo](cargo-package.md): The package is installed by [cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html) command. `aqua >= v2.8.0`
 - [forgejo_release](forgejo-release-package.md): The package is downloaded from the releases of a repository on a Forgejo instance, such as Codeberg. `aqua >= v2.65.0`
+- [gitea_release](gitea-release-package.md): The package is downloaded from the releases of a repository on a Gitea instance, such as gitea.com. `aqua >= v2.65.0`
 - [github_archive](github-archive-package.md): The package is downloaded from GitHub Archive
 - [github_content](github-content-package.md): The package is downloaded from GitHub Content
 - [github_release](github-release-package.md): The package is downloaded from GitHub Releases
@@ -86,4 +87,18 @@ name: weaveworks/eksctl
 link: https://github.com/weaveworks/eksctl
 files:
 - name: eksctl
+```
+
+A [forgejo_release](forgejo-release-package.md) or [gitea_release](gitea-release-package.md) package is on an instance of its own, which is part of both defaults, because the same owner and name on another host are another package:
+
+* `name`: `<host>/<repo owner>/<repo name>`
+* `link`: `https://<host>/<repo owner>/<repo name>`
+
+For example, in case of `codeberg.org` and `mergiraf/mergiraf`:
+
+```yaml
+name: codeberg.org/mergiraf/mergiraf
+link: https://codeberg.org/mergiraf/mergiraf
+files:
+- name: mergiraf
 ```

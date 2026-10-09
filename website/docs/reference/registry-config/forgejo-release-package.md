@@ -8,7 +8,7 @@ sidebar_position: 850
 
 The package is downloaded from the releases of a repository on a [Forgejo](https://forgejo.org/) instance, such as [Codeberg](https://codeberg.org).
 
-Forgejo serves the API it inherited from Gitea, so the instance is asked which versions exist the same way GitHub is: `aqua g` and `aqua up` find the newest release without the registry having to list the versions by hand.
+Forgejo serves the API it inherited from Gitea, so the instance is asked which versions exist the same way GitHub is: `aqua g` and `aqua up` find the newest release without the registry having to list the versions by hand. A repository on a Gitea instance is [gitea_release](gitea-release-package.md), which is this type under another name, read by the same client.
 
 ```yaml
 packages:
@@ -78,7 +78,7 @@ Where each of these comes from is checked, including the signatures of the check
       asset: "{{.Asset}}.minisig"
 ```
 
-So a [version_override](version-overrides.md) that moves older versions back to `github_release` has to say `checksum`, and any signature, again -- what it doesn't mention it inherits, and what it inherits here is refused.
+So a [version_override](version-overrides.md) that changes the type has to say `checksum`, and any signature, again -- what it doesn't mention it inherits, and what it inherits here is refused. That is true of moving older versions back to `github_release`, and of a project that moved between the two instance types, where the `host` carries over but the checksum file's type does not follow it.
 
 [slsa_provenance](slsa-provenance.md) and [github_artifact_attestations](github-artifact-attestations.md) are refused, on the checksum file as well as on the package. Both verify what GitHub signed, against a github.com repository, which a Forgejo release doesn't have.
 

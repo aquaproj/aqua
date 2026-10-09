@@ -34,6 +34,40 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 			checksumID: "github_archive/github.com/tfutils/tfenv/v3.0.0",
 		},
 		{
+			name: "forgejo_release",
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Version: "v0.20.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "forgejo_release",
+					Host:      "codeberg.org",
+					RepoOwner: "mergiraf",
+					RepoName:  "mergiraf",
+					Asset:     "mergiraf.tar.gz",
+				},
+			},
+			rt:         &runtime.Runtime{},
+			checksumID: "forgejo_release/codeberg.org/mergiraf/mergiraf/v0.20.0/mergiraf.tar.gz",
+		},
+		{
+			name: "gitea_release",
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Version: "v0.16.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "gitea_release",
+					Host:      "gitea.com",
+					RepoOwner: "gitea",
+					RepoName:  "tea",
+					Asset:     "tea.xz",
+				},
+			},
+			rt:         &runtime.Runtime{},
+			checksumID: "gitea_release/gitea.com/gitea/tea/v0.16.0/tea.xz",
+		},
+		{
 			name: pkgTypeGitHubContent,
 			pkg: &config.Package{
 				Package: &aqua.Package{
@@ -134,6 +168,23 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 				},
 			},
 			checksumID: "github_archive/github.com/tfutils/tfenv/v3.0.0",
+		},
+		{
+			name: "gitea_release",
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Version: "v0.16.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "gitea_release",
+					Host:      "gitea.com",
+					RepoOwner: "gitea",
+					RepoName:  "tea",
+					Asset:     "tea.xz",
+				},
+			},
+			asset:      "tea.xz",
+			checksumID: "gitea_release/gitea.com/gitea/tea/v0.16.0/tea.xz",
 		},
 		{
 			name: pkgTypeGitHubContent,

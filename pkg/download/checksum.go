@@ -61,8 +61,8 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 			Version:   pkg.Package.Version,
 			Asset:     asset,
 		})
-	case config.PkgInfoTypeForgejoRelease:
-		return dl.downloadForgejoChecksum(ctx, rt, pkg)
+	case config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
+		return dl.downloadForgeChecksum(ctx, rt, pkg)
 	case config.PkgInfoTypeHTTP:
 		u, err := pkg.RenderChecksumURL(rt)
 		if err != nil {
@@ -91,15 +91,15 @@ func (dl *ChecksumDownloaderImpl) GetReleaseAssets(ctx context.Context, logger *
 	return dl.ghRelease.GetReleaseAssets(ctx, logger, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version)
 }
 
-// downloadForgejoChecksum fetches the checksum file published beside the asset in the same
-// release.
-func (dl *ChecksumDownloaderImpl) downloadForgejoChecksum(ctx context.Context, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
+// downloadForgeChecksum fetches the checksum file published beside the asset in the same
+// release on a Forgejo or Gitea instance.
+func (dl *ChecksumDownloaderImpl) downloadForgeChecksum(ctx context.Context, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
 	asset, err := pkg.RenderChecksumFileName(rt)
 	if err != nil {
 		return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 	}
-	u, err := forgejoReleaseURL(pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, asset)
+	u, err := forgeReleaseURL(pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, asset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("build the URL of the checksum file: %w", err)
 	}

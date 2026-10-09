@@ -1,4 +1,4 @@
-package forgejo
+package forge
 
 import (
 	"context"

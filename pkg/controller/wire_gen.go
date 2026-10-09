@@ -48,7 +48,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
-	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forgejo"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
@@ -122,11 +122,11 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(v)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(v)
-	forgejoClient := forgejo.New(httpClient)
-	forgejoReleaseVersionGetter := versiongetter.NewForgejoRelease(forgejoClient)
+	forgeClient := forge.New(httpClient)
+	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(forgeClient)
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
-	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgejoReleaseVersionGetter, goGetter)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgeReleaseVersionGetter, goGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	controller := generate.New(configFinder, configReader, installer, v, fuzzyfinderFinder, fuzzyGetter)
 	return controller, nil
@@ -376,11 +376,11 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(v)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(v)
-	forgejoClient := forgejo.New(httpClient)
-	forgejoReleaseVersionGetter := versiongetter.NewForgejoRelease(forgejoClient)
+	forgeClient := forge.New(httpClient)
+	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(forgeClient)
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
-	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgejoReleaseVersionGetter, goGetter)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgeReleaseVersionGetter, goGetter)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()

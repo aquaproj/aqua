@@ -28,14 +28,15 @@ type Cosign struct {
 // This is used for signature files, certificates, and other verification artifacts.
 type DownloadedFile struct {
 	// Type specifies the source type for downloading the file.
-	Type string `json:"type" jsonschema:"enum=github_release,enum=http,enum=forgejo_release"`
-	// RepoOwner is the repository owner (for github_release and forgejo_release types).
+	Type string `json:"type" jsonschema:"enum=github_release,enum=http,enum=forgejo_release,enum=gitea_release"`
+	// RepoOwner is the repository owner (for github_release, forgejo_release and gitea_release types).
 	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	// RepoName is the repository name (for github_release and forgejo_release types).
+	// RepoName is the repository name (for github_release, forgejo_release and gitea_release types).
 	RepoName string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	// Asset is the name of the asset to download (for github_release and
-	// forgejo_release types). A forgejo_release file is on the instance the package
-	// itself is on: a signature is published beside what it signs.
+	// Asset is the name of the asset to download (for github_release,
+	// forgejo_release and gitea_release types). A file on a forge instance is on the
+	// instance the package itself is on: a signature is published beside what it
+	// signs.
 	Asset *string `yaml:",omitempty" json:"asset,omitempty"`
 	// URL is the direct URL to download the file (for http type).
 	URL *string `yaml:",omitempty" json:"url,omitempty"`

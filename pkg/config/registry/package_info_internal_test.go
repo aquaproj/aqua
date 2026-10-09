@@ -63,7 +63,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 // A project that moved to a Forgejo instance keeps github_release at the top level and
 // says forgejo_release for the newer versions. What belonged to GitHub has to go with it:
 // the override can't unset a field, because a field it doesn't mention is inherited.
-func TestPackageInfo_overrideVersion_toForgejoRelease(t *testing.T) {
+func TestPackageInfo_overrideVersion_toForgeRelease(t *testing.T) {
 	t.Parallel()
 	pkgInfo := &PackageInfo{
 		Type:                       PkgInfoTypeGitHubRelease,
@@ -90,7 +90,7 @@ func TestPackageInfo_overrideVersion_toForgejoRelease(t *testing.T) {
 }
 
 // The other way round, the instance goes: a github_release package is on github.com.
-func TestPackageInfo_overrideVersion_fromForgejoRelease(t *testing.T) {
+func TestPackageInfo_overrideVersion_fromForgeRelease(t *testing.T) {
 	t.Parallel()
 	pkgInfo := &PackageInfo{
 		Type:      PkgInfoTypeForgejoRelease,

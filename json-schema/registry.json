@@ -68,7 +68,8 @@
           "enum": [
             "github_release",
             "http",
-            "forgejo_release"
+            "forgejo_release",
+            "gitea_release"
           ]
         },
         "asset": {
@@ -172,7 +173,8 @@
           "enum": [
             "github_release",
             "http",
-            "forgejo_release"
+            "forgejo_release",
+            "gitea_release"
           ]
         },
         "repo_owner": {
@@ -286,7 +288,8 @@
           "enum": [
             "github_release",
             "http",
-            "forgejo_release"
+            "forgejo_release",
+            "gitea_release"
           ]
         },
         "repo_owner": {
@@ -336,7 +339,8 @@
             "go_install",
             "cargo",
             "go_build",
-            "forgejo_release"
+            "forgejo_release",
+            "gitea_release"
           ]
         },
         "format": {
@@ -448,7 +452,8 @@
             "go_install",
             "cargo",
             "go_build",
-            "forgejo_release"
+            "forgejo_release",
+            "gitea_release"
           ]
         },
         "repo_owner": {
@@ -726,7 +731,8 @@
             "go_install",
             "cargo",
             "go_build",
-            "forgejo_release"
+            "forgejo_release",
+            "gitea_release"
           ]
         },
         "repo_owner": {
