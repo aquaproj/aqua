@@ -15,7 +15,7 @@ func (is *Installer) WaitExe(ctx context.Context, logger *slog.Logger, exePath s
 	for i := range 10 {
 		logger.Debug("check if exec file exists")
 		if fi, err := os.Stat(exePath); err == nil {
-			if osfile.IsOwnerExecutable(fi.Mode()) {
+			if osfile.IsExecutable(is.realRuntime.GOOS, fi.Mode()) {
 				break
 			}
 		}

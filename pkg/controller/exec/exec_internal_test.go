@@ -117,3 +117,51 @@ func Test_wrapExec(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+func Test_argv0(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		title   string
+		goos    string
+		exePath string
+		name    string
+		exp     string
+	}{
+		{
+			title:   "linux",
+			goos:    "linux",
+			exePath: "/home/foo/npx.cmd",
+			name:    "npx",
+			exp:     "npx",
+		},
+		{
+			title:   "windows exe",
+			goos:    "windows",
+			exePath: `C:\aqua\pkgs\node.exe`,
+			name:    "node",
+			exp:     "node",
+		},
+		{
+			title:   "windows cmd",
+			goos:    "windows",
+			exePath: `C:\aqua\pkgs\npx.cmd`,
+			name:    "npx",
+			exp:     `C:\aqua\pkgs\npx.cmd`,
+		},
+		{
+			title:   "windows upper-case bat",
+			goos:    "windows",
+			exePath: `C:\aqua\pkgs\foo.BAT`,
+			name:    "foo",
+			exp:     `C:\aqua\pkgs\foo.BAT`,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if s := argv0(d.goos, d.exePath, d.name); s != d.exp {
+				t.Fatalf("wanted %s, got %s", d.exp, s)
+			}
+		})
+	}
+}

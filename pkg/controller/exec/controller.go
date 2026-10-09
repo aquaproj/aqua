@@ -28,6 +28,7 @@ type Controller struct {
 	enabledXSysExec  bool
 	vacuum           Vacuum
 	lookPath         func(exeName string) (string, error)
+	goos             string
 }
 
 type Vacuum interface {
@@ -50,6 +51,7 @@ func New(pkgInstaller Installer, whichCtrl WhichController, executor Executor, o
 		policyReader:     policyReader,
 		vacuum:           vacuum,
 		lookPath:         exec.LookPath,
+		goos:             runtime.GOOS,
 	}
 }
 

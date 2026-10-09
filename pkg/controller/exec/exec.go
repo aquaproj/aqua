@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -131,7 +132,7 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResul
 	for i := range 10 {
 		logger.Debug("check if exec file exists")
 		if fi, err := os.Stat(findResult.ExePath); err == nil {
-			if osfile.IsOwnerExecutable(fi.Mode()) {
+			if osfile.IsExecutable(c.goos, fi.Mode()) {
 				break
 			}
 		}
@@ -164,7 +165,7 @@ func (c *Controller) execCommand(ctx context.Context, exePath, name string, args
 		return false, nil
 	}
 	cmd := osexec.Command(ctx, exePath, args...)
-	cmd.Args[0] = name
+	cmd.Args[0] = argv0(c.goos, exePath, name)
 	if exitCode, err := c.executor.Exec(cmd); err != nil {
 		// https://pkg.go.dev/os#ProcessState.ExitCode
 		// > ExitCode returns the exit code of the exited process,
@@ -175,6 +176,22 @@ func (c *Controller) execCommand(ctx context.Context, exePath, name string, args
 		return false, ecerror.Wrap(err, exitCode)
 	}
 	return false, nil
+}
+
+// argv0 returns the first element of the command's arguments.
+// The command name is used so that the command can behave according to its name.
+// But on Windows a batch file is run by cmd.exe, which runs the first token of the command line instead of exePath.
+// The command name would resolve to aqua's proxy and the proxy would call itself infinitely,
+// so the absolute path is used for batch files.
+func argv0(goos, exePath, name string) string {
+	if goos != "windows" {
+		return name
+	}
+	switch strings.ToLower(filepath.Ext(exePath)) {
+	case ".bat", ".cmd":
+		return exePath
+	}
+	return name
 }
 
 func (c *Controller) execCommandWithRetry(ctx context.Context, logger *slog.Logger, exePath, name string, args ...string) error {
