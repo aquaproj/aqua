@@ -67,7 +67,8 @@
           "type": "string",
           "enum": [
             "github_release",
-            "http"
+            "http",
+            "forgejo_release"
           ]
         },
         "asset": {
@@ -170,7 +171,8 @@
           "type": "string",
           "enum": [
             "github_release",
-            "http"
+            "http",
+            "forgejo_release"
           ]
         },
         "repo_owner": {
@@ -283,7 +285,8 @@
           "type": "string",
           "enum": [
             "github_release",
-            "http"
+            "http",
+            "forgejo_release"
           ]
         },
         "repo_owner": {
@@ -332,7 +335,8 @@
             "go",
             "go_install",
             "cargo",
-            "go_build"
+            "go_build",
+            "forgejo_release"
           ]
         },
         "format": {
@@ -443,7 +447,8 @@
             "go",
             "go_install",
             "cargo",
-            "go_build"
+            "go_build",
+            "forgejo_release"
           ]
         },
         "repo_owner": {
@@ -451,6 +456,12 @@
         },
         "repo_name": {
           "type": "string"
+        },
+        "host": {
+          "type": "string",
+          "examples": [
+            "codeberg.org"
+          ]
         },
         "description": {
           "type": "string"
@@ -714,13 +725,17 @@
             "go",
             "go_install",
             "cargo",
-            "go_build"
+            "go_build",
+            "forgejo_release"
           ]
         },
         "repo_owner": {
           "type": "string"
         },
         "repo_name": {
+          "type": "string"
+        },
+        "host": {
           "type": "string"
         },
         "asset": {

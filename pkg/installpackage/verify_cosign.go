@@ -44,6 +44,7 @@ func (c *cosignVerifier) Verify(ctx context.Context, logger *slog.Logger, file s
 	if err := c.verifier.Verify(ctx, logger, c.runtime, &download.File{
 		RepoOwner: pkg.PackageInfo.RepoOwner,
 		RepoName:  pkg.PackageInfo.RepoName,
+		Host:      pkg.PackageInfo.Host,
 		Version:   pkg.Package.Version,
 	}, cos, art, file); err != nil {
 		return fmt.Errorf("verify a file with Cosign: %w", err)

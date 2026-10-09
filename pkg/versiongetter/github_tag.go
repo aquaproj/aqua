@@ -104,11 +104,6 @@ func (g *GitHubTagVersionGetter) List(ctx context.Context, logger *slog.Logger, 
 }
 
 func filterTag(logger *slog.Logger, tag *github.RepositoryTag, filters []*Filter) bool {
-	tagName := tag.GetName()
-	for _, filter := range filters {
-		if matchTagByFilter(logger, tagName, filter) {
-			return !filter.NoAsset
-		}
-	}
-	return false
+	// A tag says nothing about being a prerelease; only a release does.
+	return filterTagName(logger, tag.GetName(), false, filters)
 }

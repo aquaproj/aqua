@@ -40,6 +40,9 @@ const (
 	PkgInfoTypeGoBuild = "go_build"
 	// PkgInfoTypeCargo installs Rust packages from crates.io using cargo.
 	PkgInfoTypeCargo = "cargo"
+	// PkgInfoTypeForgejoRelease installs packages from the release assets of a
+	// Forgejo instance, such as Codeberg.
+	PkgInfoTypeForgejoRelease = "forgejo_release"
 )
 
 // PackageInfo represents a complete package definition including metadata,
@@ -47,12 +50,17 @@ const (
 // It contains all information needed to install and verify a package across
 // different platforms and versions.
 type PackageInfo struct {
-	Name                       string                      `yaml:",omitempty" json:"name,omitempty"`
-	Aliases                    []*Alias                    `yaml:",omitempty" json:"aliases,omitempty"`
-	SearchWords                []string                    `yaml:"search_words,omitempty" json:"search_words,omitempty"`
-	Type                       string                      `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
-	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Name        string   `yaml:",omitempty" json:"name,omitempty"`
+	Aliases     []*Alias `yaml:",omitempty" json:"aliases,omitempty"`
+	SearchWords []string `yaml:"search_words,omitempty" json:"search_words,omitempty"`
+	Type        string   `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
+	RepoOwner   string   `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName    string   `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	// Host is the instance the repository is on, such as codeberg.org. It is read
+	// by forgejo_release packages, because a Forgejo repository says nothing about
+	// which instance holds it. GitHub needs no such field: github.com is the only
+	// host its types can mean.
+	Host                       string                      `yaml:",omitempty" json:"host,omitempty" jsonschema:"example=codeberg.org"`
 	Description                string                      `yaml:",omitempty" json:"description,omitempty"`
 	Link                       string                      `yaml:",omitempty" json:"link,omitempty"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
@@ -142,9 +150,10 @@ func (p *PackageInfo) GetAppendExt() bool {
 // settings based on the version being installed.
 type VersionOverride struct {
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
 	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Host                       string                      `yaml:",omitempty" json:"host,omitempty"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
 	Crate                      string                      `yaml:",omitempty" json:"crate,omitempty"`
 	Path                       string                      `yaml:",omitempty" json:"path,omitempty"`
@@ -202,7 +211,7 @@ func (v Variants) IsZero() bool {
 type Override struct {
 	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
 	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
 	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
 	Crate                      string                      `yaml:",omitempty" json:"crate,omitempty"`
@@ -234,6 +243,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		Type:                       p.Type,
 		RepoOwner:                  p.RepoOwner,
 		RepoName:                   p.RepoName,
+		Host:                       p.Host,
 		Asset:                      p.Asset,
 		Crate:                      p.Crate,
 		Cargo:                      p.Cargo,
@@ -478,6 +488,12 @@ func (p *PackageInfo) GetName() string {
 		return p.Name
 	}
 	if p.HasRepo() {
+		if p.Type == PkgInfoTypeForgejoRelease && p.Host != "" {
+			// The instance is part of the name: codeberg.org's mergiraf/mergiraf
+			// is not github.com's, and a name without the instance would be the
+			// name a GitHub repository of the same owner and name already has.
+			return p.Host + "/" + p.RepoOwner + "/" + p.RepoName
+		}
 		return p.RepoOwner + "/" + p.RepoName
 	}
 	if p.Type == PkgInfoTypeGoInstall && p.Path != "" {
@@ -505,6 +521,9 @@ func (p *PackageInfo) GetLink() string {
 		return p.Link
 	}
 	if p.HasRepo() {
+		if p.Type == PkgInfoTypeForgejoRelease && p.Host != "" {
+			return "https://" + p.Host + "/" + p.RepoOwner + "/" + p.RepoName
+		}
 		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
 	}
 	return ""
@@ -544,6 +563,9 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
 	}
+	if err := p.validateFileSources(); err != nil {
+		return err
+	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		if !p.HasRepo() {
@@ -576,6 +598,8 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 			return errAssetRequired
 		}
 		return nil
+	case PkgInfoTypeForgejoRelease:
+		return p.validateForgejoRelease()
 	case PkgInfoTypeHTTP:
 		if p.URL == "" {
 			return errURLRequired
@@ -714,6 +738,15 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 			return nil
 		}
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
+	case PkgInfoTypeForgejoRelease:
+		// The host is read here as a directory, and this is read by aqua remove,
+		// which is given a registry's packages without validating them. A host that
+		// isn't one would be a path out of where the type's packages are, and what
+		// is at the end of that path is removed.
+		if !hostOnly(p.Host) || p.RepoOwner == "" || p.RepoName == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, p.Host, p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
 		if p.Crate == "" {
 			return nil
@@ -734,6 +767,134 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 			return nil
 		}
 		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
+	}
+	return nil
+}
+
+// validateFileSources checks where the files beside the asset -- the checksum file, the
+// signatures, and the signatures of the checksum file -- are said to come from.
+//
+// A forgejo_release file is on the instance the package is on, which a package of another
+// type isn't on at all. The other way round, a github_release file is a repository on
+// github.com, and that is only wrong when the file doesn't say which one: it then takes
+// the package's owner and name, which on github.com are somebody else's repository. A
+// file that names a repository of its own is a mirror, or wherever else the signature is
+// published, and is nobody's mistake.
+func (p *PackageInfo) validateFileSources() error {
+	for _, src := range p.fileSources() {
+		switch src.typ {
+		case PkgInfoTypeForgejoRelease:
+			if p.Type != PkgInfoTypeForgejoRelease {
+				return errForgejoFileSource
+			}
+		case PkgInfoTypeGitHubRelease:
+			if p.Type == PkgInfoTypeForgejoRelease && !src.ownRepo {
+				return errGitHubFileSource
+			}
+		}
+	}
+	return nil
+}
+
+// fileSource is where one file beside the asset comes from.
+type fileSource struct {
+	typ string
+	// ownRepo says the file names the repository it is in, rather than taking the
+	// package's.
+	ownRepo bool
+}
+
+// fileSources is where each file beside the asset is said to come from.
+func (p *PackageInfo) fileSources() []*fileSource {
+	sources := make([]*fileSource, 0, 10) //nolint:mnd
+	add := func(typ, repoOwner, repoName string) {
+		sources = append(sources, &fileSource{
+			typ:     typ,
+			ownRepo: repoOwner != "" && repoName != "",
+		})
+	}
+	addCosign := func(c *Cosign) {
+		if c == nil {
+			return
+		}
+		for _, f := range []*DownloadedFile{c.Signature, c.Certificate, c.Key, c.Bundle} {
+			if f != nil {
+				add(f.Type, f.RepoOwner, f.RepoName)
+			}
+		}
+	}
+	addMinisign := func(m *Minisign) {
+		if m == nil {
+			return
+		}
+		add(m.Type, m.RepoOwner, m.RepoName)
+	}
+	if c := p.Checksum; c != nil {
+		// A checksum file says no repository of its own: it is in the package's.
+		add(c.Type, "", "")
+		addCosign(c.Cosign)
+		addMinisign(c.Minisign)
+	}
+	addMinisign(p.Minisign)
+	addCosign(p.Cosign)
+	return sources
+}
+
+// hostNamePattern is a host name: labels of letters, digits and hyphens, separated by dots,
+// each beginning and ending with a letter or a digit.
+//
+// Saying what a host name is, rather than what it is not, is what makes everything else one
+// answer. A scheme, a path, userinfo, a port and a dot segment don't match it, and neither
+// do the characters a pattern is written with: aqua remove expands the install path as a
+// glob, so a host of '*' would be every instance's copy of the same owner and name, and
+// removing one package would remove those.
+var hostNamePattern = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$`)
+
+// hostOnly says whether a value is a host name, and nothing else.
+//
+// The value is read as a host by the API endpoint and the download URL, and as a directory
+// by the install path and the checksum id, which is why it has to be only that.
+//
+// A port is refused although it is part of a host, because the host is also a directory
+// and a colon can't be one on Windows, where NTFS reads it as a stream of another file. An
+// instance on a port of its own needs something that says the whole base of it, which is
+// also what an instance under a sub-path needs; a field for both can be added beside this
+// one, and the path it is written into can be made safe there. An address written as an
+// IPv6 literal goes the same way, for want of a case that wants one.
+func hostOnly(host string) bool {
+	return hostNamePattern.MatchString(host)
+}
+
+// validateForgejoRelease checks the fields a release on a Forgejo instance is found by.
+// The instance is one of them: unlike github.com it isn't implied by the type.
+func (p *PackageInfo) validateForgejoRelease() error {
+	if p.Host == "" {
+		return errHostRequired
+	}
+	if !hostOnly(p.Host) {
+		return errHostInvalid
+	}
+	if p.Private {
+		// Only what an instance serves to anyone is downloaded: there is nowhere
+		// yet to say which credential an instance should be read with. Refusing it
+		// says so, where accepting it would download the instance's sign-in page
+		// and fail on an archive that isn't one.
+		return errForgejoPrivate
+	}
+	if !p.HasRepo() {
+		return errRepoRequired
+	}
+	if p.Asset == "" {
+		return errAssetRequired
+	}
+	if p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil ||
+		(p.Checksum != nil && p.Checksum.GitHubArtifactAttestations != nil) {
+		// Both verify what GitHub signed, and the source they are checked against
+		// is a github.com repository named after the package. A Forgejo release has
+		// neither, and saying so is better than verifying a package against a
+		// repository that is somebody else's. The checksum file has its own
+		// attestations and is no different.
+		return errForgejoGitHubVerification
 	}
 	return nil
 }
@@ -769,6 +930,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	}
 	if child.RepoName != "" {
 		pkg.RepoName = child.RepoName
+	}
+	if child.Host != "" {
+		pkg.Host = child.Host
 	}
 	if child.Asset != "" {
 		pkg.Asset = child.Asset
@@ -863,6 +1027,10 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 // resetByPkgType resets package fields that are not applicable to the specified type.
 // This cleans up conflicting configuration when changing package types.
 func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
+	if typ != PkgInfoTypeForgejoRelease {
+		// Only a forgejo_release package is on an instance other than github.com.
+		p.Host = ""
+	}
 	switch typ {
 	case PkgInfoTypeGitHubRelease:
 		p.URL = ""
@@ -870,6 +1038,21 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Crate = ""
 		p.GoVersionPath = ""
 		p.Cargo = nil
+	case PkgInfoTypeForgejoRelease:
+		p.URL = ""
+		p.Path = ""
+		p.Crate = ""
+		p.GoVersionPath = ""
+		p.Cargo = nil
+		// What a version_override switching to this type inherits has to go with
+		// the type it belonged to. A project that moved from GitHub to a Forgejo
+		// instance keeps github_release with its attestations at the top level and
+		// says forgejo_release for the newer versions; leaving those fields set
+		// would refuse the definition, and the override has no way to unset them,
+		// because a field it doesn't mention is one it inherits.
+		p.SLSAProvenance = nil
+		p.GitHubArtifactAttestations = nil
+		p.Private = false
 	case PkgInfoTypeGitHubContent:
 		p.URL = ""
 		p.Asset = ""

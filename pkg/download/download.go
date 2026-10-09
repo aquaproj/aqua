@@ -16,11 +16,14 @@ type File struct {
 	Type      string
 	RepoOwner string
 	RepoName  string
-	Version   string
-	Asset     string
-	URL       string
-	Path      string
-	Private   bool
+	// Host is the Forgejo instance the release is on. It is empty for every other
+	// type, whose host is github.com or is part of URL.
+	Host    string
+	Version string
+	Asset   string
+	URL     string
+	Path    string
+	Private bool
 }
 
 type Downloader struct {
@@ -70,15 +73,27 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logger *slog.Logger, file 
 		return io.NopCloser(strings.NewReader(file.String)), 0, nil
 	case config.PkgInfoTypeGitHubArchive:
 		return dl.getReadCloserFromGitHubArchive(ctx, file)
-	case config.PkgInfoTypeHTTP:
-		rc, code, err := dl.http.Download(ctx, file.URL)
+	case config.PkgInfoTypeForgejoRelease:
+		u, err := forgejoReleaseURL(file.Host, file.RepoOwner, file.RepoName, file.Version, file.Asset)
 		if err != nil {
-			return rc, code, fmt.Errorf("download a package: %w", slogerr.With(err,
-				"download_url", file.URL))
+			return nil, 0, fmt.Errorf("build the download URL: %w", err)
 		}
-		return rc, code, nil
+		return dl.downloadURL(ctx, u)
+	case config.PkgInfoTypeHTTP:
+		return dl.downloadURL(ctx, file.URL)
 	default:
 		return nil, 0, slogerr.With(errInvalidPackageType, //nolint:wrapcheck
 			"file_type", file.Type)
 	}
+}
+
+// downloadURL fetches a package from a URL, which is what both the types that name
+// one where it is are read through.
+func (dl *Downloader) downloadURL(ctx context.Context, u string) (io.ReadCloser, int64, error) {
+	rc, code, err := dl.http.Download(ctx, u)
+	if err != nil {
+		return rc, code, fmt.Errorf("download a package: %w", slogerr.With(err,
+			"download_url", u))
+	}
+	return rc, code, nil
 }

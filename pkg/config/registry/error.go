@@ -14,10 +14,27 @@ var (
 	errGoInstallRequirePath = errors.New("go_install package requires path")
 	// errCargoRequireCrate is returned when a cargo package lacks a crate name.
 	errCargoRequireCrate = errors.New("cargo package requires crate")
-	// errAssetRequired is returned when a github_release package lacks an asset specification.
-	errAssetRequired = errors.New("github_release package requires asset")
+	// errAssetRequired is returned when a release package lacks an asset specification.
+	errAssetRequired = errors.New("github_release and forgejo_release packages require asset")
 	// errURLRequired is returned when an http package lacks a URL.
 	errURLRequired = errors.New("http package requires url")
+	// errHostRequired is returned when a forgejo_release package lacks the instance it is on.
+	errHostRequired = errors.New("forgejo_release package requires host")
+	// errForgejoPrivate is returned when a forgejo_release package says it is private,
+	// which there is no credential to read.
+	errForgejoPrivate = errors.New("forgejo_release package doesn't support private")
+	// errHostInvalid is returned when a forgejo_release package's host is written as a URL
+	// or holds a path.
+	errHostInvalid = errors.New("forgejo_release package's host must be a host name, with no scheme, userinfo, port or path")
+	// errForgejoFileSource is returned when a package of another type reads a file beside
+	// its asset as a forgejo_release file, which has no instance to be on.
+	errForgejoFileSource = errors.New("a forgejo_release checksum file or signature requires a forgejo_release package")
+	// errGitHubFileSource is returned when a forgejo_release package reads a file beside
+	// its asset from github.com, where the same repository is somebody else's.
+	errGitHubFileSource = errors.New("a github_release checksum file or signature on a forgejo_release package must name the repository it is in")
+	// errForgejoGitHubVerification is returned when a forgejo_release package asks for a
+	// verification that only GitHub can answer.
+	errForgejoGitHubVerification = errors.New("forgejo_release package doesn't support slsa_provenance or github_artifact_attestations")
 	// errInvalidPackageType is returned when a package has an unrecognized type.
 	errInvalidPackageType = errors.New("package type is invalid")
 )
