@@ -840,29 +840,29 @@ func (p *PackageInfo) fileSources() []*fileSource {
 	return sources
 }
 
+// hostNamePattern is a host name: labels of letters, digits and hyphens, separated by dots,
+// each beginning and ending with a letter or a digit.
+//
+// Saying what a host name is, rather than what it is not, is what makes everything else one
+// answer. A scheme, a path, userinfo, a port and a dot segment don't match it, and neither
+// do the characters a pattern is written with: aqua remove expands the install path as a
+// glob, so a host of '*' would be every instance's copy of the same owner and name, and
+// removing one package would remove those.
+var hostNamePattern = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$`)
+
 // hostOnly says whether a value is a host name, and nothing else.
 //
 // The value is read as a host by the API endpoint and the download URL, and as a directory
-// by the install path and the checksum id, so what it must not be is anything else: a
-// scheme, a path, userinfo naming a different host than it appears to, or a dot segment
-// that would put the install path somewhere other than where the type's packages go.
-// Parsing it as the authority of a URL is what says which it is.
+// by the install path and the checksum id, which is why it has to be only that.
 //
 // A port is refused although it is part of a host, because the host is also a directory
 // and a colon can't be one on Windows, where NTFS reads it as a stream of another file. An
 // instance on a port of its own needs something that says the whole base of it, which is
 // also what an instance under a sub-path needs; a field for both can be added beside this
-// one, and the path it is written into can be made safe there.
+// one, and the path it is written into can be made safe there. An address written as an
+// IPv6 literal goes the same way, for want of a case that wants one.
 func hostOnly(host string) bool {
-	if host == "." || host == ".." {
-		return false
-	}
-	u, err := url.Parse("//" + host)
-	if err != nil {
-		return false
-	}
-	return u.Host == host && u.User == nil && u.Path == "" &&
-		u.RawQuery == "" && u.Fragment == "" && u.Hostname() != "" && u.Port() == ""
+	return hostNamePattern.MatchString(host)
 }
 
 // validateForgejoRelease checks the fields a release on a Forgejo instance is found by.

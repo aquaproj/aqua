@@ -47,7 +47,7 @@ A checksum file published in the release is read by giving `checksum.type` the s
 
 ## Which instances this reaches
 
-`host` is a host name and nothing else: a scheme, a path, userinfo, a port or a dot segment is refused, so `https://codeberg.org`, `example.com/git`, `codeberg.org@elsewhere.example.com`, `forgejo.example.com:3000` and `..` are all errors. It names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is.
+`host` is a host name and nothing else -- labels of letters, digits and hyphens, separated by dots. A scheme, a path, userinfo, a port, a dot segment and the characters a pattern is written with are all refused, so `https://codeberg.org`, `example.com/git`, `codeberg.org@elsewhere.example.com`, `forgejo.example.com:3000`, `..` and `codeberg.*` are errors. It names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is.
 
 The port is refused because the host is a directory as well, under `pkgs/forgejo_release`, and a colon can't be one on Windows. An instance on a port of its own needs a field that says the whole base of it, which is what an instance under a sub-path needs too.
 

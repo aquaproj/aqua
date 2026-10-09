@@ -453,11 +453,9 @@ func TestPackageInfo_Validate(t *testing.T) {
 	}
 }
 
-// The type is on an instance of its own, which is what every case here is about: what says
-// which instance, and what else in a definition is a thing only github.com answers.
-// What aqua remove is given is a registry's packages, which nothing validated: the path a
-// package says it is installed at has to be one that is under where the type's packages
-// go, however the definition was written.
+// What aqua remove is given is a registry's packages, which nothing validated: whatever a
+// definition says the instance is, the path has to be one under where the type's packages
+// go, and one path rather than a pattern matching several.
 func TestPackageInfo_PkgPaths_forgejoRelease(t *testing.T) {
 	t.Parallel()
 	data := []struct {
@@ -473,6 +471,12 @@ func TestPackageInfo_PkgPaths_forgejoRelease(t *testing.T) {
 		{
 			title: "a host that is a path out of the packages",
 			host:  "../../..",
+		},
+		{
+			// aqua remove expands the path as a glob, so this one would be every
+			// instance's copy of the same owner and name.
+			title: "a host that is a pattern",
+			host:  "*",
 		},
 		{
 			title: "a host that is a dot",
@@ -507,7 +511,9 @@ func TestPackageInfo_PkgPaths_forgejoRelease(t *testing.T) {
 	}
 }
 
-func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
+// The host is what says which instance the release is on, and it is read as a directory as
+// well, so what it may be is narrow.
+func TestPackageInfo_Validate_forgejoRelease_host(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -521,38 +527,6 @@ func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
 				RepoOwner: "mergiraf",
 				RepoName:  "mergiraf",
 				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
-			},
-			isErr: true,
-		},
-		{
-			title: "forgejo_release repo is required",
-			pkgInfo: &registry.PackageInfo{
-				Type:  registry.PkgInfoTypeForgejoRelease,
-				Name:  "codeberg.org/mergiraf/mergiraf",
-				Host:  "codeberg.org",
-				Asset: "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
-			},
-			isErr: true,
-		},
-		{
-			title: "forgejo_release asset is required",
-			pkgInfo: &registry.PackageInfo{
-				Type:      registry.PkgInfoTypeForgejoRelease,
-				Host:      "codeberg.org",
-				RepoOwner: "mergiraf",
-				RepoName:  "mergiraf",
-			},
-			isErr: true,
-		},
-		{
-			title: "forgejo_release private is not supported",
-			pkgInfo: &registry.PackageInfo{
-				Type:      registry.PkgInfoTypeForgejoRelease,
-				Host:      "codeberg.org",
-				RepoOwner: "mergiraf",
-				RepoName:  "mergiraf",
-				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
-				Private:   true,
 			},
 			isErr: true,
 		},
@@ -590,6 +564,28 @@ func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
 			isErr: true,
 		},
 		{
+			title: "forgejo_release host that is a pattern",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.*",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host holding a character a host name can't",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org,elsewhere.example.com",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
 			title: "forgejo_release host that is a dot segment",
 			pkgInfo: &registry.PackageInfo{
 				Type:      registry.PkgInfoTypeForgejoRelease,
@@ -609,6 +605,64 @@ func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
 				RepoOwner: "an-owner",
 				RepoName:  "a-repo",
 				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if err := d.pkgInfo.Validate(); err != nil {
+				if !d.isErr {
+					t.Fatal(err)
+				}
+				return
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
+	}
+}
+
+// What else in a definition is a thing only github.com answers, and where the files beside
+// the asset come from.
+func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		pkgInfo *registry.PackageInfo
+		isErr   bool
+	}{
+		{
+			title: "forgejo_release repo is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:  registry.PkgInfoTypeForgejoRelease,
+				Name:  "codeberg.org/mergiraf/mergiraf",
+				Host:  "codeberg.org",
+				Asset: "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release asset is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release private is not supported",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+				Private:   true,
 			},
 			isErr: true,
 		},
