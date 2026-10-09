@@ -50,6 +50,10 @@ type Release struct {
 //
 // Pages are 1-based. A page shorter than the limit is the last one: the API says nothing
 // about how many pages there are, so that is how a caller knows to stop.
+//
+// The instance is a host, which reaches one served at the root of that host over HTTPS. An
+// instance under a sub-path, which Forgejo's ROOT_URL allows, would have to be named by a
+// base URL instead; a field for that can be added beside this one when something needs it.
 func (c *Client) ListReleases(ctx context.Context, host, owner, repo string, page, limit int) ([]*Release, error) {
 	endpoint := fmt.Sprintf("https://%s/api/v1/repos/%s/%s/releases?page=%d&limit=%d",
 		host, url.PathEscape(owner), url.PathEscape(repo), page, limit)
