@@ -30,7 +30,9 @@ func (c *Controller) lookPath(envPath, exeName string) string {
 	binDir := filepath.Join(c.rootDir, "bin")
 	exts := c.listExts()
 	for _, p := range filepath.SplitList(envPath) {
-		if p == binDir {
+		// Compare paths case-insensitively to skip aqua's shims reliably.
+		// Otherwise a shim would find itself and run itself recursively.
+		if strings.EqualFold(filepath.Clean(p), binDir) {
 			continue
 		}
 		bin := filepath.Join(p, exeName)

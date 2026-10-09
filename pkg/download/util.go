@@ -18,10 +18,13 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		Type:      file.Type,
 		RepoOwner: file.RepoOwner,
 		RepoName:  file.RepoName,
-		Version:   art.Version,
+		// The instance is the package's own: a file downloaded beside an asset is
+		// on the instance that served the asset.
+		Host:    art.Host,
+		Version: art.Version,
 	}
 	switch file.Type {
-	case "github_release":
+	case "github_release", config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
 		if f.RepoOwner == "" {
 			f.RepoOwner = art.RepoOwner
 		}
@@ -58,11 +61,12 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		Type:      pkgInfo.Type,
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
+		Host:      pkgInfo.Host,
 		Version:   pkg.Package.Version,
 		Private:   pkgInfo.Private,
 	}
 	switch pkgInfo.Type {
-	case config.PkgInfoTypeGitHubRelease:
+	case config.PkgInfoTypeGitHubRelease, config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
 		file.Asset = assetName
 		return file, nil
 	case config.PkgInfoTypeGitHubContent:

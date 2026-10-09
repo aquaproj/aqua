@@ -54,6 +54,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/google/wire"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -233,10 +234,15 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 		versiongetter.NewCargo,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
+		versiongetter.NewForgeRelease,
 		versiongetter.NewGoGetter,
 		wire.NewSet(
 			goproxy.New,
 			wire.Bind(new(versiongetter.GoProxyClient), new(*goproxy.Client)),
+		),
+		wire.NewSet(
+			forge.New,
+			wire.Bind(new(versiongetter.ForgeReleaseClient), new(*forge.Client)),
 		),
 	)
 	return &generate.Controller{}, nil
@@ -985,6 +991,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		versiongetter.NewCargo,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
+		versiongetter.NewForgeRelease,
 		versiongetter.NewGoGetter,
 		wire.NewSet(
 			cargo.NewClient,
@@ -993,6 +1000,10 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		wire.NewSet(
 			goproxy.New,
 			wire.Bind(new(versiongetter.GoProxyClient), new(*goproxy.Client)),
+		),
+		wire.NewSet(
+			forge.New,
+			wire.Bind(new(versiongetter.ForgeReleaseClient), new(*forge.Client)),
 		),
 		wire.NewSet(
 			which.New,

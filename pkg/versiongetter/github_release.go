@@ -161,16 +161,5 @@ func (g *GitHubReleaseVersionGetter) List(ctx context.Context, logger *slog.Logg
 }
 
 func filterRelease(logger *slog.Logger, release *github.RepositoryRelease, filters []*Filter) bool {
-	if release.GetPrerelease() {
-		return false
-	}
-
-	tagName := release.GetTagName()
-
-	for _, filter := range filters {
-		if matchTagByFilter(logger, tagName, filter) {
-			return !filter.NoAsset
-		}
-	}
-	return false
+	return filterTagName(logger, release.GetTagName(), release.GetPrerelease(), filters)
 }

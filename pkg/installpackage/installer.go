@@ -160,9 +160,14 @@ type ParamInstallPackages struct {
 	// LockedPackages are the packages resolved from the lock file. They arrive
 	// already built, because deciding them is also what tells the caller whether it
 	// needs a registry at all.
-	LockedPackages  []*Target
-	Tags            map[string]struct{}
-	ExcludedTags    map[string]struct{}
+	LockedPackages []*Target
+	Tags           map[string]struct{}
+	ExcludedTags   map[string]struct{}
+	// Names filters installed packages by command names or package names.
+	// If Names is empty, packages aren't filtered.
+	Names map[string]struct{}
+	// FoundNames is filled with names in Names matching packages.
+	FoundNames      map[string]struct{}
 	PolicyConfigs   []*policy.Config
 	Checksums       *checksum.Checksums
 	SkipLink        bool
@@ -200,7 +205,7 @@ type DownloadParam struct {
 	RequireChecksum bool
 }
 
-func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error { //nolint:cyclop
+func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error {
 	targets, failed := is.listTargets(logger, param)
 	pkgs := targetPackages(targets)
 
@@ -209,6 +214,12 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 			failed = failedCreateLinks
 		}
 	}
+
+	// Filtered before the onlyLink check, so that the names are validated even when
+	// nothing is downloaded. The targets are filtered rather than the packages,
+	// because installing reads the targets: a package filtered out of a list nothing
+	// installs from would have been installed anyway.
+	targets = filterTargetsByNames(logger, targets, param.Names, param.FoundNames)
 
 	if is.onlyLink {
 		logger.Debug("skip downloading the package",
@@ -226,6 +237,45 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 		return nil
 	}
 
+	return is.installTargets(ctx, logger, targets, param)
+}
+
+func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, param *ParamInstallPackage) error {
+	pkg := param.Pkg
+	logger.Debug("installing the package")
+
+	if err := is.validatePackage(logger, param); err != nil {
+		return err
+	}
+
+	assetName, err := pkg.RenderAsset(is.runtime)
+	if err != nil {
+		return fmt.Errorf("render the asset name: %w", err)
+	}
+
+	pkgPath, err := pkg.AbsPkgPath(is.rootDir, is.runtime)
+	if err != nil {
+		return fmt.Errorf("get the package install path: %w", err)
+	}
+
+	if err := is.downloadWithRetry(ctx, logger, &DownloadParam{
+		Package:         pkg,
+		Dest:            pkgPath,
+		Asset:           assetName,
+		Checksums:       param.Checksums,
+		RequireChecksum: param.RequireChecksum,
+		Checksum:        param.Checksum,
+		Locked:          param.Locked,
+	}); err != nil {
+		return err
+	}
+
+	return is.checkFilesWrap(ctx, logger, param, pkgPath)
+}
+
+// installTargets installs what the targets say, as many at a time as the parallelism
+// allows.
+func (is *Installer) installTargets(ctx context.Context, logger *slog.Logger, targets []*Target, param *ParamInstallPackages) error {
 	eg := &errgroup.Group{}
 	eg.SetLimit(is.maxParallelism)
 
@@ -260,37 +310,4 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 		return errInstallFailure
 	}
 	return nil
-}
-
-func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, param *ParamInstallPackage) error {
-	pkg := param.Pkg
-	logger.Debug("installing the package")
-
-	if err := is.validatePackage(logger, param); err != nil {
-		return err
-	}
-
-	assetName, err := pkg.RenderAsset(is.runtime)
-	if err != nil {
-		return fmt.Errorf("render the asset name: %w", err)
-	}
-
-	pkgPath, err := pkg.AbsPkgPath(is.rootDir, is.runtime)
-	if err != nil {
-		return fmt.Errorf("get the package install path: %w", err)
-	}
-
-	if err := is.downloadWithRetry(ctx, logger, &DownloadParam{
-		Package:         pkg,
-		Dest:            pkgPath,
-		Asset:           assetName,
-		Checksums:       param.Checksums,
-		RequireChecksum: param.RequireChecksum,
-		Checksum:        param.Checksum,
-		Locked:          param.Locked,
-	}); err != nil {
-		return err
-	}
-
-	return is.checkFilesWrap(ctx, logger, param, pkgPath)
 }

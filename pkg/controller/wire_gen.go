@@ -53,6 +53,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
@@ -126,9 +127,11 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(v)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(v)
+	forgeClient := forge.New(httpClient)
+	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(forgeClient)
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
-	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgeReleaseVersionGetter, goGetter)
 	v2, err := github.NewGit(ctx, logger)
 	if err != nil {
 		return nil, err
@@ -387,9 +390,11 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(v)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(v)
+	forgeClient := forge.New(httpClient)
+	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(forgeClient)
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
-	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, goGetter)
+	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgeReleaseVersionGetter, goGetter)
 	v2, err := github.NewGit(ctx, logger)
 	if err != nil {
 		return nil, err

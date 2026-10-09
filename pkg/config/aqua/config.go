@@ -82,9 +82,12 @@ func (p *Package) UnmarshalYAML(unmarshal func(any) error) error {
 	return nil
 }
 
+// HasCommandAlias returns true if the given exe name is a command alias of this package.
+// The exe name is compared case-insensitively, so the caller should prefer an
+// exact match.
 func (p *Package) HasCommandAlias(exeName string) bool {
 	for _, a := range p.CommandAliases {
-		if a.Alias == exeName {
+		if strings.EqualFold(a.Alias, exeName) {
 			return true
 		}
 	}
