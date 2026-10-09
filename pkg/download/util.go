@@ -18,10 +18,13 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		Type:      file.Type,
 		RepoOwner: file.RepoOwner,
 		RepoName:  file.RepoName,
-		Version:   art.Version,
+		// The instance is the package's own: a file downloaded beside an asset is
+		// on the instance that served the asset.
+		Host:    art.Host,
+		Version: art.Version,
 	}
 	switch file.Type {
-	case "github_release":
+	case "github_release", config.PkgInfoTypeForgejoRelease:
 		if f.RepoOwner == "" {
 			f.RepoOwner = art.RepoOwner
 		}

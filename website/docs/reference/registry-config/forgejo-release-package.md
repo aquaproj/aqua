@@ -51,6 +51,23 @@ A checksum file published in the release is read by giving `checksum.type` the s
 
 Forgejo can also be installed under a sub-path -- `ROOT_URL = https://example.com/git/` puts the API at `https://example.com/git/api/v1` -- and that is not something a host can say. Such an instance is still an [http](http-package.md) package, as it was before this type existed; what it doesn't get is the version listing.
 
+## The package name
+
+Without `name`, the package is named `<host>/<owner>/<repo>`, e.g. `codeberg.org/mergiraf/mergiraf`. The instance is part of it: codeberg.org's `mergiraf/mergiraf` is not github.com's.
+
+## Verification
+
+[cosign](cosign.md) and [minisign](minisign.md) work, and a signature published beside the asset is named the same way the asset is:
+
+```yaml
+    minisign:
+      type: forgejo_release
+      asset: "{{.Asset}}.minisig"
+      public_key: ...
+```
+
+[slsa_provenance](slsa-provenance.md) and [github_artifact_attestations](github-artifact-attestations.md) are refused. Both verify what GitHub signed, against a github.com repository, which a Forgejo release doesn't have.
+
 ## Private instances
 
 Only what an instance serves to anyone is downloaded: there is nowhere yet to say which credential an instance should be read with, so `private: true` isn't supported.

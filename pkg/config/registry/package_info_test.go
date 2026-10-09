@@ -33,6 +33,27 @@ func TestPackageInfo_GetName(t *testing.T) {
 				RepoName:  "ci-info",
 			},
 		},
+		{
+			title: "forgejo_release",
+			exp:   "codeberg.org/mergiraf/mergiraf",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+		},
+		{
+			title: "forgejo_release with a name of its own",
+			exp:   "mergiraf",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Name:      "mergiraf",
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
@@ -388,6 +409,18 @@ func TestPackageInfo_Validate(t *testing.T) {
 				RepoName:  "mergiraf",
 				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
 				Private:   true,
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release doesn't support what only GitHub can verify",
+			pkgInfo: &registry.PackageInfo{
+				Type:           registry.PkgInfoTypeForgejoRelease,
+				Host:           "codeberg.org",
+				RepoOwner:      "mergiraf",
+				RepoName:       "mergiraf",
+				Asset:          "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+				SLSAProvenance: &registry.SLSAProvenance{},
 			},
 			isErr: true,
 		},

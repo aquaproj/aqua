@@ -1,6 +1,13 @@
 package download
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/template"
+)
 
 func TestForgejoReleaseURL(t *testing.T) {
 	t.Parallel()
@@ -39,5 +46,38 @@ func TestForgejoReleaseURL(t *testing.T) {
 				t.Fatalf("wanted %s, got %s", d.exp, u)
 			}
 		})
+	}
+}
+
+// A file downloaded beside an asset -- a signature, say -- is on the instance that
+// served the asset, which the package said and the file doesn't repeat.
+func TestConvertDownloadedFileToFile_forgejoRelease(t *testing.T) {
+	t.Parallel()
+	asset := "mergiraf_x86_64-unknown-linux-gnu.tar.gz.minisig"
+	file, err := ConvertDownloadedFileToFile(
+		&registry.DownloadedFile{
+			Type:  config.PkgInfoTypeForgejoRelease,
+			Asset: &asset,
+		},
+		&File{
+			Host:      "codeberg.org",
+			RepoOwner: "mergiraf",
+			RepoName:  "mergiraf",
+			Version:   "v0.20.0",
+		},
+		&runtime.Runtime{GOOS: "linux", GOARCH: "amd64"},
+		&template.Artifact{Version: "v0.20.0"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if file.Host != "codeberg.org" || file.RepoOwner != "mergiraf" || file.RepoName != "mergiraf" {
+		t.Fatalf("wanted the package's instance and repository, got %+v", file)
+	}
+	if file.Asset != asset {
+		t.Fatalf("wanted %s, got %s", asset, file.Asset)
+	}
+	if file.Version != "v0.20.0" {
+		t.Fatalf("wanted the package's version, got %s", file.Version)
 	}
 }

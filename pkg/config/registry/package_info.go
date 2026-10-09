@@ -488,6 +488,12 @@ func (p *PackageInfo) GetName() string {
 		return p.Name
 	}
 	if p.HasRepo() {
+		if p.Type == PkgInfoTypeForgejoRelease && p.Host != "" {
+			// The instance is part of the name: codeberg.org's mergiraf/mergiraf
+			// is not github.com's, and a name without the instance would be the
+			// name a GitHub repository of the same owner and name already has.
+			return p.Host + "/" + p.RepoOwner + "/" + p.RepoName
+		}
 		return p.RepoOwner + "/" + p.RepoName
 	}
 	if p.Type == PkgInfoTypeGoInstall && p.Path != "" {
@@ -776,6 +782,13 @@ func (p *PackageInfo) validateForgejoRelease() error {
 	}
 	if p.Asset == "" {
 		return errAssetRequired
+	}
+	if p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil {
+		// Both verify what GitHub signed, and the source they are checked against
+		// is a github.com repository. A Forgejo release has neither, and saying so
+		// is better than verifying a package against a repository that is somebody
+		// else's.
+		return errForgejoGitHubVerification
 	}
 	return nil
 }

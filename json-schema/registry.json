@@ -171,7 +171,8 @@
           "type": "string",
           "enum": [
             "github_release",
-            "http"
+            "http",
+            "forgejo_release"
           ]
         },
         "repo_owner": {

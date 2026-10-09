@@ -23,6 +23,9 @@ var (
 	// errForgejoPrivate is returned when a forgejo_release package says it is private,
 	// which there is no credential to read.
 	errForgejoPrivate = errors.New("forgejo_release package doesn't support private")
+	// errForgejoGitHubVerification is returned when a forgejo_release package asks for a
+	// verification that only GitHub can answer.
+	errForgejoGitHubVerification = errors.New("forgejo_release package doesn't support slsa_provenance or github_artifact_attestations")
 	// errInvalidPackageType is returned when a package has an unrecognized type.
 	errInvalidPackageType = errors.New("package type is invalid")
 )
