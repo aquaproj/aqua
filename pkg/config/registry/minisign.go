@@ -11,7 +11,8 @@ type Minisign struct {
 	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	// RepoName is the repository name (for github_release and forgejo_release types).
 	RepoName string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
-	// Asset is the name of the signature file asset (for github_release type).
+	// Asset is the name of the signature file asset (for github_release and
+	// forgejo_release types).
 	Asset *string `yaml:",omitempty" json:"asset,omitempty"`
 	// URL is the direct URL to the signature file (for http type).
 	URL *string `yaml:",omitempty" json:"url,omitempty"`

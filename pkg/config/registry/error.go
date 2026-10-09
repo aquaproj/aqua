@@ -25,13 +25,13 @@ var (
 	errForgejoPrivate = errors.New("forgejo_release package doesn't support private")
 	// errHostInvalid is returned when a forgejo_release package's host is written as a URL
 	// or holds a path.
-	errHostInvalid = errors.New("forgejo_release package's host must be a host, with no scheme, userinfo or path")
+	errHostInvalid = errors.New("forgejo_release package's host must be a host name, with no scheme, userinfo, port or path")
 	// errForgejoFileSource is returned when a package of another type reads a file beside
 	// its asset as a forgejo_release file, which has no instance to be on.
 	errForgejoFileSource = errors.New("a forgejo_release checksum file or signature requires a forgejo_release package")
 	// errGitHubFileSource is returned when a forgejo_release package reads a file beside
 	// its asset from github.com, where the same repository is somebody else's.
-	errGitHubFileSource = errors.New("a forgejo_release package can't read a github_release checksum file or signature")
+	errGitHubFileSource = errors.New("a github_release checksum file or signature on a forgejo_release package must name the repository it is in")
 	// errForgejoGitHubVerification is returned when a forgejo_release package asks for a
 	// verification that only GitHub can answer.
 	errForgejoGitHubVerification = errors.New("forgejo_release package doesn't support slsa_provenance or github_artifact_attestations")

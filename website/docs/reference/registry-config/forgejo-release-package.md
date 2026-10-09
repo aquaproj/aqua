@@ -68,9 +68,19 @@ Without `name`, the package is named `<host>/<owner>/<repo>`, e.g. `codeberg.org
       public_key: ...
 ```
 
-Where the file comes from is the package's own forge, both ways round: a `forgejo_release` checksum file or signature on a package of another type is refused, because it is on no instance, and a `github_release` one on a `forgejo_release` package is refused too, because the same owner and name on github.com are somebody else's repository. So a [version_override](version-overrides.md) that moves older versions back to `github_release` has to say `checksum` (and any signature) again -- what it doesn't mention it inherits, and what it inherits here would be refused.
+Where each of these comes from is checked, including the signatures of the checksum file. A `forgejo_release` file on a package of another type is refused, because such a package is on no instance. A `github_release` file on a `forgejo_release` package is refused when it says no `repo_owner` and `repo_name` of its own: it would take the package's, which on github.com are somebody else's repository. Naming a repository is allowed, so a signature published on a GitHub mirror rather than beside the asset is written as:
 
-[slsa_provenance](slsa-provenance.md) and [github_artifact_attestations](github-artifact-attestations.md) are refused. Both verify what GitHub signed, against a github.com repository, which a Forgejo release doesn't have.
+```yaml
+    minisign:
+      type: github_release
+      repo_owner: a-mirror
+      repo_name: mergiraf
+      asset: "{{.Asset}}.minisig"
+```
+
+So a [version_override](version-overrides.md) that moves older versions back to `github_release` has to say `checksum`, and any signature, again -- what it doesn't mention it inherits, and what it inherits here is refused.
+
+[slsa_provenance](slsa-provenance.md) and [github_artifact_attestations](github-artifact-attestations.md) are refused, on the checksum file as well as on the package. Both verify what GitHub signed, against a github.com repository, which a Forgejo release doesn't have.
 
 ## Private instances
 

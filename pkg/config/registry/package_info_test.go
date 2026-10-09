@@ -589,6 +589,78 @@ func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
 			isErr: true,
 		},
 		{
+			title: "a github_release signature of the checksum file, inheriting the repository",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+					Minisign: &registry.Minisign{
+						Type: registry.PkgInfoTypeGitHubRelease,
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a github_release cosign signature of the checksum file, inheriting the repository",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+					Cosign: &registry.Cosign{
+						Signature: &registry.DownloadedFile{
+							Type: registry.PkgInfoTypeGitHubRelease,
+						},
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "attestations of the checksum file of a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:                       registry.PkgInfoTypeForgejoRelease,
+					Asset:                      "{{.Asset}}.sha256",
+					GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+				},
+			},
+			isErr: true,
+		},
+		{
+			// Wherever else a signature is published is nobody's mistake: what the
+			// check is for is a file that would take the package's owner and name,
+			// which on github.com are somebody else's repository.
+			title: "a github_release signature naming the repository it is in",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Minisign: &registry.Minisign{
+					Type:      registry.PkgInfoTypeGitHubRelease,
+					RepoOwner: "a-mirror",
+					RepoName:  "mergiraf",
+				},
+			},
+		},
+		{
 			title: "a forgejo_release checksum file on a forgejo_release package",
 			pkgInfo: &registry.PackageInfo{
 				Type:      registry.PkgInfoTypeForgejoRelease,

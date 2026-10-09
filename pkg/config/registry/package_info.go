@@ -767,22 +767,24 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	return nil
 }
 
-// validateFileSources checks where the files beside the asset -- the checksum file and the
-// signatures -- are said to come from.
+// validateFileSources checks where the files beside the asset -- the checksum file, the
+// signatures, and the signatures of the checksum file -- are said to come from.
 //
-// Each of them names a repository the way the package does, and the repository is on the
-// package's own forge: a forgejo_release file on a package of another type has no instance
-// to be on, and a github_release file on a forgejo_release package would be downloaded
-// from github.com, where the same owner and name are somebody else's repository.
+// A forgejo_release file is on the instance the package is on, which a package of another
+// type isn't on at all. The other way round, a github_release file is a repository on
+// github.com, and that is only wrong when the file doesn't say which one: it then takes
+// the package's owner and name, which on github.com are somebody else's repository. A
+// file that names a repository of its own is a mirror, or wherever else the signature is
+// published, and is nobody's mistake.
 func (p *PackageInfo) validateFileSources() error {
-	for _, typ := range p.fileSources() {
-		switch typ {
+	for _, src := range p.fileSources() {
+		switch src.typ {
 		case PkgInfoTypeForgejoRelease:
 			if p.Type != PkgInfoTypeForgejoRelease {
 				return errForgejoFileSource
 			}
 		case PkgInfoTypeGitHubRelease:
-			if p.Type == PkgInfoTypeForgejoRelease {
+			if p.Type == PkgInfoTypeForgejoRelease && !src.ownRepo {
 				return errGitHubFileSource
 			}
 		}
@@ -790,23 +792,48 @@ func (p *PackageInfo) validateFileSources() error {
 	return nil
 }
 
+// fileSource is where one file beside the asset comes from.
+type fileSource struct {
+	typ string
+	// ownRepo says the file names the repository it is in, rather than taking the
+	// package's.
+	ownRepo bool
+}
+
 // fileSources is where each file beside the asset is said to come from.
-func (p *PackageInfo) fileSources() []string {
-	types := make([]string, 0, 6) //nolint:mnd
-	if p.Checksum != nil {
-		types = append(types, p.Checksum.Type)
+func (p *PackageInfo) fileSources() []*fileSource {
+	sources := make([]*fileSource, 0, 10) //nolint:mnd
+	add := func(typ, repoOwner, repoName string) {
+		sources = append(sources, &fileSource{
+			typ:     typ,
+			ownRepo: repoOwner != "" && repoName != "",
+		})
 	}
-	if p.Minisign != nil {
-		types = append(types, p.Minisign.Type)
-	}
-	if c := p.Cosign; c != nil {
+	addCosign := func(c *Cosign) {
+		if c == nil {
+			return
+		}
 		for _, f := range []*DownloadedFile{c.Signature, c.Certificate, c.Key, c.Bundle} {
 			if f != nil {
-				types = append(types, f.Type)
+				add(f.Type, f.RepoOwner, f.RepoName)
 			}
 		}
 	}
-	return types
+	addMinisign := func(m *Minisign) {
+		if m == nil {
+			return
+		}
+		add(m.Type, m.RepoOwner, m.RepoName)
+	}
+	if c := p.Checksum; c != nil {
+		// A checksum file says no repository of its own: it is in the package's.
+		add(c.Type, "", "")
+		addCosign(c.Cosign)
+		addMinisign(c.Minisign)
+	}
+	addMinisign(p.Minisign)
+	addCosign(p.Cosign)
+	return sources
 }
 
 // hostOnly says whether a value is a host name, and nothing else.
@@ -856,11 +883,13 @@ func (p *PackageInfo) validateForgejoRelease() error {
 	if p.Asset == "" {
 		return errAssetRequired
 	}
-	if p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil {
+	if p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil ||
+		(p.Checksum != nil && p.Checksum.GitHubArtifactAttestations != nil) {
 		// Both verify what GitHub signed, and the source they are checked against
-		// is a github.com repository. A Forgejo release has neither, and saying so
-		// is better than verifying a package against a repository that is somebody
-		// else's.
+		// is a github.com repository named after the package. A Forgejo release has
+		// neither, and saying so is better than verifying a package against a
+		// repository that is somebody else's. The checksum file has its own
+		// attestations and is no different.
 		return errForgejoGitHubVerification
 	}
 	return nil
