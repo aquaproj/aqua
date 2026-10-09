@@ -119,6 +119,8 @@ func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 			return filepath.Join("internal", "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 		}
 		return filepath.Join("pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+	case PkgInfoTypeForgejoRelease:
+		return filepath.Join("pkgs", pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {
@@ -333,6 +335,8 @@ const (
 	PkgInfoTypeGoBuild = "go_build"
 	// PkgInfoTypeCargo indicates packages installed via Cargo (Rust package manager)
 	PkgInfoTypeCargo = "cargo"
+	// PkgInfoTypeForgejoRelease indicates packages distributed via the releases of a Forgejo instance
+	PkgInfoTypeForgejoRelease = "forgejo_release"
 )
 
 // RemoveMode specifies what should be removed during package removal operations.
@@ -424,7 +428,7 @@ func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 			return "", fmt.Errorf("render a package path: %w", err)
 		}
 		return s, nil
-	case PkgInfoTypeGitHubRelease:
+	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease:
 		return p.RenderTemplateString(pkgInfo.Asset, rt)
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)

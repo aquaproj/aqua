@@ -68,6 +68,16 @@ func TestPackageInfo_GetLink(t *testing.T) {
 				RepoName:  "ci-info",
 			},
 		},
+		{
+			title: "forgejo_release",
+			exp:   "https://codeberg.org/mergiraf/mergiraf",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
@@ -337,6 +347,58 @@ func TestPackageInfo_Validate(t *testing.T) {
 				Type:      registry.PkgInfoTypeGitHubArchive,
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
+			},
+		},
+		{
+			title: "forgejo_release host is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release repo is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:  registry.PkgInfoTypeForgejoRelease,
+				Name:  "codeberg.org/mergiraf/mergiraf",
+				Host:  "codeberg.org",
+				Asset: "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release asset is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release private is not supported",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+				Private:   true,
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
 			},
 		},
 		{

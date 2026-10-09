@@ -15,14 +15,16 @@ type GeneralVersionGetter struct {
 	cargo     *CargoVersionGetter
 	ghTag     *GitHubTagVersionGetter
 	ghRelease *GitHubReleaseVersionGetter
+	forgejo   *ForgejoReleaseVersionGetter
 	goGetter  *GoGetter
 }
 
-func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter, goGetter *GoGetter) *GeneralVersionGetter {
+func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter, forgejoRelease *ForgejoReleaseVersionGetter, goGetter *GoGetter) *GeneralVersionGetter {
 	return &GeneralVersionGetter{
 		cargo:     cargo,
 		ghTag:     ghTag,
 		ghRelease: ghRelease,
+		forgejo:   forgejoRelease,
 		goGetter:  goGetter,
 	}
 }
@@ -46,6 +48,15 @@ func (g *GeneralVersionGetter) List(ctx context.Context, logger *slog.Logger, pk
 func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 	if pkg.Type == "cargo" {
 		return g.cargo
+	}
+	if pkg.Type == registry.PkgInfoTypeForgejoRelease {
+		// A release on a Forgejo instance is read from that instance. Where GitHub's
+		// getters fall back to tags, there is nothing to fall back to: the version
+		// of a package installed from a release is the release's tag either way.
+		if g.forgejo == nil {
+			return nil
+		}
+		return g.forgejo
 	}
 	if pkg.GoVersionPath != "" {
 		return g.goGetter

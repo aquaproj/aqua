@@ -4,8 +4,9 @@ package registry
 // It supports downloading checksum files from various sources and multiple hash algorithms.
 type Checksum struct {
 	// Type specifies where to download the checksum file from.
-	Type string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=http"`
-	// Asset is the name of the checksum file asset (for github_release type).
+	Type string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=http,enum=forgejo_release"`
+	// Asset is the name of the checksum file asset (for github_release and
+	// forgejo_release types).
 	Asset string `yaml:",omitempty" json:"asset,omitempty"`
 	// URL is the direct URL to the checksum file (for http type).
 	URL string `yaml:",omitempty" json:"url,omitempty"`

@@ -58,11 +58,12 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		Type:      pkgInfo.Type,
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
+		Host:      pkgInfo.Host,
 		Version:   pkg.Package.Version,
 		Private:   pkgInfo.Private,
 	}
 	switch pkgInfo.Type {
-	case config.PkgInfoTypeGitHubRelease:
+	case config.PkgInfoTypeGitHubRelease, config.PkgInfoTypeForgejoRelease:
 		file.Asset = assetName
 		return file, nil
 	case config.PkgInfoTypeGitHubContent:

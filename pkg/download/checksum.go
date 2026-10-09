@@ -61,6 +61,18 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 			Version:   pkg.Package.Version,
 			Asset:     asset,
 		})
+	case config.PkgInfoTypeForgejoRelease:
+		asset, err := pkg.RenderChecksumFileName(rt)
+		if err != nil {
+			return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
+		}
+		u := forgejoReleaseURL(pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, asset)
+		rc, code, err := dl.http.Download(ctx, u)
+		if err != nil {
+			return rc, code, fmt.Errorf("download a checksum file: %w", slogerr.With(err,
+				"download_url", u))
+		}
+		return rc, code, nil
 	case config.PkgInfoTypeHTTP:
 		u, err := pkg.RenderChecksumURL(rt)
 		if err != nil {

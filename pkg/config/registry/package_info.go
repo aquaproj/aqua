@@ -40,6 +40,9 @@ const (
 	PkgInfoTypeGoBuild = "go_build"
 	// PkgInfoTypeCargo installs Rust packages from crates.io using cargo.
 	PkgInfoTypeCargo = "cargo"
+	// PkgInfoTypeForgejoRelease installs packages from the release assets of a
+	// Forgejo instance, such as Codeberg.
+	PkgInfoTypeForgejoRelease = "forgejo_release"
 )
 
 // PackageInfo represents a complete package definition including metadata,
@@ -47,12 +50,17 @@ const (
 // It contains all information needed to install and verify a package across
 // different platforms and versions.
 type PackageInfo struct {
-	Name                       string                      `yaml:",omitempty" json:"name,omitempty"`
-	Aliases                    []*Alias                    `yaml:",omitempty" json:"aliases,omitempty"`
-	SearchWords                []string                    `yaml:"search_words,omitempty" json:"search_words,omitempty"`
-	Type                       string                      `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
-	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Name        string   `yaml:",omitempty" json:"name,omitempty"`
+	Aliases     []*Alias `yaml:",omitempty" json:"aliases,omitempty"`
+	SearchWords []string `yaml:"search_words,omitempty" json:"search_words,omitempty"`
+	Type        string   `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
+	RepoOwner   string   `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
+	RepoName    string   `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	// Host is the instance the repository is on, such as codeberg.org. It is read
+	// by forgejo_release packages, because a Forgejo repository says nothing about
+	// which instance holds it. GitHub needs no such field: github.com is the only
+	// host its types can mean.
+	Host                       string                      `yaml:",omitempty" json:"host,omitempty" jsonschema:"example=codeberg.org"`
 	Description                string                      `yaml:",omitempty" json:"description,omitempty"`
 	Link                       string                      `yaml:",omitempty" json:"link,omitempty"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
@@ -142,9 +150,10 @@ func (p *PackageInfo) GetAppendExt() bool {
 // settings based on the version being installed.
 type VersionOverride struct {
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
 	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
+	Host                       string                      `yaml:",omitempty" json:"host,omitempty"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
 	Crate                      string                      `yaml:",omitempty" json:"crate,omitempty"`
 	Path                       string                      `yaml:",omitempty" json:"path,omitempty"`
@@ -202,7 +211,7 @@ func (v Variants) IsZero() bool {
 type Override struct {
 	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
 	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release"`
 	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
 	Crate                      string                      `yaml:",omitempty" json:"crate,omitempty"`
@@ -234,6 +243,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		Type:                       p.Type,
 		RepoOwner:                  p.RepoOwner,
 		RepoName:                   p.RepoName,
+		Host:                       p.Host,
 		Asset:                      p.Asset,
 		Crate:                      p.Crate,
 		Cargo:                      p.Cargo,
@@ -505,6 +515,9 @@ func (p *PackageInfo) GetLink() string {
 		return p.Link
 	}
 	if p.HasRepo() {
+		if p.Type == PkgInfoTypeForgejoRelease && p.Host != "" {
+			return "https://" + p.Host + "/" + p.RepoOwner + "/" + p.RepoName
+		}
 		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
 	}
 	return ""
@@ -576,6 +589,8 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 			return errAssetRequired
 		}
 		return nil
+	case PkgInfoTypeForgejoRelease:
+		return p.validateForgejoRelease()
 	case PkgInfoTypeHTTP:
 		if p.URL == "" {
 			return errURLRequired
@@ -714,6 +729,11 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 			return nil
 		}
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
+	case PkgInfoTypeForgejoRelease:
+		if p.Host == "" || p.RepoOwner == "" || p.RepoName == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, p.Host, p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
 		if p.Crate == "" {
 			return nil
@@ -734,6 +754,28 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 			return nil
 		}
 		return []string{filepath.Join(p.Type, u.Host, filepath.FromSlash(u.Path))}
+	}
+	return nil
+}
+
+// validateForgejoRelease checks the fields a release on a Forgejo instance is found by.
+// The instance is one of them: unlike github.com it isn't implied by the type.
+func (p *PackageInfo) validateForgejoRelease() error {
+	if p.Host == "" {
+		return errHostRequired
+	}
+	if p.Private {
+		// Only what an instance serves to anyone is downloaded: there is nowhere
+		// yet to say which credential an instance should be read with. Refusing it
+		// says so, where accepting it would download the instance's sign-in page
+		// and fail on an archive that isn't one.
+		return errForgejoPrivate
+	}
+	if !p.HasRepo() {
+		return errRepoRequired
+	}
+	if p.Asset == "" {
+		return errAssetRequired
 	}
 	return nil
 }
@@ -769,6 +811,9 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 	}
 	if child.RepoName != "" {
 		pkg.RepoName = child.RepoName
+	}
+	if child.Host != "" {
+		pkg.Host = child.Host
 	}
 	if child.Asset != "" {
 		pkg.Asset = child.Asset
@@ -863,8 +908,12 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 // resetByPkgType resets package fields that are not applicable to the specified type.
 // This cleans up conflicting configuration when changing package types.
 func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
+	if typ != PkgInfoTypeForgejoRelease {
+		// Only a forgejo_release package is on an instance other than github.com.
+		p.Host = ""
+	}
 	switch typ {
-	case PkgInfoTypeGitHubRelease:
+	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease:
 		p.URL = ""
 		p.Path = ""
 		p.Crate = ""

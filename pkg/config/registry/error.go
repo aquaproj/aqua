@@ -14,10 +14,15 @@ var (
 	errGoInstallRequirePath = errors.New("go_install package requires path")
 	// errCargoRequireCrate is returned when a cargo package lacks a crate name.
 	errCargoRequireCrate = errors.New("cargo package requires crate")
-	// errAssetRequired is returned when a github_release package lacks an asset specification.
-	errAssetRequired = errors.New("github_release package requires asset")
+	// errAssetRequired is returned when a release package lacks an asset specification.
+	errAssetRequired = errors.New("github_release and forgejo_release packages require asset")
 	// errURLRequired is returned when an http package lacks a URL.
 	errURLRequired = errors.New("http package requires url")
+	// errHostRequired is returned when a forgejo_release package lacks the instance it is on.
+	errHostRequired = errors.New("forgejo_release package requires host")
+	// errForgejoPrivate is returned when a forgejo_release package says it is private,
+	// which there is no credential to read.
+	errForgejoPrivate = errors.New("forgejo_release package doesn't support private")
 	// errInvalidPackageType is returned when a package has an unrecognized type.
 	errInvalidPackageType = errors.New("package type is invalid")
 )
