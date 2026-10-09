@@ -47,7 +47,7 @@ A checksum file published in the release is read by giving `checksum.type` the s
 
 ## Which instances this reaches
 
-`host` is a host, without a scheme or a path -- `https://codeberg.org` and `example.com/git` are refused. It names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is. A port is part of the host, so `example.com:3000` works.
+`host` is a host and nothing else: a scheme, a path, userinfo or a dot segment is refused, so `https://codeberg.org`, `example.com/git`, `codeberg.org@elsewhere.example.com` and `..` are all errors. A port is part of a host, so `forgejo.example.com:3000` is allowed. It names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is. A port is part of the host, so `example.com:3000` works.
 
 Forgejo can also be installed under a sub-path -- `ROOT_URL = https://example.com/git/` puts the API at `https://example.com/git/api/v1` -- and that is not something a host can say. Such an instance is still an [http](http-package.md) package, as it was before this type existed; what it doesn't get is the version listing.
 

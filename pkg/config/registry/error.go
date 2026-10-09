@@ -25,7 +25,7 @@ var (
 	errForgejoPrivate = errors.New("forgejo_release package doesn't support private")
 	// errHostInvalid is returned when a forgejo_release package's host is written as a URL
 	// or holds a path.
-	errHostInvalid = errors.New("forgejo_release package's host must be a host, without a scheme or a path")
+	errHostInvalid = errors.New("forgejo_release package's host must be a host, with no scheme, userinfo or path")
 	// errForgejoChecksumType is returned when a package of another type reads its checksum
 	// file as a forgejo_release file, which has no instance to be on.
 	errForgejoChecksumType = errors.New("checksum type forgejo_release requires a forgejo_release package")

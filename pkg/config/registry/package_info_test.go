@@ -435,6 +435,38 @@ func TestPackageInfo_Validate(t *testing.T) {
 			isErr: true,
 		},
 		{
+			title: "forgejo_release host carrying userinfo",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org@evil.example.com",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host that is a dot segment",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "..",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host with a port",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "forgejo.example.com:3000",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+		},
+		{
 			title: "a forgejo_release checksum file on a github_release package",
 			pkgInfo: &registry.PackageInfo{
 				Type:      registry.PkgInfoTypeGitHubRelease,

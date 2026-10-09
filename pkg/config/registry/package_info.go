@@ -770,16 +770,32 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	return nil
 }
 
+// hostOnly says whether a value is a host, and nothing else.
+//
+// The value is read as a host by the API endpoint and the download URL, and as a
+// directory by the install path and the checksum id, so what it must not be is anything
+// else: a scheme, a path, userinfo naming a different host than it appears to, or a dot
+// segment that would put the install path somewhere other than where the type's packages
+// go. Parsing it as the authority of a URL is what keeps a port, which is part of a host.
+func hostOnly(host string) bool {
+	if host == "." || host == ".." {
+		return false
+	}
+	u, err := url.Parse("//" + host)
+	if err != nil {
+		return false
+	}
+	return u.Host == host && u.User == nil && u.Path == "" &&
+		u.RawQuery == "" && u.Fragment == "" && u.Hostname() != ""
+}
+
 // validateForgejoRelease checks the fields a release on a Forgejo instance is found by.
 // The instance is one of them: unlike github.com it isn't implied by the type.
 func (p *PackageInfo) validateForgejoRelease() error {
 	if p.Host == "" {
 		return errHostRequired
 	}
-	if strings.ContainsAny(p.Host, "/ ") {
-		// A host, not a URL: the scheme is added and the instance is served at the
-		// root of it. https://codeberg.org would be read as https://https://...,
-		// and a path would land in the install path as well as the URL.
+	if !hostOnly(p.Host) {
 		return errHostInvalid
 	}
 	if p.Private {
