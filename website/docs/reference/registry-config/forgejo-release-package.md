@@ -78,7 +78,7 @@ Where each of these comes from is checked, including the signatures of the check
       asset: "{{.Asset}}.minisig"
 ```
 
-So a [version_override](version-overrides.md) that moves older versions back to `github_release` has to say `checksum`, and any signature, again -- what it doesn't mention it inherits, and what it inherits here is refused.
+So a [version_override](version-overrides.md) that changes the type has to say `checksum`, and any signature, again -- what it doesn't mention it inherits, and what it inherits here is refused. That is true of moving older versions back to `github_release`, and of a project that moved between the two instance types, where the `host` carries over but the checksum file's type does not follow it.
 
 [slsa_provenance](slsa-provenance.md) and [github_artifact_attestations](github-artifact-attestations.md) are refused, on the checksum file as well as on the package. Both verify what GitHub signed, against a github.com repository, which a Forgejo release doesn't have.
 

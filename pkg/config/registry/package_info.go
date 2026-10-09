@@ -905,10 +905,10 @@ func (p *PackageInfo) validateForgeRelease() error {
 	if p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil ||
 		(p.Checksum != nil && p.Checksum.GitHubArtifactAttestations != nil) {
 		// Both verify what GitHub signed, and the source they are checked against
-		// is a github.com repository named after the package. A Forgejo release has
-		// neither, and saying so is better than verifying a package against a
-		// repository that is somebody else's. The checksum file has its own
-		// attestations and is no different.
+		// is a github.com repository named after the package. A release on a Forgejo
+		// or Gitea instance has neither, and saying so is better than verifying a
+		// package against a repository that is somebody else's. The checksum file
+		// has its own attestations and is no different.
 		return errForgeGitHubVerification
 	}
 	return nil

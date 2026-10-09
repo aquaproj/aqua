@@ -15,7 +15,7 @@ var (
 	// errCargoRequireCrate is returned when a cargo package lacks a crate name.
 	errCargoRequireCrate = errors.New("cargo package requires crate")
 	// errAssetRequired is returned when a release package lacks an asset specification.
-	errAssetRequired = errors.New("github_release and forgejo_release packages require asset")
+	errAssetRequired = errors.New("github_release, forgejo_release and gitea_release packages require asset")
 	// errURLRequired is returned when an http package lacks a URL.
 	errURLRequired = errors.New("http package requires url")
 	// errHostRequired is returned when a package on a forge instance lacks the instance it

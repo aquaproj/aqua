@@ -209,6 +209,23 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			title: "gitea_release",
+			exp:   "/tmp/aqua/pkgs/gitea_release/gitea.com/gitea/tea/v0.16.0/tea.xz",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      "gitea_release",
+					Host:      "gitea.com",
+					RepoOwner: "gitea",
+					RepoName:  "tea",
+					Asset:     "tea.{{.Format}}",
+					Format:    "xz",
+				},
+				Package: &aqua.Package{
+					Version: "v0.16.0",
+				},
+			},
+		},
+		{
 			title: pkgTypeHTTP,
 			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
 			pkg: &config.Package{
