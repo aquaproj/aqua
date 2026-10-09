@@ -15,16 +15,16 @@ type GeneralVersionGetter struct {
 	cargo     *CargoVersionGetter
 	ghTag     *GitHubTagVersionGetter
 	ghRelease *GitHubReleaseVersionGetter
-	forgejo   *ForgejoReleaseVersionGetter
+	forge     *ForgeReleaseVersionGetter
 	goGetter  *GoGetter
 }
 
-func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter, forgejoRelease *ForgejoReleaseVersionGetter, goGetter *GoGetter) *GeneralVersionGetter {
+func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter, forgeRelease *ForgeReleaseVersionGetter, goGetter *GoGetter) *GeneralVersionGetter {
 	return &GeneralVersionGetter{
 		cargo:     cargo,
 		ghTag:     ghTag,
 		ghRelease: ghRelease,
-		forgejo:   forgejoRelease,
+		forge:     forgeRelease,
 		goGetter:  goGetter,
 	}
 }
@@ -49,14 +49,15 @@ func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 	if pkg.Type == "cargo" {
 		return g.cargo
 	}
-	if pkg.Type == registry.PkgInfoTypeForgejoRelease {
-		// A release on a Forgejo instance is read from that instance. Where GitHub's
-		// getters fall back to tags, there is nothing to fall back to: the version
-		// of a package installed from a release is the release's tag either way.
-		if g.forgejo == nil {
+	if pkg.Type == registry.PkgInfoTypeForgejoRelease || pkg.Type == registry.PkgInfoTypeGiteaRelease {
+		// A release on a forge instance is read from that instance, by one client:
+		// Forgejo serves the API it inherited from Gitea. Where GitHub's getters fall
+		// back to tags, there is nothing to fall back to: the version of a package
+		// installed from a release is the release's tag either way.
+		if g.forge == nil {
 			return nil
 		}
-		return g.forgejo
+		return g.forge
 	}
 	if pkg.GoVersionPath != "" {
 		return g.goGetter

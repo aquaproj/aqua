@@ -45,6 +45,16 @@ func TestPackageInfo_GetName(t *testing.T) {
 			},
 		},
 		{
+			title: "gitea_release",
+			exp:   "gitea.com/gitea/tea",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+			},
+		},
+		{
 			title: "forgejo_release with a name of its own",
 			exp:   "mergiraf",
 			pkgInfo: &registry.PackageInfo{
@@ -98,6 +108,16 @@ func TestPackageInfo_GetLink(t *testing.T) {
 				Host:      "codeberg.org",
 				RepoOwner: "mergiraf",
 				RepoName:  "mergiraf",
+			},
+		},
+		{
+			title: "gitea_release",
+			exp:   "https://gitea.com/gitea/tea",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
 			},
 		},
 	}
@@ -456,34 +476,48 @@ func TestPackageInfo_Validate(t *testing.T) {
 // What aqua remove is given is a registry's packages, which nothing validated: whatever a
 // definition says the instance is, the path has to be one under where the type's packages
 // go, and one path rather than a pattern matching several.
-func TestPackageInfo_PkgPaths_forgejoRelease(t *testing.T) {
+func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
+		typ   string
 		host  string
 		exp   string
 	}{
 		{
-			title: "an instance",
+			title: "a Forgejo instance",
+			typ:   registry.PkgInfoTypeForgejoRelease,
 			host:  "codeberg.org",
 			exp:   filepath.Join("forgejo_release", "codeberg.org", "mergiraf", "mergiraf"),
 		},
 		{
+			// Each type's packages are its own: the same repository read as a Gitea
+			// release is not the same installation.
+			title: "a Gitea instance",
+			typ:   registry.PkgInfoTypeGiteaRelease,
+			host:  "gitea.com",
+			exp:   filepath.Join("gitea_release", "gitea.com", "mergiraf", "mergiraf"),
+		},
+		{
 			title: "a host that is a path out of the packages",
+			typ:   registry.PkgInfoTypeForgejoRelease,
 			host:  "../../..",
 		},
 		{
 			// aqua remove expands the path as a glob, so this one would be every
 			// instance's copy of the same owner and name.
 			title: "a host that is a pattern",
+			typ:   registry.PkgInfoTypeForgejoRelease,
 			host:  "*",
 		},
 		{
 			title: "a host that is a dot",
+			typ:   registry.PkgInfoTypeForgejoRelease,
 			host:  ".",
 		},
 		{
 			title: "no instance at all",
+			typ:   registry.PkgInfoTypeForgejoRelease,
 			host:  "",
 		},
 	}
@@ -491,7 +525,7 @@ func TestPackageInfo_PkgPaths_forgejoRelease(t *testing.T) {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			pkgInfo := &registry.PackageInfo{
-				Type:      registry.PkgInfoTypeForgejoRelease,
+				Type:      d.typ,
 				Host:      d.host,
 				RepoOwner: "mergiraf",
 				RepoName:  "mergiraf",
@@ -513,7 +547,7 @@ func TestPackageInfo_PkgPaths_forgejoRelease(t *testing.T) {
 
 // The host is what says which instance the release is on, and it is read as a directory as
 // well, so what it may be is narrow.
-func TestPackageInfo_Validate_forgejoRelease_host(t *testing.T) { //nolint:funlen
+func TestPackageInfo_Validate_forgeRelease_host(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -627,7 +661,7 @@ func TestPackageInfo_Validate_forgejoRelease_host(t *testing.T) { //nolint:funle
 
 // What else in a definition is a thing only github.com answers, and where the files beside
 // the asset come from.
-func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
+func TestPackageInfo_Validate_forgeRelease(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -764,6 +798,69 @@ func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
 					Type:      registry.PkgInfoTypeGitHubRelease,
 					RepoOwner: "a-mirror",
 					RepoName:  "mergiraf",
+				},
+			},
+		},
+		{
+			title: "gitea_release",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea-{{trimV .Version}}-{{.OS}}-{{.Arch}}",
+			},
+		},
+		{
+			title: "gitea_release host is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea",
+			},
+			isErr: true,
+		},
+		{
+			title: "gitea_release private is not supported",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea",
+				Private:   true,
+			},
+			isErr: true,
+		},
+		{
+			// One client reads both, but a definition says which forge it is on, and
+			// a file beside the asset is on the same one.
+			title: "a gitea_release checksum file on a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGiteaRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a gitea_release checksum file on a gitea_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea.xz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGiteaRelease,
+					Asset: "{{.Asset}}.sha256",
 				},
 			},
 		},

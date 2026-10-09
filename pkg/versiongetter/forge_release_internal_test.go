@@ -7,18 +7,18 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forgejo"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
 )
 
-// fakeForgejo answers from pages written in the test, and records what it was asked for.
-type fakeForgejo struct {
-	pages [][]*forgejo.Release
+// fakeForge answers from pages written in the test, and records what it was asked for.
+type fakeForge struct {
+	pages [][]*forge.Release
 	limit int
 	calls int
 	err   error
 }
 
-func (f *fakeForgejo) ListReleases(_ context.Context, _, _, _ string, page, limit int) ([]*forgejo.Release, error) {
+func (f *fakeForge) ListReleases(_ context.Context, _, _, _ string, page, limit int) ([]*forge.Release, error) {
 	f.calls++
 	f.limit = limit
 	if f.err != nil {
@@ -40,7 +40,7 @@ func testPkg() *registry.PackageInfo {
 	}
 }
 
-func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
+func TestForgeReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	logger := slog.New(slog.DiscardHandler)
 	filters, err := createFilters(testPkg())
@@ -49,14 +49,14 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 	}
 	data := []struct {
 		title string
-		pages [][]*forgejo.Release
+		pages [][]*forge.Release
 		pkg   *registry.PackageInfo
 		exp   string
 		isErr bool
 	}{
 		{
 			title: "the newest release",
-			pages: [][]*forgejo.Release{{
+			pages: [][]*forge.Release{{
 				{TagName: "v0.19.1"},
 				{TagName: "v0.20.0"},
 			}},
@@ -64,7 +64,7 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "a prerelease is not a version to install",
-			pages: [][]*forgejo.Release{{
+			pages: [][]*forge.Release{{
 				{TagName: "v0.21.0", Prerelease: true},
 				{TagName: "v0.20.0"},
 			}},
@@ -72,7 +72,7 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "a draft is not a version to install",
-			pages: [][]*forgejo.Release{{
+			pages: [][]*forge.Release{{
 				{TagName: "v0.21.0", Draft: true},
 				{TagName: "v0.20.0"},
 			}},
@@ -82,7 +82,7 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 			// A short page is not the last one: an instance can be configured to
 			// answer with fewer items than were asked for.
 			title: "the next page is read when the first holds nothing to install",
-			pages: [][]*forgejo.Release{
+			pages: [][]*forge.Release{
 				{{TagName: "v0.2.0", Draft: true}},
 				{{TagName: "v0.1.0"}},
 			},
@@ -90,7 +90,7 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 		},
 		{
 			title: "no release at all",
-			pages: [][]*forgejo.Release{{}},
+			pages: [][]*forge.Release{{}},
 			exp:   "",
 		},
 		{
@@ -110,7 +110,7 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 			if pkg == nil {
 				pkg = testPkg()
 			}
-			getter := NewForgejoRelease(&fakeForgejo{pages: d.pages})
+			getter := NewForgeRelease(&fakeForge{pages: d.pages})
 			version, err := getter.Get(context.Background(), logger, pkg, filters)
 			if d.isErr {
 				if err == nil {
@@ -130,14 +130,14 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 
 // An instance answering the same page to every request is read no further than the cap,
 // rather than forever.
-func TestForgejoReleaseVersionGetter_Get_samePageForever(t *testing.T) {
+func TestForgeReleaseVersionGetter_Get_samePageForever(t *testing.T) {
 	t.Parallel()
 	filters, err := createFilters(testPkg())
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := &sameForgejoPage{release: &forgejo.Release{TagName: "v0.1.0", Draft: true}}
-	getter := NewForgejoRelease(client)
+	client := &sameForgePage{release: &forge.Release{TagName: "v0.1.0", Draft: true}}
+	getter := NewForgeRelease(client)
 	version, err := getter.Get(context.Background(), slog.New(slog.DiscardHandler), testPkg(), filters)
 	if err != nil {
 		t.Fatal(err)
@@ -145,35 +145,35 @@ func TestForgejoReleaseVersionGetter_Get_samePageForever(t *testing.T) {
 	if version != "" {
 		t.Fatalf("wanted no version, got %s", version)
 	}
-	if client.calls != forgejo.MaxPages {
-		t.Fatalf("wanted %d pages read, got %d", forgejo.MaxPages, client.calls)
+	if client.calls != forge.MaxPages {
+		t.Fatalf("wanted %d pages read, got %d", forge.MaxPages, client.calls)
 	}
 }
 
-// sameForgejoPage answers every request with the same release, whatever page is asked for.
-type sameForgejoPage struct {
-	release *forgejo.Release
+// sameForgePage answers every request with the same release, whatever page is asked for.
+type sameForgePage struct {
+	release *forge.Release
 	calls   int
 }
 
-func (f *sameForgejoPage) ListReleases(_ context.Context, _, _, _ string, _, _ int) ([]*forgejo.Release, error) {
+func (f *sameForgePage) ListReleases(_ context.Context, _, _, _ string, _, _ int) ([]*forge.Release, error) {
 	f.calls++
-	return []*forgejo.Release{f.release}, nil
+	return []*forge.Release{f.release}, nil
 }
 
-func TestForgejoReleaseVersionGetter_Get_error(t *testing.T) {
+func TestForgeReleaseVersionGetter_Get_error(t *testing.T) {
 	t.Parallel()
 	filters, err := createFilters(testPkg())
 	if err != nil {
 		t.Fatal(err)
 	}
-	getter := NewForgejoRelease(&fakeForgejo{err: errors.New("the instance said no")})
+	getter := NewForgeRelease(&fakeForge{err: errors.New("the instance said no")})
 	if _, err := getter.Get(context.Background(), slog.New(slog.DiscardHandler), testPkg(), filters); err == nil {
 		t.Fatal("an error must be returned")
 	}
 }
 
-func TestForgejoReleaseVersionGetter_List(t *testing.T) {
+func TestForgeReleaseVersionGetter_List(t *testing.T) {
 	t.Parallel()
 	logger := slog.New(slog.DiscardHandler)
 	filters, err := createFilters(testPkg())
@@ -182,12 +182,12 @@ func TestForgejoReleaseVersionGetter_List(t *testing.T) {
 	}
 
 	// A release listed twice, which a page boundary can do, is listed once.
-	client := &fakeForgejo{pages: [][]*forgejo.Release{{
+	client := &fakeForge{pages: [][]*forge.Release{{
 		{TagName: "v0.20.0"},
 		{TagName: "v0.19.1"},
 		{TagName: "v0.20.0"},
 	}}}
-	getter := NewForgejoRelease(client)
+	getter := NewForgeRelease(client)
 	items, err := getter.List(context.Background(), logger, testPkg(), filters, 0)
 	if err != nil {
 		t.Fatal(err)
@@ -200,11 +200,11 @@ func TestForgejoReleaseVersionGetter_List(t *testing.T) {
 	}
 
 	// The limit is the number of versions shown, not the number read.
-	client = &fakeForgejo{pages: [][]*forgejo.Release{{
+	client = &fakeForge{pages: [][]*forge.Release{{
 		{TagName: "v0.20.0"},
 		{TagName: "v0.19.1"},
 	}}}
-	getter = NewForgejoRelease(client)
+	getter = NewForgeRelease(client)
 	items, err = getter.List(context.Background(), logger, testPkg(), filters, 1)
 	if err != nil {
 		t.Fatal(err)
@@ -217,7 +217,7 @@ func TestForgejoReleaseVersionGetter_List(t *testing.T) {
 	}
 }
 
-func TestForgejoItemNumPerPage(t *testing.T) {
+func TestForgeItemNumPerPage(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title     string
@@ -227,7 +227,7 @@ func TestForgejoItemNumPerPage(t *testing.T) {
 	}{
 		{
 			title: "no limit, so as much as the instance will answer with",
-			exp:   forgejo.MaxPerPage,
+			exp:   forge.MaxPerPage,
 		},
 		{
 			title: "a limit smaller than a page, and nothing filtered out",
@@ -238,20 +238,44 @@ func TestForgejoItemNumPerPage(t *testing.T) {
 			title:     "a filter, so the page is full however small the limit is",
 			limit:     10,
 			filterNum: 1,
-			exp:       forgejo.MaxPerPage,
+			exp:       forge.MaxPerPage,
 		},
 		{
 			title: "a limit larger than a page",
-			limit: forgejo.MaxPerPage + 1,
-			exp:   forgejo.MaxPerPage,
+			limit: forge.MaxPerPage + 1,
+			exp:   forge.MaxPerPage,
 		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if n := forgejoItemNumPerPage(d.limit, d.filterNum); n != d.exp {
+			if n := forgeItemNumPerPage(d.limit, d.filterNum); n != d.exp {
 				t.Fatalf("wanted %d, got %d", d.exp, n)
 			}
 		})
+	}
+}
+
+// Both types are read by the same getter, because one client reads both forges.
+func TestGeneralVersionGetter_get_forge(t *testing.T) {
+	t.Parallel()
+	forgeGetter := NewForgeRelease(&fakeForge{})
+	getter := NewGeneralVersionGetter(nil, &GitHubTagVersionGetter{}, nil, forgeGetter, nil)
+	for _, typ := range []string{registry.PkgInfoTypeForgejoRelease, registry.PkgInfoTypeGiteaRelease} {
+		t.Run(typ, func(t *testing.T) {
+			t.Parallel()
+			if g := getter.get(&registry.PackageInfo{Type: typ, Host: "an.example.com"}); g != VersionGetter(forgeGetter) {
+				t.Fatalf("wanted the forge getter for %s, got %T", typ, g)
+			}
+		})
+	}
+}
+
+// Without one, nothing is returned rather than a getter that can't be called.
+func TestGeneralVersionGetter_get_noForge(t *testing.T) {
+	t.Parallel()
+	getter := NewGeneralVersionGetter(nil, &GitHubTagVersionGetter{}, nil, nil, nil)
+	if g := getter.get(&registry.PackageInfo{Type: registry.PkgInfoTypeGiteaRelease, Host: "an.example.com"}); g != nil {
+		t.Fatalf("wanted no getter, got %T", g)
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/template"
 )
 
-func TestForgejoReleaseURL(t *testing.T) {
+func TestForgeReleaseURL(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title string
@@ -42,7 +42,7 @@ func TestForgejoReleaseURL(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			u, err := forgejoReleaseURL(d.host, d.owner, d.repo, d.tag, d.asset)
+			u, err := forgeReleaseURL(d.host, d.owner, d.repo, d.tag, d.asset)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -53,18 +53,18 @@ func TestForgejoReleaseURL(t *testing.T) {
 	}
 }
 
-func TestForgejoReleaseURL_noInstance(t *testing.T) {
+func TestForgeReleaseURL_noInstance(t *testing.T) {
 	t.Parallel()
 	// Nothing says where to download from, which is a URL that must not be built: it
 	// would be https:///an-owner/a-repo/..., a request to nowhere reported as a 404.
-	if _, err := forgejoReleaseURL("", "an-owner", "a-repo", "v1.0.0", "a-repo.tar.gz"); err == nil {
+	if _, err := forgeReleaseURL("", "an-owner", "a-repo", "v1.0.0", "a-repo.tar.gz"); err == nil {
 		t.Fatal("an error must be returned")
 	}
 }
 
 // A file downloaded beside an asset -- a signature, say -- is on the instance that
 // served the asset, which the package said and the file doesn't repeat.
-func TestConvertDownloadedFileToFile_forgejoRelease(t *testing.T) {
+func TestConvertDownloadedFileToFile_forgeRelease(t *testing.T) {
 	t.Parallel()
 	asset := "mergiraf_x86_64-unknown-linux-gnu.tar.gz.minisig"
 	file, err := ConvertDownloadedFileToFile(

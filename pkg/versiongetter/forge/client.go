@@ -1,11 +1,14 @@
-// Package forgejo reads the releases a Forgejo instance publishes.
+// Package forge reads the releases a Forgejo or Gitea instance publishes.
 //
-// Forgejo serves the API it inherited from Gitea at /api/v1, which GitHub's API was the
-// model for without being the contract: a release says tag_name, published_at, draft and
-// prerelease the same way, while a page is asked for with page and limit rather than
-// per_page, and nothing says how many pages there are. That is why this is its own client
-// rather than GitHub's pointed elsewhere.
-package forgejo
+// One client reads both: Forgejo serves the API it inherited from Gitea at /api/v1, and
+// GitHub's API was the model for that without being the contract. A release says tag_name,
+// published_at, draft and prerelease the same way, while a page is asked for with page and
+// limit rather than per_page, and nothing says how many pages there are. That is why this
+// is its own client rather than GitHub's pointed elsewhere.
+//
+// The two package types are separate although the client is one, so that the day Forgejo
+// and Gitea differ is a change here rather than in every definition.
+package forge
 
 import (
 	"context"
@@ -31,13 +34,13 @@ const MaxPerPage = 50
 // forever, and 50 pages of releases is already far more than a version is ever found in.
 const MaxPages = 50
 
-// Client reads one or more Forgejo instances. Which instance is read is an argument
+// Client reads one or more instances. Which instance is read is an argument
 // rather than state: a registry holds packages on several of them.
 type Client struct {
 	client *http.Client
 }
 
-// New returns a client that reads Forgejo instances over the given HTTP client.
+// New returns a client that reads instances over the given HTTP client.
 func New(client *http.Client) *Client {
 	return &Client{
 		client: client,

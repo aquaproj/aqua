@@ -33,7 +33,7 @@ func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 		return path.Join(PkgInfoTypeGitHubArchive, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-	case PkgInfoTypeForgejoRelease:
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
 		return path.Join(pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
@@ -78,7 +78,7 @@ func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
-	case PkgInfoTypeForgejoRelease:
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
 		return path.Join(pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
 	case PkgInfoTypeHTTP:
 		rt, err := p.getRuntimeFromAsset(asset)
@@ -98,7 +98,7 @@ func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 func (p *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	switch pkgInfo.Checksum.Type {
-	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease:
+	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
 		asset, err := p.RenderAsset(rt)
 		if err != nil {
 			return "", err
@@ -139,7 +139,7 @@ func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 func (p *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
 	switch pkgInfo.Checksum.Type {
-	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease:
+	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
 		return p.RenderChecksumFileName(rt)
 	case PkgInfoTypeHTTP:
 		return p.RenderChecksumURL(rt)

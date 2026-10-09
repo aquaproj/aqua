@@ -16,8 +16,8 @@ type File struct {
 	Type      string
 	RepoOwner string
 	RepoName  string
-	// Host is the Forgejo instance the release is on. It is empty for every other
-	// type, whose host is github.com or is part of URL.
+	// Host is the instance the release is on, for the types that are on one. It is
+	// empty for every other type, whose host is github.com or is part of URL.
 	Host    string
 	Version string
 	Asset   string
@@ -73,8 +73,8 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logger *slog.Logger, file 
 		return io.NopCloser(strings.NewReader(file.String)), 0, nil
 	case config.PkgInfoTypeGitHubArchive:
 		return dl.getReadCloserFromGitHubArchive(ctx, file)
-	case config.PkgInfoTypeForgejoRelease:
-		u, err := forgejoReleaseURL(file.Host, file.RepoOwner, file.RepoName, file.Version, file.Asset)
+	case config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
+		u, err := forgeReleaseURL(file.Host, file.RepoOwner, file.RepoName, file.Version, file.Asset)
 		if err != nil {
 			return nil, 0, fmt.Errorf("build the download URL: %w", err)
 		}

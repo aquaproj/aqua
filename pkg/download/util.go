@@ -24,7 +24,7 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		Version: art.Version,
 	}
 	switch file.Type {
-	case "github_release", config.PkgInfoTypeForgejoRelease:
+	case "github_release", config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
 		if f.RepoOwner == "" {
 			f.RepoOwner = art.RepoOwner
 		}
@@ -66,7 +66,7 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		Private:   pkgInfo.Private,
 	}
 	switch pkgInfo.Type {
-	case config.PkgInfoTypeGitHubRelease, config.PkgInfoTypeForgejoRelease:
+	case config.PkgInfoTypeGitHubRelease, config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
 		file.Asset = assetName
 		return file, nil
 	case config.PkgInfoTypeGitHubContent:

@@ -18,23 +18,24 @@ var (
 	errAssetRequired = errors.New("github_release and forgejo_release packages require asset")
 	// errURLRequired is returned when an http package lacks a URL.
 	errURLRequired = errors.New("http package requires url")
-	// errHostRequired is returned when a forgejo_release package lacks the instance it is on.
-	errHostRequired = errors.New("forgejo_release package requires host")
-	// errForgejoPrivate is returned when a forgejo_release package says it is private,
+	// errHostRequired is returned when a package on a forge instance lacks the instance it
+	// is on.
+	errHostRequired = errors.New("forgejo_release and gitea_release packages require host")
+	// errForgePrivate is returned when a package on a forge instance says it is private,
 	// which there is no credential to read.
-	errForgejoPrivate = errors.New("forgejo_release package doesn't support private")
-	// errHostInvalid is returned when a forgejo_release package's host is written as a URL
-	// or holds a path.
-	errHostInvalid = errors.New("forgejo_release package's host must be a host name, with no scheme, userinfo, port or path")
-	// errForgejoFileSource is returned when a package of another type reads a file beside
-	// its asset as a forgejo_release file, which has no instance to be on.
-	errForgejoFileSource = errors.New("a forgejo_release checksum file or signature requires a forgejo_release package")
-	// errGitHubFileSource is returned when a forgejo_release package reads a file beside
+	errForgePrivate = errors.New("forgejo_release and gitea_release packages don't support private")
+	// errHostInvalid is returned when the instance a package is on is written as anything
+	// but a host name.
+	errHostInvalid = errors.New("host must be a host name, with no scheme, userinfo, port or path")
+	// errForgeFileSource is returned when a package reads a file beside its asset as a file
+	// on a forge instance that isn't the instance it is on itself.
+	errForgeFileSource = errors.New("a forgejo_release or gitea_release checksum file or signature requires a package of the same type")
+	// errGitHubFileSource is returned when a package on a forge instance reads a file beside
 	// its asset from github.com, where the same repository is somebody else's.
-	errGitHubFileSource = errors.New("a github_release checksum file or signature on a forgejo_release package must name the repository it is in")
-	// errForgejoGitHubVerification is returned when a forgejo_release package asks for a
+	errGitHubFileSource = errors.New("a github_release checksum file or signature on a forgejo_release or gitea_release package must name the repository it is in")
+	// errForgeGitHubVerification is returned when a package on a forge instance asks for a
 	// verification that only GitHub can answer.
-	errForgejoGitHubVerification = errors.New("forgejo_release package doesn't support slsa_provenance or github_artifact_attestations")
+	errForgeGitHubVerification = errors.New("forgejo_release and gitea_release packages don't support slsa_provenance or github_artifact_attestations")
 	// errInvalidPackageType is returned when a package has an unrecognized type.
 	errInvalidPackageType = errors.New("package type is invalid")
 )

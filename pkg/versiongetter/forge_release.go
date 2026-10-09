@@ -7,28 +7,28 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
-	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forgejo"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
 )
 
-// ForgejoReleaseVersionGetter finds the versions of a package published as the releases
-// of a repository on a Forgejo instance.
-type ForgejoReleaseVersionGetter struct {
-	client ForgejoReleaseClient
+// ForgeReleaseVersionGetter finds the versions of a package published as the releases of a
+// repository on a Forgejo or Gitea instance.
+type ForgeReleaseVersionGetter struct {
+	client ForgeReleaseClient
 }
 
-// NewForgejoRelease returns a version getter reading the given client.
-func NewForgejoRelease(client ForgejoReleaseClient) *ForgejoReleaseVersionGetter {
-	return &ForgejoReleaseVersionGetter{
+// NewForgeRelease returns a version getter reading the given client.
+func NewForgeRelease(client ForgeReleaseClient) *ForgeReleaseVersionGetter {
+	return &ForgeReleaseVersionGetter{
 		client: client,
 	}
 }
 
-// ForgejoReleaseClient lists the releases of a repository on a Forgejo instance.
-type ForgejoReleaseClient interface {
-	ListReleases(ctx context.Context, host, owner, repo string, page, limit int) ([]*forgejo.Release, error)
+// ForgeReleaseClient lists the releases of a repository on a Forgejo or Gitea instance.
+type ForgeReleaseClient interface {
+	ListReleases(ctx context.Context, host, owner, repo string, page, limit int) ([]*forge.Release, error)
 }
 
-func convForgejoRelease(release *forgejo.Release) *Release {
+func convForgeRelease(release *forge.Release) *Release {
 	v, prefix, _ := GetVersionAndPrefix(release.TagName)
 	return &Release{
 		Tag:           release.TagName,
@@ -38,10 +38,10 @@ func convForgejoRelease(release *forgejo.Release) *Release {
 	}
 }
 
-// filterForgejoRelease says whether a release is one to install from. A draft is left out
+// filterForgeRelease says whether a release is one to install from. A draft is left out
 // as well as a prerelease: its assets are not served to anyone but the people who can
 // publish it.
-func filterForgejoRelease(logger *slog.Logger, release *forgejo.Release, filters []*Filter) bool {
+func filterForgeRelease(logger *slog.Logger, release *forge.Release, filters []*Filter) bool {
 	if release.Draft {
 		return false
 	}
@@ -49,16 +49,16 @@ func filterForgejoRelease(logger *slog.Logger, release *forgejo.Release, filters
 }
 
 // Get returns the newest version the filters allow.
-func (g *ForgejoReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
+func (g *ForgeReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter) (string, error) {
 	if pkg.Host == "" {
-		return "", errForgejoHostRequired
+		return "", errForgeHostRequired
 	}
 	candidates := []*Release{}
 	// Pages are 1-based, and an empty page is the end of the list. A short page is not:
 	// an instance can be configured to answer with fewer items than were asked for, and
 	// stopping there would hide every release after the first page.
-	for page := 1; page <= forgejo.MaxPages; page++ {
-		releases, err := g.client.ListReleases(ctx, pkg.Host, pkg.RepoOwner, pkg.RepoName, page, forgejo.MaxPerPage)
+	for page := 1; page <= forge.MaxPages; page++ {
+		releases, err := g.client.ListReleases(ctx, pkg.Host, pkg.RepoOwner, pkg.RepoName, page, forge.MaxPerPage)
 		if err != nil {
 			return "", fmt.Errorf("list releases: %w", err)
 		}
@@ -66,8 +66,8 @@ func (g *ForgejoReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logg
 			return "", nil
 		}
 		for _, release := range releases {
-			if filterForgejoRelease(logger, release, filters) {
-				candidates = append(candidates, convForgejoRelease(release))
+			if filterForgeRelease(logger, release, filters) {
+				candidates = append(candidates, convForgeRelease(release))
 			}
 		}
 		if len(candidates) > 0 {
@@ -79,14 +79,14 @@ func (g *ForgejoReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logg
 
 // List returns the versions the filters allow, newest first, for the version to be picked
 // from.
-func (g *ForgejoReleaseVersionGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
+func (g *ForgeReleaseVersionGetter) List(ctx context.Context, logger *slog.Logger, pkg *registry.PackageInfo, filters []*Filter, limit int) ([]*fuzzyfinder.Item, error) {
 	if pkg.Host == "" {
-		return nil, errForgejoHostRequired
+		return nil, errForgeHostRequired
 	}
-	perPage := forgejoItemNumPerPage(limit, len(filters))
+	perPage := forgeItemNumPerPage(limit, len(filters))
 	var items []*fuzzyfinder.Item
 	tags := map[string]struct{}{}
-	for page := 1; page <= forgejo.MaxPages; page++ {
+	for page := 1; page <= forge.MaxPages; page++ {
 		releases, err := g.client.ListReleases(ctx, pkg.Host, pkg.RepoOwner, pkg.RepoName, page, perPage)
 		if err != nil {
 			return nil, fmt.Errorf("list releases: %w", err)
@@ -99,7 +99,7 @@ func (g *ForgejoReleaseVersionGetter) List(ctx context.Context, logger *slog.Log
 				continue
 			}
 			tags[release.TagName] = struct{}{}
-			if !filterForgejoRelease(logger, release, filters) {
+			if !filterForgeRelease(logger, release, filters) {
 				continue
 			}
 			v := &fuzzyfinder.Version{
@@ -120,12 +120,12 @@ func (g *ForgejoReleaseVersionGetter) List(ctx context.Context, logger *slog.Log
 	return items, nil
 }
 
-// forgejoItemNumPerPage asks for no more than the limit when every release asked for is
+// forgeItemNumPerPage asks for no more than the limit when every release asked for is
 // one that can be shown, the same way itemNumPerPage does for GitHub. The cap is the
 // instance's rather than GitHub's.
-func forgejoItemNumPerPage(limit, filterNum int) int {
-	if limit > 0 && filterNum == 0 && forgejo.MaxPerPage > limit {
+func forgeItemNumPerPage(limit, filterNum int) int {
+	if limit > 0 && filterNum == 0 && forge.MaxPerPage > limit {
 		return limit
 	}
-	return forgejo.MaxPerPage
+	return forge.MaxPerPage
 }
