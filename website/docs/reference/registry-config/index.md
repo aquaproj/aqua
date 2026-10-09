@@ -88,3 +88,17 @@ link: https://github.com/weaveworks/eksctl
 files:
 - name: eksctl
 ```
+
+A [forgejo_release](forgejo-release-package.md) or [gitea_release](gitea-release-package.md) package is on an instance of its own, which is part of both defaults, because the same owner and name on another host are another package:
+
+* `name`: `<host>/<repo owner>/<repo name>`
+* `link`: `https://<host>/<repo owner>/<repo name>`
+
+For example, in case of `codeberg.org` and `mergiraf/mergiraf`:
+
+```yaml
+name: codeberg.org/mergiraf/mergiraf
+link: https://codeberg.org/mergiraf/mergiraf
+files:
+- name: mergiraf
+```
