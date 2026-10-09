@@ -108,10 +108,11 @@ func (c *Client) doHTTPRequest(ctx context.Context, uri string) ([]byte, error) 
 // said is the start of what an instance answered with, on one line, for an error to carry.
 func said(b []byte) string {
 	const maxLen = 200
-	s := strings.TrimSpace(string(b))
-	s = strings.Join(strings.Fields(s), " ")
-	if len(s) > maxLen {
-		return s[:maxLen] + "..."
+	// By runes rather than bytes, so that a message in a language that doesn't write a
+	// letter in one byte is neither cut in the middle of one nor sliced out of range.
+	r := []rune(strings.Join(strings.Fields(string(b)), " "))
+	if len(r) > maxLen {
+		return string(r[:maxLen]) + "..."
 	}
-	return s
+	return string(r)
 }

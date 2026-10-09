@@ -371,6 +371,97 @@ func TestPackageInfo_Validate(t *testing.T) {
 			},
 		},
 		{
+			title: "github_content repo is required",
+			pkgInfo: &registry.PackageInfo{
+				Type: registry.PkgInfoTypeGitHubContent,
+			},
+			isErr: true,
+		},
+		{
+			title: "github_content path is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubContent,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+			},
+			isErr: true,
+		},
+		{
+			title: "github_content",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubContent,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Path:      "bin/ci-info",
+			},
+		},
+		{
+			title: "github_release repo is required",
+			pkgInfo: &registry.PackageInfo{
+				Type: registry.PkgInfoTypeGitHubRelease,
+			},
+			isErr: true,
+		},
+		{
+			title: "github_release asset is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+			},
+			isErr: true,
+		},
+		{
+			title: "github_release",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Asset:     "ci-info.tar.gz",
+			},
+		},
+		{
+			title: "http url is required",
+			pkgInfo: &registry.PackageInfo{
+				Type: registry.PkgInfoTypeHTTP,
+			},
+			isErr: true,
+		},
+		{
+			title: "http",
+			pkgInfo: &registry.PackageInfo{
+				Type: registry.PkgInfoTypeHTTP,
+				Name: "suzuki-shunsuke/ci-info",
+				URL:  "http://example.com",
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if err := d.pkgInfo.Validate(); err != nil {
+				if d.isErr {
+					return
+				}
+				t.Fatal(err)
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
+	}
+}
+
+// The type is on an instance of its own, which is what every case here is about: what says
+// which instance, and what else in a definition is a thing only github.com answers.
+func TestPackageInfo_Validate_forgejoRelease(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		pkgInfo *registry.PackageInfo
+		isErr   bool
+	}{
+		{
 			title: "forgejo_release host is required",
 			pkgInfo: &registry.PackageInfo{
 				Type:      registry.PkgInfoTypeForgejoRelease,
@@ -457,6 +548,7 @@ func TestPackageInfo_Validate(t *testing.T) {
 			isErr: true,
 		},
 		{
+			// The host is a directory as well, and a colon can't be one on Windows.
 			title: "forgejo_release host with a port",
 			pkgInfo: &registry.PackageInfo{
 				Type:      registry.PkgInfoTypeForgejoRelease,
@@ -464,6 +556,50 @@ func TestPackageInfo_Validate(t *testing.T) {
 				RepoOwner: "an-owner",
 				RepoName:  "a-repo",
 				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "a github_release signature on a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Minisign: &registry.Minisign{
+					Type: registry.PkgInfoTypeGitHubRelease,
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a forgejo_release signature on a github_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Asset:     "ci-info.tar.gz",
+				Cosign: &registry.Cosign{
+					Signature: &registry.DownloadedFile{
+						Type: registry.PkgInfoTypeForgejoRelease,
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a forgejo_release checksum file on a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
 			},
 		},
 		{
@@ -502,80 +638,15 @@ func TestPackageInfo_Validate(t *testing.T) {
 				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
 			},
 		},
-		{
-			title: "github_content repo is required",
-			pkgInfo: &registry.PackageInfo{
-				Type: registry.PkgInfoTypeGitHubContent,
-			},
-			isErr: true,
-		},
-		{
-			title: "github_content path is required",
-			pkgInfo: &registry.PackageInfo{
-				Type:      registry.PkgInfoTypeGitHubContent,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-			isErr: true,
-		},
-		{
-			title: "github_content",
-			pkgInfo: &registry.PackageInfo{
-				Type:      registry.PkgInfoTypeGitHubContent,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-				Path:      "bin/ci-info",
-			},
-		},
-		{
-			title: "github_release repo is required",
-			pkgInfo: &registry.PackageInfo{
-				Type: registry.PkgInfoTypeGitHubRelease,
-			},
-			isErr: true,
-		},
-		{
-			title: "github_release asset is required",
-			pkgInfo: &registry.PackageInfo{
-				Type:      registry.PkgInfoTypeGitHubRelease,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-			},
-			isErr: true,
-		},
-		{
-			title: "github_release",
-			pkgInfo: &registry.PackageInfo{
-				Type:      registry.PkgInfoTypeGitHubRelease,
-				RepoOwner: "suzuki-shunsuke",
-				RepoName:  "ci-info",
-				Asset:     "ci-info.tar.gz",
-			},
-		},
-		{
-			title: "http url is required",
-			pkgInfo: &registry.PackageInfo{
-				Type: registry.PkgInfoTypeHTTP,
-			},
-			isErr: true,
-		},
-		{
-			title: "http",
-			pkgInfo: &registry.PackageInfo{
-				Type: registry.PkgInfoTypeHTTP,
-				Name: "suzuki-shunsuke/ci-info",
-				URL:  "http://example.com",
-			},
-		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if err := d.pkgInfo.Validate(); err != nil {
-				if d.isErr {
-					return
+				if !d.isErr {
+					t.Fatal(err)
 				}
-				t.Fatal(err)
+				return
 			}
 			if d.isErr {
 				t.Fatal("error must be returned")

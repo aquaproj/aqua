@@ -563,11 +563,8 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
 	}
-	if p.Checksum != nil && p.Checksum.Type == PkgInfoTypeForgejoRelease && p.Type != PkgInfoTypeForgejoRelease {
-		// The instance a forgejo_release file is on is the package's own, and a
-		// package of another type is on no instance: the URL would be built with
-		// an empty host.
-		return errForgejoChecksumType
+	if err := p.validateFileSources(); err != nil {
+		return err
 	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
@@ -770,13 +767,61 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	return nil
 }
 
-// hostOnly says whether a value is a host, and nothing else.
+// validateFileSources checks where the files beside the asset -- the checksum file and the
+// signatures -- are said to come from.
 //
-// The value is read as a host by the API endpoint and the download URL, and as a
-// directory by the install path and the checksum id, so what it must not be is anything
-// else: a scheme, a path, userinfo naming a different host than it appears to, or a dot
-// segment that would put the install path somewhere other than where the type's packages
-// go. Parsing it as the authority of a URL is what keeps a port, which is part of a host.
+// Each of them names a repository the way the package does, and the repository is on the
+// package's own forge: a forgejo_release file on a package of another type has no instance
+// to be on, and a github_release file on a forgejo_release package would be downloaded
+// from github.com, where the same owner and name are somebody else's repository.
+func (p *PackageInfo) validateFileSources() error {
+	for _, typ := range p.fileSources() {
+		switch typ {
+		case PkgInfoTypeForgejoRelease:
+			if p.Type != PkgInfoTypeForgejoRelease {
+				return errForgejoFileSource
+			}
+		case PkgInfoTypeGitHubRelease:
+			if p.Type == PkgInfoTypeForgejoRelease {
+				return errGitHubFileSource
+			}
+		}
+	}
+	return nil
+}
+
+// fileSources is where each file beside the asset is said to come from.
+func (p *PackageInfo) fileSources() []string {
+	types := make([]string, 0, 6) //nolint:mnd
+	if p.Checksum != nil {
+		types = append(types, p.Checksum.Type)
+	}
+	if p.Minisign != nil {
+		types = append(types, p.Minisign.Type)
+	}
+	if c := p.Cosign; c != nil {
+		for _, f := range []*DownloadedFile{c.Signature, c.Certificate, c.Key, c.Bundle} {
+			if f != nil {
+				types = append(types, f.Type)
+			}
+		}
+	}
+	return types
+}
+
+// hostOnly says whether a value is a host name, and nothing else.
+//
+// The value is read as a host by the API endpoint and the download URL, and as a directory
+// by the install path and the checksum id, so what it must not be is anything else: a
+// scheme, a path, userinfo naming a different host than it appears to, or a dot segment
+// that would put the install path somewhere other than where the type's packages go.
+// Parsing it as the authority of a URL is what says which it is.
+//
+// A port is refused although it is part of a host, because the host is also a directory
+// and a colon can't be one on Windows, where NTFS reads it as a stream of another file. An
+// instance on a port of its own needs something that says the whole base of it, which is
+// also what an instance under a sub-path needs; a field for both can be added beside this
+// one, and the path it is written into can be made safe there.
 func hostOnly(host string) bool {
 	if host == "." || host == ".." {
 		return false
@@ -786,7 +831,7 @@ func hostOnly(host string) bool {
 		return false
 	}
 	return u.Host == host && u.User == nil && u.Path == "" &&
-		u.RawQuery == "" && u.Fragment == "" && u.Hostname() != ""
+		u.RawQuery == "" && u.Fragment == "" && u.Hostname() != "" && u.Port() == ""
 }
 
 // validateForgejoRelease checks the fields a release on a Forgejo instance is found by.

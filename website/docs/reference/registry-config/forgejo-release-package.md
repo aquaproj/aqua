@@ -47,7 +47,9 @@ A checksum file published in the release is read by giving `checksum.type` the s
 
 ## Which instances this reaches
 
-`host` is a host and nothing else: a scheme, a path, userinfo or a dot segment is refused, so `https://codeberg.org`, `example.com/git`, `codeberg.org@elsewhere.example.com` and `..` are all errors. A port is part of a host, so `forgejo.example.com:3000` is allowed. It names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is. A port is part of the host, so `example.com:3000` works.
+`host` is a host name and nothing else: a scheme, a path, userinfo, a port or a dot segment is refused, so `https://codeberg.org`, `example.com/git`, `codeberg.org@elsewhere.example.com`, `forgejo.example.com:3000` and `..` are all errors. It names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is.
+
+The port is refused because the host is a directory as well, under `pkgs/forgejo_release`, and a colon can't be one on Windows. An instance on a port of its own needs a field that says the whole base of it, which is what an instance under a sub-path needs too.
 
 Forgejo can also be installed under a sub-path -- `ROOT_URL = https://example.com/git/` puts the API at `https://example.com/git/api/v1` -- and that is not something a host can say. Such an instance is still an [http](http-package.md) package, as it was before this type existed; what it doesn't get is the version listing.
 
@@ -65,6 +67,8 @@ Without `name`, the package is named `<host>/<owner>/<repo>`, e.g. `codeberg.org
       asset: "{{.Asset}}.minisig"
       public_key: ...
 ```
+
+Where the file comes from is the package's own forge, both ways round: a `forgejo_release` checksum file or signature on a package of another type is refused, because it is on no instance, and a `github_release` one on a `forgejo_release` package is refused too, because the same owner and name on github.com are somebody else's repository. So a [version_override](version-overrides.md) that moves older versions back to `github_release` has to say `checksum` (and any signature) again -- what it doesn't mention it inherits, and what it inherits here would be refused.
 
 [slsa_provenance](slsa-provenance.md) and [github_artifact_attestations](github-artifact-attestations.md) are refused. Both verify what GitHub signed, against a github.com repository, which a Forgejo release doesn't have.
 
