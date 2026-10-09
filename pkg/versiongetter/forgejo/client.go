@@ -14,14 +14,22 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-// MaxPerPage is the largest page the API answers with. Codeberg caps a page at 50, and a
-// larger limit is silently reduced to it, so asking for more only hides how many were
-// left.
+// MaxPerPage is the largest page Codeberg answers with: a larger limit is silently
+// reduced to it, so asking for more only hides how many were left. An instance can be
+// configured to answer with fewer, which is why a short page is not read as the last one.
 const MaxPerPage = 50
+
+// MaxPages is how many pages are read before giving up.
+//
+// The API says nothing about how many pages there are, so the end of the list is an empty
+// page. An instance that answered the same page to every request would otherwise be read
+// forever, and 50 pages of releases is already far more than a version is ever found in.
+const MaxPages = 50
 
 // Client reads one or more Forgejo instances. Which instance is read is an argument
 // rather than state: a registry holds packages on several of them.
@@ -48,8 +56,9 @@ type Release struct {
 
 // ListReleases returns one page of a repository's releases, newest first.
 //
-// Pages are 1-based. A page shorter than the limit is the last one: the API says nothing
-// about how many pages there are, so that is how a caller knows to stop.
+// Pages are 1-based, and an empty page is the end of the list: the API says nothing about
+// how many pages there are, and a short page isn't the last one either, because an
+// instance can be configured to answer with fewer items than were asked for.
 //
 // The instance is a host, which reaches one served at the root of that host over HTTPS. An
 // instance under a sub-path, which Forgejo's ROOT_URL allows, would have to be named by a
@@ -81,12 +90,28 @@ func (c *Client) doHTTPRequest(ctx context.Context, uri string) ([]byte, error) 
 		return nil, fmt.Errorf("send a http request: %w", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read a response body: %w", err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		// With what the instance said about it, which is where a rate limit, a
+		// renamed repository and a private one are told apart.
+		if message := said(b); message != "" {
+			return nil, fmt.Errorf("unexpected status code: %d: %s", resp.StatusCode, message)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
 	return b, nil
+}
+
+// said is the start of what an instance answered with, on one line, for an error to carry.
+func said(b []byte) string {
+	const maxLen = 200
+	s := strings.TrimSpace(string(b))
+	s = strings.Join(strings.Fields(s), " ")
+	if len(s) > maxLen {
+		return s[:maxLen] + "..."
+	}
+	return s
 }

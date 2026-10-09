@@ -42,10 +42,23 @@ func TestForgejoReleaseURL(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if u := forgejoReleaseURL(d.host, d.owner, d.repo, d.tag, d.asset); u != d.exp {
+			u, err := forgejoReleaseURL(d.host, d.owner, d.repo, d.tag, d.asset)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if u != d.exp {
 				t.Fatalf("wanted %s, got %s", d.exp, u)
 			}
 		})
+	}
+}
+
+func TestForgejoReleaseURL_noInstance(t *testing.T) {
+	t.Parallel()
+	// Nothing says where to download from, which is a URL that must not be built: it
+	// would be https:///an-owner/a-repo/..., a request to nowhere reported as a 404.
+	if _, err := forgejoReleaseURL("", "an-owner", "a-repo", "v1.0.0", "a-repo.tar.gz"); err == nil {
+		t.Fatal("an error must be returned")
 	}
 }
 

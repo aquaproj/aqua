@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -69,12 +70,19 @@ func TestClient_ListReleases_notFound(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"message":"The target couldn't be found.","url":"https://codeberg.org/api/swagger"}`))
 	}))
 	defer server.Close()
 
 	client := New(toServer(server))
-	if _, err := client.ListReleases(context.Background(), "codeberg.org", "an-owner", "a-repo", 1, 30); err == nil {
+	_, err := client.ListReleases(context.Background(), "codeberg.org", "an-owner", "a-repo", 1, 30)
+	if err == nil {
 		t.Fatal("an error must be returned")
+	}
+	// What the instance said about it, which is where a rate limit, a renamed
+	// repository and a private one are told apart.
+	if !strings.Contains(err.Error(), "The target couldn't be found.") {
+		t.Fatalf("wanted the error to carry what the instance said, got %v", err)
 	}
 }
 

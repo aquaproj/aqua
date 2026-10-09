@@ -413,6 +413,42 @@ func TestPackageInfo_Validate(t *testing.T) {
 			isErr: true,
 		},
 		{
+			title: "forgejo_release host written as a URL",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "https://codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host holding a path",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "example.com/git",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "a forgejo_release checksum file on a github_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Asset:     "ci-info.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+			isErr: true,
+		},
+		{
 			title: "forgejo_release doesn't support what only GitHub can verify",
 			pkgInfo: &registry.PackageInfo{
 				Type:           registry.PkgInfoTypeForgejoRelease,

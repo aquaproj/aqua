@@ -36,7 +36,7 @@ packages:
 
 ## Checksums
 
-A checksum file published in the release is read by giving `checksum.type` the same name:
+A checksum file published in the release is read by giving `checksum.type` the same name. It is the instance the package itself is on, so a package of another type is refused rather than asked for from nowhere:
 
 ```yaml
     checksum:
@@ -47,7 +47,7 @@ A checksum file published in the release is read by giving `checksum.type` the s
 
 ## Which instances this reaches
 
-`host` names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is. A port is part of the host, so `example.com:3000` works.
+`host` is a host, without a scheme or a path -- `https://codeberg.org` and `example.com/git` are refused. It names an instance served at the root of its host over HTTPS, which is what a public instance such as codeberg.org or gitea.com is. A port is part of the host, so `example.com:3000` works.
 
 Forgejo can also be installed under a sub-path -- `ROOT_URL = https://example.com/git/` puts the API at `https://example.com/git/api/v1` -- and that is not something a host can say. Such an instance is still an [http](http-package.md) package, as it was before this type existed; what it doesn't get is the version listing.
 

@@ -54,12 +54,16 @@ func (g *ForgejoReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logg
 		return "", errForgejoHostRequired
 	}
 	candidates := []*Release{}
-	// Pages are 1-based, and the API says nothing about how many there are: a page
-	// shorter than what was asked for is the last one.
-	for page := 1; ; page++ {
+	// Pages are 1-based, and an empty page is the end of the list. A short page is not:
+	// an instance can be configured to answer with fewer items than were asked for, and
+	// stopping there would hide every release after the first page.
+	for page := 1; page <= forgejo.MaxPages; page++ {
 		releases, err := g.client.ListReleases(ctx, pkg.Host, pkg.RepoOwner, pkg.RepoName, page, forgejo.MaxPerPage)
 		if err != nil {
 			return "", fmt.Errorf("list releases: %w", err)
+		}
+		if len(releases) == 0 {
+			return "", nil
 		}
 		for _, release := range releases {
 			if filterForgejoRelease(logger, release, filters) {
@@ -69,10 +73,8 @@ func (g *ForgejoReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logg
 		if len(candidates) > 0 {
 			return getLatestRelease(candidates).Tag, nil
 		}
-		if len(releases) < forgejo.MaxPerPage {
-			return "", nil
-		}
 	}
+	return "", nil
 }
 
 // List returns the versions the filters allow, newest first, for the version to be picked
@@ -84,10 +86,13 @@ func (g *ForgejoReleaseVersionGetter) List(ctx context.Context, logger *slog.Log
 	perPage := forgejoItemNumPerPage(limit, len(filters))
 	var items []*fuzzyfinder.Item
 	tags := map[string]struct{}{}
-	for page := 1; ; page++ {
+	for page := 1; page <= forgejo.MaxPages; page++ {
 		releases, err := g.client.ListReleases(ctx, pkg.Host, pkg.RepoOwner, pkg.RepoName, page, perPage)
 		if err != nil {
 			return nil, fmt.Errorf("list releases: %w", err)
+		}
+		if len(releases) == 0 {
+			return items, nil
 		}
 		for _, release := range releases {
 			if _, ok := tags[release.TagName]; ok {
@@ -111,10 +116,8 @@ func (g *ForgejoReleaseVersionGetter) List(ctx context.Context, logger *slog.Log
 		if limit > 0 && len(items) >= limit { // Reach the limit
 			return items[:limit], nil
 		}
-		if len(releases) < perPage {
-			return items, nil
-		}
 	}
+	return items, nil
 }
 
 // forgejoItemNumPerPage asks for no more than the limit when every release asked for is

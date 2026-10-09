@@ -74,7 +74,11 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logger *slog.Logger, file 
 	case config.PkgInfoTypeGitHubArchive:
 		return dl.getReadCloserFromGitHubArchive(ctx, file)
 	case config.PkgInfoTypeForgejoRelease:
-		return dl.downloadURL(ctx, forgejoReleaseURL(file.Host, file.RepoOwner, file.RepoName, file.Version, file.Asset))
+		u, err := forgejoReleaseURL(file.Host, file.RepoOwner, file.RepoName, file.Version, file.Asset)
+		if err != nil {
+			return nil, 0, fmt.Errorf("build the download URL: %w", err)
+		}
+		return dl.downloadURL(ctx, u)
 	case config.PkgInfoTypeHTTP:
 		return dl.downloadURL(ctx, file.URL)
 	default:

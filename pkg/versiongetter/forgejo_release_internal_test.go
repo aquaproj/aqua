@@ -30,19 +30,6 @@ func (f *fakeForgejo) ListReleases(_ context.Context, _, _, _ string, page, limi
 	return f.pages[page-1], nil
 }
 
-func fullPage(tags ...string) []*forgejo.Release {
-	releases := make([]*forgejo.Release, 0, forgejo.MaxPerPage)
-	for _, tag := range tags {
-		releases = append(releases, &forgejo.Release{TagName: tag})
-	}
-	// A page shorter than the limit is the last one, so a page that is meant to be
-	// followed by another has to be full.
-	for len(releases) < forgejo.MaxPerPage {
-		releases = append(releases, &forgejo.Release{TagName: "v0.0.0", Draft: true})
-	}
-	return releases
-}
-
 func testPkg() *registry.PackageInfo {
 	return &registry.PackageInfo{
 		Type:      registry.PkgInfoTypeForgejoRelease,
@@ -92,9 +79,11 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 			exp: "v0.20.0",
 		},
 		{
+			// A short page is not the last one: an instance can be configured to
+			// answer with fewer items than were asked for.
 			title: "the next page is read when the first holds nothing to install",
 			pages: [][]*forgejo.Release{
-				fullPage(),
+				{{TagName: "v0.2.0", Draft: true}},
 				{{TagName: "v0.1.0"}},
 			},
 			exp: "v0.1.0",
@@ -137,6 +126,39 @@ func TestForgejoReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 			}
 		})
 	}
+}
+
+// An instance answering the same page to every request is read no further than the cap,
+// rather than forever.
+func TestForgejoReleaseVersionGetter_Get_samePageForever(t *testing.T) {
+	t.Parallel()
+	filters, err := createFilters(testPkg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &sameForgejoPage{release: &forgejo.Release{TagName: "v0.1.0", Draft: true}}
+	getter := NewForgejoRelease(client)
+	version, err := getter.Get(context.Background(), slog.New(slog.DiscardHandler), testPkg(), filters)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if version != "" {
+		t.Fatalf("wanted no version, got %s", version)
+	}
+	if client.calls != forgejo.MaxPages {
+		t.Fatalf("wanted %d pages read, got %d", forgejo.MaxPages, client.calls)
+	}
+}
+
+// sameForgejoPage answers every request with the same release, whatever page is asked for.
+type sameForgejoPage struct {
+	release *forgejo.Release
+	calls   int
+}
+
+func (f *sameForgejoPage) ListReleases(_ context.Context, _, _, _ string, _, _ int) ([]*forgejo.Release, error) {
+	f.calls++
+	return []*forgejo.Release{f.release}, nil
 }
 
 func TestForgejoReleaseVersionGetter_Get_error(t *testing.T) {

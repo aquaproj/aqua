@@ -563,6 +563,12 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
 	}
+	if p.Checksum != nil && p.Checksum.Type == PkgInfoTypeForgejoRelease && p.Type != PkgInfoTypeForgejoRelease {
+		// The instance a forgejo_release file is on is the package's own, and a
+		// package of another type is on no instance: the URL would be built with
+		// an empty host.
+		return errForgejoChecksumType
+	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		if !p.HasRepo() {
@@ -770,6 +776,12 @@ func (p *PackageInfo) validateForgejoRelease() error {
 	if p.Host == "" {
 		return errHostRequired
 	}
+	if strings.ContainsAny(p.Host, "/ ") {
+		// A host, not a URL: the scheme is added and the instance is served at the
+		// root of it. https://codeberg.org would be read as https://https://...,
+		// and a path would land in the install path as well as the URL.
+		return errHostInvalid
+	}
 	if p.Private {
 		// Only what an instance serves to anyone is downloaded: there is nowhere
 		// yet to say which credential an instance should be read with. Refusing it
@@ -926,12 +938,27 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Host = ""
 	}
 	switch typ {
-	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease:
+	case PkgInfoTypeGitHubRelease:
 		p.URL = ""
 		p.Path = ""
 		p.Crate = ""
 		p.GoVersionPath = ""
 		p.Cargo = nil
+	case PkgInfoTypeForgejoRelease:
+		p.URL = ""
+		p.Path = ""
+		p.Crate = ""
+		p.GoVersionPath = ""
+		p.Cargo = nil
+		// What a version_override switching to this type inherits has to go with
+		// the type it belonged to. A project that moved from GitHub to a Forgejo
+		// instance keeps github_release with its attestations at the top level and
+		// says forgejo_release for the newer versions; leaving those fields set
+		// would refuse the definition, and the override has no way to unset them,
+		// because a field it doesn't mention is one it inherits.
+		p.SLSAProvenance = nil
+		p.GitHubArtifactAttestations = nil
+		p.Private = false
 	case PkgInfoTypeGitHubContent:
 		p.URL = ""
 		p.Asset = ""
