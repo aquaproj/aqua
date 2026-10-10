@@ -26,6 +26,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 		assets   []*github.ReleaseAsset
 		crate    *cargo.CratePayload
 		gitlab   *fakeGitLab
+		limit    int
 	}{
 		{
 			// The name says where the project is, the way crates.io/<crate> does.
@@ -34,6 +35,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 			// <host>/<namespace>/<project> is what it is called.
 			name:    "a project on gitlab.com",
 			pkgName: "gitlab.com/gitlab-org/cli",
+			limit:   1,
 			gitlab: &fakeGitLab{
 				description: "A GitLab CLI tool bringing GitLab to your command line",
 				release: &forge.Release{
@@ -204,7 +206,7 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				gitlabClient = &fakeGitLab{}
 			}
 			ctrl := NewController(gh, nil, cargoClient, gitlabClient, &buf)
-			pkgInfo, _ := ctrl.getPackageInfo(ctx, logger, d.pkgName, &config.Param{}, &Config{})
+			pkgInfo, _ := ctrl.getPackageInfo(ctx, logger, d.pkgName, &config.Param{Limit: d.limit}, &Config{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}
@@ -212,10 +214,55 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 	}
 }
 
+// More than one release asked for: what they say together is a definition with
+// version_overrides, which is what reading them is for.
+func TestController_getGitLabPackageInfo_versionOverrides(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	ctrl := NewController(&github.MockRepositoriesService{}, nil, &cargo.MockClient{}, &fakeGitLab{
+		description: "A GitLab CLI tool bringing GitLab to your command line",
+		releases: []*forge.Release{
+			{
+				TagName: "v1.122.0",
+				Assets:  []string{"glab_1.122.0_darwin_arm64.tar.gz", "glab_1.122.0_linux_amd64.tar.gz"},
+			},
+			{
+				// Named another way, which is what a version_override says.
+				TagName: "v1.60.0",
+				Assets:  []string{"glab_1.60.0_macOS_arm64.tar.gz", "glab_1.60.0_Linux_x86_64.tar.gz"},
+			},
+			{
+				// Dated in the future: its assets are not published yet.
+				TagName: "v2.0.0",
+				Draft:   true,
+				Assets:  []string{"glab_2.0.0_darwin_arm64.tar.gz"},
+			},
+		},
+	}, &buf)
+
+	pkgInfo, versions := ctrl.getPackageInfo(t.Context(), slog.New(slog.DiscardHandler),
+		"gitlab.com/gitlab-org/cli", &config.Param{Limit: 10}, &Config{})
+	if pkgInfo.Type != pkgTypeGitLabRelease {
+		t.Fatalf("wanted a gitlab_release package, got %s", pkgInfo.Type)
+	}
+	if len(pkgInfo.VersionOverrides) == 0 {
+		t.Fatal("wanted the releases that name their assets another way to be an override")
+	}
+	// A definition whose overrides answer for every version says that: nothing is
+	// generated for the version that matches none of them.
+	if pkgInfo.VersionConstraints != "false" {
+		t.Fatalf("wanted the top level to answer for no version, got %q", pkgInfo.VersionConstraints)
+	}
+	if diff := cmp.Diff([]string{"v1.122.0", "v1.60.0"}, versions); diff != "" {
+		t.Fatalf("the versions are wrong (-want +got):\n%s", diff)
+	}
+}
+
 // fakeGitLab answers what a project on a GitLab instance says it is.
 type fakeGitLab struct {
 	description string
 	release     *forge.Release
+	releases    []*forge.Release
 }
 
 func (f *fakeGitLab) GetDescription(_ context.Context, _, _ string) (string, error) {
@@ -230,6 +277,13 @@ func (f *fakeGitLab) GetRelease(_ context.Context, _, _, _ string) (*forge.Relea
 		return nil, errors.New("the project has no release")
 	}
 	return f.release, nil
+}
+
+func (f *fakeGitLab) ListReleases(_ context.Context, _, _ string, page, _ int) ([]*forge.Release, error) {
+	if page != 1 {
+		return nil, nil
+	}
+	return f.releases, nil
 }
 
 func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen

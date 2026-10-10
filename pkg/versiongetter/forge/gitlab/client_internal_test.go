@@ -226,8 +226,10 @@ func TestClient_GetRelease_latest(t *testing.T) {
 	if release.TagName != "v1.122.0" {
 		t.Fatalf("wanted the newest release, got %s", release.TagName)
 	}
-	if q := got.Query(); q.Get("per_page") != "1" {
-		t.Fatalf("wanted one release asked for, got %s", got.RawQuery)
+	// A page of them rather than one: the newest to install from may not be the first,
+	// so the list is read until one is.
+	if q := got.Query(); q.Get("page") != "1" || q.Get("per_page") != "100" {
+		t.Fatalf("wanted the first page of releases, got %s", got.RawQuery)
 	}
 }
 
@@ -262,5 +264,26 @@ func TestClient_GetDescription(t *testing.T) {
 	}
 	if description != "A GitLab CLI tool bringing GitLab to your command line" {
 		t.Fatalf("wanted what the project says it is, got %q", description)
+	}
+}
+
+// A release dated in the future names assets the instance isn't serving yet, so the newest
+// one to install from is the newest that isn't upcoming.
+func TestClient_GetRelease_skipsUpcoming(t *testing.T) {
+	t.Parallel()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`[
+		  {"tag_name": "v2.0.0", "upcoming_release": true},
+		  {"tag_name": "v1.122.0", "upcoming_release": false}
+		]`))
+	}))
+	defer server.Close()
+
+	release, err := New(toServer(server)).GetRelease(context.Background(), "gitlab.com", "gitlab-org/cli", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if release.TagName != "v1.122.0" {
+		t.Fatalf("wanted the newest release to install from, got %s", release.TagName)
 	}
 }

@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -22,7 +24,7 @@ const gitLabHost = "gitlab.com"
 // the host is the project's path, whose last segment is the project and whose earlier ones
 // are the namespace it is in. Nothing else here is GitLab's own -- the asset naming is
 // read off the release's asset list by the same inference every other type goes through.
-func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logger, pkgName, version string, cfg *Config) (*registry.PackageInfo, []string) {
+func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logger, pkgName, version string, limit int, cfg *Config) (*registry.PackageInfo, []string) {
 	project := strings.TrimPrefix(pkgName, gitLabHost+"/")
 	owner, repo, found := strings.CutLast(project, "/")
 	pkgInfo := &registry.PackageInfo{
@@ -48,6 +50,15 @@ func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logg
 		pkgInfo.Description = description
 	}
 
+	if limit != 1 && version == "" {
+		// More than one release asked for: what they say together is a definition
+		// with version_overrides, the same as for a GitHub repository.
+		versions := c.versionOverrides(logger, pkgName, pkgInfo,
+			c.gitLabReleases(ctx, logger, project, limit, cfg))
+		heldToGitLab(pkgInfo)
+		return pkgInfo, versions
+	}
+
 	release, err := c.gitlab.GetRelease(ctx, gitLabHost, project, version)
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("get the release", "project", project)
@@ -69,6 +80,67 @@ func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logg
 	return pkgInfo, []string{release.TagName}
 }
 
+// gitLabReleases are the releases of a project, with what each publishes.
+//
+// The asset list comes with the release rather than per release, which is one request for
+// a page of them: GitLab answers with a release's links inside the release.
+func (c *Controller) gitLabReleases(ctx context.Context, logger *slog.Logger, project string, limit int, cfg *Config) []*Release {
+	releases := []*Release{}
+	for page := 1; page <= maxPages; page++ {
+		listed, err := c.gitlab.ListReleases(ctx, gitLabHost, project, page, maxPerPage)
+		if err != nil {
+			slogerr.WithError(logger, err).Warn("list releases", "project", project)
+			return releases
+		}
+		if len(listed) == 0 {
+			return releases
+		}
+		for _, listedRelease := range listed {
+			if listedRelease.Draft {
+				// Dated in the future: its assets are not published yet, so what
+				// it says they are named is not what they will be.
+				continue
+			}
+			if excludeVersion(logger, listedRelease.TagName, cfg) {
+				continue
+			}
+			releases = append(releases, gitLabRelease(logger, listedRelease, cfg))
+			if limit > 0 && len(releases) >= limit {
+				return releases
+			}
+		}
+	}
+	return releases
+}
+
+// gitLabRelease is one release as the definition is built from it.
+func gitLabRelease(logger *slog.Logger, listed *forge.Release, cfg *Config) *Release {
+	v, prefix, err := versiongetter.GetVersionAndPrefix(listed.TagName)
+	if err != nil {
+		slogerr.WithError(logger, err).Warn("parse a tag as semver", "tag_name", listed.TagName)
+	}
+	release := &Release{
+		Tag:           listed.TagName,
+		Version:       v,
+		VersionPrefix: prefix,
+	}
+	for _, assetName := range listed.Assets {
+		if excludeAsset(logger, assetName, cfg) {
+			continue
+		}
+		release.assets = append(release.assets, assetName)
+	}
+	return release
+}
+
+// How far the releases of a project are read: a page at a time, and no further than an
+// answer that is empty. The page is GitLab's largest, and 50 pages of releases is already
+// far more than a definition is ever built from.
+const (
+	maxPerPage = 100
+	maxPages   = 50
+)
+
 // heldToGitLab drops what the inference says that only GitHub answers.
 //
 // The inference reads an asset list the same way whatever published it, so what it writes
@@ -77,14 +149,32 @@ func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logg
 // on the instance and is kept by name; the rest are about somebody else's repository, and
 // a definition carrying them is one aqua refuses.
 func heldToGitLab(pkgInfo *registry.PackageInfo) {
-	if pkgInfo.Checksum != nil {
-		if pkgInfo.Checksum.Type == pkgTypeGitHubRelease {
-			pkgInfo.Checksum.Type = pkgTypeGitLabRelease
-		}
-		pkgInfo.Checksum.Cosign = nil
-		pkgInfo.Checksum.GitHubArtifactAttestations = nil
-	}
+	heldChecksum(pkgInfo.Checksum)
 	pkgInfo.Cosign = nil
 	pkgInfo.SLSAProvenance = nil
 	pkgInfo.GitHubArtifactAttestations = nil
+	// Every version_override says the same things, and more than one release read is
+	// what writes them.
+	for _, vo := range pkgInfo.VersionOverrides {
+		heldChecksum(vo.Checksum)
+		vo.Cosign = nil
+		vo.SLSAProvenance = nil
+		vo.GitHubArtifactAttestations = nil
+	}
+}
+
+// heldChecksum keeps the checksum file, as the release's own.
+//
+// It is the same file on the instance, found by the same name, so only what the inference
+// calls the release it is in changes. What it says about who signed it doesn't survive: the
+// identity is a workflow of a github.com repository.
+func heldChecksum(c *registry.Checksum) {
+	if c == nil {
+		return
+	}
+	if c.Type == pkgTypeGitHubRelease {
+		c.Type = pkgTypeGitLabRelease
+	}
+	c.Cosign = nil
+	c.GitHubArtifactAttestations = nil
 }

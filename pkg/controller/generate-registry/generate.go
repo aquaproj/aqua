@@ -131,7 +131,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 		return c.getCargoPackageInfo(ctx, logger, pkgName)
 	}
 	if strings.HasPrefix(pkgName, gitLabHost+"/") {
-		return c.getGitLabPackageInfo(ctx, logger, pkgName, version, cfg)
+		return c.getGitLabPackageInfo(ctx, logger, pkgName, version, limit, cfg)
 	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{

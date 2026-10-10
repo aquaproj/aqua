@@ -36,6 +36,7 @@ func NewController(gh RepositoriesService, testdataOutputter TestdataOutputter, 
 type GitLabClient interface {
 	GetDescription(ctx context.Context, host, project string) (string, error)
 	GetRelease(ctx context.Context, host, project, tag string) (*forge.Release, error)
+	ListReleases(ctx context.Context, host, project string, page, limit int) ([]*forge.Release, error)
 }
 
 type CargoClient interface {

@@ -46,6 +46,8 @@ $ aqua gr gitlab.com/gitlab-org/cli
 
 The name after the host is the project's path, so a project inside subgroups is `gitlab.com/gitlab-org/security/cli`. The asset naming is read off the release's own asset list -- the path each permanent link serves, so a link without one is left out -- and `@<version>` names a release other than the newest.
 
+`-l/--limit` reads that many releases and writes a `version_override` for each way they name their assets, the same as for a GitHub repository. A release dated in the future is left out: its assets aren't published yet, so what it says they are named isn't what they will be.
+
 What it leaves out is what only GitHub answers: a signature identity in a workflow of a github.com repository, and provenance GitHub's verifier checks. A checksum file published with the release is kept, as the release's own.
 
 ## Where the asset is downloaded from

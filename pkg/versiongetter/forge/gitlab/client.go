@@ -147,18 +147,13 @@ func served(host, assetURL, directAssetURL string) (string, bool) {
 // GetRelease returns one of a project's releases: the one the tag names, or the newest
 // when the tag is empty.
 //
-// The newest is the first of the list rather than another endpoint's answer: GitLab orders
-// releases by when they were released, and asking for one page of one is asking for that.
+// The newest is read from the list rather than from another endpoint, because GitLab orders
+// releases by when they were released. It is the newest one to install from: a release
+// dated in the future -- what GitLab calls upcoming -- names assets it isn't serving yet,
+// and is what the version listing leaves out too.
 func (c *Client) GetRelease(ctx context.Context, host, project, tag string) (*forge.Release, error) {
 	if tag == "" {
-		releases, err := c.ListReleases(ctx, host, project, 1, 1)
-		if err != nil {
-			return nil, err
-		}
-		if len(releases) == 0 {
-			return nil, errNoRelease
-		}
-		return releases[0], nil
+		return c.latestRelease(ctx, host, project)
 	}
 	endpoint := fmt.Sprintf("https://%s/api/v4/projects/%s/releases/%s",
 		host, url.PathEscape(project), url.PathEscape(tag))
@@ -180,4 +175,23 @@ func (c *Client) GetDescription(ctx context.Context, host, project string) (stri
 		return "", fmt.Errorf("get the project: %w", err)
 	}
 	return out.Description, nil
+}
+
+// latestRelease is the newest release that is one to install from.
+func (c *Client) latestRelease(ctx context.Context, host, project string) (*forge.Release, error) {
+	for page := 1; page <= forge.MaxPages; page++ {
+		releases, err := c.ListReleases(ctx, host, project, page, MaxPerPage)
+		if err != nil {
+			return nil, err
+		}
+		if len(releases) == 0 {
+			return nil, errNoRelease
+		}
+		for _, release := range releases {
+			if !release.Draft {
+				return release, nil
+			}
+		}
+	}
+	return nil, errNoRelease
 }

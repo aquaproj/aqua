@@ -241,9 +241,13 @@ func (v Variants) IsZero() bool {
 // Override provides platform-specific package configuration that overrides
 // the default settings when the specified OS/architecture conditions are met.
 type Override struct {
-	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
-	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release,enum=gitlab_release"`
+	GOOS   string `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
+	GOArch string `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
+	Type   string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release,enum=gitlab_release"`
+	// Host is the instance the repository is on, for the types that are on one. An
+	// override can say it because it can say the type: a platform read from another
+	// forge is read from another instance.
+	Host                       string                      `yaml:",omitempty" json:"host,omitempty"`
 	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
 	Crate                      string                      `yaml:",omitempty" json:"crate,omitempty"`
@@ -333,6 +337,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 	if ov.Type != "" {
 		p.resetByPkgType(ov.Type)
 		p.Type = ov.Type
+	}
+
+	if ov.Host != "" {
+		p.Host = ov.Host
 	}
 
 	if ov.Asset != "" {
@@ -869,7 +877,7 @@ func (p *PackageInfo) fileSources() []*fileSource {
 		})
 	}
 	addCosign := func(c *Cosign) {
-		if c == nil {
+		if !c.GetEnabled() {
 			return
 		}
 		for _, f := range []*DownloadedFile{c.Signature, c.Certificate, c.Key, c.Bundle} {
@@ -879,12 +887,16 @@ func (p *PackageInfo) fileSources() []*fileSource {
 		}
 	}
 	addMinisign := func(m *Minisign) {
-		if m == nil {
+		if !m.GetEnabled() {
 			return
 		}
 		add(m.Type, m.RepoOwner, m.RepoName)
 	}
-	if c := p.Checksum; c != nil {
+	// What is turned off is not read, so where it would have been read from is not a
+	// question: a package moved to another forge leaves the checksum it had disabled
+	// where it was, and saying it may not name github.com would be refusing a
+	// definition over a file nothing downloads.
+	if c := p.Checksum; c.GetEnabled() {
 		// A checksum file says no repository of its own: it is in the package's.
 		add(c.Type, "", "")
 		addCosign(c.Cosign)
