@@ -533,6 +533,8 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 		title string
 		typ   string
 		host  string
+		owner string
+		name  string
 		exp   string
 	}{
 		{
@@ -561,6 +563,31 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 			exp:   filepath.Join("gitlab_release", "gitlab.com", "mergiraf", "mergiraf"),
 		},
 		{
+			// The owner is a directory as well, and aqua remove expands the path as
+			// a glob: this one would be every owner's copy of the same name.
+			title: "an owner that is a pattern",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "codeberg.org",
+			owner: "*",
+		},
+		{
+			title: "a name that is a path out of the packages",
+			typ:   registry.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			owner: "gitlab-org",
+			name:  "..",
+		},
+		{
+			// A repository called .github is a repository; what is refused is a
+			// dot segment and a pattern, not a name beginning with a dot.
+			title: "a name beginning with a dot",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "codeberg.org",
+			owner: "an-owner",
+			name:  ".github",
+			exp:   filepath.Join("forgejo_release", "codeberg.org", "an-owner", ".github"),
+		},
+		{
 			title: "a host that is a path out of the packages",
 			typ:   registry.PkgInfoTypeForgejoRelease,
 			host:  "../../..",
@@ -586,11 +613,18 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+			owner, name := d.owner, d.name
+			if owner == "" {
+				owner = "mergiraf"
+			}
+			if name == "" {
+				name = "mergiraf"
+			}
 			pkgInfo := &registry.PackageInfo{
 				Type:      d.typ,
 				Host:      d.host,
-				RepoOwner: "mergiraf",
-				RepoName:  "mergiraf",
+				RepoOwner: owner,
+				RepoName:  name,
 				Asset:     "mergiraf.tar.gz",
 			}
 			paths := pkgInfo.PkgPaths()

@@ -791,8 +791,13 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 		// which is given a registry's packages without validating them. A host that
 		// isn't one would be a path out of where the type's packages are, and what
 		// is at the end of that path is removed.
+		// The host, the owner and the name are all read here as directories, and
+		// this is read by aqua remove, which is given a registry's packages without
+		// validating them and expands what it reads as a glob. Anything that isn't a
+		// path says no path at all, which is what a package the registry can't place
+		// already says.
 		host := p.GetHost()
-		if !hostOnly(host) || p.RepoOwner == "" || p.RepoName == "" {
+		if !hostOnly(host) || !p.HasRepo() || !p.repoPathOnly() {
 			return nil
 		}
 		return []string{filepath.Join(p.Type, host, p.RepoOwner, p.RepoName)}
@@ -890,14 +895,24 @@ func (p *PackageInfo) fileSources() []*fileSource {
 	return sources
 }
 
-// pathSegmentPattern is a name a directory can have: anything but a separator, a dot
-// segment, and the characters a pattern is written with.
+// pathSegment says whether a name can also be a directory in the install path.
 //
 // The owner and the name are read as directories by the install path and the checksum id,
 // and aqua remove expands that path as a glob, which is the same reasoning hostOnly comes
-// from. A GitLab project is the first case where the owner holds separators of its own: a
-// project in subgroups is gitlab-org/security/cli, and every segment of it is one of these.
-var pathSegmentPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+// from. So what a segment must not be is a dot segment, which is a path out of where the
+// type's packages go, or a name holding what a pattern is written with. Anything else a
+// forge allows in a name is allowed here: a repository called .github is a repository.
+//
+// A GitLab project is the first case where the owner holds separators of its own: a project
+// in subgroups is gitlab-org/security/cli, and every segment of it is one of these.
+func pathSegment(s string) bool {
+	if s == "" || s == "." || s == ".." {
+		return false
+	}
+	// A separator is not inside a segment: where one is allowed -- a GitLab namespace
+	// -- it is what the segments were split on.
+	return !strings.ContainsAny(s, `/*?[]\`)
+}
 
 // hostNamePattern is a host name: labels of letters, digits and hyphens, separated by dots,
 // each beginning and ending with a letter or a digit.
@@ -935,7 +950,7 @@ func (p *PackageInfo) repoPathOnly() bool {
 		owners = strings.Split(p.RepoOwner, "/")
 	}
 	for _, segment := range append(owners, p.RepoName) {
-		if !pathSegmentPattern.MatchString(segment) {
+		if !pathSegment(segment) {
 			return false
 		}
 	}
@@ -1115,8 +1130,12 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 // resetByPkgType resets package fields that are not applicable to the specified type.
 // This cleans up conflicting configuration when changing package types.
 func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
-	if !OnInstanceType(typ) {
-		// Only a package on a forge instance is on a host other than github.com.
+	if typ != p.Type {
+		// The instance belongs to the type that named it. Every other type is on
+		// github.com, and a package moved from one forge to another is on another
+		// instance -- which the override says, or which the new type's own default
+		// answers. Carrying the old forge's host over would read a Forgejo host with
+		// GitLab's API.
 		p.Host = ""
 	}
 	switch typ {

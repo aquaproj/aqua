@@ -181,3 +181,49 @@ func TestPackageInfo_setVersion(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+// A package that moved from one forge to another is on another instance: the override
+// says which, or the new type's own default answers. Carrying the old forge's host over
+// would read a Forgejo host with GitLab's API.
+func TestPackageInfo_overrideVersion_betweenForges(t *testing.T) {
+	t.Parallel()
+	pkgInfo := &PackageInfo{
+		Type:      PkgInfoTypeForgejoRelease,
+		Host:      "codeberg.org",
+		RepoOwner: "an-owner",
+		RepoName:  "a-repo",
+		Asset:     "a-repo.tar.gz",
+	}
+
+	// To GitLab with nothing said about the instance: gitlab.com, which is where a
+	// gitlab_release package is.
+	pkg := pkgInfo.overrideVersion(&VersionOverride{Type: PkgInfoTypeGitLabRelease})
+	if pkg.Host != "" {
+		t.Fatalf("wanted the old forge's host gone, got %s", pkg.Host)
+	}
+	if host := pkg.GetHost(); host != "gitlab.com" {
+		t.Fatalf("wanted gitlab.com, got %s", host)
+	}
+	if err := pkg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+
+	// To GitLab on an instance of its own: the override says so.
+	pkg = pkgInfo.overrideVersion(&VersionOverride{
+		Type: PkgInfoTypeGitLabRelease,
+		Host: "gitlab.example.com",
+	})
+	if host := pkg.GetHost(); host != "gitlab.example.com" {
+		t.Fatalf("wanted the instance the override named, got %s", host)
+	}
+
+	// To Gitea, which has no instance nearly every package is on, so a definition
+	// saying nothing is one that can't be read.
+	pkg = pkgInfo.overrideVersion(&VersionOverride{Type: PkgInfoTypeGiteaRelease})
+	if pkg.GetHost() != "" {
+		t.Fatalf("wanted no instance, got %s", pkg.GetHost())
+	}
+	if err := pkg.Validate(); err == nil {
+		t.Fatal("an error must be returned")
+	}
+}
