@@ -62,9 +62,14 @@ type Asset struct {
 	Type      string `json:"type"`
 	RepoOwner string `json:"repo_owner,omitempty"`
 	RepoName  string `json:"repo_name,omitempty"`
-	Asset     string `json:"asset,omitempty"`
-	URL       string `json:"url,omitempty"`
-	Format    string `json:"format,omitempty"`
+	// Host is the forge instance the release is on, for a forgejo_release or
+	// gitea_release entry. The other types need no such field: their host is
+	// github.com, or is part of URL. A repository on a Forgejo instance says
+	// nothing about which instance holds it, so the entry has to.
+	Host   string `json:"host,omitempty"`
+	Asset  string `json:"asset,omitempty"`
+	URL    string `json:"url,omitempty"`
+	Format string `json:"format,omitempty"`
 	// Path is the Go module path of a go_install package. Crate and Cargo describe a
 	// cargo one. A release says nothing about either, so ar2 copies them from
 	// registry.yaml rather than inferring them.

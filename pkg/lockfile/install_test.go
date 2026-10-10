@@ -134,3 +134,21 @@ func TestPackage_NeedsChecksum(t *testing.T) {
 		})
 	}
 }
+
+// Installing from the lock file reads the instance the release is on, which is the
+// difference between downloading from codeberg.org and downloading from github.com.
+func TestPackage_PackageInfo_instance(t *testing.T) {
+	t.Parallel()
+	p := &lockfile.Package{
+		Name:      "codeberg.org/mergiraf/mergiraf",
+		Version:   "v0.20.0",
+		Type:      "forgejo_release",
+		Host:      "codeberg.org",
+		RepoOwner: "mergiraf",
+		RepoName:  "mergiraf",
+		Asset:     "mergiraf_x86_64-unknown-linux-gnu.tar.gz",
+	}
+	if pkgInfo := p.PackageInfo(); pkgInfo.Host != "codeberg.org" {
+		t.Fatalf("Host is %q, want the instance the release is on", pkgInfo.Host)
+	}
+}

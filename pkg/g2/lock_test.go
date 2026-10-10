@@ -135,3 +135,35 @@ func TestNewRegistry(t *testing.T) {
 		t.Errorf("the registry is wrong (-want +got):\n%s", diff)
 	}
 }
+
+// An entry on a forge instance says which instance, because its owner and name don't.
+// The field has to survive both directions of the conversion, or a lock file resolved
+// from g2 would install a package from github.com instead.
+func TestClient_LockPackages_instance(t *testing.T) {
+	t.Parallel()
+	c := g2.New(nil, nil, "aquaproj", "aqua-registry-g2")
+	reg := &g2.Registry{
+		Assets: []*g2.Asset{
+			{
+				OS:        "linux",
+				Arch:      "amd64",
+				Type:      "forgejo_release",
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_x86_64-unknown-linux-gnu.tar.gz",
+				Format:    "tar.gz",
+			},
+		},
+	}
+	pkgs := c.LockPackages(reg, "codeberg.org/mergiraf/mergiraf", "v0.20.0")
+	if len(pkgs) != 1 {
+		t.Fatalf("got %d packages, want 1", len(pkgs))
+	}
+	if pkgs[0].Host != "codeberg.org" {
+		t.Errorf("Host is %q, want the instance the release is on", pkgs[0].Host)
+	}
+	if diff := cmp.Diff(reg, g2.NewRegistry(pkgs)); diff != "" {
+		t.Errorf("the registry is wrong (-want +got):\n%s", diff)
+	}
+}
