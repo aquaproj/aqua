@@ -6,11 +6,16 @@ const BundleAssetPackslip = "packslip.sigstore.json"
 
 // Packslip defines configuration for verifying packages with packslip.
 // packslip publishes a signed release bundle, packslip.sigstore.json, beside the
-// release's artifacts, and aqua downloads it from the package's own release.
+// release's artifacts, and aqua downloads it from the package's own release
+// unless URL says where it is.
 // https://github.com/jdx/packslip
 type Packslip struct {
 	// Enabled controls whether packslip verification is active.
 	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
+	// URL is the URL of the packslip bundle.
+	// If it isn't set, packslip.sigstore.json is downloaded from the package's release.
+	// It is required for a package that isn't a release asset, such as the http type.
+	URL *string `yaml:",omitempty" json:"url,omitempty"`
 	// PublicKey is the public key of a key-signed release, as its base64 line.
 	// It is passed to `packslip verify --pubkey`.
 	PublicKey string `yaml:"pubkey,omitempty" json:"pubkey,omitempty"`
@@ -41,6 +46,25 @@ func (p *Packslip) GetEnabled() bool {
 		return *p.Enabled
 	}
 	return true
+}
+
+// ToDownloadedFile converts the packslip configuration to a DownloadedFile,
+// which is used for downloading the bundle.
+//
+// pkgType is the package's type. Without URL, the bundle is the release's own
+// packslip.sigstore.json, in the same release as the package's asset.
+func (p *Packslip) ToDownloadedFile(pkgType string) *DownloadedFile {
+	if p.URL != nil {
+		return &DownloadedFile{
+			Type: PkgInfoTypeHTTP,
+			URL:  p.URL,
+		}
+	}
+	asset := BundleAssetPackslip
+	return &DownloadedFile{
+		Type:  pkgType,
+		Asset: &asset,
+	}
 }
 
 // HasTrust reports whether the configuration says whom to trust.

@@ -11,6 +11,7 @@ Please see [Reference](/docs/reference/security/packslip) too.
 ## Fields
 
 - enabled (bool)
+- url (string) (optional): The URL of the packslip bundle. If it isn't set, `packslip.sigstore.json` is downloaded from the package's release. Packages that aren't release assets, such as the `http` type, require it.
 - pubkey (string): The public key of a key-signed release, as its base64 line. `packslip verify --pubkey`
 - identity (string): The exact certificate identity a keyless signer must have, including its ref. `packslip verify --identity`
 - identity_prefix (string): A prefix the certificate identity must start with, such as `https://github.com/owner/repo/`. `packslip verify --identity-prefix`
@@ -25,5 +26,12 @@ e.g.
 ```yaml
 packslip:
   identity_prefix: https://github.com/jdx/hk/
+  issuer: https://token.actions.githubusercontent.com
+```
+
+```yaml
+packslip:
+  url: https://example.com/mytool/{{.Version}}/packslip.sigstore.json
+  identity_prefix: https://github.com/owner/mytool/
   issuer: https://token.actions.githubusercontent.com
 ```

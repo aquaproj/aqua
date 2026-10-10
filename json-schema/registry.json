@@ -623,6 +623,9 @@
         "enabled": {
           "type": "boolean"
         },
+        "url": {
+          "type": "string"
+        },
         "pubkey": {
           "type": "string"
         },

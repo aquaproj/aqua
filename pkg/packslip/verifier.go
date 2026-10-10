@@ -60,7 +60,7 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 	}()
 
 	bundlePath := filepath.Join(tempDir, registry.BundleAssetPackslip)
-	if err := v.downloadBundle(ctx, logger, rt, art, file, bundlePath); err != nil {
+	if err := v.downloadBundle(ctx, logger, rt, ps, art, file, bundlePath); err != nil {
 		return err
 	}
 
@@ -87,14 +87,10 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 	})
 }
 
-func (v *Verifier) downloadBundle(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, art *template.Artifact, file *download.File, dest string) error {
-	asset := registry.BundleAssetPackslip
-	f, err := download.ConvertDownloadedFileToFile(&registry.DownloadedFile{
-		Type:  file.Type,
-		Asset: &asset,
-	}, file, rt, art)
+func (v *Verifier) downloadBundle(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, ps *registry.Packslip, art *template.Artifact, file *download.File, dest string) error {
+	f, err := download.ConvertDownloadedFileToFile(ps.ToDownloadedFile(file.Type), file, rt, art)
 	if err != nil {
-		return err //nolint:wrapcheck
+		return fmt.Errorf("get where the packslip bundle is: %w", err)
 	}
 
 	rc, _, err := v.downloader.ReadCloser(ctx, logger, f)

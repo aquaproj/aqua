@@ -10,6 +10,7 @@ aqua supports verifying packages with [packslip](https://github.com/jdx/packslip
 packslip publishes a signed release bundle `packslip.sigstore.json` in a release, which records the digests of the release's artifacts.
 
 aqua downloads `packslip.sigstore.json` from the package's release and runs `packslip verify` against the downloaded asset.
+If the bundle is somewhere else, or the package isn't a release asset (e.g. the `http` type), set `url` to download it from.
 aqua installs packslip automatically, so you don't need to install it.
 
 ## Example
