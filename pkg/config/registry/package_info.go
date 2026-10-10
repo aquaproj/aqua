@@ -60,6 +60,13 @@ const (
 	PkgInfoTypeGitLabRelease = "gitlab_release"
 )
 
+// defaultGitLabHost is the instance a gitlab_release package is on when it says none.
+//
+// GitLab has one instance nearly every package on it is on, so a definition saying
+// gitlab.com would be saying the obvious. Forgejo and Gitea have no such instance --
+// Codeberg is one of many -- so their types ask.
+const defaultGitLabHost = "gitlab.com"
+
 // OnInstanceType says whether a package type is on a forge instance of its own, which is
 // what Host names and what every other type has no need of.
 //
@@ -506,6 +513,22 @@ func (p *PackageInfo) HasRepo() bool {
 	return p.RepoOwner != "" && p.RepoName != ""
 }
 
+// GetHost returns the instance the package is on.
+//
+// It is the Host the definition gives, or gitlab.com for a gitlab_release package that
+// gives none. Everything that reads where a package is reads this rather than the field,
+// so the default is in one place: the name, the link, the install path, the checksum id,
+// the download URL and the version listing all say the same instance.
+func (p *PackageInfo) GetHost() string {
+	if p.Host != "" {
+		return p.Host
+	}
+	if p.Type == PkgInfoTypeGitLabRelease {
+		return defaultGitLabHost
+	}
+	return ""
+}
+
 // GetName returns the effective name of the package.
 // It uses the Name field if set, otherwise derives it from repository or path information.
 func (p *PackageInfo) GetName() string {
@@ -513,11 +536,11 @@ func (p *PackageInfo) GetName() string {
 		return p.Name
 	}
 	if p.HasRepo() {
-		if OnInstanceType(p.Type) && p.Host != "" {
+		if host := p.GetHost(); OnInstanceType(p.Type) && host != "" {
 			// The instance is part of the name: codeberg.org's mergiraf/mergiraf
 			// is not github.com's, and a name without the instance would be the
 			// name a GitHub repository of the same owner and name already has.
-			return p.Host + "/" + p.RepoOwner + "/" + p.RepoName
+			return host + "/" + p.RepoOwner + "/" + p.RepoName
 		}
 		return p.RepoOwner + "/" + p.RepoName
 	}
@@ -546,8 +569,8 @@ func (p *PackageInfo) GetLink() string {
 		return p.Link
 	}
 	if p.HasRepo() {
-		if OnInstanceType(p.Type) && p.Host != "" {
-			return "https://" + p.Host + "/" + p.RepoOwner + "/" + p.RepoName
+		if host := p.GetHost(); OnInstanceType(p.Type) && host != "" {
+			return "https://" + host + "/" + p.RepoOwner + "/" + p.RepoName
 		}
 		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
 	}
@@ -768,10 +791,11 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 		// which is given a registry's packages without validating them. A host that
 		// isn't one would be a path out of where the type's packages are, and what
 		// is at the end of that path is removed.
-		if !hostOnly(p.Host) || p.RepoOwner == "" || p.RepoName == "" {
+		host := p.GetHost()
+		if !hostOnly(host) || p.RepoOwner == "" || p.RepoName == "" {
 			return nil
 		}
-		return []string{filepath.Join(p.Type, p.Host, p.RepoOwner, p.RepoName)}
+		return []string{filepath.Join(p.Type, host, p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
 		if p.Crate == "" {
 			return nil
@@ -921,10 +945,11 @@ func (p *PackageInfo) repoPathOnly() bool {
 // validateForgeRelease checks the fields a release on a forge instance is found by. The
 // instance is one of them: unlike github.com it isn't implied by the type.
 func (p *PackageInfo) validateForgeRelease() error {
-	if p.Host == "" {
+	host := p.GetHost()
+	if host == "" {
 		return errHostRequired
 	}
-	if !hostOnly(p.Host) {
+	if !hostOnly(host) {
 		return errHostInvalid
 	}
 	if p.Private {

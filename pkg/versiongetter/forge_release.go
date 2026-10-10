@@ -99,7 +99,7 @@ func (g *ForgeReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logger
 	// an instance can be configured to answer with fewer items than were asked for, and
 	// stopping there would hide every release after the first page.
 	for page := 1; page <= forge.MaxPages; page++ {
-		releases, err := client.list(ctx, pkg.Host, pkg.RepoOwner, pkg.RepoName, page, client.maxPerPage)
+		releases, err := client.list(ctx, pkg.GetHost(), pkg.RepoOwner, pkg.RepoName, page, client.maxPerPage)
 		if err != nil {
 			return "", fmt.Errorf("list releases: %w", err)
 		}
@@ -129,7 +129,7 @@ func (g *ForgeReleaseVersionGetter) List(ctx context.Context, logger *slog.Logge
 	var items []*fuzzyfinder.Item
 	tags := map[string]struct{}{}
 	for page := 1; page <= forge.MaxPages; page++ {
-		releases, err := client.list(ctx, pkg.Host, pkg.RepoOwner, pkg.RepoName, page, perPage)
+		releases, err := client.list(ctx, pkg.GetHost(), pkg.RepoOwner, pkg.RepoName, page, perPage)
 		if err != nil {
 			return nil, fmt.Errorf("list releases: %w", err)
 		}
@@ -167,7 +167,7 @@ func (g *ForgeReleaseVersionGetter) List(ctx context.Context, logger *slog.Logge
 // An error rather than a nil client: a type nothing reads and an instance nothing names
 // are both a question this can't answer, and a nil client would answer it by panicking.
 func (g *ForgeReleaseVersionGetter) client(pkg *registry.PackageInfo) (*forgeReader, error) {
-	if pkg.Host == "" {
+	if pkg.GetHost() == "" {
 		return nil, errForgeHostRequired
 	}
 	client, ok := g.clients[pkg.Type]

@@ -11,7 +11,6 @@ The package is downloaded from the releases of a project on a [GitLab](https://a
 ```yaml
 packages:
   - type: gitlab_release
-    host: gitlab.com
     repo_owner: gitlab-org
     repo_name: cli
     asset: glab_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}
@@ -29,10 +28,13 @@ packages:
 ## Required fields
 
 * type
-* host: The instance the project is on, such as `gitlab.com`
 * repo_owner: The project's namespace. A project inside subgroups carries all of it, e.g. `gitlab-org/security`
 * repo_name
 * asset: The template string of the release asset's name
+
+## Optional fields
+
+* host: The instance the project is on. It defaults to `gitlab.com`, which nearly every project on GitLab is on; a self-managed instance says its own host, under the same rule [forgejo_release](forgejo-release-package.md) describes (a host name, so no port and no sub-path)
 
 ## Where the asset is downloaded from
 

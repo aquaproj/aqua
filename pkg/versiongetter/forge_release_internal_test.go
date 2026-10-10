@@ -324,10 +324,6 @@ func TestForgeReleaseVersionGetter_client(t *testing.T) {
 		t.Fatal(err)
 	}
 	logger := slog.New(slog.DiscardHandler)
-	giteaClient := &fakeForge{pages: [][]*forge.Release{{{TagName: "v0.20.0"}}}}
-	gitlabClient := &fakeGitLab{pages: [][]*forge.Release{{{TagName: "v1.122.0"}}}}
-	getter := NewForgeRelease(giteaClient, gitlabClient)
-
 	for _, d := range []struct {
 		typ string
 		exp string
@@ -338,6 +334,11 @@ func TestForgeReleaseVersionGetter_client(t *testing.T) {
 	} {
 		t.Run(d.typ, func(t *testing.T) {
 			t.Parallel()
+			// A client of each per case: what the getter asked for is recorded on
+			// them, and the cases run at the same time.
+			gitlabClient := &fakeGitLab{pages: [][]*forge.Release{{{TagName: "v1.122.0"}}}}
+			getter := NewForgeRelease(
+				&fakeForge{pages: [][]*forge.Release{{{TagName: "v0.20.0"}}}}, gitlabClient)
 			version, err := getter.Get(context.Background(), logger,
 				&registry.PackageInfo{Type: d.typ, Host: "an.example.com", RepoOwner: "an-owner", RepoName: "a-repo"}, filters)
 			if err != nil {

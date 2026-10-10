@@ -55,6 +55,17 @@ func TestPackageInfo_GetName(t *testing.T) {
 			},
 		},
 		{
+			// GitLab has one instance nearly every package on it is on, so a
+			// definition saying gitlab.com would be saying the obvious.
+			title: "gitlab_release with no host",
+			exp:   "gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+			},
+		},
+		{
 			title: "gitlab_release",
 			exp:   "gitlab.com/gitlab-org/cli",
 			pkgInfo: &registry.PackageInfo{
@@ -139,6 +150,15 @@ func TestPackageInfo_GetLink(t *testing.T) {
 				Host:      "gitea.com",
 				RepoOwner: "gitea",
 				RepoName:  "tea",
+			},
+		},
+		{
+			title: "gitlab_release with no host",
+			exp:   "https://gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
 			},
 		},
 		{
@@ -533,6 +553,11 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 			title: "a GitLab instance",
 			typ:   registry.PkgInfoTypeGitLabRelease,
 			host:  "gitlab.com",
+			exp:   filepath.Join("gitlab_release", "gitlab.com", "mergiraf", "mergiraf"),
+		},
+		{
+			title: "a GitLab package that says no instance",
+			typ:   registry.PkgInfoTypeGitLabRelease,
 			exp:   filepath.Join("gitlab_release", "gitlab.com", "mergiraf", "mergiraf"),
 		},
 		{
@@ -1071,12 +1096,24 @@ func TestPackageInfo_Validate_gitLabRelease(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			title: "gitlab_release host is required",
+			// The instance a gitlab_release package is on is gitlab.com unless it
+			// says otherwise, so saying nothing is a definition that works.
+			title: "gitlab_release with no host",
 			pkgInfo: &registry.PackageInfo{
 				Type:      registry.PkgInfoTypeGitLabRelease,
 				RepoOwner: "gitlab-org",
 				RepoName:  "cli",
 				Asset:     "glab.tar.gz",
+			},
+		},
+		{
+			// The other two have no instance nearly every package is on, so they ask.
+			title: "gitea_release host is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea.xz",
 			},
 			isErr: true,
 		},

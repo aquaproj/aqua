@@ -95,6 +95,8 @@ A [forgejo_release](forgejo-release-package.md), [gitea_release](gitea-release-p
 * `name`: `<host>/<repo owner>/<repo name>`
 * `link`: `https://<host>/<repo owner>/<repo name>`
 
+A `gitlab_release` package that says no `host` is on `gitlab.com`, so its defaults are that host's.
+
 For example, in case of `codeberg.org` and `mergiraf/mergiraf`:
 
 ```yaml

@@ -61,7 +61,7 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		Type:      pkgInfo.Type,
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
-		Host:      pkgInfo.Host,
+		Host:      pkgInfo.GetHost(),
 		Version:   pkg.Package.Version,
 		Private:   pkgInfo.Private,
 	}

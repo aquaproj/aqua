@@ -103,7 +103,7 @@ func (dl *ChecksumDownloaderImpl) downloadForgeChecksum(ctx context.Context, rt 
 	if err != nil {
 		return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 	}
-	u, err := forgeReleaseURL(pkgInfo.Checksum.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, asset)
+	u, err := forgeReleaseURL(pkgInfo.Checksum.Type, pkgInfo.GetHost(), pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, asset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("build the URL of the checksum file: %w", err)
 	}

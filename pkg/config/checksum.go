@@ -34,7 +34,7 @@ func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
-		return path.Join(pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+		return path.Join(pkgInfo.Type, pkgInfo.GetHost(), pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {
@@ -79,7 +79,7 @@ func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
 	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
-		return path.Join(pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
+		return path.Join(pkgInfo.Type, pkgInfo.GetHost(), pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
 	case PkgInfoTypeHTTP:
 		rt, err := p.getRuntimeFromAsset(asset)
 		if err != nil {
