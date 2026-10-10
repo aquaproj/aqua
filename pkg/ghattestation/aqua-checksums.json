@@ -1,38 +1,38 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/cli/cli/v2.100.0/gh_2.100.0_linux_amd64.tar.gz",
-      "checksum": "E4D4BB4498E8D007ABE545B6568926793ACE1B6447DA598294A610018CB164BE",
+      "id": "github_release/github.com/cli/cli/v2.102.0/gh_2.102.0_linux_amd64.tar.gz",
+      "checksum": "BB766F710EEF8EDE859C18578C72C327597CD4C8A85B06001B1F3843C6019386",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cli/cli/v2.100.0/gh_2.100.0_linux_arm64.tar.gz",
-      "checksum": "EA4E7A581A32CCAD6CC7923CB1576AC5859BA4B9A16AB22EB8F8A96E78E2E961",
+      "id": "github_release/github.com/cli/cli/v2.102.0/gh_2.102.0_linux_arm64.tar.gz",
+      "checksum": "7862C86C72F43DF3A2D93DDDE6F473285B4E2AF61B494849846827E513EF6484",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cli/cli/v2.100.0/gh_2.100.0_macOS_amd64.zip",
-      "checksum": "FCD7799E85EB575F3C7D2B1679BFBFEDAEFA1269D4BC7D096B51E10939B4812B",
+      "id": "github_release/github.com/cli/cli/v2.102.0/gh_2.102.0_macOS_amd64.zip",
+      "checksum": "B245F24EB2BF5F75B426B4C26DA3651A107F8D5B6F4FDDFBFCCC5679041378B3",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cli/cli/v2.100.0/gh_2.100.0_macOS_arm64.zip",
-      "checksum": "45F9A62DA2F6E641A7FAD57E2CE39656DFD7EF331372D80A2A2AED65ABB01642",
+      "id": "github_release/github.com/cli/cli/v2.102.0/gh_2.102.0_macOS_arm64.zip",
+      "checksum": "DA922C20D1792E5B2CBF375593D7A658ACF034C12C84E007E71C76EF959C337E",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cli/cli/v2.100.0/gh_2.100.0_windows_amd64.zip",
-      "checksum": "227E35230B25DB3FA1B997BAB7CF4D67DF0470A3B75B99E4EE66BCE1A7CD4E72",
+      "id": "github_release/github.com/cli/cli/v2.102.0/gh_2.102.0_windows_amd64.zip",
+      "checksum": "AE64E556ECC240B200F7EBA60D550E4BB60D78E860E69DD88C449405B86067F4",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cli/cli/v2.100.0/gh_2.100.0_windows_arm64.zip",
-      "checksum": "7BEAEB4743CF255809A8E574A2724C685B566545E04EABEA284FE38A56C15B02",
+      "id": "github_release/github.com/cli/cli/v2.102.0/gh_2.102.0_windows_arm64.zip",
+      "checksum": "5DCF12AA8525EABD0C46EC414F323AB6CF65229FC2CD46543CC705001BBAF223",
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.567.0/registry.yaml",
-      "checksum": "F77615F1937F89ED9631704807B5AF340675932F4E7A29E9C180E9F8FDFA4AE9",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.573.1/registry.yaml",
+      "checksum": "7F95A2779ECA5740BF20BA529680C6DC7CA280811334A819A2D7870F41BFEFC5",
       "algorithm": "sha256"
     }
   ]

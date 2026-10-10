@@ -7,13 +7,13 @@ on:
 jobs:
   deploy_doc:
     timeout-minutes: 15
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
       issues: write
       id-token: write
     steps:
-      - uses: flatt-security/setup-takumi-guard-npm@6d4182745c1e474c35a023573c2612c085be45a4 # v1.2.0
+      - uses: flatt-security/setup-takumi-guard-npm@14f07d0cbc739b42a1b7c70a04c2b84cd1318ddd # v1.4.0
         with:
           bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
       - name: Move the npmrc to the user npmrc

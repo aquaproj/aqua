@@ -15,7 +15,7 @@ USAGE:
    aqua [global options] [command [command options]]
 
 VERSION:
-   2.63.0
+   2.64.0
 
 COMMANDS:
    init                   Create a configuration file if it doesn't exist
@@ -96,7 +96,7 @@ NAME:
    aqua install - Install tools
 
 USAGE:
-   aqua install [options]
+   aqua install [options] [<command or package name> ...]
 
 DESCRIPTION:
    Install tools according to the configuration files.
@@ -119,6 +119,13 @@ DESCRIPTION:
    e.g.
    $ aqua i -t foo # Install only packages having a tag "foo"
    $ aqua i --exclude-tags foo # Install only packages not having a tag "foo"
+
+   You can install only specific packages by passing command names or package names.
+   If any of them isn't found in configuration files, the command fails.
+
+   e.g.
+   $ aqua i gh # Install only the package having the command "gh"
+   $ aqua i cli/cli suzuki-shunsuke/tfcmt # Install only the packages "cli/cli" and "suzuki-shunsuke/tfcmt"
 
 
 OPTIONS:
@@ -288,7 +295,7 @@ NAME:
    aqua update-aqua - Update aqua
 
 USAGE:
-   aqua update-aqua [options] version 
+   aqua update-aqua [options] [version] 
 
 DESCRIPTION:
    Update aqua.
@@ -827,7 +834,7 @@ NAME:
    aqua policy allow - Allow a policy file
 
 USAGE:
-   aqua policy allow [options] policy_path 
+   aqua policy allow [options] [policy_path] 
 
 DESCRIPTION:
    Allow a policy file
@@ -856,7 +863,7 @@ NAME:
    aqua policy deny - Deny a policy file
 
 USAGE:
-   aqua policy deny [options] policy_path 
+   aqua policy deny [options] [policy_path] 
 
 DESCRIPTION:
    Deny a policy file
@@ -1108,7 +1115,6 @@ OPTIONS:
 
 GLOBAL OPTIONS:
    --log-level string                     log level [$AQUA_LOG_LEVEL]
-   --config string, -c string             configuration file path [$AQUA_CONFIG]
    --disable-cosign                       Disable Cosign verification [$AQUA_DISABLE_COSIGN]
    --disable-slsa                         Disable SLSA verification [$AQUA_DISABLE_SLSA]
    --disable-github-artifact-attestation  Disable GitHub Artifact Attestations verification [$AQUA_DISABLE_GITHUB_ARTIFACT_ATTESTATION]

@@ -112,4 +112,7 @@ func TestConfig_HasCommandAlias(t *testing.T) {
 	if !p.HasCommandAlias("bar") {
 		t.Fatal("HasCommandAlias(bar): wanted true, got false")
 	}
+	if !p.HasCommandAlias("BAR") {
+		t.Fatal("HasCommandAlias(BAR): wanted true, got false")
+	}
 }

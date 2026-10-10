@@ -16,6 +16,24 @@ type Filter struct {
 	NoAsset    bool
 }
 
+// filterTagName says whether a tag is one the package can be installed from.
+//
+// A prerelease never is: it is published to be tried rather than installed, and a
+// version filter that didn't exclude it would have to exclude it again for every
+// package. Otherwise the first filter whose constraint the tag meets answers, which is
+// what lets a version_override say a range of versions has no asset.
+func filterTagName(logger *slog.Logger, tagName string, prerelease bool, filters []*Filter) bool {
+	if prerelease {
+		return false
+	}
+	for _, filter := range filters {
+		if matchTagByFilter(logger, tagName, filter) {
+			return !filter.NoAsset
+		}
+	}
+	return false
+}
+
 func createFilters(pkgInfo *registry.PackageInfo) ([]*Filter, error) {
 	filters := make([]*Filter, 0, 1+len(pkgInfo.VersionOverrides))
 	topFilter := &Filter{

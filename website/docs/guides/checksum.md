@@ -165,7 +165,7 @@ Add a GitHub Actions job that runs a tampered package.
 
 ```yaml
   test:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     env:
@@ -173,7 +173,7 @@ Add a GitHub Actions job that runs a tampered package.
       AQUA_REQUIRE_CHECKSUM: "true"
     steps:
       - uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6-beta
-      - uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
+      - uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
         with:
           aqua_version: v2.48.3
         env:
@@ -225,7 +225,7 @@ on: pull_request
 permissions: {}
 jobs:
   autofix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions: {}
     timeout-minutes: 15
     steps:
@@ -234,7 +234,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install aqua
-        uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
+        uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
         with:
           aqua_version: v2.43.0
       - name: Fix aqua-checksums.json
@@ -256,7 +256,7 @@ on: pull_request
 permissions: {}
 jobs:
   securefix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions: {}
     timeout-minutes: 15
     steps:
@@ -265,7 +265,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install aqua
-        uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
+        uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
         with:
           aqua_version: v2.43.0
       - name: Fix aqua-checksums.json
@@ -291,7 +291,7 @@ on: pull_request
 permissions: {}
 jobs:
   update-aqua-checksums:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions: {}
     timeout-minutes: 15
     steps:
@@ -300,7 +300,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install aqua
-        uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
+        uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
         with:
           aqua_version: v2.43.0
       - name: Fix aqua-checksums.json

@@ -192,6 +192,40 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			title: "forgejo_release",
+			exp:   "/tmp/aqua/pkgs/forgejo_release/codeberg.org/mergiraf/mergiraf/v0.20.0/mergiraf.tar.gz",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      "forgejo_release",
+					Host:      "codeberg.org",
+					RepoOwner: "mergiraf",
+					RepoName:  "mergiraf",
+					Asset:     "mergiraf.{{.Format}}",
+					Format:    "tar.gz",
+				},
+				Package: &aqua.Package{
+					Version: "v0.20.0",
+				},
+			},
+		},
+		{
+			title: "gitea_release",
+			exp:   "/tmp/aqua/pkgs/gitea_release/gitea.com/gitea/tea/v0.16.0/tea.xz",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      "gitea_release",
+					Host:      "gitea.com",
+					RepoOwner: "gitea",
+					RepoName:  "tea",
+					Asset:     "tea.{{.Format}}",
+					Format:    "xz",
+				},
+				Package: &aqua.Package{
+					Version: "v0.16.0",
+				},
+			},
+		},
+		{
 			title: pkgTypeHTTP,
 			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
 			pkg: &config.Package{

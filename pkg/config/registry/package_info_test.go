@@ -2,6 +2,7 @@
 package registry_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
@@ -31,6 +32,37 @@ func TestPackageInfo_GetName(t *testing.T) {
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
+			},
+		},
+		{
+			title: "forgejo_release",
+			exp:   "codeberg.org/mergiraf/mergiraf",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+		},
+		{
+			title: "gitea_release",
+			exp:   "gitea.com/gitea/tea",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+			},
+		},
+		{
+			title: "forgejo_release with a name of its own",
+			exp:   "mergiraf",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Name:      "mergiraf",
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
 			},
 		},
 	}
@@ -66,6 +98,26 @@ func TestPackageInfo_GetLink(t *testing.T) {
 				Type:      "github_release",
 				RepoOwner: "suzuki-shunsuke",
 				RepoName:  "ci-info",
+			},
+		},
+		{
+			title: "forgejo_release",
+			exp:   "https://codeberg.org/mergiraf/mergiraf",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+		},
+		{
+			title: "gitea_release",
+			exp:   "https://gitea.com/gitea/tea",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
 			},
 		},
 	}
@@ -268,6 +320,22 @@ func TestPackageInfo_MaybeHasCommand(t *testing.T) {
 			},
 		},
 		{
+			title: "case-insensitive",
+			has:   []string{"CI-INFO", "Ci-Info.Prebuilt"},
+			lacks: []string{"ci-inf"},
+			pkgInfo: &registry.PackageInfo{
+				Type:      "github_release",
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Files: []*registry.File{
+					{
+						Name: "ci-info.prebuilt",
+					},
+				},
+				Build: &registry.Build{},
+			},
+		},
+		{
 			title: "has name",
 			has:   []string{"cmctl"},
 			pkgInfo: &registry.PackageInfo{
@@ -397,6 +465,464 @@ func TestPackageInfo_Validate(t *testing.T) {
 					return
 				}
 				t.Fatal(err)
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
+	}
+}
+
+// What aqua remove is given is a registry's packages, which nothing validated: whatever a
+// definition says the instance is, the path has to be one under where the type's packages
+// go, and one path rather than a pattern matching several.
+func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		title string
+		typ   string
+		host  string
+		exp   string
+	}{
+		{
+			title: "a Forgejo instance",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "codeberg.org",
+			exp:   filepath.Join("forgejo_release", "codeberg.org", "mergiraf", "mergiraf"),
+		},
+		{
+			// Each type's packages are its own: the same repository read as a Gitea
+			// release is not the same installation.
+			title: "a Gitea instance",
+			typ:   registry.PkgInfoTypeGiteaRelease,
+			host:  "gitea.com",
+			exp:   filepath.Join("gitea_release", "gitea.com", "mergiraf", "mergiraf"),
+		},
+		{
+			title: "a host that is a path out of the packages",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "../../..",
+		},
+		{
+			// aqua remove expands the path as a glob, so this one would be every
+			// instance's copy of the same owner and name.
+			title: "a host that is a pattern",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "*",
+		},
+		{
+			title: "a host that is a dot",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  ".",
+		},
+		{
+			title: "no instance at all",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "",
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			pkgInfo := &registry.PackageInfo{
+				Type:      d.typ,
+				Host:      d.host,
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+			}
+			paths := pkgInfo.PkgPaths()
+			if d.exp == "" {
+				if len(paths) != 0 {
+					t.Fatalf("wanted no path, got %v", paths)
+				}
+				return
+			}
+			if _, ok := paths[d.exp]; !ok || len(paths) != 1 {
+				t.Fatalf("wanted %s, got %v", d.exp, paths)
+			}
+		})
+	}
+}
+
+// The host is what says which instance the release is on, and it is read as a directory as
+// well, so what it may be is narrow.
+func TestPackageInfo_Validate_forgeRelease_host(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		pkgInfo *registry.PackageInfo
+		isErr   bool
+	}{
+		{
+			title: "forgejo_release host is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host written as a URL",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "https://codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host holding a path",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "example.com/git",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host carrying userinfo",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org@evil.example.com",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host that is a pattern",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.*",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host holding a character a host name can't",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org,elsewhere.example.com",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release host that is a dot segment",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "..",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			// The host is a directory as well, and a colon can't be one on Windows.
+			title: "forgejo_release host with a port",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "forgejo.example.com:3000",
+				RepoOwner: "an-owner",
+				RepoName:  "a-repo",
+				Asset:     "a-repo.tar.gz",
+			},
+			isErr: true,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if err := d.pkgInfo.Validate(); err != nil {
+				if !d.isErr {
+					t.Fatal(err)
+				}
+				return
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
+	}
+}
+
+// What else in a definition is a thing only github.com answers, and where the files beside
+// the asset come from.
+func TestPackageInfo_Validate_forgeRelease(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		pkgInfo *registry.PackageInfo
+		isErr   bool
+	}{
+		{
+			title: "forgejo_release repo is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:  registry.PkgInfoTypeForgejoRelease,
+				Name:  "codeberg.org/mergiraf/mergiraf",
+				Host:  "codeberg.org",
+				Asset: "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release asset is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release private is not supported",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+				Private:   true,
+			},
+			isErr: true,
+		},
+		{
+			title: "a github_release signature on a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Minisign: &registry.Minisign{
+					Type: registry.PkgInfoTypeGitHubRelease,
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a forgejo_release signature on a github_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Asset:     "ci-info.tar.gz",
+				Cosign: &registry.Cosign{
+					Signature: &registry.DownloadedFile{
+						Type: registry.PkgInfoTypeForgejoRelease,
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a github_release signature of the checksum file, inheriting the repository",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+					Minisign: &registry.Minisign{
+						Type: registry.PkgInfoTypeGitHubRelease,
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a github_release cosign signature of the checksum file, inheriting the repository",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+					Cosign: &registry.Cosign{
+						Signature: &registry.DownloadedFile{
+							Type: registry.PkgInfoTypeGitHubRelease,
+						},
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "attestations of the checksum file of a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:                       registry.PkgInfoTypeForgejoRelease,
+					Asset:                      "{{.Asset}}.sha256",
+					GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+				},
+			},
+			isErr: true,
+		},
+		{
+			// Wherever else a signature is published is nobody's mistake: what the
+			// check is for is a file that would take the package's owner and name,
+			// which on github.com are somebody else's repository.
+			title: "a github_release signature naming the repository it is in",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Minisign: &registry.Minisign{
+					Type:      registry.PkgInfoTypeGitHubRelease,
+					RepoOwner: "a-mirror",
+					RepoName:  "mergiraf",
+				},
+			},
+		},
+		{
+			title: "gitea_release",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea-{{trimV .Version}}-{{.OS}}-{{.Arch}}",
+			},
+		},
+		{
+			title: "gitea_release host is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea",
+			},
+			isErr: true,
+		},
+		{
+			title: "gitea_release private is not supported",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea",
+				Private:   true,
+			},
+			isErr: true,
+		},
+		{
+			// One client reads both, but a definition says which forge it is on, and
+			// a file beside the asset is on the same one.
+			title: "a gitea_release checksum file on a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGiteaRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a gitea_release checksum file on a gitea_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea.xz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGiteaRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+		},
+		{
+			title: "a forgejo_release checksum file on a forgejo_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+		},
+		{
+			title: "a forgejo_release checksum file on a github_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitHubRelease,
+				RepoOwner: "suzuki-shunsuke",
+				RepoName:  "ci-info",
+				Asset:     "ci-info.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeForgejoRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release doesn't support what only GitHub can verify",
+			pkgInfo: &registry.PackageInfo{
+				Type:           registry.PkgInfoTypeForgejoRelease,
+				Host:           "codeberg.org",
+				RepoOwner:      "mergiraf",
+				RepoName:       "mergiraf",
+				Asset:          "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+				SLSAProvenance: &registry.SLSAProvenance{},
+			},
+			isErr: true,
+		},
+		{
+			title: "forgejo_release",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if err := d.pkgInfo.Validate(); err != nil {
+				if !d.isErr {
+					t.Fatal(err)
+				}
+				return
 			}
 			if d.isErr {
 				t.Fatal("error must be returned")

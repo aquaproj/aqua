@@ -68,6 +68,7 @@ func (p *Package) PackageInfo() *registry.PackageInfo {
 		Type:                       p.Type,
 		RepoOwner:                  p.RepoOwner,
 		RepoName:                   p.RepoName,
+		Host:                       p.Host,
 		Asset:                      p.Asset,
 		URL:                        p.URL,
 		Format:                     p.Format,
