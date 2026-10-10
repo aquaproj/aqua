@@ -66,6 +66,18 @@ func TestForgeReleaseURL(t *testing.T) { //nolint:funlen
 			exp:   "https://gitlab.com/gitlab-org/security/cli/-/releases/v1.122.0/downloads/glab.tar.gz",
 		},
 		{
+			// An asset is named by the file path its release link was created with,
+			// which can be nested: those separators say where the file is.
+			title: "a GitLab asset that is a path",
+			typ:   config.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			owner: "an-owner",
+			repo:  "a-repo",
+			tag:   "v1.0.0",
+			asset: "binaries/linux-amd64",
+			exp:   "https://gitlab.com/an-owner/a-repo/-/releases/v1.0.0/downloads/binaries/linux-amd64",
+		},
+		{
 			title: "a GitLab tag holding a slash",
 			typ:   config.PkgInfoTypeGitLabRelease,
 			host:  "gitlab.com",

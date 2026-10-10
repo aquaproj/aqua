@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 // GitLab answers in its own words, and the translation is what the version getter reads,
@@ -156,8 +158,26 @@ func TestClient_GetRelease(t *testing.T) {
 		    "count": 2,
 		    "sources": [{"format": "zip", "url": "https://gitlab.com/x/-/archive/v1.122.0/x.zip"}],
 		    "links": [
-		      {"name": "glab_1.122.0_darwin_arm64.tar.gz"},
-		      {"name": "checksums.txt"}
+		      {
+		        "name": "glab_1.122.0_darwin_arm64.tar.gz",
+		        "url": "https://gitlab.com/api/v4/projects/1/packages/generic/glab/1%2E122%2E0/glab_1%2E122%2E0_darwin_arm64%2Etar%2Egz",
+		        "direct_asset_url": "https://gitlab.com/gitlab-org/cli/-/releases/v1.122.0/downloads/glab_1.122.0_darwin_arm64.tar.gz"
+		      },
+		      {
+		        "name": "package: RPM riscv64",
+		        "url": "https://gitlab.com/api/v4/projects/1/packages/generic/glab/1.122.0/glab.rpm",
+		        "direct_asset_url": "https://gitlab.com/gitlab-org/cli/-/releases/v1.122.0/downloads/packages/rpm/glab.rpm"
+		      },
+		      {
+		        "name": "glab_1.122.0_linux_s390x.rpm",
+		        "url": "https://gitlab.com/api/v4/projects/1/packages/generic/glab/1.122.0/glab.rpm",
+		        "direct_asset_url": "https://gitlab.com/api/v4/projects/1/packages/generic/glab/1.122.0/glab.rpm"
+		      },
+		      {
+		        "name": "binary: macOS arm64",
+		        "url": "https://downloads.example.com/v1.122.0/binaries/glab-darwin-arm64",
+		        "direct_asset_url": "https://gitlab.com/gitlab-org/cli/-/releases/v1.122.0/downloads/binaries/glab-darwin-arm64"
+		      }
 		    ]
 		  }
 		}`))
@@ -171,10 +191,20 @@ func TestClient_GetRelease(t *testing.T) {
 	if got.EscapedPath() != "/api/v4/projects/gitlab-org%2Fcli/releases/v1.122.0" {
 		t.Fatalf("wanted the release the tag names, got %s", got.EscapedPath())
 	}
-	// The links are the files the release publishes; the sources are archives GitLab
-	// makes of the tag, which is not what a package is installed from.
-	if len(release.Assets) != 2 || release.Assets[0] != "glab_1.122.0_darwin_arm64.tar.gz" {
-		t.Fatalf("wanted the names of the published files, got %v", release.Assets)
+	// The path the permanent link serves the file at, which is the file path the link
+	// was created with rather than the name beside it: the second link is named
+	// "package: RPM riscv64" and is served at packages/rpm/glab.rpm.
+	//
+	// Two are left out. The third has no permanent link -- GitLab answered with where
+	// the file was uploaded -- so there is no path to install it by. The fourth has
+	// one, but the file is on another host: asking the permanent link for it answers
+	// with the page GitLab shows before sending a reader to another site, which is
+	// HTML a download would save as the asset.
+	//
+	// The sources are archives GitLab makes of the tag, which is not what a package is
+	// installed from either.
+	if diff := cmp.Diff([]string{"glab_1.122.0_darwin_arm64.tar.gz", "packages/rpm/glab.rpm"}, release.Assets); diff != "" {
+		t.Fatalf("the assets are wrong (-want +got):\n%s", diff)
 	}
 }
 

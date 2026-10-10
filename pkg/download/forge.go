@@ -34,8 +34,9 @@ var (
 //
 // Each segment is escaped because a tag is upstream's text rather than ours: a version
 // such as kustomize/v5.8.1 holds a slash, and left as it is the slash would name a path
-// the instance doesn't serve. A GitLab namespace is the exception: a project in subgroups
-// is gitlab-org/security/cli, and those separators are part of where the project is.
+// the instance doesn't serve. GitLab's namespace and asset are the exceptions: a project
+// in subgroups is gitlab-org/security/cli, and an asset is named by the file path its
+// release link was created with, so their separators are part of where the file is.
 func forgeReleaseURL(typ, host, owner, repo, tag, asset string) (string, error) {
 	if host == "" {
 		return "", errForgeHostRequired
@@ -46,17 +47,19 @@ func forgeReleaseURL(typ, host, owner, repo, tag, asset string) (string, error) 
 			host, url.PathEscape(owner), url.PathEscape(repo), url.PathEscape(tag), url.PathEscape(asset)), nil
 	case config.PkgInfoTypeGitLabRelease:
 		return fmt.Sprintf("https://%s/%s/%s/-/releases/%s/downloads/%s",
-			host, escapeNamespace(owner), url.PathEscape(repo), url.PathEscape(tag), url.PathEscape(asset)), nil
+			host, escapePath(owner), url.PathEscape(repo), url.PathEscape(tag), escapePath(asset)), nil
 	default:
 		return "", slogerr.With(errForgeTypeUnknown, "package_type", typ) //nolint:wrapcheck
 	}
 }
 
-// escapeNamespace escapes each segment of a GitLab namespace, keeping the separators
-// between them: the segments say where the project is, and only what is inside one is
-// upstream's text.
-func escapeNamespace(namespace string) string {
-	segments := strings.Split(namespace, "/")
+// escapePath escapes each segment of a path, keeping the separators between them.
+//
+// Two things GitLab reads as paths need it: a namespace, whose segments say where the
+// project is, and an asset, which is named by the file path its release link was created
+// with and can be nested the same way. Only what is inside a segment is upstream's text.
+func escapePath(path string) string {
+	segments := strings.Split(path, "/")
 	for i, segment := range segments {
 		segments[i] = url.PathEscape(segment)
 	}
