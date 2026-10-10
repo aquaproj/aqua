@@ -78,6 +78,18 @@ func TestForgeReleaseURL(t *testing.T) { //nolint:funlen
 			exp:   "https://gitlab.com/an-owner/a-repo/-/releases/v1.0.0/downloads/binaries/linux-amd64",
 		},
 		{
+			// A release link can be created with a path holding a space, which
+			// the asset is named by: the permanent link writes it escaped.
+			title: "a GitLab asset holding a space",
+			typ:   config.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			owner: "an-owner",
+			repo:  "a-repo",
+			tag:   "v1.0.0",
+			asset: "glab 1.0.0 windows.zip",
+			exp:   "https://gitlab.com/an-owner/a-repo/-/releases/v1.0.0/downloads/glab%201.0.0%20windows.zip",
+		},
+		{
 			title: "a GitLab tag holding a slash",
 			typ:   config.PkgInfoTypeGitLabRelease,
 			host:  "gitlab.com",

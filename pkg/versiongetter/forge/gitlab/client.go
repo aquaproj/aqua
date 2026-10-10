@@ -137,8 +137,15 @@ func served(host, assetURL, directAssetURL string) (string, bool) {
 	if !found {
 		return "", false
 	}
-	_, path, found := strings.Cut(afterRelease, "/downloads/")
-	if !found || path == "" {
+	_, escaped, found := strings.Cut(afterRelease, "/downloads/")
+	if !found || escaped == "" {
+		return "", false
+	}
+	// The path arrives inside a URL, so it is escaped. What a definition says is the
+	// path itself -- a space is a space -- and what builds the download URL escapes it
+	// again. Left as it came, a space would be written %20 and escaped to %2520.
+	path, err := url.PathUnescape(escaped)
+	if err != nil || path == "" {
 		return "", false
 	}
 	return path, true

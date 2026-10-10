@@ -177,6 +177,11 @@ func TestClient_GetRelease(t *testing.T) {
 		        "name": "binary: macOS arm64",
 		        "url": "https://downloads.example.com/v1.122.0/binaries/glab-darwin-arm64",
 		        "direct_asset_url": "https://gitlab.com/gitlab-org/cli/-/releases/v1.122.0/downloads/binaries/glab-darwin-arm64"
+		      },
+		      {
+		        "name": "glab for windows",
+		        "url": "https://gitlab.com/api/v4/projects/1/packages/generic/glab/1.122.0/glab.zip",
+		        "direct_asset_url": "https://gitlab.com/gitlab-org/cli/-/releases/v1.122.0/downloads/glab%201.122.0%20windows.zip"
 		      }
 		    ]
 		  }
@@ -203,7 +208,15 @@ func TestClient_GetRelease(t *testing.T) {
 	//
 	// The sources are archives GitLab makes of the tag, which is not what a package is
 	// installed from either.
-	if diff := cmp.Diff([]string{"glab_1.122.0_darwin_arm64.tar.gz", "packages/rpm/glab.rpm"}, release.Assets); diff != "" {
+	//
+	// The fifth is named by a path holding a space, which the permanent link writes
+	// escaped. The path is what the file is called, and escaping it again is what
+	// builds the download URL.
+	if diff := cmp.Diff([]string{
+		"glab_1.122.0_darwin_arm64.tar.gz",
+		"packages/rpm/glab.rpm",
+		"glab 1.122.0 windows.zip",
+	}, release.Assets); diff != "" {
 		t.Fatalf("the assets are wrong (-want +got):\n%s", diff)
 	}
 }
