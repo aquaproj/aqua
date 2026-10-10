@@ -13,6 +13,7 @@ package gitlab
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -22,6 +23,9 @@ import (
 
 // MaxPerPage is the largest page GitLab answers with.
 const MaxPerPage = 100
+
+// errNoRelease is returned when a project has published none.
+var errNoRelease = errors.New("the project has no release")
 
 // Client reads one or more instances. Which instance is read is an argument rather than
 // state: a registry holds packages on several of them.
@@ -66,6 +70,14 @@ type release struct {
 	TagName     string `json:"tag_name"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Assets      struct {
+		// Links are the files the release publishes. GitLab has sources beside
+		// them -- the archives it makes of the tag -- which are not what a package
+		// is installed from.
+		Links []struct {
+			Name string `json:"name"`
+		} `json:"links"`
+	} `json:"assets"`
 	// UpcomingRelease says the release is dated in the future. GitLab has no draft, and
 	// this is the same answer to the same question: what it names isn't one to install
 	// from yet.
@@ -76,11 +88,54 @@ type release struct {
 }
 
 func (r *release) release() *forge.Release {
-	return &forge.Release{
+	out := &forge.Release{
 		TagName: r.TagName,
 		Name:    r.Name,
 		Body:    r.Description,
 		HTMLURL: r.Links.Self,
 		Draft:   r.UpcomingRelease,
+		Assets:  make([]string, 0, len(r.Assets.Links)),
 	}
+	for _, link := range r.Assets.Links {
+		out.Assets = append(out.Assets, link.Name)
+	}
+	return out
+}
+
+// GetRelease returns one of a project's releases: the one the tag names, or the newest
+// when the tag is empty.
+//
+// The newest is the first of the list rather than another endpoint's answer: GitLab orders
+// releases by when they were released, and asking for one page of one is asking for that.
+func (c *Client) GetRelease(ctx context.Context, host, project, tag string) (*forge.Release, error) {
+	if tag == "" {
+		releases, err := c.ListReleases(ctx, host, project, 1, 1)
+		if err != nil {
+			return nil, err
+		}
+		if len(releases) == 0 {
+			return nil, errNoRelease
+		}
+		return releases[0], nil
+	}
+	endpoint := fmt.Sprintf("https://%s/api/v4/projects/%s/releases/%s",
+		host, url.PathEscape(project), url.PathEscape(tag))
+	out := &release{}
+	if err := c.requester.GetJSON(ctx, endpoint, out); err != nil {
+		return nil, fmt.Errorf("get the release: %w", err)
+	}
+	return out.release(), nil
+}
+
+// GetDescription is what the project says it is, which is what a generated definition
+// describes the package as.
+func (c *Client) GetDescription(ctx context.Context, host, project string) (string, error) {
+	endpoint := fmt.Sprintf("https://%s/api/v4/projects/%s", host, url.PathEscape(project))
+	out := &struct {
+		Description string `json:"description"`
+	}{}
+	if err := c.requester.GetJSON(ctx, endpoint, out); err != nil {
+		return "", fmt.Errorf("get the project: %w", err)
+	}
+	return out.Description, nil
 }

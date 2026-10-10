@@ -71,15 +71,23 @@ type release struct {
 	HTMLURL    string `json:"html_url"`
 	Draft      bool   `json:"draft"`
 	Prerelease bool   `json:"prerelease"`
+	Assets     []struct {
+		Name string `json:"name"`
+	} `json:"assets"`
 }
 
 func (r *release) release() *forge.Release {
-	return &forge.Release{
+	out := &forge.Release{
 		TagName:    r.TagName,
 		Name:       r.Name,
 		Body:       r.Body,
 		HTMLURL:    r.HTMLURL,
 		Draft:      r.Draft,
 		Prerelease: r.Prerelease,
+		Assets:     make([]string, 0, len(r.Assets)),
 	}
+	for _, a := range r.Assets {
+		out.Assets = append(out.Assets, a.Name)
+	}
+	return out
 }

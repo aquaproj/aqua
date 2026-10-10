@@ -36,6 +36,18 @@ packages:
 
 * host: The instance the project is on. It defaults to `gitlab.com`, which nearly every project on GitLab is on; a self-managed instance says its own host, under the same rule [forgejo_release](forgejo-release-package.md) describes (a host name, so no port and no sub-path)
 
+## Generating the definition
+
+`aqua gr` writes it, the way it does for a GitHub repository, when the package name says the project is on gitlab.com:
+
+```console
+$ aqua gr gitlab.com/gitlab-org/cli
+```
+
+The name after the host is the project's path, so a project inside subgroups is `gitlab.com/gitlab-org/security/cli`. The asset naming is read off the release's own asset list, and `@<version>` names a release other than the newest.
+
+What it leaves out is what only GitHub answers: a signature identity in a workflow of a github.com repository, and provenance GitHub's verifier checks. A checksum file published with the release is kept, as the release's own.
+
 ## Where the asset is downloaded from
 
 GitLab serves a release's asset at a permanent link built from the project, the tag and the asset's name:

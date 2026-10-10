@@ -142,3 +142,95 @@ type roundTripper func(req *http.Request) (*http.Response, error)
 func (f roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
+
+// Generating a definition reads the release's asset names, which is the one thing
+// installing a version needs nothing of.
+func TestClient_GetRelease(t *testing.T) {
+	t.Parallel()
+	var got *url.URL
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.URL
+		_, _ = w.Write([]byte(`{
+		  "tag_name": "v1.122.0",
+		  "assets": {
+		    "count": 2,
+		    "sources": [{"format": "zip", "url": "https://gitlab.com/x/-/archive/v1.122.0/x.zip"}],
+		    "links": [
+		      {"name": "glab_1.122.0_darwin_arm64.tar.gz"},
+		      {"name": "checksums.txt"}
+		    ]
+		  }
+		}`))
+	}))
+	defer server.Close()
+
+	release, err := New(toServer(server)).GetRelease(context.Background(), "gitlab.com", "gitlab-org/cli", "v1.122.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.EscapedPath() != "/api/v4/projects/gitlab-org%2Fcli/releases/v1.122.0" {
+		t.Fatalf("wanted the release the tag names, got %s", got.EscapedPath())
+	}
+	// The links are the files the release publishes; the sources are archives GitLab
+	// makes of the tag, which is not what a package is installed from.
+	if len(release.Assets) != 2 || release.Assets[0] != "glab_1.122.0_darwin_arm64.tar.gz" {
+		t.Fatalf("wanted the names of the published files, got %v", release.Assets)
+	}
+}
+
+// With no tag, the newest release is the first of the list: GitLab orders them by when
+// they were released.
+func TestClient_GetRelease_latest(t *testing.T) {
+	t.Parallel()
+	var got *url.URL
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.URL
+		_, _ = w.Write([]byte(`[{"tag_name": "v1.122.0"}]`))
+	}))
+	defer server.Close()
+
+	release, err := New(toServer(server)).GetRelease(context.Background(), "gitlab.com", "gitlab-org/cli", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if release.TagName != "v1.122.0" {
+		t.Fatalf("wanted the newest release, got %s", release.TagName)
+	}
+	if q := got.Query(); q.Get("per_page") != "1" {
+		t.Fatalf("wanted one release asked for, got %s", got.RawQuery)
+	}
+}
+
+// A project that has published none has no newest one, which is not an empty answer.
+func TestClient_GetRelease_none(t *testing.T) {
+	t.Parallel()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	defer server.Close()
+
+	if _, err := New(toServer(server)).GetRelease(context.Background(), "gitlab.com", "gitlab-org/cli", ""); err == nil {
+		t.Fatal("an error must be returned")
+	}
+}
+
+func TestClient_GetDescription(t *testing.T) {
+	t.Parallel()
+	var got *url.URL
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.URL
+		_, _ = w.Write([]byte(`{"description": "A GitLab CLI tool bringing GitLab to your command line"}`))
+	}))
+	defer server.Close()
+
+	description, err := New(toServer(server)).GetDescription(context.Background(), "gitlab.com", "gitlab-org/cli")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.EscapedPath() != "/api/v4/projects/gitlab-org%2Fcli" {
+		t.Fatalf("wanted the project, got %s", got.EscapedPath())
+	}
+	if description != "A GitLab CLI tool bringing GitLab to your command line" {
+		t.Fatalf("wanted what the project says it is, got %q", description)
+	}
+}

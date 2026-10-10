@@ -3,6 +3,7 @@ package genrgst
 const (
 	pkgTypeCargo         = "cargo"
 	pkgTypeGitHubRelease = "github_release"
+	pkgTypeGitLabRelease = "gitlab_release"
 
 	flagCertOIDCIssuer     = "--certificate-oidc-issuer"
 	flagCertIdentityRegexp = "--certificate-identity-regexp"

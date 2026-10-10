@@ -2,6 +2,8 @@ package genrgst
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"log/slog"
 	"testing"
 
@@ -9,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -22,7 +25,55 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 		repo     *github.Repository
 		assets   []*github.ReleaseAsset
 		crate    *cargo.CratePayload
+		gitlab   *fakeGitLab
 	}{
+		{
+			// The name says where the project is, the way crates.io/<crate> does.
+			// What it doesn't have to say is the host or the package's own name:
+			// gitlab.com is where a gitlab_release package is, and
+			// <host>/<namespace>/<project> is what it is called.
+			name:    "a project on gitlab.com",
+			pkgName: "gitlab.com/gitlab-org/cli",
+			gitlab: &fakeGitLab{
+				description: "A GitLab CLI tool bringing GitLab to your command line",
+				release: &forge.Release{
+					TagName: "v1.122.0",
+					Assets: []string{
+						"glab_1.122.0_darwin_arm64.tar.gz",
+						"glab_1.122.0_linux_amd64.tar.gz",
+						"checksums.txt",
+					},
+				},
+			},
+			exp: &registry.PackageInfo{
+				Type:        pkgTypeGitLabRelease,
+				RepoOwner:   "gitlab-org",
+				RepoName:    "cli",
+				Description: "A GitLab CLI tool bringing GitLab to your command line",
+				Asset:       "glab_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+				Format:      "tar.gz",
+				SupportedEnvs: registry.SupportedEnvs{
+					"linux/amd64",
+					"darwin/arm64",
+				},
+				Checksum: &registry.Checksum{
+					// The file is in the release, which is on the instance: the
+					// inference knew only GitHub's releases.
+					Type:      pkgTypeGitLabRelease,
+					Asset:     "checksums.txt",
+					Algorithm: "sha256",
+				},
+			},
+		},
+		{
+			// A project needs a namespace.
+			name:    "a gitlab.com name with no project",
+			pkgName: "gitlab.com/gitlab-org",
+			exp: &registry.PackageInfo{
+				Name: "gitlab.com/gitlab-org",
+				Type: pkgTypeGitLabRelease,
+			},
+		},
 		{
 			name:    "package name doesn't have slash",
 			pkgName: pkgFoo,
@@ -148,13 +199,37 @@ func TestController_getPackageInfo(t *testing.T) { //nolint:funlen
 				CratePayload: d.crate,
 			}
 			var buf bytes.Buffer
-			ctrl := NewController(gh, nil, cargoClient, &buf)
+			gitlabClient := d.gitlab
+			if gitlabClient == nil {
+				gitlabClient = &fakeGitLab{}
+			}
+			ctrl := NewController(gh, nil, cargoClient, gitlabClient, &buf)
 			pkgInfo, _ := ctrl.getPackageInfo(ctx, logger, d.pkgName, &config.Param{}, &Config{})
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}
 		})
 	}
+}
+
+// fakeGitLab answers what a project on a GitLab instance says it is.
+type fakeGitLab struct {
+	description string
+	release     *forge.Release
+}
+
+func (f *fakeGitLab) GetDescription(_ context.Context, _, _ string) (string, error) {
+	if f.description == "" {
+		return "", errors.New("the project is not found")
+	}
+	return f.description, nil
+}
+
+func (f *fakeGitLab) GetRelease(_ context.Context, _, _, _ string) (*forge.Release, error) {
+	if f.release == nil {
+		return nil, errors.New("the project has no release")
+	}
+	return f.release, nil
 }
 
 func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen

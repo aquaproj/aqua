@@ -85,7 +85,8 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logger *sl
 	}
 	outputter := output.New(stdout)
 	client := cargo.NewClient(httpClient)
-	controller := genrgst.NewController(v, outputter, client, stdout)
+	gitlabClient := gitlab.New(httpClient)
+	controller := genrgst.NewController(v, outputter, client, gitlabClient, stdout)
 	return controller, nil
 }
 

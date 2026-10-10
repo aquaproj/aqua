@@ -123,6 +123,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logger *sl
 			cargo.NewClient,
 			wire.Bind(new(genrgst.CargoClient), new(*cargo.Client)),
 		),
+		wire.NewSet(
+			gitlab.New,
+			wire.Bind(new(genrgst.GitLabClient), new(*gitlab.Client)),
+		),
 	)
 	return &genrgst.Controller{}, nil
 }

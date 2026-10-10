@@ -31,6 +31,10 @@ type Release struct {
 	// same question.
 	Draft      bool
 	Prerelease bool
+	// Assets are the names of the files the release publishes. Installing a version
+	// needs none of them -- a definition says how an asset is named -- and generating
+	// that definition is read off exactly this list.
+	Assets []string
 }
 
 // Said is the start of what an instance answered with, on one line, for an error to carry.
