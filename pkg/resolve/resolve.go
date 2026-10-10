@@ -180,14 +180,18 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 	}
 
 	return &lockfile.Package{
-		Name:                       param.PkgName,
-		Version:                    param.Version,
-		OS:                         rt.GOOS,
-		Arch:                       rt.GOARCH,
-		Variants:                   variantsOf(rt),
-		Type:                       info.Type,
-		RepoOwner:                  info.RepoOwner,
-		RepoName:                   info.RepoName,
+		Name:      param.PkgName,
+		Version:   param.Version,
+		OS:        rt.GOOS,
+		Arch:      rt.GOARCH,
+		Variants:  variantsOf(rt),
+		Type:      info.Type,
+		RepoOwner: info.RepoOwner,
+		RepoName:  info.RepoName,
+		// The instance, for the types that are on one. Without it the entry would
+		// name a repository on github.com, where the same owner and name are
+		// somebody else's.
+		Host:                       info.Host,
 		Asset:                      assetName,
 		URL:                        url,
 		Format:                     info.GetFormat(),

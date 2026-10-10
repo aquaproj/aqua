@@ -158,6 +158,31 @@ func TestResolve_http(t *testing.T) {
 	}
 }
 
+// A release on a forge instance is a repository per instance, so the entry says which
+// one: without it, installing would read the same owner and name on github.com.
+func TestResolve_forgeInstance(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "codeberg.org/mergiraf/mergiraf",
+		Version: "v0.20.0",
+		PkgInfo: &registry.PackageInfo{
+			Type:          "forgejo_release",
+			Host:          "codeberg.org",
+			RepoOwner:     "mergiraf",
+			RepoName:      "mergiraf",
+			Asset:         "mergiraf_{{.Arch}}-{{.OS}}.{{.Format}}",
+			Format:        "tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pkgs[0].Host != "codeberg.org" {
+		t.Errorf("the host is %q, want the instance the release is on", pkgs[0].Host)
+	}
+}
+
 // A package that resolves to nothing anywhere can't be locked, and an empty list
 // would look like a successful resolution.
 func TestResolve_noSupportedEnv(t *testing.T) {
