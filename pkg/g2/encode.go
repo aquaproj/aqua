@@ -1,9 +1,8 @@
 // Package g2 reads aqua-registry-g2, the registry that serves statically resolved
 // registry.json instead of templates.
 //
-// Each package has its own orphan branch holding one registry.json per version, so
-// aqua fetches exactly the file it needs rather than a registry covering every
-// package. That is what lets a lock file be built without downloading a registry
+// Each package has its own directory holding one registry.json per version, so aqua
+// fetches exactly the file it needs rather than a registry covering every package. That is what lets a lock file be built without downloading a registry
 // whose other entries are irrelevant.
 package g2
 
@@ -13,10 +12,10 @@ import (
 	"strings"
 )
 
-// BranchPrefix marks the branches holding a package's generated registry.json.
-const BranchPrefix = "pkg_"
+// PackagesDir is the directory on the default branch holding every package.
+const PackagesDir = "pkgs"
 
-// VersionDir is the directory those files live in on the branch.
+// VersionDir is the directory in a package's directory those files live in.
 const VersionDir = "versions"
 
 // FileName is the generated file a version directory holds.
@@ -31,31 +30,35 @@ const VersionDir = "versions"
 // is recorded inside the file.
 const FileName = "registry-1.json"
 
-// IDBranchName returns the branch holding the package whose id this is.
+// PackageDir returns the directory holding the package whose id this is, such as
+// pkgs/69/1790772769.
 //
-// A branch is named after the package's id rather than after the package, so that a
+// The directory is named after the package's id rather than after the package, so that a
 // repository being renamed moves nothing: the name is resolved to an id through the table
-// the registry publishes, and everything else addresses the id.
-func IDBranchName(id string) string {
-	return BranchPrefix + id
+// the registry publishes, and everything else addresses the id. The id's last two digits
+// spread the packages over a hundred directories, since an id is the second it was minted.
+func PackageDir(id string) string {
+	return PackagesDir + "/" + Shard(id) + "/" + id
 }
 
-// BranchName returns the branch a package's generated registry.json was held on while
-// branches were named after the package.
-//
-// Nothing here addresses a package that way any more. It is what the registry's own tooling
-// reads to carry a package over to the branch named after its id, and it goes when those
-// branches go.
-func BranchName(pkgName string) string {
-	return BranchPrefix + EncodePackageName(pkgName)
+// shardWidth is how many of an id's trailing digits name its shard.
+const shardWidth = 2
+
+// Shard is the directory under PackagesDir the package whose id this is sits in.
+func Shard(id string) string {
+	if len(id) < shardWidth {
+		return strings.Repeat("0", shardWidth-len(id)) + id
+	}
+	return id[len(id)-shardWidth:]
 }
 
-// Path returns where the package's registry.json sits on its branch.
+// Path returns where the package's registry.json sits in the package's directory.
 func Path(version string) string {
 	return VersionDir + "/" + EncodeVersion(version) + "/" + FileName
 }
 
-// EncodePackageName escapes a package name so it can be used as a git ref.
+// EncodePackageName escapes a package name so that it is one path segment, which is how the
+// cache keeps a package's files under its name.
 //
 // Every character outside [A-Za-z0-9.-] becomes an underscore followed by two
 // lowercase hex digits. The underscore is escaped too, which is what makes the
@@ -67,13 +70,8 @@ func Path(version string) string {
 //	sr.ht/~charles/rq          -> sr.ht_2f_7echarles_2frq
 //	sue445/plant_erd           -> sue445_2fplant_5ferd
 //
-// The result stays within [A-Za-z0-9._-], so it needs no further escaping in a URL.
-// Percent-encoding would: a branch named with "%7E" has to be written "%257E" in a
-// raw URL, because the server decodes the escape before looking the ref up.
-//
-// It also contains no slash, so it is a single ref segment. That removes the
-// directory/file conflict which would otherwise stop "ipinfo/cli" and
-// "ipinfo/cli/grepip" from existing as branches at the same time.
+// The result stays within [A-Za-z0-9._-] and contains no slash, so "ipinfo/cli" and
+// "ipinfo/cli/grepip" are two directories side by side rather than one inside the other.
 func EncodePackageName(name string) string {
 	return encode(name)
 }
@@ -90,7 +88,7 @@ func EncodePackageName(name string) string {
 //	kustomize/v5.8.1   -> kustomize_2fv5.8.1
 //	@yarnpkg/cli/4.16.0 -> _40yarnpkg_2fcli_2f4.16.0
 //
-// It is the escaping a branch name uses, with the same reversibility. A version that
+// It is the escaping a package name uses, with the same reversibility. A version that
 // needs no escape is left as it is, which is nearly all of them.
 func EncodeVersion(version string) string {
 	return encode(version)
@@ -127,20 +125,6 @@ func isSafe(c byte) bool {
 		return true
 	}
 	return false
-}
-
-// PackageName returns the package a branch holds, or false when the branch isn't a
-// package's.
-//
-// The encoding was chosen to be reversible, which is why the underscore is escaped
-// along with everything else: a scheme turning a slash into two underscores couldn't
-// tell those apart from a package name that contains one.
-func PackageName(branch string) (string, bool) {
-	encoded, ok := strings.CutPrefix(branch, BranchPrefix)
-	if !ok {
-		return "", false
-	}
-	return DecodePackageName(encoded)
 }
 
 // DecodePackageName undoes EncodePackageName.

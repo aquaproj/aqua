@@ -48,11 +48,11 @@ type fakeBranches struct {
 	notHeld bool
 }
 
-func (f *fakeBranches) BranchOf(_ context.Context, _ *slog.Logger, pkgName string) (string, error) {
+func (f *fakeBranches) DirOf(_ context.Context, _ *slog.Logger, pkgName string) (string, error) {
 	if f.notHeld {
 		return "", fmt.Errorf("%w: %s", g2.ErrNoPackageBranch, pkgName)
 	}
-	return g2.IDBranchName("1790772767"), nil
+	return g2.PackageDir("1790772767"), nil
 }
 
 func newG2(versions ...string) *versiongetter.G2VersionGetter {

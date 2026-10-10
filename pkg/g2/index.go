@@ -16,10 +16,9 @@ import (
 
 // IndexFileName is the catalogue on aqua-registry-g2's main branch.
 //
-// Everything else about a package lives on its own branch, which is what keeps one
-// package's history out of another's. A catalogue can't: listing what a registry
-// holds is a question about all of them at once, and asking it branch by branch would
-// be thousands of requests to answer what one file answers.
+// Everything else about a package lives in its own directory. A catalogue can't: listing
+// what a registry holds is a question about all of them at once, and asking it package by
+// package would be thousands of requests to answer what one file answers.
 const IndexFileName = "index.json"
 
 // Index is what aqua-registry-g2 holds, as a list.
@@ -33,15 +32,15 @@ type Index struct {
 
 // IndexPackage is a package as it appears when searching for one.
 //
-// Only what a search shows or matches on: the rest is on the package's own branch and
+// Only what a search shows or matches on: the rest is in the package's own directory and
 // is read once a package has been chosen.
 type IndexPackage struct {
 	Name string `json:"name"`
-	// ID is what the package's branch is named after.
+	// ID is what the package's directory is named after.
 	//
 	// A name is not an identity. A repository can be renamed, and the name it leaves
-	// behind can be taken by a different repository, so a branch named after a name is
-	// a branch whose subject can change under it. The branch is named after something
+	// behind can be taken by a different repository, so a directory named after a name is
+	// one whose subject can change under it. The directory is named after something
 	// that never changes instead, and this catalogue is what turns a name -- the one a
 	// package has now, or one it used to have -- into it.
 	//
@@ -50,8 +49,7 @@ type IndexPackage struct {
 	// random characters, a serial -- is the registry's business and not part of what a
 	// consumer has to agree to.
 	//
-	// Empty while a package's branch is still named after it. Nothing resolves through
-	// this yet.
+	// Empty for a package taken over before the registry minted ids.
 	ID          string   `json:"id,omitempty"`
 	Description string   `json:"description,omitempty"`
 	Link        string   `json:"link,omitempty"`

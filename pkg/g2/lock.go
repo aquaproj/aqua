@@ -80,7 +80,7 @@ func lockFiles(files []*File) []*lockfile.File {
 // caller tries each in turn and keeps the first that answers.
 func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
 	// Both names reach the package: the table maps a name a repository used to have to
-	// the one it has now, and both of them to the same branch. So resolving is the
+	// the one it has now, and both of them to the same id. So resolving is the
 	// fetch's business, and what is left here is saying that the configuration asks for
 	// a name the registry no longer calls it.
 	reg, err := c.Get(ctx, logger, pkgName, version)
@@ -121,7 +121,7 @@ func NewDefault(dl Downloader, cache *Cache) *Client {
 // It is the reverse of LockPackages, and exists so that what generates aqua-registry-g2
 // and what reads it agree on the format by construction rather than by two
 // descriptions of it being kept in step. The package name, the version and the
-// registry are dropped: the branch and the path already say which package and which
+// registry are dropped: the path already says which package and which
 // version this is, and the registry is the repository the file sits in.
 func NewRegistry(pkgs []*lockfile.Package) *Registry {
 	reg := &Registry{Assets: make([]*Asset, 0, len(pkgs))}

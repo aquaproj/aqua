@@ -22,14 +22,14 @@ func (g *fakeTreeGetter) GetTree(_ context.Context, _, _, sha string, _ bool) (*
 	return g.tree, nil, g.err
 }
 
-// fakeBranches answers with the branch holding whatever package is asked for. What a lister
+// fakeBranches answers with the directory holding whatever package is asked for. What a lister
 // test is about is the tree, so the resolving is a constant here.
 type fakeBranches struct {
 	id  string
 	err error
 }
 
-func (f *fakeBranches) BranchOf(_ context.Context, _ *slog.Logger, _ string) (string, error) {
+func (f *fakeBranches) DirOf(_ context.Context, _ *slog.Logger, _ string) (string, error) {
 	if f.err != nil {
 		return "", f.err
 	}
@@ -37,7 +37,7 @@ func (f *fakeBranches) BranchOf(_ context.Context, _ *slog.Logger, _ string) (st
 	if id == "" {
 		id = "1790772767"
 	}
-	return g2.IDBranchName(id), nil
+	return g2.PackageDir(id), nil
 }
 
 func tree(truncated bool, entries ...*github.TreeEntry) *github.Tree {
@@ -82,9 +82,9 @@ func TestVersionLister_List(t *testing.T) {
 	if diff := cmp.Diff([]string{"v1.0.0", "v10.0.0", "v2.0.0"}, got); diff != "" {
 		t.Errorf("the versions are wrong (-want +got):\n%s", diff)
 	}
-	// The branch holding the package is where the versions are, and they are a directory
-	// in it.
-	if diff := cmp.Diff("pkg_1790772767:versions", gh.sha); diff != "" {
+	// The package's directory on the default branch is where the versions are, and they
+	// are a directory in it.
+	if diff := cmp.Diff("main:pkgs/67/1790772767/versions", gh.sha); diff != "" {
 		t.Errorf("the tree is wrong (-want +got):\n%s", diff)
 	}
 }

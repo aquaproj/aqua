@@ -16,37 +16,37 @@ type TreeGetter interface {
 	GetTree(ctx context.Context, owner, repo, sha string, recursive bool) (*github.Tree, *github.Response, error)
 }
 
-// Branches says which branch holds a package.
+// Dirs says which directory holds a package.
 //
-// A branch is named after the package's id, so a name has to be resolved before a branch can
-// be read at all.
-type Branches interface {
-	BranchOf(ctx context.Context, logger *slog.Logger, pkgName string) (string, error)
+// A package's directory is named after its id, so a name has to be resolved before the
+// directory can be read at all.
+type Dirs interface {
+	DirOf(ctx context.Context, logger *slog.Logger, pkgName string) (string, error)
 }
 
 // VersionLister lists the versions aqua-registry-g2 holds for a package.
 type VersionLister struct {
 	git       TreeGetter
-	branches  Branches
+	dirs      Dirs
 	repoOwner string
 	repoName  string
 }
 
 // NewVersionLister creates a VersionLister. An empty owner or name falls back to
 // aqua-registry-g2.
-func NewVersionLister(git TreeGetter, branches Branches, repoOwner, repoName string) *VersionLister {
+func NewVersionLister(git TreeGetter, dirs Dirs, repoOwner, repoName string) *VersionLister {
 	if repoOwner == "" {
 		repoOwner = DefaultRepoOwner
 	}
 	if repoName == "" {
 		repoName = DefaultRepoName
 	}
-	return &VersionLister{git: git, branches: branches, repoOwner: repoOwner, repoName: repoName}
+	return &VersionLister{git: git, dirs: dirs, repoOwner: repoOwner, repoName: repoName}
 }
 
 // NewDefaultVersionLister creates a VersionLister reading aqua-registry-g2.
-func NewDefaultVersionLister(git TreeGetter, branches Branches) *VersionLister {
-	return NewVersionLister(git, branches, "", "")
+func NewDefaultVersionLister(git TreeGetter, dirs Dirs) *VersionLister {
+	return NewVersionLister(git, dirs, "", "")
 }
 
 // List returns every version of a package that g2 has generated a registry.json for.
@@ -66,21 +66,20 @@ func (l *VersionLister) List(ctx context.Context, logger *slog.Logger, pkgName s
 	//
 	// The tree is read recursively so that a version is recognised by the file it
 	// holds rather than by being a directory. See versionOf.
-	branch, err := l.branches.BranchOf(ctx, logger, pkgName)
+	dir, err := l.dirs.DirOf(ctx, logger, pkgName)
 	if err != nil {
 		// Including the registry not holding the package, which the caller tells apart
 		// from a failure to read it.
 		return nil, err //nolint:wrapcheck // the error already says what it couldn't resolve
 	}
-	tree, resp, err := l.git.GetTree(ctx, l.repoOwner, l.repoName, branch+":"+VersionDir, true)
+	tree, resp, err := l.git.GetTree(ctx, l.repoOwner, l.repoName, DefaultBranch+":"+dir+"/"+VersionDir, true)
 	if err != nil {
-		// No branch for the package, or no repository at all while g2 is being
-		// filled in. Either way it holds nothing for this package, which is not the
-		// same as having failed to answer.
+		// No versions for the package, or no repository at all. Either way it holds
+		// nothing for this package, which is not the same as having failed to answer.
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
 			return nil, fmt.Errorf("%w: %s", ErrNoPackageBranch, pkgName)
 		}
-		return nil, fmt.Errorf("get the versions directory of a package branch: %w", err)
+		return nil, fmt.Errorf("get the versions directory of a package: %w", err)
 	}
 	if resp != nil {
 		logger.Debug("GitHub API Rate Limit info",

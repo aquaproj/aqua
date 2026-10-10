@@ -19,8 +19,8 @@ const (
 	DefaultRepoName  = "aqua-registry-g2"
 )
 
-// DefaultBranch holds what the registry is as a whole -- the catalogue and the table of
-// other names -- as opposed to a package's own branch, which holds that package.
+// DefaultBranch holds the registry: the catalogue, the table of names, and every package
+// under PackagesDir.
 const DefaultBranch = "main"
 
 // Registry is the content of a package version's registry.json.
@@ -180,37 +180,35 @@ func (c *Client) Get(ctx context.Context, logger *slog.Logger, pkgName, version 
 	return registry, nil
 }
 
-// BranchOf returns the branch holding the package.
+// DirOf returns the directory holding the package.
 //
-// The branch is named after the package's id, so the name has to be resolved before anything
-// can be asked for. The cached table answers first, which costs nothing; a name it doesn't
+// The directory is named after the package's id, so the name has to be resolved before
+// anything can be asked for. The cached table answers first, which costs nothing; a name it doesn't
 // know is a package that arrived after it was written -- or one this registry doesn't hold --
 // and the registry's own table tells those apart and is cached so that the next run knows.
 //
 // A miss is the signal rather than an age, because a miss is what a stale table looks like
 // from here: a name it knows is a name it knows, whenever it was written.
-func (c *Client) BranchOf(ctx context.Context, logger *slog.Logger, pkgName string) (string, error) {
+func (c *Client) DirOf(ctx context.Context, logger *slog.Logger, pkgName string) (string, error) {
 	if id, ok := c.cachedNames().ID(pkgName); ok {
-		return IDBranchName(id), nil
+		return PackageDir(id), nil
 	}
 	if id, ok := c.fetchNames(ctx, logger).ID(pkgName); ok {
-		return IDBranchName(id), nil
+		return PackageDir(id), nil
 	}
 	return "", fmt.Errorf("%w: %s", ErrNoPackageBranch, pkgName)
 }
 
 func (c *Client) download(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]byte, error) {
-	branch, err := c.BranchOf(ctx, logger, pkgName)
+	dir, err := c.DirOf(ctx, logger, pkgName)
 	if err != nil {
 		return nil, err
 	}
 	file, err := c.dl.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
 		RepoOwner: c.repoOwner,
 		RepoName:  c.repoName,
-		// Each package has its own branch, so the ref carries the package and the
-		// path carries the version.
-		Ref:  branch,
-		Path: Path(version),
+		Ref:       DefaultBranch,
+		Path:      dir + "/" + Path(version),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("download registry.json: %w", err)

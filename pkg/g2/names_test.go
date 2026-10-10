@@ -157,7 +157,7 @@ func opencode() *refDownloader {
 	return &refDownloader{files: map[string]string{
 		g2.DefaultBranch + ":" + g2.NamesFileName: `{"ids":{"anomalyco/opencode":"` + opencodeID + `"},
 			"aliases":{"sst/opencode":"anomalyco/opencode"}}`,
-		g2.IDBranchName(opencodeID) + ":" + g2.Path("v1.0.0"): `{"assets":[
+		g2.DefaultBranch + ":" + g2.PackageDir(opencodeID) + "/" + g2.Path("v1.0.0"): `{"assets":[
 			{"os":"linux","arch":"amd64","type":"github_release","repo_owner":"anomalyco",
 			 "repo_name":"opencode","asset":"opencode.tar.gz"}]}`,
 	}}
@@ -222,7 +222,7 @@ func TestClient_Resolve_staleTable(t *testing.T) {
 	// A run before the package arrived caches a table that doesn't hold it.
 	before := &refDownloader{files: map[string]string{
 		g2.DefaultBranch + ":" + g2.NamesFileName: `{"ids":{"cli/cli":"1790772769"},"aliases":{}}`,
-		g2.IDBranchName("1790772769") + ":" + g2.Path("v2.1.0"): `{"assets":[
+		g2.DefaultBranch + ":" + g2.PackageDir("1790772769") + "/" + g2.Path("v2.1.0"): `{"assets":[
 			{"os":"linux","arch":"amd64","type":"github_release","repo_owner":"cli",
 			 "repo_name":"cli","asset":"gh.tar.gz"}]}`,
 	}}

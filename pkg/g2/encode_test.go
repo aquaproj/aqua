@@ -42,21 +42,15 @@ func TestEncodePackageName(t *testing.T) {
 	}
 }
 
-// TestBranchName_prefixPairs checks the pairs that turning a slash into two
-// underscores could not represent: git refuses to hold refs/heads/a and
-// refs/heads/a/b at once, and aqua-registry has 30 package pairs in that shape.
-func TestBranchName_prefixPairs(t *testing.T) {
+func TestPackageDir(t *testing.T) {
 	t.Parallel()
-	a := g2.BranchName("ipinfo/cli")
-	b := g2.BranchName("ipinfo/cli/grepip")
-	if a == b {
-		t.Fatalf("the two packages encode to the same branch: %s", a)
-	}
-	for _, name := range []string{a, b} {
-		for _, c := range name {
-			if c == '/' {
-				t.Errorf("a branch name must be a single ref segment, got %s", name)
-			}
+	for id, want := range map[string]string{
+		"1790772769": "pkgs/69/1790772769",
+		"1790773000": "pkgs/00/1790773000",
+		"7":          "pkgs/07/7",
+	} {
+		if got := g2.PackageDir(id); got != want {
+			t.Errorf("PackageDir(%q) = %q, want %q", id, got, want)
 		}
 	}
 }
@@ -68,9 +62,9 @@ func TestPath(t *testing.T) {
 	}
 }
 
-// Encoding and decoding have to be exact inverses: the branch name is the only place
-// a package's name is written on its branch.
-func TestPackageName(t *testing.T) {
+// Encoding and decoding have to be exact inverses: the cache keeps a package's files under
+// its encoded name.
+func TestDecodePackageName(t *testing.T) {
 	t.Parallel()
 	for _, name := range []string{
 		"cli/cli",
@@ -81,7 +75,7 @@ func TestPackageName(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, ok := g2.PackageName(g2.BranchName(name))
+			got, ok := g2.DecodePackageName(g2.EncodePackageName(name))
 			if !ok {
 				t.Fatalf("%q didn't decode", name)
 			}
@@ -92,24 +86,21 @@ func TestPackageName(t *testing.T) {
 	}
 }
 
-// A branch that isn't a package's, or that no encoding could have produced, is
-// reported rather than turned into a name.
-func TestPackageName_notAPackage(t *testing.T) {
+// What no encoding could have produced is reported rather than turned into a name.
+func TestDecodePackageName_notEncoded(t *testing.T) {
 	t.Parallel()
-	for _, branch := range []string{
-		"main",
-		"ar2_cli_2fcli",
+	for _, encoded := range []string{
 		// A truncated escape.
-		"pkg_cli_2",
+		"cli_2",
 		// Not hexadecimal.
-		"pkg_cli_zzcli",
+		"cli_zzcli",
 		// An escape of a character that would never have been escaped.
-		"pkg_cli_61cli",
+		"cli_61cli",
 	} {
-		t.Run(branch, func(t *testing.T) {
+		t.Run(encoded, func(t *testing.T) {
 			t.Parallel()
-			if got, ok := g2.PackageName(branch); ok {
-				t.Errorf("%q decoded to %q, want a refusal", branch, got)
+			if got, ok := g2.DecodePackageName(encoded); ok {
+				t.Errorf("%q decoded to %q, want a refusal", encoded, got)
 			}
 		})
 	}
