@@ -183,6 +183,30 @@ func TestResolve_forgeInstance(t *testing.T) {
 	}
 }
 
+// A gitlab_release package is on gitlab.com unless it says otherwise, and the entry says
+// which instance even then: what reads it reads nothing else.
+func TestResolve_gitLabDefaultHost(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "gitlab.com/gitlab-org/cli",
+		Version: "v1.122.0",
+		PkgInfo: &registry.PackageInfo{
+			Type:          "gitlab_release",
+			RepoOwner:     "gitlab-org",
+			RepoName:      "cli",
+			Asset:         "glab_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+			Format:        "tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pkgs[0].Host != "gitlab.com" {
+		t.Errorf("the host is %q, want the instance a gitlab_release package is on", pkgs[0].Host)
+	}
+}
+
 // A package that resolves to nothing anywhere can't be locked, and an empty list
 // would look like a successful resolution.
 func TestResolve_noSupportedEnv(t *testing.T) {

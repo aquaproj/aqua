@@ -190,8 +190,11 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		RepoName:  info.RepoName,
 		// The instance, for the types that are on one. Without it the entry would
 		// name a repository on github.com, where the same owner and name are
-		// somebody else's.
-		Host:                       info.Host,
+		// somebody else's. A definition may leave it to the type's own default --
+		// a gitlab_release package is on gitlab.com unless it says otherwise -- and
+		// the entry says which instance either way, because what reads the entry
+		// reads nothing else.
+		Host:                       info.GetHost(),
 		Asset:                      assetName,
 		URL:                        url,
 		Format:                     info.GetFormat(),
