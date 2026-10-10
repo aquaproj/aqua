@@ -42,6 +42,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
+	"github.com/aquaproj/aqua/v2/pkg/packslip"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -159,6 +160,11 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
+	packslipExecutorImpl, err := packslip.NewExecutor(logger, executor, param)
+	if err != nil {
+		return nil, err
+	}
+	packslipVerifier := packslip.New(downloader, packslipExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -168,7 +174,7 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
 	client := vacuum.New(param)
-	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, packslipVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
 	validatorImpl := policy.NewValidator(param)
 	configFinderImpl := policy.NewConfigFinder()
 	configReaderImpl := policy.NewConfigReader()
@@ -218,6 +224,11 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
+	packslipExecutorImpl, err := packslip.NewExecutor(logger, executor, param)
+	if err != nil {
+		return nil, err
+	}
+	packslipVerifier := packslip.New(downloader, packslipExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -227,7 +238,7 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
 	client := vacuum.New(param)
-	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, packslipVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(v, httpDownloader)
@@ -262,6 +273,11 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
+	packslipExecutorImpl, err := packslip.NewExecutor(logger, executor, param)
+	if err != nil {
+		return nil, err
+	}
+	packslipVerifier := packslip.New(downloader, packslipExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -271,7 +287,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
 	client := vacuum.New(param)
-	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, packslipVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
 	controller := updateaqua.New(param, rt, v, installer)
 	return controller, nil
 }
@@ -296,6 +312,11 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
+	packslipExecutorImpl, err := packslip.NewExecutor(logger, executor, param)
+	if err != nil {
+		return nil, err
+	}
+	packslipVerifier := packslip.New(downloader, packslipExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -305,7 +326,7 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
 	client := vacuum.New(param)
-	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	installer := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, packslipVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
 	configFinder := finder.NewConfigFinder()
 	configReader := reader.New(param)
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(v, httpDownloader)
@@ -345,6 +366,11 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 		return nil, err
 	}
 	minisignVerifier := minisign.New(downloader, minisignExecutorImpl)
+	packslipExecutorImpl, err := packslip.NewExecutor(logger, executor, param)
+	if err != nil {
+		return nil, err
+	}
+	packslipVerifier := packslip.New(downloader, packslipExecutorImpl)
 	ghattestationExecutorImpl, err := ghattestation.NewExecutor(executor, param)
 	if err != nil {
 		return nil, err
@@ -354,7 +380,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 	goBuildInstallerImpl := installpackage.NewGoBuildInstallerImpl(executor)
 	cargoPackageInstallerImpl := installpackage.NewCargoPackageInstallerImpl(executor)
 	client := vacuum.New(param)
-	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
+	installpackageInstaller := installpackage.New(param, downloader, rt, linker, checksumDownloaderImpl, calculator, unarchiver, verifier, slsaVerifier, minisignVerifier, packslipVerifier, ghattestationVerifier, goInstallInstallerImpl, goBuildInstallerImpl, cargoPackageInstallerImpl, client)
 	controller := updatechecksum.New(param, configFinder, configReader, installer, rt, checksumDownloaderImpl, downloader, gitHubContentFileDownloader, installpackageInstaller)
 	return controller, nil
 }

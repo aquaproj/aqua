@@ -126,6 +126,15 @@ func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *D
 			asset:       param.Asset,
 			minisign:    pkgInfo.Minisign,
 		},
+		&packslipVerifier{
+			pkg:         ppkg,
+			installer:   is.packslipInstaller,
+			verifier:    is.packslipVerifier,
+			runtime:     is.runtime,
+			realRuntime: is.realRuntime,
+			asset:       param.Asset,
+			packslip:    pkgInfo.Packslip,
+		},
 	}
 
 	var tempFilePath string

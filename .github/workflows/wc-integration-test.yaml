@@ -412,6 +412,11 @@ jobs:
         working-directory: tests/minisign
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
+      - name: Test packslip
+        run: aqua -c aqua.yaml i
+        working-directory: tests/packslip
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
       - name: test Cosign, SLSA, and GitHub Artifact Attestations
         run: aqua i
         working-directory: tests/cosign

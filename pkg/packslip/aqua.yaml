@@ -1,0 +1,10 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
+checksum:
+  enabled: true
+  require_checksum: true
+registries:
+- type: standard
+  ref: v4.573.1 # renovate: depName=aquaproj/aqua-registry
+packages:
+- name: jdx/packslip@v1.6.0

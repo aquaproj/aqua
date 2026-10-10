@@ -1,0 +1,12 @@
+---
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+checksum:
+  enabled: true
+registries:
+  - name: packslip
+    type: local
+    path: registry.yaml
+packages:
+  - name: jdx/hk@v2.5.0
+    registry: packslip
