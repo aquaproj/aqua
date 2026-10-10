@@ -130,6 +130,9 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 	if strings.HasPrefix(pkgName, "crates.io/") {
 		return c.getCargoPackageInfo(ctx, logger, pkgName)
 	}
+	if strings.HasPrefix(pkgName, gitLabHost+"/") {
+		return c.getGitLabPackageInfo(ctx, logger, pkgName, version, limit, cfg)
+	}
 	splitPkgNames := strings.Split(pkgName, "/")
 	pkgInfo := &registry.PackageInfo{
 		Type:          pkgTypeGitHubRelease,

@@ -314,9 +314,13 @@ func (g *Getter) getChecksumsFromChecksumFile(pkg *config.Package, assetNames ma
 			},
 		}, nil
 	}
-	arr := make([]*checksum.Checksum, 0, len(m))
-	for assetName, chksum := range m {
-		if _, ok := assetNames[assetName]; !ok {
+	// Each asset is looked up the way installing one does, so the checksum is recorded
+	// under the asset aqua will then ask for: an asset named by a path is one entry of
+	// the file, whether the file wrote that path or only the file name.
+	arr := make([]*checksum.Checksum, 0, len(assetNames))
+	for assetName := range assetNames {
+		chksum, ok := checksum.FindChecksum(m, assetName)
+		if !ok {
 			continue
 		}
 		checksumID, err := pkg.ChecksumIDFromAsset(assetName)

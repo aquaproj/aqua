@@ -58,7 +58,7 @@ func (s *minisignVerifier) Verify(ctx context.Context, logger *slog.Logger, file
 	if err := s.verifier.Verify(ctx, logger, s.runtime, m, art, &download.File{
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
-		Host:      pkgInfo.Host,
+		Host:      pkgInfo.GetHost(),
 		Version:   pkg.Package.Version,
 	}, &minisign.ParamVerify{
 		ArtifactPath: file,

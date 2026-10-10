@@ -54,7 +54,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
-	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitea"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitlab"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/google/wire"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -127,6 +128,10 @@ func InitializeGenerateRegistryCommandController(ctx context.Context, logger *sl
 		wire.NewSet(
 			cargo.NewClient,
 			wire.Bind(new(genrgst.CargoClient), new(*cargo.Client)),
+		),
+		wire.NewSet(
+			gitlab.New,
+			wire.Bind(new(genrgst.GitLabClient), new(*gitlab.Client)),
 		),
 	)
 	return &genrgst.Controller{}, nil
@@ -241,8 +246,12 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 			wire.Bind(new(versiongetter.GoProxyClient), new(*goproxy.Client)),
 		),
 		wire.NewSet(
-			forge.New,
-			wire.Bind(new(versiongetter.ForgeReleaseClient), new(*forge.Client)),
+			gitea.New,
+			wire.Bind(new(versiongetter.GiteaReleaseClient), new(*gitea.Client)),
+		),
+		wire.NewSet(
+			gitlab.New,
+			wire.Bind(new(versiongetter.GitLabReleaseClient), new(*gitlab.Client)),
 		),
 	)
 	return &generate.Controller{}, nil
@@ -1002,8 +1011,12 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 			wire.Bind(new(versiongetter.GoProxyClient), new(*goproxy.Client)),
 		),
 		wire.NewSet(
-			forge.New,
-			wire.Bind(new(versiongetter.ForgeReleaseClient), new(*forge.Client)),
+			gitea.New,
+			wire.Bind(new(versiongetter.GiteaReleaseClient), new(*gitea.Client)),
+		),
+		wire.NewSet(
+			gitlab.New,
+			wire.Bind(new(versiongetter.GitLabReleaseClient), new(*gitlab.Client)),
 		),
 		wire.NewSet(
 			which.New,

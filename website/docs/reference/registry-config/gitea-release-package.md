@@ -34,6 +34,8 @@ packages:
 * repo_name
 * asset: The template string of the release asset's name
 
+A project on a GitLab instance is [gitlab_release](gitlab-release-package.md), which is read the same way by a client of its own.
+
 ## The same as `forgejo_release`
 
 Everything else about this type is what [forgejo_release](forgejo-release-package.md) says: the package name, what a `host` may be, which checksums and signatures can be read, and what is refused. Forgejo serves the API it inherited from Gitea, so aqua reads both with one client.

@@ -147,8 +147,8 @@ func groupByAllAsset(releases []*Release) []*Group {
 	for _, release := range releases {
 		assetNames := make([]string, len(release.assets))
 		semver := strings.TrimPrefix(release.Tag, release.VersionPrefix)
-		for i, asset := range release.assets {
-			assetNames[i] = replaceVersion(asset.GetName(), release.Tag, semver)
+		for i, assetName := range release.assets {
+			assetNames[i] = replaceVersion(assetName, release.Tag, semver)
 		}
 		sort.Strings(assetNames)
 		allAsset := strings.Join(assetNames, "\n")

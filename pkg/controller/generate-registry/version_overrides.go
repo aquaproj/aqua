@@ -27,7 +27,9 @@ type Release struct {
 	Tag           string
 	Version       *version.Version
 	VersionPrefix string
-	assets        []*github.ReleaseAsset
+	// assets are the names of the files the release publishes, which is all that is
+	// read of them: what tells two releases apart is how they name what they publish.
+	assets []string
 }
 
 func (r *Release) LessThan(r2 *Release) bool {
@@ -121,7 +123,15 @@ func excludeAsset(logger *slog.Logger, tag, asset string, cfg *Config) bool {
 	return !f
 }
 
-func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string { //nolint:cyclop
+func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string {
+	return c.versionOverrides(logger, pkgName, pkgInfo, c.gitHubReleases(ctx, logger, pkgInfo, limit, cfg), cfg)
+}
+
+// gitHubReleases are the releases of a GitHub repository, with what each publishes.
+//
+// The asset list comes per release rather than with it, because a release carries only
+// the first page of its own.
+func (c *Controller) gitHubReleases(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []*Release {
 	ghReleases := c.listReleases(ctx, logger, pkgInfo, limit)
 	releases := make([]*Release, 0, len(ghReleases))
 	for _, release := range ghReleases {
@@ -133,13 +143,34 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		if err != nil {
 			slogerr.WithError(logger, err).Warn("parse a tag as semver", "tag_name", tag)
 		}
-		releases = append(releases, &Release{
+		rel := &Release{
 			ID:            release.GetID(),
 			Tag:           tag,
 			Version:       v,
 			VersionPrefix: prefix,
-		})
+		}
+		info := &registry.PackageInfo{
+			Type:      pkgTypeGitHubRelease,
+			RepoOwner: pkgInfo.RepoOwner,
+			RepoName:  pkgInfo.RepoName,
+		}
+		arr := c.listReleaseAssets(ctx, logger, info, rel.ID)
+		logger.Debug("got assets", "num_of_assets", len(arr))
+		for _, asset := range arr {
+			if excludeAsset(logger, tag, asset.GetName(), cfg) {
+				continue
+			}
+			rel.assets = append(rel.assets, asset.GetName())
+		}
+		releases = append(releases, rel)
 	}
+	return releases
+}
+
+// versionOverrides builds the definition that answers for every release it is given, which
+// is what reading more than one of them is for: a package whose asset naming changed is a
+// version_override saying so.
+func (c *Controller) versionOverrides(logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, releases []*Release, cfg *Config) []string {
 	sort.Slice(releases, func(i, j int) bool {
 		r1 := releases[i]
 		r2 := releases[j]
@@ -150,30 +181,6 @@ func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, log
 		}
 		return v1.LessThan(v2)
 	})
-	for _, release := range releases {
-		pkgInfo := &registry.PackageInfo{
-			Type:      pkgTypeGitHubRelease,
-			RepoOwner: pkgInfo.RepoOwner,
-			RepoName:  pkgInfo.RepoName,
-		}
-		if release.VersionPrefix != "" {
-			pkgInfo.VersionPrefix = release.VersionPrefix
-		}
-		arr := c.listReleaseAssets(ctx, logger, pkgInfo, release.ID)
-		logger.Debug("got assets", "num_of_assets", len(arr))
-		assets := make([]*github.ReleaseAsset, 0, len(arr))
-		for _, asset := range arr {
-			if excludeAsset(logger, release.Tag, asset.GetName(), cfg) {
-				continue
-			}
-			assets = append(assets, asset)
-		}
-		if len(assets) == 0 {
-			continue
-		}
-		release.assets = assets
-	}
-
 	versions := c.generatePackage(logger, cfg, pkgInfo, pkgName, releases)
 	if len(pkgInfo.VersionOverrides) != 0 {
 		pkgInfo.VersionConstraints = "false"

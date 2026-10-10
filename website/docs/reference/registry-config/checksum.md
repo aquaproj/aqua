@@ -71,6 +71,11 @@ The following `type` are supported.
 
 - `github_release`
 - `http`
+- `forgejo_release`
+- `gitea_release`
+- `gitlab_release`
+
+The three instance types read the checksum file from the release the asset is in, the same way `github_release` does, and belong to a package of that same type.
 
 `github_release` requires the following attributes.
 
