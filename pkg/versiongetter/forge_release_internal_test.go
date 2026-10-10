@@ -8,19 +8,54 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitea"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitlab"
 )
 
 // fakeForge answers from pages written in the test, and records what it was asked for.
 type fakeForge struct {
-	pages [][]*forge.Release
-	limit int
-	calls int
-	err   error
+	pages   [][]*forge.Release
+	limit   int
+	calls   int
+	perPage int
+	err     error
+}
+
+// MaxPerPage is the page size the getter asks this client for; zero is gitea's, which is
+// what the tests that don't care about it read.
+func (f *fakeForge) MaxPerPage() int {
+	if f.perPage == 0 {
+		return gitea.MaxPerPage
+	}
+	return f.perPage
 }
 
 func (f *fakeForge) ListReleases(_ context.Context, _, _, _ string, page, limit int) ([]*forge.Release, error) {
 	f.calls++
 	f.limit = limit
+	if f.err != nil {
+		return nil, f.err
+	}
+	if page < 1 || page > len(f.pages) {
+		return nil, nil
+	}
+	return f.pages[page-1], nil
+}
+
+// fakeGitLab answers the way GitLab's client does, by project path, which is what tells
+// the two clients apart.
+type fakeGitLab struct {
+	pages   [][]*forge.Release
+	project string
+	err     error
+}
+
+func (f *fakeGitLab) MaxPerPage() int {
+	return gitlab.MaxPerPage
+}
+
+func (f *fakeGitLab) ListReleases(_ context.Context, _, project string, page, _ int) ([]*forge.Release, error) {
+	f.project = project
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -110,7 +145,7 @@ func TestForgeReleaseVersionGetter_Get(t *testing.T) { //nolint:funlen
 			if pkg == nil {
 				pkg = testPkg()
 			}
-			getter := NewForgeRelease(&fakeForge{pages: d.pages})
+			getter := NewForgeRelease(&fakeForge{pages: d.pages}, nil)
 			version, err := getter.Get(context.Background(), logger, pkg, filters)
 			if d.isErr {
 				if err == nil {
@@ -137,7 +172,7 @@ func TestForgeReleaseVersionGetter_Get_samePageForever(t *testing.T) {
 		t.Fatal(err)
 	}
 	client := &sameForgePage{release: &forge.Release{TagName: "v0.1.0", Draft: true}}
-	getter := NewForgeRelease(client)
+	getter := NewForgeRelease(client, nil)
 	version, err := getter.Get(context.Background(), slog.New(slog.DiscardHandler), testPkg(), filters)
 	if err != nil {
 		t.Fatal(err)
@@ -156,6 +191,11 @@ type sameForgePage struct {
 	calls   int
 }
 
+// MaxPerPage is gitea's, which is what the page bound is read against.
+func (f *sameForgePage) MaxPerPage() int {
+	return gitea.MaxPerPage
+}
+
 func (f *sameForgePage) ListReleases(_ context.Context, _, _, _ string, _, _ int) ([]*forge.Release, error) {
 	f.calls++
 	return []*forge.Release{f.release}, nil
@@ -167,7 +207,7 @@ func TestForgeReleaseVersionGetter_Get_error(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	getter := NewForgeRelease(&fakeForge{err: errors.New("the instance said no")})
+	getter := NewForgeRelease(&fakeForge{err: errors.New("the instance said no")}, nil)
 	if _, err := getter.Get(context.Background(), slog.New(slog.DiscardHandler), testPkg(), filters); err == nil {
 		t.Fatal("an error must be returned")
 	}
@@ -187,7 +227,7 @@ func TestForgeReleaseVersionGetter_List(t *testing.T) {
 		{TagName: "v0.19.1"},
 		{TagName: "v0.20.0"},
 	}}}
-	getter := NewForgeRelease(client)
+	getter := NewForgeRelease(client, nil)
 	items, err := getter.List(context.Background(), logger, testPkg(), filters, 0)
 	if err != nil {
 		t.Fatal(err)
@@ -204,7 +244,7 @@ func TestForgeReleaseVersionGetter_List(t *testing.T) {
 		{TagName: "v0.20.0"},
 		{TagName: "v0.19.1"},
 	}}}
-	getter = NewForgeRelease(client)
+	getter = NewForgeRelease(client, nil)
 	items, err = getter.List(context.Background(), logger, testPkg(), filters, 1)
 	if err != nil {
 		t.Fatal(err)
@@ -227,7 +267,7 @@ func TestForgeItemNumPerPage(t *testing.T) {
 	}{
 		{
 			title: "no limit, so as much as the instance will answer with",
-			exp:   forge.MaxPerPage,
+			exp:   gitea.MaxPerPage,
 		},
 		{
 			title: "a limit smaller than a page, and nothing filtered out",
@@ -238,36 +278,93 @@ func TestForgeItemNumPerPage(t *testing.T) {
 			title:     "a filter, so the page is full however small the limit is",
 			limit:     10,
 			filterNum: 1,
-			exp:       forge.MaxPerPage,
+			exp:       gitea.MaxPerPage,
 		},
 		{
 			title: "a limit larger than a page",
-			limit: forge.MaxPerPage + 1,
-			exp:   forge.MaxPerPage,
+			limit: gitea.MaxPerPage + 1,
+			exp:   gitea.MaxPerPage,
 		},
+	}
+	// Each API caps a page at its own number, which is the one the getter asks for.
+	if n := forgeItemNumPerPage(0, 0, gitlab.MaxPerPage); n != gitlab.MaxPerPage {
+		t.Fatalf("wanted GitLab's page, got %d", n)
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			if n := forgeItemNumPerPage(d.limit, d.filterNum); n != d.exp {
+			if n := forgeItemNumPerPage(d.limit, d.filterNum, gitea.MaxPerPage); n != d.exp {
 				t.Fatalf("wanted %d, got %d", d.exp, n)
 			}
 		})
 	}
 }
 
-// Both types are read by the same getter, because one client reads both forges.
+// Every type on a forge instance is read by the same getter, which is what picks the
+// client that speaks the instance's API.
 func TestGeneralVersionGetter_get_forge(t *testing.T) {
 	t.Parallel()
-	forgeGetter := NewForgeRelease(&fakeForge{})
+	forgeGetter := NewForgeRelease(&fakeForge{}, &fakeGitLab{})
 	getter := NewGeneralVersionGetter(nil, &GitHubTagVersionGetter{}, nil, forgeGetter, nil)
-	for _, typ := range []string{registry.PkgInfoTypeForgejoRelease, registry.PkgInfoTypeGiteaRelease} {
+	for _, typ := range []string{registry.PkgInfoTypeForgejoRelease, registry.PkgInfoTypeGiteaRelease, registry.PkgInfoTypeGitLabRelease} {
 		t.Run(typ, func(t *testing.T) {
 			t.Parallel()
 			if g := getter.get(&registry.PackageInfo{Type: typ, Host: "an.example.com"}); g != VersionGetter(forgeGetter) {
 				t.Fatalf("wanted the forge getter for %s, got %T", typ, g)
 			}
 		})
+	}
+}
+
+// Which client answers is the package's type, because the two APIs are not each other's.
+func TestForgeReleaseVersionGetter_client(t *testing.T) {
+	t.Parallel()
+	filters, err := createFilters(testPkg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger := slog.New(slog.DiscardHandler)
+	giteaClient := &fakeForge{pages: [][]*forge.Release{{{TagName: "v0.20.0"}}}}
+	gitlabClient := &fakeGitLab{pages: [][]*forge.Release{{{TagName: "v1.122.0"}}}}
+	getter := NewForgeRelease(giteaClient, gitlabClient)
+
+	for _, d := range []struct {
+		typ string
+		exp string
+	}{
+		{typ: registry.PkgInfoTypeForgejoRelease, exp: "v0.20.0"},
+		{typ: registry.PkgInfoTypeGiteaRelease, exp: "v0.20.0"},
+		{typ: registry.PkgInfoTypeGitLabRelease, exp: "v1.122.0"},
+	} {
+		t.Run(d.typ, func(t *testing.T) {
+			t.Parallel()
+			version, err := getter.Get(context.Background(), logger,
+				&registry.PackageInfo{Type: d.typ, Host: "an.example.com", RepoOwner: "an-owner", RepoName: "a-repo"}, filters)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if version != d.exp {
+				t.Fatalf("wanted %s, which is what that forge's client answers, got %s", d.exp, version)
+			}
+			if d.typ == registry.PkgInfoTypeGitLabRelease && gitlabClient.project != "an-owner/a-repo" {
+				t.Fatalf("wanted the project GitLab reads as one id, got %q", gitlabClient.project)
+			}
+		})
+	}
+}
+
+// A getter built without the client a type is read by refuses that type rather than
+// calling nothing.
+func TestForgeReleaseVersionGetter_client_missing(t *testing.T) {
+	t.Parallel()
+	filters, err := createFilters(testPkg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	getter := NewForgeRelease(&fakeForge{}, nil)
+	if _, err := getter.Get(context.Background(), slog.New(slog.DiscardHandler),
+		&registry.PackageInfo{Type: registry.PkgInfoTypeGitLabRelease, Host: "gitlab.com"}, filters); err == nil {
+		t.Fatal("an error must be returned")
 	}
 }
 

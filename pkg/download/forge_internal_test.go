@@ -10,10 +10,11 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/template"
 )
 
-func TestForgeReleaseURL(t *testing.T) {
+func TestForgeReleaseURL(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		title string
+		typ   string
 		host  string
 		owner string
 		repo  string
@@ -22,7 +23,8 @@ func TestForgeReleaseURL(t *testing.T) {
 		exp   string
 	}{
 		{
-			title: "normal",
+			title: "a Forgejo instance",
+			typ:   config.PkgInfoTypeForgejoRelease,
 			host:  "codeberg.org",
 			owner: "mergiraf",
 			repo:  "mergiraf",
@@ -32,6 +34,7 @@ func TestForgeReleaseURL(t *testing.T) {
 		},
 		{
 			title: "a tag holding a slash",
+			typ:   config.PkgInfoTypeGiteaRelease,
 			host:  "codeberg.org",
 			owner: "an-owner",
 			repo:  "a-repo",
@@ -39,11 +42,44 @@ func TestForgeReleaseURL(t *testing.T) {
 			asset: "a-repo.tar.gz",
 			exp:   "https://codeberg.org/an-owner/a-repo/releases/download/kustomize%2Fv5.8.1/a-repo.tar.gz",
 		},
+		{
+			// GitLab serves it at a path of its own: the permanent release link.
+			title: "a GitLab instance",
+			typ:   config.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			owner: "gitlab-org",
+			repo:  "cli",
+			tag:   "v1.122.0",
+			asset: "glab_1.122.0_linux_amd64.tar.gz",
+			exp:   "https://gitlab.com/gitlab-org/cli/-/releases/v1.122.0/downloads/glab_1.122.0_linux_amd64.tar.gz",
+		},
+		{
+			// A project in subgroups is named by its namespace, and those separators
+			// say where the project is rather than being upstream's text.
+			title: "a GitLab project in subgroups",
+			typ:   config.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			owner: "gitlab-org/security",
+			repo:  "cli",
+			tag:   "v1.122.0",
+			asset: "glab.tar.gz",
+			exp:   "https://gitlab.com/gitlab-org/security/cli/-/releases/v1.122.0/downloads/glab.tar.gz",
+		},
+		{
+			title: "a GitLab tag holding a slash",
+			typ:   config.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			owner: "an-owner",
+			repo:  "a-repo",
+			tag:   "cli/v1.0.0",
+			asset: "a-repo.tar.gz",
+			exp:   "https://gitlab.com/an-owner/a-repo/-/releases/cli%2Fv1.0.0/downloads/a-repo.tar.gz",
+		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			u, err := forgeReleaseURL(d.host, d.owner, d.repo, d.tag, d.asset)
+			u, err := forgeReleaseURL(d.typ, d.host, d.owner, d.repo, d.tag, d.asset)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -58,7 +94,16 @@ func TestForgeReleaseURL_noInstance(t *testing.T) {
 	t.Parallel()
 	// Nothing says where to download from, which is a URL that must not be built: it
 	// would be https:///an-owner/a-repo/..., a request to nowhere reported as a 404.
-	if _, err := forgeReleaseURL("", "an-owner", "a-repo", "v1.0.0", "a-repo.tar.gz"); err == nil {
+	if _, err := forgeReleaseURL(config.PkgInfoTypeForgejoRelease, "", "an-owner", "a-repo", "v1.0.0", "a-repo.tar.gz"); err == nil {
+		t.Fatal("an error must be returned")
+	}
+}
+
+// A type that is on no instance has no such URL, which is a caller asking the wrong
+// question rather than a definition being wrong.
+func TestForgeReleaseURL_unknownType(t *testing.T) {
+	t.Parallel()
+	if _, err := forgeReleaseURL(config.PkgInfoTypeHTTP, "an.example.com", "an-owner", "a-repo", "v1.0.0", "a-repo.tar.gz"); err == nil {
 		t.Fatal("an error must be returned")
 	}
 }
@@ -96,11 +141,11 @@ func TestConvertDownloadedFileToFile_forgeRelease(t *testing.T) {
 	}
 }
 
-// Both types are downloaded from the instance the package is on, and a package of either
+// Each type is downloaded from the instance the package is on, and a package of any
 // is read as the release it says it is.
 func TestConvertPackageToFile_forge(t *testing.T) {
 	t.Parallel()
-	for _, typ := range []string{config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease} {
+	for _, typ := range []string{config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease, config.PkgInfoTypeGitLabRelease} {
 		t.Run(typ, func(t *testing.T) {
 			t.Parallel()
 			file, err := ConvertPackageToFile(&config.Package{

@@ -55,6 +55,27 @@ func TestPackageInfo_GetName(t *testing.T) {
 			},
 		},
 		{
+			title: "gitlab_release",
+			exp:   "gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+			},
+		},
+		{
+			// A GitLab project in subgroups is named by its whole namespace.
+			title: "gitlab_release in subgroups",
+			exp:   "gitlab.com/gitlab-org/security/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org/security",
+				RepoName:  "cli",
+			},
+		},
+		{
 			title: "forgejo_release with a name of its own",
 			exp:   "mergiraf",
 			pkgInfo: &registry.PackageInfo{
@@ -118,6 +139,16 @@ func TestPackageInfo_GetLink(t *testing.T) {
 				Host:      "gitea.com",
 				RepoOwner: "gitea",
 				RepoName:  "tea",
+			},
+		},
+		{
+			title: "gitlab_release",
+			exp:   "https://gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
 			},
 		},
 	}
@@ -497,6 +528,12 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 			typ:   registry.PkgInfoTypeGiteaRelease,
 			host:  "gitea.com",
 			exp:   filepath.Join("gitea_release", "gitea.com", "mergiraf", "mergiraf"),
+		},
+		{
+			title: "a GitLab instance",
+			typ:   registry.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			exp:   filepath.Join("gitlab_release", "gitlab.com", "mergiraf", "mergiraf"),
 		},
 		{
 			title: "a host that is a path out of the packages",
@@ -999,5 +1036,154 @@ version_overrides:
 
 	if !vo2.SLSAProvenance.GetEnabled() {
 		t.Error("SLSAProvenance should be enabled in second version override")
+	}
+}
+
+// GitLab is read as a package on a forge instance like the other two, and is the first
+// type where the owner holding separators of its own is ordinary.
+func TestPackageInfo_Validate_gitLabRelease(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		pkgInfo *registry.PackageInfo
+		isErr   bool
+	}{
+		{
+			title: "gitlab_release",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+			},
+		},
+		{
+			// A project in subgroups: its namespace is where the project is, and
+			// every segment of it is a name a directory can have.
+			title: "a project in subgroups",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org/security",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+			},
+		},
+		{
+			title: "gitlab_release host is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "gitlab_release private is not supported",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+				Private:   true,
+			},
+			isErr: true,
+		},
+		{
+			title: "gitlab_release doesn't support what only GitHub can verify",
+			pkgInfo: &registry.PackageInfo{
+				Type:           registry.PkgInfoTypeGitLabRelease,
+				Host:           "gitlab.com",
+				RepoOwner:      "gitlab-org",
+				RepoName:       "cli",
+				Asset:          "glab.tar.gz",
+				SLSAProvenance: &registry.SLSAProvenance{},
+			},
+			isErr: true,
+		},
+		{
+			// The owner is a directory as well, and a dot segment would be a path out
+			// of where the type's packages go.
+			title: "an owner that is a path out of the packages",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org/..",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			// aqua remove expands the install path as a glob.
+			title: "a name that is a pattern",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "*",
+				Asset:     "glab.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			// A slash in the owner is GitLab's namespace and nothing else's: on the
+			// other instances it would be a path where a name belongs.
+			title: "a forgejo_release owner holding a separator",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf/elsewhere",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "a gitlab_release checksum file on a gitea_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea.xz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGitLabRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a gitlab_release checksum file on a gitlab_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGitLabRelease,
+					Asset: "checksums.txt",
+				},
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if err := d.pkgInfo.Validate(); err != nil {
+				if !d.isErr {
+					t.Fatal(err)
+				}
+				return
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
 	}
 }

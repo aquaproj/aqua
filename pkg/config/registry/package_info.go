@@ -51,12 +51,23 @@ const (
 	// differ is a change here rather than in every definition that named the wrong
 	// one.
 	PkgInfoTypeGiteaRelease = "gitea_release"
+	// PkgInfoTypeGitLabRelease installs packages from the release assets of a GitLab
+	// instance, such as gitlab.com.
+	//
+	// GitLab is not read the way the other two are: its API is its own, and so is the
+	// path a release asset is served at. What it shares with them is that the package
+	// is on an instance rather than on github.com, which is what Host says.
+	PkgInfoTypeGitLabRelease = "gitlab_release"
 )
 
-// onInstanceType says whether a package type is on a forge instance of its own, which is
+// OnInstanceType says whether a package type is on a forge instance of its own, which is
 // what Host names and what every other type has no need of.
-func onInstanceType(typ string) bool {
-	return typ == PkgInfoTypeForgejoRelease || typ == PkgInfoTypeGiteaRelease
+//
+// It is exported because what reads a package's versions asks the same question: a release
+// on an instance is read from that instance, and there are three types that are.
+func OnInstanceType(typ string) bool {
+	return typ == PkgInfoTypeForgejoRelease || typ == PkgInfoTypeGiteaRelease ||
+		typ == PkgInfoTypeGitLabRelease
 }
 
 // PackageInfo represents a complete package definition including metadata,
@@ -67,7 +78,7 @@ type PackageInfo struct {
 	Name        string   `yaml:",omitempty" json:"name,omitempty"`
 	Aliases     []*Alias `yaml:",omitempty" json:"aliases,omitempty"`
 	SearchWords []string `yaml:"search_words,omitempty" json:"search_words,omitempty"`
-	Type        string   `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release"`
+	Type        string   `json:"type" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release,enum=gitlab_release"`
 	RepoOwner   string   `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName    string   `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	// Host is the instance the repository is on, such as codeberg.org. It is read by
@@ -164,7 +175,7 @@ func (p *PackageInfo) GetAppendExt() bool {
 // settings based on the version being installed.
 type VersionOverride struct {
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release,enum=gitlab_release"`
 	RepoOwner                  string                      `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
 	RepoName                   string                      `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	Host                       string                      `yaml:",omitempty" json:"host,omitempty"`
@@ -225,7 +236,7 @@ func (v Variants) IsZero() bool {
 type Override struct {
 	GOOS                       string                      `yaml:",omitempty" json:"goos,omitempty" jsonschema:"enum=darwin,enum=linux,enum=windows"`
 	GOArch                     string                      `yaml:",omitempty" json:"goarch,omitempty" jsonschema:"enum=amd64,enum=arm64"`
-	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release"`
+	Type                       string                      `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=github_content,enum=github_archive,enum=http,enum=go,enum=go_install,enum=cargo,enum=go_build,enum=forgejo_release,enum=gitea_release,enum=gitlab_release"`
 	Format                     string                      `yaml:",omitempty" json:"format,omitempty" jsonschema:"example=tar.gz,example=raw,example=zip"`
 	Asset                      string                      `yaml:",omitempty" json:"asset,omitempty"`
 	Crate                      string                      `yaml:",omitempty" json:"crate,omitempty"`
@@ -502,7 +513,7 @@ func (p *PackageInfo) GetName() string {
 		return p.Name
 	}
 	if p.HasRepo() {
-		if onInstanceType(p.Type) && p.Host != "" {
+		if OnInstanceType(p.Type) && p.Host != "" {
 			// The instance is part of the name: codeberg.org's mergiraf/mergiraf
 			// is not github.com's, and a name without the instance would be the
 			// name a GitHub repository of the same owner and name already has.
@@ -535,7 +546,7 @@ func (p *PackageInfo) GetLink() string {
 		return p.Link
 	}
 	if p.HasRepo() {
-		if onInstanceType(p.Type) && p.Host != "" {
+		if OnInstanceType(p.Type) && p.Host != "" {
 			return "https://" + p.Host + "/" + p.RepoOwner + "/" + p.RepoName
 		}
 		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
@@ -612,7 +623,7 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 			return errAssetRequired
 		}
 		return nil
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
 		return p.validateForgeRelease()
 	case PkgInfoTypeHTTP:
 		if p.URL == "" {
@@ -752,7 +763,7 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 			return nil
 		}
 		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
 		// The host is read here as a directory, and this is read by aqua remove,
 		// which is given a registry's packages without validating them. A host that
 		// isn't one would be a path out of where the type's packages are, and what
@@ -798,12 +809,12 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 func (p *PackageInfo) validateFileSources() error {
 	for _, src := range p.fileSources() {
 		switch src.typ {
-		case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+		case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
 			if src.typ != p.Type {
 				return errForgeFileSource
 			}
 		case PkgInfoTypeGitHubRelease:
-			if onInstanceType(p.Type) && !src.ownRepo {
+			if OnInstanceType(p.Type) && !src.ownRepo {
 				return errGitHubFileSource
 			}
 		}
@@ -855,6 +866,15 @@ func (p *PackageInfo) fileSources() []*fileSource {
 	return sources
 }
 
+// pathSegmentPattern is a name a directory can have: anything but a separator, a dot
+// segment, and the characters a pattern is written with.
+//
+// The owner and the name are read as directories by the install path and the checksum id,
+// and aqua remove expands that path as a glob, which is the same reasoning hostOnly comes
+// from. A GitLab project is the first case where the owner holds separators of its own: a
+// project in subgroups is gitlab-org/security/cli, and every segment of it is one of these.
+var pathSegmentPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+
 // hostNamePattern is a host name: labels of letters, digits and hyphens, separated by dots,
 // each beginning and ending with a letter or a digit.
 //
@@ -880,6 +900,24 @@ func hostOnly(host string) bool {
 	return hostNamePattern.MatchString(host)
 }
 
+// repoPathOnly says whether the repository the package names is one that can also be a
+// path.
+//
+// A GitLab project is named by its namespace, so the owner may hold separators; nothing
+// else may, and no segment of either may be a dot segment or hold a pattern's characters.
+func (p *PackageInfo) repoPathOnly() bool {
+	owners := []string{p.RepoOwner}
+	if p.Type == PkgInfoTypeGitLabRelease {
+		owners = strings.Split(p.RepoOwner, "/")
+	}
+	for _, segment := range append(owners, p.RepoName) {
+		if !pathSegmentPattern.MatchString(segment) {
+			return false
+		}
+	}
+	return true
+}
+
 // validateForgeRelease checks the fields a release on a forge instance is found by. The
 // instance is one of them: unlike github.com it isn't implied by the type.
 func (p *PackageInfo) validateForgeRelease() error {
@@ -899,19 +937,29 @@ func (p *PackageInfo) validateForgeRelease() error {
 	if !p.HasRepo() {
 		return errRepoRequired
 	}
+	if !p.repoPathOnly() {
+		return errRepoPathInvalid
+	}
 	if p.Asset == "" {
 		return errAssetRequired
 	}
-	if p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil ||
-		(p.Checksum != nil && p.Checksum.GitHubArtifactAttestations != nil) {
-		// Both verify what GitHub signed, and the source they are checked against
-		// is a github.com repository named after the package. A release on a Forgejo
-		// or Gitea instance has neither, and saying so is better than verifying a
-		// package against a repository that is somebody else's. The checksum file
-		// has its own attestations and is no different.
+	if p.asksWhatOnlyGitHubAnswers() {
 		return errForgeGitHubVerification
 	}
 	return nil
+}
+
+// asksWhatOnlyGitHubAnswers says whether the definition asks for a verification that only
+// GitHub can give.
+//
+// SLSA provenance and the artifact attestations both verify what GitHub signed, and the
+// source they are checked against is a github.com repository named after the package. A
+// release on a forge instance has neither, and saying so is better than verifying a
+// package against a repository that is somebody else's. The checksum file has its own
+// attestations and is no different.
+func (p *PackageInfo) asksWhatOnlyGitHubAnswers() bool {
+	return p.SLSAProvenance != nil || p.GitHubArtifactAttestations != nil ||
+		(p.Checksum != nil && p.Checksum.GitHubArtifactAttestations != nil)
 }
 
 // defaultCmdName returns the default command name for the package.
@@ -1042,7 +1090,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 // resetByPkgType resets package fields that are not applicable to the specified type.
 // This cleans up conflicting configuration when changing package types.
 func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
-	if !onInstanceType(typ) {
+	if !OnInstanceType(typ) {
 		// Only a package on a forge instance is on a host other than github.com.
 		p.Host = ""
 	}
@@ -1053,7 +1101,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Crate = ""
 		p.GoVersionPath = ""
 		p.Cargo = nil
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
 		p.URL = ""
 		p.Path = ""
 		p.Crate = ""

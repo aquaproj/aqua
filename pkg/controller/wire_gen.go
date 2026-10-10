@@ -48,7 +48,8 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
 	"github.com/aquaproj/aqua/v2/pkg/vacuum"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
-	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitea"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitlab"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
@@ -122,8 +123,9 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(v)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(v)
-	forgeClient := forge.New(httpClient)
-	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(forgeClient)
+	giteaClient := gitea.New(httpClient)
+	gitlabClient := gitlab.New(httpClient)
+	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(giteaClient, gitlabClient)
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgeReleaseVersionGetter, goGetter)
@@ -376,8 +378,9 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	cargoVersionGetter := versiongetter.NewCargo(client)
 	gitHubTagVersionGetter := versiongetter.NewGitHubTag(v)
 	gitHubReleaseVersionGetter := versiongetter.NewGitHubRelease(v)
-	forgeClient := forge.New(httpClient)
-	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(forgeClient)
+	giteaClient := gitea.New(httpClient)
+	gitlabClient := gitlab.New(httpClient)
+	forgeReleaseVersionGetter := versiongetter.NewForgeRelease(giteaClient, gitlabClient)
 	goproxyClient := goproxy.New(httpClient)
 	goGetter := versiongetter.NewGoGetter(goproxyClient)
 	generalVersionGetter := versiongetter.NewGeneralVersionGetter(cargoVersionGetter, gitHubTagVersionGetter, gitHubReleaseVersionGetter, forgeReleaseVersionGetter, goGetter)

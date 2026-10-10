@@ -11,10 +11,10 @@ Please see [Reference](/docs/reference/security/minisign) too.
 ## Fields
 
 - enabled (bool)
-- type (string): `github_release` or `http`
+- type (string): `github_release`, `http`, `forgejo_release`, `gitea_release` or `gitlab_release`
 - repo_owner (string) (optional):
 - repo_name (string) (optional):
-- asset (string) (`github_release` requires):
+- asset (string) (every type but `http` requires):
 - url (string) (`http` requires):
 - public_key (string)
 

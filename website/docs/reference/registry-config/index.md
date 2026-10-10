@@ -35,6 +35,7 @@ packages:
 - [github_archive](github-archive-package.md): The package is downloaded from GitHub Archive
 - [github_content](github-content-package.md): The package is downloaded from GitHub Content
 - [github_release](github-release-package.md): The package is downloaded from GitHub Releases
+- [gitlab_release](gitlab-release-package.md): The package is downloaded from the releases of a project on a GitLab instance, such as gitlab.com. `aqua >= v2.65.0`
 - [go_build](go-build-package.md): The package is installed by `go build` command. `aqua >= v2.11.0`
 - [go_install](go-install-package.md): The package is installed by `go install` command. `aqua >= v1.10.0`
 - [http](http-package.md): The package is downloaded from the specified URL
@@ -89,7 +90,7 @@ files:
 - name: eksctl
 ```
 
-A [forgejo_release](forgejo-release-package.md) or [gitea_release](gitea-release-package.md) package is on an instance of its own, which is part of both defaults, because the same owner and name on another host are another package:
+A [forgejo_release](forgejo-release-package.md), [gitea_release](gitea-release-package.md) or [gitlab_release](gitlab-release-package.md) package is on an instance of its own, which is part of both defaults, because the same owner and name on another host are another package:
 
 * `name`: `<host>/<repo owner>/<repo name>`
 * `link`: `https://<host>/<repo owner>/<repo name>`

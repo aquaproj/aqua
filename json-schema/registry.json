@@ -69,7 +69,8 @@
             "github_release",
             "http",
             "forgejo_release",
-            "gitea_release"
+            "gitea_release",
+            "gitlab_release"
           ]
         },
         "asset": {
@@ -174,7 +175,8 @@
             "github_release",
             "http",
             "forgejo_release",
-            "gitea_release"
+            "gitea_release",
+            "gitlab_release"
           ]
         },
         "repo_owner": {
@@ -289,7 +291,8 @@
             "github_release",
             "http",
             "forgejo_release",
-            "gitea_release"
+            "gitea_release",
+            "gitlab_release"
           ]
         },
         "repo_owner": {
@@ -340,7 +343,8 @@
             "cargo",
             "go_build",
             "forgejo_release",
-            "gitea_release"
+            "gitea_release",
+            "gitlab_release"
           ]
         },
         "format": {
@@ -453,7 +457,8 @@
             "cargo",
             "go_build",
             "forgejo_release",
-            "gitea_release"
+            "gitea_release",
+            "gitlab_release"
           ]
         },
         "repo_owner": {
@@ -732,7 +737,8 @@
             "cargo",
             "go_build",
             "forgejo_release",
-            "gitea_release"
+            "gitea_release",
+            "gitlab_release"
           ]
         },
         "repo_owner": {
