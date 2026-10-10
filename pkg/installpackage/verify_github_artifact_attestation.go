@@ -38,10 +38,15 @@ func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logger 
 	}
 
 	if err := g.ghVerifier.Verify(ctx, logger, &ghattestation.ParamVerify{
-		Repository:     g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName,
-		ArtifactPath:   file,
-		PredicateType:  g.gaa.PredicateType,
-		SignerWorkflow: g.gaa.SignerWorkflow(),
+		Repository:            g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName,
+		ArtifactPath:          file,
+		PredicateType:         g.gaa.PredicateType,
+		SignerWorkflow:        g.gaa.SignerWorkflow(),
+		SignerRepo:            g.gaa.SignerRepo,
+		SourceRef:             g.gaa.SourceRef,
+		SourceDigest:          g.gaa.SourceDigest,
+		CertOIDCIssuer:        g.gaa.CertOIDCIssuer,
+		DenySelfHostedRunners: g.gaa.DenySelfHostedRunners,
 	}); err != nil {
 		return fmt.Errorf("verify a package with gh attestation: %w", err)
 	}

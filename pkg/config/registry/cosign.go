@@ -22,6 +22,45 @@ type Cosign struct {
 	Key *DownloadedFile `yaml:",omitempty" json:"key,omitempty"`
 	// Bundle specifies where to download the signature bundle.
 	Bundle *DownloadedFile `yaml:",omitempty" json:"bundle,omitempty"`
+	// CertificateIdentity is the identity the signing certificate must carry, passed as
+	// --certificate-identity.
+	CertificateIdentity string `yaml:"certificate_identity,omitempty" json:"certificate_identity,omitempty"`
+	// CertificateIdentityRegexp is a regular expression the certificate's identity must
+	// match, passed as --certificate-identity-regexp.
+	CertificateIdentityRegexp string `yaml:"certificate_identity_regexp,omitempty" json:"certificate_identity_regexp,omitempty"`
+	// CertificateOIDCIssuer is the OIDC issuer the certificate must name, passed as
+	// --certificate-oidc-issuer.
+	CertificateOIDCIssuer string `yaml:"certificate_oidc_issuer,omitempty" json:"certificate_oidc_issuer,omitempty"`
+	// CertificateGitHubWorkflowRepository is the repository whose workflow signed, passed as
+	// --certificate-github-workflow-repository.
+	CertificateGitHubWorkflowRepository string `yaml:"certificate_github_workflow_repository,omitempty" json:"certificate_github_workflow_repository,omitempty"`
+	// CertificateGitHubWorkflowRef is the ref that workflow ran on, passed as
+	// --certificate-github-workflow-ref.
+	CertificateGitHubWorkflowRef string `yaml:"certificate_github_workflow_ref,omitempty" json:"certificate_github_workflow_ref,omitempty"`
+}
+
+// CertificateOpts returns the flags the certificate fields say, in a fixed order.
+//
+// They are fields rather than a part of Opts so that what is verified can be read without
+// parsing a command line. Opts still carries whatever no field names.
+func (c *Cosign) CertificateOpts() []string {
+	if c == nil {
+		return nil
+	}
+	fields := []struct{ flag, value string }{
+		{"--certificate-identity", c.CertificateIdentity},
+		{"--certificate-identity-regexp", c.CertificateIdentityRegexp},
+		{"--certificate-oidc-issuer", c.CertificateOIDCIssuer},
+		{"--certificate-github-workflow-repository", c.CertificateGitHubWorkflowRepository},
+		{"--certificate-github-workflow-ref", c.CertificateGitHubWorkflowRef},
+	}
+	opts := []string{}
+	for _, f := range fields {
+		if f.value != "" {
+			opts = append(opts, f.flag, f.value)
+		}
+	}
+	return opts
 }
 
 // DownloadedFile represents a file that can be downloaded from various sources.

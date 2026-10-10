@@ -72,6 +72,9 @@ type Package struct {
 	Type      string `json:"type"`
 	RepoOwner string `json:"repo_owner,omitempty"`
 	RepoName  string `json:"repo_name,omitempty"`
+	// RepoID is the repository's numeric id on GitHub, carried from the registry so that
+	// the lock records which repository the name meant when it was locked.
+	RepoID int64 `json:"repo_id,omitempty"`
 	// Host is the forge instance the release is on, for a forgejo_release or
 	// gitea_release entry. The other types need no such field: their host is
 	// github.com, or is part of URL.

@@ -26,6 +26,11 @@ const ConfigFileName = "registry.yaml"
 // has no place for.
 type Config struct {
 	*registry.PackageInfo `yaml:",inline"`
+	// RepoID is the numeric id of the repository on GitHub the package comes from. A
+	// repository's name can be taken over by another repository and its id can't, so a
+	// generation stops when the repository the name answers with has another id. It is
+	// g2's own field rather than aqua-registry's, which has no use for it.
+	RepoID int64 `yaml:"repo_id,omitempty"`
 	// AllAssetsFilter drops assets that aren't the command, such as the shared
 	// libraries and headers a release may ship beside it. A release doesn't say
 	// which of its assets is the one to install, so this is written by hand. It
