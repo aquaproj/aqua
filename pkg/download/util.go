@@ -23,8 +23,7 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		Host:    art.Host,
 		Version: art.Version,
 	}
-	switch file.Type {
-	case "github_release", config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
+	if registry.ReleaseAssetType(file.Type) {
 		if f.RepoOwner == "" {
 			f.RepoOwner = art.RepoOwner
 		}
@@ -40,7 +39,8 @@ func ConvertDownloadedFileToFile(file *registry.DownloadedFile, art *File, rt *r
 		}
 		f.Asset = asset
 		return f, nil
-	case "http":
+	}
+	if file.Type == config.PkgInfoTypeHTTP {
 		if file.URL == nil {
 			return nil, errors.New("url is required")
 		}
@@ -61,14 +61,15 @@ func ConvertPackageToFile(pkg *config.Package, assetName string, rt *runtime.Run
 		Type:      pkgInfo.Type,
 		RepoOwner: pkgInfo.RepoOwner,
 		RepoName:  pkgInfo.RepoName,
-		Host:      pkgInfo.Host,
+		Host:      pkgInfo.GetHost(),
 		Version:   pkg.Package.Version,
 		Private:   pkgInfo.Private,
 	}
-	switch pkgInfo.Type {
-	case config.PkgInfoTypeGitHubRelease, config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
+	if registry.ReleaseAssetType(pkgInfo.Type) {
 		file.Asset = assetName
 		return file, nil
+	}
+	switch pkgInfo.Type {
 	case config.PkgInfoTypeGitHubContent:
 		file.Path = assetName
 		return file, nil

@@ -6,13 +6,13 @@ type Minisign struct {
 	// Enabled controls whether Minisign verification is active.
 	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
 	// Type specifies where to download the signature file from.
-	Type string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=http,enum=forgejo_release,enum=gitea_release"`
-	// RepoOwner is the repository owner (for github_release, forgejo_release and gitea_release types).
+	Type string `yaml:",omitempty" json:"type,omitempty" jsonschema:"enum=github_release,enum=http,enum=forgejo_release,enum=gitea_release,enum=gitlab_release"`
+	// RepoOwner is the repository owner (for github_release, forgejo_release, gitea_release and gitlab_release types).
 	RepoOwner string `yaml:"repo_owner,omitempty" json:"repo_owner,omitempty"`
-	// RepoName is the repository name (for github_release, forgejo_release and gitea_release types).
+	// RepoName is the repository name (for github_release, forgejo_release, gitea_release and gitlab_release types).
 	RepoName string `yaml:"repo_name,omitempty" json:"repo_name,omitempty"`
 	// Asset is the name of the signature file asset (for github_release,
-	// forgejo_release and gitea_release types).
+	// forgejo_release, gitea_release and gitlab_release types).
 	Asset *string `yaml:",omitempty" json:"asset,omitempty"`
 	// URL is the direct URL to the signature file (for http type).
 	URL *string `yaml:",omitempty" json:"url,omitempty"`

@@ -8,7 +8,7 @@ sidebar_position: 850
 
 The package is downloaded from the releases of a repository on a [Forgejo](https://forgejo.org/) instance, such as [Codeberg](https://codeberg.org).
 
-Forgejo serves the API it inherited from Gitea, so the instance is asked which versions exist the same way GitHub is: `aqua g` and `aqua up` find the newest release without the registry having to list the versions by hand. A repository on a Gitea instance is [gitea_release](gitea-release-package.md), which is this type under another name, read by the same client.
+Forgejo serves the API it inherited from Gitea, so the instance is asked which versions exist the same way GitHub is: `aqua g` and `aqua up` find the newest release without the registry having to list the versions by hand. A repository on a Gitea instance is [gitea_release](gitea-release-package.md), which is this type under another name, read by the same client. A project on a GitLab instance is [gitlab_release](gitlab-release-package.md), which is read the same way by a client of its own.
 
 ```yaml
 packages:

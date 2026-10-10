@@ -68,6 +68,23 @@ func TestPackage_ChecksumID(t *testing.T) { //nolint:funlen
 			checksumID: "gitea_release/gitea.com/gitea/tea/v0.16.0/tea.xz",
 		},
 		{
+			name: "gitlab_release",
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Version: "v1.122.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "gitlab_release",
+					Host:      "gitlab.com",
+					RepoOwner: "gitlab-org",
+					RepoName:  "cli",
+					Asset:     "glab.tar.gz",
+				},
+			},
+			rt:         &runtime.Runtime{},
+			checksumID: "gitlab_release/gitlab.com/gitlab-org/cli/v1.122.0/glab.tar.gz",
+		},
+		{
 			name: pkgTypeGitHubContent,
 			pkg: &config.Package{
 				Package: &aqua.Package{
@@ -185,6 +202,23 @@ func TestPackage_ChecksumIDFromAsset(t *testing.T) { //nolint:funlen
 			},
 			asset:      "tea.xz",
 			checksumID: "gitea_release/gitea.com/gitea/tea/v0.16.0/tea.xz",
+		},
+		{
+			name: "gitlab_release",
+			pkg: &config.Package{
+				Package: &aqua.Package{
+					Version: "v1.122.0",
+				},
+				PackageInfo: &registry.PackageInfo{
+					Type:      "gitlab_release",
+					Host:      "gitlab.com",
+					RepoOwner: "gitlab-org",
+					RepoName:  "cli",
+					Asset:     "glab.tar.gz",
+				},
+			},
+			asset:      "glab.tar.gz",
+			checksumID: "gitlab_release/gitlab.com/gitlab-org/cli/v1.122.0/glab.tar.gz",
 		},
 		{
 			name: pkgTypeGitHubContent,

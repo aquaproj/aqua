@@ -55,6 +55,38 @@ func TestPackageInfo_GetName(t *testing.T) {
 			},
 		},
 		{
+			// GitLab has one instance nearly every package on it is on, so a
+			// definition saying gitlab.com would be saying the obvious.
+			title: "gitlab_release with no host",
+			exp:   "gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+			},
+		},
+		{
+			title: "gitlab_release",
+			exp:   "gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+			},
+		},
+		{
+			// A GitLab project in subgroups is named by its whole namespace.
+			title: "gitlab_release in subgroups",
+			exp:   "gitlab.com/gitlab-org/security/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org/security",
+				RepoName:  "cli",
+			},
+		},
+		{
 			title: "forgejo_release with a name of its own",
 			exp:   "mergiraf",
 			pkgInfo: &registry.PackageInfo{
@@ -118,6 +150,25 @@ func TestPackageInfo_GetLink(t *testing.T) {
 				Host:      "gitea.com",
 				RepoOwner: "gitea",
 				RepoName:  "tea",
+			},
+		},
+		{
+			title: "gitlab_release with no host",
+			exp:   "https://gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+			},
+		},
+		{
+			title: "gitlab_release",
+			exp:   "https://gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
 			},
 		},
 	}
@@ -482,6 +533,8 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 		title string
 		typ   string
 		host  string
+		owner string
+		name  string
 		exp   string
 	}{
 		{
@@ -497,6 +550,42 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 			typ:   registry.PkgInfoTypeGiteaRelease,
 			host:  "gitea.com",
 			exp:   filepath.Join("gitea_release", "gitea.com", "mergiraf", "mergiraf"),
+		},
+		{
+			title: "a GitLab instance",
+			typ:   registry.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			exp:   filepath.Join("gitlab_release", "gitlab.com", "mergiraf", "mergiraf"),
+		},
+		{
+			title: "a GitLab package that says no instance",
+			typ:   registry.PkgInfoTypeGitLabRelease,
+			exp:   filepath.Join("gitlab_release", "gitlab.com", "mergiraf", "mergiraf"),
+		},
+		{
+			// The owner is a directory as well, and aqua remove expands the path as
+			// a glob: this one would be every owner's copy of the same name.
+			title: "an owner that is a pattern",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "codeberg.org",
+			owner: "*",
+		},
+		{
+			title: "a name that is a path out of the packages",
+			typ:   registry.PkgInfoTypeGitLabRelease,
+			host:  "gitlab.com",
+			owner: "gitlab-org",
+			name:  "..",
+		},
+		{
+			// A repository called .github is a repository; what is refused is a
+			// dot segment and a pattern, not a name beginning with a dot.
+			title: "a name beginning with a dot",
+			typ:   registry.PkgInfoTypeForgejoRelease,
+			host:  "codeberg.org",
+			owner: "an-owner",
+			name:  ".github",
+			exp:   filepath.Join("forgejo_release", "codeberg.org", "an-owner", ".github"),
 		},
 		{
 			title: "a host that is a path out of the packages",
@@ -524,11 +613,18 @@ func TestPackageInfo_PkgPaths_forgeRelease(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
+			owner, name := d.owner, d.name
+			if owner == "" {
+				owner = "mergiraf"
+			}
+			if name == "" {
+				name = "mergiraf"
+			}
 			pkgInfo := &registry.PackageInfo{
 				Type:      d.typ,
 				Host:      d.host,
-				RepoOwner: "mergiraf",
-				RepoName:  "mergiraf",
+				RepoOwner: owner,
+				RepoName:  name,
 				Asset:     "mergiraf.tar.gz",
 			}
 			paths := pkgInfo.PkgPaths()
@@ -999,5 +1095,166 @@ version_overrides:
 
 	if !vo2.SLSAProvenance.GetEnabled() {
 		t.Error("SLSAProvenance should be enabled in second version override")
+	}
+}
+
+// GitLab is read as a package on a forge instance like the other two, and is the first
+// type where the owner holding separators of its own is ordinary.
+func TestPackageInfo_Validate_gitLabRelease(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		title   string
+		pkgInfo *registry.PackageInfo
+		isErr   bool
+	}{
+		{
+			title: "gitlab_release",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}}",
+			},
+		},
+		{
+			// A project in subgroups: its namespace is where the project is, and
+			// every segment of it is a name a directory can have.
+			title: "a project in subgroups",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org/security",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+			},
+		},
+		{
+			// The instance a gitlab_release package is on is gitlab.com unless it
+			// says otherwise, so saying nothing is a definition that works.
+			title: "gitlab_release with no host",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+			},
+		},
+		{
+			// The other two have no instance nearly every package is on, so they ask.
+			title: "gitea_release host is required",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea.xz",
+			},
+			isErr: true,
+		},
+		{
+			title: "gitlab_release private is not supported",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+				Private:   true,
+			},
+			isErr: true,
+		},
+		{
+			title: "gitlab_release doesn't support what only GitHub can verify",
+			pkgInfo: &registry.PackageInfo{
+				Type:           registry.PkgInfoTypeGitLabRelease,
+				Host:           "gitlab.com",
+				RepoOwner:      "gitlab-org",
+				RepoName:       "cli",
+				Asset:          "glab.tar.gz",
+				SLSAProvenance: &registry.SLSAProvenance{},
+			},
+			isErr: true,
+		},
+		{
+			// The owner is a directory as well, and a dot segment would be a path out
+			// of where the type's packages go.
+			title: "an owner that is a path out of the packages",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org/..",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			// aqua remove expands the install path as a glob.
+			title: "a name that is a pattern",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "*",
+				Asset:     "glab.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			// A slash in the owner is GitLab's namespace and nothing else's: on the
+			// other instances it would be a path where a name belongs.
+			title: "a forgejo_release owner holding a separator",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeForgejoRelease,
+				Host:      "codeberg.org",
+				RepoOwner: "mergiraf/elsewhere",
+				RepoName:  "mergiraf",
+				Asset:     "mergiraf.tar.gz",
+			},
+			isErr: true,
+		},
+		{
+			title: "a gitlab_release checksum file on a gitea_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGiteaRelease,
+				Host:      "gitea.com",
+				RepoOwner: "gitea",
+				RepoName:  "tea",
+				Asset:     "tea.xz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGitLabRelease,
+					Asset: "{{.Asset}}.sha256",
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "a gitlab_release checksum file on a gitlab_release package",
+			pkgInfo: &registry.PackageInfo{
+				Type:      registry.PkgInfoTypeGitLabRelease,
+				Host:      "gitlab.com",
+				RepoOwner: "gitlab-org",
+				RepoName:  "cli",
+				Asset:     "glab.tar.gz",
+				Checksum: &registry.Checksum{
+					Type:  registry.PkgInfoTypeGitLabRelease,
+					Asset: "checksums.txt",
+				},
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			if err := d.pkgInfo.Validate(); err != nil {
+				if !d.isErr {
+					t.Fatal(err)
+				}
+				return
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
 	}
 }

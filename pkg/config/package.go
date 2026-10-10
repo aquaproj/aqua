@@ -100,6 +100,11 @@ func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 	if err != nil {
 		return "", fmt.Errorf("render the asset name: %w", err)
 	}
+	if registry.OnInstanceType(pkgInfo.Type) {
+		// A package on an instance is placed under the instance it is on: the owner
+		// and the name are only unique there.
+		return filepath.Join("pkgs", pkgInfo.Type, pkgInfo.GetHost(), pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+	}
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return filepath.Join("pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
@@ -119,8 +124,6 @@ func (p *Package) PkgPath(rt *runtime.Runtime) (string, error) { //nolint:cyclop
 			return filepath.Join("internal", "pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 		}
 		return filepath.Join("pkgs", pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
-		return filepath.Join("pkgs", pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {
@@ -339,6 +342,8 @@ const (
 	PkgInfoTypeForgejoRelease = "forgejo_release"
 	// PkgInfoTypeGiteaRelease indicates packages distributed via the releases of a Gitea instance
 	PkgInfoTypeGiteaRelease = "gitea_release"
+	// PkgInfoTypeGitLabRelease indicates packages distributed via the releases of a GitLab instance
+	PkgInfoTypeGitLabRelease = "gitlab_release"
 )
 
 // RemoveMode specifies what should be removed during package removal operations.
@@ -419,6 +424,9 @@ func appendExt(s, format string) string {
 // It handles different package types to generate the appropriate asset identifier.
 func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
+	if registry.ReleaseAssetType(pkgInfo.Type) {
+		return p.RenderTemplateString(pkgInfo.Asset, rt)
+	}
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		return "", nil
@@ -430,8 +438,6 @@ func (p *Package) renderAsset(rt *runtime.Runtime) (string, error) {
 			return "", fmt.Errorf("render a package path: %w", err)
 		}
 		return s, nil
-	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
-		return p.RenderTemplateString(pkgInfo.Asset, rt)
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {

@@ -44,12 +44,28 @@ func GetChecksum(logger *slog.Logger, assetName, checksumFileContent string, che
 	if s != "" {
 		return s, nil
 	}
-	a, ok := m[assetName]
-	if ok {
+	if a, ok := FindChecksum(m, assetName); ok {
 		return a, nil
 	}
 	showFileContent(logger, checksumFileContent)
 	return "", ErrNoChecksumIsFound
+}
+
+// FindChecksum is the checksum one parsed checksum file gives for one asset.
+//
+// An asset can be named by a path: a release link on a GitLab instance is created with
+// one, and that path is how the instance serves the file. A checksum file names the file
+// rather than where it is, so the name as written is tried first -- it is what the file
+// holds when the two agree -- and the file name alone after it.
+func FindChecksum(m map[string]string, assetName string) (string, bool) {
+	if a, ok := m[assetName]; ok {
+		return a, true
+	}
+	if base := path.Base(assetName); base != assetName {
+		a, ok := m[base]
+		return a, ok
+	}
+	return "", false
 }
 
 // ParseChecksumFile parses checksum file content according to the provided configuration.
@@ -90,20 +106,62 @@ func parseDefault(content string) (map[string]string, string, error) {
 		return nil, lines[0], nil
 	}
 	m := make(map[string]string, len(lines))
+	// What each file name alone says, which is nothing once two lines name the same
+	// file in two places.
+	bases := make(map[string]string, len(lines))
 	for _, line := range lines {
-		idx := strings.Index(line, " ")
-		if idx == -1 {
-			idx = strings.Index(line, "\t")
-			if idx == -1 {
-				continue
-			}
+		name, chksum, ok := checksumLine(line)
+		if !ok {
+			continue
 		}
-		m[strings.TrimPrefix(path.Base(strings.TrimSpace(line[idx:])), "*")] = line[:idx]
+		m[name] = chksum
+		base := path.Base(name)
+		if base == name {
+			continue
+		}
+		if _, seen := bases[base]; seen {
+			// An asset named by its path still matches the line that wrote
+			// that path, and nothing is published as the name alone.
+			bases[base] = ""
+			continue
+		}
+		bases[base] = chksum
 	}
+	addFileNames(m, bases)
 	if len(m) == 0 {
 		return nil, "", ErrNoChecksumExtracted
 	}
 	return m, "", nil
+}
+
+// checksumLine is the file and the checksum one line of a checksum file holds.
+func checksumLine(line string) (string, string, bool) {
+	idx := strings.Index(line, " ")
+	if idx == -1 {
+		idx = strings.Index(line, "\t")
+		if idx == -1 {
+			return "", "", false
+		}
+	}
+	// The asterisk is how sha256sum writes a file it read as binary.
+	return strings.TrimPrefix(strings.TrimSpace(line[idx:]), "*"), line[:idx], true
+}
+
+// addFileNames adds what a file name alone answers for, where it answers for one line.
+//
+// A checksum file commonly writes where the file was built rather than what the release
+// publishes, and the asset is then named by the file alone. A line that named the file
+// itself is the answer already, and an ambiguous name is left out.
+func addFileNames(m, bases map[string]string) {
+	for base, chksum := range bases {
+		if chksum == "" {
+			continue
+		}
+		if _, ok := m[base]; ok {
+			continue
+		}
+		m[base] = chksum
+	}
 }
 
 // parseRegex parses checksum files using regular expressions to extract checksums and filenames.
