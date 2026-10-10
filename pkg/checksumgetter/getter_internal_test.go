@@ -190,3 +190,59 @@ func TestHasAssetSignature(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+// An asset on a GitLab instance can be named by the path its release link was created
+// with, while the checksum file names the file. The checksum has to be recorded under the
+// asset, because that is what installing it then looks for.
+func TestGetter_getChecksumsFromChecksumFile_nestedAsset(t *testing.T) {
+	t.Parallel()
+	rt := &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}
+	pkg := &config.Package{
+		Package: &aqua.Package{
+			Name:    "gitlab.com/ns/proj",
+			Version: "v1.0.0",
+		},
+		PackageInfo: &registry.PackageInfo{
+			Type:      "gitlab_release",
+			RepoOwner: "ns",
+			RepoName:  "proj",
+			Asset:     "binaries/tool-{{.OS}}-{{.Arch}}",
+			Format:    "raw",
+			Checksum: &registry.Checksum{
+				Type:      "gitlab_release",
+				Asset:     "checksums.txt",
+				Algorithm: "sha256",
+			},
+		},
+	}
+	assetName, err := pkg.RenderAsset(rt)
+	if err != nil {
+		t.Fatalf("RenderAsset: %v", err)
+	}
+	if assetName != "binaries/tool-linux-amd64" {
+		t.Fatalf("the asset is %q", assetName)
+	}
+	wantID, err := pkg.ChecksumID(rt)
+	if err != nil {
+		t.Fatalf("ChecksumID: %v", err)
+	}
+
+	g := &Getter{}
+	const want = "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101"
+	cs, err := g.getChecksumsFromChecksumFile(pkg,
+		map[string]struct{}{assetName: {}}, wantID,
+		want+"  tool-linux-amd64\n"+
+			"1182217e827a44e22df22be4b95e5392f52530eaed52da5195b5f026d06f41f4  tool-darwin-arm64\n")
+	if err != nil {
+		t.Fatalf("getChecksumsFromChecksumFile: %v", err)
+	}
+	if len(cs) != 1 {
+		t.Fatalf("wanted one checksum, got %d", len(cs))
+	}
+	if cs[0].ID != wantID {
+		t.Fatalf("wanted the checksum to be recorded as %q, got %q", wantID, cs[0].ID)
+	}
+	if cs[0].Checksum != want {
+		t.Fatalf("wanted %q, got %q", want, cs[0].Checksum)
+	}
+}

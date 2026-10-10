@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/template"
 )
@@ -28,13 +29,14 @@ func (p *Package) ChecksumID(rt *runtime.Runtime) (string, error) {
 	}
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
+	if registry.OnInstanceType(pkgInfo.Type) {
+		return path.Join(pkgInfo.Type, pkgInfo.GetHost(), pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
+	}
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		return path.Join(PkgInfoTypeGitHubArchive, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
-		return path.Join(pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, assetName), nil
 	case PkgInfoTypeHTTP:
 		uS, err := p.RenderURL(rt)
 		if err != nil {
@@ -73,13 +75,14 @@ func (p *Package) getRuntimeFromAsset(asset string) (*runtime.Runtime, error) {
 func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 	pkgInfo := p.PackageInfo
 	pkg := p.Package
+	if registry.OnInstanceType(pkgInfo.Type) {
+		return path.Join(pkgInfo.Type, pkgInfo.GetHost(), pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
+	}
 	switch pkgInfo.Type {
 	case PkgInfoTypeGitHubArchive:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version), nil
 	case PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
 		return path.Join(pkgInfo.Type, "github.com", pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
-		return path.Join(pkgInfo.Type, pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Version, asset), nil
 	case PkgInfoTypeHTTP:
 		rt, err := p.getRuntimeFromAsset(asset)
 		if err != nil {
@@ -97,8 +100,7 @@ func (p *Package) ChecksumIDFromAsset(asset string) (string, error) {
 // It uses templates to generate platform-specific checksum file names.
 func (p *Package) RenderChecksumFileName(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
-	switch pkgInfo.Checksum.Type {
-	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+	if registry.ReleaseAssetType(pkgInfo.Checksum.Type) {
 		asset, err := p.RenderAsset(rt)
 		if err != nil {
 			return "", err
@@ -138,10 +140,10 @@ func (p *Package) RenderChecksumURL(rt *runtime.Runtime) (string, error) {
 // Returns either a filename for GitHub releases or URL for HTTP packages.
 func (p *Package) RenderChecksumFileID(rt *runtime.Runtime) (string, error) {
 	pkgInfo := p.PackageInfo
-	switch pkgInfo.Checksum.Type {
-	case PkgInfoTypeGitHubRelease, PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease:
+	if registry.ReleaseAssetType(pkgInfo.Checksum.Type) {
 		return p.RenderChecksumFileName(rt)
-	case PkgInfoTypeHTTP:
+	}
+	if pkgInfo.Checksum.Type == PkgInfoTypeHTTP {
 		return p.RenderChecksumURL(rt)
 	}
 	return "", errUnknownChecksumFileType

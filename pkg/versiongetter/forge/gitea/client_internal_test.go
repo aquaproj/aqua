@@ -1,4 +1,4 @@
-package forge
+package gitea
 
 import (
 	"context"
@@ -108,41 +108,4 @@ type roundTripper func(req *http.Request) (*http.Response, error)
 
 func (f roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
-}
-
-func TestSaid(t *testing.T) {
-	t.Parallel()
-	data := []struct {
-		title string
-		body  string
-		exp   string
-	}{
-		{
-			title: "one line, whatever the instance wrote it as",
-			body:  "  {\"message\":\"The target couldn't be found.\"}\n",
-			exp:   `{"message":"The target couldn't be found."}`,
-		},
-		{
-			title: "nothing said",
-			body:  "\n\n",
-			exp:   "",
-		},
-		{
-			// 300 letters of two bytes each, written as an escape because the
-			// source is English: by bytes this would be cut in the middle of a
-			// letter, and a message of 150 such letters would be sliced out of
-			// range.
-			title: "a message that doesn't write a letter in one byte",
-			body:  strings.Repeat("\u00e9", 300),
-			exp:   strings.Repeat("\u00e9", 200) + "...",
-		},
-	}
-	for _, d := range data {
-		t.Run(d.title, func(t *testing.T) {
-			t.Parallel()
-			if s := said([]byte(d.body)); s != d.exp {
-				t.Fatalf("wanted %s, got %s", d.exp, s)
-			}
-		})
-	}
 }

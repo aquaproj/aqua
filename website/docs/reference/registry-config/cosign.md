@@ -12,11 +12,11 @@ Please see [Cosign and SLSA Provenance Support](/docs/reference/security/cosign-
 
 - opts ([]string): [cosign verify-blob](https://docs.sigstore.dev/signing/quickstart/#verifying-a-signed-blob) options
 - signature
-  - type (string): `github_release` or `http`
+  - type (string): `github_release`, `http`, `forgejo_release`, `gitea_release` or `gitlab_release`
   - repo_owner (string) (optional):
   - repo_name (string) (optional):
   - url (string) (`http` requires):
-  - asset (string) (`github_release` requires):
+  - asset (string) (every type but `http` requires):
 - key
   - same as `signature`
 - certificate

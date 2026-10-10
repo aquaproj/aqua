@@ -1,8 +1,13 @@
 package genrgst
 
+import "github.com/aquaproj/aqua/v2/pkg/config/registry"
+
+// The types a generated definition can say, named where a definition is read so that one
+// of them changing is one place changing.
 const (
-	pkgTypeCargo         = "cargo"
-	pkgTypeGitHubRelease = "github_release"
+	pkgTypeCargo         = registry.PkgInfoTypeCargo
+	pkgTypeGitHubRelease = registry.PkgInfoTypeGitHubRelease
+	pkgTypeGitLabRelease = registry.PkgInfoTypeGitLabRelease
 
 	flagCertOIDCIssuer     = "--certificate-oidc-issuer"
 	flagCertIdentityRegexp = "--certificate-identity-regexp"

@@ -10,6 +10,7 @@ import (
 	"net/url"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -49,6 +50,9 @@ type ChecksumDownloader interface {
 
 func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
+	if registry.OnInstanceType(pkg.PackageInfo.Checksum.Type) {
+		return dl.downloadForgeChecksum(ctx, rt, pkg)
+	}
 	switch pkg.PackageInfo.Checksum.Type {
 	case config.PkgInfoTypeGitHubRelease:
 		asset, err := pkg.RenderChecksumFileName(rt)
@@ -61,8 +65,6 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 			Version:   pkg.Package.Version,
 			Asset:     asset,
 		})
-	case config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:
-		return dl.downloadForgeChecksum(ctx, rt, pkg)
 	case config.PkgInfoTypeHTTP:
 		u, err := pkg.RenderChecksumURL(rt)
 		if err != nil {
@@ -92,14 +94,18 @@ func (dl *ChecksumDownloaderImpl) GetReleaseAssets(ctx context.Context, logger *
 }
 
 // downloadForgeChecksum fetches the checksum file published beside the asset in the same
-// release on a Forgejo or Gitea instance.
+// release on a forge instance.
+//
+// The type it builds the URL from is the checksum file's own, which is what the caller
+// switched on. Validation holds the two to be the same, and honouring the one that was
+// asked about is what stays right if a file is ever read some other way.
 func (dl *ChecksumDownloaderImpl) downloadForgeChecksum(ctx context.Context, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
 	asset, err := pkg.RenderChecksumFileName(rt)
 	if err != nil {
 		return nil, 0, fmt.Errorf("render a checksum file name: %w", err)
 	}
-	u, err := forgeReleaseURL(pkgInfo.Host, pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, asset)
+	u, err := forgeReleaseURL(pkgInfo.Checksum.Type, pkgInfo.GetHost(), pkgInfo.RepoOwner, pkgInfo.RepoName, pkg.Package.Version, asset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("build the URL of the checksum file: %w", err)
 	}

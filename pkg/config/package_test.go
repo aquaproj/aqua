@@ -226,6 +226,23 @@ func TestPackageInfo_PkgPath(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			title: "gitlab_release",
+			exp:   "/tmp/aqua/pkgs/gitlab_release/gitlab.com/gitlab-org/cli/v1.122.0/glab.tar.gz",
+			pkg: &config.Package{
+				PackageInfo: &registry.PackageInfo{
+					Type:      "gitlab_release",
+					Host:      "gitlab.com",
+					RepoOwner: "gitlab-org",
+					RepoName:  "cli",
+					Asset:     "glab.{{.Format}}",
+					Format:    "tar.gz",
+				},
+				Package: &aqua.Package{
+					Version: "v1.122.0",
+				},
+			},
+		},
+		{
 			title: pkgTypeHTTP,
 			exp:   "/tmp/aqua/pkgs/http/example.com/foo-1.0.0.zip",
 			pkg: &config.Package{
