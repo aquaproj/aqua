@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	// errForgeHostRequired is returned when nothing says which instance to download from.
+	// errInstanceUnknown is returned when nothing says which instance to download from.
 	// Validation refuses such a package, so this is a file read some other way: a
 	// signature named as a file on an instance by a package that isn't on one at all.
-	errForgeHostRequired = errors.New("the instance to download from is unknown")
+	errInstanceUnknown = errors.New("the instance to download from is unknown")
 	// errForgeTypeUnknown is returned when the type isn't one of the forges, which is a
 	// caller asking the wrong question rather than a definition being wrong.
 	errForgeTypeUnknown = errors.New("the type is not a release on a forge instance")
@@ -39,7 +39,7 @@ var (
 // release link was created with, so their separators are part of where the file is.
 func forgeReleaseURL(typ, host, owner, repo, tag, asset string) (string, error) {
 	if host == "" {
-		return "", errForgeHostRequired
+		return "", errInstanceUnknown
 	}
 	switch typ {
 	case config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease:

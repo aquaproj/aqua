@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
@@ -47,6 +48,13 @@ type ClientAPI interface {
 }
 
 func (dl *Downloader) ReadCloser(ctx context.Context, logger *slog.Logger, file *File) (io.ReadCloser, int64, error) {
+	if registry.OnInstanceType(file.Type) {
+		u, err := forgeReleaseURL(file.Type, file.Host, file.RepoOwner, file.RepoName, file.Version, file.Asset)
+		if err != nil {
+			return nil, 0, fmt.Errorf("build the download URL: %w", err)
+		}
+		return dl.downloadURL(ctx, u)
+	}
 	switch file.Type {
 	case config.PkgInfoTypeGitHubRelease:
 		return dl.ghRelease.DownloadGitHubRelease(ctx, logger, &domain.DownloadGitHubReleaseParam{ //nolint:wrapcheck
@@ -73,12 +81,6 @@ func (dl *Downloader) ReadCloser(ctx context.Context, logger *slog.Logger, file 
 		return io.NopCloser(strings.NewReader(file.String)), 0, nil
 	case config.PkgInfoTypeGitHubArchive:
 		return dl.getReadCloserFromGitHubArchive(ctx, file)
-	case config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease, config.PkgInfoTypeGitLabRelease:
-		u, err := forgeReleaseURL(file.Type, file.Host, file.RepoOwner, file.RepoName, file.Version, file.Asset)
-		if err != nil {
-			return nil, 0, fmt.Errorf("build the download URL: %w", err)
-		}
-		return dl.downloadURL(ctx, u)
 	case config.PkgInfoTypeHTTP:
 		return dl.downloadURL(ctx, file.URL)
 	default:

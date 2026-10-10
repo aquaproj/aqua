@@ -10,6 +10,7 @@ import (
 	"net/url"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
@@ -49,6 +50,9 @@ type ChecksumDownloader interface {
 
 func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, pkg *config.Package) (io.ReadCloser, int64, error) {
 	pkgInfo := pkg.PackageInfo
+	if registry.OnInstanceType(pkg.PackageInfo.Checksum.Type) {
+		return dl.downloadForgeChecksum(ctx, rt, pkg)
+	}
 	switch pkg.PackageInfo.Checksum.Type {
 	case config.PkgInfoTypeGitHubRelease:
 		asset, err := pkg.RenderChecksumFileName(rt)
@@ -61,8 +65,6 @@ func (dl *ChecksumDownloaderImpl) DownloadChecksum(ctx context.Context, logger *
 			Version:   pkg.Package.Version,
 			Asset:     asset,
 		})
-	case config.PkgInfoTypeForgejoRelease, config.PkgInfoTypeGiteaRelease, config.PkgInfoTypeGitLabRelease:
-		return dl.downloadForgeChecksum(ctx, rt, pkg)
 	case config.PkgInfoTypeHTTP:
 		u, err := pkg.RenderChecksumURL(rt)
 		if err != nil {

@@ -13,10 +13,10 @@ import (
 
 // gitLabHost is the instance a package name can say a project is on.
 //
-// Only this one: a package on another GitLab instance is a definition somebody writes,
-// and its host is the one thing such a definition has to say. gitlab.com is what a name
-// can imply, because a gitlab_release package is on it unless it says otherwise.
-const gitLabHost = "gitlab.com"
+// Only this one, and it is the default a gitlab_release package has rather than a second
+// spelling of it: a package on another GitLab instance is a definition somebody writes,
+// and its host is the one thing such a definition has to say.
+const gitLabHost = registry.DefaultGitLabHost
 
 // getGitLabPackageInfo generates the definition of a project on gitlab.com.
 //
@@ -44,25 +44,41 @@ func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logg
 	pkgInfo.RepoOwner = owner
 	pkgInfo.RepoName = repo
 
-	if description, err := c.gitlab.GetDescription(ctx, gitLabHost, project); err != nil {
-		slogerr.WithError(logger, err).Warn("get the project", "project", project)
-	} else {
-		pkgInfo.Description = description
-	}
+	// What the project is and what it released are two answers neither of which needs the
+	// other, so they are asked for at once. Somebody is waiting for the definition.
+	description := make(chan string, 1)
+	go func() {
+		defer close(description)
+		d, err := c.gitlab.GetDescription(ctx, gitLabHost, project)
+		if err != nil {
+			slogerr.WithError(logger, err).Warn("get the project", "project", project)
+			return
+		}
+		description <- d
+	}()
 
+	versions := c.gitLabVersions(ctx, logger, pkgInfo, pkgName, project, version, limit, cfg)
+	// Empty if the project wasn't found, which is a definition without a description
+	// rather than no definition.
+	pkgInfo.Description = <-description
+	heldToGitLab(pkgInfo)
+	return pkgInfo, versions
+}
+
+// gitLabVersions reads the releases a definition is built from, and says which they were.
+//
+// One release, or the one a version names, is a definition of its own; more than one is a
+// definition with version_overrides, the same as for a GitHub repository.
+func (c *Controller) gitLabVersions(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, project, version string, limit int, cfg *Config) []string {
 	if limit != 1 && version == "" {
-		// More than one release asked for: what they say together is a definition
-		// with version_overrides, the same as for a GitHub repository.
-		versions := c.versionOverrides(logger, pkgName, pkgInfo,
+		return c.versionOverrides(logger, pkgName, pkgInfo,
 			c.gitLabReleases(ctx, logger, project, limit, cfg))
-		heldToGitLab(pkgInfo)
-		return pkgInfo, versions
 	}
 
 	release, err := c.gitlab.GetRelease(ctx, gitLabHost, project, version)
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("get the release", "project", project)
-		return pkgInfo, []string{version}
+		return []string{version}
 	}
 	logger.Debug("got the release", "version", release.TagName)
 
@@ -76,8 +92,7 @@ func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logg
 	logger.Debug("got assets", "num_of_assets", len(assetNames))
 
 	c.patchRelease(logger, pkgInfo, pkgName, release.TagName, assetNames)
-	heldToGitLab(pkgInfo)
-	return pkgInfo, []string{release.TagName}
+	return []string{release.TagName}
 }
 
 // gitLabReleases are the releases of a project, with what each publishes.

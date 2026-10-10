@@ -60,12 +60,15 @@ const (
 	PkgInfoTypeGitLabRelease = "gitlab_release"
 )
 
-// defaultGitLabHost is the instance a gitlab_release package is on when it says none.
+// DefaultGitLabHost is the instance a gitlab_release package is on when it says none.
 //
 // GitLab has one instance nearly every package on it is on, so a definition saying
 // gitlab.com would be saying the obvious. Forgejo and Gitea have no such instance --
 // Codeberg is one of many -- so their types ask.
-const defaultGitLabHost = "gitlab.com"
+//
+// It is exported because what writes a definition reads it: a package name beginning with
+// this host is a gitlab_release package, and the definition then says neither.
+const DefaultGitLabHost = "gitlab.com"
 
 // OnInstanceType says whether a package type is on a forge instance of its own, which is
 // what Host names and what every other type has no need of.
@@ -75,6 +78,15 @@ const defaultGitLabHost = "gitlab.com"
 func OnInstanceType(typ string) bool {
 	return typ == PkgInfoTypeForgejoRelease || typ == PkgInfoTypeGiteaRelease ||
 		typ == PkgInfoTypeGitLabRelease
+}
+
+// ReleaseAssetType says whether a package type installs an asset published with a release.
+//
+// What such a package names is the asset, and what finds it is the release it belongs to --
+// on github.com, or on the instance the package is on. The types that name a URL, a path or
+// a crate answer no.
+func ReleaseAssetType(typ string) bool {
+	return typ == PkgInfoTypeGitHubRelease || OnInstanceType(typ)
 }
 
 // PackageInfo represents a complete package definition including metadata,
@@ -532,7 +544,7 @@ func (p *PackageInfo) GetHost() string {
 		return p.Host
 	}
 	if p.Type == PkgInfoTypeGitLabRelease {
-		return defaultGitLabHost
+		return DefaultGitLabHost
 	}
 	return ""
 }
@@ -622,6 +634,11 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	if err := p.validateFileSources(); err != nil {
 		return err
 	}
+	if OnInstanceType(p.Type) {
+		// Whichever forge a type names, what the definition has to say is the same;
+		// what differs is the API its versions are read from and the URL built.
+		return p.validateForgeRelease()
+	}
 	switch p.Type {
 	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild:
 		if !p.HasRepo() {
@@ -654,8 +671,6 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 			return errAssetRequired
 		}
 		return nil
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
-		return p.validateForgeRelease()
 	case PkgInfoTypeHTTP:
 		if p.URL == "" {
 			return errURLRequired
@@ -788,17 +803,7 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 	if p.NoAsset || p.ErrorMessage != "" {
 		return nil
 	}
-	switch p.Type {
-	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
-		if p.RepoOwner == "" || p.RepoName == "" {
-			return nil
-		}
-		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
-		// The host is read here as a directory, and this is read by aqua remove,
-		// which is given a registry's packages without validating them. A host that
-		// isn't one would be a path out of where the type's packages are, and what
-		// is at the end of that path is removed.
+	if OnInstanceType(p.Type) {
 		// The host, the owner and the name are all read here as directories, and
 		// this is read by aqua remove, which is given a registry's packages without
 		// validating them and expands what it reads as a glob. Anything that isn't a
@@ -809,6 +814,13 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 			return nil
 		}
 		return []string{filepath.Join(p.Type, host, p.RepoOwner, p.RepoName)}
+	}
+	switch p.Type {
+	case PkgInfoTypeGitHubArchive, PkgInfoTypeGoBuild, PkgInfoTypeGitHubContent, PkgInfoTypeGitHubRelease:
+		if p.RepoOwner == "" || p.RepoName == "" {
+			return nil
+		}
+		return []string{filepath.Join(p.Type, "github.com", p.RepoOwner, p.RepoName)}
 	case PkgInfoTypeCargo:
 		if p.Crate == "" {
 			return nil
@@ -845,15 +857,14 @@ func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
 // else the signature is published, and is nobody's mistake.
 func (p *PackageInfo) validateFileSources() error {
 	for _, src := range p.fileSources() {
-		switch src.typ {
-		case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
+		if OnInstanceType(src.typ) {
 			if src.typ != p.Type {
 				return errForgeFileSource
 			}
-		case PkgInfoTypeGitHubRelease:
-			if OnInstanceType(p.Type) && !src.ownRepo {
-				return errGitHubFileSource
-			}
+			continue
+		}
+		if src.typ == PkgInfoTypeGitHubRelease && OnInstanceType(p.Type) && !src.ownRepo {
+			return errGitHubFileSource
 		}
 	}
 	return nil
@@ -1150,14 +1161,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		// GitLab's API.
 		p.Host = ""
 	}
-	switch typ {
-	case PkgInfoTypeGitHubRelease:
-		p.URL = ""
-		p.Path = ""
-		p.Crate = ""
-		p.GoVersionPath = ""
-		p.Cargo = nil
-	case PkgInfoTypeForgejoRelease, PkgInfoTypeGiteaRelease, PkgInfoTypeGitLabRelease:
+	if OnInstanceType(typ) {
 		p.URL = ""
 		p.Path = ""
 		p.Crate = ""
@@ -1172,6 +1176,15 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.SLSAProvenance = nil
 		p.GitHubArtifactAttestations = nil
 		p.Private = false
+		return
+	}
+	switch typ {
+	case PkgInfoTypeGitHubRelease:
+		p.URL = ""
+		p.Path = ""
+		p.Crate = ""
+		p.GoVersionPath = ""
+		p.Cargo = nil
 	case PkgInfoTypeGitHubContent:
 		p.URL = ""
 		p.Asset = ""
