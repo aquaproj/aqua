@@ -61,6 +61,7 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 	if err != nil {
 		return fmt.Errorf("render cosign options: %w", err)
 	}
+	opts = append(opts, cos.CertificateOpts()...)
 
 	files := map[string]*registry.DownloadedFile{
 		"signature":   cos.Signature,

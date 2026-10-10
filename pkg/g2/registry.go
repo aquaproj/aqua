@@ -62,6 +62,11 @@ type Asset struct {
 	Type      string `json:"type"`
 	RepoOwner string `json:"repo_owner,omitempty"`
 	RepoName  string `json:"repo_name,omitempty"`
+	// RepoID is the repository's numeric id on GitHub, for an entry naming a GitHub
+	// repository. A repository's name can be taken over -- deleted and created again, or
+	// transferred and replaced -- and its id can't, so the id is what says the repository
+	// is still the one the entry was generated from.
+	RepoID int64 `json:"repo_id,omitempty"`
 	// Host is the forge instance the release is on, for a forgejo_release or
 	// gitea_release entry. The other types need no such field: their host is
 	// github.com, or is part of URL. A repository on a Forgejo instance says
