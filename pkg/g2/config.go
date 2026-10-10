@@ -8,15 +8,15 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 )
 
-// ConfigFileName is the file at the root of a package's branch.
+// ConfigFileName is the definition in a package's directory.
 //
-// It sits on the package's own branch rather than on main, so that everything about
-// one package is on one branch: what it is generated from and what was generated. The
-// branch says which package it is, which is why the path carries no name.
+// It sits beside what was generated from it, so that everything about one package is in one
+// directory. The definition says which package the directory holds, which is why the path
+// carries no name.
 //
-// It is also why maintaining it needs no separate route. The branch is already where
-// a generated registry.json is committed and reviewed, so a change to the definition
-// travels the same way.
+// It is also why maintaining it needs no separate route. The directory is already where a
+// generated registry.json is committed and reviewed, so a change to the definition travels
+// the same way.
 const ConfigFileName = "registry.yaml"
 
 // Config is a package's definition, the input aqua-registry-g2 generates from.

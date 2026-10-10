@@ -23,11 +23,11 @@ import (
 // an order of magnitude larger, for an answer that is a word.
 const NamesFileName = "names.json"
 
-// Names resolves a name to the branch holding the package, and an old name to the name the
+// Names resolves a name to the id the package is kept under, and an old name to the name the
 // package has now.
 //
-// A package's branch is named after its id rather than after the package, so a name has to
-// be resolved before anything can be fetched. It is one table for every name rather than a
+// A package's directory is named after its id rather than after the package, so a name has
+// to be resolved before anything can be fetched. It is one table for every name rather than a
 // file per name, because a configuration asks for many packages at once: a file per name
 // would be a request per package on every command that reads one, where a table is one
 // request that answers for all of them and is cached afterwards.
@@ -37,7 +37,7 @@ const NamesFileName = "names.json"
 // inverted from the catalogue rather than written beside it, so that the two can't disagree
 // about which package a name belongs to.
 type Names struct {
-	// IDs maps a package's name to the id its branch is named after.
+	// IDs maps a package's name to the id its directory is named after.
 	IDs map[string]string `json:"ids"`
 	// Aliases maps each other name a package is known by to the name it has now. It is
 	// what rewrites a configuration, where IDs is what fetches a file.
@@ -72,7 +72,7 @@ func ReadNames(r io.Reader) (*Names, error) {
 	return names, nil
 }
 
-// ID returns the id of the branch holding the package this name belongs to, and false when
+// ID returns the id of the package this name belongs to, and false when
 // the table doesn't know the name.
 //
 // An old name is answered for as well as a current one: it is the same package, and what

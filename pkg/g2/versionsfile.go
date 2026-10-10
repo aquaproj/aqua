@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-// VersionsFileName is the list of versions a package branch holds, at the root of that
-// branch beside the definition.
+// VersionsFileName is the list of versions a package holds, in its directory beside the
+// definition.
 //
-// The list is also what the branch's tree says, and reading the tree is how it is read
+// The list is also what the directory's tree says, and reading the tree is how it is read
 // today. The file is for reading it in one object of a few kilobytes rather than an entry
 // per version per directory, and for saying what the tree can't: when each release was
 // published, and the digest of the file the registry serves for it.
 const VersionsFileName = "versions.json"
 
-// Versions is the content of a package branch's versions.json.
+// Versions is the content of a package's versions.json.
 //
 // What it is for is choosing a version without fetching one: a cooldown that won't take a
 // release until it has stood for some days, a listing that stops at some date, the order of
@@ -26,16 +26,16 @@ const VersionsFileName = "versions.json"
 // version.
 type Versions struct {
 	// Source is the sha of the versions directory the list was made from -- the tree
-	// object, as git names it. It is what says whether the list is still the branch's:
+	// object, as git names it. It is what says whether the list is still the package's:
 	// the directory's sha moves when a version is added, taken out or generated again,
-	// and not when anything else on the branch does, which the branch's commit can't say.
+	// and not when anything else does, which a commit can't say.
 	//
 	// It is also what makes reading the list cheap for whoever keeps it: the sha is one
-	// request, and a list naming the current one needs nothing else read. The branch's
-	// commit would be no use for that, since writing the list moves it.
+	// request, and a list naming the current one needs nothing else read. A commit would
+	// be no use for that, since writing the list moves it.
 	//
-	// When the list is stale the branch is right, since the branch is what aqua installs
-	// from and this is a copy of what it holds.
+	// When the list is stale the directory is right, since the directory is what aqua
+	// installs from and this is a copy of what it holds.
 	Source string `json:"source,omitempty"`
 	// Versions is every version the registry holds, newest release first.
 	Versions []*Version `json:"versions"`
@@ -43,8 +43,8 @@ type Versions struct {
 
 // Version is one version the registry holds.
 type Version struct {
-	// Version is the release's tag, as upstream writes it rather than as the branch
-	// escapes it for a directory name.
+	// Version is the release's tag, as upstream writes it rather than as it is escaped
+	// for a directory name.
 	Version string `json:"version"`
 	// PublishedAt is when the release was published, as RFC 3339 in UTC. It is empty for
 	// a version with no release to ask -- a package whose versions are tags -- which is

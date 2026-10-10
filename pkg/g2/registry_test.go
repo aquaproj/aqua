@@ -61,13 +61,13 @@ func TestClient_Get(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The branch carries the package -- named after its id, which the table resolved the
-	// name to -- and the path carries the version.
+	// The path carries the package -- a directory named after its id, which the table
+	// resolved the name to -- and the version.
 	want := &domain.GitHubContentFileParam{
 		RepoOwner: "aquaproj",
 		RepoName:  "aqua-registry-g2",
-		Ref:       "pkg_" + fakeID,
-		Path:      "versions/v2.1.0/registry-1.json",
+		Ref:       "main",
+		Path:      g2.PackageDir(fakeID) + "/versions/v2.1.0/registry-1.json",
 	}
 	if diff := cmp.Diff(want, dl.param); diff != "" {
 		t.Errorf("the request is wrong (-want +got):\n%s", diff)

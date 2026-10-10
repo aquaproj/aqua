@@ -45,8 +45,8 @@ func NewCache(param *config.Param) *Cache {
 
 // Path is where one package version's registry.json is cached.
 //
-// Under the package's name rather than under the branch it came from, which is named after
-// the package's id: what a caller has is a name, and a cached file it has already read is
+// Under the package's name rather than under the directory it came from, which is named
+// after the package's id: what a caller has is a name, and a cached file it has already read is
 // found again without resolving anything -- including on a run that can't reach the registry
 // at all.
 func (c *Cache) Path(repoOwner, repoName, pkgName, version string) string {
@@ -57,7 +57,7 @@ func (c *Cache) Path(repoOwner, repoName, pkgName, version string) string {
 // NamesPath is where the table that resolves a name is cached.
 //
 // Beside the packages rather than inside one: it is the registry as a whole, the same way it
-// sits at the root of the default branch rather than on a package's branch.
+// sits at the root of the default branch rather than in a package's directory.
 func (c *Cache) NamesPath(repoOwner, repoName string) string {
 	return filepath.Join(c.dir, RegistryType, "github.com", repoOwner, repoName, NamesFileName)
 }
