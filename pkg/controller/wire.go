@@ -43,6 +43,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
+	"github.com/aquaproj/aqua/v2/pkg/packslip"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -282,6 +283,7 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(packslip.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
@@ -342,6 +344,14 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 		wire.NewSet(
 			minisign.NewExecutor,
 			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
+			packslip.New,
+			wire.Bind(new(installpackage.PackslipVerifier), new(*packslip.Verifier)),
+		),
+		wire.NewSet(
+			packslip.NewExecutor,
+			wire.Bind(new(packslip.Executor), new(*packslip.ExecutorImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
@@ -464,6 +474,7 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(packslip.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
@@ -525,6 +536,14 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
 		),
 		wire.NewSet(
+			packslip.New,
+			wire.Bind(new(installpackage.PackslipVerifier), new(*packslip.Verifier)),
+		),
+		wire.NewSet(
+			packslip.NewExecutor,
+			wire.Bind(new(packslip.Executor), new(*packslip.ExecutorImpl)),
+		),
+		wire.NewSet(
 			ghattestation.New,
 			wire.Bind(new(installpackage.GitHubArtifactAttestationsVerifier), new(*ghattestation.Verifier)),
 		),
@@ -576,6 +595,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 			wire.Bind(new(cosign.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(packslip.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
@@ -624,6 +644,14 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 		wire.NewSet(
 			minisign.NewExecutor,
 			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
+			packslip.New,
+			wire.Bind(new(installpackage.PackslipVerifier), new(*packslip.Verifier)),
+		),
+		wire.NewSet(
+			packslip.NewExecutor,
+			wire.Bind(new(packslip.Executor), new(*packslip.ExecutorImpl)),
 		),
 		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
@@ -697,6 +725,7 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(packslip.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
 		),
 		wire.NewSet(
@@ -766,6 +795,14 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
 		),
 		wire.NewSet(
+			packslip.New,
+			wire.Bind(new(installpackage.PackslipVerifier), new(*packslip.Verifier)),
+		),
+		wire.NewSet(
+			packslip.NewExecutor,
+			wire.Bind(new(packslip.Executor), new(*packslip.ExecutorImpl)),
+		),
+		wire.NewSet(
 			installpackage.NewGoInstallInstallerImpl,
 			wire.Bind(new(installpackage.GoInstallInstaller), new(*installpackage.GoInstallInstallerImpl)),
 		),
@@ -831,6 +868,7 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 			wire.Bind(new(slsa.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(installpackage.Executor), new(*osexec.Executor)),
 			wire.Bind(new(minisign.CommandExecutor), new(*osexec.Executor)),
+			wire.Bind(new(packslip.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(ghattestation.CommandExecutor), new(*osexec.Executor)),
 			wire.Bind(new(unarchive.Executor), new(*osexec.Executor)),
 		),
@@ -866,6 +904,14 @@ func InitializeUpdateChecksumCommandController(ctx context.Context, logger *slog
 		wire.NewSet(
 			minisign.NewExecutor,
 			wire.Bind(new(minisign.Executor), new(*minisign.ExecutorImpl)),
+		),
+		wire.NewSet(
+			packslip.New,
+			wire.Bind(new(installpackage.PackslipVerifier), new(*packslip.Verifier)),
+		),
+		wire.NewSet(
+			packslip.NewExecutor,
+			wire.Bind(new(packslip.Executor), new(*packslip.ExecutorImpl)),
 		),
 		wire.NewSet(
 			ghattestation.New,

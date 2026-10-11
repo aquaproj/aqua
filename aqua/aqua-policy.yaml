@@ -19,6 +19,9 @@ registries:
   - name: libc
     type: local
     path: ../tests/libc/registry.yaml
+  - name: packslip
+    type: local
+    path: ../tests/packslip/registry.yaml
 packages:
   - registry: standard
   - registry: main
@@ -26,3 +29,4 @@ packages:
   - registry: slsa
   - registry: macos
   - registry: libc
+  - registry: packslip

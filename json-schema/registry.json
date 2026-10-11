@@ -406,6 +406,9 @@
         "minisign": {
           "$ref": "#/$defs/Minisign"
         },
+        "packslip": {
+          "$ref": "#/$defs/Packslip"
+        },
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
@@ -581,6 +584,9 @@
         "minisign": {
           "$ref": "#/$defs/Minisign"
         },
+        "packslip": {
+          "$ref": "#/$defs/Packslip"
+        },
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"
         },
@@ -611,6 +617,36 @@
         "$ref": "#/$defs/PackageInfo"
       },
       "type": "array"
+    },
+    "Packslip": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "url": {
+          "type": "string"
+        },
+        "pubkey": {
+          "type": "string"
+        },
+        "identity": {
+          "type": "string"
+        },
+        "identity_prefix": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "pin": {
+          "type": "string"
+        },
+        "allow_unlogged": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "Replacements": {
       "properties": {
@@ -832,6 +868,9 @@
         },
         "minisign": {
           "$ref": "#/$defs/Minisign"
+        },
+        "packslip": {
+          "$ref": "#/$defs/Packslip"
         },
         "github_artifact_attestations": {
           "$ref": "#/$defs/GitHubArtifactAttestations"

@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/link"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/aquaproj/aqua/v2/pkg/packslip"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
 	"github.com/aquaproj/aqua/v2/pkg/testutil"
@@ -76,7 +77,7 @@ e922723678f493216c2398f3f23fb027c9a98808b49f6fce401ef82ee2c22b03  aqua_linux_arm
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
 			ctrl := installpackage.New(d.param, &download.Mock{
 				RC: io.NopCloser(strings.NewReader("xxx")),
-			}, d.rt, link.New(), d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
+			}, d.rt, link.New(), d.checksumDownloader, d.checksumCalculator, &unarchive.MockUnarchiver{}, &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &packslip.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			if err := ctrl.InstallAqua(ctx, logger, d.version); err != nil {
 				if d.isErr {
 					return

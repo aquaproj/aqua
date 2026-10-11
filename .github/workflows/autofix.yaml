@@ -30,6 +30,10 @@ jobs:
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
       - run: aqua upc -prune
+        working-directory: pkg/packslip
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: aqua upc -prune
         working-directory: tests/pnpm
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
