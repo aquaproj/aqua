@@ -5,6 +5,9 @@ package registry
 type GitHubArtifactAttestations struct {
 	// Enabled controls whether GitHub artifact attestation verification is active.
 	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
+	// Repository is the repository the artifact is attested in, as owner/name, passed as
+	// --repo. It defaults to the package's repository.
+	Repository string `yaml:"repository,omitempty" json:"repository,omitempty"`
 	// PredicateType specifies the type of predicate to verify.
 	PredicateType string `yaml:"predicate_type,omitempty" json:"predicate_type,omitempty"`
 	// SignerWorkflow2 specifies the expected GitHub Actions workflow for signing.

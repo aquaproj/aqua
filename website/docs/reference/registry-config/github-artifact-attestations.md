@@ -13,6 +13,7 @@ Please see [Reference](/docs/reference/security/github-artifact-attestations) to
 - enabled (bool)
 - signer_workflow (string)
 - predicate_type (string)
+- repository (string): `aqua >= v2.65.0`
 - signer_repo (string): `aqua >= v2.65.0`
 - cert_oidc_issuer (string): `aqua >= v2.65.0`
 - deny_self_hosted_runners (bool): `aqua >= v2.65.0`
@@ -26,10 +27,11 @@ github_artifact_attestations:
   signer_workflow: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml
 ```
 
-Each of the fields added in v2.65.0 is passed to `gh attestation verify` as the flag of the same name, and only when it is set:
+Each of the fields added in v2.65.0 is passed to `gh attestation verify` as the flag below, and only when it is set:
 
 | field | flag | what it checks |
 | --- | --- | --- |
+| repository | `--repo` | the repository the artifact is attested in, as `owner/name`. It defaults to the package's repository, so it is needed only when the attestation is in another repository |
 | signer_repo | `--signer-repo` | the repository of the workflow that signed, without pinning the workflow's path |
 | cert_oidc_issuer | `--cert-oidc-issuer` | the OIDC issuer of the signing certificate. gh defaults to GitHub Actions' issuer `https://token.actions.githubusercontent.com`, so it only needs to be set for another issuer |
 | deny_self_hosted_runners | `--deny-self-hosted-runners` | that the artifact wasn't built on a self-hosted runner |

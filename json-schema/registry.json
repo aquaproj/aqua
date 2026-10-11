@@ -266,6 +266,9 @@
         "enabled": {
           "type": "boolean"
         },
+        "repository": {
+          "type": "string"
+        },
         "predicate_type": {
           "type": "string"
         },

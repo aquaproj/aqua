@@ -38,7 +38,7 @@ func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logger 
 	}
 
 	if err := g.ghVerifier.Verify(ctx, logger, &ghattestation.ParamVerify{
-		Repository:            g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName,
+		Repository:            g.repository(),
 		ArtifactPath:          file,
 		PredicateType:         g.gaa.PredicateType,
 		SignerWorkflow:        g.gaa.SignerWorkflow(),
@@ -51,4 +51,13 @@ func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logger 
 		return fmt.Errorf("verify a package with gh attestation: %w", err)
 	}
 	return nil
+}
+
+// repository is the repository the attestation is looked up in: the one the configuration
+// names, or the package's.
+func (g *gitHubArtifactAttestationsVerifier) repository() string {
+	if g.gaa.Repository != "" {
+		return g.gaa.Repository
+	}
+	return g.pkg.PackageInfo.RepoOwner + "/" + g.pkg.PackageInfo.RepoName
 }
