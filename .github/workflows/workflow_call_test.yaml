@@ -24,7 +24,7 @@ jobs:
               - .github/workflows/wc-test-docker.yaml
 
   test:
-    uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@981264a9d35fe1edc3426aedc1bb94bc3e62264a # v6.1.0
+    uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@7b56230bf736afb64e34caddb6c73338395283d4 # test/parallel-lint-test
     with:
       aqua_version: v2.64.0
       golangci-lint-timeout: 120s
