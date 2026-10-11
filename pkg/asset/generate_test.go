@@ -255,3 +255,84 @@ func TestParseAssetInfos(t *testing.T) {
 		})
 	}
 }
+
+// A replacement promoted to the package has to be cancelled for an OS that spells the
+// architecture the way aqua does, or that OS is looked for under the other spelling.
+func TestParseAssetInfos_replacementPerOS(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	data := []struct {
+		name         string
+		assets       []string
+		version      string
+		replacements registry.Replacements
+		overrides    []*registry.Override
+	}{
+		{
+			// darwin and windows are x86_64, linux is amd64.
+			name: "zk-org/zk",
+			assets: []string{
+				"zk-v0.15.6-linux-amd64.tar.gz", "zk-v0.15.6-linux-arm64.tar.gz",
+				"zk-v0.15.6-macos-arm64.tar.gz", "zk-v0.15.6-macos-x86_64.tar.gz",
+				"zk-v0.15.6-windows-x86_64.tar.gz",
+			},
+			version:      "v0.15.6",
+			replacements: registry.Replacements{archAmd64: "x86_64", osDarwin: "macos"},
+			overrides: []*registry.Override{
+				{GOOS: osLinux, Replacements: registry.Replacements{archAmd64: archAmd64}},
+			},
+		},
+		{
+			// linux is aarch64 as well as arm64, darwin is only arm64.
+			name: "dotenvx/dotenvx",
+			assets: []string{
+				"dotenvx-2.34.2-darwin-amd64.tar.gz", "dotenvx-2.34.2-darwin-arm64.tar.gz",
+				"dotenvx-2.34.2-linux-aarch64.tar.gz", "dotenvx-2.34.2-linux-amd64.tar.gz",
+				"dotenvx-2.34.2-linux-arm64.tar.gz", "dotenvx-2.34.2-windows-amd64.tar.gz",
+			},
+			version: "v2.34.2",
+			overrides: []*registry.Override{
+				{GOOS: osLinux, Replacements: registry.Replacements{archArm64: "aarch64"}},
+			},
+		},
+		{
+			// windows has only amd64, which arm64 runs under emulation, so the promoted
+			// arm64: aarch64 isn't cancelled for it and no override is left for windows.
+			name: "windows emulating arm64",
+			assets: []string{
+				"foo-linux-amd64.tar.gz", "foo-linux-aarch64.tar.gz",
+				"foo-darwin-amd64.tar.gz", "foo-darwin-aarch64.tar.gz",
+				"foo-windows-amd64.tar.gz",
+			},
+			version:      "v1.0.0",
+			replacements: registry.Replacements{archArm64: "aarch64"},
+		},
+		{
+			// darwin has only amd64, which arm64 runs under Rosetta 2.
+			name: "darwin under Rosetta 2",
+			assets: []string{
+				"foo-linux-amd64.tar.gz", "foo-linux-aarch64.tar.gz",
+				"foo-darwin-amd64.tar.gz",
+				"foo-windows-amd64.tar.gz", "foo-windows-aarch64.tar.gz",
+			},
+			version:      "v1.0.0",
+			replacements: registry.Replacements{archArm64: "aarch64"},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			infos := make([]*asset.AssetInfo, 0, len(d.assets))
+			for _, name := range d.assets {
+				infos = append(infos, asset.ParseAssetName(name, d.version))
+			}
+			pkgInfo := &registry.PackageInfo{}
+			asset.ParseAssetInfos(pkgInfo, infos)
+			if diff := cmp.Diff(d.replacements, pkgInfo.Replacements); diff != "" {
+				t.Errorf("replacements (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(d.overrides, pkgInfo.Overrides); diff != "" {
+				t.Errorf("overrides (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

@@ -205,7 +205,7 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	defaultAsset := getDefaultAsset(pkgInfo.Format, pkgInfo.Overrides)
 	pkgInfo.Asset = defaultAsset
 
-	pkgInfo.Overrides = normalizeOverridesByAsset(pkgInfo.Asset, pkgInfo.Overrides)
+	clearDefaultAsset(pkgInfo.Asset, pkgInfo.Overrides)
 
 	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo)
 }
@@ -216,7 +216,6 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string]string, []*registry.Override) { //nolint:funlen,gocognit,gocyclo,cyclop
 	overrides := pkgInfo.Overrides
 	var replacements map[string]string
-	var ret []*registry.Override
 	for _, override := range overrides {
 		for k, v := range override.Replacements {
 			score := -1
@@ -264,11 +263,13 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 					if override.GOOS == k || override.GOArch == k || (override.GOOS == "" && isOS) || (override.GOArch == "" && !isOS) {
 						if !matched {
 							if isKeyUsed(pkgInfo, override, k) {
-								if override.Replacements == nil {
-									override.Replacements = map[string]string{}
-								}
 								if k != archArm64 || (override.GOOS != osWindows || !pkgInfo.WindowsARMEmulation) && (override.GOOS != osDarwin || !pkgInfo.Rosetta2) {
 									// https://github.com/aquaproj/aqua/issues/3336
+									// The map is made only when something goes in it, so an
+									// override left with nothing is dropped below.
+									if override.Replacements == nil {
+										override.Replacements = map[string]string{}
+									}
 									override.Replacements[k] = k
 								}
 							}
@@ -284,7 +285,15 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 				}
 			}
 		}
-		if override.Replacements != nil || override.Format != "" || override.Asset != "" {
+	}
+	// Kept after every replacement is promoted, not as each override is looked at:
+	// promoting one can give an override looked at earlier a replacement of its own,
+	// which cancels the promoted one for it. zk-org/zk names linux amd64 but darwin and
+	// windows x86_64, and a linux override dropped before amd64: x86_64 was promoted
+	// left linux with x86_64 too.
+	var ret []*registry.Override
+	for _, override := range overrides {
+		if len(override.Replacements) != 0 || override.Format != "" || override.Asset != "" {
 			ret = append(ret, override)
 		}
 	}
@@ -313,21 +322,16 @@ func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key s
 	return strings.Contains(asset, "{{.Arch}}") || strings.Contains(checksumAsset, "{{.Arch}}")
 }
 
-// normalizeOverridesByAsset removes redundant asset specifications from overrides.
-// If an override uses the default asset, the asset field is cleared to reduce duplication.
-func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Override) []*registry.Override {
-	ret := []*registry.Override{}
+// clearDefaultAsset clears the asset of the overrides that use the default one.
+//
+// An override left saying nothing is kept: normalizeOverridesByReplacements may give it a
+// replacement of its own when it promotes one to the package, and drops it if it doesn't.
+func clearDefaultAsset(defaultAsset string, overrides []*registry.Override) {
 	for _, override := range overrides {
-		if override.Asset != defaultAsset {
-			ret = append(ret, override)
-			continue
-		}
-		override.Asset = ""
-		if override.Format != "" || len(override.Replacements) != 0 {
-			ret = append(ret, override)
+		if override.Asset == defaultAsset {
+			override.Asset = ""
 		}
 	}
-	return ret
 }
 
 // getDefaultAsset determines the most commonly used asset template for the default format.
