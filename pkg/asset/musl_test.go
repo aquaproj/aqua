@@ -12,7 +12,7 @@ import (
 
 // A release publishing a musl build beside the Linux one gets a variant choosing it, and a
 // release whose Linux build is already the musl one gets none.
-func TestParseAssetInfos_musl(t *testing.T) { //nolint:funlen
+func TestParseAssetInfos_musl(t *testing.T) { //nolint:funlen,gocognit,cyclop
 	t.Parallel()
 	data := []struct {
 		name    string
@@ -50,6 +50,23 @@ func TestParseAssetInfos_musl(t *testing.T) { //nolint:funlen
 				"amd64/musl":  "foo-linux-x86_64-musl.tar.gz",
 				"arm64/glibc": "foo-linux-arm64.tar.gz",
 				"arm64/musl":  "foo-linux-arm64.tar.gz",
+			},
+		},
+		{
+			// arm64 is spelled aarch64 by both of its builds, and the shared override has to
+			// say so for arm64 rather than take amd64's build for both.
+			name: "x86_64 aarch64",
+			assets: []string{
+				"foo-linux-x86_64.tar.gz", "foo-linux-aarch64.tar.gz",
+				"foo-linux-x86_64-musl.tar.gz", "foo-linux-aarch64-musl.tar.gz",
+				"foo-darwin-x86_64.tar.gz", "foo-darwin-aarch64.tar.gz",
+			},
+			version: "v1.0.0",
+			want: map[string]string{
+				"amd64/glibc": "foo-linux-x86_64.tar.gz",
+				"amd64/musl":  "foo-linux-x86_64-musl.tar.gz",
+				"arm64/glibc": "foo-linux-aarch64.tar.gz",
+				"arm64/musl":  "foo-linux-aarch64-musl.tar.gz",
 			},
 		},
 		{
@@ -93,6 +110,29 @@ func TestParseAssetInfos_musl(t *testing.T) { //nolint:funlen
 					if got != want {
 						t.Errorf("linux/%s %s: got %s, want %s", goarch, libc, got, want)
 					}
+				}
+				// aqua < v2.58.0 doesn't know variants and drops them, so it has to be
+				// left on the glibc build it installed before there was a musl one.
+				want, ok := d.want[goarch+"/glibc"]
+				if !ok {
+					continue
+				}
+				rt := &runtime.Runtime{GOOS: "linux", GOARCH: goarch}
+				p := pkgInfo.Copy()
+				p.Overrides = make([]*registry.Override, len(pkgInfo.Overrides))
+				for i, ov := range pkgInfo.Overrides {
+					o := *ov
+					o.Variants = nil
+					p.Overrides[i] = &o
+				}
+				p.OverrideByRuntime(rt)
+				pkg := &config.Package{PackageInfo: p, Package: &aqua.Package{Name: "o/r", Version: d.version}}
+				got, err := pkg.RenderAsset(rt)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if got != want {
+					t.Errorf("linux/%s without variants: got %s, want %s", goarch, got, want)
 				}
 			}
 		})

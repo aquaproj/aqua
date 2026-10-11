@@ -225,29 +225,80 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 // nothing: a static build runs on glibc too.
 //
 // The overrides go first, because aqua applies the first override that matches, and so
-// say everything their asset needs rather than relying on the Linux override.
+// say everything their asset needs rather than relying on the Linux override. Before the
+// musl ones go glibc ones saying what the Linux override does: aqua < v2.58.0 doesn't
+// know variants, matches the first override for linux whatever its variant, and has to
+// stay on the build it always installed.
 func muslVariants(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) []*registry.Override {
 	builds := muslBuilds(assetInfos)
 	if len(builds) == 0 {
 		return nil
 	}
-	variants := []*registry.Variant{{Key: "libc", Value: "musl"}}
 	amd, arm := builds[archAmd64], builds[archArm64]
-	if amd != nil && arm != nil && amd.Template == arm.Template && amd.Format == arm.Format {
-		ov := muslOverride(pkgInfo, amd, []string{archAmd64, archArm64})
-		ov.Variants = variants
-		return []*registry.Override{ov}
-	}
-	ret := make([]*registry.Override, 0, len(builds))
-	for _, goarch := range []string{archAmd64, archArm64} {
-		if b := builds[goarch]; b != nil {
-			ov := muslOverride(pkgInfo, b, []string{goarch})
-			ov.GOArch = goarch
-			ov.Variants = variants
-			ret = append(ret, ov)
+	scopes := [][]string{}
+	if amd != nil && arm != nil && amd.Template == arm.Template && amd.Format == arm.Format &&
+		spelling(amd.Replacements, osLinux) == spelling(arm.Replacements, osLinux) {
+		scopes = append(scopes, []string{archAmd64, archArm64})
+	} else {
+		for _, goarch := range []string{archAmd64, archArm64} {
+			if builds[goarch] != nil {
+				scopes = append(scopes, []string{goarch})
+			}
 		}
 	}
+	var glibc, musl []*registry.Override
+	for _, goarchs := range scopes {
+		glibc = append(glibc, glibcOverrides(pkgInfo.Overrides, goarchs)...)
+		musl = append(musl, muslOverride(pkgInfo, builds, goarchs))
+	}
+	return append(glibc, musl...)
+}
+
+// glibcOverrides returns, for the architectures a musl override covers, overrides choosing
+// on glibc what the Linux override chose before there was a musl one.
+//
+// They come before the musl override, so that an aqua that doesn't know variants matches
+// them first. Architectures that the Linux override treats differently get one each.
+func glibcOverrides(overrides []*registry.Override, goarchs []string) []*registry.Override {
+	variants := []*registry.Variant{{Key: "libc", Value: "glibc"}}
+	first := linuxOverride(overrides, goarchs[0])
+	shared := true
+	for _, goarch := range goarchs[1:] {
+		if linuxOverride(overrides, goarch) != first {
+			shared = false
+		}
+	}
+	ret := []*registry.Override{}
+	for i, goarch := range goarchs {
+		if shared && i > 0 {
+			break
+		}
+		ov := &registry.Override{}
+		if base := linuxOverride(overrides, goarch); base != nil {
+			*ov = *base
+		}
+		ov.GOOS = osLinux
+		ov.GOArch = ""
+		if len(goarchs) == 1 || !shared {
+			ov.GOArch = goarch
+		}
+		ov.Variants = variants
+		ret = append(ret, ov)
+	}
 	return ret
+}
+
+// linuxOverride is the override aqua applies on Linux for goarch, or nil when none does.
+func linuxOverride(overrides []*registry.Override, goarch string) *registry.Override {
+	for _, ov := range overrides {
+		if len(ov.Variants) != 0 {
+			continue
+		}
+		if (ov.GOOS == "" || ov.GOOS == osLinux) && (ov.GOArch == "" || ov.GOArch == goarch) {
+			return ov
+		}
+	}
+	return nil
 }
 
 // muslBuilds returns, by architecture, the musl build of each Linux architecture whose
@@ -275,13 +326,22 @@ func muslBuilds(assetInfos []*AssetInfo) map[string]*AssetInfo {
 	return builds
 }
 
-// muslOverride is the override naming a musl build for the given architectures.
+// muslOverride is the override naming the musl build of the given architectures, each of
+// which spells its architecture as its own build does.
 //
 // It says a replacement only where the package's would spell the OS or an architecture
 // differently from the build's name, and a format only where it differs from the
 // package's.
-func muslOverride(pkgInfo *registry.PackageInfo, build *AssetInfo, goarchs []string) *registry.Override {
-	ov := &registry.Override{GOOS: osLinux, Asset: build.Template}
+func muslOverride(pkgInfo *registry.PackageInfo, builds map[string]*AssetInfo, goarchs []string) *registry.Override {
+	build := builds[goarchs[0]]
+	ov := &registry.Override{
+		GOOS:     osLinux,
+		Asset:    build.Template,
+		Variants: []*registry.Variant{{Key: "libc", Value: "musl"}},
+	}
+	if len(goarchs) == 1 {
+		ov.GOArch = goarchs[0]
+	}
 	if build.Format != pkgInfo.Format {
 		ov.Format = build.Format
 	}
@@ -291,7 +351,7 @@ func muslOverride(pkgInfo *registry.PackageInfo, build *AssetInfo, goarchs []str
 	}
 	if strings.Contains(build.Template, "{{.Arch}}") {
 		for _, goarch := range goarchs {
-			want[goarch] = spelling(build.Replacements, goarch)
+			want[goarch] = spelling(builds[goarch].Replacements, goarch)
 		}
 	}
 	for k, v := range want {
