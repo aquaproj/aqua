@@ -162,6 +162,21 @@
         },
         "bundle": {
           "$ref": "#/$defs/DownloadedFile"
+        },
+        "certificate_identity": {
+          "type": "string"
+        },
+        "certificate_identity_regexp": {
+          "type": "string"
+        },
+        "certificate_oidc_issuer": {
+          "type": "string"
+        },
+        "certificate_github_workflow_repository": {
+          "type": "string"
+        },
+        "certificate_github_workflow_ref": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
