@@ -68,6 +68,7 @@ packages:
 - [cosign](cosign.md)
 - [slsa_provenance](slsa-provenance.md)
 - [minisign](minisign.md)
+- [packslip](packslip.md)
 - [github_artifact_attestations](github-artifact-attestations.md)
 - [github_immutable_release](github-immutable-release.md)
 - [private](private.md)

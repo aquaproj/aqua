@@ -217,6 +217,12 @@ func (c *Controller) patchRelease(logger *slog.Logger, cfg *Config, pkgInfo *reg
 	assetNames := map[string]struct{}{}
 	checksumNames := map[string]struct{}{}
 	for _, assetName := range assets {
+		// packslip.sigstore.json is the packslip bundle of the whole release. It is
+		// neither an asset of the package nor a cosign bundle of any file.
+		if assetName == registry.BundleAssetPackslip {
+			pkgInfo.Packslip = packslipConfig(pkgInfo)
+			continue
+		}
 		if !pkgNameContainChecksum {
 			chksum := checksum.GetChecksumConfigFromFilename(assetName, tagName)
 			if chksum != nil {
@@ -344,6 +350,17 @@ func slsaProvenance(pkgInfo *registry.PackageInfo, assets []string, tagName stri
 		}
 	}
 	return release
+}
+
+// packslipConfig is how a packslip bundle in the package's release is verified.
+//
+// Left to itself, packslip trusts whichever project the bundle claims, so the
+// configuration pins the signer to a workflow of the package's own repository.
+func packslipConfig(pkgInfo *registry.PackageInfo) *registry.Packslip {
+	return &registry.Packslip{
+		IdentityPrefix: fmt.Sprintf("https://github.com/%s/%s/", pkgInfo.RepoOwner, pkgInfo.RepoName),
+		Issuer:         urlOIDCIssuer,
+	}
 }
 
 func findSignature(assetNames map[string]struct{}, checksumAssetName string) string {

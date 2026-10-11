@@ -135,6 +135,7 @@ type PackageInfo struct {
 	Cosign                     *Cosign                     `yaml:",omitempty" json:"cosign,omitempty"`
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
+	Packslip                   *Packslip                   `yaml:",omitempty" json:"packslip,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
 	VersionConstraints         string                      `yaml:"version_constraint,omitempty" json:"version_constraint,omitempty"`
@@ -222,6 +223,7 @@ type VersionOverride struct {
 	Cosign                     *Cosign                     `yaml:",omitempty" json:"cosign,omitempty"`
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
+	Packslip                   *Packslip                   `yaml:",omitempty" json:"packslip,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 	Build                      *Build                      `yaml:",omitempty" json:"build,omitempty"`
 	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
@@ -276,6 +278,7 @@ type Override struct {
 	Cosign                     *Cosign                     `yaml:",omitempty" json:"cosign,omitempty"`
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
+	Packslip                   *Packslip                   `yaml:",omitempty" json:"packslip,omitempty"`
 	GitHubArtifactAttestations *GitHubArtifactAttestations `yaml:"github_artifact_attestations,omitempty" json:"github_artifact_attestations,omitempty"`
 	Vars                       []*Var                      `yaml:",omitempty" json:"vars,omitempty"`
 	Envs                       SupportedEnvs               `yaml:",omitempty" json:"envs,omitempty"`
@@ -320,6 +323,7 @@ func (p *PackageInfo) Copy() *PackageInfo {
 		Cosign:                     p.Cosign,
 		SLSAProvenance:             p.SLSAProvenance,
 		Minisign:                   p.Minisign,
+		Packslip:                   p.Packslip,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
 		Private:                    p.Private,
 		ErrorMessage:               p.ErrorMessage,
@@ -414,6 +418,10 @@ func (p *PackageInfo) OverrideByRuntime(rt *runtime.Runtime) { //nolint:cyclop,f
 
 	if ov.Minisign != nil {
 		p.Minisign = ov.Minisign
+	}
+
+	if ov.Packslip != nil {
+		p.Packslip = ov.Packslip
 	}
 
 	if ov.GitHubArtifactAttestations != nil {
@@ -632,6 +640,9 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 		return nil
 	}
 	if err := p.validateFileSources(); err != nil {
+		return err
+	}
+	if err := p.Packslip.validate(p.Type); err != nil {
 		return err
 	}
 	if OnInstanceType(p.Type) {
@@ -895,6 +906,9 @@ func (p *PackageInfo) OverrideVersion(child *VersionOverride) *PackageInfo { //n
 	}
 	if child.Minisign != nil {
 		pkg.Minisign = child.Minisign
+	}
+	if child.Packslip != nil {
+		pkg.Packslip = child.Packslip
 	}
 	if child.GitHubArtifactAttestations != nil {
 		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
@@ -1218,6 +1232,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Minisign = nil
+		p.Packslip = nil
 		p.GitHubArtifactAttestations = nil
 		p.Format = ""
 		p.Rosetta2 = false
@@ -1233,6 +1248,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Minisign = nil
+		p.Packslip = nil
 		p.GitHubArtifactAttestations = nil
 		p.Format = ""
 		p.Rosetta2 = false
@@ -1247,6 +1263,7 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		p.Cosign = nil
 		p.SLSAProvenance = nil
 		p.Minisign = nil
+		p.Packslip = nil
 		p.GitHubArtifactAttestations = nil
 		p.Format = ""
 		p.Rosetta2 = false

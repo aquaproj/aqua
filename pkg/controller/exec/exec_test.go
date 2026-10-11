@@ -24,6 +24,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/aquaproj/aqua/v2/pkg/packslip"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -159,7 +160,7 @@ packages:
 			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, linker)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuum.NewMock(d.param.RootDir, nil, nil))
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &packslip.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuum.NewMock(d.param.RootDir, nil, nil))
 			policyFinder := policy.NewConfigFinder()
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, policy.NewReader(policyValidator, policyFinder, policy.NewConfigReader()), vacuum.NewMock(d.param.RootDir, nil, nil))
 			if err := ctrl.Exec(ctx, logger, d.param, d.exeName, d.args...); err != nil {
@@ -291,7 +292,7 @@ packages:
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)
-			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
+			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &packslip.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			ctrl := execCtrl.New(pkgInstaller, whichCtrl, executor, osEnv, newLocalPolicyReader(b, tempDir), vacuumMock)
 			b.ResetTimer()
 			for b.Loop() {
