@@ -208,6 +208,110 @@ func ParseAssetInfos(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) { /
 	clearDefaultAsset(pkgInfo.Asset, pkgInfo.Overrides)
 
 	pkgInfo.Replacements, pkgInfo.Overrides = normalizeOverridesByReplacements(pkgInfo)
+
+	// After the replacements are settled, because a musl override is the first that
+	// matches on a musl system and has to say whatever the package-level replacements
+	// would get wrong for its asset.
+	pkgInfo.Overrides = append(muslVariants(pkgInfo, assetInfos), pkgInfo.Overrides...)
+}
+
+// muslVariants returns overrides choosing the musl build on a musl system, for a release
+// that publishes one beside the Linux build chosen for the package.
+//
+// Which libc a build needs is in its name only as "musl", so this is what lets aqua gr
+// write the variant a person had to: UsefulSoftwareCo/executor publishes
+// executor-linux-x64.tar.gz and executor-linux-x64-musl.tar.gz. A release whose Linux
+// build is already the musl one, as a Rust release with both target triples is, needs
+// nothing: a static build runs on glibc too.
+//
+// The overrides go first, because aqua applies the first override that matches, and so
+// say everything their asset needs rather than relying on the Linux override.
+func muslVariants(pkgInfo *registry.PackageInfo, assetInfos []*AssetInfo) []*registry.Override {
+	builds := muslBuilds(assetInfos)
+	if len(builds) == 0 {
+		return nil
+	}
+	variants := []*registry.Variant{{Key: "libc", Value: "musl"}}
+	amd, arm := builds[archAmd64], builds[archArm64]
+	if amd != nil && arm != nil && amd.Template == arm.Template && amd.Format == arm.Format {
+		ov := muslOverride(pkgInfo, amd, []string{archAmd64, archArm64})
+		ov.Variants = variants
+		return []*registry.Override{ov}
+	}
+	ret := make([]*registry.Override, 0, len(builds))
+	for _, goarch := range []string{archAmd64, archArm64} {
+		if b := builds[goarch]; b != nil {
+			ov := muslOverride(pkgInfo, b, []string{goarch})
+			ov.GOArch = goarch
+			ov.Variants = variants
+			ret = append(ret, ov)
+		}
+	}
+	return ret
+}
+
+// muslBuilds returns, by architecture, the musl build of each Linux architecture whose
+// chosen build isn't one.
+func muslBuilds(assetInfos []*AssetInfo) map[string]*AssetInfo {
+	musl := make([]*AssetInfo, 0, len(assetInfos))
+	for _, a := range assetInfos {
+		if a.Musl {
+			musl = append(musl, a)
+		}
+	}
+	if len(musl) == 0 {
+		return nil
+	}
+	builds := map[string]*AssetInfo{}
+	for _, goarch := range []string{archAmd64, archArm64} {
+		chosen := GetOSArch(osLinux, goarch, assetInfos)
+		if chosen == nil || chosen.Musl {
+			continue
+		}
+		if m := GetOSArch(osLinux, goarch, musl); m != nil {
+			builds[goarch] = m
+		}
+	}
+	return builds
+}
+
+// muslOverride is the override naming a musl build for the given architectures.
+//
+// It says a replacement only where the package's would spell the OS or an architecture
+// differently from the build's name, and a format only where it differs from the
+// package's.
+func muslOverride(pkgInfo *registry.PackageInfo, build *AssetInfo, goarchs []string) *registry.Override {
+	ov := &registry.Override{GOOS: osLinux, Asset: build.Template}
+	if build.Format != pkgInfo.Format {
+		ov.Format = build.Format
+	}
+	want := map[string]string{}
+	if strings.Contains(build.Template, "{{.OS}}") {
+		want[osLinux] = spelling(build.Replacements, osLinux)
+	}
+	if strings.Contains(build.Template, "{{.Arch}}") {
+		for _, goarch := range goarchs {
+			want[goarch] = spelling(build.Replacements, goarch)
+		}
+	}
+	for k, v := range want {
+		if spelling(pkgInfo.Replacements, k) == v {
+			continue
+		}
+		if ov.Replacements == nil {
+			ov.Replacements = map[string]string{}
+		}
+		ov.Replacements[k] = v
+	}
+	return ov
+}
+
+// spelling is how replacements spell key, which is key itself when they don't replace it.
+func spelling(replacements map[string]string, key string) string {
+	if v, ok := replacements[key]; ok {
+		return v
+	}
+	return key
 }
 
 // normalizeOverridesByReplacements extracts common replacements from overrides to reduce duplication.
@@ -427,6 +531,9 @@ func ParseAssetName(assetName, version string) *AssetInfo { //nolint:cyclop
 		if strings.Contains(lowAssetName, "_universal") || strings.Contains(lowAssetName, "-universal") || strings.Contains(lowAssetName, ".universal") {
 			assetInfo.DarwinAll = true
 		}
+	}
+	if assetInfo.OS == osLinux && strings.Contains(lowAssetName, "musl") {
+		assetInfo.Musl = true
 	}
 	assetInfo.Format = getFormat(assetName)
 	if assetInfo.Format != formatRaw {
