@@ -65,12 +65,19 @@ func (f *DownloadedFile) Wrap(w io.Writer) io.Writer {
 	return w
 }
 
-func (f *DownloadedFile) copy() error {
+func (f *DownloadedFile) copy() (e error) {
 	tmp, err := os.CreateTemp("", "")
 	if err != nil {
 		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	f.path = tmp.Name()
+	// The file is read again by its path, so the handle isn't needed afterwards.
+	// Left open, it also keeps Windows from removing the file.
+	defer func() {
+		if err := tmp.Close(); err != nil && e == nil {
+			e = fmt.Errorf("close a temporary file: %w", err)
+		}
+	}()
 	var w io.Writer = tmp
 	if f.pb != nil {
 		w = io.MultiWriter(tmp, f.pb)
