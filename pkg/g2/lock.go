@@ -54,6 +54,7 @@ func (c *Client) LockPackages(reg *Registry, pkgName, version string) []*lockfil
 			Cosign:                     asset.Cosign,
 			GitHubArtifactAttestations: asset.GitHubArtifactAttestations,
 			Minisign:                   asset.Minisign,
+			Packslip:                   asset.Packslip,
 			SLSAProvenance:             asset.SLSAProvenance,
 		})
 	}
@@ -150,6 +151,7 @@ func NewRegistry(pkgs []*lockfile.Package) *Registry {
 			Cosign:                     pkg.Cosign,
 			GitHubArtifactAttestations: pkg.GitHubArtifactAttestations,
 			Minisign:                   pkg.Minisign,
+			Packslip:                   pkg.Packslip,
 			SLSAProvenance:             pkg.SLSAProvenance,
 		})
 	}

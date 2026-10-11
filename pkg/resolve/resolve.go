@@ -206,6 +206,7 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		Cosign:                     sign.cosign,
 		GitHubArtifactAttestations: info.GitHubArtifactAttestations,
 		Minisign:                   sign.minisign,
+		Packslip:                   sign.packslip,
 		SLSAProvenance:             sign.slsa,
 	}, nil
 }
