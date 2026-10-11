@@ -30,3 +30,21 @@ func TestParamVerify_certificateArgs(t *testing.T) {
 		t.Errorf("no field set gave %v", got)
 	}
 }
+
+// gh refuses signer_repo together with signer_workflow, so aqua refuses it before running gh.
+func TestParamVerify_validate(t *testing.T) {
+	t.Parallel()
+	both := &ParamVerify{SignerRepo: "org/workflows", SignerWorkflow: "org/workflows/.github/workflows/release.yaml"}
+	if err := both.validate(); err == nil {
+		t.Error("signer_repo with signer_workflow was accepted")
+	}
+	for _, p := range []*ParamVerify{
+		{SignerRepo: "org/workflows"},
+		{SignerWorkflow: "org/workflows/.github/workflows/release.yaml"},
+		{},
+	} {
+		if err := p.validate(); err != nil {
+			t.Errorf("%+v: %v", p, err)
+		}
+	}
+}
