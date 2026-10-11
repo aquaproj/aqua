@@ -95,9 +95,12 @@ func (c *Cosign) GetEnabled() bool {
 
 // RenderOpts renders the Cosign command-line options with template substitution.
 // It replaces template variables in the options with runtime and artifact values.
+// The certificate fields are rendered too, after Opts, so a definition can name the
+// identity of every version as a template such as ...@refs/tags/{{.Version}}.
 func (c *Cosign) RenderOpts(rt *runtime.Runtime, art *template.Artifact) ([]string, error) {
-	opts := make([]string, len(c.Opts))
-	for i, opt := range c.Opts {
+	raw := append(append([]string{}, c.Opts...), c.CertificateOpts()...)
+	opts := make([]string, len(raw))
+	for i, opt := range raw {
 		s, err := template.Render(opt, art, rt)
 		if err != nil {
 			return nil, fmt.Errorf("render a cosign option: %w", err)
