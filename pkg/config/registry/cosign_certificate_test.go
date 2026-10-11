@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/template"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -31,5 +33,28 @@ func TestCosign_CertificateOpts(t *testing.T) {
 	}
 	if got := (*registry.Cosign)(nil).CertificateOpts(); got != nil {
 		t.Errorf("nil gave %v", got)
+	}
+}
+
+// The certificate fields are rendered like Opts, after them, so a definition can name every
+// version's identity as a template.
+func TestCosign_RenderOpts_certificate(t *testing.T) {
+	t.Parallel()
+	c := &registry.Cosign{
+		Opts:                  []string{"--insecure-ignore-sct"},
+		CertificateIdentity:   "https://github.com/foundry-rs/foundry/.github/workflows/release.yml@refs/tags/{{.Version}}",
+		CertificateOIDCIssuer: "https://token.actions.githubusercontent.com",
+	}
+	got, err := c.RenderOpts(&runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}, &template.Artifact{Version: "v1.8.0"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		"--insecure-ignore-sct",
+		"--certificate-identity", "https://github.com/foundry-rs/foundry/.github/workflows/release.yml@refs/tags/v1.8.0",
+		"--certificate-oidc-issuer", "https://token.actions.githubusercontent.com",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("(-want +got):\n%s", diff)
 	}
 }
