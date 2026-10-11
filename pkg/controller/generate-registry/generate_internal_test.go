@@ -677,3 +677,33 @@ func TestSLSAProvenance(t *testing.T) {
 		})
 	}
 }
+
+func TestController_patchRelease_packslip(t *testing.T) {
+	t.Parallel()
+	pkgInfo := &registry.PackageInfo{
+		Type:      pkgTypeGitHubRelease,
+		RepoOwner: "jdx",
+		RepoName:  "hk",
+	}
+	c := &Controller{}
+	c.patchRelease(slog.New(slog.DiscardHandler), &Config{}, pkgInfo, "jdx/hk", "v2.5.0", []string{
+		"hk-aarch64-apple-darwin.tar.gz",
+		"hk-x86_64-unknown-linux-musl.tar.gz",
+		"checksums.txt",
+		registry.BundleAssetPackslip,
+	})
+	// The bundle signs the whole release: the signer is pinned to the package's own
+	// repository, and the bundle is neither the package's asset nor a cosign bundle.
+	if diff := cmp.Diff(&registry.Packslip{
+		IdentityPrefix: "https://github.com/jdx/hk/",
+		Issuer:         urlOIDCIssuer,
+	}, pkgInfo.Packslip); diff != "" {
+		t.Fatal(diff)
+	}
+	if pkgInfo.Asset != "hk-{{.Arch}}-{{.OS}}.{{.Format}}" {
+		t.Fatalf("asset is %q", pkgInfo.Asset)
+	}
+	if pkgInfo.Checksum == nil || pkgInfo.Checksum.Cosign != nil {
+		t.Fatalf("checksum is %+v", pkgInfo.Checksum)
+	}
+}

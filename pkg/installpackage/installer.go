@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
+	"github.com/aquaproj/aqua/v2/pkg/packslip"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/slsa"
@@ -38,10 +39,12 @@ type Installer struct {
 	cosign                CosignVerifier
 	slsaVerifier          SLSAVerifier
 	minisignVerifier      MinisignVerifier
+	packslipVerifier      PackslipVerifier
 	ghVerifier            GitHubArtifactAttestationsVerifier
 	cosignInstaller       *DedicatedInstaller
 	slsaVerifierInstaller *DedicatedInstaller
 	minisignInstaller     *DedicatedInstaller
+	packslipInstaller     *DedicatedInstaller
 	ghInstaller           *DedicatedInstaller
 	goInstallInstaller    GoInstallInstaller
 	goBuildInstaller      GoBuildInstaller
@@ -64,14 +67,14 @@ type Vacuum interface {
 	Update(pkgPath string, timestamp time.Time) error
 }
 
-func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuum Vacuum) *Installer {
+func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, packslipVerifier PackslipVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuum Vacuum) *Installer {
 	// realRT is the actual host runtime, shared across the main installer and
-	// the four dedicated verifier installers below. Computing it once avoids
+	// the dedicated verifier installers below. Computing it once avoids
 	// repeating libc detection (file stats and a possible `ldd --version`
 	// invocation) for every dedicated installer.
 	realRT := runtime.NewR(context.Background())
 	ni := func(rt *runtime.Runtime) *Installer {
-		return newInstaller(param, downloader, rt, realRT, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, ghVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, vacuum)
+		return newInstaller(param, downloader, rt, realRT, linker, chkDL, chkCalc, unarchiver, cosignVerifier, slsaVerifier, minisignVerifier, packslipVerifier, ghVerifier, goInstallInstaller, goBuildInstaller, cargoPackageInstaller, vacuum)
 	}
 	installer := ni(rt)
 	installer.cosignInstaller = newDedicatedInstaller(
@@ -89,6 +92,11 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 		minisign.Package,
 		minisign.Checksums(),
 	)
+	installer.packslipInstaller = newDedicatedInstaller(
+		ni(realRT),
+		packslip.Package,
+		packslip.Checksums(),
+	)
 	installer.ghInstaller = newDedicatedInstaller(
 		ni(realRT),
 		ghattestation.Package,
@@ -97,7 +105,7 @@ func New(param *config.Param, downloader download.ClientAPI, rt *runtime.Runtime
 	return installer
 }
 
-func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT *runtime.Runtime, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuum Vacuum) *Installer {
+func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT *runtime.Runtime, linker Linker, chkDL download.ChecksumDownloader, chkCalc ChecksumCalculator, unarchiver Unarchiver, cosignVerifier CosignVerifier, slsaVerifier SLSAVerifier, minisignVerifier MinisignVerifier, packslipVerifier PackslipVerifier, ghVerifier GitHubArtifactAttestationsVerifier, goInstallInstaller GoInstallInstaller, goBuildInstaller GoBuildInstaller, cargoPackageInstaller CargoPackageInstaller, vacuum Vacuum) *Installer {
 	return &Installer{
 		rootDir:               param.RootDir,
 		maxParallelism:        param.MaxParallelism,
@@ -118,6 +126,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT
 		cosign:                cosignVerifier,
 		slsaVerifier:          slsaVerifier,
 		minisignVerifier:      minisignVerifier,
+		packslipVerifier:      packslipVerifier,
 		ghVerifier:            ghVerifier,
 		goInstallInstaller:    goInstallInstaller,
 		goBuildInstaller:      goBuildInstaller,
@@ -139,6 +148,10 @@ type SLSAVerifier interface {
 
 type MinisignVerifier interface {
 	Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, m *registry.Minisign, art *template.Artifact, file *download.File, param *minisign.ParamVerify) error
+}
+
+type PackslipVerifier interface {
+	Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, ps *registry.Packslip, art *template.Artifact, file *download.File, artifactPath, assetName string) error
 }
 
 type GitHubArtifactAttestationsVerifier interface {

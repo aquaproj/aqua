@@ -211,6 +211,15 @@ func (is *Installer) assetVerifiers(logger *slog.Logger, pkg *config.Package, as
 			asset:       assetName,
 			minisign:    pkgInfo.Minisign,
 		},
+		&packslipVerifier{
+			pkg:         pkg,
+			installer:   is.packslipInstaller,
+			verifier:    is.packslipVerifier,
+			runtime:     rt,
+			realRuntime: is.realRuntime,
+			asset:       assetName,
+			packslip:    pkgInfo.Packslip,
+		},
 	}
 }
 

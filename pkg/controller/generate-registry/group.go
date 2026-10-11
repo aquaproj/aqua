@@ -32,6 +32,7 @@ func ConvertPkgToVO(pkgInfo *registry.PackageInfo) *registry.VersionOverride {
 		CompleteWindowsExt: pkgInfo.CompleteWindowsExt,
 		Checksum:           pkgInfo.Checksum,
 		SLSAProvenance:     pkgInfo.SLSAProvenance,
+		Packslip:           pkgInfo.Packslip,
 	}
 }
 

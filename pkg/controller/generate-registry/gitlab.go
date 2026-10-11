@@ -168,6 +168,7 @@ func heldToGitLab(pkgInfo *registry.PackageInfo) {
 	pkgInfo.Cosign = nil
 	pkgInfo.SLSAProvenance = nil
 	pkgInfo.GitHubArtifactAttestations = nil
+	pkgInfo.Packslip = nil
 	// Every version_override says the same things, and more than one release read is
 	// what writes them.
 	for _, vo := range pkgInfo.VersionOverrides {
@@ -175,6 +176,7 @@ func heldToGitLab(pkgInfo *registry.PackageInfo) {
 		vo.Cosign = nil
 		vo.SLSAProvenance = nil
 		vo.GitHubArtifactAttestations = nil
+		vo.Packslip = nil
 	}
 }
 

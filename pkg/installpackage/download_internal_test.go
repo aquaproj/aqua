@@ -294,7 +294,7 @@ func TestInstallerAssetVerifiers(t *testing.T) {
 		{
 			// Everything a registry resolved is verified as it always was.
 			name: "from a registry",
-			exp:  4,
+			exp:  5,
 		},
 		{
 			// The lock file's checksum already pins the download to the artifact the
@@ -306,7 +306,7 @@ func TestInstallerAssetVerifiers(t *testing.T) {
 			name:             "from the lock file, asked to verify anyway",
 			locked:           true,
 			verifySignatures: true,
-			exp:              4,
+			exp:              5,
 		},
 	}
 	for _, d := range data {

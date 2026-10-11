@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/registry.json
+packages:
+  - type: github_release
+    repo_owner: jdx
+    repo_name: hk
+    asset: hk-{{.Arch}}-{{.OS}}.{{.Format}}
+    format: tar.gz
+    replacements:
+      amd64: x86_64
+      arm64: aarch64
+      darwin: apple-darwin
+      linux: unknown-linux-musl
+      windows: pc-windows-msvc
+    overrides:
+      - goos: windows
+        format: zip
+    supported_envs:
+      - linux
+      - darwin/arm64
+      - windows
+    packslip:
+      identity_prefix: https://github.com/jdx/hk/
+      issuer: https://token.actions.githubusercontent.com
