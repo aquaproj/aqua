@@ -51,6 +51,50 @@ func TestResolve_signingIsRendered(t *testing.T) {
 	}
 }
 
+// A packslip bundle's url is a template like any other signature file's, and the
+// policy saying whom to trust is carried with it, into the definition aqua installs
+// from too.
+func TestResolve_packslip(t *testing.T) {
+	t.Parallel()
+	url := "https://example.com/{{.Version}}/{{.OS}}/packslip.sigstore.json"
+	pkgs, err := resolve.Resolve(slog.New(slog.DiscardHandler), &resolve.Param{
+		PkgName: "jdx/hk",
+		Version: "v2.5.0",
+		PkgInfo: &registry.PackageInfo{
+			Name:          "jdx/hk",
+			Type:          "github_release",
+			RepoOwner:     "jdx",
+			RepoName:      "hk",
+			Asset:         "hk-{{.Arch}}-{{.OS}}.tar.gz",
+			Format:        "tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"darwin/arm64"},
+			Replacements:  registry.Replacements{"darwin": "apple-darwin", "arm64": "aarch64"},
+			Packslip: &registry.Packslip{
+				URL:            &url,
+				IdentityPrefix: "https://github.com/jdx/hk/",
+				Issuer:         "https://token.actions.githubusercontent.com",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pkgs) != 1 {
+		t.Fatalf("got %d entries, want 1", len(pkgs))
+	}
+	ps := pkgs[0].PackageInfo().Packslip
+	if ps == nil {
+		t.Fatal("the definition built from the entry lost packslip")
+	}
+	want := "https://example.com/v2.5.0/apple-darwin/packslip.sigstore.json"
+	if ps.URL == nil || *ps.URL != want {
+		t.Errorf("the bundle URL is %v, want %s", ps.URL, want)
+	}
+	if ps.IdentityPrefix != "https://github.com/jdx/hk/" || ps.Issuer != "https://token.actions.githubusercontent.com" {
+		t.Errorf("the policy was lost: %+v", ps)
+	}
+}
+
 // A package from a private repository says so, because that is what sends the
 // download straight to the API instead of trying the anonymous URL first.
 func TestResolve_private(t *testing.T) {

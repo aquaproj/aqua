@@ -210,13 +210,14 @@ func needsAssetVerification(pkgInfo *registry.PackageInfo, verifyAssets bool) bo
 // a checksum file listing it.
 //
 // Such a signature is only ever checked against the asset's bytes: cosign's
-// verify-blob, slsa-verifier and gh attestation verify all want the artifact, and
-// none of them take a digest instead. So the asset has to be downloaded for the
+// verify-blob, slsa-verifier, gh attestation verify and packslip verify all want the
+// artifact, and none of them take a digest instead. So the asset has to be downloaded for the
 // signature to mean anything, which is why this is asked before the cheaper sources
 // are considered.
 func hasAssetSignature(pkgInfo *registry.PackageInfo) bool {
 	return pkgInfo.Cosign.GetEnabled() || pkgInfo.SLSAProvenance.GetEnabled() ||
-		pkgInfo.GitHubArtifactAttestations.GetEnabled() || pkgInfo.Minisign.GetEnabled()
+		pkgInfo.GitHubArtifactAttestations.GetEnabled() || pkgInfo.Minisign.GetEnabled() ||
+		pkgInfo.Packslip.GetEnabled()
 }
 
 // hasChecksumSignatureVerification returns true if the checksum has signature verification configured

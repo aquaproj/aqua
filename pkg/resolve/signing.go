@@ -55,6 +55,11 @@ func renderSigning(pkg *config.Package, info *registry.PackageInfo, rt *runtime.
 		m.Asset, m.URL = asset, url
 		out.minisign = &m
 	}
+	ps, err := renderPackslip(info.Packslip, rt, art)
+	if err != nil {
+		return nil, err
+	}
+	out.packslip = ps
 	return out, nil
 }
 
@@ -63,6 +68,21 @@ type signing struct {
 	cosign   *registry.Cosign
 	slsa     *registry.SLSAProvenance
 	minisign *registry.Minisign
+	packslip *registry.Packslip
+}
+
+// renderPackslip renders the packslip configuration, or returns nil when packslip is off.
+func renderPackslip(ps *registry.Packslip, rt *runtime.Runtime, art *template.Artifact) (*registry.Packslip, error) {
+	if !ps.GetEnabled() {
+		return nil, nil //nolint:nilnil // packslip isn't configured
+	}
+	out := *ps
+	url, err := renderPtr(ps.URL, rt, art)
+	if err != nil {
+		return nil, fmt.Errorf("render the packslip bundle URL: %w", err)
+	}
+	out.URL = url
+	return &out, nil
 }
 
 func renderCosign(cos *registry.Cosign, rt *runtime.Runtime, art *template.Artifact) (*registry.Cosign, error) {
