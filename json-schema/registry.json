@@ -275,6 +275,21 @@
         "signer-workflow": {
           "type": "string",
           "description": "Deprecated: use signer_workflow instead"
+        },
+        "signer_repo": {
+          "type": "string"
+        },
+        "source_ref": {
+          "type": "string"
+        },
+        "source_digest": {
+          "type": "string"
+        },
+        "cert_oidc_issuer": {
+          "type": "string"
+        },
+        "deny_self_hosted_runners": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,

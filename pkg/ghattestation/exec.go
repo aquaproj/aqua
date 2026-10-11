@@ -94,6 +94,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 	if param.PredicateType != "" {
 		args = append(args, "--predicate-type", param.PredicateType)
 	}
+	args = append(args, param.certificateArgs()...)
 	for i := range 5 {
 		err := e.exec(ctx, args)
 		if err == nil {
