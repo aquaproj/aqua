@@ -2,6 +2,7 @@ package ghattestation
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 )
 
@@ -27,8 +28,24 @@ type ParamVerify struct {
 	DenySelfHostedRunners bool
 }
 
+var errSignerRepoAndWorkflow = errors.New("signer_repo and signer_workflow can't be set together, because gh attestation verify accepts only one of them")
+
 func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
+	// gh refuses the combination as a flag error, which would otherwise be retried and
+	// reported as a verification failure.
+	if err := param.validate(); err != nil {
+		return err
+	}
 	return v.exe.Verify(ctx, logger, param) //nolint:wrapcheck
+}
+
+// validate rejects what gh attestation verify would refuse as flags rather than as an
+// attestation.
+func (p *ParamVerify) validate() error {
+	if p.SignerRepo != "" && p.SignerWorkflow != "" {
+		return errSignerRepoAndWorkflow
+	}
+	return nil
 }
 
 // certificateArgs returns the flags pinning what the signing certificate says, in a fixed

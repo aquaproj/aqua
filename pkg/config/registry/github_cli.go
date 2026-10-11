@@ -19,9 +19,9 @@ type GitHubArtifactAttestations struct {
 	//
 	// Deprecated: Use SignerWorkflow2 instead. This will be removed in aqua v3.
 	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty" jsonschema:"description=Deprecated: use signer_workflow instead"`
-	// SignerRepo is the repository whose workflow signed, passed as --signer-repo. It is for
-	// a workflow in another repository than the artifact's -- a reusable one -- since
-	// signer_workflow already names the repository otherwise.
+	// SignerRepo is the repository whose workflow signed, passed as --signer-repo. It pins
+	// the repository and not the workflow's path, so it is a looser alternative to
+	// signer_workflow. gh accepts only one of them.
 	SignerRepo string `yaml:"signer_repo,omitempty" json:"signer_repo,omitempty"`
 	// SourceRef is the ref the artifact was built from, such as refs/tags/v1.2.3, passed as
 	// --source-ref.
