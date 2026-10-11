@@ -47,6 +47,11 @@ Please see [the registry configuration](/docs/reference/registry-config/packslip
 
 If a release has `packslip.sigstore.json`, `aqua gr` generates the packslip setting.
 
+## Private repositories
+
+The bundle isn't downloaded through the GitHub API even if the package is `private: true`, so downloading the bundle of a package in a private repository fails.
+This is the same as Cosign and Minisign.
+
 ## Supported platforms
 
 packslip supports linux, darwin/arm64, and windows.

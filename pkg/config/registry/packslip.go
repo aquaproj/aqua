@@ -1,5 +1,7 @@
 package registry
 
+import "errors"
+
 // BundleAssetPackslip is the name packslip publishes its signed bundle under, in the
 // release whose artifacts it signs.
 const BundleAssetPackslip = "packslip.sigstore.json"
@@ -74,4 +76,26 @@ func (p *Packslip) ToDownloadedFile(pkgType string) *DownloadedFile {
 // project, not that it is the package aqua was asked to install.
 func (p *Packslip) HasTrust() bool {
 	return p.PublicKey != "" || p.Identity != "" || p.IdentityPrefix != "" || p.Pin != ""
+}
+
+var (
+	errPackslipRequireTrust = errors.New("packslip requires pubkey, identity, identity_prefix, or pin to know whom to trust")
+	errPackslipRequireURL   = errors.New("packslip requires url for a package that isn't a release asset")
+)
+
+// validate checks the configuration before anything is downloaded.
+//
+// pkgType is the package's type. Without url, the bundle is looked for in the
+// package's release, which only a release asset has.
+func (p *Packslip) validate(pkgType string) error {
+	if !p.GetEnabled() {
+		return nil
+	}
+	if !p.HasTrust() {
+		return errPackslipRequireTrust
+	}
+	if p.URL == nil && !ReleaseAssetType(pkgType) {
+		return errPackslipRequireURL
+	}
+	return nil
 }

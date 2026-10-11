@@ -642,6 +642,9 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	if err := p.validateFileSources(); err != nil {
 		return err
 	}
+	if err := p.Packslip.validate(p.Type); err != nil {
+		return err
+	}
 	if OnInstanceType(p.Type) {
 		// Whichever forge a type names, what the definition has to say is the same;
 		// what differs is the API its versions are read from and the URL built.
