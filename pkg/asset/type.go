@@ -29,4 +29,7 @@ type AssetInfo struct { //nolint:revive
 	Replacements       map[string]string
 	Score              int
 	CompleteWindowsExt *bool
+	// Musl says the asset is a Linux build against musl, which its name says by
+	// carrying "musl".
+	Musl bool
 }
