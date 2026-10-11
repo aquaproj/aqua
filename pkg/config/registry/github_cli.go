@@ -5,6 +5,9 @@ package registry
 type GitHubArtifactAttestations struct {
 	// Enabled controls whether GitHub artifact attestation verification is active.
 	Enabled *bool `yaml:",omitempty" json:"enabled,omitempty"`
+	// Repository is the repository the artifact is attested in, as owner/name, passed as
+	// --repo. It defaults to the package's repository.
+	Repository string `yaml:"repository,omitempty" json:"repository,omitempty"`
 	// PredicateType specifies the type of predicate to verify.
 	PredicateType string `yaml:"predicate_type,omitempty" json:"predicate_type,omitempty"`
 	// SignerWorkflow2 specifies the expected GitHub Actions workflow for signing.
@@ -19,9 +22,9 @@ type GitHubArtifactAttestations struct {
 	//
 	// Deprecated: Use SignerWorkflow2 instead. This will be removed in aqua v3.
 	SignerWorkflow3 string `yaml:"signer-workflow,omitempty" json:"signer-workflow,omitempty" jsonschema:"description=Deprecated: use signer_workflow instead"`
-	// SignerRepo is the repository whose workflow signed, passed as --signer-repo. It is for
-	// a workflow in another repository than the artifact's -- a reusable one -- since
-	// signer_workflow already names the repository otherwise.
+	// SignerRepo is the repository whose workflow signed, passed as --signer-repo. It pins
+	// the repository and not the workflow's path, so it is a looser alternative to
+	// signer_workflow. gh accepts only one of them.
 	SignerRepo string `yaml:"signer_repo,omitempty" json:"signer_repo,omitempty"`
 	// SourceRef is the ref the artifact was built from, such as refs/tags/v1.2.3, passed as
 	// --source-ref.
