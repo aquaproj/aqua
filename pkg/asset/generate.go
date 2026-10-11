@@ -284,6 +284,13 @@ func normalizeOverridesByReplacements(pkgInfo *registry.PackageInfo) (map[string
 				}
 			}
 		}
+	}
+	// Kept after every replacement is promoted, not as each override is looked at:
+	// promoting one can give an override looked at earlier a replacement of its own,
+	// which cancels the promoted one for it. zk-org/zk names linux amd64 but darwin and
+	// windows x86_64, and a linux override dropped before amd64: x86_64 was promoted
+	// left linux with x86_64 too.
+	for _, override := range overrides {
 		if override.Replacements != nil || override.Format != "" || override.Asset != "" {
 			ret = append(ret, override)
 		}
@@ -315,19 +322,16 @@ func isKeyUsed(pkgInfo *registry.PackageInfo, override *registry.Override, key s
 
 // normalizeOverridesByAsset removes redundant asset specifications from overrides.
 // If an override uses the default asset, the asset field is cleared to reduce duplication.
+//
+// An override left saying nothing is kept here: normalizeOverridesByReplacements may give it
+// a replacement of its own when it promotes one to the package, and drops it if it doesn't.
 func normalizeOverridesByAsset(defaultAsset string, overrides []*registry.Override) []*registry.Override {
-	ret := []*registry.Override{}
 	for _, override := range overrides {
-		if override.Asset != defaultAsset {
-			ret = append(ret, override)
-			continue
-		}
-		override.Asset = ""
-		if override.Format != "" || len(override.Replacements) != 0 {
-			ret = append(ret, override)
+		if override.Asset == defaultAsset {
+			override.Asset = ""
 		}
 	}
-	return ret
+	return overrides
 }
 
 // getDefaultAsset determines the most commonly used asset template for the default format.
