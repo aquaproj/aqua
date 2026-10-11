@@ -258,7 +258,7 @@ func TestParseAssetInfos(t *testing.T) {
 
 // A replacement promoted to the package has to be cancelled for an OS that spells the
 // architecture the way aqua does, or that OS is looked for under the other spelling.
-func TestParseAssetInfos_replacementPerOS(t *testing.T) {
+func TestParseAssetInfos_replacementPerOS(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name         string
@@ -293,6 +293,29 @@ func TestParseAssetInfos_replacementPerOS(t *testing.T) {
 			overrides: []*registry.Override{
 				{GOOS: osLinux, Replacements: registry.Replacements{archArm64: "aarch64"}},
 			},
+		},
+		{
+			// windows has only amd64, which arm64 runs under emulation, so the promoted
+			// arm64: aarch64 isn't cancelled for it and no override is left for windows.
+			name: "windows emulating arm64",
+			assets: []string{
+				"foo-linux-amd64.tar.gz", "foo-linux-aarch64.tar.gz",
+				"foo-darwin-amd64.tar.gz", "foo-darwin-aarch64.tar.gz",
+				"foo-windows-amd64.tar.gz",
+			},
+			version:      "v1.0.0",
+			replacements: registry.Replacements{archArm64: "aarch64"},
+		},
+		{
+			// darwin has only amd64, which arm64 runs under Rosetta 2.
+			name: "darwin under Rosetta 2",
+			assets: []string{
+				"foo-linux-amd64.tar.gz", "foo-linux-aarch64.tar.gz",
+				"foo-darwin-amd64.tar.gz",
+				"foo-windows-amd64.tar.gz", "foo-windows-aarch64.tar.gz",
+			},
+			version:      "v1.0.0",
+			replacements: registry.Replacements{archArm64: "aarch64"},
 		},
 	}
 	for _, d := range data {
