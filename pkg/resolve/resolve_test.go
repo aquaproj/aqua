@@ -415,3 +415,53 @@ func TestResolve_emulationLimitedByConfig(t *testing.T) {
 		t.Fatalf("the environments are wrong (-want +got):\n%s", diff)
 	}
 }
+
+// A configuration that allows the arm64 environment gets it.
+func TestResolve_emulationAllowedByConfig(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName:       "foo/foo",
+		Version:       "v1.0.0",
+		SupportedEnvs: []string{"windows"},
+		PkgInfo: &registry.PackageInfo{
+			Type:                "github_release",
+			RepoOwner:           "foo",
+			RepoName:            "foo",
+			Asset:               "foo_{{.OS}}_{{.Arch}}.zip",
+			WindowsARMEmulation: true,
+			SupportedEnvs:       registry.SupportedEnvs{"windows/amd64"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"windows/amd64", "windows/arm64"}, envs(pkgs)); diff != "" {
+		t.Fatalf("the environments are wrong (-want +got):\n%s", diff)
+	}
+}
+
+// Rosetta 2 is the same on macOS: darwin/arm64 runs the amd64 build.
+func TestResolve_rosetta2(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "foo/foo",
+		Version: "v1.0.0",
+		PkgInfo: &registry.PackageInfo{
+			Type:          "github_release",
+			RepoOwner:     "foo",
+			RepoName:      "foo",
+			Asset:         "foo_{{.OS}}_{{.Arch}}.tar.gz",
+			Rosetta2:      true,
+			SupportedEnvs: registry.SupportedEnvs{"darwin/amd64"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"darwin/amd64", "darwin/arm64"}, envs(pkgs)); diff != "" {
+		t.Fatalf("the environments are wrong (-want +got):\n%s", diff)
+	}
+	if got := pkgs[1].Asset; got != "foo_darwin_amd64.tar.gz" {
+		t.Errorf("darwin/arm64 resolves to %s, want the amd64 build", got)
+	}
+}
