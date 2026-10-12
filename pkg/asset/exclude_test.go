@@ -74,6 +74,63 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			exp:       true,
 		},
 		{
+			name:      "armel",
+			pkgName:   "foo/foo",
+			assetName: "foo_linux_armel.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "armv5",
+			pkgName:   "ginuerzh/gost",
+			assetName: "ghost-linux-armv5-2.11.3.gz",
+			exp:       true,
+		},
+		{
+			name:      "musleabi",
+			pkgName:   "foo/foo",
+			assetName: "foo-arm-unknown-linux-musleabi.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "uclibceabi",
+			pkgName:   "foo/foo",
+			assetName: "foo-arm-unknown-linux-uclibceabi.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "arm_7",
+			pkgName:   "foo/foo",
+			assetName: "foo_linux_arm_7.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "arm-v7",
+			pkgName:   "foo/foo",
+			assetName: "foo-linux-arm-v7.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "armv8l",
+			pkgName:   "foo/foo",
+			assetName: "foo-armv8l-linux.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "carmel isn't armel",
+			pkgName:   "org/carmel-cli",
+			assetName: "carmel-cli_linux_amd64.tar.gz",
+		},
+		{
+			name:      "arm itself is kept",
+			pkgName:   "volta-cli/volta",
+			assetName: "volta-2.0.2-linux-arm.tar.gz",
+		},
+		{
+			name:      "a package named after the spelling",
+			pkgName:   "foo/ArmHF-tools",
+			assetName: "ArmHF-tools_linux_armhf.tar.gz",
+		},
+		{
 			name:      "arm64 is kept",
 			pkgName:   "XTLS/Xray-core",
 			assetName: "Xray-linux-arm64-v8a.zip",
