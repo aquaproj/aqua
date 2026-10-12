@@ -385,3 +385,40 @@ func TestGetOSArch_sidecars(t *testing.T) {
 		})
 	}
 }
+
+// The pick doesn't depend on the order a release lists its assets in, and a dotted suffix
+// that isn't a file named after another asset decides nothing by itself.
+func TestGetOSArch_order(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name         string
+		goos, goarch string
+		names        []string
+		want         string
+	}{
+		{
+			name: "a lower score loses", goos: "windows", goarch: "amd64",
+			names: []string{"foo-windows-amd64.exe", "foo-windows.exe"},
+			want:  "foo-{{.OS}}-{{.Arch}}",
+		},
+		{
+			name: "an AppImage isn't a sidecar", goos: "linux", goarch: "amd64",
+			names: []string{"tool-linux-amd64.AppImage", "tool-cli-linux-amd64"},
+			want:  "tool-{{.OS}}-{{.Arch}}.AppImage",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			for _, names := range [][]string{tt.names, {tt.names[1], tt.names[0]}} {
+				infos := make([]*asset.AssetInfo, 0, len(names))
+				for _, name := range names {
+					infos = append(infos, asset.ParseAssetName(name, "v1.0.0"))
+				}
+				got := asset.GetOSArch(tt.goos, tt.goarch, infos)
+				if got == nil || got.Template != tt.want {
+					t.Errorf("%v: chose %+v, want %q", names, got, tt.want)
+				}
+			}
+		})
+	}
+}

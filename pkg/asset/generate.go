@@ -9,49 +9,22 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-// GetOSArch finds the best matching asset for a given OS and architecture combination.
-// It scores assets based on format preferences and template complexity, preferring
-// non-raw formats and simpler templates for better compatibility.
 // GetOSArch returns the asset to install on one platform, or nil when the release
 // has none for it.
 //
 // Several assets can claim the same platform, and they are ranked in this order: an
-// archive beats a bare executable, a higher score beats a lower one, a template that
-// becomes a template earlier beats one with a longer prefix, and a shorter template
-// beats a longer one. The last rule is what tells the ordinary build from one for
-// particular hardware, such as ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
-// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}.
-func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:cyclop
+// archive beats a bare executable, and among the same kind the order is prefer's.
+func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo {
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
 		if (assetInfo.OS != goos || assetInfo.Arch != goarch) && !assetInfo.DarwinAll {
 			continue
 		}
 		if assetInfo.Format == "" || assetInfo.Format == formatRaw {
-			if rawA == nil || preferRaw(assetInfo, rawA) {
-				rawA = assetInfo
-			}
+			rawA = better(rawA, assetInfo)
 			continue
 		}
-		if a == nil {
-			a = assetInfo
-			continue
-		}
-		if assetInfo.Score > a.Score {
-			a = assetInfo
-			continue
-		}
-		aIdx := strings.Index(a.Template, "{")
-		assetIdx := strings.Index(assetInfo.Template, "{")
-		if aIdx != assetIdx && aIdx != -1 && assetIdx != -1 {
-			if aIdx > assetIdx {
-				a = assetInfo
-			}
-			continue
-		}
-		if plainer(assetInfo.Template, a.Template) {
-			a = assetInfo
-		}
+		a = better(a, assetInfo)
 	}
 	if a != nil {
 		return a
@@ -59,13 +32,31 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 	return rawA
 }
 
-// preferRaw says whether a raw candidate is a better pick than the one chosen so far.
-func preferRaw(candidate, incumbent *AssetInfo) bool {
-	if candidate.Score > incumbent.Score {
-		return true
+// better returns whichever of the asset chosen so far and a candidate prefer ranks first.
+func better(chosen, candidate *AssetInfo) *AssetInfo {
+	if chosen == nil || prefer(candidate, chosen) {
+		return candidate
 	}
-	if c, i := sidecarDots(candidate.Template), sidecarDots(incumbent.Template); c != i {
-		return c < i
+	return chosen
+}
+
+// prefer says whether a candidate is a better pick than the asset chosen so far for the
+// same platform.
+//
+// A higher score wins, and a lower one loses, so that the pick doesn't depend on the order
+// the release lists its assets in. Then a binary beats a file named after it -- an SBOM or
+// a signature published beside it: regctl-windows-amd64.cyclonedx.json beside
+// regctl-windows-amd64.exe, whose .exe has already been taken off the template. Then a
+// template that becomes a template earlier beats one with a longer prefix, and a shorter
+// template beats a longer one. The last rule is what tells the ordinary build from one for
+// particular hardware, such as ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
+// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}.
+func prefer(candidate, incumbent *AssetInfo) bool {
+	if candidate.Score != incumbent.Score {
+		return candidate.Score > incumbent.Score
+	}
+	if namedAfter(incumbent, candidate) || namedAfter(candidate, incumbent) {
+		return namedAfter(incumbent, candidate)
 	}
 	iIdx := strings.Index(incumbent.Template, "{")
 	cIdx := strings.Index(candidate.Template, "{")
@@ -75,14 +66,10 @@ func preferRaw(candidate, incumbent *AssetInfo) bool {
 	return plainer(candidate.Template, incumbent.Template)
 }
 
-// sidecarDots counts the dotted suffixes after a raw asset's last placeholder.
-//
-// A release can publish files named after a binary beside it -- an SBOM, a signature,
-// regctl-windows-amd64.cyclonedx.json beside regctl-windows-amd64.exe -- and they parse to
-// the same OS and arch. The binary is the one with nothing appended: on Windows its .exe
-// has already been taken off the template, so it has none either.
-func sidecarDots(template string) int {
-	return strings.Count(template[strings.LastIndex(template, "}}")+1:], ".")
+// namedAfter says whether an asset is a file named after another: the other's name with
+// something dotted appended.
+func namedAfter(file, of *AssetInfo) bool {
+	return strings.HasPrefix(file.Template, of.Template+".")
 }
 
 // plainer reports whether candidate is the ordinary build of what incumbent is a
