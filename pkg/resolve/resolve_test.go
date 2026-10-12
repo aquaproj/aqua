@@ -361,3 +361,57 @@ func TestResolve_varWithoutValue(t *testing.T) {
 		t.Errorf("the error doesn't name the variable: %v", err)
 	}
 }
+
+// A release with only an amd64 Windows build runs on a Windows arm64 machine under
+// emulation, and aqua installs it there although supported_envs names windows/amd64
+// alone: jacobdeichert/mask 0.11.5.
+func TestResolve_windowsARMEmulation(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "jacobdeichert/mask",
+		Version: "mask/0.11.5",
+		PkgInfo: &registry.PackageInfo{
+			Type:                "github_release",
+			RepoOwner:           "jacobdeichert",
+			RepoName:            "mask",
+			Asset:               "mask-0.11.5-{{.Arch}}-{{.OS}}.{{.Format}}",
+			Format:              "zip",
+			WindowsARMEmulation: true,
+			Replacements:        map[string]string{"amd64": "x86_64", "arm64": "aarch64", "darwin": "apple-darwin", "linux": "unknown-linux-musl", "windows": "pc-windows-msvc"},
+			SupportedEnvs:       registry.SupportedEnvs{"linux/amd64", "darwin/arm64", "windows/amd64"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"linux/amd64", "darwin/arm64", "windows/amd64", "windows/arm64"}, envs(pkgs)); diff != "" {
+		t.Fatalf("the environments are wrong (-want +got):\n%s", diff)
+	}
+	if got := pkgs[3].Asset; got != "mask-0.11.5-x86_64-pc-windows-msvc.zip" {
+		t.Errorf("windows/arm64 resolves to %s, want the amd64 build", got)
+	}
+}
+
+// supported_envs in the configuration still limits the emulated environment.
+func TestResolve_emulationLimitedByConfig(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName:       "foo/foo",
+		Version:       "v1.0.0",
+		SupportedEnvs: []string{"windows/amd64"},
+		PkgInfo: &registry.PackageInfo{
+			Type:                "github_release",
+			RepoOwner:           "foo",
+			RepoName:            "foo",
+			Asset:               "foo_{{.OS}}_{{.Arch}}.zip",
+			WindowsARMEmulation: true,
+			SupportedEnvs:       registry.SupportedEnvs{"windows/amd64"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"windows/amd64"}, envs(pkgs)); diff != "" {
+		t.Fatalf("the environments are wrong (-want +got):\n%s", diff)
+	}
+}

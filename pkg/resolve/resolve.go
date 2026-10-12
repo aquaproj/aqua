@@ -120,7 +120,64 @@ func Runtimes(pkgInfo *registry.PackageInfo, supportedEnvs []string) ([]*runtime
 	if err != nil {
 		return nil, fmt.Errorf("get the supported environments: %w", err)
 	}
+	rts, err = addEmulated(pkgInfo, rts, supportedEnvs)
+	if err != nil {
+		return nil, err
+	}
 	return ExpandByVariants(pkgInfo, rts), nil
+}
+
+// addEmulated adds the arm64 environments that run the amd64 build.
+//
+// supported_envs can name windows/amd64 alone while windows_arm_emulation says a
+// Windows arm64 machine runs that build, and aqua installs it there: the check at
+// install time reads the two together. Reading supported_envs alone left the arm64
+// entry out, so a release publishing only an amd64 Windows build, such as
+// jacobdeichert/mask 0.11.5, had no entry for windows/arm64. Rosetta 2 is the same
+// on macOS.
+func addEmulated(pkgInfo *registry.PackageInfo, rts []*runtime.Runtime, supportedEnvs []string) ([]*runtime.Runtime, error) {
+	have := envSet(rts)
+	var allowed map[string]struct{}
+	if len(supportedEnvs) != 0 {
+		cfgRTs, err := runtime.GetRuntimesFromEnvs(supportedEnvs)
+		if err != nil {
+			return nil, fmt.Errorf("get the supported environments: %w", err)
+		}
+		allowed = envSet(cfgRTs)
+	}
+	for _, e := range []struct {
+		goos     string
+		emulated bool
+	}{
+		{"darwin", pkgInfo.Rosetta2},
+		{"windows", pkgInfo.WindowsARMEmulation},
+	} {
+		if !e.emulated {
+			continue
+		}
+		if _, ok := have[e.goos+"/amd64"]; !ok {
+			continue
+		}
+		to := e.goos + "/arm64"
+		if _, ok := have[to]; ok {
+			continue
+		}
+		if allowed != nil {
+			if _, ok := allowed[to]; !ok {
+				continue
+			}
+		}
+		rts = append(rts, &runtime.Runtime{GOOS: e.goos, GOARCH: "arm64"})
+	}
+	return rts, nil
+}
+
+func envSet(rts []*runtime.Runtime) map[string]struct{} {
+	set := make(map[string]struct{}, len(rts))
+	for _, rt := range rts {
+		set[rt.Env()] = struct{}{}
+	}
+	return set
 }
 
 // forRuntime is the definition as it applies to one environment.
