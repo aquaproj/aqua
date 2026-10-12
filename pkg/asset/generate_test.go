@@ -438,3 +438,21 @@ func TestParseAssetName_spellingInAnother(t *testing.T) {
 		}
 	}
 }
+
+// A spelling changes nothing about an asset it isn't in.
+func TestParseAssetName_spellingElsewhere(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{
+		"foo-macos-arm64_x86_64.zip",
+		"foo-linux-aarch64-amd64.tar.gz",
+		"foo-darwin-arm64-x86_64.tar.gz",
+	} {
+		without := asset.ParseAssetName(name, "v1.0.0")
+		for _, spellings := range []asset.Spellings{{"amd64": "64"}, {"amd64": "x86_64"}, {"linux": "ubuntu"}} {
+			with := asset.ParseAssetName(name, "v1.0.0", spellings)
+			if with.Arch != without.Arch || with.OS != without.OS {
+				t.Errorf("%s with %v: %s/%s, without: %s/%s", name, spellings, with.OS, with.Arch, without.OS, without.Arch)
+			}
+		}
+	}
+}

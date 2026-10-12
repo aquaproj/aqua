@@ -53,18 +53,20 @@ type Spellings map[string]string
 func (s Spellings) osList() []*OS {
 	out := make([]*OS, 0, len(s))
 	for _, goos := range []string{osLinux, osDarwin, osWindows} {
-		if name, ok := s[goos]; ok && name != "" && name != goos {
+		if name, ok := s[goos]; ok && name != "" && !KnowsSpelling(goos, name) {
 			out = append(out, &OS{Name: strings.ToLower(name), OS: goos})
 		}
 	}
 	return out
 }
 
-// archList returns the extra names for an architecture.
+// archList returns the extra names for an architecture. A name the parser already
+// knows is left out: tried before the others, it would change how assets that don't use
+// it are read, when repeating it says nothing new.
 func (s Spellings) archList() []*Arch {
 	out := make([]*Arch, 0, len(s))
 	for _, goarch := range []string{archAmd64, archArm64} {
-		if name, ok := s[goarch]; ok && name != "" && name != goarch {
+		if name, ok := s[goarch]; ok && name != "" && !KnowsSpelling(goarch, name) {
 			out = append(out, &Arch{Name: strings.ToLower(name), Arch: goarch})
 		}
 	}
