@@ -336,3 +336,89 @@ func TestParseAssetInfos_replacementPerOS(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+// regclient/regclient v0.11.6 publishes SBOMs and signing files beside each binary, and
+// they parse to the same OS and arch as the binary. The binary is what has nothing
+// appended to its name, whichever comes first in the release.
+func TestGetOSArch_sidecars(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		goos, goarch string
+		names        []string
+		want         string
+	}{
+		{
+			goos: "windows", goarch: "amd64",
+			names: []string{
+				"regctl-windows-amd64.cyclonedx.json",
+				"regctl-windows-amd64.exe",
+				"regctl-windows-amd64.pem",
+				"regctl-windows-amd64.sig",
+				"regctl-windows-amd64.sigstore.json",
+				"regctl-windows-amd64.spdx.json",
+			},
+			want: "regctl-{{.OS}}-{{.Arch}}",
+		},
+		{
+			goos: "linux", goarch: "amd64",
+			names: []string{
+				"regctl-linux-amd64.cyclonedx.json.sig",
+				"regctl-linux-amd64.asc",
+				"regctl-linux-amd64",
+			},
+			want: "regctl-{{.OS}}-{{.Arch}}",
+		},
+	} {
+		t.Run(tt.goos, func(t *testing.T) {
+			t.Parallel()
+			infos := make([]*asset.AssetInfo, 0, len(tt.names))
+			for _, name := range tt.names {
+				infos = append(infos, asset.ParseAssetName(name, "v0.11.6"))
+			}
+			got := asset.GetOSArch(tt.goos, tt.goarch, infos)
+			if got == nil {
+				t.Fatal("no asset was chosen")
+			}
+			if got.Template != tt.want {
+				t.Errorf("chose %q, want %q", got.Template, tt.want)
+			}
+		})
+	}
+}
+
+// The pick doesn't depend on the order a release lists its assets in, and a dotted suffix
+// that isn't a file named after another asset decides nothing by itself.
+func TestGetOSArch_order(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name         string
+		goos, goarch string
+		names        []string
+		want         string
+	}{
+		{
+			name: "a lower score loses", goos: "windows", goarch: "amd64",
+			names: []string{"foo-windows-amd64.exe", "foo-windows.exe"},
+			want:  "foo-{{.OS}}-{{.Arch}}",
+		},
+		{
+			name: "an AppImage isn't a sidecar", goos: "linux", goarch: "amd64",
+			names: []string{"tool-linux-amd64.AppImage", "tool-cli-linux-amd64"},
+			want:  "tool-{{.OS}}-{{.Arch}}.AppImage",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			for _, names := range [][]string{tt.names, {tt.names[1], tt.names[0]}} {
+				infos := make([]*asset.AssetInfo, 0, len(names))
+				for _, name := range names {
+					infos = append(infos, asset.ParseAssetName(name, "v1.0.0"))
+				}
+				got := asset.GetOSArch(tt.goos, tt.goarch, infos)
+				if got == nil || got.Template != tt.want {
+					t.Errorf("%v: chose %+v, want %q", names, got, tt.want)
+				}
+			}
+		})
+	}
+}

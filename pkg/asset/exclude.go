@@ -42,10 +42,35 @@ func Exclude(pkgName, assetName string) bool {
 			return true
 		}
 	}
+	return excludedExt(asset)
+}
+
+// excludedExt reports whether an asset is a file aqua can't install from: a package for
+// a system package manager, or an SBOM published beside a binary.
+func excludedExt(asset string) bool {
 	exts := []string{
 		".deb",
 		".rpm",
 		".msi",
+		// SBOMs published beside each binary. regclient/regclient's v0.11.6 Windows
+		// assets include regctl-windows-amd64.cyclonedx.json, which sorts before the
+		// .exe and was taken for the binary.
+		".cyclonedx.json",
+		".cyclonedx.xml",
+		".cdx.json",
+		".cdx.xml",
+		".bom.json",
+		".bom.xml",
+		".spdx.json",
+		".spdx.xml",
+		".spdx.yaml",
+		".spdx.yml",
+		".spdx.rdf",
+		".spdx",
+		".sbom.json",
+		".sbom.xml",
+		".sbom",
+		".syft.json",
 	}
 	for _, ext := range exts {
 		if strings.HasSuffix(asset, ext) {
