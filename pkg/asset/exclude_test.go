@@ -56,6 +56,29 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			assetName: "regctl-windows-amd64.exe",
 		},
 		{
+			name:      "gnueabi",
+			pkgName:   "ekzhang/bore",
+			assetName: "bore-v0.5.1-arm-unknown-linux-gnueabi.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "arm32",
+			pkgName:   "XTLS/Xray-core",
+			assetName: "Xray-linux-arm32-v5.zip",
+			exp:       true,
+		},
+		{
+			name:      "armhf",
+			pkgName:   "ahmetb/kubectx",
+			assetName: "kubectx_v0.9.4_windows_armhf.zip",
+			exp:       true,
+		},
+		{
+			name:      "arm64 is kept",
+			pkgName:   "XTLS/Xray-core",
+			assetName: "Xray-linux-arm64-v8a.zip",
+		},
+		{
 			name:      "32bit",
 			pkgName:   "suzuki-shunsuke/tfcmt",
 			assetName: "tfcmt-linux-32bit.tar.gz",
