@@ -336,3 +336,52 @@ func TestParseAssetInfos_replacementPerOS(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+// regclient/regclient v0.11.6 publishes SBOMs and signing files beside each binary, and
+// they parse to the same OS and arch as the binary. The binary is what has nothing
+// appended to its name, whichever comes first in the release.
+func TestGetOSArch_sidecars(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		goos, goarch string
+		names        []string
+		want         string
+	}{
+		{
+			goos: "windows", goarch: "amd64",
+			names: []string{
+				"regctl-windows-amd64.cyclonedx.json",
+				"regctl-windows-amd64.exe",
+				"regctl-windows-amd64.pem",
+				"regctl-windows-amd64.sig",
+				"regctl-windows-amd64.sigstore.json",
+				"regctl-windows-amd64.spdx.json",
+			},
+			want: "regctl-{{.OS}}-{{.Arch}}",
+		},
+		{
+			goos: "linux", goarch: "amd64",
+			names: []string{
+				"regctl-linux-amd64.cyclonedx.json.sig",
+				"regctl-linux-amd64.asc",
+				"regctl-linux-amd64",
+			},
+			want: "regctl-{{.OS}}-{{.Arch}}",
+		},
+	} {
+		t.Run(tt.goos, func(t *testing.T) {
+			t.Parallel()
+			infos := make([]*asset.AssetInfo, 0, len(tt.names))
+			for _, name := range tt.names {
+				infos = append(infos, asset.ParseAssetName(name, "v0.11.6"))
+			}
+			got := asset.GetOSArch(tt.goos, tt.goarch, infos)
+			if got == nil {
+				t.Fatal("no asset was chosen")
+			}
+			if got.Template != tt.want {
+				t.Errorf("chose %q, want %q", got.Template, tt.want)
+			}
+		})
+	}
+}

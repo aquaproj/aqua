@@ -21,30 +21,14 @@ import (
 // beats a longer one. The last rule is what tells the ordinary build from one for
 // particular hardware, such as ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
 // ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}.
-func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
+func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:cyclop
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
 		if (assetInfo.OS != goos || assetInfo.Arch != goarch) && !assetInfo.DarwinAll {
 			continue
 		}
-		if assetInfo.Format == "" || assetInfo.Format == formatRaw { //nolint:nestif
-			if rawA == nil {
-				rawA = assetInfo
-				continue
-			}
-			if assetInfo.Score > rawA.Score {
-				rawA = assetInfo
-				continue
-			}
-			rawAIdx := strings.Index(rawA.Template, "{")
-			assetIdx := strings.Index(assetInfo.Template, "{")
-			if rawAIdx != assetIdx && rawAIdx != -1 && assetIdx != -1 {
-				if rawAIdx > assetIdx {
-					rawA = assetInfo
-				}
-				continue
-			}
-			if plainer(assetInfo.Template, rawA.Template) {
+		if assetInfo.Format == "" || assetInfo.Format == formatRaw {
+			if rawA == nil || preferRaw(assetInfo, rawA) {
 				rawA = assetInfo
 			}
 			continue
@@ -73,6 +57,32 @@ func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //noli
 		return a
 	}
 	return rawA
+}
+
+// preferRaw says whether a raw candidate is a better pick than the one chosen so far.
+func preferRaw(candidate, incumbent *AssetInfo) bool {
+	if candidate.Score > incumbent.Score {
+		return true
+	}
+	if c, i := sidecarDots(candidate.Template), sidecarDots(incumbent.Template); c != i {
+		return c < i
+	}
+	iIdx := strings.Index(incumbent.Template, "{")
+	cIdx := strings.Index(candidate.Template, "{")
+	if iIdx != cIdx && iIdx != -1 && cIdx != -1 {
+		return iIdx > cIdx
+	}
+	return plainer(candidate.Template, incumbent.Template)
+}
+
+// sidecarDots counts the dotted suffixes after a raw asset's last placeholder.
+//
+// A release can publish files named after a binary beside it -- an SBOM, a signature,
+// regctl-windows-amd64.cyclonedx.json beside regctl-windows-amd64.exe -- and they parse to
+// the same OS and arch. The binary is the one with nothing appended: on Windows its .exe
+// has already been taken off the template, so it has none either.
+func sidecarDots(template string) int {
+	return strings.Count(template[strings.LastIndex(template, "}}")+1:], ".")
 }
 
 // plainer reports whether candidate is the ordinary build of what incumbent is a
