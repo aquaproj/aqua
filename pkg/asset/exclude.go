@@ -46,6 +46,16 @@ func Exclude(pkgName, assetName string) bool {
 		".deb",
 		".rpm",
 		".msi",
+		// SBOMs published beside each binary. regclient/regclient's v0.11.6 Windows
+		// assets include regctl-windows-amd64.cyclonedx.json, which sorts before the
+		// .exe and was taken for the binary.
+		".cyclonedx.json",
+		".cyclonedx.xml",
+		".cdx.json",
+		".spdx.json",
+		".spdx",
+		".sbom.json",
+		".sbom",
 	}
 	for _, ext := range exts {
 		if strings.HasSuffix(asset, ext) {

@@ -21,6 +21,23 @@ func Test_Exclude(t *testing.T) {
 			assetName: "tfcmt_linux_amd64.tar.gz",
 		},
 		{
+			name:      "cyclonedx sbom",
+			pkgName:   "regclient/regclient/regctl",
+			assetName: "regctl-windows-amd64.cyclonedx.json",
+			exp:       true,
+		},
+		{
+			name:      "spdx sbom",
+			pkgName:   "regclient/regclient/regctl",
+			assetName: "regctl-windows-amd64.spdx.json",
+			exp:       true,
+		},
+		{
+			name:      "the binary beside an sbom",
+			pkgName:   "regclient/regclient/regctl",
+			assetName: "regctl-windows-amd64.exe",
+		},
+		{
 			name:      "32bit",
 			pkgName:   "suzuki-shunsuke/tfcmt",
 			assetName: "tfcmt-linux-32bit.tar.gz",
