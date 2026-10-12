@@ -23,11 +23,15 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spelli
 		osList = append(s.osList(), osList...)
 	}
 
+	names := make([]string, len(osList))
+	for i, o := range osList {
+		names[i] = o.Name
+	}
 	for _, o := range osList {
 		if assetInfo.OS != "" && assetInfo.OS != o.OS {
 			continue
 		}
-		if idx := strings.Index(lowAssetName, o.Name); idx != -1 {
+		if idx := strings.Index(lowAssetName, o.Name); idx != -1 && !shadowed(lowAssetName, idx, o.Name, names) {
 			assetInfo.OS = o.OS
 			osName := assetName[idx : idx+len(o.Name)]
 			if osName != o.OS {
