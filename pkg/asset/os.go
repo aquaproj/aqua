@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -21,6 +22,10 @@ func SetOS(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spelli
 
 	for _, s := range extra {
 		osList = append(s.osList(), osList...)
+	}
+	if len(osList) != len(knownOSs()) {
+		// As for the architectures: a name that contains another is tried first.
+		slices.SortStableFunc(osList, func(a, b *OS) int { return len(b.Name) - len(a.Name) })
 	}
 
 	for _, o := range osList {

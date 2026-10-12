@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -12,6 +13,12 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spel
 	archList := knownArchs()
 	for _, s := range extra {
 		archList = append(s.archList(), archList...)
+	}
+	if len(archList) != len(knownArchs()) {
+		// A name that contains another has to be tried first, and a spelling given by
+		// name can be contained in one the parser knows: XTLS/Xray-core spells amd64 as
+		// 64 and arm64 as arm64-v8a, and 64 read Xray-linux-arm64-v8a.zip as amd64.
+		slices.SortStableFunc(archList, func(a, b *Arch) int { return len(b.Name) - len(a.Name) })
 	}
 
 	for _, o := range archList {

@@ -422,3 +422,19 @@ func TestGetOSArch_order(t *testing.T) {
 		})
 	}
 }
+
+// XTLS/Xray-core spells amd64 as 64 and arm64 as arm64-v8a. The shorter spelling is
+// contained in the longer one and must not be read out of it.
+func TestParseAssetName_spellingInAnother(t *testing.T) {
+	t.Parallel()
+	spellings := asset.Spellings{"amd64": "64", "arm64": "arm64-v8a"}
+	for name, want := range map[string]string{
+		"Xray-linux-arm64-v8a.zip": "arm64",
+		"Xray-linux-64.zip":        "amd64",
+		"Xray-macos-arm64-v8a.zip": "arm64",
+	} {
+		if got := asset.ParseAssetName(name, "v26.3.27", spellings).Arch; got != want {
+			t.Errorf("%s: arch is %q, want %q", name, got, want)
+		}
+	}
+}
