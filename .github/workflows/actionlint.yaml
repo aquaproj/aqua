@@ -12,4 +12,4 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: suzuki-shunsuke/actionlint-action@bbce1e825be8286c27e00c3f6c42adccf5955fba # v0.2.1
+      - uses: suzuki-shunsuke/actionlint-action@83c4a4a3b228afcf6dbf79d793c742de182de31e # v0.2.2

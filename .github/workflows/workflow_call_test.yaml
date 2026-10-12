@@ -24,10 +24,11 @@ jobs:
               - .github/workflows/wc-test-docker.yaml
 
   test:
-    uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@8e6155052a645b80a1dd9bf8d4f2668714977ca8 # v6.2.0
+    uses: suzuki-shunsuke/go-test-workflow/.github/workflows/test.yaml@da03362365c429417c3af65c7b224b06cb25ece4 # v3.2.1
     with:
       aqua_version: v2.64.0
       golangci-lint-timeout: 120s
+      go-version-file: go.mod
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:
@@ -103,3 +104,11 @@ jobs:
   typos:
     uses: ./.github/workflows/workflow_call_typos.yaml
     permissions: {}
+
+  test-workflow:
+    uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@51ece8dcaabff59820bfb2053c56e3cb281cf7b2 # v0.0.1
+    with:
+      aqua_version: v2.64.0
+    permissions:
+      contents: read
+      pull-requests: read

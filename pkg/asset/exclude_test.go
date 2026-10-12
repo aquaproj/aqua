@@ -6,7 +6,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/asset"
 )
 
-func Test_Exclude(t *testing.T) {
+func Test_Exclude(t *testing.T) { //nolint:funlen
 	t.Parallel()
 	data := []struct {
 		name      string
@@ -19,6 +19,41 @@ func Test_Exclude(t *testing.T) {
 			name:      "not exclude",
 			pkgName:   "suzuki-shunsuke/tfcmt",
 			assetName: "tfcmt_linux_amd64.tar.gz",
+		},
+		{
+			name:      "cyclonedx sbom",
+			pkgName:   "regclient/regclient/regctl",
+			assetName: "regctl-windows-amd64.cyclonedx.json",
+			exp:       true,
+		},
+		{
+			name:      "spdx sbom",
+			pkgName:   "regclient/regclient/regctl",
+			assetName: "regctl-windows-amd64.spdx.json",
+			exp:       true,
+		},
+		{
+			name:      "bom.json sbom",
+			pkgName:   "foo/foo",
+			assetName: "foo-windows-amd64.bom.json",
+			exp:       true,
+		},
+		{
+			name:      "cdx.xml sbom",
+			pkgName:   "foo/foo",
+			assetName: "foo-linux-amd64.cdx.xml",
+			exp:       true,
+		},
+		{
+			name:      "syft sbom",
+			pkgName:   "foo/foo",
+			assetName: "foo_linux_amd64.syft.json",
+			exp:       true,
+		},
+		{
+			name:      "the binary beside an sbom",
+			pkgName:   "regclient/regclient/regctl",
+			assetName: "regctl-windows-amd64.exe",
 		},
 		{
 			name:      "32bit",
