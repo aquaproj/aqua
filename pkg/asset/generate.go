@@ -9,70 +9,67 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-// GetOSArch finds the best matching asset for a given OS and architecture combination.
-// It scores assets based on format preferences and template complexity, preferring
-// non-raw formats and simpler templates for better compatibility.
 // GetOSArch returns the asset to install on one platform, or nil when the release
 // has none for it.
 //
 // Several assets can claim the same platform, and they are ranked in this order: an
-// archive beats a bare executable, a higher score beats a lower one, a template that
-// becomes a template earlier beats one with a longer prefix, and a shorter template
-// beats a longer one. The last rule is what tells the ordinary build from one for
-// particular hardware, such as ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
-// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}.
-func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo { //nolint:gocognit,cyclop
+// archive beats a bare executable, and among the same kind the order is prefer's.
+func GetOSArch(goos, goarch string, assetInfos []*AssetInfo) *AssetInfo {
 	var a, rawA *AssetInfo
 	for _, assetInfo := range assetInfos {
 		if (assetInfo.OS != goos || assetInfo.Arch != goarch) && !assetInfo.DarwinAll {
 			continue
 		}
-		if assetInfo.Format == "" || assetInfo.Format == formatRaw { //nolint:nestif
-			if rawA == nil {
-				rawA = assetInfo
-				continue
-			}
-			if assetInfo.Score > rawA.Score {
-				rawA = assetInfo
-				continue
-			}
-			rawAIdx := strings.Index(rawA.Template, "{")
-			assetIdx := strings.Index(assetInfo.Template, "{")
-			if rawAIdx != assetIdx && rawAIdx != -1 && assetIdx != -1 {
-				if rawAIdx > assetIdx {
-					rawA = assetInfo
-				}
-				continue
-			}
-			if plainer(assetInfo.Template, rawA.Template) {
-				rawA = assetInfo
-			}
+		if assetInfo.Format == "" || assetInfo.Format == formatRaw {
+			rawA = better(rawA, assetInfo)
 			continue
 		}
-		if a == nil {
-			a = assetInfo
-			continue
-		}
-		if assetInfo.Score > a.Score {
-			a = assetInfo
-			continue
-		}
-		aIdx := strings.Index(a.Template, "{")
-		assetIdx := strings.Index(assetInfo.Template, "{")
-		if aIdx != assetIdx && aIdx != -1 && assetIdx != -1 {
-			if aIdx > assetIdx {
-				a = assetInfo
-			}
-			continue
-		}
-		if plainer(assetInfo.Template, a.Template) {
-			a = assetInfo
-		}
+		a = better(a, assetInfo)
 	}
 	if a != nil {
 		return a
 	}
 	return rawA
+}
+
+// better returns whichever of the asset chosen so far and a candidate prefer ranks first.
+func better(chosen, candidate *AssetInfo) *AssetInfo {
+	if chosen == nil || prefer(candidate, chosen) {
+		return candidate
+	}
+	return chosen
+}
+
+// prefer says whether a candidate is a better pick than the asset chosen so far for the
+// same platform.
+//
+// A higher score wins, and a lower one loses, so that the pick doesn't depend on the order
+// the release lists its assets in. Then a binary beats a file named after it -- an SBOM or
+// a signature published beside it: regctl-windows-amd64.cyclonedx.json beside
+// regctl-windows-amd64.exe, whose .exe has already been taken off the template. Then a
+// template that becomes a template earlier beats one with a longer prefix, and a shorter
+// template beats a longer one. The last rule is what tells the ordinary build from one for
+// particular hardware, such as ollama-{{.OS}}-{{.Arch}}.{{.Format}} beside
+// ollama-{{.OS}}-{{.Arch}}-rocm.{{.Format}}.
+func prefer(candidate, incumbent *AssetInfo) bool {
+	if candidate.Score != incumbent.Score {
+		return candidate.Score > incumbent.Score
+	}
+	if namedAfter(incumbent, candidate) || namedAfter(candidate, incumbent) {
+		return namedAfter(incumbent, candidate)
+	}
+	iIdx := strings.Index(incumbent.Template, "{")
+	cIdx := strings.Index(candidate.Template, "{")
+	if iIdx != cIdx && iIdx != -1 && cIdx != -1 {
+		return iIdx > cIdx
+	}
+	return plainer(candidate.Template, incumbent.Template)
+}
+
+// namedAfter says whether an asset is a file named after another: the other's name with
+// something dotted appended.
+func namedAfter(file, of *AssetInfo) bool {
+	return strings.HasPrefix(file.Template, of.Template+".")
 }
 
 // plainer reports whether candidate is the ordinary build of what incumbent is a
