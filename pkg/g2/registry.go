@@ -63,7 +63,9 @@ type Asset struct {
 	// amd64 build: on macOS through Rosetta 2, on Windows through its emulation. The
 	// asset is the amd64 one already, so nothing installs differently by them. They
 	// are recorded so that which entries depend on emulation can be found, for the
-	// day it goes away: Apple has said Rosetta 2 will.
+	// day it goes away: Apple has said Rosetta 2 will. A file written before the fields
+	// existed has neither, so a list made from them is complete only once every version
+	// has been written again.
 	Rosetta2            bool `json:"rosetta2,omitempty"`
 	WindowsARMEmulation bool `json:"windows_arm_emulation,omitempty"`
 

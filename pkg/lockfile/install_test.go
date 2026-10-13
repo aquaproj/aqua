@@ -152,3 +152,17 @@ func TestPackage_PackageInfo_instance(t *testing.T) {
 		t.Fatalf("Host is %q, want the instance the release is on", pkgInfo.Host)
 	}
 }
+
+// An entry running the amd64 build under emulation says so as a definition too.
+func TestPackage_PackageInfo_emulation(t *testing.T) {
+	t.Parallel()
+	for _, p := range []*lockfile.Package{
+		{Name: "o/r", OS: "darwin", Arch: "arm64", Type: "github_release", Asset: "r_darwin_amd64.tar.gz", Rosetta2: true},
+		{Name: "o/r", OS: "windows", Arch: "arm64", Type: "github_release", Asset: "r_windows_amd64.zip", WindowsARMEmulation: true},
+	} {
+		info := p.PackageInfo()
+		if info.Rosetta2 != p.Rosetta2 || info.WindowsARMEmulation != p.WindowsARMEmulation {
+			t.Errorf("%s/%s: got rosetta2=%v windows_arm_emulation=%v", p.OS, p.Arch, info.Rosetta2, info.WindowsARMEmulation)
+		}
+	}
+}

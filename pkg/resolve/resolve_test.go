@@ -516,3 +516,46 @@ func TestResolve_rosetta2NotUsed(t *testing.T) {
 		})
 	}
 }
+
+// An amd64 build whose name doesn't change with the architecture still runs under
+// Rosetta 2 on an arm64 Mac: Songmu/gocredits names the architecture in the template.
+func TestResolve_rosetta2NameSaysAmd64(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name string
+		info *registry.PackageInfo
+	}{
+		{
+			name: "the template names amd64",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "Songmu", RepoName: "gocredits",
+				Asset:         "gocredits_{{.Version}}_{{.OS}}_amd64.{{.Format}}",
+				Format:        "zip",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+		{
+			name: "only amd64 is supported",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+				Asset:         "foo_darwin.tar.gz",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin/amd64"},
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			pkgs, err := resolve.Resolve(logger(), &resolve.Param{PkgName: "foo/foo", Version: "v1.0.0", PkgInfo: tt.info})
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, p := range pkgs {
+				if want := p.Arch == "arm64"; p.Rosetta2 != want {
+					t.Errorf("%s/%s: rosetta2 is %v, want %v", p.OS, p.Arch, p.Rosetta2, want)
+				}
+			}
+		})
+	}
+}

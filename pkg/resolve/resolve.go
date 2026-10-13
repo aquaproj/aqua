@@ -3,6 +3,7 @@ package resolve
 import (
 	"fmt"
 	"log/slog"
+	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -188,11 +189,16 @@ const (
 
 // emulationOf says whether the entry runs the amd64 build on an arm64 machine.
 //
-// It is read off what was resolved rather than off the definition: the asset is rendered
-// again with emulation turned off, and the entry depends on emulation only when that
-// gives another asset. A definition can say rosetta2 and still resolve to a universal
-// build, a native one named in an override, or a go_install path, and none of those
-// would stop working without Rosetta 2.
+// It is read off what was resolved rather than off the definition, since a definition can
+// say rosetta2 and still resolve to a universal build, a native one named in an override,
+// or a go_install path, none of which would stop working without Rosetta 2. The entry
+// depends on emulation when, with emulation turned off,
+//
+//   - the asset is another one: the asset was named from the amd64 architecture,
+//   - the environment isn't supported at all: it is there only because of emulation, or
+//   - the asset is the same one and its name says amd64 and not arm64 or universal:
+//     Songmu/gocredits writes gocredits_{{.Version}}_{{.OS}}_amd64.{{.Format}}, the
+//     same name whichever architecture asks.
 //
 // It returns whether that is through Rosetta 2 and whether through Windows' emulation.
 func emulationOf(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) (bool, bool, error) {
@@ -221,7 +227,34 @@ func runsAmd64Build(param *Param, info *registry.PackageInfo, rt *runtime.Runtim
 	if err != nil {
 		return false, fmt.Errorf("resolve without emulation: %w", err)
 	}
-	return nativeAsset != assetName || nativeURL != url, nil
+	if nativeAsset != assetName || nativeURL != url {
+		return true, nil
+	}
+	if !native.CheckSupportedEnvs(rt.GOOS, rt.GOARCH, rt.Env()) {
+		return true, nil
+	}
+	name := assetName
+	if name == "" {
+		name = path.Base(url)
+	}
+	return namesAmd64(name), nil
+}
+
+// namesAmd64 says whether an asset's name says it is an amd64 build and not an arm64 or
+// universal one.
+func namesAmd64(name string) bool {
+	s := strings.ToLower(name)
+	for _, other := range []string{"arm64", "aarch64", "universal"} {
+		if strings.Contains(s, other) {
+			return false
+		}
+	}
+	for _, amd64 := range []string{"amd64", "x86_64", "x86-64", "x64", "64bit", "64-bit"} {
+		if strings.Contains(s, amd64) {
+			return true
+		}
+	}
+	return false
 }
 
 // nothingToInstall says a package resolves to neither an asset nor a URL on the
