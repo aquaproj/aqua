@@ -26,7 +26,7 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spel
 				assetInfo.Replacements[o.Arch] = archName
 			}
 			assetInfo.Template = strings.Replace(assetInfo.Template, archName, "{{.Arch}}", 1)
-			if o.Arch == archArm64 && o.Name == "arm" {
+			if o.Arch == archArm64 && o.Name == archArm {
 				assetInfo.Score -= 1
 			}
 			break
@@ -52,7 +52,7 @@ func knownArchs() []*Arch {
 		{Name: "64bit", Arch: archAmd64},
 		{Name: "64-bit", Arch: archAmd64},
 		{Name: "aarch64", Arch: archArm64},
-		{Name: "arm", Arch: archArm64},
+		{Name: archArm, Arch: archArm64},
 	}
 }
 
