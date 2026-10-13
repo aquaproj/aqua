@@ -98,9 +98,46 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			exp:       true,
 		},
 		{
-			name:      "arm_7",
+			name:      "arm6",
 			pkgName:   "foo/foo",
-			assetName: "foo_linux_arm_7.tar.gz",
+			assetName: "foo_linux_arm6.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "armv7 inside a word",
+			pkgName:   "foo/foo",
+			assetName: "foo-linuxarmv7.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "arm_64 is 64-bit",
+			pkgName:   "foo/foo",
+			assetName: "foo_linux_arm_64.zip",
+		},
+		{
+			name:      "arm-64 is 64-bit",
+			pkgName:   "foo/foo",
+			assetName: "foo-macos-arm-64.tar.gz",
+		},
+		{
+			name:      "a version after arm",
+			pkgName:   "foo/foo",
+			assetName: "foo-arm-5.0.tar.gz",
+		},
+		{
+			name:      "seabird isn't an ABI",
+			pkgName:   "owner/tools",
+			assetName: "seabird_linux_amd64.tar.gz",
+		},
+		{
+			name:      "armello isn't armel",
+			pkgName:   "owner/cli-suite",
+			assetName: "armello_linux_amd64.tar.gz",
+		},
+		{
+			name:      "the package name excuses only its own spelling",
+			pkgName:   "foo/ArmHF-tools",
+			assetName: "ArmHF-tools_linux_armv7.tar.gz",
 			exp:       true,
 		},
 		{
