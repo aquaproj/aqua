@@ -9,7 +9,6 @@ import (
 // that are not compatible with aqua's installation process.
 func Exclude(pkgName, assetName string) bool {
 	asset := strings.ToLower(assetName)
-	pkg := strings.ToLower(pkgName)
 	words := []string{
 		"32-bit",
 		"32bit",
@@ -23,10 +22,14 @@ func Exclude(pkgName, assetName string) bool {
 		"i386",
 		"license",
 		"mips",
+		"mips64",
+		"mips64le",
+		"mipsle",
 		"netbsd",
 		"openbsd",
 		"plan9",
 		"ppc64",
+		"ppc64le",
 		"readme",
 		"riscv64",
 		"s390x",
@@ -34,12 +37,14 @@ func Exclude(pkgName, assetName string) bool {
 		"wasm",
 	}
 	for _, s := range words {
-		if strings.Contains(asset, s) && !strings.Contains(pkg, s) {
+		if strings.Contains(asset, s) && !strings.Contains(pkgName, s) {
 			return true
 		}
 	}
-	if s := arm32Spelling(asset); s != "" && !strings.Contains(pkg, s) {
-		return true
+	for _, s := range arm32Spellings(asset) {
+		if !strings.Contains(pkgName, s) {
+			return true
+		}
 	}
 	return excludedExt(asset)
 }
@@ -51,35 +56,37 @@ func Exclude(pkgName, assetName string) bool {
 // windows_armhf. "arm" itself isn't one of them, since some releases write their 64-bit
 // builds that way.
 var arm32Tokens = map[string]struct{}{ //nolint:gochecknoglobals
-	"arm32": {}, "armel": {}, "armhf": {}, "armv5": {}, "armv5te": {}, "armv8l": {},
-	"arm5": {}, "arm6": {}, "arm7": {},
+	"armel": {}, "armhf": {}, "armle": {}, "armv4": {}, "armv4t": {},
+	"armv5": {}, "armv5l": {}, "armv5te": {}, "armv5tel": {}, "armv8l": {},
+	"arm5": {}, "arm6": {}, "arm7": {}, "arm7l": {},
 }
 
-// arm32Spelling returns the 32-bit ARM spelling an asset name has, or "".
+// arm32Spellings returns the 32-bit ARM spellings an asset name has.
 //
 // The name is read word by word, so that a spelling has to be a whole word: arm_64 and
-// arm-64 are 64-bit, and neither carmel nor seabird is a spelling. A word ending in eabi
-// is an ARM embedded ABI (gnueabi, musleabi, uclibceabi), and arm followed by v5, v6 or v7
-// is a version written apart (arm-v7).
-func arm32Spelling(asset string) string {
+// arm-64 are 64-bit, and neither carmel nor seabird is a spelling. A word starting with
+// arm32 (arm32, arm32v7) is one, a word ending in eabi is an ARM embedded ABI (gnueabi,
+// musleabi, uclibceabi), and arm followed by v5, v6 or v7 is a version written apart
+// (arm-v7). Every spelling is returned, so that a package named after one of them is
+// excused for that one only.
+func arm32Spellings(asset string) []string {
 	words := strings.FieldsFunc(asset, func(r rune) bool {
 		return (r < 'a' || r > 'z') && (r < '0' || r > '9')
 	})
+	var out []string
 	for i, w := range words {
-		if _, ok := arm32Tokens[w]; ok {
-			return w
-		}
-		if strings.HasSuffix(w, "eabi") {
-			return w
-		}
-		if w == archArm && i+1 < len(words) {
+		_, ok := arm32Tokens[w]
+		switch {
+		case ok, strings.HasPrefix(w, "arm32"), strings.HasSuffix(w, "eabi"):
+			out = append(out, w)
+		case w == archArm && i+1 < len(words):
 			switch words[i+1] {
 			case "v5", "v6", "v7":
-				return w + "-" + words[i+1]
+				out = append(out, w+"-"+words[i+1])
 			}
 		}
 	}
-	return ""
+	return out
 }
 
 // excludedExt reports whether an asset is a file aqua can't install from: a package for

@@ -135,8 +135,44 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			assetName: "armello_linux_amd64.tar.gz",
 		},
 		{
+			name:      "each spelling found is checked against the package name",
+			pkgName:   "foo/armel-x",
+			assetName: "armel-x_linux_armhf.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "arm32v7",
+			pkgName:   "foo/foo",
+			assetName: "foo_linux_arm32v7.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "armv5tel",
+			pkgName:   "foo/foo",
+			assetName: "foo-armv5tel-linux.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "armv4t",
+			pkgName:   "foo/foo",
+			assetName: "foo-armv4t-linux.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "mips64 beside a package named mips",
+			pkgName:   "foo/mips-tools",
+			assetName: "mips-tools_linux_mips64.tar.gz",
+			exp:       true,
+		},
+		{
+			name:      "the package name is compared as written",
+			pkgName:   "foo/FreeBSD-tool",
+			assetName: "freebsd-tool_freebsd_amd64.tar.gz",
+			exp:       true,
+		},
+		{
 			name:      "the package name excuses only its own spelling",
-			pkgName:   "foo/ArmHF-tools",
+			pkgName:   "foo/armhf-tools",
 			assetName: "ArmHF-tools_linux_armv7.tar.gz",
 			exp:       true,
 		},
@@ -164,7 +200,7 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 		},
 		{
 			name:      "a package named after the spelling",
-			pkgName:   "foo/ArmHF-tools",
+			pkgName:   "foo/armhf-tools",
 			assetName: "ArmHF-tools_linux_armhf.tar.gz",
 		},
 		{
