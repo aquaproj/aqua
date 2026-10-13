@@ -6,6 +6,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -200,6 +201,10 @@ const (
 //     Songmu/gocredits writes gocredits_{{.Version}}_{{.OS}}_amd64.{{.Format}}, the
 //     same name whichever architecture asks.
 //
+// Only the emulation a definition declares is recorded, for the OS it is declared for:
+// rosetta2 on macOS, windows_arm_emulation on Windows. A definition that sends arm64 to
+// the amd64 build through replacements alone -- snaplet/cli's arm64: x64 -- isn't.
+//
 // It returns whether that is through Rosetta 2 and whether through Windows' emulation.
 func emulationOf(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) (bool, bool, error) {
 	emulated, err := runsAmd64Build(param, info, rt, assetName, url)
@@ -210,7 +215,7 @@ func emulationOf(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, 
 }
 
 func runsAmd64Build(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) (bool, error) {
-	if rt.GOARCH != archArm64 || (!info.Rosetta2 && !info.WindowsARMEmulation) {
+	if !declaresEmulation(info, rt) {
 		return false, nil
 	}
 	native := info.Copy()
@@ -227,35 +232,43 @@ func runsAmd64Build(param *Param, info *registry.PackageInfo, rt *runtime.Runtim
 	if err != nil {
 		return false, fmt.Errorf("resolve without emulation: %w", err)
 	}
-	if nativeAsset != assetName || nativeURL != url {
-		return true, nil
+	return nativeAsset != assetName || nativeURL != url || amd64Only(native, rt, assetName, url), nil
+}
+
+// declaresEmulation says whether the definition declares that an arm64 machine of the
+// environment's OS runs the amd64 build.
+func declaresEmulation(info *registry.PackageInfo, rt *runtime.Runtime) bool {
+	if rt.GOARCH != archArm64 {
+		return false
 	}
+	return rt.GOOS == osDarwin && info.Rosetta2 || rt.GOOS == osWindows && info.WindowsARMEmulation
+}
+
+// amd64Only says whether an asset that is the same with or without emulation is the amd64
+// build: the environment isn't supported without emulation, or the name says amd64.
+func amd64Only(native *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) bool {
 	if !native.CheckSupportedEnvs(rt.GOOS, rt.GOARCH, rt.Env()) {
-		return true, nil
+		return true
 	}
 	name := assetName
 	if name == "" {
 		name = path.Base(url)
 	}
-	return namesAmd64(name), nil
+	return namesAmd64(name)
 }
 
 // namesAmd64 says whether an asset's name says it is an amd64 build and not an arm64 or
-// universal one.
+// universal one. The spellings have to be whole words, so that a tool named x64tool or a
+// repository named after arm64 doesn't decide it.
 func namesAmd64(name string) bool {
 	s := strings.ToLower(name)
-	for _, other := range []string{"arm64", "aarch64", "universal"} {
-		if strings.Contains(s, other) {
-			return false
-		}
-	}
-	for _, amd64 := range []string{"amd64", "x86_64", "x86-64", "x64", "64bit", "64-bit"} {
-		if strings.Contains(s, amd64) {
-			return true
-		}
-	}
-	return false
+	return amd64Word.MatchString(s) && !nativeWord.MatchString(s)
 }
+
+var (
+	amd64Word  = regexp.MustCompile(`(^|[^a-z0-9])(amd64|x86[-_]64|x64|64-?bit)([^a-z0-9]|$)`)
+	nativeWord = regexp.MustCompile(`(^|[^a-z0-9])(arm64|aarch64|universal)([^a-z0-9]|$)`)
+)
 
 // nothingToInstall says a package resolves to neither an asset nor a URL on the
 // environment. go_install and cargo are identified by their path and crate instead, so

@@ -65,7 +65,8 @@ type Asset struct {
 	// are recorded so that which entries depend on emulation can be found, for the
 	// day it goes away: Apple has said Rosetta 2 will. A file written before the fields
 	// existed has neither, so a list made from them is complete only once every version
-	// has been written again.
+	// has been written again. Only the emulation a definition declares is recorded: an
+	// arm64 entry sent to the amd64 build through replacements alone doesn't say so.
 	Rosetta2            bool `json:"rosetta2,omitempty"`
 	WindowsARMEmulation bool `json:"windows_arm_emulation,omitempty"`
 

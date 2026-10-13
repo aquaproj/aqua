@@ -559,3 +559,68 @@ func TestResolve_rosetta2NameSaysAmd64(t *testing.T) {
 		})
 	}
 }
+
+// Each OS's flag is read from its own declaration, and the name decides only by whole
+// words.
+func TestResolve_emulationPerOS(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name                     string
+		info                     *registry.PackageInfo
+		rosetta2, windowsARMEmul bool
+	}{
+		{
+			name: "windows_arm_emulation says nothing about macOS",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "o", RepoName: "r",
+				Asset:               "r_{{.OS}}_amd64.zip",
+				WindowsARMEmulation: true,
+				SupportedEnvs:       registry.SupportedEnvs{"darwin", "windows"},
+			},
+			windowsARMEmul: true,
+		},
+		{
+			name: "a tool named x64 isn't an amd64 build",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "o", RepoName: "x64tool",
+				Asset:         "x64tool_{{.OS}}.zip",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+		{
+			name: "a darwin override naming the amd64 build",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "o", RepoName: "r",
+				Asset:    "r_{{.OS}}_{{.Arch}}.tar.gz",
+				Rosetta2: true,
+				Overrides: []*registry.Override{
+					{GOOS: "darwin", Asset: "r_macos_x86_64.tar.gz"},
+				},
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+			rosetta2: true,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			pkgs, err := resolve.Resolve(logger(), &resolve.Param{PkgName: "o/r", Version: "v1.0.0", PkgInfo: tt.info})
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, p := range pkgs {
+				if p.Arch != "arm64" {
+					continue
+				}
+				want := tt.rosetta2
+				got := p.Rosetta2
+				if p.OS == "windows" {
+					want, got = tt.windowsARMEmul, p.WindowsARMEmulation
+				}
+				if got != want {
+					t.Errorf("%s/%s: flag is %v, want %v", p.OS, p.Arch, got, want)
+				}
+			}
+		})
+	}
+}
