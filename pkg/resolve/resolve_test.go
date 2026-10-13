@@ -390,6 +390,13 @@ func TestResolve_windowsARMEmulation(t *testing.T) {
 	if got := pkgs[3].Asset; got != "mask-0.11.5-x86_64-pc-windows-msvc.zip" {
 		t.Errorf("windows/arm64 resolves to %s, want the amd64 build", got)
 	}
+	// The entry says it runs under emulation, and the native amd64 one doesn't.
+	if !pkgs[3].WindowsARMEmulation {
+		t.Error("windows/arm64 doesn't say it runs under emulation")
+	}
+	if pkgs[2].WindowsARMEmulation || pkgs[3].Rosetta2 {
+		t.Errorf("a flag is set where emulation doesn't apply: %+v %+v", pkgs[2], pkgs[3])
+	}
 }
 
 // supported_envs in the configuration still limits the emulated environment.
@@ -463,5 +470,8 @@ func TestResolve_rosetta2(t *testing.T) {
 	}
 	if got := pkgs[1].Asset; got != "foo_darwin_amd64.tar.gz" {
 		t.Errorf("darwin/arm64 resolves to %s, want the amd64 build", got)
+	}
+	if !pkgs[1].Rosetta2 || pkgs[0].Rosetta2 {
+		t.Errorf("only darwin/arm64 runs under Rosetta 2: amd64=%v arm64=%v", pkgs[0].Rosetta2, pkgs[1].Rosetta2)
 	}
 }

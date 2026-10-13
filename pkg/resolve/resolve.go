@@ -149,8 +149,8 @@ func addEmulated(pkgInfo *registry.PackageInfo, rts []*runtime.Runtime, supporte
 		goos     string
 		emulated bool
 	}{
-		{"darwin", pkgInfo.Rosetta2},
-		{"windows", pkgInfo.WindowsARMEmulation},
+		{osDarwin, pkgInfo.Rosetta2},
+		{osWindows, pkgInfo.WindowsARMEmulation},
 	} {
 		if !e.emulated {
 			continue
@@ -167,7 +167,7 @@ func addEmulated(pkgInfo *registry.PackageInfo, rts []*runtime.Runtime, supporte
 				continue
 			}
 		}
-		rts = append(rts, &runtime.Runtime{GOOS: e.goos, GOARCH: "arm64"})
+		rts = append(rts, &runtime.Runtime{GOOS: e.goos, GOARCH: archArm64})
 	}
 	return rts, nil
 }
@@ -178,6 +178,18 @@ func envSet(rts []*runtime.Runtime) map[string]struct{} {
 		set[rt.Env()] = struct{}{}
 	}
 	return set
+}
+
+const (
+	osDarwin  = "darwin"
+	osWindows = "windows"
+	archArm64 = "arm64"
+)
+
+// emulated says whether an arm64 machine of goos runs the amd64 build, under the same
+// conditions aqua's getArch takes the amd64 build under.
+func emulated(enabled bool, goos string, rt *runtime.Runtime) bool {
+	return enabled && rt.GOOS == goos && rt.GOARCH == archArm64
 }
 
 // forRuntime is the definition as it applies to one environment.
@@ -237,14 +249,16 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 	}
 
 	return &lockfile.Package{
-		Name:      param.PkgName,
-		Version:   param.Version,
-		OS:        rt.GOOS,
-		Arch:      rt.GOARCH,
-		Variants:  variantsOf(rt),
-		Type:      info.Type,
-		RepoOwner: info.RepoOwner,
-		RepoName:  info.RepoName,
+		Name:                param.PkgName,
+		Version:             param.Version,
+		OS:                  rt.GOOS,
+		Arch:                rt.GOARCH,
+		Variants:            variantsOf(rt),
+		Rosetta2:            emulated(info.Rosetta2, osDarwin, rt),
+		WindowsARMEmulation: emulated(info.WindowsARMEmulation, osWindows, rt),
+		Type:                info.Type,
+		RepoOwner:           info.RepoOwner,
+		RepoName:            info.RepoName,
 		// The instance, for the types that are on one. Without it the entry would
 		// name a repository on github.com, where the same owner and name are
 		// somebody else's. A definition may leave it to the type's own default --
