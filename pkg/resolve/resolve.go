@@ -186,10 +186,63 @@ const (
 	archArm64 = "arm64"
 )
 
-// emulated says whether an arm64 machine of goos runs the amd64 build, under the same
-// conditions aqua's getArch takes the amd64 build under.
-func emulated(enabled bool, goos string, rt *runtime.Runtime) bool {
-	return enabled && rt.GOOS == goos && rt.GOARCH == archArm64
+// emulationOf says whether the entry runs the amd64 build on an arm64 machine.
+//
+// It is read off what was resolved rather than off the definition: the asset is rendered
+// again with emulation turned off, and the entry depends on emulation only when that
+// gives another asset. A definition can say rosetta2 and still resolve to a universal
+// build, a native one named in an override, or a go_install path, and none of those
+// would stop working without Rosetta 2.
+//
+// It returns whether that is through Rosetta 2 and whether through Windows' emulation.
+func emulationOf(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) (bool, bool, error) {
+	emulated, err := runsAmd64Build(param, info, rt, assetName, url)
+	if err != nil || !emulated {
+		return false, false, err
+	}
+	return rt.GOOS == osDarwin, rt.GOOS == osWindows, nil
+}
+
+func runsAmd64Build(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) (bool, error) {
+	if rt.GOARCH != archArm64 || (!info.Rosetta2 && !info.WindowsARMEmulation) {
+		return false, nil
+	}
+	native := info.Copy()
+	native.Rosetta2 = false
+	native.WindowsARMEmulation = false
+	pkg := &config.Package{
+		Package:     &aqua.Package{Name: param.PkgName, Version: param.Version},
+		PackageInfo: native,
+	}
+	if err := fillVars(pkg); err != nil {
+		return false, err
+	}
+	nativeAsset, nativeURL, err := renderLocation(pkg, native, rt)
+	if err != nil {
+		return false, fmt.Errorf("resolve without emulation: %w", err)
+	}
+	return nativeAsset != assetName || nativeURL != url, nil
+}
+
+// nothingToInstall says a package resolves to neither an asset nor a URL on the
+// environment. go_install and cargo are identified by their path and crate instead, so
+// they never are.
+func nothingToInstall(info *registry.PackageInfo, assetName, url string) bool {
+	return assetName == "" && url == "" && info.Type != registry.PkgInfoTypeGoInstall && info.Type != registry.PkgInfoTypeCargo
+}
+
+// renderLocation resolves where the package is downloaded from on the environment: the
+// asset name, and the URL for an http package.
+func renderLocation(pkg *config.Package, info *registry.PackageInfo, rt *runtime.Runtime) (string, string, error) {
+	assetName, err := pkg.RenderAsset(rt)
+	if err != nil {
+		return "", "", fmt.Errorf("render the asset name for %s: %w", rt.Env(), err)
+	}
+	url, err := renderURL(pkg, info, rt)
+	if err != nil {
+		return "", "", err
+	}
+	return assetName, url, nil
 }
 
 // forRuntime is the definition as it applies to one environment.
@@ -224,18 +277,14 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		return nil, err
 	}
 
-	assetName, err := pkg.RenderAsset(rt)
-	if err != nil {
-		return nil, fmt.Errorf("render the asset name for %s: %w", rt.Env(), err)
-	}
-	url, err := renderURL(pkg, info, rt)
+	assetName, url, err := renderLocation(pkg, info, rt)
 	if err != nil {
 		return nil, err
 	}
 	// A package that resolves to neither an asset nor a URL has nothing to install
 	// on this environment. go_install and cargo are identified by their path and
 	// crate instead, so they are not caught by this.
-	if assetName == "" && url == "" && info.Type != registry.PkgInfoTypeGoInstall && info.Type != registry.PkgInfoTypeCargo {
+	if nothingToInstall(info, assetName, url) {
 		return nil, nil //nolint:nilnil
 	}
 
@@ -247,6 +296,10 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 	if err != nil {
 		return nil, err
 	}
+	rosetta2, windowsARMEmulation, err := emulationOf(param, info, rt, assetName, url)
+	if err != nil {
+		return nil, err
+	}
 
 	return &lockfile.Package{
 		Name:                param.PkgName,
@@ -254,8 +307,8 @@ func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *ru
 		OS:                  rt.GOOS,
 		Arch:                rt.GOARCH,
 		Variants:            variantsOf(rt),
-		Rosetta2:            emulated(info.Rosetta2, osDarwin, rt),
-		WindowsARMEmulation: emulated(info.WindowsARMEmulation, osWindows, rt),
+		Rosetta2:            rosetta2,
+		WindowsARMEmulation: windowsARMEmulation,
 		Type:                info.Type,
 		RepoOwner:           info.RepoOwner,
 		RepoName:            info.RepoName,

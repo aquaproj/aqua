@@ -475,3 +475,44 @@ func TestResolve_rosetta2(t *testing.T) {
 		t.Errorf("only darwin/arm64 runs under Rosetta 2: amd64=%v arm64=%v", pkgs[0].Rosetta2, pkgs[1].Rosetta2)
 	}
 }
+
+// A definition saying rosetta2 doesn't make an entry depend on it: a universal build or
+// a package built from source runs on arm64 as it is.
+func TestResolve_rosetta2NotUsed(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name string
+		info *registry.PackageInfo
+	}{
+		{
+			name: "universal build",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+				Asset:         "foo_darwin_universal.tar.gz",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+		{
+			name: "go_install",
+			info: &registry.PackageInfo{
+				Type: "go_install", Path: "example.com/foo",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			pkgs, err := resolve.Resolve(logger(), &resolve.Param{PkgName: "foo/foo", Version: "v1.0.0", PkgInfo: tt.info})
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, p := range pkgs {
+				if p.Rosetta2 {
+					t.Errorf("%s/%s says it runs under Rosetta 2", p.OS, p.Arch)
+				}
+			}
+		})
+	}
+}

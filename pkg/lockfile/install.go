@@ -79,6 +79,8 @@ func (p *Package) PackageInfo() *registry.PackageInfo {
 		AppendExt:                  &no,
 		CompleteWindowsExt:         &no,
 		Private:                    p.Private,
+		Rosetta2:                   p.Rosetta2,
+		WindowsARMEmulation:        p.WindowsARMEmulation,
 		Cosign:                     p.Cosign,
 		GitHubArtifactAttestations: p.GitHubArtifactAttestations,
 		Minisign:                   p.Minisign,

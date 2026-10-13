@@ -182,6 +182,9 @@ func TestNewRegistry_emulation(t *testing.T) {
 		},
 	}
 	pkgs := c.LockPackages(reg, "o/r", "v1.0.0")
+	if len(pkgs) != 2 {
+		t.Fatalf("got %d lock entries, want 2", len(pkgs))
+	}
 	if !pkgs[0].Rosetta2 || !pkgs[1].WindowsARMEmulation {
 		t.Errorf("the lock entries lost the emulation: %+v %+v", pkgs[0], pkgs[1])
 	}
