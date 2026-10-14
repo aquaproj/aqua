@@ -82,7 +82,7 @@ type Selection struct {
 //
 // A darwin build whose name says no architecture is for both, which is how a universal
 // binary is named. An arm64 machine with no build of its own runs the amd64 one, on macOS
-// always and on Windows when the name says amd64.
+// by Rosetta 2 and on Windows by its emulation.
 func Select(pkgName, version string, names []string, spellings Spellings) *Selection {
 	type key struct{ os, arch, libc string }
 	groups := map[key][]*Selected{}
@@ -190,8 +190,8 @@ func archsOf(info *AssetInfo) []string {
 
 // emulated returns the arm64 environments that run the amd64 build, for the OSes that
 // can: macOS by Rosetta 2, Windows by its emulation. Only an environment with no build of
-// its own gets one, and on Windows only a build whose name says amd64, since a name
-// saying nothing can as well be the 32-bit build.
+// its own gets one. On Windows a build whose name says no architecture gets one too: it is
+// the amd64 build or the 32-bit one, and Windows on arm64 runs either.
 func emulated(assets []*Selected, ties []*Tie) []*Selected {
 	have := map[string]struct{}{}
 	for _, a := range assets {
@@ -203,9 +203,6 @@ func emulated(assets []*Selected, ties []*Tie) []*Selected {
 	var out []*Selected
 	for _, a := range assets {
 		if a.Arch != archAmd64 || (a.OS != osDarwin && a.OS != osWindows) {
-			continue
-		}
-		if a.OS == osWindows && a.Info.NoArch {
 			continue
 		}
 		if _, ok := have[a.OS+"/"+archArm64]; ok {

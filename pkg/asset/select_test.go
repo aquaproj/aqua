@@ -121,12 +121,13 @@ func TestSelect(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			name:    "a Windows build naming no architecture isn't emulated",
-			pkgName: "foo/foo",
-			version: "v1.0.0",
-			assets:  []string{"foo.exe"},
+			name:    "a Windows build naming no architecture runs on arm64 too",
+			pkgName: "luau-lang/luau",
+			version: "0.742",
+			assets:  []string{"luau-windows.zip"},
 			want: map[string]picked{
-				"windows/amd64": {Name: "foo.exe"},
+				"windows/amd64": {Name: "luau-windows.zip"},
+				"windows/arm64": {Name: "luau-windows.zip", Emulated: true},
 			},
 		},
 		{
