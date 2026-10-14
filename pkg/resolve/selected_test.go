@@ -79,7 +79,7 @@ func TestResolveSelected(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			sel := asset.Select("foo/foo", "v1.0.0", d.sel, nil)
+			sel := asset.Select("foo/foo", "v1.0.0", d.sel, nil, nil)
 			// The last entry is the one under test: for Rosetta 2 it is the emulated arm64 one.
 			chosen := sel.Assets[len(sel.Assets)-1]
 			got, err := resolve.ResolveSelected(logger(), &resolve.Param{

@@ -167,6 +167,15 @@ func TestSelect(t *testing.T) { //nolint:funlen
 			ties: []string{"linux/amd64: ollama-linux-amd64-rocm.tgz, ollama-linux-amd64.tgz"},
 		},
 		{
+			name:    "one build in two formats",
+			pkgName: "koalaman/shellcheck",
+			version: "v0.11.0",
+			assets:  []string{"shellcheck-v0.11.0.linux.x86_64.tar.xz", "shellcheck-v0.11.0.linux.x86_64.tar.gz"},
+			want: map[string]picked{
+				"linux/amd64": {Name: "shellcheck-v0.11.0.linux.x86_64.tar.gz"},
+			},
+		},
+		{
 			name:    "a release publishing several programs",
 			pkgName: "kcp-dev/kcp",
 			version: "v0.33.1",
@@ -196,7 +205,7 @@ func TestSelect(t *testing.T) { //nolint:funlen
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			sel := asset.Select(d.pkgName, d.version, d.assets, nil)
+			sel := asset.Select(d.pkgName, d.version, d.assets, nil, nil)
 			if diff := cmp.Diff(d.want, summarize(sel)); diff != "" {
 				t.Errorf("assets (-want +got):\n%s", diff)
 			}
@@ -216,10 +225,31 @@ func TestSelect(t *testing.T) { //nolint:funlen
 
 func TestSelectAs(t *testing.T) {
 	t.Parallel()
-	sel := asset.SelectAs("windows", []string{"amd64", "arm64"}, []string{"shellcheck-v0.11.0.zip"}, "v0.11.0", nil)
+	sel := asset.SelectAs("windows", []string{"amd64", "arm64"}, []string{"shellcheck-v0.11.0.zip"}, "v0.11.0", nil, nil)
 	want := map[string]picked{
 		"windows/amd64": {Name: "shellcheck-v0.11.0.zip"},
 		"windows/arm64": {Name: "shellcheck-v0.11.0.zip"},
+	}
+	if diff := cmp.Diff(want, summarize(sel)); diff != "" {
+		t.Errorf("(-want +got):\n%s", diff)
+	}
+}
+
+// The format a definition declares for an environment picks among one build's formats.
+func TestSelect_declaredFormat(t *testing.T) {
+	t.Parallel()
+	sel := asset.Select("tamasfe/taplo", "0.10.0", []string{"taplo-windows-x86_64.gz", "taplo-windows-x86_64.zip", "taplo-linux-x86_64.gz", "taplo-linux-x86_64.tar.gz"}, nil, &asset.SelectOptions{
+		Format: func(goos, _, _ string) string {
+			if goos == "linux" {
+				return "gz"
+			}
+			return ""
+		},
+	})
+	want := map[string]picked{
+		"linux/amd64":   {Name: "taplo-linux-x86_64.gz"},
+		"windows/amd64": {Name: "taplo-windows-x86_64.zip"},
+		"windows/arm64": {Name: "taplo-windows-x86_64.zip", Emulated: true},
 	}
 	if diff := cmp.Diff(want, summarize(sel)); diff != "" {
 		t.Errorf("(-want +got):\n%s", diff)

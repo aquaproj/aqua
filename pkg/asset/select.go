@@ -60,6 +60,29 @@ func (t *Tie) String() string {
 	return fmt.Sprintf("%s: %s", env, strings.Join(t.Names, ", "))
 }
 
+// SelectOptions is what a definition says that helps tell a release's assets apart.
+type SelectOptions struct {
+	// Commands are the names of the package's executables.
+	Commands []string
+	// Format is the format the definition declares for an environment, or "" when it
+	// declares none. It may be nil.
+	Format func(goos, goarch, libc string) string
+}
+
+func (o *SelectOptions) commands() []string {
+	if o == nil {
+		return nil
+	}
+	return o.Commands
+}
+
+func (o *SelectOptions) format(goos, goarch, libc string) string {
+	if o == nil || o.Format == nil {
+		return ""
+	}
+	return o.Format(goos, goarch, libc)
+}
+
 // Selection is what a release publishes, by environment.
 type Selection struct {
 	// Assets has one entry per os, arch and libc, sorted.
@@ -78,19 +101,20 @@ type Selection struct {
 // Assets for the same os, arch and libc are ranked, and a release publishing a glibc and
 // a musl build for one platform has both selected, as builds for different machines
 // rather than rivals. The ranking is this: an archive beats a bare executable, a higher
-// score beats a lower one, a binary beats a file named after it, and an asset named for one
-// of the package's commands beats the others. Anything left equal is a tie, which is
-// reported rather than broken.
+// score beats a lower one, a binary beats a file named after it, an asset named for one of
+// the package's commands beats the others, and of one build published in several formats
+// the one in the format the definition declares wins, or else the format every machine
+// opens. Anything left equal is a tie, which is reported
+// rather than broken.
 //
-// The commands are the names of the package's executables. The last segment of the package
-// name is one of them too, which is how a release publishing several programs is read:
+// The last segment of the package name is one of the commands too, which is how a release publishing several programs is read:
 // kcp-dev/kcp's kcp_0.33.1_linux_amd64.tar.gz beside apigen_0.33.1_linux_amd64.tar.gz.
 //
 // A darwin build whose name says no architecture is for both, which is how a universal
 // binary is named. An arm64 machine with no build of its own runs the amd64 one, on macOS
 // by Rosetta 2 and on Windows by its emulation.
-func Select(pkgName, version string, names []string, spellings Spellings, commands ...string) *Selection {
-	commands = append(commands, path.Base(pkgName))
+func Select(pkgName, version string, names []string, spellings Spellings, opts *SelectOptions) *Selection {
+	o := &SelectOptions{Commands: append(slices.Clone(opts.commands()), path.Base(pkgName)), Format: opts.format}
 	type key struct{ os, arch, libc string }
 	groups := map[key][]*Selected{}
 	sel := &Selection{}
@@ -110,7 +134,7 @@ func Select(pkgName, version string, names []string, spellings Spellings, comman
 		}
 	}
 	for k, candidates := range groups {
-		chosen, tied := Pick(candidates, commands...)
+		chosen, tied := Pick(candidates, o)
 		if tied != nil {
 			sel.Ties = append(sel.Ties, &Tie{OS: k.os, Arch: k.arch, Libc: k.libc, Names: tied})
 			continue
@@ -134,7 +158,7 @@ func Select(pkgName, version string, names []string, spellings Spellings, comman
 // It is how a definition places such an asset: koalaman/shellcheck's Windows build is
 // shellcheck-v0.11.0.zip. Each name is read as the OS's, and one saying no architecture is
 // for every one of the environments.
-func SelectAs(goos string, goarchs []string, names []string, version string, spellings Spellings, commands ...string) *Selection {
+func SelectAs(goos string, goarchs []string, names []string, version string, spellings Spellings, opts *SelectOptions) *Selection {
 	sel := &Selection{}
 	for _, goarch := range goarchs {
 		var candidates []*Selected
@@ -149,7 +173,7 @@ func SelectAs(goos string, goarchs []string, names []string, version string, spe
 		if len(candidates) == 0 {
 			continue
 		}
-		chosen, tied := Pick(candidates, commands...)
+		chosen, tied := Pick(candidates, opts)
 		if tied != nil {
 			sel.Ties = append(sel.Ties, &Tie{OS: goos, Arch: goarch, Names: tied})
 			continue
@@ -161,7 +185,7 @@ func SelectAs(goos string, goarchs []string, names []string, version string, spe
 
 // Pick returns the best of the candidates for one environment, or, when the best can't be
 // told apart, nil and their names.
-func Pick(candidates []*Selected, commands ...string) (*Selected, []string) {
+func Pick(candidates []*Selected, opts *SelectOptions) (*Selected, []string) {
 	best := candidates
 	if archives := slices.DeleteFunc(slices.Clone(best), isRaw); len(archives) != 0 {
 		best = archives
@@ -174,9 +198,12 @@ func Pick(candidates []*Selected, commands ...string) (*Selected, []string) {
 	if len(best) == 1 {
 		return best[0], nil
 	}
-	named := slices.DeleteFunc(slices.Clone(best), func(s *Selected) bool { return !namedFor(s.Info, commands) })
+	named := slices.DeleteFunc(slices.Clone(best), func(s *Selected) bool { return !namedFor(s.Info, opts.commands()) })
 	if len(named) == 1 {
 		return named[0], nil
+	}
+	if format := inFormats(best, opts.format(best[0].OS, best[0].Arch, best[0].Libc)); format != nil {
+		return format, nil
 	}
 	names := make([]string, len(best))
 	for i, s := range best {
@@ -184,6 +211,37 @@ func Pick(candidates []*Selected, commands ...string) (*Selected, []string) {
 	}
 	slices.Sort(names)
 	return nil, slices.Compact(names)
+}
+
+// formatPreference is the order archives of the same build are preferred in: the formats
+// every machine can open first.
+var formatPreference = []string{"tar.gz", "tgz", "zip", "tar.xz", "txz", "tar.zst", "tar.bz2", "tbz2", "tbz"} //nolint:gochecknoglobals
+
+// inFormats returns, for candidates that are one build published in several formats, the
+// one in the declared format, or else in the format preferred, or nil when they are more than
+// that. koalaman/shellcheck publishes each build as a .tar.gz and a .tar.xz: they hold the
+// same files, so either installs the same thing. tamasfe/taplo's Windows build is a .gz
+// holding taplo-windows-x86_64 and a .zip holding taplo.exe, and the definition's files
+// describe the .zip, which is what the format it declares says.
+func inFormats(candidates []*Selected, declared string) *Selected {
+	for _, c := range candidates[1:] {
+		if c.Info.Template != candidates[0].Info.Template {
+			return nil
+		}
+	}
+	rank := func(s *Selected) int {
+		if declared != "" && s.Info.Format == declared {
+			return -1
+		}
+		if i := slices.Index(formatPreference, s.Info.Format); i >= 0 {
+			return i
+		}
+		return len(formatPreference)
+	}
+	best := slices.MinFunc(candidates, func(a, b *Selected) int {
+		return cmp.Or(cmp.Compare(rank(a), rank(b)), cmp.Compare(a.Info.Format, b.Info.Format))
+	})
+	return best
 }
 
 // namedFor says whether an asset is named for one of the commands: what its name says
