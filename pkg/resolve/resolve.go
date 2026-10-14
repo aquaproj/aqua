@@ -233,7 +233,7 @@ func ResolveSelected(logger *slog.Logger, param *Param, sel *asset.Selected) (*l
 	info := forRuntime(versioned, filesFrom, rt)
 	info.Asset = sel.Name
 	info.Format = sel.Info.Format
-	info.Replacements = withSpellings(info.Replacements, sel.Info.Replacements)
+	info.Replacements = withSpellings(info.Replacements, sel.Info)
 	no := false
 	info.AppendExt = &no
 	info.CompleteWindowsExt = &no
@@ -245,14 +245,27 @@ func ResolveSelected(logger *slog.Logger, param *Param, sel *asset.Selected) (*l
 }
 
 // withSpellings is the definition's replacements with the asset's own spellings over them.
-func withSpellings(defined registry.Replacements, spelled map[string]string) registry.Replacements {
-	if len(spelled) == 0 {
-		return defined
-	}
-	out := make(registry.Replacements, len(defined)+len(spelled))
+//
+// The OS and the architecture of the asset are spelled as its name spells them, which is
+// the platform's own name when the name uses that: a definition writing darwin as macOS
+// for its other assets must not rename it in a template rendered for an asset that says
+// darwin. An architecture the name doesn't say is left to the definition.
+func withSpellings(defined registry.Replacements, info *asset.AssetInfo) registry.Replacements {
+	out := make(registry.Replacements, len(defined)+2) //nolint:mnd
 	maps.Copy(out, defined)
-	maps.Copy(out, spelled)
+	out[info.OS] = spelled(info.Replacements, info.OS)
+	if !info.NoArch {
+		out[info.Arch] = spelled(info.Replacements, info.Arch)
+	}
 	return out
+}
+
+// spelled is how the name spells key, which is key itself when it isn't replaced.
+func spelled(replacements map[string]string, key string) string {
+	if v, ok := replacements[key]; ok {
+		return v
+	}
+	return key
 }
 
 // resolveInfo resolves the definition as it applies to one environment.

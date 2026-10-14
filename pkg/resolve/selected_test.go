@@ -23,7 +23,10 @@ func TestResolveSelected(t *testing.T) { //nolint:funlen
 		// What the definition says about the asset no longer applies.
 		Asset:  "foo-{{.OS}}-{{.Arch}}.{{.Format}}",
 		Format: "zip",
-		Files:  []*registry.File{{Name: "foo"}},
+		// The definition's spelling of an OS doesn't rename one the asset's name spells
+		// as the OS itself.
+		Replacements: registry.Replacements{"darwin": "macOS"},
+		Files:        []*registry.File{{Name: "foo"}},
 		SLSAProvenance: &registry.SLSAProvenance{
 			Type:  "github_release",
 			Asset: new("foo-{{.OS}}-{{.Arch}}.intoto.jsonl"),
