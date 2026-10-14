@@ -167,6 +167,18 @@ func TestSelect(t *testing.T) { //nolint:funlen
 			ties: []string{"linux/amd64: ollama-linux-amd64-rocm.tgz, ollama-linux-amd64.tgz"},
 		},
 		{
+			name:    "a release publishing several programs",
+			pkgName: "kcp-dev/kcp",
+			version: "v0.33.1",
+			assets: []string{
+				"apigen_0.33.1_linux_amd64.tar.gz", "kcp_0.33.1_linux_amd64.tar.gz",
+				"kcp-front-proxy_0.33.1_linux_amd64.tar.gz", "kubectl-kcp-plugin_0.33.1_linux_amd64.tar.gz",
+			},
+			want: map[string]picked{
+				"linux/amd64": {Name: "kcp_0.33.1_linux_amd64.tar.gz"},
+			},
+		},
+		{
 			name:    "an asset naming no OS is left for a rule",
 			pkgName: "koalaman/shellcheck",
 			version: "v0.11.0",

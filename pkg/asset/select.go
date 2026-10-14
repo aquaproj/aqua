@@ -3,6 +3,7 @@ package asset
 import (
 	"cmp"
 	"fmt"
+	"path"
 	"slices"
 	"strings"
 
@@ -77,13 +78,19 @@ type Selection struct {
 // Assets for the same os, arch and libc are ranked, and a release publishing a glibc and
 // a musl build for one platform has both selected, as builds for different machines
 // rather than rivals. The ranking is this: an archive beats a bare executable, a higher
-// score beats a lower one, and a binary beats a file named after it. Anything left equal
-// is a tie, which is reported rather than broken.
+// score beats a lower one, a binary beats a file named after it, and an asset named for one
+// of the package's commands beats the others. Anything left equal is a tie, which is
+// reported rather than broken.
+//
+// The commands are the names of the package's executables. The last segment of the package
+// name is one of them too, which is how a release publishing several programs is read:
+// kcp-dev/kcp's kcp_0.33.1_linux_amd64.tar.gz beside apigen_0.33.1_linux_amd64.tar.gz.
 //
 // A darwin build whose name says no architecture is for both, which is how a universal
 // binary is named. An arm64 machine with no build of its own runs the amd64 one, on macOS
 // by Rosetta 2 and on Windows by its emulation.
-func Select(pkgName, version string, names []string, spellings Spellings) *Selection {
+func Select(pkgName, version string, names []string, spellings Spellings, commands ...string) *Selection {
+	commands = append(commands, path.Base(pkgName))
 	type key struct{ os, arch, libc string }
 	groups := map[key][]*Selected{}
 	sel := &Selection{}
@@ -103,7 +110,7 @@ func Select(pkgName, version string, names []string, spellings Spellings) *Selec
 		}
 	}
 	for k, candidates := range groups {
-		chosen, tied := Pick(candidates)
+		chosen, tied := Pick(candidates, commands...)
 		if tied != nil {
 			sel.Ties = append(sel.Ties, &Tie{OS: k.os, Arch: k.arch, Libc: k.libc, Names: tied})
 			continue
@@ -127,7 +134,7 @@ func Select(pkgName, version string, names []string, spellings Spellings) *Selec
 // It is how a definition places such an asset: koalaman/shellcheck's Windows build is
 // shellcheck-v0.11.0.zip. Each name is read as the OS's, and one saying no architecture is
 // for every one of the environments.
-func SelectAs(goos string, goarchs []string, names []string, version string, spellings Spellings) *Selection {
+func SelectAs(goos string, goarchs []string, names []string, version string, spellings Spellings, commands ...string) *Selection {
 	sel := &Selection{}
 	for _, goarch := range goarchs {
 		var candidates []*Selected
@@ -142,7 +149,7 @@ func SelectAs(goos string, goarchs []string, names []string, version string, spe
 		if len(candidates) == 0 {
 			continue
 		}
-		chosen, tied := Pick(candidates)
+		chosen, tied := Pick(candidates, commands...)
 		if tied != nil {
 			sel.Ties = append(sel.Ties, &Tie{OS: goos, Arch: goarch, Names: tied})
 			continue
@@ -154,7 +161,7 @@ func SelectAs(goos string, goarchs []string, names []string, version string, spe
 
 // Pick returns the best of the candidates for one environment, or, when the best can't be
 // told apart, nil and their names.
-func Pick(candidates []*Selected) (*Selected, []string) {
+func Pick(candidates []*Selected, commands ...string) (*Selected, []string) {
 	best := candidates
 	if archives := slices.DeleteFunc(slices.Clone(best), isRaw); len(archives) != 0 {
 		best = archives
@@ -167,12 +174,29 @@ func Pick(candidates []*Selected) (*Selected, []string) {
 	if len(best) == 1 {
 		return best[0], nil
 	}
+	named := slices.DeleteFunc(slices.Clone(best), func(s *Selected) bool { return !namedFor(s.Info, commands) })
+	if len(named) == 1 {
+		return named[0], nil
+	}
 	names := make([]string, len(best))
 	for i, s := range best {
 		names[i] = s.Name
 	}
 	slices.Sort(names)
 	return nil, slices.Compact(names)
+}
+
+// namedFor says whether an asset is named for one of the commands: what its name says
+// before the version or the platform is the command's name and nothing more.
+// kcp_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}} is named for kcp, and
+// kcp-front-proxy_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}} isn't.
+func namedFor(info *AssetInfo, commands []string) bool {
+	prefix, _, _ := strings.Cut(info.Template, "{")
+	prefix = strings.TrimRight(prefix, "_-. ")
+	if prefix == "" {
+		return false
+	}
+	return slices.ContainsFunc(commands, func(c string) bool { return strings.EqualFold(prefix, c) })
 }
 
 func isRaw(s *Selected) bool {
