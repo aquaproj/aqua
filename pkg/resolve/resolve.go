@@ -3,10 +3,12 @@ package resolve
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"path/filepath"
 	"reflect"
 	"strings"
 
+	"github.com/aquaproj/aqua/v2/pkg/asset"
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -203,7 +205,58 @@ func forRuntime(versioned, filesFrom *registry.PackageInfo, rt *runtime.Runtime)
 // resolveOne resolves a single environment, or returns nil when the package doesn't
 // support it or resolves to nothing there.
 func resolveOne(param *Param, versioned, filesFrom *registry.PackageInfo, rt *runtime.Runtime) (*lockfile.Package, error) {
+	return resolveInfo(param, forRuntime(versioned, filesFrom, rt), rt)
+}
+
+// ResolveSelected resolves the entry of an asset already chosen for its environment.
+//
+// The asset is what the release itself says, picked by its name rather than rendered
+// from the definition, so the definition's asset, format and the spellings it would
+// render them with don't apply: the entry names the asset as the release lists it. What
+// the definition still supplies is what a release can't say, such as the executables
+// inside the archive and how the asset is signed, and those are rendered with the
+// spellings the asset's own name uses, so that a signature named after the asset's
+// platform names the release's file.
+func ResolveSelected(logger *slog.Logger, param *Param, sel *asset.Selected) (*lockfile.Package, error) {
+	versioned, err := param.PkgInfo.SetVersion(logger, param.Version)
+	if err != nil {
+		return nil, fmt.Errorf("evaluate the version constraints: %w", err)
+	}
+	var filesFrom *registry.PackageInfo
+	if param.FilesFrom != nil {
+		filesFrom, err = param.FilesFrom.SetVersion(logger, param.Version)
+		if err != nil {
+			return nil, fmt.Errorf("evaluate the version constraints of the files: %w", err)
+		}
+	}
+	rt := &runtime.Runtime{GOOS: sel.OS, GOARCH: sel.Arch, LibC: sel.Libc}
 	info := forRuntime(versioned, filesFrom, rt)
+	info.Asset = sel.Name
+	info.Format = sel.Info.Format
+	info.Replacements = withSpellings(info.Replacements, sel.Info.Replacements)
+	no := false
+	info.AppendExt = &no
+	info.CompleteWindowsExt = &no
+	// An emulated environment installs the amd64 build, and a template naming the
+	// architecture has to name the build's.
+	info.Rosetta2 = sel.Emulated && sel.OS == "darwin"
+	info.WindowsARMEmulation = sel.Emulated && sel.OS == "windows"
+	return resolveInfo(param, info, rt)
+}
+
+// withSpellings is the definition's replacements with the asset's own spellings over them.
+func withSpellings(defined registry.Replacements, spelled map[string]string) registry.Replacements {
+	if len(spelled) == 0 {
+		return defined
+	}
+	out := make(registry.Replacements, len(defined)+len(spelled))
+	maps.Copy(out, defined)
+	maps.Copy(out, spelled)
+	return out
+}
+
+// resolveInfo resolves the definition as it applies to one environment.
+func resolveInfo(param *Param, info *registry.PackageInfo, rt *runtime.Runtime) (*lockfile.Package, error) {
 	pkg := &config.Package{
 		Package:     &aqua.Package{Name: param.PkgName, Version: param.Version},
 		PackageInfo: info,

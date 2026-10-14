@@ -53,6 +53,7 @@ func TestParseAssetName(t *testing.T) { //nolint:funlen
 				DarwinAll: false,
 				Format:    formatTarGz,
 				Score:     -2,
+				NoArch:    true,
 			},
 		},
 		{
@@ -81,6 +82,7 @@ func TestParseAssetName(t *testing.T) { //nolint:funlen
 				Arch:     archAmd64,
 				Format:   formatTarGz,
 				Score:    -2,
+				NoArch:   true,
 			},
 		},
 	}
