@@ -39,6 +39,31 @@ type Config struct {
 	// AssetFilters says which assets are the command for some versions rather than
 	// for all of them, and is read before AllAssetsFilter.
 	AssetFilters []*AssetFilter `yaml:"asset_filters,omitempty"`
+	// AssetRules say which environments the assets whose name says no OS are for,
+	// which the inference can't read off the release.
+	AssetRules []*AssetRule `yaml:"asset_rules,omitempty"`
+}
+
+// AssetRule says which environments an asset whose name says no OS is for.
+//
+// The inference reads which environment an asset is for off its name, and a name can say
+// none: koalaman/shellcheck's Windows build is shellcheck-v0.11.0.zip, and ip7z/7zip's
+// console binaries are in 7z2604-extra.7z. A template naming the asset would have to be
+// kept in step with the name. A rule says nothing about the name: an asset naming an OS is
+// the inference's to place, so what is left is the assets naming none, and the inference
+// picks each environment's among them by the architecture the name says.
+//
+// Nothing here evaluates it. The generator does, for each version, and writes the asset
+// it picks into the entries of Envs.
+type AssetRule struct {
+	// Envs are the environments the assets are for, as os/arch.
+	Envs []string `yaml:"envs"`
+	// Filter is an expr expression over Asset, the asset's name, narrowing the assets
+	// naming no OS further when a release has more than one such asset the inference
+	// can't tell apart, such as 7z2604-extra.7z beside 7z2604-src.7z. It needn't match
+	// one asset, and it is best written in words a new version doesn't change, such as
+	// Asset contains "extra".
+	Filter string `yaml:"filter,omitempty"`
 }
 
 // AssetFilter is which assets are the command, for the versions its constraint
