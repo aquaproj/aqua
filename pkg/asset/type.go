@@ -34,6 +34,9 @@ type AssetInfo struct { //nolint:revive
 	// Musl says the asset is a Linux build against musl, which its name says by
 	// carrying "musl".
 	Musl bool
+	// NoArch says the name says no architecture. Arch is then amd64, which is what such
+	// a build usually is, but it is a guess rather than something the name says.
+	NoArch bool
 }
 
 // Spellings are names for a platform beyond the ones the parser knows.
