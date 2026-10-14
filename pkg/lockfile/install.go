@@ -12,17 +12,22 @@ import (
 // musl build beside a glibc one. The most specific match wins, the same way an
 // Override does: an entry constraining libc beats one constraining nothing, so the
 // unconstrained entry acts as the fallback rather than shadowing its siblings.
+//
+// When no entry matches, a statically linked build is installed: it needs no libc, so
+// it runs whichever one the machine has, including one whose libc can't be told. A
+// release publishing a glibc and a musl build has an entry for each and none for a
+// machine that is neither, and the musl build is usually the static one.
 func (lf *LockFile) Find(name, version string, rt *runtime.Runtime) *Package {
 	if lf == nil {
 		return nil
 	}
-	var best *Package
+	var best, static *Package
 	for _, pkg := range lf.Packages {
-		if pkg.Name != name || pkg.Version != version {
+		if !pkg.isFor(name, version, rt) {
 			continue
 		}
-		if pkg.OS != rt.GOOS || pkg.Arch != rt.GOARCH {
-			continue
+		if static == nil && pkg.isStatic() {
+			static = pkg
 		}
 		if !matchVariants(pkg.Variants, rt) {
 			continue
@@ -31,7 +36,36 @@ func (lf *LockFile) Find(name, version string, rt *runtime.Runtime) *Package {
 			best = pkg
 		}
 	}
+	if best == nil {
+		return static
+	}
 	return best
+}
+
+// isFor says whether the entry describes name at version on rt's os and arch, whatever its
+// variants say.
+func (p *Package) isFor(name, version string, rt *runtime.Runtime) bool {
+	return p.Name == name && p.Version == version && p.OS == rt.GOOS && p.Arch == rt.GOARCH
+}
+
+// isStatic says whether the entry is a build needing no libc, for a machine aqua can tell
+// it is for.
+func (p *Package) isStatic() bool {
+	return p.LinkedLibc == linkedStatic && supportedVariants(p.Variants)
+}
+
+// linkedStatic is the LinkedLibc of a build that needs no libc.
+const linkedStatic = "static"
+
+// supportedVariants says whether aqua evaluates every key of the variants. An entry
+// selecting on something aqua can't tell is for a machine it can't say it is.
+func supportedVariants(variants map[string]string) bool {
+	for key := range variants {
+		if !registry.IsSupportedVariantKey(key) {
+			return false
+		}
+	}
+	return true
 }
 
 func matchVariants(variants map[string]string, rt *runtime.Runtime) bool {

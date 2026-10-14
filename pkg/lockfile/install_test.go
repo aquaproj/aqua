@@ -70,6 +70,43 @@ func TestLockFile_Find(t *testing.T) {
 
 // A variant key aqua doesn't evaluate can't be shown to hold, so the entry must not be
 // installed on the strength of the keys that do.
+// A release publishing a glibc and a musl build has an entry for each and none constraining
+// nothing. A machine that is neither, or whose libc can't be told, gets the static build.
+func TestLockFile_Find_static(t *testing.T) {
+	t.Parallel()
+	lf := &lockfile.LockFile{
+		Packages: []*lockfile.Package{
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Asset: "gnu", LinkedLibc: "glibc", Variants: map[string]string{"libc": "glibc"}},
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Asset: "musl", LinkedLibc: "static", Variants: map[string]string{"libc": "musl"}},
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "arm64", Asset: "gnu", LinkedLibc: "glibc", Variants: map[string]string{"libc": "glibc"}},
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "arm64", Asset: "musl", LinkedLibc: "musl", Variants: map[string]string{"libc": "musl"}},
+		},
+	}
+	for _, tc := range []struct {
+		name string
+		rt   *runtime.Runtime
+		want string
+	}{
+		{name: "glibc", rt: &runtime.Runtime{GOOS: "linux", GOARCH: "amd64", LibC: "glibc"}, want: "gnu"},
+		{name: "musl", rt: &runtime.Runtime{GOOS: "linux", GOARCH: "amd64", LibC: "musl"}, want: "musl"},
+		{name: "unknown libc", rt: &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}, want: "musl"},
+		// Neither build of arm64 is static, so nothing runs on a machine that is neither.
+		{name: "no static build", rt: &runtime.Runtime{GOOS: "linux", GOARCH: "arm64"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := lf.Find("foo/foo", "v1.0.0", tc.rt)
+			asset := ""
+			if got != nil {
+				asset = got.Asset
+			}
+			if asset != tc.want {
+				t.Errorf("got %q, want %q", asset, tc.want)
+			}
+		})
+	}
+}
+
 func TestLockFile_Find_unsupportedVariantKey(t *testing.T) {
 	t.Parallel()
 	lf := &lockfile.LockFile{
