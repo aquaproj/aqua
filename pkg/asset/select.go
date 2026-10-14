@@ -96,7 +96,7 @@ func Select(pkgName, version string, names []string, spellings Spellings) *Selec
 			sel.Unnamed = append(sel.Unnamed, name)
 			continue
 		}
-		libc := libcOf(info.OS, name)
+		libc := LibcOf(info.OS, name)
 		for _, arch := range archsOf(info) {
 			k := key{info.OS, arch, libc}
 			groups[k] = append(groups[k], &Selected{Name: name, Info: info, OS: info.OS, Arch: arch, Libc: libc})
@@ -137,7 +137,7 @@ func SelectAs(goos string, goarchs []string, names []string, version string, spe
 			if !info.NoArch && info.Arch != goarch {
 				continue
 			}
-			candidates = append(candidates, &Selected{Name: name, Info: info, OS: goos, Arch: goarch, Libc: libcOf(goos, name)})
+			candidates = append(candidates, &Selected{Name: name, Info: info, OS: goos, Arch: goarch, Libc: LibcOf(goos, name)})
 		}
 		if len(candidates) == 0 {
 			continue
@@ -219,8 +219,9 @@ func emulated(assets []*Selected, ties []*Tie) []*Selected {
 	return out
 }
 
-// libcOf is the libc a Linux asset's name says it is built against, or "".
-func libcOf(goos, name string) string {
+// LibcOf is the libc a Linux asset's name says it is built against, or "". It reads a
+// template as well as a name: claude-{{.OS}}-{{.Arch}}-musl.{{.Format}} says musl.
+func LibcOf(goos, name string) string {
 	if goos != osLinux {
 		return ""
 	}
