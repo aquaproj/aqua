@@ -188,6 +188,26 @@ func TestSelect(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			// Alpine Linux is built on musl, so a build for it is the musl build for Linux.
+			name:    "a build for Alpine Linux",
+			pkgName: "snyk/cli",
+			version: "v1.1301.0",
+			assets: []string{
+				"snyk-alpine", "snyk-alpine-arm64", "snyk-linux", "snyk-linux-arm64",
+				"snyk-macos", "snyk-macos-arm64", "snyk-win.exe",
+			},
+			want: map[string]picked{
+				"darwin/amd64":     {Name: "snyk-macos"},
+				"darwin/arm64":     {Name: "snyk-macos-arm64"},
+				"linux/amd64":      {Name: "snyk-linux"},
+				"linux/amd64/musl": {Name: "snyk-alpine", Libc: "musl"},
+				"linux/arm64":      {Name: "snyk-linux-arm64"},
+				"linux/arm64/musl": {Name: "snyk-alpine-arm64", Libc: "musl"},
+				"windows/amd64":    {Name: "snyk-win.exe"},
+				"windows/arm64":    {Name: "snyk-win.exe", Emulated: true},
+			},
+		},
+		{
 			name:    "an asset naming no OS is left for a rule",
 			pkgName: "koalaman/shellcheck",
 			version: "v0.11.0",
