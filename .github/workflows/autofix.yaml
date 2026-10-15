@@ -5,69 +5,20 @@ permissions: {}
 jobs:
   autofix:
     runs-on: ubuntu-26.04
-    permissions:
-      id-token: write
-    timeout-minutes: 15
+    if: always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    timeout-minutes: 10
+    permissions: {}
+    needs:
+      - fix
     steps:
-      - uses: suzuki-shunsuke/go-autofix-action@9a8682f2dc2a935fe2a2ac96deb03de2dfcb872e # v0.1.13
-        with:
-          aqua_version: v2.64.0
-          takumi_guard_bot_id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
-      - run: aqua upc -prune
-        working-directory: pkg/cosign
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: aqua upc -prune
-        working-directory: pkg/slsa
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: aqua upc -prune
-        working-directory: pkg/minisign
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: aqua upc -prune
-        working-directory: pkg/ghattestation
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: aqua upc -prune
-        working-directory: pkg/packslip
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: aqua upc -prune
-        working-directory: tests/pnpm
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: exit 1
 
-      - run: git ls-files docs | xargs pinact run -u
-        working-directory: website
-        env:
-          GITHUB_TOKEN: ${{github.token}}
-      - name: get nested property
-        id: package_json
-        uses: notiz-dev/github-action-json-property@a5a9c668b16513c737c3e1f8956772c99c73f6e8 # v0.2.0
-        with:
-          path: website/package.json
-          prop_path: volta.node
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{steps.package_json.outputs.prop}}
-          cache: npm
-          cache-dependency-path: website/package-lock.json
-      - uses: flatt-security/setup-takumi-guard-npm@14f07d0cbc739b42a1b7c70a04c2b84cd1318ddd # v1.4.0
-        with:
-          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
-      - name: Move the npmrc to the user npmrc
-        # setup-takumi-guard-npm writes the registry and auth token to ./.npmrc,
-        # but npm ci runs in website/ and npm does not read parent directories'
-        # .npmrc. Move it to the user-level ~/.npmrc so npm ci picks it up.
-        run: |
-          if [ -f .npmrc ]; then
-            cat .npmrc >> "$HOME/.npmrc"
-            rm .npmrc
-          fi
-      - run: npm ci
-        working-directory: website
-      - run: bash scripts/generate-usage.sh
-        working-directory: website
-
-      - uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a # v1.3.4
+  fix:
+    uses: suzuki-shunsuke/go-autofix-action/.github/workflows/autofix-ci.yaml@2c7f494d0149fe60c0adc9feb09b6b995bae00ec # v0.2.0
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      aqua_version: v2.64.0
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
