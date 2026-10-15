@@ -123,6 +123,11 @@ func Select(pkgName, version string, names []string, spellings Spellings, opts *
 			continue
 		}
 		info := ParseAssetName(name, version, spellings)
+		if info.OS == "" && hasWord(strings.ToLower(name), alpine) {
+			// Alpine Linux is a distribution built on musl: snyk/cli's snyk-alpine-arm64 is
+			// its musl build for linux/arm64.
+			info.OS = osLinux
+		}
 		if info.OS == "" {
 			sel.Unnamed = append(sel.Unnamed, name)
 			continue
@@ -299,13 +304,14 @@ func emulated(assets []*Selected, ties []*Tie) []*Selected {
 }
 
 // LibcOf is the libc a Linux asset's name says it is built against, or "". It reads a
-// template as well as a name: claude-{{.OS}}-{{.Arch}}-musl.{{.Format}} says musl.
+// template as well as a name: claude-{{.OS}}-{{.Arch}}-musl.{{.Format}} says musl, and so
+// does a name for Alpine Linux, which is built on musl.
 func LibcOf(goos, name string) string {
 	if goos != osLinux {
 		return ""
 	}
 	low := strings.ToLower(name)
-	if strings.Contains(low, LibcMusl) {
+	if strings.Contains(low, LibcMusl) || hasWord(low, alpine) {
 		return LibcMusl
 	}
 	if strings.Contains(low, LibcGlibc) || hasWord(low, "gnu") {
@@ -313,6 +319,9 @@ func LibcOf(goos, name string) string {
 	}
 	return ""
 }
+
+// alpine is the word naming a build for Alpine Linux.
+const alpine = "alpine"
 
 // hasWord says whether a lower-cased name has the word, delimited by anything but a
 // letter or a digit.
