@@ -255,6 +255,22 @@ func TestSelectAs(t *testing.T) {
 	}
 }
 
+// A glibc and a musl build named for no OS are both selected, as Select selects them.
+func TestSelectAs_libc(t *testing.T) {
+	t.Parallel()
+	sel := asset.SelectAs("linux", []string{"amd64"}, []string{"tini-static-amd64", "tini-static-muslc-amd64"}, "v0.19.0", nil, nil)
+	want := map[string]picked{
+		"linux/amd64":      {Name: "tini-static-amd64"},
+		"linux/amd64/musl": {Name: "tini-static-muslc-amd64", Libc: "musl"},
+	}
+	if diff := cmp.Diff(want, summarize(sel)); diff != "" {
+		t.Errorf("(-want +got):\n%s", diff)
+	}
+	if len(sel.Ties) != 0 {
+		t.Errorf("got ties %v, want none", sel.Ties)
+	}
+}
+
 // The format a definition declares for an environment picks among one build's formats.
 func TestSelect_declaredFormat(t *testing.T) {
 	t.Parallel()
