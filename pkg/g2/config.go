@@ -42,6 +42,11 @@ type Config struct {
 	// AssetRules say which environments the assets whose name says no OS are for,
 	// which the inference can't read off the release.
 	AssetRules []*AssetRule `yaml:"asset_rules,omitempty"`
+	// Prerelease says the prereleases are versions of the package too, for a project
+	// whose prereleases are what people install. Without it a prerelease is generated
+	// only when the project has never published anything else. Either way the version
+	// is marked as a prerelease, so that whoever offers versions can pass it over.
+	Prerelease bool `yaml:"prerelease,omitempty"`
 }
 
 // AssetRule says which environments an asset whose name says no OS is for.

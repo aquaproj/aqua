@@ -82,6 +82,7 @@ func TestConfig_yaml(t *testing.T) {
 repo_owner: aubepkg
 repo_name: aube
 all_assets_filter: not (Asset matches "^libaube-")
+prerelease: true
 version_overrides:
   - version_constraint: "true"
     asset: aube-{{.Version}}.tar.gz
@@ -92,6 +93,9 @@ version_overrides:
 	}
 	if diff := cmp.Diff(`not (Asset matches "^libaube-")`, cfg.AllAssetsFilter); diff != "" {
 		t.Errorf("the filter is wrong (-want +got):\n%s", diff)
+	}
+	if !cfg.Prerelease {
+		t.Error("prerelease is lost")
 	}
 	if diff := cmp.Diff("aubepkg", cfg.RepoOwner); diff != "" {
 		t.Errorf("the base is wrong (-want +got):\n%s", diff)
