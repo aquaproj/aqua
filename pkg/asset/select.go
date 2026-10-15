@@ -3,6 +3,7 @@ package asset
 import (
 	"cmp"
 	"fmt"
+	"maps"
 	"path"
 	"slices"
 	"strings"
@@ -166,24 +167,27 @@ func Select(pkgName, version string, names []string, spellings Spellings, opts *
 func SelectAs(goos string, goarchs []string, names []string, version string, spellings Spellings, opts *SelectOptions) *Selection {
 	sel := &Selection{}
 	for _, goarch := range goarchs {
-		var candidates []*Selected
+		// A glibc and a musl build for the same machine are both selected, as they are by
+		// Select: krallin/tini's tini-static-amd64 and tini-static-muslc-amd64 name no OS,
+		// and compared with each other they were a tie.
+		byLibc := map[string][]*Selected{}
 		for _, name := range names {
 			info := ParseAssetName(name, version, spellings)
 			info.OS = goos
 			if !info.NoArch && info.Arch != goarch {
 				continue
 			}
-			candidates = append(candidates, &Selected{Name: name, Info: info, OS: goos, Arch: goarch, Libc: LibcOf(goos, name)})
+			libc := LibcOf(goos, name)
+			byLibc[libc] = append(byLibc[libc], &Selected{Name: name, Info: info, OS: goos, Arch: goarch, Libc: libc})
 		}
-		if len(candidates) == 0 {
-			continue
+		for _, libc := range slices.Sorted(maps.Keys(byLibc)) {
+			chosen, tied := Pick(byLibc[libc], opts)
+			if tied != nil {
+				sel.Ties = append(sel.Ties, &Tie{OS: goos, Arch: goarch, Libc: libc, Names: tied})
+				continue
+			}
+			sel.Assets = append(sel.Assets, chosen)
 		}
-		chosen, tied := Pick(candidates, opts)
-		if tied != nil {
-			sel.Ties = append(sel.Ties, &Tie{OS: goos, Arch: goarch, Names: tied})
-			continue
-		}
-		sel.Assets = append(sel.Assets, chosen)
 	}
 	return sel
 }
