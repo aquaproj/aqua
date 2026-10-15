@@ -54,6 +54,9 @@ type Version struct {
 	// written as "sha256:" and the hex. A reader that has the file can tell whether what
 	// it has is what the registry holds now.
 	Digest string `json:"digest,omitempty"`
+	// Prerelease is the registry.json's: the version is a prerelease, which a reader
+	// offering the newest version usually passes over.
+	Prerelease bool `json:"prerelease,omitempty"`
 }
 
 // ReadVersions reads a versions.json.

@@ -28,12 +28,13 @@ func TestVersions_Sort(t *testing.T) {
 func TestReadVersions(t *testing.T) {
 	t.Parallel()
 	got, err := g2.ReadVersions(strings.NewReader(
-		`{"source":"abc","versions":[{"version":"v1.0.0","published_at":"2026-01-01T00:00:00Z","digest":"sha256:0"}]}`))
+		`{"source":"abc","versions":[{"version":"v1.0.0","published_at":"2026-01-01T00:00:00Z","digest":"sha256:0"},{"version":"v1.1.0-rc1","prerelease":true}]}`))
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := &g2.Versions{Source: "abc", Versions: []*g2.Version{
 		{Version: "v1.0.0", PublishedAt: "2026-01-01T00:00:00Z", Digest: "sha256:0"},
+		{Version: "v1.1.0-rc1", Prerelease: true},
 	}}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Error(diff)

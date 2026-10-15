@@ -36,6 +36,16 @@ type Registry struct {
 	// It is empty for a version that has no release to ask -- a package whose versions
 	// are tags -- and for a file generated before this was recorded.
 	PublishedAt string `json:"published_at,omitempty"`
+	// Prerelease says the version is a prerelease: its release is marked as one, or, for
+	// a version that is a tag, the tag is written as one, such as v4.3.0-rc2. It is what
+	// the release said when this was generated. A prerelease promoted to a release later
+	// keeps it until the version is generated again, which is rare enough to leave to
+	// that.
+	//
+	// A prerelease is generated only for a package whose definition asks for them, or
+	// one that has never published anything else. It is recorded rather than left out so
+	// that whoever offers versions decides whether to offer it.
+	Prerelease bool `json:"prerelease,omitempty"`
 
 	Assets []*Asset `json:"assets"`
 }
