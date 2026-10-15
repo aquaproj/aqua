@@ -207,6 +207,32 @@ func TestResolve_gitLabDefaultHost(t *testing.T) {
 	}
 }
 
+// A github_archive package is the repository's archive of the tag, which needs no asset
+// or URL to say where it is: bats-core/bats-core.
+func TestResolve_githubArchive(t *testing.T) {
+	t.Parallel()
+	pkgs, err := resolve.Resolve(logger(), &resolve.Param{
+		PkgName: "bats-core/bats-core",
+		Version: "v1.14.0",
+		PkgInfo: &registry.PackageInfo{
+			Type: "github_archive", RepoOwner: "bats-core", RepoName: "bats-core",
+			SupportedEnvs: registry.SupportedEnvs{"darwin", "linux"},
+			Files:         []*registry.File{{Name: "bats", Src: "bats-core-{{trimV .Version}}/bin/bats"}},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pkgs) != 4 {
+		t.Fatalf("got %d entries, want one for each of darwin and linux on amd64 and arm64", len(pkgs))
+	}
+	for _, p := range pkgs {
+		if p.Type != "github_archive" || len(p.Files) != 1 || p.Files[0].Src != "bats-core-1.14.0/bin/bats" {
+			t.Errorf("%s/%s is wrong: %+v", p.OS, p.Arch, p)
+		}
+	}
+}
+
 // A package that resolves to nothing anywhere can't be locked, and an empty list
 // would look like a successful resolution.
 func TestResolve_noSupportedEnv(t *testing.T) {

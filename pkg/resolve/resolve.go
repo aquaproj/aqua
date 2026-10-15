@@ -273,10 +273,17 @@ var (
 )
 
 // nothingToInstall says a package resolves to neither an asset nor a URL on the
-// environment. go_install and cargo are identified by their path and crate instead, so
-// they never are.
+// environment. go_install and cargo are identified by their path and crate instead, and
+// github_archive by its repository and tag, so they never are.
 func nothingToInstall(info *registry.PackageInfo, assetName, url string) bool {
-	return assetName == "" && url == "" && info.Type != registry.PkgInfoTypeGoInstall && info.Type != registry.PkgInfoTypeCargo
+	if assetName != "" || url != "" {
+		return false
+	}
+	switch info.Type {
+	case registry.PkgInfoTypeGoInstall, registry.PkgInfoTypeCargo, registry.PkgInfoTypeGitHubArchive:
+		return false
+	}
+	return true
 }
 
 // renderLocation resolves where the package is downloaded from on the environment: the
