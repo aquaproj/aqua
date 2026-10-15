@@ -59,6 +59,17 @@ type Asset struct {
 	// glibc it was built against.
 	LinkedLibc string `json:"linked_libc,omitempty"`
 
+	// Rosetta2 and WindowsARMEmulation say the entry is an arm64 machine running the
+	// amd64 build: on macOS through Rosetta 2, on Windows through its emulation. The
+	// asset is the amd64 one already, so nothing installs differently by them. They
+	// are recorded so that which entries depend on emulation can be found, for the
+	// day it goes away: Apple has said Rosetta 2 will. A file written before the fields
+	// existed has neither, so a list made from them is complete only once every version
+	// has been written again. Only the emulation a definition declares is recorded: an
+	// arm64 entry sent to the amd64 build through replacements alone doesn't say so.
+	Rosetta2            bool `json:"rosetta2,omitempty"`
+	WindowsARMEmulation bool `json:"windows_arm_emulation,omitempty"`
+
 	Type      string `json:"type"`
 	RepoOwner string `json:"repo_owner,omitempty"`
 	RepoName  string `json:"repo_name,omitempty"`

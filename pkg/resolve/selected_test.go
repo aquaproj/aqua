@@ -65,7 +65,8 @@ func TestResolveSelected(t *testing.T) { //nolint:funlen
 			sel:  []string{"foo-darwin-x64.zip"},
 			want: &lockfile.Package{
 				Name: "foo/foo", Version: "v1.0.0", OS: "darwin", Arch: "arm64",
-				Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+				Rosetta2: true,
+				Type:     "github_release", RepoOwner: "foo", RepoName: "foo",
 				Asset:  "foo-darwin-x64.zip",
 				Format: "zip",
 				Files:  []*lockfile.File{{Name: "foo", Src: "foo"}},

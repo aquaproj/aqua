@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
+	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/asset"
@@ -151,8 +153,8 @@ func addEmulated(pkgInfo *registry.PackageInfo, rts []*runtime.Runtime, supporte
 		goos     string
 		emulated bool
 	}{
-		{"darwin", pkgInfo.Rosetta2},
-		{"windows", pkgInfo.WindowsARMEmulation},
+		{osDarwin, pkgInfo.Rosetta2},
+		{osWindows, pkgInfo.WindowsARMEmulation},
 	} {
 		if !e.emulated {
 			continue
@@ -169,7 +171,7 @@ func addEmulated(pkgInfo *registry.PackageInfo, rts []*runtime.Runtime, supporte
 				continue
 			}
 		}
-		rts = append(rts, &runtime.Runtime{GOOS: e.goos, GOARCH: "arm64"})
+		rts = append(rts, &runtime.Runtime{GOOS: e.goos, GOARCH: archArm64})
 	}
 	return rts, nil
 }
@@ -180,6 +182,115 @@ func envSet(rts []*runtime.Runtime) map[string]struct{} {
 		set[rt.Env()] = struct{}{}
 	}
 	return set
+}
+
+const (
+	osDarwin  = "darwin"
+	osWindows = "windows"
+	archArm64 = "arm64"
+)
+
+// emulationOf says whether the entry runs the amd64 build on an arm64 machine.
+//
+// It is read off what was resolved rather than off the definition, since a definition can
+// say rosetta2 and still resolve to a universal build, a native one named in an override,
+// or a go_install path, none of which would stop working without Rosetta 2. The entry
+// depends on emulation when, with emulation turned off,
+//
+//   - the asset is another one: the asset was named from the amd64 architecture,
+//   - the environment isn't supported at all: it is there only because of emulation, or
+//   - the asset is the same one and its name says amd64 and not arm64 or universal:
+//     Songmu/gocredits writes gocredits_{{.Version}}_{{.OS}}_amd64.{{.Format}}, the
+//     same name whichever architecture asks.
+//
+// Only the emulation a definition declares is recorded, for the OS it is declared for:
+// rosetta2 on macOS, windows_arm_emulation on Windows. A definition that sends arm64 to
+// the amd64 build through replacements alone -- snaplet/cli's arm64: x64 -- isn't.
+//
+// It returns whether that is through Rosetta 2 and whether through Windows' emulation.
+func emulationOf(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) (bool, bool, error) {
+	emulated, err := runsAmd64Build(param, info, rt, assetName, url)
+	if err != nil || !emulated {
+		return false, false, err
+	}
+	return rt.GOOS == osDarwin, rt.GOOS == osWindows, nil
+}
+
+func runsAmd64Build(param *Param, info *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) (bool, error) {
+	if !declaresEmulation(info, rt) {
+		return false, nil
+	}
+	native := info.Copy()
+	native.Rosetta2 = false
+	native.WindowsARMEmulation = false
+	pkg := &config.Package{
+		Package:     &aqua.Package{Name: param.PkgName, Version: param.Version},
+		PackageInfo: native,
+	}
+	if err := fillVars(pkg); err != nil {
+		return false, err
+	}
+	nativeAsset, nativeURL, err := renderLocation(pkg, native, rt)
+	if err != nil {
+		return false, fmt.Errorf("resolve without emulation: %w", err)
+	}
+	return nativeAsset != assetName || nativeURL != url || amd64Only(native, rt, assetName, url), nil
+}
+
+// declaresEmulation says whether the definition declares that an arm64 machine of the
+// environment's OS runs the amd64 build.
+func declaresEmulation(info *registry.PackageInfo, rt *runtime.Runtime) bool {
+	if rt.GOARCH != archArm64 {
+		return false
+	}
+	return rt.GOOS == osDarwin && info.Rosetta2 || rt.GOOS == osWindows && info.WindowsARMEmulation
+}
+
+// amd64Only says whether an asset that is the same with or without emulation is the amd64
+// build: the environment isn't supported without emulation, or the name says amd64.
+func amd64Only(native *registry.PackageInfo, rt *runtime.Runtime, assetName, url string) bool {
+	if !native.CheckSupportedEnvs(rt.GOOS, rt.GOARCH, rt.Env()) {
+		return true
+	}
+	name := assetName
+	if name == "" {
+		name = path.Base(url)
+	}
+	return namesAmd64(name)
+}
+
+// namesAmd64 says whether an asset's name says it is an amd64 build and not an arm64 or
+// universal one. The spellings have to be whole words, so that a tool named x64tool or a
+// repository named after arm64 doesn't decide it.
+func namesAmd64(name string) bool {
+	s := strings.ToLower(name)
+	return amd64Word.MatchString(s) && !nativeWord.MatchString(s)
+}
+
+var (
+	amd64Word  = regexp.MustCompile(`(^|[^a-z0-9])(amd64|x86[-_]64|x64|64-?bit)([^a-z0-9]|$)`)
+	nativeWord = regexp.MustCompile(`(^|[^a-z0-9])(arm64|aarch64|universal)([^a-z0-9]|$)`)
+)
+
+// nothingToInstall says a package resolves to neither an asset nor a URL on the
+// environment. go_install and cargo are identified by their path and crate instead, so
+// they never are.
+func nothingToInstall(info *registry.PackageInfo, assetName, url string) bool {
+	return assetName == "" && url == "" && info.Type != registry.PkgInfoTypeGoInstall && info.Type != registry.PkgInfoTypeCargo
+}
+
+// renderLocation resolves where the package is downloaded from on the environment: the
+// asset name, and the URL for an http package.
+func renderLocation(pkg *config.Package, info *registry.PackageInfo, rt *runtime.Runtime) (string, string, error) {
+	assetName, err := pkg.RenderAsset(rt)
+	if err != nil {
+		return "", "", fmt.Errorf("render the asset name for %s: %w", rt.Env(), err)
+	}
+	url, err := renderURL(pkg, info, rt)
+	if err != nil {
+		return "", "", err
+	}
+	return assetName, url, nil
 }
 
 // forRuntime is the definition as it applies to one environment.
@@ -278,18 +389,14 @@ func resolveInfo(param *Param, info *registry.PackageInfo, rt *runtime.Runtime) 
 		return nil, err
 	}
 
-	assetName, err := pkg.RenderAsset(rt)
-	if err != nil {
-		return nil, fmt.Errorf("render the asset name for %s: %w", rt.Env(), err)
-	}
-	url, err := renderURL(pkg, info, rt)
+	assetName, url, err := renderLocation(pkg, info, rt)
 	if err != nil {
 		return nil, err
 	}
 	// A package that resolves to neither an asset nor a URL has nothing to install
 	// on this environment. go_install and cargo are identified by their path and
 	// crate instead, so they are not caught by this.
-	if assetName == "" && url == "" && info.Type != registry.PkgInfoTypeGoInstall && info.Type != registry.PkgInfoTypeCargo {
+	if nothingToInstall(info, assetName, url) {
 		return nil, nil //nolint:nilnil
 	}
 
@@ -301,16 +408,22 @@ func resolveInfo(param *Param, info *registry.PackageInfo, rt *runtime.Runtime) 
 	if err != nil {
 		return nil, err
 	}
+	rosetta2, windowsARMEmulation, err := emulationOf(param, info, rt, assetName, url)
+	if err != nil {
+		return nil, err
+	}
 
 	return &lockfile.Package{
-		Name:      param.PkgName,
-		Version:   param.Version,
-		OS:        rt.GOOS,
-		Arch:      rt.GOARCH,
-		Variants:  variantsOf(rt),
-		Type:      info.Type,
-		RepoOwner: info.RepoOwner,
-		RepoName:  info.RepoName,
+		Name:                param.PkgName,
+		Version:             param.Version,
+		OS:                  rt.GOOS,
+		Arch:                rt.GOARCH,
+		Variants:            variantsOf(rt),
+		Rosetta2:            rosetta2,
+		WindowsARMEmulation: windowsARMEmulation,
+		Type:                info.Type,
+		RepoOwner:           info.RepoOwner,
+		RepoName:            info.RepoName,
 		// The instance, for the types that are on one. Without it the entry would
 		// name a repository on github.com, where the same owner and name are
 		// somebody else's. A definition may leave it to the type's own default --

@@ -64,6 +64,11 @@ type Package struct {
 	// glibc it was built against.
 	LinkedLibc string `json:"linked_libc,omitempty"`
 
+	// Rosetta2 and WindowsARMEmulation say the entry runs the amd64 build on an arm64
+	// machine. See g2.Asset.
+	Rosetta2            bool `json:"rosetta2,omitempty"`
+	WindowsARMEmulation bool `json:"windows_arm_emulation,omitempty"`
+
 	// Checksum may be empty only for the types that build from source through
 	// another tool, which verifies for itself: go_install and cargo.
 	Checksum          string `json:"checksum,omitempty"`

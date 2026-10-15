@@ -390,6 +390,13 @@ func TestResolve_windowsARMEmulation(t *testing.T) {
 	if got := pkgs[3].Asset; got != "mask-0.11.5-x86_64-pc-windows-msvc.zip" {
 		t.Errorf("windows/arm64 resolves to %s, want the amd64 build", got)
 	}
+	// The entry says it runs under emulation, and the native amd64 one doesn't.
+	if !pkgs[3].WindowsARMEmulation {
+		t.Error("windows/arm64 doesn't say it runs under emulation")
+	}
+	if pkgs[2].WindowsARMEmulation || pkgs[3].Rosetta2 {
+		t.Errorf("a flag is set where emulation doesn't apply: %+v %+v", pkgs[2], pkgs[3])
+	}
 }
 
 // supported_envs in the configuration still limits the emulated environment.
@@ -463,5 +470,157 @@ func TestResolve_rosetta2(t *testing.T) {
 	}
 	if got := pkgs[1].Asset; got != "foo_darwin_amd64.tar.gz" {
 		t.Errorf("darwin/arm64 resolves to %s, want the amd64 build", got)
+	}
+	if !pkgs[1].Rosetta2 || pkgs[0].Rosetta2 {
+		t.Errorf("only darwin/arm64 runs under Rosetta 2: amd64=%v arm64=%v", pkgs[0].Rosetta2, pkgs[1].Rosetta2)
+	}
+}
+
+// A definition saying rosetta2 doesn't make an entry depend on it: a universal build or
+// a package built from source runs on arm64 as it is.
+func TestResolve_rosetta2NotUsed(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name string
+		info *registry.PackageInfo
+	}{
+		{
+			name: "universal build",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+				Asset:         "foo_darwin_universal.tar.gz",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+		{
+			name: "go_install",
+			info: &registry.PackageInfo{
+				Type: "go_install", Path: "example.com/foo",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			pkgs, err := resolve.Resolve(logger(), &resolve.Param{PkgName: "foo/foo", Version: "v1.0.0", PkgInfo: tt.info})
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, p := range pkgs {
+				if p.Rosetta2 {
+					t.Errorf("%s/%s says it runs under Rosetta 2", p.OS, p.Arch)
+				}
+			}
+		})
+	}
+}
+
+// An amd64 build whose name doesn't change with the architecture still runs under
+// Rosetta 2 on an arm64 Mac: Songmu/gocredits names the architecture in the template.
+func TestResolve_rosetta2NameSaysAmd64(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name string
+		info *registry.PackageInfo
+	}{
+		{
+			name: "the template names amd64",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "Songmu", RepoName: "gocredits",
+				Asset:         "gocredits_{{.Version}}_{{.OS}}_amd64.{{.Format}}",
+				Format:        "zip",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+		{
+			name: "only amd64 is supported",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+				Asset:         "foo_darwin.tar.gz",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin/amd64"},
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			pkgs, err := resolve.Resolve(logger(), &resolve.Param{PkgName: "foo/foo", Version: "v1.0.0", PkgInfo: tt.info})
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, p := range pkgs {
+				if want := p.Arch == "arm64"; p.Rosetta2 != want {
+					t.Errorf("%s/%s: rosetta2 is %v, want %v", p.OS, p.Arch, p.Rosetta2, want)
+				}
+			}
+		})
+	}
+}
+
+// Each OS's flag is read from its own declaration, and the name decides only by whole
+// words.
+func TestResolve_emulationPerOS(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name                     string
+		info                     *registry.PackageInfo
+		rosetta2, windowsARMEmul bool
+	}{
+		{
+			name: "windows_arm_emulation says nothing about macOS",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "o", RepoName: "r",
+				Asset:               "r_{{.OS}}_amd64.zip",
+				WindowsARMEmulation: true,
+				SupportedEnvs:       registry.SupportedEnvs{"darwin", "windows"},
+			},
+			windowsARMEmul: true,
+		},
+		{
+			name: "a tool named x64 isn't an amd64 build",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "o", RepoName: "x64tool",
+				Asset:         "x64tool_{{.OS}}.zip",
+				Rosetta2:      true,
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+		},
+		{
+			name: "a darwin override naming the amd64 build",
+			info: &registry.PackageInfo{
+				Type: "github_release", RepoOwner: "o", RepoName: "r",
+				Asset:    "r_{{.OS}}_{{.Arch}}.tar.gz",
+				Rosetta2: true,
+				Overrides: []*registry.Override{
+					{GOOS: "darwin", Asset: "r_macos_x86_64.tar.gz"},
+				},
+				SupportedEnvs: registry.SupportedEnvs{"darwin"},
+			},
+			rosetta2: true,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			pkgs, err := resolve.Resolve(logger(), &resolve.Param{PkgName: "o/r", Version: "v1.0.0", PkgInfo: tt.info})
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, p := range pkgs {
+				if p.Arch != "arm64" {
+					continue
+				}
+				want := tt.rosetta2
+				got := p.Rosetta2
+				if p.OS == "windows" {
+					want, got = tt.windowsARMEmul, p.WindowsARMEmulation
+				}
+				if got != want {
+					t.Errorf("%s/%s: flag is %v, want %v", p.OS, p.Arch, got, want)
+				}
+			}
+		})
 	}
 }

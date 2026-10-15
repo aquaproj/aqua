@@ -169,3 +169,26 @@ func TestClient_LockPackages_instance(t *testing.T) {
 		t.Errorf("the registry is wrong (-want +got):\n%s", diff)
 	}
 }
+
+// An entry running the amd64 build under emulation says so in both directions of the
+// conversion, so that which entries depend on it can be found from either file.
+func TestNewRegistry_emulation(t *testing.T) {
+	t.Parallel()
+	c := g2.New(nil, nil, "aquaproj", "aqua-registry-g2")
+	reg := &g2.Registry{
+		Assets: []*g2.Asset{
+			{OS: "darwin", Arch: "arm64", Rosetta2: true, Type: "github_release", RepoOwner: "o", RepoName: "r", Asset: "r_darwin_amd64.tar.gz", Format: "tar.gz"},
+			{OS: "windows", Arch: "arm64", WindowsARMEmulation: true, Type: "github_release", RepoOwner: "o", RepoName: "r", Asset: "r_windows_amd64.zip", Format: "zip"},
+		},
+	}
+	pkgs := c.LockPackages(reg, "o/r", "v1.0.0")
+	if len(pkgs) != 2 {
+		t.Fatalf("got %d lock entries, want 2", len(pkgs))
+	}
+	if !pkgs[0].Rosetta2 || !pkgs[1].WindowsARMEmulation {
+		t.Errorf("the lock entries lost the emulation: %+v %+v", pkgs[0], pkgs[1])
+	}
+	if diff := cmp.Diff(reg, g2.NewRegistry(pkgs)); diff != "" {
+		t.Errorf("the registry is wrong (-want +got):\n%s", diff)
+	}
+}
