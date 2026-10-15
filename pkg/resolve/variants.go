@@ -1,13 +1,22 @@
-package updatechecksum
+// Package resolve turns a registry's definition of a package into entries resolved
+// for each environment it supports.
+//
+// A registry describes a package with templates and overrides, which have to be
+// evaluated per operating system, architecture and variant before anything can be
+// installed or written to a lock file. Doing that in one place is what keeps aqua and
+// the tool that generates aqua-registry-g2 from disagreeing about what a registry
+// means.
+package resolve
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-// expandRuntimesByVariants returns rts with each entry potentially duplicated
+// ExpandByVariants returns rts with each entry potentially duplicated
 // to cover every variant value combination declared in pkgInfo.Overrides for
 // the base runtime's (GOOS, GOARCH). For packages without variant-aware
 // overrides this is effectively a no-op and the input runtimes are returned.
@@ -16,7 +25,7 @@ import (
 // Override [pkg/config/registry.Override.Match] picks first for a given
 // runtime — silently dropping the assets of any sibling Override that differs
 // only by variants (e.g. libc=musl vs libc=glibc).
-func expandRuntimesByVariants(pkgInfo *registry.PackageInfo, rts []*runtime.Runtime) []*runtime.Runtime {
+func ExpandByVariants(pkgInfo *registry.PackageInfo, rts []*runtime.Runtime) []*runtime.Runtime {
 	if len(pkgInfo.Overrides) == 0 {
 		return rts
 	}
@@ -24,7 +33,7 @@ func expandRuntimesByVariants(pkgInfo *registry.PackageInfo, rts []*runtime.Runt
 	expanded := make([]*runtime.Runtime, 0, len(rts))
 	seen := map[string]struct{}{}
 	add := func(rt *runtime.Runtime) {
-		k := runtimeKey(rt)
+		k := RuntimeKey(rt)
 		if _, ok := seen[k]; ok {
 			return
 		}
@@ -83,37 +92,44 @@ func hasVariantsOverride(overrides []*registry.Override) bool {
 	return false
 }
 
-// collectVariantValueSets returns, for each supported variant key, the set of
-// values to enumerate. An override that does not mention a key contributes the
-// empty string (representing "no constraint" / fallback), so a fallback
-// Override produces a runtime with that field cleared.
+// collectVariantValueSets returns, for each supported variant key, the set of values
+// to enumerate.
+//
+// The empty value is always among them. It stands for an environment that constrains
+// nothing, which is reachable however the overrides are written: an Override matches
+// only when the runtime's value equals its own, so a machine whose libc is something
+// else, or whose libc couldn't be detected at all, falls through to the package's own
+// definition. Leaving it out would drop the environment that uses the base asset,
+// which for a package whose base is the musl build is the musl machines.
 func collectVariantValueSets(overrides []*registry.Override, keys []string) map[string]map[string]struct{} {
 	sets := make(map[string]map[string]struct{}, len(keys))
 	for _, key := range keys {
-		sets[key] = map[string]struct{}{}
+		sets[key] = map[string]struct{}{"": {}}
 	}
 	for _, ov := range overrides {
-		mentioned := make(map[string]string, len(ov.Variants))
 		for _, v := range ov.Variants {
-			mentioned[v.Key] = v.Value
-		}
-		for _, key := range keys {
-			if val, ok := mentioned[key]; ok {
-				sets[key][val] = struct{}{}
-			} else {
-				sets[key][""] = struct{}{}
+			if _, ok := sets[v.Key]; ok {
+				sets[v.Key][v.Value] = struct{}{}
 			}
 		}
 	}
 	return sets
 }
 
+// cartesianProduct enumerates every combination of variant values.
+//
+// Keys and values are walked in sorted order rather than in map order, so that the
+// environments come out the same on every run. What is generated from them is written
+// to a file and read as a diff, and an order that changed between runs would show up
+// as a change that isn't one. Sorting also puts the unconstrained value first, since
+// the empty string sorts before any other.
 func cartesianProduct(sets map[string]map[string]struct{}) []map[string]string {
 	combos := []map[string]string{{}}
-	for key, values := range sets {
+	for _, key := range slices.Sorted(maps.Keys(sets)) {
+		values := slices.Sorted(maps.Keys(sets[key]))
 		next := make([]map[string]string, 0, len(combos)*len(values))
 		for _, c := range combos {
-			for v := range values {
+			for _, v := range values {
 				nc := make(map[string]string, len(c)+1)
 				maps.Copy(nc, c)
 				nc[key] = v
@@ -129,4 +145,10 @@ func applyVariantCombo(rt *runtime.Runtime, combo map[string]string) {
 	if v, ok := combo["libc"]; ok {
 		rt.LibC = v
 	}
+}
+
+// RuntimeKey returns a unique map key for rt that includes the variant axes, so that
+// runtimes differing only by variant, such as musl and glibc, do not collide.
+func RuntimeKey(rt *runtime.Runtime) string {
+	return rt.GOOS + "/" + rt.GOARCH + "/" + rt.LibC
 }

@@ -1,17 +1,18 @@
-package updatechecksum
+package resolve_test
 
 import (
 	"slices"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/resolve"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
 func sortedKeys(rts []*runtime.Runtime) []string {
 	keys := make([]string, 0, len(rts))
 	for _, rt := range rts {
-		keys = append(keys, runtimeKey(rt))
+		keys = append(keys, resolve.RuntimeKey(rt))
 	}
 	slices.Sort(keys)
 	return keys
@@ -62,10 +63,12 @@ func TestExpandRuntimesByVariants(t *testing.T) { //nolint:funlen
 				},
 			},
 			rts:      []*runtime.Runtime{linuxAmd64, darwinArm64},
-			wantKeys: []string{"darwin/arm64/", "linux/amd64/glibc", "linux/amd64/musl"},
+			wantKeys: []string{"darwin/arm64/", "linux/amd64/", "linux/amd64/glibc", "linux/amd64/musl"},
 		},
 		{
-			name: "musl-only override drops empty-LibC runtime for that platform",
+			// The unconstrained runtime stays: it is the machine whose libc is
+			// neither musl nor detectable, which installs the base asset.
+			name: "musl-only override keeps the unconstrained runtime",
 			pkgInfo: &registry.PackageInfo{
 				Overrides: registry.Overrides{
 					{
@@ -76,7 +79,7 @@ func TestExpandRuntimesByVariants(t *testing.T) { //nolint:funlen
 				},
 			},
 			rts:      []*runtime.Runtime{linuxAmd64, linuxArm64},
-			wantKeys: []string{"linux/amd64/musl", "linux/arm64/"},
+			wantKeys: []string{"linux/amd64/", "linux/amd64/musl", "linux/arm64/"},
 		},
 		{
 			name: "fallback override coexists with libc-constrained override",
@@ -118,16 +121,16 @@ func TestExpandRuntimesByVariants(t *testing.T) { //nolint:funlen
 				},
 			},
 			rts:      []*runtime.Runtime{linuxAmd64, linuxArm64, darwinArm64},
-			wantKeys: []string{"darwin/arm64/", "linux/amd64/musl", "linux/arm64/musl"},
+			wantKeys: []string{"darwin/arm64/", "linux/amd64/", "linux/amd64/musl", "linux/arm64/", "linux/arm64/musl"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := sortedKeys(expandRuntimesByVariants(tt.pkgInfo, tt.rts))
+			got := sortedKeys(resolve.ExpandByVariants(tt.pkgInfo, tt.rts))
 			if !slices.Equal(got, tt.wantKeys) {
-				t.Errorf("expandRuntimesByVariants() keys = %v, want %v", got, tt.wantKeys)
+				t.Errorf("ExpandByVariants() keys = %v, want %v", got, tt.wantKeys)
 			}
 		})
 	}

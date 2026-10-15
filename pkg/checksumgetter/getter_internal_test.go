@@ -1,4 +1,4 @@
-package updatechecksum
+package checksumgetter
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/resolve"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -40,8 +41,8 @@ func TestAllChecksumsCached(t *testing.T) { //nolint:funlen
 	pkgDarwin, idDarwin := newGitHubReleasePkg(t, "cli", "cli", "v2.17.0", "gh_darwin_arm64.tar.gz", rtDarwin)
 
 	pkgs := map[string]*config.Package{
-		runtimeKey(rtLinux):  pkgLinux,
-		runtimeKey(rtDarwin): pkgDarwin,
+		resolve.RuntimeKey(rtLinux):  pkgLinux,
+		resolve.RuntimeKey(rtDarwin): pkgDarwin,
 	}
 	rts := []*runtime.Runtime{rtLinux, rtDarwin}
 
@@ -98,10 +99,102 @@ func TestAllChecksumsCached(t *testing.T) { //nolint:funlen
 	})
 }
 
+func TestHasAssetSignature(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	enabled := true
+	disabled := false
+	data := []struct {
+		name    string
+		pkgInfo *registry.PackageInfo
+		exp     bool
+	}{
+		{
+			name:    "nothing is signed",
+			pkgInfo: &registry.PackageInfo{Type: "github_release"},
+		},
+		{
+			name: "a checksum file is signed but the asset isn't",
+			// The signature covers the file listing the digests, which is enough to
+			// trust them without ever fetching the asset.
+			pkgInfo: &registry.PackageInfo{
+				Type: "github_release",
+				Checksum: &registry.Checksum{
+					Type:   "github_release",
+					Asset:  "checksums.txt",
+					Cosign: &registry.Cosign{},
+				},
+			},
+		},
+		{
+			name: "cosign",
+			pkgInfo: &registry.PackageInfo{
+				Type:   "github_release",
+				Cosign: &registry.Cosign{Opts: []string{"--key", "cosign.pub"}},
+			},
+			exp: true,
+		},
+		{
+			// Cosign with nothing to verify with is not a signature.
+			name: "an empty cosign",
+			pkgInfo: &registry.PackageInfo{
+				Type:   "github_release",
+				Cosign: &registry.Cosign{},
+			},
+		},
+		{
+			name: "slsa provenance",
+			pkgInfo: &registry.PackageInfo{
+				Type:           "github_release",
+				SLSAProvenance: &registry.SLSAProvenance{Type: "github_release", Asset: &[]string{"multiple.intoto.jsonl"}[0]},
+			},
+			exp: true,
+		},
+		{
+			name: "github artifact attestations",
+			pkgInfo: &registry.PackageInfo{
+				Type:                       "github_release",
+				GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+			},
+			exp: true,
+		},
+		{
+			name: "minisign",
+			pkgInfo: &registry.PackageInfo{
+				Type:     "github_release",
+				Minisign: &registry.Minisign{PublicKey: "RWQ"},
+			},
+			exp: true,
+		},
+		{
+			name: "a signature the registry turned off",
+			pkgInfo: &registry.PackageInfo{
+				Type:   "github_release",
+				Cosign: &registry.Cosign{Opts: []string{"--key", "cosign.pub"}, Enabled: &disabled},
+			},
+		},
+		{
+			name: "a signature the registry turned on",
+			pkgInfo: &registry.PackageInfo{
+				Type:   "github_release",
+				Cosign: &registry.Cosign{Enabled: &enabled},
+			},
+			exp: true,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			if got := hasAssetSignature(d.pkgInfo); got != d.exp {
+				t.Fatalf("hasAssetSignature = %v, wanted %v", got, d.exp)
+			}
+		})
+	}
+}
+
 // An asset on a GitLab instance can be named by the path its release link was created
 // with, while the checksum file names the file. The checksum has to be recorded under the
 // asset, because that is what installing it then looks for.
-func TestController_getChecksumsFromChecksumFile_nestedAsset(t *testing.T) {
+func TestGetter_getChecksumsFromChecksumFile_nestedAsset(t *testing.T) {
 	t.Parallel()
 	rt := &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}
 	pkg := &config.Package{
@@ -134,9 +227,9 @@ func TestController_getChecksumsFromChecksumFile_nestedAsset(t *testing.T) {
 		t.Fatalf("ChecksumID: %v", err)
 	}
 
-	c := &Controller{}
+	g := &Getter{}
 	const want = "89f744a88dad0e73866d06e79afccd5476152770c70101361566b234b0722101"
-	cs, err := c.getChecksumsFromChecksumFile(pkg,
+	cs, err := g.getChecksumsFromChecksumFile(pkg,
 		map[string]struct{}{assetName: {}}, wantID,
 		want+"  tool-linux-amd64\n"+
 			"1182217e827a44e22df22be4b95e5392f52530eaed52da5195b5f026d06f41f4  tool-darwin-arm64\n")

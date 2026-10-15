@@ -22,11 +22,23 @@ func (p *Package) RenameFile(logger *slog.Logger, pkgPath string, file *registry
 	if !rt.IsWindows() {
 		return s, nil
 	}
-	if osfile.Ext(s, p.Package.Version) != "" {
+	ext := osfile.Ext(s, p.Package.Version)
+	if ext == "" {
+		return p.renameFile(logger, pkgPath, s)
+	}
+	if ext != p.windowsExt() {
 		return s, nil
 	}
-
-	return p.renameFile(logger, pkgPath, s)
+	// An already resolved files[].src -- a lock file's, or aqua-registry-g2's -- names
+	// the file as it is once installed, so it carries the extension this would add.
+	// The archive it came out of may spell it without, and nothing has renamed
+	// anything yet, so the rename still has to happen.
+	if f, err := osfile.Exists(filepath.Join(pkgPath, s)); err != nil {
+		return "", err //nolint:wrapcheck
+	} else if f {
+		return s, nil
+	}
+	return p.renameFile(logger, pkgPath, strings.TrimSuffix(s, ext))
 }
 
 // renameFile performs the actual file renaming with Windows extension.

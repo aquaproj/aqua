@@ -71,7 +71,7 @@ func (p *PackageInfo) SetVersion(logger *slog.Logger, v string) (*PackageInfo, e
 				"package_version", v,
 				"package_semver", sv,
 			)
-			return p.overrideVersion(vo), nil
+			return p.OverrideVersion(vo), nil
 		}
 	}
 	logger.Debug(

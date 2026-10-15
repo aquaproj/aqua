@@ -59,6 +59,7 @@ type Installer struct {
 	cosignDisabled        bool
 	slsaDisabled          bool
 	gaaDisabled           bool
+	verifySignatures      bool
 	vacuum                Vacuum
 }
 
@@ -119,6 +120,7 @@ func newInstaller(param *config.Param, downloader download.ClientAPI, rt, realRT
 		cosignDisabled:        param.CosignDisabled,
 		slsaDisabled:          param.SLSADisabled,
 		gaaDisabled:           param.GitHubArtifactAttestationDisabled,
+		verifySignatures:      param.VerifySignatures,
 		copyDir:               param.Dest,
 		unarchiver:            unarchiver,
 		cosign:                cosignVerifier,
@@ -168,6 +170,10 @@ type ParamInstallPackages struct {
 	ConfigFilePath string
 	Config         *aqua.Config
 	Registries     map[string]*registry.Config
+	// LockedPackages are the packages resolved from the lock file. They arrive
+	// already built, because deciding them is also what tells the caller whether it
+	// needs a registry at all.
+	LockedPackages []*Target
 	Tags           map[string]struct{}
 	ExcludedTags   map[string]struct{}
 	// Names filters installed packages by command names or package names.
@@ -185,6 +191,7 @@ type ParamInstallPackages struct {
 type ParamInstallPackage struct {
 	Pkg             *config.Package
 	Checksums       *checksum.Checksums
+	Locked          bool
 	RequireChecksum bool
 	PolicyConfigs   []*policy.Config
 	DisablePolicy   bool
@@ -207,19 +214,25 @@ type DownloadParam struct {
 	Checksum        *checksum.Checksum
 	Dest            string
 	Asset           string
+	Locked          bool
 	RequireChecksum bool
 }
 
-func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error { //nolint:cyclop
-	pkgs, failed := config.ListPackages(logger, param.Config, is.runtime, param.Registries)
+func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error {
+	targets, failed := is.listTargets(logger, param)
+	pkgs := targetPackages(targets)
+
 	if !param.SkipLink {
 		if failedCreateLinks := is.createLinks(logger, pkgs); failedCreateLinks {
 			failed = failedCreateLinks
 		}
 	}
 
-	// Filter packages by names before checking onlyLink so that names are validated even if onlyLink is true.
-	pkgs = filterPackagesByNames(logger, pkgs, param.Names, param.FoundNames)
+	// Filtered before the onlyLink check, so that the names are validated even when
+	// nothing is downloaded. The targets are filtered rather than the packages,
+	// because installing reads the targets: a package filtered out of a list nothing
+	// installs from would have been installed anyway.
+	targets = filterTargetsByNames(logger, targets, param.Names, param.FoundNames)
 
 	if is.onlyLink {
 		logger.Debug("skip downloading the package",
@@ -230,44 +243,14 @@ func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, p
 		return nil
 	}
 
-	if len(pkgs) == 0 {
+	if len(targets) == 0 {
 		if failed {
 			return errInstallFailure
 		}
 		return nil
 	}
 
-	eg := &errgroup.Group{}
-	eg.SetLimit(is.maxParallelism)
-
-	for _, pkg := range pkgs {
-		logger := logger.With(
-			"package_name", pkg.Package.Name,
-			"package_version", pkg.Package.Version,
-			"registry", pkg.Package.Registry,
-		)
-		if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
-			logger.Debug("skip installing the package because package tags are unmatched")
-			continue
-		}
-		eg.Go(func() error {
-			if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
-				Pkg:             pkg,
-				Checksums:       param.Checksums,
-				RequireChecksum: param.RequireChecksum,
-				PolicyConfigs:   param.PolicyConfigs,
-				DisablePolicy:   param.DisablePolicy,
-			}); err != nil {
-				slogerr.WithError(logger, err).Error("install the package")
-				return err
-			}
-			return nil
-		})
-	}
-	if err := eg.Wait(); err != nil {
-		return errInstallFailure
-	}
-	return nil
+	return is.installTargets(ctx, logger, targets, param)
 }
 
 func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, param *ParamInstallPackage) error {
@@ -295,9 +278,49 @@ func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, pa
 		Checksums:       param.Checksums,
 		RequireChecksum: param.RequireChecksum,
 		Checksum:        param.Checksum,
+		Locked:          param.Locked,
 	}); err != nil {
 		return err
 	}
 
 	return is.checkFilesWrap(ctx, logger, param, pkgPath)
+}
+
+// installTargets installs what the targets say, as many at a time as the parallelism
+// allows.
+func (is *Installer) installTargets(ctx context.Context, logger *slog.Logger, targets []*Target, param *ParamInstallPackages) error {
+	eg := &errgroup.Group{}
+	eg.SetLimit(is.maxParallelism)
+
+	for _, t := range targets {
+		pkg := t.Pkg
+		logger := logger.With(
+			"package_name", pkg.Package.Name,
+			"package_version", pkg.Package.Version,
+			"registry", pkg.Package.Registry,
+		)
+		if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
+			logger.Debug("skip installing the package because package tags are unmatched")
+			continue
+		}
+		eg.Go(func() error {
+			if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
+				Pkg:             pkg,
+				Checksum:        t.Checksum,
+				Locked:          t.Locked,
+				Checksums:       param.Checksums,
+				RequireChecksum: param.RequireChecksum,
+				PolicyConfigs:   param.PolicyConfigs,
+				DisablePolicy:   param.DisablePolicy,
+			}); err != nil {
+				slogerr.WithError(logger, err).Error("install the package")
+				return err
+			}
+			return nil
+		})
+	}
+	if err := eg.Wait(); err != nil {
+		return errInstallFailure
+	}
+	return nil
 }

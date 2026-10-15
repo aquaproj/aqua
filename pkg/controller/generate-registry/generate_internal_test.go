@@ -661,7 +661,7 @@ func TestSLSAProvenance(t *testing.T) {
 	for _, tt := range provenanceCases() {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := slsaProvenance(&registry.PackageInfo{Asset: tt.pkgAsset}, tt.assets, tt.tag)
+			got := slsaProvenance(&registry.PackageInfo{Asset: tt.pkgAsset}, tt.assets, tt.tag, nil)
 			if tt.want == "" {
 				if got != nil {
 					t.Fatalf("claimed %q, want nothing", *got.Asset)
@@ -686,7 +686,7 @@ func TestController_patchRelease_packslip(t *testing.T) {
 		RepoName:  "hk",
 	}
 	c := &Controller{}
-	c.patchRelease(slog.New(slog.DiscardHandler), pkgInfo, "jdx/hk", "v2.5.0", []string{
+	c.patchRelease(slog.New(slog.DiscardHandler), &Config{}, pkgInfo, "jdx/hk", "v2.5.0", []string{
 		"hk-aarch64-apple-darwin.tar.gz",
 		"hk-x86_64-unknown-linux-musl.tar.gz",
 		"checksums.txt",

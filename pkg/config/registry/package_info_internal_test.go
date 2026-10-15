@@ -9,7 +9,7 @@ import (
 
 const proxyName = "aqua-proxy"
 
-func TestPackageInfo_overrideVersion(t *testing.T) {
+func TestPackageInfo_OverrideVersion(t *testing.T) {
 	t.Parallel()
 	data := []struct {
 		title   string
@@ -52,7 +52,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			pkgInfo := d.pkgInfo.overrideVersion(d.child)
+			pkgInfo := d.pkgInfo.OverrideVersion(d.child)
 			if diff := cmp.Diff(d.exp, pkgInfo); diff != "" {
 				t.Fatal(diff)
 			}
@@ -63,7 +63,7 @@ func TestPackageInfo_overrideVersion(t *testing.T) {
 // A project that moved to a Forgejo instance keeps github_release at the top level and
 // says forgejo_release for the newer versions. What belonged to GitHub has to go with it:
 // the override can't unset a field, because a field it doesn't mention is inherited.
-func TestPackageInfo_overrideVersion_toForgeRelease(t *testing.T) {
+func TestPackageInfo_OverrideVersion_toForgeRelease(t *testing.T) {
 	t.Parallel()
 	pkgInfo := &PackageInfo{
 		Type:                       PkgInfoTypeGitHubRelease,
@@ -74,7 +74,7 @@ func TestPackageInfo_overrideVersion_toForgeRelease(t *testing.T) {
 		SLSAProvenance:             &SLSAProvenance{},
 		GitHubArtifactAttestations: &GitHubArtifactAttestations{},
 	}
-	pkg := pkgInfo.overrideVersion(&VersionOverride{
+	pkg := pkgInfo.OverrideVersion(&VersionOverride{
 		Type: PkgInfoTypeForgejoRelease,
 		Host: "codeberg.org",
 	})
@@ -90,7 +90,7 @@ func TestPackageInfo_overrideVersion_toForgeRelease(t *testing.T) {
 }
 
 // The other way round, the instance goes: a github_release package is on github.com.
-func TestPackageInfo_overrideVersion_fromForgeRelease(t *testing.T) {
+func TestPackageInfo_OverrideVersion_fromForgeRelease(t *testing.T) {
 	t.Parallel()
 	pkgInfo := &PackageInfo{
 		Type:      PkgInfoTypeForgejoRelease,
@@ -99,7 +99,7 @@ func TestPackageInfo_overrideVersion_fromForgeRelease(t *testing.T) {
 		RepoName:  "a-repo",
 		Asset:     "a-repo.tar.gz",
 	}
-	pkg := pkgInfo.overrideVersion(&VersionOverride{
+	pkg := pkgInfo.OverrideVersion(&VersionOverride{
 		Type: PkgInfoTypeGitHubRelease,
 	})
 	if pkg.Host != "" {
@@ -197,7 +197,7 @@ func TestPackageInfo_overrideVersion_betweenForges(t *testing.T) {
 
 	// To GitLab with nothing said about the instance: gitlab.com, which is where a
 	// gitlab_release package is.
-	pkg := pkgInfo.overrideVersion(&VersionOverride{Type: PkgInfoTypeGitLabRelease})
+	pkg := pkgInfo.OverrideVersion(&VersionOverride{Type: PkgInfoTypeGitLabRelease})
 	if pkg.Host != "" {
 		t.Fatalf("wanted the old forge's host gone, got %s", pkg.Host)
 	}
@@ -209,7 +209,7 @@ func TestPackageInfo_overrideVersion_betweenForges(t *testing.T) {
 	}
 
 	// To GitLab on an instance of its own: the override says so.
-	pkg = pkgInfo.overrideVersion(&VersionOverride{
+	pkg = pkgInfo.OverrideVersion(&VersionOverride{
 		Type: PkgInfoTypeGitLabRelease,
 		Host: "gitlab.example.com",
 	})
@@ -219,7 +219,7 @@ func TestPackageInfo_overrideVersion_betweenForges(t *testing.T) {
 
 	// To Gitea, which has no instance nearly every package is on, so a definition
 	// saying nothing is one that can't be read.
-	pkg = pkgInfo.overrideVersion(&VersionOverride{Type: PkgInfoTypeGiteaRelease})
+	pkg = pkgInfo.OverrideVersion(&VersionOverride{Type: PkgInfoTypeGiteaRelease})
 	if pkg.GetHost() != "" {
 		t.Fatalf("wanted no instance, got %s", pkg.GetHost())
 	}
