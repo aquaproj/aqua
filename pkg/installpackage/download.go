@@ -233,7 +233,10 @@ func (is *Installer) assetVerifiers(logger *slog.Logger, pkg *config.Package, as
 }
 
 // skipRecordedVerifiers drops the verifiers when the asset's entry in
-// aqua-checksums.json was recorded after all of them passed.
+// aqua-checksums.json was recorded after the signatures it rests on were verified:
+// either all of the asset's own, or all of the checksum file's that the registry
+// configures. A signed checksum file ties the digest to the publisher, and can carry
+// the same provenance, as the lock file already relies on.
 //
 // The checksum is verified right after this, and an asset whose checksum matches the
 // entry is the asset whose signatures were verified, so verifying them again tells
@@ -251,11 +254,33 @@ func (is *Installer) skipRecordedVerifiers(logger *slog.Logger, param *DownloadP
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	if !param.Checksums.Get(cid).HasVerified(verifierKinds(verifiers)) {
-		return verifiers, nil
+	entry := param.Checksums.Get(cid)
+	if entry.HasVerified(verifierKinds(verifiers)) {
+		logger.Debug("skip verifying signatures because aqua-checksums.json records that they were verified when the checksum was recorded")
+		return nil, nil
 	}
-	logger.Debug("skip verifying signatures because aqua-checksums.json records that they were verified when the checksum was recorded")
-	return nil, nil
+	checksumKinds, err := is.configuredChecksumFileKinds(logger, param.Package, param.Asset)
+	if err != nil {
+		return nil, err
+	}
+	if len(checksumKinds) != 0 && entry.HasVerified(checksumKinds) {
+		logger.Debug("skip verifying signatures because aqua-checksums.json records that the checksum file's signatures were verified when the checksum was recorded")
+		return nil, nil
+	}
+	return verifiers, nil
+}
+
+// configuredChecksumFileKinds returns the kinds of signature over the checksum file that the
+// registry configures and that are enabled here.
+func (is *Installer) configuredChecksumFileKinds(logger *slog.Logger, pkg *config.Package, assetName string) ([]string, error) {
+	if !pkg.PackageInfo.Checksum.GetEnabled() {
+		return nil, nil
+	}
+	verifiers, err := is.filterVerifiers(logger, is.newChecksumVerifiers(pkg, assetName))
+	if err != nil {
+		return nil, err
+	}
+	return checksumFileKinds(verifiers), nil
 }
 
 func verifierKinds(verifiers []FileVerifier) []string {

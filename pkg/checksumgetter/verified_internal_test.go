@@ -31,44 +31,27 @@ func TestNeedsAssetVerification(t *testing.T) {
 	data := []struct {
 		name    string
 		pkgInfo *registry.PackageInfo
-		mode    verifyMode
 		exp     bool
 	}{
 		{
 			name:    "no signature",
 			pkgInfo: &registry.PackageInfo{},
-			mode:    verifyForChecksums,
 		},
 		{
 			name:    "asset signature",
 			pkgInfo: &registry.PackageInfo{GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{}},
-			mode:    verifyForChecksums,
 			exp:     true,
 		},
 		{
-			// An install skips only what aqua-checksums.json records, and a signed
-			// checksum file isn't what the registry asks it to verify.
-			name:    "asset signature and a signed checksum file, for aqua-checksums.json",
+			// The signed checksum file ties the digest to the publisher already.
+			name:    "asset signature and a signed checksum file",
 			pkgInfo: &registry.PackageInfo{GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{}, Checksum: signedChecksum},
-			mode:    verifyForChecksums,
-			exp:     true,
-		},
-		{
-			name:    "asset signature and a signed checksum file, for the lock file",
-			pkgInfo: &registry.PackageInfo{GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{}, Checksum: signedChecksum},
-			mode:    verifyForLock,
-		},
-		{
-			name:    "asset signature, for the lock file",
-			pkgInfo: &registry.PackageInfo{GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{}},
-			mode:    verifyForLock,
-			exp:     true,
 		},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Parallel()
-			if got := needsAssetVerification(d.pkgInfo, d.mode); got != d.exp {
+			if got := needsAssetVerification(d.pkgInfo); got != d.exp {
 				t.Fatalf("needsAssetVerification = %v, wanted %v", got, d.exp)
 			}
 		})
@@ -160,5 +143,39 @@ func assertChecksum(t *testing.T, got, exp *checksum.Checksum) {
 	t.Helper()
 	if got.ID != exp.ID || !strings.EqualFold(got.Checksum, exp.Checksum) || got.Algorithm != exp.Algorithm || !slices.Equal(got.Verified, exp.Verified) {
 		t.Fatalf("checksum = %+v, wanted %+v", got, exp)
+	}
+}
+
+func TestGetter_dlAndVerifyChecksumFile_verified(t *testing.T) {
+	t.Parallel()
+	rt := &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}
+	pkg, cid := newGitHubReleasePkg(t, "aquaproj", "ar2", "v0.15.14", "ar2_{{.OS}}_{{.Arch}}.tar.gz", rt)
+	pkg.PackageInfo.Checksum = &registry.Checksum{
+		Type:                       "github_release",
+		Asset:                      "ar2_checksums.txt",
+		Algorithm:                  "sha256",
+		GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+	}
+	g := &Getter{
+		chkDL: &download.MockChecksumDownloader{
+			Body: `2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824  ar2_linux_amd64.tar.gz
+cd76fbe5150c06f4928c8c00759bf54237c85c4cff829d4a6a19628709ca2aa7  ar2_darwin_arm64.tar.gz
+`,
+		},
+		checksumFileVerifier: &MockChecksumFileVerifier{ChecksumKinds: []string{"checksum.github_artifact_attestations"}},
+	}
+	cs, err := g.dlAndVerifyChecksumFile(t.Context(), slog.New(slog.DiscardHandler), pkg, rt,
+		map[string]struct{}{"ar2_linux_amd64.tar.gz": {}, "ar2_darwin_arm64.tar.gz": {}}, cid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cs) != 2 {
+		t.Fatalf("wanted two checksums, got %d", len(cs))
+	}
+	// Every checksum the signed file lists records the file's verification.
+	for _, c := range cs {
+		if !slices.Equal(c.Verified, []string{"checksum.github_artifact_attestations"}) {
+			t.Fatalf("checksum = %+v", c)
+		}
 	}
 }

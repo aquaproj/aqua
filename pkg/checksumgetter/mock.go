@@ -12,14 +12,16 @@ type MockChecksumFileVerifier struct {
 	Err error
 	// Kinds is what VerifyAsset and VerifyAssetDigest report as verified.
 	Kinds []string
+	// ChecksumKinds is what VerifyChecksumFileContent reports as verified.
+	ChecksumKinds []string
 	// DigestOK is whether VerifyAssetDigest could verify the digest.
 	DigestOK bool
 	// Digests records the digests VerifyAssetDigest was given.
 	Digests []string
 }
 
-func (v *MockChecksumFileVerifier) VerifyChecksumFileContent(_ context.Context, _ *slog.Logger, _ *config.Package, _ string, _ []byte) error {
-	return v.Err
+func (v *MockChecksumFileVerifier) VerifyChecksumFileContent(_ context.Context, _ *slog.Logger, _ *config.Package, _ string, _ []byte) ([]string, error) {
+	return v.ChecksumKinds, v.Err
 }
 
 func (v *MockChecksumFileVerifier) VerifyAsset(_ context.Context, _ *slog.Logger, _ *config.Package, _, _ string, _ *runtime.Runtime) ([]string, error) {

@@ -119,11 +119,12 @@ type Checksum struct {
 	ID        string `json:"id"`
 	Checksum  string `json:"checksum"`
 	Algorithm string `json:"algorithm"`
-	// Verified lists the kinds of signature verification (e.g. "cosign",
-	// "github_artifact_attestations") the asset passed before this checksum was
-	// recorded. An install whose registry asks for nothing outside this list can
-	// trust the checksum in their place. An entry without it says nothing about the
-	// signatures, so they are verified at install as before.
+	// Verified lists the kinds of signature verification passed before this
+	// checksum was recorded: the asset's own (e.g. "cosign",
+	// "github_artifact_attestations") or the checksum file's that listed it (e.g.
+	// "checksum.cosign"). An install whose registry asks for nothing outside this
+	// list can trust the checksum in their place. An entry without it says nothing
+	// about the signatures, so they are verified at install as before.
 	Verified []string `json:"verified,omitempty"`
 }
 

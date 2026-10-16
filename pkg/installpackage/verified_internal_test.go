@@ -60,9 +60,30 @@ func TestInstaller_skipRecordedVerifiers(t *testing.T) { //nolint:funlen
 		name             string
 		entry            *checksum.Checksum
 		checksum         *checksum.Checksum
+		signedChecksum   bool
 		verifySignatures bool
 		exp              int
 	}{
+		{
+			// The checksum file's signature ties the digest to the publisher, as the
+			// lock file relies on too.
+			name:           "the signed checksum file recorded",
+			signedChecksum: true,
+			entry:          &checksum.Checksum{ID: cid, Checksum: "foo", Algorithm: "sha256", Verified: []string{"checksum.github_artifact_attestations"}},
+		},
+		{
+			name:           "the signed checksum file not recorded",
+			signedChecksum: true,
+			entry:          &checksum.Checksum{ID: cid, Checksum: "foo", Algorithm: "sha256"},
+			exp:            2,
+		},
+		{
+			// The entry was recorded from a signed checksum file the registry no
+			// longer configures.
+			name:  "a checksum file kind the registry doesn't configure",
+			entry: &checksum.Checksum{ID: cid, Checksum: "foo", Algorithm: "sha256", Verified: []string{"checksum.github_artifact_attestations"}},
+			exp:   2,
+		},
 		{
 			name: "no entry",
 			exp:  2,
@@ -111,10 +132,20 @@ func TestInstaller_skipRecordedVerifiers(t *testing.T) { //nolint:funlen
 				runtime:          rt,
 				verifySignatures: d.verifySignatures,
 			}
+			pkg := newVerifiedTestPackage()
+			if d.signedChecksum {
+				pkg.PackageInfo.Checksum = &registry.Checksum{
+					Type:                       "github_release",
+					Asset:                      "ar2_checksums.txt",
+					Algorithm:                  "sha256",
+					GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+				}
+			}
 			got, err := is.skipRecordedVerifiers(logger, &DownloadParam{
 				Package:   pkg,
 				Checksums: checksums,
 				Checksum:  d.checksum,
+				Asset:     "ar2_linux_amd64.tar.gz",
 			}, verifiers)
 			if err != nil {
 				t.Fatal(err)
@@ -218,6 +249,24 @@ func TestInstaller_verifyChecksum_verified(t *testing.T) { //nolint:funlen
 				t.Fatalf("entry = %+v, wanted %+v", got, d.exp)
 			}
 		})
+	}
+}
+
+func TestRecordChecksum(t *testing.T) {
+	t.Parallel()
+	const cid = "github_release/github.com/aquaproj/ar2/v0.15.14/ar2_linux_amd64.tar.gz"
+	checksums := checksum.New()
+	// A checksum taken from a signed checksum file carries the file's kinds, and the
+	// asset's own are added to them.
+	recordChecksum(checksums, cid, &checksum.Checksum{
+		ID:        cid,
+		Checksum:  "foo",
+		Algorithm: "sha256",
+		Verified:  []string{"checksum.cosign"},
+	}, false, []string{"github_artifact_attestations"})
+	got := checksums.Get(cid)
+	if !slices.Equal(got.Verified, []string{"github_artifact_attestations", "checksum.cosign"}) {
+		t.Fatalf("verified = %v", got.Verified)
 	}
 }
 

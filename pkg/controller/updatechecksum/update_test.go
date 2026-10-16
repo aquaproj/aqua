@@ -21,7 +21,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
+func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name               string
@@ -200,6 +200,59 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 			chkDL: &download.MockChecksumDownloader{},
 			downloader: &download.Mock{
 				RC: io.NopCloser(strings.NewReader("hello")),
+			},
+		},
+		{
+			// A signed checksum file ties the digest to the publisher, so the asset
+			// isn't downloaded, and the entry records the checksum file's verification.
+			name: "signed checksum file",
+			param: &config.Param{
+				All: true,
+			},
+			cfgFiles: []string{"aqua.yaml"},
+			expChecksums: []string{
+				"github_release/github.com/aquaproj/ar2/v0.15.14/ar2_darwin_arm64.tar.gz",
+			},
+			expContents: []string{`"verified": [
+        "checksum.github_artifact_attestations"
+      ]`},
+			verifier: &checksumgetter.MockChecksumFileVerifier{
+				Kinds:         []string{"github_artifact_attestations"},
+				ChecksumKinds: []string{"checksum.github_artifact_attestations"},
+			},
+			cfgReader: newAr2ConfigReader(),
+			registryInstaller: &rgst.MockInstaller{
+				M: map[string]*registry.Config{
+					"standard": {
+						PackageInfos: registry.PackageInfos{
+							{
+								RepoOwner:                  "aquaproj",
+								RepoName:                   "ar2",
+								Type:                       "github_release",
+								Asset:                      "ar2_{{.OS}}_{{.Arch}}.tar.gz",
+								GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+								Checksum: &registry.Checksum{
+									Type:                       "github_release",
+									Asset:                      "ar2_checksums.txt",
+									Algorithm:                  "sha256",
+									GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+								},
+							},
+						},
+					},
+				},
+			},
+			registryDownloader: &domain.MockGitHubContentFileDownloader{},
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			chkDL: &download.MockChecksumDownloader{
+				Body: `cd76fbe5150c06f4928c8c00759bf54237c85c4cff829d4a6a19628709ca2aa7  ar2_darwin_arm64.tar.gz
+`,
+			},
+			downloader: &download.Mock{
+				Err: errors.New("the asset must not be downloaded"),
 			},
 		},
 		{
