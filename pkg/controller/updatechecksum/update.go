@@ -91,7 +91,7 @@ func (c *Controller) updateChecksum(ctx context.Context, logger *slog.Logger, cf
 			"package_version", pkg.Package.Version,
 			"package_registry", pkg.Package.Registry,
 		)
-		if err := c.checksumGetter.Get(ctx, logger, checksums, pkg, supportedEnvs); err != nil {
+		if err := c.checksumGetter.GetVerified(ctx, logger, checksums, pkg, supportedEnvs); err != nil {
 			failed = true
 			slogerr.WithError(logger, err).Error("update checksums")
 		}

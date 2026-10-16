@@ -159,7 +159,9 @@ type GitHubArtifactAttestationsVerifier interface {
 }
 
 type CosignVerifier interface {
+	Supported() bool
 	Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error
+	VerifyDigest(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, digest string) (bool, error)
 }
 
 type Unarchiver interface {
