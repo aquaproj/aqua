@@ -136,9 +136,12 @@ type ParamVerifyChecksum struct {
 	AssetName       string
 	TempFilePath    string
 	SkipSetChecksum bool
+	// Verified is the kinds of signature verification the asset passed. A checksum
+	// newly recorded from this asset records them.
+	Verified []string
 }
 
-func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger, param *DownloadParam, bodyFile *download.DownloadedFile) error {
+func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger, param *DownloadParam, bodyFile *download.DownloadedFile, verified []string) error {
 	if param.Checksum == nil && param.Checksums == nil {
 		return nil
 	}
@@ -154,6 +157,7 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger
 		AssetName:       param.Asset,
 		TempFilePath:    tempFilePath,
 		SkipSetChecksum: true,
+		Verified:        verified,
 	}
 
 	if param.Checksum == nil {
@@ -227,6 +231,9 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 	chksum := param.Checksum
 	checksumID := param.ChecksumID
 	tempFilePath := param.TempFilePath
+	// A checksum already recorded keeps what it records. Only a checksum recorded
+	// here, from this asset, can say which signatures this asset passed.
+	recorded := chksum != nil
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
 		var err error
@@ -234,7 +241,6 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 		if err != nil {
 			return err
 		}
-		checksums.Set(checksumID, chksum)
 	}
 
 	algorithm := "sha256"
@@ -264,7 +270,20 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 		}
 	}
 	if !param.SkipSetChecksum {
-		checksums.Set(checksumID, chksum)
+		recordChecksum(checksums, checksumID, chksum, recorded, param.Verified)
 	}
 	return nil
+}
+
+// recordChecksum records the checksum the asset matched.
+//
+// It is recorded only once the asset matches it: the signatures were verified
+// against this asset, so recording them for a checksum the asset doesn't have would
+// vouch for something else. A checksum that was already recorded keeps what it
+// records.
+func recordChecksum(checksums *checksum.Checksums, checksumID string, chksum *checksum.Checksum, recorded bool, verified []string) {
+	if !recorded {
+		chksum.Verified = verified
+	}
+	checksums.Set(checksumID, chksum)
 }

@@ -94,11 +94,20 @@ func (is *Installer) download(ctx context.Context, logger *slog.Logger, param *D
 		}
 	}()
 
-	if err := is.runVerifiers(ctx, logger, is.assetVerifiers(logger, ppkg, param.Asset, is.runtime, param.Locked), bodyFile.Path); err != nil {
+	verifiers, err := is.filterVerifiers(logger, is.assetVerifiers(logger, ppkg, param.Asset, is.runtime, param.Locked))
+	if err != nil {
+		return err
+	}
+	verifiers, err = is.skipRecordedVerifiers(logger, param, verifiers)
+	if err != nil {
+		return err
+	}
+	verified, err := is.runVerifiers(ctx, logger, verifiers, bodyFile.Path)
+	if err != nil {
 		return err
 	}
 
-	if err := is.verifyChecksumWrap(ctx, logger, param, bodyFile); err != nil {
+	if err := is.verifyChecksumWrap(ctx, logger, param, bodyFile, verified); err != nil {
 		return err
 	}
 
@@ -223,42 +232,103 @@ func (is *Installer) assetVerifiers(logger *slog.Logger, pkg *config.Package, as
 	}
 }
 
-// runVerifiers runs the verifiers that are enabled against the asset.
+// skipRecordedVerifiers drops the verifiers when the asset's entry in
+// aqua-checksums.json was recorded after all of them passed.
 //
-// path produces the file to verify, and is called only once a verifier turns out to
-// be enabled: the download is held in memory until something needs it on disk, and a
-// package with no signatures should never pay for a temporary file.
-func (is *Installer) runVerifiers(ctx context.Context, logger *slog.Logger, verifiers []FileVerifier, path func() (string, error)) error {
-	filePath := ""
-	for _, verifier := range verifiers {
-		a, err := verifier.Enabled(logger)
-		if err != nil {
-			return fmt.Errorf("check if the verifier is enabled: %w", err)
-		}
-		if !a {
-			continue
-		}
-		if filePath == "" {
-			a, err := path()
-			if err != nil {
-				return fmt.Errorf("get the path of the asset to verify: %w", err)
-			}
-			filePath = a
-		}
-		if err := verifier.Verify(ctx, logger, filePath); err != nil {
-			return fmt.Errorf("verify the asset: %w", err)
-		}
+// The checksum is verified right after this, and an asset whose checksum matches the
+// entry is the asset whose signatures were verified, so verifying them again tells
+// nothing new. It costs downloading cosign, slsa-verifier, minisign or gh, and calls
+// to GitHub's API and the transparency log, which count against rate limits.
+//
+// If the registry asks for a kind the entry doesn't record, for example because the
+// registry added it later, every verifier runs as before. AQUA_VERIFY_SIGNATURES
+// keeps them all running regardless.
+func (is *Installer) skipRecordedVerifiers(logger *slog.Logger, param *DownloadParam, verifiers []FileVerifier) ([]FileVerifier, error) {
+	if len(verifiers) == 0 || is.verifySignatures || param.Checksum != nil || param.Checksums == nil {
+		return verifiers, nil
 	}
-	return nil
+	cid, err := param.Package.ChecksumID(is.runtime)
+	if err != nil {
+		return nil, err //nolint:wrapcheck
+	}
+	if !param.Checksums.Get(cid).HasVerified(verifierKinds(verifiers)) {
+		return verifiers, nil
+	}
+	logger.Debug("skip verifying signatures because aqua-checksums.json records that they were verified when the checksum was recorded")
+	return nil, nil
 }
 
-// VerifyAsset verifies the signatures over an asset that has already been downloaded.
+func verifierKinds(verifiers []FileVerifier) []string {
+	kinds := make([]string, len(verifiers))
+	for i, verifier := range verifiers {
+		kinds[i] = verifier.Kind()
+	}
+	return kinds
+}
+
+// runVerifiers runs the verifiers against the asset and returns the kinds verified.
+// The verifiers must already be filtered by filterVerifiers.
 //
-// It is how the lock file comes to be worth trusting: the checksum recorded for an
-// entry is the checksum of an artifact whose signatures were checked here, once,
-// which is what lets an install verify the checksum alone.
-func (is *Installer) VerifyAsset(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, filePath string, rt *runtime.Runtime) error {
-	return is.runVerifiers(ctx, logger, is.assetVerifiers(logger, pkg, assetName, rt, false), func() (string, error) {
+// path produces the file to verify, and is called only if there is a verifier: the
+// download is held in memory until something needs it on disk, and a package with no
+// signatures should never pay for a temporary file.
+func (is *Installer) runVerifiers(ctx context.Context, logger *slog.Logger, verifiers []FileVerifier, path func() (string, error)) ([]string, error) {
+	if len(verifiers) == 0 {
+		return nil, nil
+	}
+	filePath, err := path()
+	if err != nil {
+		return nil, fmt.Errorf("get the path of the asset to verify: %w", err)
+	}
+	for _, verifier := range verifiers {
+		if err := verifier.Verify(ctx, logger, filePath); err != nil {
+			return nil, fmt.Errorf("verify the asset: %w", err)
+		}
+	}
+	return verifierKinds(verifiers), nil
+}
+
+// VerifyAsset verifies the signatures over an asset that has already been downloaded,
+// and returns the kinds verified.
+//
+// It is how a recorded checksum comes to be worth trusting: the checksum recorded in
+// the lock file or aqua-checksums.json is the checksum of an artifact whose
+// signatures were checked here, once, which is what lets an install verify the
+// checksum alone.
+func (is *Installer) VerifyAsset(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, filePath string, rt *runtime.Runtime) ([]string, error) {
+	verifiers, err := is.filterVerifiers(logger, is.assetVerifiers(logger, pkg, assetName, rt, false))
+	if err != nil {
+		return nil, err
+	}
+	return is.runVerifiers(ctx, logger, verifiers, func() (string, error) {
 		return filePath, nil
 	})
+}
+
+// VerifyAssetDigest verifies the signatures over an asset with its digest
+// ("<algorithm>:<hex>") alone, and returns the kinds verified.
+//
+// Only cosign can verify a digest, and only with a new format bundle. If any
+// signature the asset carries can't be verified that way, nothing is verified and
+// false is returned, so that the caller downloads the asset and calls VerifyAsset.
+func (is *Installer) VerifyAssetDigest(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName, digest string, rt *runtime.Runtime) ([]string, bool, error) {
+	verifiers, err := is.filterVerifiers(logger, is.assetVerifiers(logger, pkg, assetName, rt, false))
+	if err != nil {
+		return nil, false, err
+	}
+	if len(verifiers) == 0 {
+		return nil, true, nil
+	}
+	if len(verifiers) != 1 {
+		return nil, false, nil
+	}
+	cos, ok := verifiers[0].(*cosignVerifier)
+	if !ok {
+		return nil, false, nil
+	}
+	f, err := cos.VerifyDigest(ctx, logger, digest)
+	if err != nil || !f {
+		return nil, false, err
+	}
+	return []string{cos.Kind()}, true, nil
 }
