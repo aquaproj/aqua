@@ -16,6 +16,8 @@ import (
 )
 
 type (
+	Attestation                 = github.Attestation
+	AttestationsResponse        = github.AttestationsResponse
 	ReleaseAsset                = github.ReleaseAsset
 	ListOptions                 = github.ListOptions
 	RepositoryRelease           = github.RepositoryRelease
