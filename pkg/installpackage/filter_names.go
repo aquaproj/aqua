@@ -7,15 +7,18 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 )
 
-// filterPackagesByNames returns packages matching names.
-// If names is empty, it returns pkgs as is.
-// Names matching packages are added to foundNames.
-func filterPackagesByNames(logger *slog.Logger, pkgs []*config.Package, names, foundNames map[string]struct{}) []*config.Package {
+// filterTargetsByNames drops the targets whose package matches none of the names.
+//
+// The names are matched against the package rather than the target, which is the package
+// plus what installing it needs, so this is the same filter as filterPackagesByNames and
+// the one to use where what is installed is a list of targets.
+func filterTargetsByNames(logger *slog.Logger, targets []*Target, names, foundNames map[string]struct{}) []*Target {
 	if len(names) == 0 {
-		return pkgs
+		return targets
 	}
-	filtered := make([]*config.Package, 0, len(pkgs))
-	for _, pkg := range pkgs {
+	filtered := make([]*Target, 0, len(targets))
+	for _, target := range targets {
+		pkg := target.Pkg
 		if !filterPackageByNames(pkg, names, foundNames) {
 			logger.Debug("skip installing the package because the package doesn't match the specified names",
 				"package_name", pkg.Package.Name,
@@ -24,7 +27,7 @@ func filterPackagesByNames(logger *slog.Logger, pkgs []*config.Package, names, f
 			)
 			continue
 		}
-		filtered = append(filtered, pkg)
+		filtered = append(filtered, target)
 	}
 	return filtered
 }

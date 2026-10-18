@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/checksumgetter"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -185,7 +186,8 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 				cfgFiles[i] = filepath.Join(dir, f)
 			}
 			cfgFinder := &updatechecksum.MockConfigFinder{Files: cfgFiles}
-			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
+			getter := checksumgetter.New(d.chkDL, d.downloader, &checksumgetter.MockChecksumFileVerifier{})
+			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.rt, getter, d.registryDownloader)
 			if err := ctrl.UpdateChecksum(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

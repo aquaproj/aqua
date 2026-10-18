@@ -456,7 +456,7 @@ func (h *handler) decompress(input io.Reader, decomp archives.Decompressor) erro
 	if err := osfile.MkdirAll(h.dest); err != nil {
 		return fmt.Errorf("create a directory (%s): %w", h.dest, err)
 	}
-	dst, err := os.Create(filepath.Join(h.dest, strings.TrimSuffix(h.filename, filepath.Ext(h.filename))))
+	dst, err := os.Create(filepath.Join(h.dest, decompressedName(h.filename)))
 	if err != nil {
 		return fmt.Errorf("create a destination file: %w", err)
 	}
