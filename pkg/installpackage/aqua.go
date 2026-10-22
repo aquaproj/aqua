@@ -17,6 +17,7 @@ import (
 func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, version string) error { //nolint:funlen
 	provTemplate := "multiple.intoto.jsonl"
 	disabled := false
+	const checksumAsset = "aqua_{{trimV .Version}}_checksums.txt"
 	pkg := &config.Package{
 		Package: &aqua.Package{
 			Name:    "aquaproj/aqua",
@@ -39,10 +40,6 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 					Name: pkgNameAqua,
 				},
 			},
-			SLSAProvenance: &registry.SLSAProvenance{
-				Type:  pkgTypeGitHubRelease,
-				Asset: &provTemplate,
-			},
 			// Checksum: &registry.Checksum{
 			// 	Type:       pkgTypeGitHubRelease,
 			// 	Asset:      "aqua_{{trimV .Version}}_checksums.txt",
@@ -62,8 +59,29 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 			// 		},
 			// 	},
 			// },
-			VersionConstraints: `semver(">= 2.17.0")`,
+			VersionConstraints: `semver(">= 2.65.0")`,
 			VersionOverrides: []*registry.VersionOverride{
+				{
+					VersionConstraints: `semver(">= 2.17.0")`,
+					SLSAProvenance: &registry.SLSAProvenance{
+						Type:  pkgTypeGitHubRelease,
+						Asset: &provTemplate,
+					},
+					Overrides: []*registry.Override{},
+					Checksum: &registry.Checksum{
+						Type:       pkgTypeGitHubRelease,
+						Asset:      checksumAsset,
+						FileFormat: algoTypeRegexp,
+						Algorithm:  algoSHA256,
+						Pattern: &registry.ChecksumPattern{
+							Checksum: regexpSHA256,
+							File:     regexpSHA256WithFile,
+						},
+						Cosign: &registry.Cosign{
+							Opts: []string{},
+						},
+					},
+				},
 				{
 					VersionConstraints: `semver(">= 1.26.0")`,
 					SLSAProvenance: &registry.SLSAProvenance{
@@ -72,7 +90,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 					Overrides: []*registry.Override{},
 					Checksum: &registry.Checksum{
 						Type:       pkgTypeGitHubRelease,
-						Asset:      "aqua_{{trimV .Version}}_checksums.txt",
+						Asset:      checksumAsset,
 						FileFormat: algoTypeRegexp,
 						Algorithm:  algoSHA256,
 						Pattern: &registry.ChecksumPattern{
@@ -92,7 +110,7 @@ func (is *Installer) InstallAqua(ctx context.Context, logger *slog.Logger, versi
 					},
 					Checksum: &registry.Checksum{
 						Type:       pkgTypeGitHubRelease,
-						Asset:      "aqua_{{trimV .Version}}_checksums.txt",
+						Asset:      checksumAsset,
 						FileFormat: algoTypeRegexp,
 						Algorithm:  algoSHA256,
 						Pattern: &registry.ChecksumPattern{
