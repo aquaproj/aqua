@@ -12,7 +12,7 @@ jobs:
       contents: read
       id-token: write
     with:
-      aqua_version: v2.64.0
+      aqua_version: v2.65.1
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
 
@@ -26,7 +26,7 @@ jobs:
           persist-credentials: false
       - uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
         with:
-          aqua_version: v2.64.0
+          aqua_version: v2.65.1
       - run: aqua upc -prune
         working-directory: pkg/cosign
         env:
