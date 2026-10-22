@@ -12,7 +12,7 @@ jobs:
       contents: read
       id-token: write
     with:
-      aqua_version: v2.64.0
+      aqua_version: v2.65.1
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
 
