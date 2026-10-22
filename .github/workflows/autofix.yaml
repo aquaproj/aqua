@@ -14,11 +14,9 @@ jobs:
       - run: exit 1
 
   fix:
-    uses: suzuki-shunsuke/go-autofix-action/.github/workflows/autofix-ci.yaml@2c7f494d0149fe60c0adc9feb09b6b995bae00ec # v0.2.0
+    uses: $/.github/workflows/wc_autofix.yaml
     permissions:
       contents: read
       id-token: write
-    with:
-      aqua_version: v2.64.0
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}

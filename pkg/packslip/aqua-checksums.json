@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/jdx/packslip/v1.7.0/packslip-v1.7.0-darwin-arm64.tar.xz",
-      "checksum": "176FCCDD7D14DA8F55A7D6A747C37FDBC17E72F1EACC759C7E2EC1958C2BC408",
+      "id": "github_release/github.com/jdx/packslip/v1.9.0/packslip-v1.9.0-darwin-arm64.tar.xz",
+      "checksum": "4D6DB06190E70A0CDA66CD6A1107708A839DCB031173E817E5D25543F75DC6C1",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.7.0/packslip-v1.7.0-linux-arm64.tar.xz",
-      "checksum": "00D704E02F1760D5F1223DF2F4E770ED201CD2052AACFB351634CFF943DE5C4E",
+      "id": "github_release/github.com/jdx/packslip/v1.9.0/packslip-v1.9.0-linux-arm64.tar.xz",
+      "checksum": "1737AFFDC059FCF8D45E91FB1F9D09E0D1D14B1B03902EE764E35EA344364A3B",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.7.0/packslip-v1.7.0-linux-x64.tar.xz",
-      "checksum": "13B0D4E730D959B0F8847BF3CAF9E50EF5319C7F0E7977A68E4BB7A705B57109",
+      "id": "github_release/github.com/jdx/packslip/v1.9.0/packslip-v1.9.0-linux-x64.tar.xz",
+      "checksum": "93751FF4FD7A91F23AFD0A67B75C651E3A90114770C763A09A6C3F5D5D67604A",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.7.0/packslip-v1.7.0-windows-arm64.zip",
-      "checksum": "D770B44058D2077E1EF09ABCE5C8F409DFF75B30AA3BC123EF52E66DAB0AD391",
+      "id": "github_release/github.com/jdx/packslip/v1.9.0/packslip-v1.9.0-windows-arm64.zip",
+      "checksum": "A9A746A4044BC06A6E079275E0C0E6B782F94AFB84ABE252FB1A0A0F32EDC635",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.7.0/packslip-v1.7.0-windows-x64.zip",
-      "checksum": "F87001127DD408100F3314E3E876DF6F0E1E37DD6BFAA76002E58D3AF90B4713",
+      "id": "github_release/github.com/jdx/packslip/v1.9.0/packslip-v1.9.0-windows-x64.zip",
+      "checksum": "5DCC9F1C269AFC01F1D6A392B9424CEA87936ADF1AD06E8FE001F4B476E03467",
       "algorithm": "sha256"
     },
     {

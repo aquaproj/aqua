@@ -1,0 +1,60 @@
+---
+on:
+  workflow_call:
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: false
+permissions: {}
+jobs:
+  go:
+    uses: suzuki-shunsuke/go-autofix-action/.github/workflows/autofix-ci.yaml@2c7f494d0149fe60c0adc9feb09b6b995bae00ec # v0.2.0
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      aqua_version: v2.64.0
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
+  fix:
+    runs-on: ubuntu-26.04
+    permissions: {}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+        with:
+          aqua_version: v2.64.0
+      - run: aqua upc -prune
+        working-directory: pkg/cosign
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: aqua upc -prune
+        working-directory: pkg/slsa
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: aqua upc -prune
+        working-directory: pkg/minisign
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: aqua upc -prune
+        working-directory: pkg/ghattestation
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: aqua upc -prune
+        working-directory: pkg/packslip
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: aqua upc -prune
+        working-directory: tests/pnpm
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+
+      - run: git ls-files docs | xargs pinact run -u
+        working-directory: website
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+
+      - uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a # v1.3.4
