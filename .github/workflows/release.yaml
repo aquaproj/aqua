@@ -6,7 +6,7 @@ on:
 permissions: {}
 jobs:
   release:
-    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@5b8d75c27ab40fe6ef0e18b35912125c0ed6b2d1 # v10.1.1
+    uses: suzuki-shunsuke/go-release-workflow/.github/workflows/release.yaml@0d23f1a95619a616037bae4f630f3c7e23ec1def # v11.0.0-0
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     with:
@@ -14,6 +14,7 @@ jobs:
       aqua_policy_allow: true
       aqua_version: v2.64.0
       split_build: true
+      slsa_provenance: true
     permissions:
       contents: write
       id-token: write
