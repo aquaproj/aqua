@@ -13,16 +13,16 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
 
-const ProxyVersion = "v1.2.13" // renovate: depName=aquaproj/aqua-proxy
+const ProxyVersion = "v1.2.14" // renovate: depName=aquaproj/aqua-proxy
 
 func ProxyChecksums() map[string]string {
 	return map[string]string{
-		"darwin/amd64":  "7ea3fa8104c6a5dc502e9aef48bb041f80b06a7fba7f6d8a94b3ade830f25432",
-		"darwin/arm64":  "c5b40aca37c859914cf74318d34ffa628039fd26cee45da6b2cd4c18daa4a79c",
-		"linux/amd64":   "206c6ffdc0e5e243f836917594ffd96429f0c13ae859edd2bd6db32703f35142",
-		"linux/arm64":   "937b391c3aef291a12822d56a7a7b86a8bae416a54043c6a1ea510a8b0cde935",
-		"windows/amd64": "88de661cf7d65539f011549c51c8ddf773082ae037d9dd0a2c79ea1ea7d1e904",
-		"windows/arm64": "faed3b38c2f07a1bb20381f5ab23b8de1e2ecd5c925ade65e4248d3ce3acb3e8",
+		"darwin/amd64":  "aae4b9004237c6de27c4eef18cd07ea978d582ef18db400617ebfe5b9ad01659",
+		"darwin/arm64":  "ef088450b7af7f44e064d9c4f4c9b40ac79166c379532234dda2cd9dff5961b6",
+		"linux/amd64":   "d66234878fd9c5354d042108209cbf809b98f1f3601e5ff0c8d23d8198b68151",
+		"linux/arm64":   "dcaeb1ed642798f8f72ac0f441bd72824535076b1b8666ca3fcc96a527fcdc80",
+		"windows/amd64": "a7e716ad313f387d6305fba8a1d0404af21d9db3d82d5cb6ec1717d075b2792e",
+		"windows/arm64": "00fc3454719dd2358e4ea0867e414f1623ff14fa2754bd598fa60119112f2981",
 	}
 }
 
