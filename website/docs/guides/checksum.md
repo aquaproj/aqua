@@ -173,7 +173,7 @@ Add a GitHub Actions job that runs a tampered package.
       AQUA_REQUIRE_CHECKSUM: "true"
     steps:
       - uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6-beta
-      - uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+      - uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
         with:
           aqua_version: v2.48.3
         env:
@@ -234,7 +234,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install aqua
-        uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+        uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
         with:
           aqua_version: v2.43.0
       - name: Fix aqua-checksums.json
@@ -265,7 +265,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install aqua
-        uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+        uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
         with:
           aqua_version: v2.43.0
       - name: Fix aqua-checksums.json
@@ -300,7 +300,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install aqua
-        uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+        uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
         with:
           aqua_version: v2.43.0
       - name: Fix aqua-checksums.json
