@@ -305,7 +305,7 @@ func TestForgeItemNumPerPage(t *testing.T) {
 func TestGeneralVersionGetter_get_forge(t *testing.T) {
 	t.Parallel()
 	forgeGetter := NewForgeRelease(&fakeForge{}, &fakeGitLab{})
-	getter := NewGeneralVersionGetter(nil, &GitHubTagVersionGetter{}, nil, forgeGetter, nil)
+	getter := NewGeneralVersionGetter(nil, &GitHubTagVersionGetter{}, nil, forgeGetter, nil, nil)
 	for _, typ := range []string{registry.PkgInfoTypeForgejoRelease, registry.PkgInfoTypeGiteaRelease, registry.PkgInfoTypeGitLabRelease} {
 		t.Run(typ, func(t *testing.T) {
 			t.Parallel()
@@ -372,7 +372,7 @@ func TestForgeReleaseVersionGetter_client_missing(t *testing.T) {
 // Without one, nothing is returned rather than a getter that can't be called.
 func TestGeneralVersionGetter_get_noForge(t *testing.T) {
 	t.Parallel()
-	getter := NewGeneralVersionGetter(nil, &GitHubTagVersionGetter{}, nil, nil, nil)
+	getter := NewGeneralVersionGetter(nil, &GitHubTagVersionGetter{}, nil, nil, nil, nil)
 	if g := getter.get(&registry.PackageInfo{Type: registry.PkgInfoTypeGiteaRelease, Host: "an.example.com"}); g != nil {
 		t.Fatalf("wanted no getter, got %T", g)
 	}
