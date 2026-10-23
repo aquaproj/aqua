@@ -63,6 +63,27 @@ func (c *Client) ListReleases(ctx context.Context, host, owner, repo string, pag
 	return out, nil
 }
 
+// ListTags returns one page of a repository's tags, newest first.
+//
+// Pages are read the way ListReleases reads them. A repository can tag versions without
+// publishing a release of any: Zig's binaries are on its own site, and Codeberg answers
+// its releases with a 404 while its tags are every version.
+func (c *Client) ListTags(ctx context.Context, host, owner, repo string, page, limit int) ([]*forge.Tag, error) {
+	endpoint := fmt.Sprintf("https://%s/api/v1/repos/%s/%s/tags?page=%d&limit=%d",
+		host, url.PathEscape(owner), url.PathEscape(repo), page, limit)
+	tags := []*struct {
+		Name string `json:"name"`
+	}{}
+	if err := c.requester.GetJSON(ctx, endpoint, &tags); err != nil {
+		return nil, fmt.Errorf("list tags: %w", err)
+	}
+	out := make([]*forge.Tag, 0, len(tags))
+	for _, t := range tags {
+		out = append(out, &forge.Tag{Name: t.Name})
+	}
+	return out, nil
+}
+
 // release is a release as this API answers with it.
 type release struct {
 	TagName    string `json:"tag_name"`

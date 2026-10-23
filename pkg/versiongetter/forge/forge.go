@@ -37,6 +37,14 @@ type Release struct {
 	Assets []string
 }
 
+// Tag is as much of a tag as aqua reads: its name, which is the version.
+//
+// A tag says nothing about being a draft or a prerelease; only a release does. That is
+// what a package whose project publishes no release on the instance is read by.
+type Tag struct {
+	Name string
+}
+
 // Said is the start of what an instance answered with, on one line, for an error to carry.
 //
 // It is where a rate limit, a renamed repository and a private one are told apart: each is
