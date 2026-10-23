@@ -8,5 +8,5 @@ registries:
     type: local
     path: registry.yaml
 packages:
-  - name: jdx/hk@v2.7.1
+  - name: jdx/hk@v2.8.0
     registry: packslip
